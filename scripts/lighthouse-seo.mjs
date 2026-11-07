@@ -13,12 +13,10 @@ const USAGE =
   'the noindex header and the disallow-all robots.txt make the crawlability audits fail.';
 
 const args = process.argv.slice(2);
-/** Removes `flag value` from `args` and returns the value. */
 function takeOption(flag) {
   const at = args.indexOf(flag);
   return at === -1 ? undefined : args.splice(at, 2)[1];
 }
-/** Removes every `--path value` from `args` and returns the values. */
 function takePaths() {
   const found = [];
   for (let at = args.indexOf('--path'); at !== -1; at = args.indexOf('--path')) {
@@ -42,7 +40,6 @@ if (
 }
 const origin = new URL(base).origin;
 
-/** The first entry the list links to: any current slug will do. */
 async function firstEntryPath() {
   const html = await (await fetch(`${origin}/compendium`)).text();
   const match = /href="(\/compendium\/ingredients\/[^"]+)"/.exec(html);

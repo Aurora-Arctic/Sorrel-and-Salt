@@ -9,7 +9,6 @@ import { ORNAMENTS, ornamentPath, type Corner } from '../src/emails/ornaments.ts
 
 const ROOT = join(import.meta.dirname, '..');
 
-/** The PNG for one corner on one theme. */
 export async function composeOrnament(
   corner: Corner,
   theme: keyof typeof EMAIL_THEMES,

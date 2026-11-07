@@ -9,20 +9,16 @@ import { basename, extname, join } from 'node:path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { slugify } from '../src/lib/slugify.ts';
 
-/** Absolute, so a lane in a worktree reads the one copy in /app. */
 const DEFAULT_LIBRARY = '/app/.library';
 
-/** The folder a book's text goes in: `text/<slug of its file name>/`. */
 export function bookFolder(library: string, file: string): string {
   return join(library, 'text', slugify(basename(file, extname(file))));
 }
 
-/** `0007.txt`: zero-padded so a listing sorts in page order. */
 export function pageFile(page: number): string {
   return `${String(page).padStart(4, '0')}.txt`;
 }
 
-/** Writes one text file per page; returns the page count and how many held text. */
 async function extractPdf(path: string, folder: string) {
   const task = getDocument({
     data: new Uint8Array(readFileSync(path)),

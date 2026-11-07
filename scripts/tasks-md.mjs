@@ -4,9 +4,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-/**
- * The breakdown's files in reading order: TASKS.md, whose table names the waves, then the milestone sections. Declared, not listed, as the order expands a range.
- */
 export const TASKS_FILES = [
   'claude-docs/TASKS.md',
   'claude-docs/tasks/m0.md',
@@ -36,7 +33,6 @@ export const TASKS_FILES = [
   'claude-docs/tasks/mw.md',
 ];
 
-/** A repo-relative path, resolved from this script rather than the cwd. */
 const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
 
 // `ID` and `HEADING` are what the project-progress tally imports, so the skill
@@ -124,9 +120,7 @@ export function readEntry(text, id) {
   };
 }
 
-/** Every file in `TASKS_FILES`, in that order, as one text. */
 export const loadTasksMdText = () =>
   TASKS_FILES.map((path) => readFileSync(fromRepo(path), 'utf8')).join('\n');
 
-/** `readTasksMd` over the files on disk. */
 export const loadTasksMd = () => readTasksMd(loadTasksMdText());

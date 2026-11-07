@@ -19,7 +19,6 @@ export function parseJournal(text: string): JournalEntry[] {
   return entries.map(({ idx, tag, when }) => ({ idx, tag, when }));
 }
 
-/** The journal `base` has committed — never the working tree's. */
 export function readBaseJournal(base: string, cwd: string = REPO_ROOT): JournalEntry[] {
   let text: string;
   try {
@@ -80,7 +79,6 @@ export function orderProblems(
   return problems;
 }
 
-/** Prints the outcome; the exit code. */
 export function report(
   problems: string[],
   baseName: string,

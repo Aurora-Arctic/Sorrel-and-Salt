@@ -3,7 +3,6 @@
 // every other account is derived overhead.
 const SIZES = [100, 1000, 10000, 100000];
 const I = {
-  // ratios (assumption unless noted)
   membersPerCoven: 5.5, // sourced S45 (tabletop mean)
   membershipsPerAccount: 1.2, // assumption, range 1.0-2.0
   activeFraction: 0.25, // assumption, range 0.15-0.30
@@ -17,12 +16,10 @@ const I = {
   memoryGb: 2, // sourced default function memory
   mailsPerAccountMonth: 0.5, // assumption, range 0.25-1
   mailingsPerYear: 2, // assumption
-  // bytes (measured / derived)
   fixedBytes: 15515648,
   accountBytes: 3766,
   covenBytes: Math.round((32682 + 203327) / 2),
   ledgerBytesPerRecipient: 225,
-  // prices
   vercelBase: 20,
   vercelCredit: 20,
   invPerM: 0.6,
@@ -51,7 +48,6 @@ const I = {
     gateMin: 5398,
     perMin: 0.006,
   },
-  // ops
   ops: {
     errors: [0, 15, 15, 50],
     uptime: [12, 12, 12, 12], // Solo: Free has no heartbeat monitors
@@ -61,7 +57,6 @@ const I = {
   },
   // tracing (A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
   tracing: { spansPerReq: 20, sample: 0.1, perM: 0.5 },
-  // labour
   // hours a month = fixed + variable x (paying seats / 1,000)
   fixedHours: { low: 24.8, median: 44.4, high: 70.4 },
   // variable hours per 1,000 paying seats: support, payment disputes, privacy requests, abuse reports
@@ -111,14 +106,12 @@ const I = {
   // benefits (health, retirement), the same in every structure: method A (low) and method B (high)
   benefitsYear: { low: 20848, high: 57251 },
   onCallMonth: 2340,
-  // payments and tax
   stripePct: 0.029 + 0.007 + 0.005,
   stripeFix: 0.3,
   mpExtra: 0.035,
   bo: 0.00471,
   boCredit: 55,
   churn: 0.061,
-  // overhead on top of paying seats (no free tier)
   demoOnlyShare: 0.625, // derived 100% - 37.5% activation, Userpilot [G1]; range 0.574-0.70 [G1][G2]
   demoOnlyRange: [0.574, 0.625, 0.7],
   growthMonthly: [0.0284, 0.0284, 0.0284, 0.0153], // derived (1+40%)^(1/12)-1 under $1M ARR; (1+20%)^(1/12)-1 at 100k [G4]
@@ -294,9 +287,7 @@ const varHours = Object.fromEntries(
     ),
   ]),
 );
-// hours a month at P paying seats
 const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
-// paying seats at which one person's 160 hours a month run out
 const ceilingSeats = Object.fromEntries(
   CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
 );

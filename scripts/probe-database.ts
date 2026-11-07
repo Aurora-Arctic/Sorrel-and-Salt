@@ -11,11 +11,7 @@ import { withoutClientOnlyParams } from '../src/db/connection-url.ts';
 import { parseEnvFile, validateDatabaseUrl } from './assert-pulled-env.ts';
 import type { ProbeResult } from './types.ts';
 
-/**
- * What to do about each failure whose code alone would still mean reading a
- * Postgres error table mid-incident. Keyed by the driver's own code so the log
- * is searchable by the string it prints.
- */
+// Keyed by the driver's own code so the log is searchable by the string it prints.
 export const probeHints: Record<string, string> = {
   '42704':
     'The server does not recognise a parameter it was sent. postgres.js forwards every query ' +
@@ -78,7 +74,6 @@ export function scrub(text: string, url: string | undefined): string {
   return scrubbed;
 }
 
-/** The driver's code and message, scrubbed, plus the hint if there is one. */
 export function describeConnectionError(error: unknown, url: string | undefined): string {
   if (!(error instanceof Error)) {
     return scrub(String(error), url);

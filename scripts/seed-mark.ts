@@ -13,7 +13,6 @@ if (given === undefined) {
   process.exit(2);
 }
 const absolute = resolve(given);
-// The path as the loader names it, relative to the compendium root.
 const path = relative(resolve(COMPENDIUM_ROOT), absolute).split(sep).join('/');
 const before = readFileSync(absolute, 'utf8');
 const result = markFile(path, before);

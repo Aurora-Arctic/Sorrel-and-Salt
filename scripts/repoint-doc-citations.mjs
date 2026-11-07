@@ -13,11 +13,6 @@ const TOOLS = ['scripts/split-doc.mjs', 'scripts/repoint-doc-citations.mjs'];
 // A comment a tool reads ends a paragraph: rewrapping must never move it.
 const DIRECTIVE = /^(?:oxlint-|eslint-|@ts-|prettier-ignore|istanbul |c8 |v8 )/;
 
-/**
- * @param {string} text a citing file
- * @param {string} doc the split summary, `claude-docs/db/README.md`
- * @param {{ text: string, file: string }[]} headings every heading under it, with its file
- */
 export function repointCitations(text, doc, headings) {
   let count = 0;
   const out = text.replace(sectionOf(doc), (_, tail, quoted) => {
@@ -86,7 +81,6 @@ export function reflowComments(text, marker) {
   return lines.join('\n');
 }
 
-/** Every heading under a split summary's directory, as the guard reads them. */
 function headingsUnder(root, dir) {
   return readdirSync(join(root, dir)).flatMap((name) => {
     const file = `${dir}/${name}`;

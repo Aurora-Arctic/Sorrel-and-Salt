@@ -9,7 +9,6 @@ export interface SetupResult {
   outcome: 'copied' | 'kept';
 }
 
-/** Each example and the file copied from it, relative to the repository root. */
 function pairs(root: string): [from: string, to: string][] {
   const vscode = existsSync(join(root, '.vscode'))
     ? readdirSync(join(root, '.vscode'))

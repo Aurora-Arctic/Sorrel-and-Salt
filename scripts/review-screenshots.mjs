@@ -9,7 +9,6 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 
-// A small phone and a large one, the widths a section signs off at.
 const VIEWPORTS = [
   { width: 375, height: 812 },
   { width: 412, height: 915 },
@@ -36,7 +35,6 @@ if (!endpoint) {
   process.exit(2);
 }
 
-// A path that exists is a file; anything else is the list itself.
 const pages = JSON.parse(
   existsSync(values.pages) ? readFileSync(values.pages, 'utf8') : values.pages,
 );

@@ -105,8 +105,6 @@ for (let i = 0; i < W * H; i++) {
   presence[i] = Math.min(1, Math.max(l, chroma) * PRESENCE_GAIN);
 }
 
-// The ground fill: empty pixels reachable from the border are ground; the rest
-// are pockets inside the subject and stay.
 const exterior = new Uint8Array(W * H);
 const queue = [];
 const seed = (i) => {
@@ -144,7 +142,6 @@ for (let i = 0; i < W * H; i++) {
   if (!bordersGround) presence[i] = 1;
 }
 
-// The speck filter: connected present components, dropped when small and dark.
 const seen = new Uint8Array(W * H);
 for (let start = 0; start < W * H; start++) {
   if (seen[start] || presence[start] < EMPTY) continue;

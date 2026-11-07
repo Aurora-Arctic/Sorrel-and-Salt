@@ -48,7 +48,6 @@ for (const flag of flags) {
 }
 const dryRun = flags.has('--dry-run');
 
-/** The line a reference seed ends on: what it seeded, or that a dry run wrote nothing. */
 const done = (what: string): void => {
   console.log(
     dryRun ? `Dry run: ${what} were seeded and rolled back; nothing written.` : `Seeded ${what}.`,

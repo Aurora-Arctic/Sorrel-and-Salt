@@ -16,12 +16,10 @@ export const META_DIR = 'src/db/migrations/meta';
 
 const SNAPSHOT = /^\d+_snapshot\.json$/;
 
-/** The snapshot drizzle-kit writes for a journal tag: its number prefix, then `_snapshot.json`. */
 export function snapshotFor(tag: string): string {
   return `${tag.split('_')[0]}_snapshot.json`;
 }
 
-/** Every way `files` (a `meta/` listing) breaks the one-snapshot rule; empty when it holds. */
 export function snapshotProblems(files: string[], entries: JournalEntry[]): string[] {
   const newest = snapshotFor(entries[entries.length - 1].tag);
   const problems = files
@@ -34,7 +32,6 @@ export function snapshotProblems(files: string[], entries: JournalEntry[]): stri
   return problems;
 }
 
-/** Deletes every snapshot in `dir` but the one its journal's newest entry names; returns what went. */
 export function pruneSnapshots(dir: string): string[] {
   const entries = parseJournal(readFileSync(join(dir, '_journal.json'), 'utf8'));
   const newest = snapshotFor(entries[entries.length - 1].tag);

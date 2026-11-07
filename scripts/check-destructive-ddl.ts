@@ -13,7 +13,6 @@ const REPO_ROOT = join(import.meta.dirname, '..');
 const MIGRATIONS_DIR = join(REPO_ROOT, 'src', 'db', 'migrations');
 const FIXTURES_DIR = join(import.meta.dirname, '__fixtures__', 'destructive-ddl');
 
-/** The pathspec every git query below is scoped by — `.sql` only, never `meta/`. */
 const MIGRATIONS_PATHSPEC = 'src/db/migrations/*.sql';
 
 export const ACK_LINE_RE = /^destructive ddl acknowledged:\s*\S.*$/im;
@@ -139,10 +138,7 @@ export function scanFile(path: string): Finding[] {
   return scanSql(readFileSync(path, 'utf8'), relative(REPO_ROOT, path));
 }
 
-/**
- * The base a local run diffs against, from the branch prefix — gitflow.yml's
- * rules. Unrecognised gets `staging`.
- */
+// gitflow.yml's base rules; an unrecognised prefix gets `staging`.
 export function resolveDefaultBase(branch: string): string {
   if (/^(hotfix\/|release\/)/.test(branch)) return 'origin/main';
   return 'origin/staging';
@@ -159,10 +155,7 @@ function lines(output: string): string[] {
     .filter((line) => line.length > 0);
 }
 
-/**
- * Every migration this branch adds or edits against `base`: working tree
- * against the merge base, plus untracked, so a just-generated migration counts.
- */
+// Plus untracked files, so a just-generated migration counts.
 export function changedMigrations(base: string, cwd: string = REPO_ROOT): string[] {
   let mergeBase: string;
   try {
@@ -198,7 +191,6 @@ function allCommittedMigrations(): string[] {
     .map((name) => join(MIGRATIONS_DIR, name));
 }
 
-/** The file list from whichever source applies, `*.sql` only. */
 export function resolveFilesToScan(
   argv: string[],
   // Deliberately not NodeJS.ProcessEnv: Next augments that type with a
@@ -240,15 +232,10 @@ export function resolveFilesToScan(
   return files;
 }
 
-/** `0002_x.sql` → `0002_x.ack.md`. */
 export function sidecarPath(sqlPath: string): string {
   return sqlPath.replace(/\.sql$/, '.ack.md');
 }
 
-/**
- * The sidecar's text, or undefined. Accepts the relative path a `Finding`
- * carries as readily as an absolute one.
- */
 export function readAcknowledgement(sqlPath: string): string | undefined {
   const sidecar = sidecarPath(sqlPath.startsWith('/') ? sqlPath : join(REPO_ROOT, sqlPath));
   try {
@@ -258,11 +245,7 @@ export function readAcknowledgement(sqlPath: string): string | undefined {
   }
 }
 
-/**
- * Grouped by file, so an acknowledgement covers exactly the migration it sits
- * beside. `readSidecar` is injected so the correlation can be tested without
- * writing files.
- */
+// `readSidecar` is injected so the correlation can be tested without writing files.
 export function report(
   findings: Finding[],
   readSidecar: (file: string) => string | undefined = readAcknowledgement,
@@ -314,8 +297,7 @@ export function report(
   return 1;
 }
 
-// Exercises the checked-in fixtures end to end; needs no test runner, which is
-// what `make act-*` and a bare clone have.
+// Needs no test runner, which a bare clone lacks.
 function selfTest(): number {
   let failed = false;
 

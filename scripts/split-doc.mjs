@@ -10,7 +10,6 @@ import { slug } from 'github-slugger';
 
 const FENCE = /^\s*```/;
 
-/** Each `##`/`###` heading outside fenced code, with its line index. */
 function headings(lines) {
   const out = [];
   let fence = false;
@@ -22,7 +21,6 @@ function headings(lines) {
   return out;
 }
 
-/** The preamble, then each `## ` section as its heading and lines. */
 function sectionsOf(text) {
   const preamble = [];
   const sections = [];
@@ -38,7 +36,6 @@ function sectionsOf(text) {
 
 const trimEnd = (lines) => lines.join('\n').replace(/\s+$/, '');
 
-/** Hard-wrapped at 80 columns, as the summaries are. */
 function wrap(text) {
   const lines = [''];
   for (const word of text.split(' ')) {
@@ -49,11 +46,6 @@ function wrap(text) {
   return lines.join('\n');
 }
 
-/**
- * @param {string} text the summary
- * @param {{ dir: string, sections: { file: string, sentence: string }[],
- *   ownFile?: { heading: string, file: string }[] }} plan
- */
 export function splitDoc(text, plan) {
   const ownFile = plan.ownFile ?? [];
   const { preamble, sections } = sectionsOf(text);

@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 const RUN = 8;
 const WORD = /[\p{L}\p{N}]+(?:['’./_-][\p{L}\p{N}]+)*/gu;
 
-/** The words of a doc, lowercased, with each link read by its text alone. */
 export function words(text) {
   return (
     text
@@ -22,7 +21,6 @@ export function words(text) {
 const runsOf = (list, n) =>
   list.slice(0, Math.max(0, list.length - n + 1)).map((_, i) => list.slice(i, i + n).join(' '));
 
-/** The distinct runs shared by two or more docs, and the count each pair shares. */
 export function overlap(docs, n = RUN) {
   const holders = new Map();
   for (const { path, text } of docs) {
@@ -55,7 +53,6 @@ export function overlap(docs, n = RUN) {
   return { files: docs.length, shared, pairs };
 }
 
-/** The longest stretches of `a` made of runs `b` also holds, in `a`'s order. */
 export function passages(a, b, n = RUN) {
   const list = words(a);
   const held = new Set(runsOf(words(b), n));
@@ -69,7 +66,6 @@ export function passages(a, b, n = RUN) {
   return spans.map(({ start, end }) => list.slice(start, end).join(' '));
 }
 
-/** Whether a tracked path is a live doc or skill, rather than frozen or code. */
 export function isLiveDoc(path) {
   if (!path.endsWith('.md')) return false;
   if (path === 'CLAUDE.md' || path.startsWith('.claude/')) return true;
