@@ -262,7 +262,7 @@
   the lockfile and the source, with a lockfile-only restore key. The path is
   absolute because `hashFiles()` reads `$GITHUB_WORKSPACE` while the build
   writes `/app`. A pull request restores the entry `staging` saved
- , since GitHub never lets one pull request's run read a cache
+  , since GitHub never lets one pull request's run read a cache
   another pull request saved, only its own, its base branch's and `main`'s.
   The input `build-only` is how that entry is made: set, the run step adds
   `--grep-invert . --pass-with-no-tests`, so the servers build and start but

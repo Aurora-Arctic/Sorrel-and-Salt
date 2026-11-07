@@ -65,7 +65,7 @@ convention) and split across two schema files:
   above are ordinary Drizzle `pgTable` definitions; `npm run db:generate`
   (`drizzle-kit generate`) diffed them the same way it would any other
   table and wrote `src/db/migrations/0001_lucky_centennial.sql`
- , `0002_solid_marauders.sql` and
+  , `0002_solid_marauders.sql` and
   `0003_sweet_madame_masque.sql`. Better Auth never pushes or
   alters schema at request time.
 - **Don't regenerate this schema with `@better-auth/cli`.** The documented

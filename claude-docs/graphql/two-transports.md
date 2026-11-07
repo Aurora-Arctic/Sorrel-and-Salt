@@ -55,7 +55,7 @@ resolve: async (_query, { workspaceId }, { session }) =>
   have checked. Each service's tests refuse by direct call
   (`tests/modules/*/services/`), and each field's GraphQL file reads the same
   refusal as the browser does, `extensions.code` through the shared harness
- . A test of the two paths agreeing over a throwaway schema went with
+  . A test of the two paths agreeing over a throwaway schema went with
   MB.227: with the check in the service and nowhere else, it repeated both.
 - **The boundary is mechanical.** Lint stops a resolver, page or component
   importing anything under `src/db` at runtime, and `server-only` fails the

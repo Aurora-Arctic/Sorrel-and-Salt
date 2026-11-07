@@ -43,13 +43,13 @@ limiter counts them the same way, per client address and path, and the rules
 below come from Better Auth's own source (`dist/api/rate-limiter/index.mjs` and
 `dist/plugins/two-factor/index.mjs`) unless a task is named.
 
-| Route                                                         | Limit              | Where the rule comes from                                                                         |
-| ------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
-| `/sign-up/*`, `/change-password`, `/change-email`             | 3 per 10 seconds   | Better Auth's built-in rule, with `/sign-in/*`                                                    |
-| `/request-password-reset`, `/forget-password*`                | 3 per 60 seconds   | Better Auth's built-in rule, with `/send-verification-email`                                      |
+| Route                                                         | Limit              | Where the rule comes from                                                                 |
+| ------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| `/sign-up/*`, `/change-password`, `/change-email`             | 3 per 10 seconds   | Better Auth's built-in rule, with `/sign-in/*`                                            |
+| `/request-password-reset`, `/forget-password*`                | 3 per 60 seconds   | Better Auth's built-in rule, with `/send-verification-email`                              |
 | `/reset-password` and `/reset-password/:token`                | 100 per 10 seconds | No special rule, so the every-other-path default; the token's 15-minute life is its guard |
-| `/two-factor/*`                                               | 3 per 10 seconds   | The `twoFactor` plugin's own rule                                                                 |
-| `/passkey/*`, which includes `/passkey/verify-authentication` | 3 per 10 seconds   | A `customRules` entry M16.7 adds, because the passkey plugin ships no rate rule                   |
+| `/two-factor/*`                                               | 3 per 10 seconds   | The `twoFactor` plugin's own rule                                                         |
+| `/passkey/*`, which includes `/passkey/verify-authentication` | 3 per 10 seconds   | A `customRules` entry M16.7 adds, because the passkey plugin ships no rate rule           |
 
 The `/passkey/*` rule counts every passkey route, so it also limits listing,
 renaming and removing passkeys on the account page, three a path per ten

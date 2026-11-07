@@ -133,7 +133,7 @@ name and address, and carries Stop Impersonating, at the top of every page
   absent where it is shut (one environment each way, the gate's matrix
   covering the rest), and the declined ban columns. That a keeper target is refused is the
   db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
- .
+  .
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-keeper is
   refused, a keeper target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/keepers`'s check

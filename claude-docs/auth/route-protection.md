@@ -15,7 +15,7 @@ answer.
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
- ; `/sign-in`; `/forgot-password` and `/reset-password`, since a
+  ; `/sign-in`; `/forgot-password` and `/reset-password`, since a
   person who has forgotten their password has no session
   ([`passwords.md`](passwords.md)); `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
@@ -142,7 +142,7 @@ navigation.
   A non-keeper who is already in a coven is sent into its page directly
   (`signedInLanding` in `src/lib/landing.ts`, the first coven the switcher
   lists), not to `/coven`
- : `/coven` answers such a visitor with a redirect to that page, and
+  : `/coven` answers such a visitor with a redirect to that page, and
   the dev server compiles both routes on the way, which showed as a blank page.
   A production build answers `/coven` with a bodiless 307 in about 60 ms, so
   the stop was the dev server's alone; the hop is gone from both. Someone in no
