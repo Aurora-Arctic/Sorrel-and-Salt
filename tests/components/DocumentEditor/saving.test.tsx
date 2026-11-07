@@ -23,15 +23,11 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// What the editor does around a write: a publish reads the page again, so what the page drew from the server (the version
-// number) describes the version just published; and typed text is not lost to a link, a tab close or a reload.
-
 beforeEach(() => {
   router.push.mockClear();
   router.refresh.mockClear();
 });
 
-/** A link elsewhere on the page, as the site menu is. */
 function Go() {
   const navigation = usePendingNavigation();
   return (
@@ -41,7 +37,6 @@ function Go() {
   );
 }
 
-/** Renders the editor on its page, in the site's NavigationProvider, with an open draft at `revision`. */
 async function renderOnPage({ revision = null }: { revision?: number | null } = {}) {
   render(
     <NavigationProvider>
@@ -61,7 +56,6 @@ async function renderOnPage({ revision = null }: { revision?: number | null } = 
   return screen.findByRole('textbox', { name: 'Document Text' });
 }
 
-/** Changes the text as a keeper does, by bolding a word, and waits until the editor reads it as unsaved. */
 async function change(text: HTMLElement): Promise<void> {
   const node = document.createTreeWalker(text, NodeFilter.SHOW_TEXT).nextNode() as Text;
   const range = document.createRange();
@@ -85,7 +79,6 @@ async function change(text: HTMLElement): Promise<void> {
   await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeEnabled());
 }
 
-/** A tab close or reload as the browser raises it: true when something cancelled it. */
 function unload(): boolean {
   const event = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(event);
@@ -117,8 +110,7 @@ describe('publishing', () => {
   });
 });
 
-// The guard's shape (Keep Editing, Discard Changes, a dialog outside the form) is proved once at
-// tests/components/Modal/discard.test.tsx; this is the editor's wiring of it.
+// The guard's shape is tests/components/Modal/discard.test.tsx's; this is the editor's wiring.
 describe('leaving with unsaved changes', () => {
   it('holds a link and a tab close once the text is changed', async () => {
     const text = await renderOnPage();
@@ -160,7 +152,6 @@ describe('leaving with unsaved changes', () => {
     expect(router.push).toHaveBeenCalledExactlyOnceWith('/compendium');
   });
 
-  // A publish with changed text saves them first, so they are on their way to the server, as a save in flight is.
   it('lets a tab close go while a publish of the changed text is in flight', async () => {
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {

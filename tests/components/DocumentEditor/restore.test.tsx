@@ -16,10 +16,6 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider } = await import('@/lib/navigation');
 
-// Restore Published Version throws the draft away: it asks first, deletes the open draft at the revision the editor holds, and
-// puts the published text back in the editor, leaving nothing to save or publish. With no draft open it only puts the text back,
-// as there is nothing on the server to delete. Readers see no change, which documents' service tests prove.
-
 const PUBLISHED = 'Fixturewort grows here.';
 const DRAFT = 'Fixturewort grows in the draft.';
 const RESTORE = 'Restore Published Version';
@@ -36,7 +32,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Renders the editor on `body`, with the draft at `revision` open, or none. */
 async function renderEditor({ body, revision }: { body: string; revision: number | null }) {
   render(
     <NavigationProvider>
@@ -55,7 +50,6 @@ async function renderEditor({ body, revision }: { body: string; revision: number
   return screen.findByRole('textbox', { name: 'Document Text' });
 }
 
-/** Changes the text as a keeper does, by bolding a word, and waits until the editor reads it as unsaved. */
 async function change(text: HTMLElement): Promise<void> {
   const node = document.createTreeWalker(text, NodeFilter.SHOW_TEXT).nextNode() as Text;
   const range = document.createRange();
@@ -78,7 +72,6 @@ async function change(text: HTMLElement): Promise<void> {
   await waitFor(() => expect(saveDraft()).toBeEnabled());
 }
 
-/** Records each discard, answering the discarded draft's id. */
 function acceptDiscards(): DiscardVariables[] {
   const sent: DiscardVariables[] = [];
   mockGraphQLMutation<{ discardDocumentDraft: string }, DiscardVariables>(
@@ -91,7 +84,6 @@ function acceptDiscards(): DiscardVariables[] {
   return sent;
 }
 
-/** Records each draft save, so a test can prove none was sent. */
 function recordSaves(): SaveDocumentDraftMutationVariables[] {
   const sent: SaveDocumentDraftMutationVariables[] = [];
   mockGraphQLMutation<SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables>(
@@ -106,16 +98,13 @@ function recordSaves(): SaveDocumentDraftMutationVariables[] {
 
 const saveDraft = () => screen.getByRole('button', { name: 'Save Draft' });
 const publish = () => screen.getByRole('button', { name: 'Publish' });
-/** Restore's button, or null when the editor does not offer it. */
 const restore = () => screen.queryByRole('button', { name: RESTORE });
 
-/** True when Restore cannot be pressed: not drawn, or drawn disabled. */
 function restoreUnavailable(): boolean {
   const button = restore();
   return button === null || (button as HTMLButtonElement).disabled;
 }
 
-/** A tab close or reload as the browser raises it: true when something cancelled it. */
 function unload(): boolean {
   const event = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(event);
@@ -129,13 +118,11 @@ async function confirm(question: HTMLElement): Promise<void> {
   });
 }
 
-/** Presses Restore and confirms it in the question it opens. */
 async function restoreAndConfirm(): Promise<void> {
   fireEvent.click(restore()!);
   await confirm(await screen.findByRole('dialog', { name: RESTORE }));
 }
 
-/** Leaves the editor time to autosave anything it held, and the answers to land. */
 const waitPastAutosave = () =>
   act(async () => {
     await vi.advanceTimersByTimeAsync(PAST_AUTOSAVE_MS);
@@ -153,7 +140,6 @@ describe('Restore Published Version', () => {
 
     fireEvent.click(restore()!);
     const question = await screen.findByRole('dialog', { name: RESTORE });
-    // It asks: nothing is sent until the admin confirms.
     expect(discards).toEqual([]);
     await confirm(question);
 
