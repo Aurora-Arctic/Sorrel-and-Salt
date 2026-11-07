@@ -508,3 +508,18 @@ export interface SeedDocument {
   publishedOn: Date;
   body: string;
 }
+
+/** One entry of the help list: an FAQ question, an article or sub page, or a glossary term. */
+export interface SeedHelpArticle {
+  /** The key the seed finds its row by, unique across the list. */
+  seedKey: string;
+  kind: 'faq' | 'article' | 'term';
+  audience: 'public' | 'staff' | 'keeper';
+  title: string;
+  summary: string | null;
+  body: string;
+  /** The order of an FAQ question or article; a term has none. */
+  position: number | null;
+  /** The `seedKey` of the article this is a sub page of, or null. */
+  parent: string | null;
+}

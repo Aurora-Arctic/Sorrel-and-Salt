@@ -17,6 +17,7 @@ import { seedSources } from '../src/db/seed/sources.ts';
 import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
 import { formatContentReport } from '../src/db/seed/demo-coven-content.ts';
 import { seedDocuments } from '../src/db/seed/documents.ts';
+import { seedHelp } from '../src/db/seed/help.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals, keptLines } from '../src/db/seed/compendium/report.ts';
@@ -35,6 +36,7 @@ const FLAGS: Record<string, readonly string[]> = {
   sources: ['--dry-run'],
   'demo-coven': ['--dry-run'],
   documents: ['--dry-run'],
+  help: ['--dry-run'],
   compendium: ['--dry-run', '--adopt', '--force'],
   reference: ['--dry-run', '--adopt', '--force'],
 };
@@ -74,6 +76,9 @@ try {
       console.log(line);
     }
     done("the vocabularies' sources and their links");
+  } else if (target === 'help') {
+    await seedHelp(db, { dryRun });
+    done('the help articles, the FAQ and the glossary');
   } else if (target === 'documents') {
     await seedDocuments(db, { dryRun });
     done('the privacy policy, the disclaimer, the code of ethics and the terms');
@@ -118,7 +123,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "documents", "reference" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "documents", "help", "reference" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {

@@ -14,6 +14,7 @@ import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
 import { seedDocuments } from '@/db/seed/documents';
+import { seedHelp } from '@/db/seed/help';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
@@ -191,6 +192,12 @@ const SEED_ENTRIES: SeedEntry[] = (
       name: 'the documents seed',
       seed: seedDocuments,
       tables: ['documents', 'document_versions'],
+    },
+    {
+      // The help articles and the glossary, the real list: a few dozen rows, few enough for every sweep.
+      name: 'the help seed',
+      seed: seedHelp,
+      tables: ['help_articles'],
     },
   ] satisfies Omit<SeedEntry, 'run'>[]
 ).map((entry: Omit<SeedEntry, 'run'>) => ({
