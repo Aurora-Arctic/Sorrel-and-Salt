@@ -3,6 +3,7 @@ import AdminNav from '../../../components/AdminNav';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
 import SectionBody from '../../../components/SectionBody';
+import StaffHelpLink from '../../../components/StaffHelpLink';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
@@ -37,11 +38,8 @@ export default async function KeepersLayout({ children }: AdminLayoutProps) {
       >
         <AdminNav managesPeople={session.role === 'admin'} needsStaff={needsStaff} />
       </ContextRow>
+      <StaffHelpLink />
       <SectionBody region="admin" className="page-column">
-        {/* The staff and keeper help pages, which only a curator reads. */}
-        <nav aria-label="Staff help">
-          <PendingLink href="/help/staff">Staff Help</PendingLink>
-        </nav>
         {children}
       </SectionBody>
     </RouteModalProvider>

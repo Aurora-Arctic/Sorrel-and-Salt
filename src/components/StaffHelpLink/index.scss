@@ -1,0 +1,13 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// In the page column's own edges, as the demo coven's notice is. The end margin takes back the column's top padding
+// beyond its gap, so the page beneath starts where it did when the link stood inside the column.
+.staff-help-link {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: $wide-column;
+  margin-inline: auto;
+  margin-block-end: calc(#{space(5)} - #{space(6)});
+  padding: space(6) space(4) 0;
+}
