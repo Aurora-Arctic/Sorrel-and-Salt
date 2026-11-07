@@ -1,0 +1,16 @@
+@use '../../scss/variables' as *;
+
+.help-glossary {
+  &__entry {
+    margin-block-end: space(5);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  dt {
+    font-weight: 600;
+  }
+
+  dd {
+    margin-inline-start: 0;
+  }
+}

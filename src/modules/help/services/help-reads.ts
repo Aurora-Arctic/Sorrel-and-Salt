@@ -2,6 +2,7 @@ import 'server-only';
 import {
   findHelpArticleBySlug,
   findHelpArticleChildren,
+  findHelpArticlePathPage,
   findHelpArticleIndexPage,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
@@ -16,38 +17,68 @@ import type { PageEntry, PageRequest } from '@/lib/types';
 import { assertCurator } from '@/modules/identity';
 import type { HelpArticle, HelpArticleWithChildren, HelpReach } from '../types';
 import { reachOf } from './reach';
-import { toHelpArticle } from './rows';
+import { toHelpArticles } from './rows';
 
 // The public reads take no session: a signed-out reader sees what any reader sees, and a staff or keeper row, a draft or a deleted one is never answered.
 // The staff reads and the search are never cached, since what they answer depends on who asks.
 
-const mapPage = (entries: PageEntry<HelpArticleRow>[]): PageEntry<HelpArticle>[] =>
-  entries.map(({ node, cursor }) => ({ node: toHelpArticle(node), cursor }));
+async function mapPage(
+  entries: PageEntry<HelpArticleRow>[],
+  reach: HelpReach,
+): Promise<PageEntry<HelpArticle>[]> {
+  const nodes = await toHelpArticles(
+    entries.map((entry) => entry.node),
+    reach,
+  );
+  return entries.map(({ cursor }, index) => ({ node: nodes[index], cursor }));
+}
 
 async function withChildren(
   row: HelpArticleRow,
   reach: HelpReach,
 ): Promise<HelpArticleWithChildren> {
   const children = row.kind === 'article' ? await findHelpArticleChildren(reach, [row.id]) : [];
-  return { ...toHelpArticle(row), children: children.map(toHelpArticle) };
+  const [article, ...answered] = await toHelpArticles([row, ...children], reach);
+  return { ...article, children: answered };
 }
 
 async function publicFaq(page: PageRequest) {
-  return mapPage(await findHelpFaqPage(page));
+  return mapPage(await findHelpFaqPage(page), 'public');
 }
 
 async function publicIndex(page: PageRequest) {
-  return mapPage(await findHelpArticleIndexPage(page));
+  return mapPage(await findHelpArticleIndexPage(page), 'public');
 }
 
 async function publicGlossary(page: PageRequest) {
-  return mapPage(await findHelpGlossaryPage(page));
+  return mapPage(await findHelpGlossaryPage(page), 'public');
+}
+
+// Wide enough for every public article the help centre will hold; the sitemap lists no more.
+const PATHS_LIMIT = 2001;
+
+async function publicPaths(): Promise<string[]> {
+  const entries = await findHelpArticlePathPage({ limit: PATHS_LIMIT, inverted: false });
+  const rows = entries.map((entry) => entry.node);
+  const topLevel = new Map(rows.filter((row) => !row.parentId).map((row) => [row.id, row.slug]));
+  return rows.flatMap((row) => {
+    if (!row.parentId) return [`/help/${row.slug}`];
+    const parent = topLevel.get(row.parentId);
+    return parent ? [`/help/${parent}/${row.slug}`] : [];
+  });
 }
 
 async function publicArticle(slug: string): Promise<HelpArticleWithChildren> {
   const row = await findHelpArticleBySlug(slug, 'public');
   if (!row) throw new NotFound('Help article not found');
   return withChildren(row, 'public');
+}
+
+const cachedPaths = cachedHelpRead('help-paths', publicPaths);
+
+/** The address of each public article and public sub page, which the sitemap lists. Takes no session: one cached read for every viewer. */
+export function listHelpArticlePaths(): Promise<string[]> {
+  return cachedPaths();
 }
 
 /** The public FAQ entries, in position order. */
@@ -89,7 +120,8 @@ export async function listStaffHelpArticles(
   page: PageRequest,
 ): Promise<PageEntry<HelpArticle>[]> {
   assertCurator(session);
-  return mapPage(await findHelpArticleStaffPage(reachOf(session), page));
+  const reach = reachOf(session);
+  return mapPage(await findHelpArticleStaffPage(reach, page), reach);
 }
 
 /** The rows the reader reaches that `query` finds, best first; a blank query finds none. A null session is a signed-out reader. */
@@ -100,6 +132,11 @@ export async function searchHelp(
 ): Promise<PageEntry<HelpArticle, { score: number }>[]> {
   const text = query.trim();
   if (text === '') return [];
-  const entries = await findHelpArticleSearchPage(reachOf(session), text, page);
-  return entries.map(({ node, cursor, score }) => ({ node: toHelpArticle(node), cursor, score }));
+  const reach = reachOf(session);
+  const entries = await findHelpArticleSearchPage(reach, text, page);
+  const nodes = await toHelpArticles(
+    entries.map((entry) => entry.node),
+    reach,
+  );
+  return entries.map(({ cursor, score }, index) => ({ node: nodes[index], cursor, score }));
 }

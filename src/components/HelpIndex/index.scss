@@ -1,0 +1,25 @@
+@use '../../scss/variables' as *;
+
+.help-index {
+  h2 {
+    margin-block: space(8) space(3);
+  }
+
+  &__guides {
+    padding: 0;
+    list-style: none;
+
+    li + li {
+      margin-block-start: space(3);
+    }
+
+    p {
+      margin-block: space(1) 0;
+    }
+  }
+
+  &__faq {
+    margin-block-end: space(6);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+}

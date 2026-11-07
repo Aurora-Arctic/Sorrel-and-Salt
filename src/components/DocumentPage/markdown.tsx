@@ -189,14 +189,14 @@ function visitElements(node: Root | Element, visit: (element: Element) => void):
   }
 }
 
-function sectionsOf(tree: Root): PageNavEntry[] {
+function sectionsOf(tree: Root, reserved: readonly string[]): PageNavEntry[] {
   const headings: Element[] = [];
   visitElements(tree, (element) => {
     if (element.tagName === 'h2' || element.tagName === 'h3') headings.push(element);
   });
   const entries: PageNavEntry[] = [];
   // The page's own ids are taken first, so a body heading never claims one; a repeated text gets -2, -3 after the first.
-  const taken = new Set(['document-title', 'document-history']);
+  const taken = new Set(['document-title', 'document-history', ...reserved]);
   let group: string | null = null;
   headings.forEach((heading, index) => {
     const label = textOf(heading);
@@ -220,6 +220,8 @@ function sectionsOf(tree: Root): PageNavEntry[] {
 export function renderMarkdown(
   body: string,
   placeholders: DocumentPlaceholders = {},
+  // Ids a heading must not take, for a page that anchors other elements by id.
+  reserved: readonly string[] = [],
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
@@ -229,6 +231,6 @@ export function renderMarkdown(
   ) as RootContent[];
   tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
   visitElements(tree, shapeFootnotes);
-  const entries = sectionsOf(tree);
+  const entries = sectionsOf(tree, reserved);
   return { content: reactProcessorFor(placeholders).stringify(tree) as ReactNode, entries };
 }

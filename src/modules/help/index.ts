@@ -1,6 +1,7 @@
 // The help module's behaviour surface. Its table is reached at `@/modules/help/schema/*`.
 export { createHelpArticle, deleteHelpArticle, updateHelpArticle } from './services/help-writes';
 export {
+  listHelpArticlePaths,
   listStaffHelpArticles,
   readHelpArticle,
   readHelpArticleIndex,

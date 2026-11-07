@@ -30,6 +30,9 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
       <Link className="btn btn--quiet" href="/compendium">
         Browse the Compendium
       </Link>
+      <Link className="btn btn--quiet" href="/help">
+        Help
+      </Link>
     </p>
   </div>
 );

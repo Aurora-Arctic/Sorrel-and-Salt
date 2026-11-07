@@ -315,6 +315,8 @@ export const rules = {
           'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
         'src/components/PasswordSection/index.tsx':
           'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
+        'src/components/HelpSearchForm/index.tsx':
+          'a one-field search that submits as a page load: nothing typed waits on a Save',
         'src/components/FilterForm/index.tsx':
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':

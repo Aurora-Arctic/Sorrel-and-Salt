@@ -12,6 +12,9 @@ export const NotFoundScreen = (): ReactElement => (
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
     </Link>
+    <Link className="btn btn--quiet" href="/help">
+      Help
+    </Link>
     <ReportThis code={404} />
   </ErrorPage>
 );

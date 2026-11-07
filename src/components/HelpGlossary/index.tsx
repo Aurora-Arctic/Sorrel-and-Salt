@@ -1,0 +1,34 @@
+import type { ReactElement } from 'react';
+import { renderMarkdown } from '../DocumentPage/markdown';
+import HelpSearchForm from '../HelpSearchForm';
+import PageHeader from '../PageHeader';
+import type { HelpGlossaryProps } from './types';
+import './index.scss';
+
+// The glossary: one term and definition per row, each anchored by its slug so /help/glossary#steward lands on it
+// (claude-docs/components/help-pages.md).
+const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
+  // A heading in a definition never takes a term's id, or another definition's heading id.
+  const reserved = terms.map((term) => term.slug);
+  const definitions = terms.map((term) => {
+    const { content, entries } = renderMarkdown(term.body, {}, reserved);
+    reserved.push(...entries.map(({ href }) => href.slice(1)));
+    return content;
+  });
+  return (
+    <div className="help-glossary">
+      <PageHeader title="Glossary" />
+      <HelpSearchForm />
+      <dl>
+        {terms.map((term, index) => (
+          <div key={term.slug} id={term.slug} className="help-glossary__entry">
+            <dt>{term.title}</dt>
+            <dd>{definitions[index]}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+};
+
+export default HelpGlossary;

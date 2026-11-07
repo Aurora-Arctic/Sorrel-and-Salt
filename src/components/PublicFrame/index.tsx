@@ -14,6 +14,7 @@ import './index.scss';
 
 const COMPENDIUM_LINK: readonly SiteLink[] = [
   { label: 'Compendium', href: '/compendium', base: '/compendium' },
+  { label: 'Help', href: '/help', base: '/help' },
 ];
 
 const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (

@@ -1,0 +1,13 @@
+@use '../../scss/variables' as *;
+
+.help-search {
+  display: flex;
+  gap: space(2);
+  max-width: $measure;
+  margin-block: space(4);
+
+  .input {
+    flex: 1;
+    min-width: 0;
+  }
+}

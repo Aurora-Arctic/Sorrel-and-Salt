@@ -106,6 +106,29 @@ export async function findHelpArticleChildren(
   return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
 }
 
+/** The slug of each live row among these ids that `reach` admits, keyed by id: how a child names its parent. */
+export async function findHelpArticleSlugsByIds(
+  reach: HelpReach,
+  ids: readonly string[],
+): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const rows = await selectFrom(
+    helpArticles,
+    and(notSoftDeleted(helpArticles), inArray(helpArticles.id, [...ids]), admits(reach)),
+  );
+  return new Map(rows.map((row) => [row.id, row.slug]));
+}
+
+/** One page of the live public articles of any depth, A to Z: what the sitemap lists. */
+export function findHelpArticlePathPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
+  return findPage(
+    helpArticles,
+    A_TO_Z,
+    page,
+    and(eq(helpArticles.kind, 'article'), admits('public')),
+  );
+}
+
 /** Every live child of one parent, whatever its audience: how a write checks the structure rules. */
 export function findAllHelpArticleChildren(parentId: string): Promise<HelpArticleRow[]> {
   return selectFrom(

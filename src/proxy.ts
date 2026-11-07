@@ -30,6 +30,9 @@ const PUBLIC_ROUTES = [
   '/terms/versions/*',
   '/code-of-ethics',
   '/code-of-ethics/versions/*',
+  '/help',
+  '/help/glossary',
+  '/help/search',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
@@ -45,9 +48,15 @@ const PUBLIC_ROUTES = [
   '/opengraph-image', // the site share card for `/`; the compendium's cards sit under /compendium/*
 ];
 
+/** A public help article is /help/<slug> or /help/<parent>/<slug>; /help/staff and everything beneath it is for curators and keepers. */
+const HELP_ARTICLE = /^\/help\/(?!staff(?:\/|$))[^/]+(?:\/[^/]+)?$/;
+
 function isPublic(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) =>
-    route.endsWith('/*') ? pathname.startsWith(route.slice(0, -1)) : pathname === route,
+  return (
+    HELP_ARTICLE.test(pathname) ||
+    PUBLIC_ROUTES.some((route) =>
+      route.endsWith('/*') ? pathname.startsWith(route.slice(0, -1)) : pathname === route,
+    )
   );
 }
 

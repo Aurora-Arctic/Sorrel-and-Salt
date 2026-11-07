@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { CuratorNav } from '../../../components/AdminNav';
 import { adminTarget } from '../../../components/AdminNav/target';
 import { PendingLink } from '../../../lib/navigation';
@@ -41,6 +42,10 @@ export default async function CuratorLayout({ children }: AdminLayoutProps) {
         <CuratorNav />
       </ContextRow>
       <SectionBody region="admin" className="page-column">
+        {/* The staff and keeper help pages, which only a curator reads. */}
+        <p>
+          <Link href="/help/staff">Staff Help</Link>
+        </p>
         {children}
       </SectionBody>
     </RouteModalProvider>

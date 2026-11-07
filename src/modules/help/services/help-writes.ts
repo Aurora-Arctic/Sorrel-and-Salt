@@ -24,7 +24,7 @@ import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
 } from '../validation/help';
-import { toHelpArticle } from './rows';
+import { toHelpArticles } from './rows';
 
 // The keeper's writing of the help centre. Every call is a keeper's alone: a curator reads staff help and writes none of it.
 
@@ -125,7 +125,7 @@ export async function createHelpArticle(
     }),
   );
   expireHelp();
-  return toHelpArticle(row);
+  return (await toHelpArticles([row], 'keeper'))[0];
 }
 
 /**
@@ -169,7 +169,7 @@ export async function updateHelpArticle(
   );
   if (!row) throw new NotFound('Help article not found');
   expireHelp();
-  return toHelpArticle(row);
+  return (await toHelpArticles([row], 'keeper'))[0];
 }
 
 /**

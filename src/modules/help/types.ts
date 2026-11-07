@@ -14,6 +14,8 @@ export interface HelpArticle {
   body: string;
   position: number | null;
   parentId: string | null;
+  /** The parent's slug, which a page address is built from; null for a top-level row. */
+  parentSlug: string | null;
 }
 
 export type HelpArticleWithChildren = HelpArticle & { children: HelpArticle[] };

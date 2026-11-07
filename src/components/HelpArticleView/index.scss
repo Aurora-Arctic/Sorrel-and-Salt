@@ -1,0 +1,32 @@
+@use '../../scss/variables' as *;
+
+.help-article__body {
+  margin-block-start: space(6);
+
+  h2 {
+    margin-block: space(8) space(3);
+  }
+
+  ul,
+  ol {
+    max-width: $measure;
+    margin-block: space(2) space(4);
+  }
+}
+
+.help-article__subpages {
+  margin-block-start: space(8);
+
+  ul {
+    padding: 0;
+    list-style: none;
+  }
+
+  li + li {
+    margin-block-start: space(3);
+  }
+
+  p {
+    margin-block: space(1) 0;
+  }
+}

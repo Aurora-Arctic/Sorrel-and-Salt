@@ -201,6 +201,8 @@ export {
   findAllHelpArticleChildren,
   findHelpArticleBySlug,
   findHelpArticleChildren,
+  findHelpArticlePathPage,
+  findHelpArticleSlugsByIds,
   findHelpArticleHoldingSlug,
   findHelpArticleIndexPage,
   findHelpArticleSearchPage,
