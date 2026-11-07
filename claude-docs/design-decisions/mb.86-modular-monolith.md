@@ -1,6 +1,6 @@
 # MB.86 — Domain modules with a guarded boundary
 
-**Decided (2026-09-27):** `src/` is a modular monolith. Five domain modules under `src/modules/`, each owning its tables and its services, with a public surface and an allowed dependency graph enforced by lint and by a guard test. The `ingredients` table stays one table with two tiers, and the reads that cross the tiers are a named, countable set in the repository. Modules are directories under one package, not npm workspace packages. The approved plan, with the amendments made while executing it, is [`mb.86-plan.md`](mb.86-plan.md); the working summary is [`../modules.md`](../modules.md).
+**Decided (2026-09-27):** `src/` is a modular monolith. Five domain modules under `src/modules/`, each owning its tables and its services, with a public surface and an allowed dependency graph enforced by lint and by a guard test. The `ingredients` table stays one table with two tiers, and the reads that cross the tiers are a named, countable set in the repository. Modules are directories under one package, not npm workspace packages. The working summary is [`../modules.md`](../modules.md).
 
 ## What the question was
 

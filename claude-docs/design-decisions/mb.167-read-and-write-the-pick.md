@@ -7,9 +7,8 @@ MB.165 gave the pick a place: `ingredients.form_id` beside `form`, and
 ([`mb.165-record-the-picked-vocabulary-row.md`](mb.165-record-the-picked-vocabulary-row.md)).
 MB.166 filled the table from `ingredients.deities` as unlinked names. This
 task switches every reader and writer to them, and moves MB.162's compendium
-rule for the form and the deities from a spelling onto the pick. The scoping
-plan is [`mb.167-plan.md`](mb.167-plan.md). DESIGN.md §5 and §7 carry the model;
-this record carries the calls and the alternatives.
+rule for the form and the deities from a spelling onto the pick.
+DESIGN.md §5 and §7 carry the model; this record carries the calls and the alternatives.
 
 ## The owner's calls, in scoping
 

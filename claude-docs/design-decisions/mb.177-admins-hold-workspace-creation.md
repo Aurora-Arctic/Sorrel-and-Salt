@@ -7,25 +7,6 @@ as a second rule beside the flag, and no keeper row agreed with it. This
 record says why the rule became an invariant on the row rather than a second
 prong in the gate. DESIGN.md §5, `canCreateWorkspace`, carries the model.
 
-## Where things stood
-
-DESIGN.md §5 let a keeper create a workspace "regardless of the flag", and
-M6.7 was written to gate on `canCreateWorkspace` **or** the admin role. M2.9
-had a grant set the flag as well, "so the row states what the person may do"
-([`m2.9-granting-admin.md`](m2.9-granting-admin.md), "Granting"), but MB.59,
-which carries that rule, is not built. In the meantime nothing gave a keeper
-the flag:
-
-- the primary keeper's promotion (MB.60, MB.68) writes `role` alone;
-- fixture E is seeded `role: 'admin'` with the flag `false`, on purpose, so
-  that M6.7's admin prong had a fixture
-  ([`standard-scenario.md`](../db/standard-scenario.md));
-- MB.58's migration backfilled the ledger for every keeper, but not the flag.
-
-So every keeper read "No" in MB.52's `/admin/users` and sat in M5.8's
-awaiting-approval filter, which reads the flag alone. Two readers of the same
-question had two answers.
-
 ## Decision
 
 The flag is what lets anyone create a workspace, keepers included, and every

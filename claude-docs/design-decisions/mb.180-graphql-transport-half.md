@@ -2,8 +2,7 @@
 
 **Status:** decided · **Date:** 2026-10-07
 
-The owner's call, taken while scoping the test-suite consolidation
-([`mb.180-plan.md`](mb.180-plan.md)): a resolver test proves what only the
+The owner's call, taken while scoping the test-suite consolidation: a resolver test proves what only the
 transport can show, and the service test owns the rule. This record says what
 the suite had been doing instead, what a resolver test can catch, and the two
 backstops the change was accepted with. `claude-docs/testing/layer-ownership.md`

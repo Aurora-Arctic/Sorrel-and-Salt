@@ -9,8 +9,8 @@ Two tables recorded who changed whose privileges: MB.58's
 schema file, schema test, enum and doc entry, and each relied on the service
 that changed the column remembering to write the row. A third privilege would
 have been a third of everything. The owner asked how to stop ledgers
-multiplying; this record is the answer, reached in
-[`mb.194-plan.md`](mb.194-plan.md). DESIGN.md §5, `user_privilege_changes`,
+multiplying; this record is the answer.
+DESIGN.md §5, `user_privilege_changes`,
 carries the model.
 
 ## The model

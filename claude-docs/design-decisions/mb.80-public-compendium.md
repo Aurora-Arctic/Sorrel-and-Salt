@@ -1,6 +1,6 @@
 # MB.80 — The compendium is public and search-indexable
 
-**Decided:** the compendium list and every compendium entry are public and search-indexable, as DESIGN.md §1 and §9 specify, while `canCreateWorkspace`, memberships, a workspace's ingredients and its grimoire stay exactly as gated. The approved plan, with the facts read and the questions asked on the way, is [`mb.80-plan.md`](mb.80-plan.md).
+**Decided:** the compendium list and every compendium entry are public and search-indexable, as DESIGN.md §1 and §9 specify, while `canCreateWorkspace`, memberships, a workspace's ingredients and its grimoire stay exactly as gated.
 
 ## The shape
 
@@ -38,16 +38,3 @@ MB.81 lands the columns and the table; MB.82 the behaviour. Table first, behavio
 ## v2: suggesting a change to an entry
 
 The public entry page is where a reader notices a correspondence is wrong, so §13's suggestion queue gains a second subject: a proposed change to an existing entry, beside a proposed new one. DESIGN.md §13, "Compendium and category suggestions", specifies it — offered on the entry page to a signed-in account, accepted by a keeper as an ordinary compendium write — and v1 builds only the entry page's shape. Asking a visitor to sign in before suggesting is the one thing the public compendium asks of anyone, and it is what keeps the queue attributable.
-
-## Tasks
-
-| Task  | Wave | What                                                                                             |
-| ----- | ---- | ------------------------------------------------------------------------------------------------ |
-| MB.80 | 7    | This record, the plan, and the doc and criteria changes                                          |
-| MB.81 | 8    | `ingredients.slug`, the pending-slug columns and `retired_ingredient_slugs`, after M4.8          |
-| MB.82 | 8    | The slug rule: set on create, follow a rename, retire with a 308, reserve and claim, after M5.2  |
-| MB.83 | 12   | Proxy entries and the public frame, which draws the chrome on the server, before M8.18           |
-| MB.84 | 12   | robots, sitemap, page metadata and noindex off production, after M8.19                           |
-| MB.85 | 12   | Story 63 — a visitor reads the compendium without signing in — its acceptance test and e2e, last |
-
-M5.2, M5.5, M8.5, M8.6, M8.18 and M8.19 were amended in place rather than re-minted; their entries in `TASKS.md` say what changed.

@@ -18,8 +18,7 @@ keeper's to-do filter; and the vocabulary seeds' sources written as rows. This
 record settles what those leave open, and why. The build is MB.152 (the
 tables), MB.153 (the services and the renderer), MB.154 (the form), MB.155
 (the page) and MB.156 (the seed). DESIGN.md §5 carries the model; this record
-carries the alternatives. The scoping plan is
-[`mb.151-plan.md`](mb.151-plan.md).
+carries the alternatives.
 
 ## What the research changed
 

@@ -2,7 +2,7 @@
 
 **Status:** decided and built; the owner has run no full test suite yet (Q0) and runs `/design-sync` at the end · **Date:** 2026-10-29 to 2026-10-30
 
-The approved plan, as it ran, is stored beside this record as [`mb.123-plan.md`](mb.123-plan.md). This record wins where the two differ.
+This record wins where the two differ.
 
 ## 1. Context
 

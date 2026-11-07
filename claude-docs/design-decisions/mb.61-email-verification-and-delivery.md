@@ -29,8 +29,7 @@ The work is six new tasks, three rewritten in place, and one re-scoped:
 - M7.3, M7.4 and M7.5 are rewritten for delivery by mail.
 
 MB.69 and MB.70 are separate because CLAUDE.md puts a table and the service
-that governs it in separate tasks. The approved plan that produced this record
-is beside it as [`mb.61-plan.md`](mb.61-plan.md).
+that governs it in separate tasks.
 
 ## Where things stand
 
@@ -233,7 +232,7 @@ mapped in `src/lib/sign-in.ts` to one sentence, the same whatever the cause:
 sign in the way you did before, then add this provider under Account. A
 squatted address and a never-vouching provider over an existing row redirect
 with the same code, and a sentence naming the squat would confirm the address
-is taken (MB.71, [`mb.71-plan.md`](mb.71-plan.md)).
+is taken (MB.71, [`mb.71-link-a-second-sign-in-method.md`](mb.71-link-a-second-sign-in-method.md)).
 
 ## The audit trail, against rules 1 and 3
 
@@ -308,7 +307,7 @@ records, and a Mailtrap account with one sandbox. Both go into `secrets.md`'s
 
 ## MB.54: the email page
 
-**Corrected by MB.54's build** ([`mb.54-plan.md`](mb.54-plan.md)): a change
+**Corrected by MB.54's build** ([`mb.54-email-page.md`](mb.54-email-page.md)): a change
 never writes `users.email` and never unverifies a row, because an established
 account marked unverified would be older than the cap below and swept; the
 new address is mailed Better Auth's own change link instead. The shape is

@@ -8,7 +8,7 @@
 - **A context row** beneath it. On a coven page its left end names the coven and _is_ the coven switcher. On an admin page it reads "Admin" as plain text. The section nav sits beside it as icon tabs, separated by a hairline.
 - **A bottom bar on a phone.** At 40rem and narrower the section nav leaves the row and becomes a bar along the bottom of the screen, in the thumb zone.
 
-This also folds MB.122, the design review of the navigation, into MB.7. Once the design is chosen before the build, the review and the build are one piece of work. The scoping plan is [`mb.7-plan.md`](mb.7-plan.md).
+This also folds MB.122, the design review of the navigation, into MB.7. Once the design is chosen before the build, the review and the build are one piece of work.
 
 ## The Problem
 

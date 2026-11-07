@@ -2,7 +2,7 @@
 
 **Status:** decided · **Date:** 2026-10-11 (settled with the owner on 2026-10-10)
 
-An ingredient's forms used to be separate entries. This record says why they become rows beneath one entry, what each row carries, and what was turned down. The scoping plan that led here is [`mb.215-plan.md`](mb.215-plan.md); DESIGN.md §5 (`ingredient_variants` and "Ingredient identity — the formal name") carries the model, and MB.216 to MB.223 build it.
+An ingredient's forms used to be separate entries. This record says why they become rows beneath one entry, what each row carries, and what was turned down. DESIGN.md §5 (`ingredient_variants` and "Ingredient identity — the formal name") carries the model, and MB.216 to MB.223 build it.
 
 ## The problem
 

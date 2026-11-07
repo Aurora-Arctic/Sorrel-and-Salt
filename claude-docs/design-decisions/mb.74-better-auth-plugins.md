@@ -21,9 +21,6 @@ The outcome is four follow-up tasks and one change to §13:
 - **Passkeys become the v2 first-party credential** in DESIGN.md §13, in
   place of email and password.
 
-The approved plan that produced this record is beside it as
-[`mb.74-plan.md`](mb.74-plan.md).
-
 ## The frame
 
 The site signs in through four OAuth providers and nothing else, and it is

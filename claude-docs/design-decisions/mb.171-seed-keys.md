@@ -10,8 +10,8 @@ that every vocabulary seed has the same gap: they key by slug, the slug is
 derived from the name, and M5.6, M5.6a, M5.6b, MB.95 and MB.132 all rename a
 row and re-slug it. `deploy.yml` reseeds whenever a push touches a seed file,
 so the twin arrives on the first such deploy after the edit. The owner chose a
-stable key on every seeded row, for every data type this can happen to
-([`mb.171-plan.md`](mb.171-plan.md)). The build is MB.171 (the column), MB.172
+stable key on every seeded row, for every data type this can happen to.
+The build is MB.171 (the column), MB.172
 (the vocabulary seeds keyed on it) and MB.156 (the sources seed, keyed from its
 first row). DESIGN.md §5, "`seedKey`", carries the model; this record carries
 the alternatives.

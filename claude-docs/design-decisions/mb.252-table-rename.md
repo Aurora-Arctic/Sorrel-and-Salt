@@ -2,7 +2,7 @@
 
 **Status:** decided · **Date:** 2026-10-12 (scoped in the task; the index names were the owner's call)
 
-**Decided:** `planets` is renamed `celestial_bodies` in one migration, `0067_celestial-bodies-expand`. A view named `planets` over the new table serves the deploy that is still running. The table's indexes, its CHECK and its foreign keys take the new name in the same migration. The scoping plan is [`mb.252-plan.md`](mb.252-plan.md), and the pattern for the next table rename is in [`db/expand-contract.md`](../db/expand-contract.md), "Renaming a table".
+**Decided:** `planets` is renamed `celestial_bodies` in one migration, `0067_celestial-bodies-expand`. A view named `planets` over the new table serves the deploy that is still running. The table's indexes, its CHECK and its foreign keys take the new name in the same migration. The pattern for the next table rename is in [`db/expand-contract.md`](../db/expand-contract.md), "Renaming a table".
 
 ## The question the task asked first
 

@@ -4,7 +4,7 @@
 
 **Note, 2026-10-12 (MB.115):** an entry heading is now cited `under "Mugwort"` rather than `s.v. Mugwort`, following the 18th edition of the _Chicago Manual of Style_ (14.130); every seed locator was converted, and [`db/references.md`](../db/references.md) holds the form in force.
 
-Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium a keeper fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
+Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium a keeper fills by hand. This record says why the seed is shaped as it is and what was turned down. The rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
 
 ## The problem
 
@@ -45,7 +45,6 @@ The owner reversed the wave file on 2026-10-11 and asked for "a decently large c
 
 ## Sources
 
-- The plan's research, reported by three agents on 2026-10-11, with the provenance each figure carries there: [`mb.240-plan.md`](mb.240-plan.md), "What the research found".
 - The books' editions: each file's own title and copyright pages, read on 2026-10-11 and recorded in [`db/compendium-seed/README.md`](../db/compendium-seed/README.md), "The library".
 - The repo's own precedents: `src/db/seed/sources.ts` (Wikipedia as an `entry`), [`mb.171-seed-keys.md`](mb.171-seed-keys.md) (seed keys), [`mb.215-ingredient-variants.md`](mb.215-ingredient-variants.md) (an entry and its forms).
 

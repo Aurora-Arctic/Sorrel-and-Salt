@@ -8,7 +8,7 @@ nine columns but for the workspace pair and the note, and nothing writes or
 reads either yet: M7.2 to M7.7 and MB.70 were each about to build a token
 path, an accept, a revoke, a pending list and an acceptance page on its own
 table. The owner asked for one table instead, while the copy is still a copy
-of nothing ([`mb.194-plan.md`](mb.194-plan.md), "The invitations"). DESIGN.md
+of nothing ([`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md), "The invitations"). DESIGN.md
 §5, `invitations`, carries the model; this record carries why.
 
 ## The model
@@ -89,7 +89,7 @@ table is.
 
 ## The plan's section, as approved
 
-Copied from [`mb.194-plan.md`](mb.194-plan.md), which is not maintained after its PR lands; the record above is what holds where the two differ.
+Copied from [`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md); the record above is what holds where the two differ.
 
 **`invitations`**, in `src/modules/coven/schema/invitations.ts` — `id`, `workspaceId` (nullable → `workspaces.id`), `email`, `role` (nullable `workspace_role`), `tokenHash`, `expiresAt` (default seven days), `acceptedAt`, `acceptedBy`, `revokedAt`, `note` (nullable), `...auditColumns`.
 

@@ -8,7 +8,7 @@ unique (MB.35): two live forms may both be "Wax", two live deities "Hecate".
 `ingredients.form` is text and `ingredients.deities` a `text[]`, so "Wax
 (Animal)" and "Wax (Substance)" saved alike, and nothing after the save could
 say which was picked. The owner chose to store the pick first and show it
-after ([`mb.165-plan.md`](mb.165-plan.md)). This record settles the model, and
+after. This record settles the model, and
 why. The build is MB.165 (the column and the table), MB.166 (the fill), MB.167
 (the switch), MB.168 (the drop) and MB.169 (the display), under rule 10, and
 MB.170 (the reorder control) follows from the order rule. DESIGN.md §5,
