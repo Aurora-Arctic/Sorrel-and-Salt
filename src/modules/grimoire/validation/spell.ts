@@ -97,7 +97,7 @@ export const SpellInput = SpellFields.superRefine(titleRule)
   .superRefine(categoryRule);
 
 // An update names the revision it was written against so a save over someone else's change is caught; null overwrites.
-// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Saving a recipe").
 export const UpdateSpellInput = SpellFields.extend({
   steps: z.array(SpellStepInput).optional(),
   expectedRevision: z

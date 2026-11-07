@@ -25,7 +25,7 @@ describe('StockInput', () => {
   });
 
   // `0` is out of stock and null is "we have this, unweighed"
-  // (claude-docs/db/stock.md, "Nullability"); both are values, and neither is
+  // (claude-docs/db/stock.md, "Nullability, and why zero is not the same as nothing"); both are values, and neither is
   // refused.
   it('takes zero, and takes nothing at all', () => {
     expect(StockInput.safeParse({ quantityOnHand: 0, lowStockThreshold: 0 }).success).toBe(true);

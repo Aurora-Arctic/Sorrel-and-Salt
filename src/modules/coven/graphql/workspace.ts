@@ -86,7 +86,7 @@ builder.objectField(UserRef, 'memberships', (t) =>
   }),
 );
 
-// The gate is the service's; this scope only keeps a signed-out caller out (claude-docs/graphql/schema.md, "Auth scopes").
+// The gate is the service's; this scope only keeps a signed-out caller out (claude-docs/graphql/schema.md, "Auth scopes: the second check").
 builder.mutationField('createWorkspace', (t) =>
   t.field({
     type: WorkspaceRef,

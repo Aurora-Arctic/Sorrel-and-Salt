@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
+// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
 // Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
 
 const REPOSITORY = 'src/db/repository';
@@ -19,7 +19,7 @@ const ESCAPE_HATCHES = [
   'findCupboardEntryIncludingSoftDeleted',
 ];
 
-/** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering"). */
+/** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"). */
 const INTERNAL_HATCHES: Record<string, string[]> = {
   existsInIncludingSoftDeleted: ['inUseIngredientParent'],
   findPageInScopeIncludingSoftDeleted: ['findWorkspaceIngredientPage'],

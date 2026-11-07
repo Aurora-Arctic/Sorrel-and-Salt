@@ -9,7 +9,7 @@ import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
 import type { AdminWrite, Governed, ScopeProbe } from './types';
 
-// Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes").
+// Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes: the second check").
 // Resolver files need no signed-out test of their own (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
 
 let compendiumId: string;

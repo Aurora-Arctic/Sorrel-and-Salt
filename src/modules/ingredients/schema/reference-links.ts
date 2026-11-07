@@ -12,7 +12,7 @@ import { idColumn } from '../../../db/schema-parts';
 
 // Which row a reference supports, one per citation: a nullable key per sourced table under one `num_nonnulls` CHECK. Full `auditColumns`:
 // a link is content, and unlinking leaves a tombstone (DESIGN.md §5, "References"). Adding a sourced table:
-// claude-docs/db/references.md, "Reference links schema details".
+// claude-docs/db/references.md, "References".
 
 export const nameBasis = pgEnum('name_basis', NAME_BASES);
 
@@ -50,14 +50,14 @@ export const referenceLinks = pgTable(
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
     // How the citation names the ingredient, and the field names it backs; null when nobody recorded them. Written by the seed and a curator,
-    // never on a coven's link (claude-docs/db/references.md, "Reference links schema details").
+    // never on a coven's link (claude-docs/db/references.md, "References").
     nameBasis: nameBasis('name_basis'),
     supports: text('supports').array(),
     ...auditColumns,
   },
   (table) => [
     // One live link per reference per row, partial per rule 4. Each leads on its sourced id and none on `reference_id`, which nothing reads back
-    // (claude-docs/db/references.md, "Reference links schema details").
+    // (claude-docs/db/references.md, "References").
     ...SOURCED_KEYS.map((key) =>
       uniqueIndex(`reference_links_${SOURCED[key].column.replace(/_id$/, '')}_unique`)
         .on(table[key], table.referenceId)

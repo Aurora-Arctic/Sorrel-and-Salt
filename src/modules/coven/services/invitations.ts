@@ -20,7 +20,7 @@ import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRole } from '../types';
 import { assertMembership } from './membership';
 
-// Who may invite is this service's; the token, expiry and workspace are the repository's (claude-docs/db/invitations.md, "Coven invitation service details").
+// Who may invite is this service's; the token, expiry and workspace are the repository's (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const INVITABLE: readonly WorkspaceRole[] = ['viewer', 'member'];
 
@@ -47,7 +47,7 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
 }
 
 /**
- * A second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
+ * A second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Inviting into a coven").
  *
  * @throws {Forbidden} the caller is not a steward of the coven (`member: invite`).
  * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the hourly mail limit.

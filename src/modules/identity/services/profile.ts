@@ -11,7 +11,7 @@ import type { UserRow } from '../types';
 const userById = cache((id: string) => findOneById(users, id));
 
 /**
- * `User`'s private fields are scoped again in the schema as the second check (claude-docs/graphql/schema.md, "Auth scopes").
+ * `User`'s private fields are scoped again in the schema as the second check (claude-docs/graphql/schema.md, "Auth scopes: the second check").
  *
  * @throws {NotFound} the row is gone or soft-deleted: Better Auth reads the session's user without our filter, so a session can outlive its row.
  */

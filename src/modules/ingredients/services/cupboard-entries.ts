@@ -160,7 +160,7 @@ function setColumns(input: CupboardEntryInput): Partial<CupboardEntryInput> {
   ) as Partial<CupboardEntryInput>;
 }
 
-/** Refuses a label the coven already uses, case folded; `exceptId` is the entry being written (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** Refuses a label the coven already uses, case folded; `exceptId` is the entry being written (claude-docs/db/workspace-compendium-entries.md, "Writing it"). */
 async function refuseLabelTaken(
   membership: Membership,
   label: string | null | undefined,
@@ -341,7 +341,7 @@ interface SelfLink {
   substituteVariantId: string | null;
 }
 
-/** The entry as a coven write's input, read as the entry page reads it (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** The entry as a coven write's input, read as the entry page reads it (claude-docs/db/workspace-compendium-entries.md, "Reading it"). */
 async function ownValuesOf(
   session: Session,
   merged: IngredientRow,
@@ -597,7 +597,7 @@ export async function heldCompendiumEntryIdsIn(
   return held;
 }
 
-/** The viewer's own covens that hold this compendium entry, by name; per viewer, so never cached (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** The viewer's own covens that hold this compendium entry, by name; per viewer, so never cached (claude-docs/db/workspace-compendium-entries.md, "Counting covens"). */
 export async function covensHoldingEntry(
   session: Session,
   ingredientId: string,

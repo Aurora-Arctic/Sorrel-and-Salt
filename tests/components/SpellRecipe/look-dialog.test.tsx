@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({
 const { RouteModalProvider } = await import('@/components/Modal');
 const { default: SpellLookDialog } = await import('@/components/SpellRecipe/look-dialog');
 
-// claude-docs/components/spell-recipe.md, "Quick Look"
+// claude-docs/components/spell-recipe.md, "The Quick Look modal"
 
 const LIST = '/coven/fixture-coven/grimoire' as Route;
 const RECIPE = '/coven/fixture-coven/grimoire/s1' as Route;

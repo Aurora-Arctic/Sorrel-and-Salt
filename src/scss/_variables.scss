@@ -425,7 +425,7 @@ $notice-button-ink: var(--notice-button-ink);
 
 // The opacity of `Backdrop`'s `screen` layer, which lifts its grey ornaments out of soot, and of its `multiply` layer, which sinks
 // them into parchment. One is zero on each theme, and the toggle cross-fades them. Decorative, so held to no contrast ratio
-// (claude-docs/styling.md, "$ornament-screen").
+// (claude-docs/styling.md, "`$ornament-screen` and `$ornament-multiply`").
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
 

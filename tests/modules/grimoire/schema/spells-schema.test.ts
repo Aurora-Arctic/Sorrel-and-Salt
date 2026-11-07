@@ -150,7 +150,7 @@ describe('spells table', () => {
   });
 });
 
-// Autosave writes a draft before the member may have named it, so a title is required only to complete a spell (claude-docs/db/grimoire.md, "The grimoire").
+// Autosave writes a draft before the member may have named it, so a title is required only to complete a spell (claude-docs/db/grimoire.md, "Column decisions").
 describe('a spell with no title', () => {
   const CHECK_COMPLETE_HAS_TITLE = 'spells_complete_has_title';
 

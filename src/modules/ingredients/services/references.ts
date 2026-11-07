@@ -18,7 +18,7 @@ import { type Curator, assertCurator } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { ReferenceValues } from '../types';
 
-// A reference, kept once in its tier and linked from every row it supports (claude-docs/db/references.md, "Reference service details").
+// A reference, kept once in its tier and linked from every row it supports (claude-docs/db/references.md, "Reading and writing them").
 
 /** Every optional field cleared, under the parsed input: Zod leaves an absent key absent, and an update replaces the row. */
 const NOTHING = {
@@ -120,7 +120,7 @@ export async function updateReference(
 }
 
 /**
- * One reference by id, whole, for the form that edits it, from the tiers the picker offers (claude-docs/db/references.md, "Reference service details").
+ * One reference by id, whole, for the form that edits it, from the tiers the picker offers (claude-docs/db/references.md, "Reading and writing them").
  *
  * @throws {Forbidden} a coven is named and the caller may not read its ingredients.
  * @throws {NotFound} no live reference with this id in those tiers.
@@ -139,7 +139,7 @@ export async function getReference(
 }
 
 /**
- * What the reference picker offers as `query` is typed (claude-docs/db/references.md, "Reference service details"). Asks only
+ * What the reference picker offers as `query` is typed (claude-docs/db/references.md, "Reading and writing them"). Asks only
  * `ingredient: ['read']`, so every row it returns is one a reader of this coven could already see cited.
  *
  * @throws {Forbidden} a coven is named and the caller may not read its ingredients.

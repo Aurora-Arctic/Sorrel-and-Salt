@@ -7,7 +7,7 @@ import type { Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
 
 // The categories a spell is assigned: what it intends, never the ones its ingredients bring.
-// The ids a save sends are the whole set; the pairs are reached through the spell (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// The ids a save sends are the whole set; the pairs are reached through the spell (claude-docs/db/grimoire.md, "Saving its categories").
 
 const distinctIds = (ids: readonly string[]): string[] => [...new Set(ids)];
 

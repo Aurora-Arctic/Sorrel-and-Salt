@@ -28,7 +28,7 @@ export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL 
   return sql`lower(coalesce(${canonicalName}, ${name}))`;
 }
 
-// Column names are raw and the text matches the migrations byte for byte (claude-docs/db/identity-model.md, "Ingredient table details").
+// Column names are raw and the text matches the migrations byte for byte (claude-docs/db/identity-model.md, "The ingredient identity model").
 const IDENTITY_KEY = identityKeyOf(sql.raw('name'), sql.raw('canonical_name'));
 
 // One table, two tiers: `workspace_id IS NULL` is the compendium (everyone reads, keepers write); otherwise the row is that workspace's.
@@ -42,11 +42,11 @@ export const ingredients = pgTable(
     // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
     slug: text('slug').notNull(),
     canonicalName: text('canonical_name'),
-    // No database default: the Zod variants supply or demand it (claude-docs/db/identity-model.md, "Ingredient table details").
+    // No database default: the Zod variants supply or demand it (claude-docs/db/identity-model.md, "The ingredient identity model").
     nomenclature: nomenclatureKind('nomenclature').notNull(),
 
     // The formal name alone: what the tier-split unique indexes hold once per tier. GENERATED ALWAYS, so Postgres refuses a
-    // direct write (claude-docs/db/identity-model.md, "Ingredient table details").
+    // direct write (claude-docs/db/identity-model.md, "The ingredient identity model").
     identityKey: text('identity_key').notNull().generatedAlwaysAs(IDENTITY_KEY),
     description: text('description'),
     // A list of the five elements (claude-docs/db/identity-model.md, "The ingredient identity model").
@@ -59,13 +59,13 @@ export const ingredients = pgTable(
     // Whether the ingredient as a whole is dangerous. Its own, never read into a form or out of one (DESIGN.md §5, "The toxic flag is the one exception").
     toxic: boolean('toxic').notNull().default(false),
     // The sha256 of the seeded fields of the file this entry was last written from; null on a coven's own entry and until seeded
-    // (claude-docs/db/identity-model.md, "Ingredient table details").
+    // (claude-docs/db/identity-model.md, "The ingredient identity model").
     seedContentHash: text('seed_content_hash'),
     // When a curator last reviewed the entry and who, both set or both null; the seed never overwrites a reviewed entry.
     curatorReviewedAt: timestamp('curator_reviewed_at', { withTimezone: true }),
     curatorReviewedBy: uuid('curator_reviewed_by').references(() => users.id),
     // Whether the public compendium shows the entry. A hidden entry is kept, never deleted; a coven's own entry is always shown.
-    // Nothing reads or writes it yet (claude-docs/db/identity-model.md, "Ingredient table details").
+    // Nothing reads or writes it yet (claude-docs/db/identity-model.md, "The ingredient identity model").
     shown: boolean('shown').notNull().default(true),
     // Substitutes and deities are child tables, not text lists, because a list of text cannot hold a link
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
@@ -99,7 +99,7 @@ export const ingredients = pgTable(
     ),
 
     // The formal name once per tier, whatever the form. Partial (CLAUDE.md rule 4), and two indexes because only constraints take
-    // `nullsNotDistinct()` (claude-docs/db/identity-model.md, "Ingredient table details").
+    // `nullsNotDistinct()` (claude-docs/db/identity-model.md, "The ingredient identity model").
     uniqueIndex('ingredients_compendium_identity_key_unique')
       .on(table.identityKey)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
@@ -125,7 +125,7 @@ export const ingredients = pgTable(
 
     // One multicolumn trigram index serves either column alone. Write a match as `name % $1` under a per-transaction
     // `pg_trgm.similarity_threshold`, never `similarity(...) > 0.4`, which no trigram index answers
-    // (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
+    // (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
     index('ingredients_trgm').using(
       'gin',
       sql`${table.name} gin_trgm_ops`,

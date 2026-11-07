@@ -348,7 +348,7 @@ function layerIdentity(
 
 /**
  * A jar's recipe is seeded whole or not at all: a step's identity is a place in a shared sequence, so patching one into an
- * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
+ * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "Idempotency, and a jar's stack seeded whole or not at all").
  */
 export async function insertMissingSteps(
   tx: SeedTransaction,

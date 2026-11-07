@@ -9,7 +9,7 @@ import { browserUrl } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make: the rows a Discord sign-in
 // would leave go straight to this worker's slot database, with a session cookie signed by the build's
-// secret (claude-docs/testing/e2e.md, "E2E").
+// secret (claude-docs/testing/e2e.md, "E2E — Playwright").
 
 /**
  * The address every e2e server gets as ADMIN_BOOTSTRAP_EMAIL, on the reserved `.invalid` domain: set by

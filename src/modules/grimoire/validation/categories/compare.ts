@@ -1,6 +1,6 @@
 import type { CategoryComparison } from './types';
 
-// Takes id sets only and returns the two lists apart (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// Takes id sets only and returns the two lists apart (claude-docs/db/grimoire.md, "Grimoire read details").
 export function compareSpellCategories(
   intended: readonly string[],
   present: readonly string[],

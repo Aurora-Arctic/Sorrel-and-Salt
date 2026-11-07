@@ -5,7 +5,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { PartialIndexRow, PartialUniqueIndex, Row } from './types';
 
 // A catalogue sweep, so a new partial unique index fails here until classified below
-// (claude-docs/testing/db-harness.md, "The db test harness").
+// (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`").
 
 const AUTHOR = FIXTURE_USERS.A.id;
 

@@ -4,7 +4,7 @@ import type { IndexRow, CatalogueReads } from './types';
 
 // One client per test file, opened in `beforeAll` and ended in `afterAll`: the harness re-clones the worker's
 // database `WITH (FORCE)` before every file, which kills a connection that outlived its file
-// (claude-docs/testing/db-harness.md, "The db test harness").
+// (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`").
 
 // `DATABASE_URL` is read inside the hook, after `db-runner.ts` has pointed it at this worker's clone.
 export function useTestDatabase(bind: (client: postgres.Sql) => void): CatalogueReads {

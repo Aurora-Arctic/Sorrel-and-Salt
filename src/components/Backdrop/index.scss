@@ -4,7 +4,7 @@
 
 // Each photograph is a grey image whose alpha is the subject; the theme's blend (`screen` or `multiply`) and token fades pick the layer shown.
 // `z-index: -1` on a body child paints above the page colour and beneath every in-flow element
-// (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture" and "Stacking").
+// (claude-docs/components/backdrop.md, "Contracts" and "Stacking").
 .backdrop {
   position: fixed;
   z-index: -1;

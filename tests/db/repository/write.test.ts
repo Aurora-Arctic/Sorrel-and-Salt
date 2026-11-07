@@ -819,7 +819,7 @@ describe('a table marked namedWrites, refused by every generic writer method', (
   });
 });
 
-// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path").
+// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path — `withAudit`").
 describe('a soft-deleted row, out of reach of every update and soft delete', () => {
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
   const stamps = { created_by: session.userId, updated_by: session.userId };

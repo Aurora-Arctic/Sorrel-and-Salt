@@ -3,7 +3,7 @@ import type { SlotEnv } from './types';
 
 // One `next start` and one database per worker slot. The server needs its own
 // because it reads `DATABASE_URL` once at boot; the worker count is fixed here
-// so the servers can be declared up front (claude-docs/testing/e2e.md, "E2E").
+// so the servers can be declared up front (claude-docs/testing/e2e.md, "E2E — Playwright").
 
 const CACHE_OFFSET = 100;
 
@@ -75,10 +75,10 @@ export function currentSlot(env: SlotEnv = process.env, slots = E2E_SLOTS): numb
 
 // Set only by the `devcontainer` compose service: the browser then runs in the
 // `playwright-server` service while the runner stays local, which is why
-// `webServer`'s readiness poll stays on `localhost` (claude-docs/testing/e2e.md, "E2E").
+// `webServer`'s readiness poll stays on `localhost` (claude-docs/testing/e2e.md, "E2E — Playwright").
 export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 
-/** The audit's own server: WebKit, Firefox and Chromium on the `playwright-audit` compose service (claude-docs/testing/e2e.md, "The audit"). */
+/** The audit's own server: WebKit, Firefox and Chromium on the `playwright-audit` compose service (claude-docs/testing/e2e.md, "The audit runs the suite in WebKit, Firefox and as a phone, on demand"). */
 export const auditWsEndpoint =
   process.env.E2E_AUDIT === '1' ? process.env.PLAYWRIGHT_AUDIT_WS_ENDPOINT : undefined;
 

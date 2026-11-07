@@ -186,7 +186,7 @@ export interface WordMatch {
 /**
  * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean `SIMILARITY_THRESHOLD` and `WORD_SIMILARITY_THRESHOLD`,
  * and the first `limit` rows come back in `orderBy`'s order. Never `similarity(a, b) > n` in the `where`: no trigram index answers
- * a function call (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
+ * a function call (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
  */
 export interface Similarity {
   orderBy: SQL[];

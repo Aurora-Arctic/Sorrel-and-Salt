@@ -11,7 +11,7 @@ import { applyCupboardEntry } from '@/modules/ingredients';
 import type { SpellStepView } from '../types';
 
 /**
- * Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+ * Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire read details").
  */
 export async function stepsInSpells(
   membership: Membership,

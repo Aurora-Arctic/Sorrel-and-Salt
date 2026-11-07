@@ -22,7 +22,7 @@ import { isAnnotated } from '../validation/cupboard-merge';
 import { EXPECTED_REVISION, IngredientElementEnum, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
-// Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries: CupboardEntry and Ingredient.cupboardEntry").
+// Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries").
 
 export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
   description:

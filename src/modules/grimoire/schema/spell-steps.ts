@@ -18,7 +18,7 @@ import { spells } from './spells';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // A spell's recipe, one ordered list: a step is an instruction, an ingredient laid in the jar, or both. It references the
-// ingredient, never the inventory item, and is soft-deleted as a tombstone (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// ingredient, never the inventory item, and is soft-deleted as a tombstone (claude-docs/db/grimoire.md, "The join names the ingredient, never the stock row").
 export const spellSteps = pgTable(
   'spell_steps',
   {

@@ -15,7 +15,7 @@ import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
 
-/** Readable on one's own row and by a site admin, else `Forbidden` (claude-docs/graphql/schema.md, "Auth scopes"). */
+/** Readable on one's own row and by a site admin, else `Forbidden` (claude-docs/graphql/schema.md, "Auth scopes: the second check"). */
 const selfOrAdmin = (user: UserRow) => ({ self: user.id, admin: true });
 
 export const UserRef = builder.objectRef<UserRow>('User').implement({

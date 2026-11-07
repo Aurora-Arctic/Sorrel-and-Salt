@@ -22,12 +22,12 @@ import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { AdminInvitationFilter, InvitationSender } from '../types';
 
-// Accepting is invitation-acceptance.ts's (claude-docs/auth/admin-users.md, "Admin invitation service details").
+// Accepting is invitation-acceptance.ts's (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
 const REFUSAL = 'Only a site keeper may invite or withdraw a keeper invitation';
 
 /**
- * Stored as its hash alone (claude-docs/auth/admin-users.md, "Admin invitation service details").
+ * Stored as its hash alone (claude-docs/auth/admin-users.md, "Inviting a keeper").
  *
  * @throws {Forbidden} the session's role is not `admin`, or keeper changes are paused and the caller is not the primary keeper.
  * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above.

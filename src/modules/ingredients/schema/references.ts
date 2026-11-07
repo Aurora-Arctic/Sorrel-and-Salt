@@ -27,7 +27,7 @@ const OPTIONAL_NOT_BLANK = [
 
 // One source per row, in Chicago bibliography form, kept once and linked from every row it supports through `reference_links`.
 // One table, two tiers, as `ingredients`: `workspace_id IS NULL` is the compendium. Fields are text as Chicago prints them, and there
-// is no unique index (claude-docs/db/references.md, "Reference links schema details").
+// is no unique index (claude-docs/db/references.md, "References").
 export const references = pgTable(
   'references',
   {
@@ -74,7 +74,7 @@ export const references = pgTable(
 
     // The four that make the renderer total: every row admitted renders
     // without a branch for a missing required field
-    // (claude-docs/design-decisions/mb.151-references.md, "3. CHECKs").
+    // (claude-docs/design-decisions/mb.151-references.md, "Decided").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

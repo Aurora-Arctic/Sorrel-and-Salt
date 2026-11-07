@@ -18,7 +18,7 @@ import type {
 } from '../types';
 
 // The steps every curated vocabulary's admin write is made of, shared so that how a slug collision, a missing row or a group's move
-// is refused is one edit (claude-docs/modules.md, "Vocabulary shared write steps"). Internal to the module.
+// is refused is one edit (claude-docs/modules.md, "Shared steps inside a module"). Internal to the module.
 
 /** A write that broke the vocabulary's slug index, as a `ValidationError` on `name` naming the row holding the address; any other error unchanged. */
 export async function refuseSlugCollision(
@@ -94,7 +94,7 @@ export async function moveTarget<TTable extends GroupTable>(
 
 /**
  * Rewrites a group whole, its slug following the name, and on a rename the slug of every live row under it whose slug carries the
- * group's name (claude-docs/modules.md, "Vocabulary shared write steps").
+ * group's name (claude-docs/modules.md, "Shared steps inside a module").
  *
  * @throws {ValidationError} a move onto another row's address, or the group's own slug is a live group's.
  * @throws {NotFound} no live group has this id.
@@ -134,7 +134,7 @@ export async function updateGroup<TTable extends GroupTable>(
 }
 
 /**
- * Soft-deletes a group, first moving its live rows to the group `moveTo` names (claude-docs/modules.md, "Vocabulary shared write steps").
+ * Soft-deletes a group, first moving its live rows to the group `moveTo` names (claude-docs/modules.md, "Shared steps inside a module").
  *
  * @throws {ValidationError} on `moveTo`, a missing target, or a row that would move onto another row's address.
  * @throws {NotFound} no live group has this id.

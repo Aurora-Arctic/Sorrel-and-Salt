@@ -6,7 +6,7 @@ export interface PageHeaderProps {
   /**
    * The small capitals above the heading that name the part of the site. Only
    * the public pages and the screens outside the app's lists carry one; a list
-   * page's heading stands alone (claude-docs/styling.md, "Page heads").
+   * page's heading stands alone (claude-docs/styling.md, "Designing a section").
    */
   eyebrow?: string;
   lede?: ReactNode;

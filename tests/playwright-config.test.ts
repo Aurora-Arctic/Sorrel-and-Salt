@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // The audit projects exist only when asked for, and `npm run e2e` never asks
-// (claude-docs/testing/e2e.md, "The audit"). The config reads the environment as it loads, so
+// (claude-docs/testing/e2e.md, "The audit runs the suite in WebKit, Firefox and as a phone, on demand"). The config reads the environment as it loads, so
 // each case loads it afresh.
 
 const CHROMIUM_PROJECTS = [

@@ -195,7 +195,7 @@ export function findDeitiesOfIngredients(
 /**
  * The live substitutes of these ingredients, or of these variants (`of` says which the ids name), each beside the ingredient it links, soft-deleted or not,
  * or null for a typed name. The escape hatch that skips the linked ingredient's filter and no other, so a link to a deleted ingredient reads as its last name
- * (claude-docs/db/soft-delete.md, "Soft-delete filtering"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Tier-scoped reads").
+ * (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],

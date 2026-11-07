@@ -19,7 +19,7 @@ import type { CardAttemptEntry, CardAttemptReason } from './types';
 
 // The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The keeper opens it
 // from the Invitation Cards tab, and the page is read when it opens, so the tab itself carries only the count
-// (claude-docs/components/admin-cards.md, "Attempts").
+// (claude-docs/components/admin-cards.md, "Refused Opens (`attempts.tsx`)").
 
 const PAGE_SIZE = 20;
 

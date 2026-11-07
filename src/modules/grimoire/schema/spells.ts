@@ -15,7 +15,7 @@ export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace
 // The orders a grimoire page takes, kept here so the GraphQL enum and the repository read one list (claude-docs/graphql/schema.md, "The grimoire").
 export const GRIMOIRE_ORDERS = ['UPDATED_DESC', 'CREATED_DESC', 'TITLE_ASC'] as const;
 
-// The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The grimoire").
+// The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The tables").
 export const spells = pgTable(
   'spells',
   {
@@ -47,7 +47,7 @@ export const spells = pgTable(
       sql`${table.status} <> 'complete' OR ${table.title} IS NOT NULL`,
     ),
     // The grimoire search's fold reaches a trigram index only through an expression index over the same fold, as
-    // `ingredients_unaccent_trgm` does (claude-docs/db/grimoire.md, "Grimoire service and schema details"). Not partial: it reserves nothing.
+    // `ingredients_unaccent_trgm` does (claude-docs/db/grimoire.md, "The grimoire search"). Not partial: it reserves nothing.
     index('spells_unaccent_trgm').using(
       'gin',
       sql`unaccent_immutable(${table.title}) gin_trgm_ops`,

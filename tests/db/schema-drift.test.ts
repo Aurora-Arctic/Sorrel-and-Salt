@@ -46,10 +46,10 @@ import * as deityOtherNames from '@/modules/vocabulary/schema/deity-other-names'
 import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 
 // One comparison of the Drizzle schema against the migrated database, table by table: a schema file edited without its migration, or the reverse, fails here.
-// A table's row rules are its module schema test's (claude-docs/testing/db-harness.md, "The db test harness"). A schema file missing from the imports below leaves its table out of the code's set, which the first test fails.
+// A table's row rules are its module schema test's (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`"). A schema file missing from the imports below leaves its table out of the code's set, which the first test fails.
 
 // The expand/contract window (CLAUDE.md rule 10): a drop is two PRs, so between them the migrated database holds what the schema no longer declares; the undeclare task adds its line here and the drop task removes it, and a line outliving its drop fails below
-// (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the old name a renamed table leaves for the deploy before it, with `table` and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a table").
+// (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`"). A `view` is the old name a renamed table leaves for the deploy before it, with `table` and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a table").
 // A pending column the code still declares is compared like any other: only the database side of an undeclared one is set aside.
 const PENDING_DROPS: readonly {
   table: string;

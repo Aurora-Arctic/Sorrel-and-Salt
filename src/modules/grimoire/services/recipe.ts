@@ -91,7 +91,7 @@ export async function checkRecipe(
   if (issues.length > 0) throw new ValidationError(issues);
 }
 
-/** Which steps are exempt: claude-docs/db/grimoire.md, "Grimoire service and schema details". */
+/** Which steps are exempt: claude-docs/db/grimoire.md, "Saving a recipe". */
 async function unmeasurableSteps(
   membership: Membership,
   steps: readonly ParsedStep[],
