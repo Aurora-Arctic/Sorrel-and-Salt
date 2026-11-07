@@ -114,12 +114,82 @@ const documentsArticle = article(
 const writingHelp = article(
   16,
   'Writing Help Articles',
-  'How help entries are organised.',
-  `The help centre holds three kinds of entry: FAQ questions, articles and glossary terms. Each has an audience: public, staff or keeper. An article can have sub pages one level deep, and a sub page's audience is its parent's or narrower. A glossary term is always public and has no position or parent. Each entry's address comes from its title.
+  'How a Keeper adds, edits and deletes help entries.',
+  `Only a Keeper writes help. Open Help in the Keepers area. A curator reads staff help and writes none of it.
 
-The shipped entries are loaded by the seed. It restates an entry nobody has edited to the seed's current text, leaves an entry a person edited as they wrote it, and never brings back one a person deleted. The names glossary, staff and search are reserved and cannot be used as an address.`,
+The page lists every help entry you can read, whatever its kind or audience, from A to Z by title, 25 to a page. Use "Prev" and "Next" to move between pages. The columns are Title, Kind, Audience and Position; a glossary term has no audience, and an entry with no position leaves that cell empty. Choose "Add Help Article" to add an entry, or the edit link on a row to change one. Either opens a form over the list.
+
+The help centre holds three kinds of entry: FAQ questions, articles and glossary terms. An article can have sub pages one level deep. A sub page cannot have sub pages of its own.
+
+To delete an entry, choose Delete in its form and confirm. Deleting an article that still has sub pages is refused, and the form shows why: delete or move the sub pages first.
+
+A save changes the public pages at once. The shipped entries are loaded by the seed. It restates an entry nobody has edited to the seed's current text, leaves an entry a person edited as they wrote it, and never brings back one that has been deleted.`,
   'keeper',
 );
+const writingHelpPages = [
+  subPage(
+    writingHelp,
+    1,
+    'The Help Article Form',
+    'The fields of the form and what each one does.',
+    `The form has these fields:
+
+- "Kind": FAQ, Article or Term. You choose it when adding. It cannot be changed afterwards, so the field is disabled when editing.
+- "Title": required.
+- "Slug": the last part of the entry's address. Leave it empty and it comes from the title. See Slugs and Addresses.
+- "Summary": a short line. Articles show it beside their link.
+- "Body": required, written in Markdown. A region named "Preview" under it shows the body as it will read, and raw HTML in a body appears as plain text.
+- "Parent": an article only. See Audiences, Parents and Sub Pages.
+- "Audience": every kind except a term. Public, Staff or Keeper.
+- "Position": every kind except a term. A whole number, which sets the entry's place in the public FAQ and in the list of articles. Entries with no position come last.
+
+The save button is named for the kind: "Save FAQ Entry", "Save Article" or "Save Term". A refusal from the server is shown on the field it concerns; the form stays open so you can correct it. If you cancel after changing a field, the form asks before it discards your changes.`,
+  ),
+  subPage(
+    writingHelp,
+    2,
+    'Audiences, Parents and Sub Pages',
+    'Who can read an entry, and how a sub page relates to its parent.',
+    `An entry's audience says who can read it: Public means anyone, Staff means curators and Keepers, and Keeper means Keepers alone.
+
+A glossary term is always public. Its form has no Audience, Parent or Position field, and the server refuses a term with any of them.
+
+An FAQ question has an audience and a position, but no parent. Only an article can have a parent, chosen in "Parent". The choices are "No Parent" and every other top-level article. An article that has sub pages of its own cannot become a sub page, and an article cannot be its own parent.
+
+A sub page's audience is its parent's or narrower, in the order Public, Staff, Keeper. Once you choose a parent, the Audience field offers only that parent's audience and the narrower ones, and if the audience you had set is wider than the parent's it is raised to the parent's. The server refuses a wider one too. The rule also runs the other way: you cannot narrow a parent below one of its sub pages.`,
+  ),
+  subPage(
+    writingHelp,
+    3,
+    'Slugs and Addresses',
+    'How an entry gets its address, and which slugs are taken.',
+    `An entry's slug is the last part of its address. If you leave "Slug" empty when adding, the slug is made from the title. A slug you type is run through the same process, so it is lower case, with words joined by hyphens and other punctuation dropped. When you change a title, the slug stays as it was, because a link may hold it; only a slug you change in the form moves it.
+
+A slug must hold a letter or a number. It must also be unique within its kind: no two FAQ questions share one, no two terms share one, and no two articles share one, a sub page included. An FAQ question and an article may share a slug. The form shows "Another article holds that slug" and its like on the Slug field.
+
+The names glossary, staff and search are reserved, since each is a page beneath /help. The form refuses them on the Slug field.
+
+The address comes from the kind, the audience and the parent:
+
+- A public article is at /help/ then its slug; a public sub page is at /help/ then its parent's slug, a slash and its own.
+- A staff or Keeper article is at /help/staff/ then its slug, and its sub pages beneath it in the same way.
+- An FAQ question is an anchor on the page of its audience: /help for a Public question and /help/staff for a Staff or Keeper one.
+- A glossary term is an anchor on /help/glossary.
+
+Opening a sub page at its top-level address redirects to the address beneath its parent.`,
+  ),
+  subPage(
+    writingHelp,
+    4,
+    'Who Reads What, and How Search Finds It',
+    'The reach of each kind of reader, and how the help search ranks.',
+    `A signed-out reader and any signed-in user who is not staff reads Public entries. A curator reads Public and Staff entries, and a Keeper reads all three. A curator reads staff help at /help/staff, which lists the Staff and Keeper entries. A curator is not shown a Keeper entry, even by its address.
+
+The search is at /help/search and takes a query in "q". A blank query finds nothing. It looks in the title, the summary and the body, and a match in the title ranks above one in the summary, which ranks above one in the body. If no entry matches the words, it falls back to titles close to what was typed, so a misspelt title still finds its page. Search shows a reader only the entries that reader may read, so a Staff entry never appears in a public search.
+
+A search page is not indexed by search engines, and the pages of Staff help are not either.`,
+  ),
+];
 
 export const STAFF_ARTICLES = [
   curating,
@@ -132,4 +202,5 @@ export const STAFF_ARTICLES = [
   cards,
   documentsArticle,
   writingHelp,
+  ...writingHelpPages,
 ];

@@ -118,7 +118,16 @@ const SECTIONS: { title: string; audience: Audience; children: (string | Expecte
   { title: 'Inviting a Curator or Keeper', audience: 'keeper', children: [] },
   { title: 'Minting Printed Cards', audience: 'keeper', children: [] },
   { title: 'Editing Site Documents', audience: 'keeper', children: [] },
-  { title: 'Writing Help Articles', audience: 'keeper', children: [] },
+  {
+    title: 'Writing Help Articles',
+    audience: 'keeper',
+    children: [
+      'The Help Article Form',
+      'Audiences, Parents and Sub Pages',
+      'Slugs and Addresses',
+      'Who Reads What, and How Search Finds It',
+    ],
+  },
 ];
 
 const TERMS: string[] = [
