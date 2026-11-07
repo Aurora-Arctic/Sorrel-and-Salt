@@ -62,7 +62,7 @@ export const FRONT_COPY: readonly FrontCopy[] = [
     headline: 'Read the Leaves',
     tagline: "They say you're expected.",
     howTo: 'Scan the code, sign in, and keep a grimoire of what you brew.',
-    admits: 'This card admits one. Brew a pot for the rest.',
+    admits: 'This card admits one. Invite others in for tea.',
   },
 ];
 
