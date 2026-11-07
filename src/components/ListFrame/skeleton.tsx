@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
-import type { StackColumn } from '../DataTable/types';
+import type { StackColumn, StackRowKind } from '../DataTable/types';
 import IngredientCardList from '../IngredientCardList';
 import { IngredientCardSkeleton } from '../IngredientCard/skeleton';
 import { SpellCardSkeleton } from '../SpellCard/skeleton';
@@ -15,6 +15,8 @@ export interface ListBodySkeletonProps {
   headings?: readonly string[];
   /** The headings that are action columns (Edit, Revoke), whose cells carry no bar. */
   actions?: readonly string[];
+  /** A table: which list it is, so each placeholder row stacks as a card as tall as that list's real row (`$stack-row-skeleton-heights`). */
+  rowKind?: StackRowKind;
   /** Which card the cards are: a coven's ingredient (the default), a compendium entry's or a spell's. */
   card?: 'cupboard' | 'compendium' | 'spell';
   /** With `card="spell"`: the cards are drafts, which stand taller than complete ones. */
@@ -29,6 +31,7 @@ export interface ListBodySkeletonProps {
 // cards, so the list keeps its place when the rows arrive. The filter row is not part of it.
 export const ListBodySkeleton = ({
   label,
+  rowKind,
   headings = [],
   actions = [],
   card = 'cupboard',
@@ -62,6 +65,7 @@ export const ListBodySkeleton = ({
       empty=""
       aria-label={label}
       pendingRows={count}
+      pendingKind={rowKind}
     />
   );
 };

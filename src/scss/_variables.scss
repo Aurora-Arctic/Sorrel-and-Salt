@@ -1196,3 +1196,23 @@ $card-skeleton-heights: (
     'compact': 17.01rem,
   ),
 );
+
+// The height a table's placeholder row stands at phone width, where each row is a card: one block as
+// tall as that list's real stacked row (a typical row, with its longest cells). 'default' is a row
+// with no list named.
+$stack-row-skeleton-heights: (
+  'default': 16rem,
+  'users': 32rem,
+  'members': 23.25rem,
+  'support': 29.416rem,
+  'invitation-cards': 28.25rem,
+  'card-sign-ups': 21rem,
+  'refused-opens': 15.25rem,
+  'keeper-invitations': 16.625rem,
+  'privilege-changes': 22.75rem,
+  'pending-invitations': 13.375rem,
+  'received-invitations': 11rem,
+  'groups': 12.637rem,
+  'values': 20rem,
+  'compendium': 23.612rem,
+);

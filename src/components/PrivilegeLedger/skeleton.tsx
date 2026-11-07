@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const PrivilegeLedgerBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Privilege Changes"
+    rowKind="privilege-changes"
     headings={['When', 'User', 'Privilege', 'Change', 'How', 'Changed By', 'Note']}
   />
 );

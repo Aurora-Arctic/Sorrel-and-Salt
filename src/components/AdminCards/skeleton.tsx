@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const AdminCardsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Invitation Cards"
+    rowKind="invitation-cards"
     headings={[
       'Batch',
       'Status',
@@ -25,6 +26,7 @@ export const AdminCardsBodySkeleton = (): ReactElement => (
 export const CardArrivalsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Card Sign-Ups"
+    rowKind="card-sign-ups"
     headings={['Name', 'Email', 'Accepted On', 'Batch', 'Beta', 'Covens Owned']}
     count={4}
   />
@@ -34,6 +36,7 @@ export const CardArrivalsBodySkeleton = (): ReactElement => (
 export const CardAttemptsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Refused Opens"
+    rowKind="refused-opens"
     headings={['Name', 'Email', 'Card', 'Refusal']}
     count={3}
   />

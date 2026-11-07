@@ -1191,6 +1191,35 @@
     }
   }
 
+  // A table on its way: the fill cell is there only at phone width, where the whole row is one
+  // block in the card's frame at the height of its list's real row (`$stack-row-skeleton-heights`).
+  .data-table--pending > tbody > tr > .card-skeleton__fill {
+    display: none;
+  }
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    .data-table--pending > tbody > tr {
+      position: relative;
+      box-sizing: border-box;
+      padding: 0;
+      @include card-skeleton-fill;
+
+      > :not(.card-skeleton__fill) {
+        display: none;
+      }
+
+      > .card-skeleton__fill {
+        display: block;
+      }
+    }
+
+    @each $kind, $height in $stack-row-skeleton-heights {
+      .data-table--pending-#{$kind} > tbody > tr {
+        height: $height;
+      }
+    }
+  }
+
   // The row a detail page opens with: the way back at the left, anything the page adds at the
   // right, on one centre line. The ingredient entry page and the spell recipe page both draw it.
   .back-bar {

@@ -7,6 +7,7 @@ import { KINDS } from './kinds';
 export const GroupListBodySkeleton = ({ kind }: { kind: GroupKind }): ReactElement => (
   <ListBodySkeleton
     label={KINDS[kind].title}
+    rowKind="groups"
     headings={['Name', 'Description', 'Edit']}
     actions={['Edit']}
     count={4}

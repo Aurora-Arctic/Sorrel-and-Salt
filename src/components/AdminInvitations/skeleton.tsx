@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const AdminInvitationsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Keeper Invitations"
+    rowKind="keeper-invitations"
     headings={['Email', 'Role', 'Reason', 'Expires', 'Revoke']}
     actions={['Revoke']}
     count={4}

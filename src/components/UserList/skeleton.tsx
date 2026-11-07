@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const UserListBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Users"
+    rowKind="users"
     headings={[
       'Name',
       'Email',

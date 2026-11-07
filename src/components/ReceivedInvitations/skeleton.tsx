@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const ReceivedInvitationsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Your Invitations"
+    rowKind="received-invitations"
     headings={['Coven', 'Role', 'Expires', 'Answer']}
     actions={['Answer']}
     count={3}

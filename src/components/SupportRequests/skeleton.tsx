@@ -6,6 +6,7 @@ import { ListFilterFrame, ListBodySkeleton } from '../ListFrame/skeleton';
 export const SupportListBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Support Requests"
+    rowKind="support"
     headings={[
       'About',
       'Subject',

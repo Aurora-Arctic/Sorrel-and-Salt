@@ -13,6 +13,7 @@ export const GroupedValueListBodySkeleton = ({
   return (
     <ListBodySkeleton
       label={title}
+      rowKind="values"
       headings={['Name', ...(group ? [group.label] : []), 'Description', 'Edit']}
       actions={['Edit']}
     />

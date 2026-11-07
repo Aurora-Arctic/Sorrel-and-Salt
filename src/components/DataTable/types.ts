@@ -92,7 +92,25 @@ export interface StackTableProps<Row> {
   otherOrders?: readonly OtherOrder[];
   /** Draws this many placeholder rows under the real headings in place of the rows, for a table on its way: hidden from assistive technology, with no sort links and no controls. */
   pendingRows?: number;
+  /** With `pendingRows`: the list, so at phone width each placeholder row is one block as tall as that list's real stacked row. */
+  pendingKind?: StackRowKind;
 }
+
+/** The lists whose stacked rows have a measured placeholder height, `$stack-row-skeleton-heights`. */
+export type StackRowKind =
+  | 'users'
+  | 'members'
+  | 'support'
+  | 'invitation-cards'
+  | 'card-sign-ups'
+  | 'refused-opens'
+  | 'keeper-invitations'
+  | 'privilege-changes'
+  | 'pending-invitations'
+  | 'received-invitations'
+  | 'groups'
+  | 'values'
+  | 'compendium';
 
 export interface GroupChipProps {
   name: string;

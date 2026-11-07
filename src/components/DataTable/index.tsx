@@ -94,6 +94,7 @@ function StackTable<Row>({
   className,
   otherOrders,
   pendingRows,
+  pendingKind,
 }: StackTableProps<Row>): ReactElement {
   const pending = pendingRows !== undefined;
   if (!pending && !rows.length)
@@ -111,7 +112,13 @@ function StackTable<Row>({
       {sorting && <SortSelect choices={sorting.choices} current={sorting.current} />}
       <table
         aria-hidden={pending || undefined}
-        className={['data-table data-table--stack', className].filter(Boolean).join(' ')}
+        className={[
+          'data-table data-table--stack',
+          pending && `data-table--pending data-table--pending-${pendingKind ?? 'default'}`,
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         aria-label={label}
         {...tableRole('table')}
       >
@@ -140,6 +147,8 @@ function StackTable<Row>({
           {pending
             ? Array.from({ length: pendingRows }, (_, at) => (
                 <tr key={at} {...tableRole('row')}>
+                  {/* At phone width the row is one block in the card's frame; the cells wait for the table. */}
+                  <td className="card-skeleton__fill" aria-hidden="true" />
                   {shown.map((column) => (
                     <td
                       key={column.heading}

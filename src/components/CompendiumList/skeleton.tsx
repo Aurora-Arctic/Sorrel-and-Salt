@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const CompendiumListBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Compendium"
+    rowKind="compendium"
     headings={[
       'Name',
       'Formal Name',

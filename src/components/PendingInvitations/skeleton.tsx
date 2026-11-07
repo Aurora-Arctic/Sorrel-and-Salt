@@ -5,6 +5,7 @@ import { ListBodySkeleton } from '../ListFrame/skeleton';
 export const PendingInvitationsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Pending Invitations"
+    rowKind="pending-invitations"
     headings={['Email', 'Role', 'Status', 'Action']}
     actions={['Action']}
   />
