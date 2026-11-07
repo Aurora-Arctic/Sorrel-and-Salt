@@ -32,7 +32,8 @@ It differs in three things:
 - **A bounded wait.** The range request carries
   `AbortSignal.timeout(BREACHED_CHECK_TIMEOUT_MS)`, three seconds, so a range API
   that accepts the connection and never answers cannot hold the sign-up open
-  until the platform kills it.
+  until the platform kills it. Tests answer the range API with MSW
+  (`tests/support/password.ts`), never the real service.
 - **It fails closed.** A timeout, a refused connection, a non-2xx answer or a
   count that is not a whole number all refuse the password with a 500 and "We
   couldn't check your password just now. Please try again later." A password the
