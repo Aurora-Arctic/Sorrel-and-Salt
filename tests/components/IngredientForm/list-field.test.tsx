@@ -14,11 +14,8 @@ import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
-// The form's list field on its own: one box to type in, its entries inside it, on react-hook-form with the form's resolver, and no lookup (the suggestions are given, as `LookupListField` gives them).
-// The shared behaviour runs on a plain list and a pick-only one, the two ways an entry gets in; `ordered` and the folk names' own-name rule have their own describes, and the six lists otherwise differ only in the shape a typed entry is sent in, of which there are two.
-// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Stories and tests").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
-/** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {
   variant: 'plain',
   name: 'substitutes',
@@ -46,7 +43,6 @@ const PICK_ONLY: Variant = {
   pickOnly: true,
 };
 const VARIANTS = [PLAIN, PICK_ONLY];
-/** The deities as the form wires them: ordered, typed into. */
 const DEITIES: Variant = {
   variant: 'deities',
   name: 'deities',
@@ -62,13 +58,12 @@ const LISTS: (Omit<Variant, 'variant'> & { sent: (values: string[]) => unknown }
 ];
 
 const FIXTURES = ['First Fixture', 'Second Fixture', 'Third Fixture'];
-/** A source offering these, curated, as a lookup's answer is shaped. */
 const offer = (values: string[]): Suggestions<ListOption> => ({
   options: values.map((value) => ({ value, curated: true })),
   pending: false,
 });
 
-/** One list field in a form of its own, given its entries as an edit would be. A pick-only list is given a source, since a pick is its only way in; the Name box is there for what a folk name is judged against. */
+/** A pick-only list is given a source, since a pick is its only way in; the Name box is there for what a folk name is judged against. */
 function renderList(
   { name, legend, entry, ordered, pickOnly }: Omit<Variant, 'variant'>,
   {
@@ -116,18 +111,14 @@ const changes = (legend: string) =>
   within(group(legend)).getByRole('status', { name: `${legend} changes` });
 const removeButton = (value: string) => screen.getByRole('button', { name: `Remove ${value}` });
 const addButton = (entry: string) => screen.getByRole('button', { name: `Add ${entry}` });
-/** Adds `value` the way the list allows: typed and Added, or typed and picked from the source. */
 const add = ({ entry, pickOnly }: Omit<Variant, 'variant'>, value: string) => {
   type(entry, value);
   if (pickOnly) fireEvent.click(screen.getByRole('option', { name: value.trim() }));
   else fireEvent.click(addButton(entry));
 };
-/** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
 const save = () => press('Save Ingredient');
-/** Lets a submit that may have started reach its handler. */
 const settle = () => act(async () => {});
 
-/** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {
   expect(control).toBeInvalid();
   expect(control).toHaveAccessibleDescription(/\S/);
@@ -161,8 +152,6 @@ describe('ListField', () => {
     });
   });
 
-  // Once an entry is in, a plain list and a pick-only one share every path: removing,
-  // Backspace, Clear and an error on one entry run once, on the plain list.
   describe('the plain list', () => {
     const variant = PLAIN;
     const { legend, entry, name } = variant;
@@ -290,9 +279,6 @@ describe('ListField', () => {
     });
   });
 
-  // A list refuses a repeat at the box, as the schema would at save,
-  // and says why in its one error element; the source leaves out what the
-  // list holds, and the typed row is withheld for a repeat.
   describe('a repeat at a box with a source', () => {
     const { entry, legend } = PLAIN;
     const listed = () => within(group(legend)).queryAllByRole('button', { name: /^Remove / });
@@ -329,8 +315,6 @@ describe('ListField', () => {
     });
   });
 
-  // A pick-only list's entries are curated rows picked, so the box
-  // offers those alone and refuses what is typed and not picked.
   describe('a repeat at a pick-only box', () => {
     const { entry, legend } = PICK_ONLY;
 
@@ -385,8 +369,6 @@ describe('ListField', () => {
     });
   });
 
-  // A list takes several picks in one visit to its list, as the
-  // multi-select does; Escape still closes it.
   it('keeps the list open after a pick, with the focus in the box, for the next', () => {
     const { entry, legend } = PICK_ONLY;
     renderList(PICK_ONLY);
@@ -405,8 +387,6 @@ describe('ListField', () => {
     expect(box(entry)).toHaveAttribute('aria-expanded', 'false');
   });
 
-  // The ingredient's own name is no folk name: refused at the box as a
-  // repeat is, and left out of the source, as the name is typed.
   it('refuses a folk name repeating the name, at the box, and offers it from no source', () => {
     const { entry, legend } = FOLK_NAME;
     renderList(FOLK_NAME, { suggestions: offer(['Testwort', 'Hedge Fixture']) });
@@ -428,9 +408,6 @@ describe('ListField', () => {
     expectErrorOn(box(entry));
   });
 
-  // The source leaves out what the list holds, by the schema's key —
-  // a link by its id, text folded among the typed entries — and the typed
-  // row is withheld for text the list would refuse.
   describe('a source beside the listed entries', () => {
     const GREEK = {
       id: '4b2a6c8e-1d3f-4a5b-9c7d-8e0f1a2b3c4d',
@@ -520,7 +497,6 @@ describe('ListField', () => {
       fireEvent.keyDown(box(entry), { key: 'Enter' });
       expect(entries(legend)).toEqual(['Remove Mockwort', 'Remove mockwort']);
 
-      // A second typed one is a repeat of the first, not of the link.
       type(entry, ' MOCKWORT ');
       expect(typedRow('MOCKWORT')).not.toBeInTheDocument();
       fireEvent.keyDown(box(entry), { key: 'Enter' });
@@ -529,8 +505,6 @@ describe('ListField', () => {
     });
   });
 
-  // An ordered list's entries move, each by its handle; an unordered
-  // one's have none to move by.
   describe('moving an entry', () => {
     const { entry, legend } = ORDERED;
     const handle = (value: string) =>
@@ -609,7 +583,6 @@ describe('ListField', () => {
     });
   });
 
-  // What differs by list: the shape a typed entry is sent in, one list a shape.
   describe.each(LISTS)('the $legend list', (list) => {
     it('sends the entries in order, less any removed', async () => {
       const onSubmit = renderList(list);
@@ -645,8 +618,6 @@ describe('ListField', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // A substitute links an ingredient or names one, and a refused
-  // link is named as its pill reads, by its formal name too.
   it('marks a refused link beside its pill, named by its formal name too', async () => {
     const linked = {
       value: 'Mockleaf',
@@ -672,8 +643,6 @@ describe('ListField', () => {
   });
 });
 
-// The pick-only multi-select beside the lists, given its elements as an edit would be:
-// drawn as chips in the order held, and a repeat refused on the control itself.
 describe('MultiSelectField, given its values', () => {
   function renderElements(elements: IngredientElement[]) {
     const onSubmit = vi.fn();

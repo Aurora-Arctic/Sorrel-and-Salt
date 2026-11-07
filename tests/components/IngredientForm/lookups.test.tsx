@@ -36,11 +36,8 @@ import type {
   NameNode,
 } from './types';
 
-// The form's lookups on their own components: the Form box (`FormField`) and a list's box (`LookupListField`), each in a form of its own on the form's resolver, asking MSW as /api/graphql answers.
-// What a pick becomes is read from what the resolver hands the submit, the input the form sends. That the form gives each box its coven, and sends the pick, is index.test.tsx's, once per lookup;
-// the box's rows and keys are Combobox's (claude-docs/components/ingredient-form.md, "Stories and tests").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
-/** `field` in a form of its own, its name given, and `values` beside; the submit receives what the form would send. */
 function renderInForm(field: ReactElement, values: Partial<IngredientFormValues> = {}) {
   const onSubmit = vi.fn();
   const Harness = () => {
@@ -58,7 +55,6 @@ function renderInForm(field: ReactElement, values: Partial<IngredientFormValues>
     );
   };
   renderWithClient(<Harness />);
-  /** What the save sent, once it has. */
   return async (): Promise<IngredientFormInput> => {
     press('Save Ingredient');
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -81,9 +77,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-/** Lets the typing settle, and what it sets going — an open list's position, a microtask on — land inside `act`. */
 const settle = () => act(async () => void vi.advanceTimersByTime(DEBOUNCE_MS));
-/** Focuses the box, waits for its first, empty ask, then types `text` and lets it settle. */
 const lookUp = async (entry: string, calls: unknown[], text: string) => {
   act(() => box(entry).focus());
   await waitFor(() => expect(calls).toHaveLength(1));
@@ -113,7 +107,6 @@ describe('FormField', () => {
     curated: true,
     claimants: [],
   };
-  // In use only: no curated row, so nothing to pick.
   const RHIZOMES: FormNode = {
     id: null,
     value: 'Rhizomes',
@@ -124,26 +117,20 @@ describe('FormField', () => {
     claimants: [{ name: 'Mockleaf', canonicalName: null }],
   };
 
-  // One form, which the Form box writes, as a variant's does.
   const renderField = () =>
     renderInForm(<FormField workspaceId={WORKSPACE_ID} at="variants.0" />, {
       variants: [EMPTY_VARIANT],
     });
-  /** The one form the save sent. */
   const sentForm = async (send: () => Promise<IngredientFormInput>) => (await send()).variants?.[0];
-  /** Looks up "wax" in the Form box and picks the row named `option`. */
   const pickWax = async (calls: unknown[], option: RegExp) => {
     await lookUp('Form', calls, 'wax');
     fireEvent.click(await screen.findByRole('option', { name: option }));
   };
-  // The group a pick shows inside the box, not the tooltip that repeats it.
   const group = (text: string) =>
     within(box('Form').closest('.combobox') as HTMLElement).queryByText(text, {
       ignore: '[role="tooltip"]',
     });
 
-  // The one debounce test of the lookups, `useLookup` being one hook; the
-  // debounce's own timing is tests/lib/debounce.test.tsx's.
   it('asks nothing until the box is used, then once the typing settles, about this coven', async () => {
     renderField();
     const calls = offerForms([WAX_ANIMAL]);
@@ -171,7 +158,6 @@ describe('FormField', () => {
     await lookUp('Form', calls, 'wax');
 
     const curated = await screen.findByRole('group', { name: 'From Compendium' });
-    // Two same-named forms, told apart by the group in each one's name.
     expect(within(curated).getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveTextContent(
       'Testwort (Fixtura testalis)',
     );
@@ -180,13 +166,11 @@ describe('FormField', () => {
     );
     const inUse = screen.getByRole('group', { name: 'From Coven' });
     expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent('Mockleaf');
-    // What was typed comes first.
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
   });
 
-  // The text alone reads the same for both Waxes; the group tells
-  // which was picked, and the id records it.
+  // The text alone reads the same for both Waxes; the group tells which was picked, and the id records it.
   it('fills the field from a pick, shows its group in the box and sends its id', async () => {
     const send = renderField();
     const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
@@ -214,14 +198,10 @@ describe('FormField', () => {
 
     expect(group('(Animal)')).toBeInTheDocument();
     expect(group('(Substance)')).not.toBeInTheDocument();
-    // A group with no description is the whole of what the box adds; the
-    // qualifier's tooltip, and none without a detail, are Combobox's.
     expect(box('Form')).toHaveAccessibleDescription(expect.stringMatching(/\(Animal\)$/));
     expect((await sentForm(send))?.formId).toBe(ANIMAL_WAX_ID);
   });
 
-  // The text is still the member's to edit, and an edit
-  // away from the pick leaves typed text, which links nothing.
   it('drops the group and the id once the text is edited away from the pick', async () => {
     const send = renderField();
     const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
@@ -321,7 +301,6 @@ describe('LookupListField', () => {
     matchedName: null,
     curated: true,
   };
-  // In use only: no curated row, so nothing to pick.
   const HECATE_FIXTURE: DeityNode = {
     id: null,
     value: 'Hecate Fixturia',
@@ -343,8 +322,7 @@ describe('LookupListField', () => {
       { id: '71c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e', form: 'Dried leaf', formChoice: null },
     ],
   };
-  // The same label and formal name in another form: only the tooltip tells
-  // the two apart once one is picked.
+  // The same label and formal name in another form: only the tooltip tells the two apart once one is picked.
   const MOCKWORT_COVEN: IngredientNode = {
     ...MOCKWORT_COMPENDIUM,
     id: COVEN_ID,
@@ -360,9 +338,6 @@ describe('LookupListField', () => {
     variants: [],
   };
 
-  // A list's box asks its hook's query, with this coven, once it is used:
-  // one hook, `useLookup`, under each; which query each list asks is
-  // index.test.tsx's, once per lookup.
   it('asks about the folk names for this coven once its box is used, and not before', async () => {
     renderList(FOLK_NAMES);
     const calls = offerNames([HEDGE]);
@@ -395,7 +370,6 @@ describe('LookupListField', () => {
     expect(changes('Folk Names')).toHaveTextContent('Hedge Fixture');
   });
 
-  // The celestial bodies and the signs share one shape and one split.
   it('offers the curated celestial bodies apart from those in use, with their descriptions', async () => {
     renderList(CELESTIAL_BODIES);
     const calls = offerCelestialBodies([MOON, MOONFIXTURE]);
@@ -413,8 +387,6 @@ describe('LookupListField', () => {
     ).toBeInTheDocument();
   });
 
-  // The rows reach the list's filter, which list-field.test.tsx
-  // proves on given rows.
   it('leaves a listed celestial body out whatever its case, and offers what was typed only when it is no repeat', async () => {
     renderList(CELESTIAL_BODIES);
     const calls = offerCelestialBodies([{ ...MOON, description: null }, MOONFIXTURE]);
@@ -451,8 +423,6 @@ describe('LookupListField', () => {
     ).toBeInTheDocument();
   });
 
-  // The same name in two traditions, told apart on the pill as in
-  // the list, and saved as two picks.
   it('adds Greek and Roman Hecate as two pills, each with its tradition, and sends two ids', async () => {
     const send = renderList(DEITIES);
     const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN]);
@@ -464,8 +434,6 @@ describe('LookupListField', () => {
     await settle();
     fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Roman)' }));
 
-    // Its description in its tooltip and its x's description, as a linked
-    // substitute's detail is; a deity with none has nothing more.
     expect(removeButton('Hecate (Greek)')).toHaveAccessibleDescription(
       'Of crossroads and the moon.',
     );
@@ -525,10 +493,8 @@ describe('LookupListField', () => {
     expect(rows).toHaveLength(3);
     expect(rows[0]).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect(rows[1]).toHaveTextContent('Mockwort (Fixtura vulgaris)');
-    // Told apart by whose entry each is.
     expect(rows[0]).not.toHaveAccessibleName(rows[1].textContent ?? '');
     expect(rows[2]).toHaveTextContent('Mockwort Tea');
-    // None is in the cupboard, so there is no Your Ingredients group.
     expect(screen.queryByRole('group', { name: 'Your Ingredients' })).not.toBeInTheDocument();
   });
 
@@ -550,7 +516,6 @@ describe('LookupListField', () => {
     expect(within(yours).getByRole('option')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect(within(compendium).getAllByRole('option')).toHaveLength(2);
     expect(within(compendium).getByRole('option', { name: /^Mockwort Tea/ })).toBeInTheDocument();
-    // Yours comes first.
     expect(
       yours.compareDocumentPosition(compendium) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -566,9 +531,6 @@ describe('LookupListField', () => {
         name: 'Mockwort (Fixtura vulgaris) This coven’s entry',
       }),
     );
-    // The chip reads as the compendium's Mockwort would; its detail says
-    // which was picked, in one short line that leaves the
-    // description to the summary.
     const picked = removeButton('Mockwort (Fixtura vulgaris)');
     expect(picked).toHaveAccessibleDescription(expect.stringContaining('This coven’s entry'));
     expect(picked).not.toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
