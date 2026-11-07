@@ -10,9 +10,7 @@ vi.mock('next/navigation', () => ({
 const { RouteModalProvider } = await import('@/components/Modal');
 const { default: SpellLookDialog } = await import('@/components/SpellRecipe/look-dialog');
 
-// The Quick Look modal a grimoire card's eye opens (
-// claude-docs/components/spell-recipe.md, "Quick Look"): a spell read over the list,
-// a way through to its recipe page, and, for a role that may update it, an Edit.
+// claude-docs/components/spell-recipe.md, "Quick Look"
 
 const LIST = '/coven/fixture-coven/grimoire' as Route;
 const RECIPE = '/coven/fixture-coven/grimoire/s1' as Route;
@@ -96,7 +94,6 @@ describe('SpellLookDialog', () => {
         <SpellLookDialog closeHref={LIST} opened={{ ...OPENED, editHref: EDIT }} />
       </RouteModalProvider>,
     );
-    // The pencil is in the head, by the title; the foot holds See Full Recipe alone.
     const edit = within(dialog()).getByRole('link', { name: 'Edit Fixture Working' });
     expect(edit).toHaveAttribute('href', EDIT);
     const foot = within(dialog()).getByRole('link', { name: 'See Full Recipe' }).parentElement!;
