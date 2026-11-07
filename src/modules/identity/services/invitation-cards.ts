@@ -10,6 +10,7 @@ import {
   findCardBatchTotals,
   findCardCount,
   findCardPositions,
+  findInvitationByToken,
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
@@ -34,7 +35,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
-import type { CardState, MintedCards } from '../types';
+import type { CardState, LiveCard, MintedCards } from '../types';
 
 // The keeper's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
@@ -195,6 +196,16 @@ export function cardState(
   if (row.acceptedAt) return 'accepted';
   if (row.revokedAt) return 'revoked';
   return row.expiresAt.getTime() <= now.getTime() ? 'expired' : 'pending';
+}
+
+/**
+ * Whether `token` names a pending card, and if so whether its batch was minted for beta testers; null for anything else.
+ * It takes no session: the landing page shows it to a signed-out visitor, who holds the token and nothing more.
+ */
+export async function liveCardOf(token: string): Promise<LiveCard | null> {
+  const row = await findInvitationByToken(token);
+  if (row?.kind !== 'card' || cardState(row) !== 'pending') return null;
+  return { beta: row.beta };
 }
 
 /**

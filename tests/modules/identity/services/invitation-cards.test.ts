@@ -16,6 +16,7 @@ import {
   countCardBatches,
   listCardArrivals,
   listCardBatches,
+  liveCardOf,
   mintInvitationCards,
   revokeInvitationCardBatch,
 } from '@/modules/identity';
@@ -197,6 +198,33 @@ describe('mintInvitationCards', () => {
       ValidationError,
     );
     expect(await cards()).toHaveLength(0);
+  });
+});
+
+describe('liveCardOf', () => {
+  it("answers a pending card with its batch's beta flag, reading with no session", async () => {
+    const beta = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), undefined, true);
+    const plain = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+
+    expect(await liveCardOf(beta.tokens[0]!)).toEqual({ beta: true });
+    expect(await liveCardOf(plain.tokens[0]!)).toEqual({ beta: false });
+  });
+
+  it('answers null for an accepted, revoked or expired card, an unknown token and an address invitation', async () => {
+    const minted = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), undefined, true);
+    const [accepted, revoked, expired, live] = minted.tokens;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where token_hash = ${sha256(accepted!)}`;
+    await sql`update invitations set revoked_at = now() where token_hash = ${sha256(revoked!)}`;
+    await sql`update invitations set expires_at = now() - interval '1 second' where token_hash = ${sha256(expired!)}`;
+    await sql`
+      insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at)
+      values ('wort@example.test', ${sha256('addresstoken')}, 'curator', ${E.id}, ${E.id}, now() + interval '7 days')
+    `;
+    // The batch is beta and one card of it is still live, so a null below is the card's own state.
+    expect(await liveCardOf(live!)).toEqual({ beta: true });
+
+    for (const token of [accepted!, revoked!, expired!, 'nosuchtoken', 'addresstoken'])
+      expect(await liveCardOf(token)).toBeNull();
   });
 });
 
