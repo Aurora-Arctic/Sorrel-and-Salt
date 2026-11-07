@@ -269,7 +269,9 @@ label.
 **What the page sends for each card.** Each result card reaches React's data as
 its props, not as drawn markup: `IngredientCard` is a server wrapper around a
 client card face, and passes a card's safety notes on only as a stand-in that
-says there are some, since the card shows a badge and never the text
+says there are some, since the card shows a badge and never the text, and names its
+categories by id, which the card reads from the `categories` the page already
+sends
 ([`ingredient-card.md`](ingredient-card.md), "What the page sends").
 
 **The cursor rule.** A cursor names a place in one filter's results, so it
