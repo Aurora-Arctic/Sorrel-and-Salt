@@ -3330,13 +3330,37 @@ public finders. `position` orders the FAQ and is unused by a term. The slug is
 unique across all three kinds among live rows, so an article's address and a
 term's anchor never clash. Columns are in `DESIGN.md` §5.
 
-### Audiences and search
+### Audiences, staff routes and search
 
-Decided by the owner on 2026-11-07.
+Decided by the owner on 2026-11-07. These decisions amend the sections around them; where one conflicts with an older sentence, this section stands.
 
-- `audience` is an enum `help_audience`: `public` (anyone), `staff` (site keepers and curators, the `assertCurator` check) or `keeper` (site keepers only, `assertSiteAdmin`). It is not null and defaults to `public`. A CHECK keeps every `term` `public`, since the glossary is one public page.
-- The services (M17.14) keep a child's audience equal to its parent's, move the children with a parent whose audience changes, filter by audience in SQL, and reserve the slugs `glossary`, `staff` and `search`.
-- `search_vector` is a generated `tsvector` column (`english`; title weight A, summary B, body C, the summary coalesced to an empty string) with a GIN index, so the help search (M17.14) ranks with `ts_rank` and needs no maintenance code.
+**Audiences.**
+
+- `audience` is an enum `help_audience`: `public` (anyone, signed in or not), `staff` (site keepers and curators, the `assertCurator` check) or `keeper` (site keepers only, `assertSiteAdmin`). It is not null and defaults to `public`. A CHECK keeps every `term` `public`, since the glossary is one public page.
+- A child's audience is equal to its parent's or narrower, in the order public, staff, keeper. A parent made narrower than any live child is refused with an explaining error. There is no cascade. The database holds neither rule; the service (M17.14) does, because each needs a look at a second row.
+- An article's list of children is filtered by the reader's audience in SQL: the public finder returns public children only, and the staff finder applies the same rules as for any row.
+
+**Staff routes.**
+
+- `/help/staff`, `/help/staff/[slug]` and `/help/staff/[parent]/[slug]` serve the `staff` and `keeper` rows. They live under `src/app/(shell)/help/staff/`, not under `(public)`: pages under `(public)` have no guard test and `PUBLIC_ROUTES`' `/help/*` would admit `/help/staff` past the proxy, whereas `tests/guards/shell-page-guards.test.ts` covers every page under `(shell)`. Each page still calls `requireSession()` and the curator check.
+- A signed-out visitor is sent to sign in. A signed-in user who is neither keeper nor curator gets the styled not-authorized page, as `/curator` does. A curator asking for a `keeper` row gets 404. A public article is never served under `/help/staff/…`, and a staff article is never served under `/help/[slug]` (404). A staff child requested at `/help/staff/[slug]` is answered like the public rule: 308 to the nested address.
+- The pages are dynamic, uncached and `noindex`, and are kept out of `PUBLIC_ROUTES` and the sitemap. `/curator` and `/keepers` link to `/help/staff`.
+- The staff reads take the session, run the check and filter by audience in SQL. They are never cached, because their result depends on the viewer (CLAUDE.md rule 6). Only the public finder is cached, under the tag `help`.
+- The slugs `glossary`, `staff` and `search` are reserved, refused on create and rename: `staff` and `search` would collide with `/help/[slug]`.
+
+**Search.**
+
+- `search_vector` is a generated `tsvector` column (`english`; title weight A, summary B, body C, the summary coalesced to an empty string) with a GIN index (M17.13). `searchHelp` (M17.14) matches through `websearch_to_tsquery` and ranks with `ts_rank`.
+- Help search uses `tsvector` rather than the compendium's trigram match because trigram similarity is poor over long Markdown bodies.
+- When the full-text search finds nothing, it falls back to a trigram match on the title, reusing the compendium's `word_similarity` mechanism (`src/db/repository/predicates.ts`, with `unaccent_immutable`), so a typo still finds a page.
+- Results page by score through the M3.6 cursor helper, as `findPageInTiers` does with `carry: { score }` in `src/db/repository/ingredients.ts`.
+- The audience scope is applied in SQL by the rules above, so a staff row's words never surface for a signed-out visitor or a practitioner. An empty or whitespace-only query returns an empty result.
+- Search has its own page, `/help/search?q=…`, dynamic, uncached and `noindex`, and not in the sitemap. It is in the proxy's public routes, since signed-out visitors search the public rows. A search box sits on `/help` and on every article page, the staff pages included, and a submit goes to the page. There are no as-you-type suggestions for now.
+
+**Widgets and screenshots (later tasks).**
+
+- A widget is placed in a Markdown body by a tag, `::widget[name]`, from a fixed list in code. The syntax is fixed now so later tasks know the form. The renderer does nothing with the tag yet and the seeded prose carries none.
+- Screenshots will be captured by a Playwright script into the repo. Both are separate tasks; a re-seed carries them into each row no keeper has edited.
 
 ### The glossary
 
@@ -3371,6 +3395,9 @@ one general page and one per practice.
   canonical address.
 - **A parent with live children cannot be deleted** until they are moved or
   deleted, and the error says so.
+- **A child's audience** is equal to its parent's or narrower, and the
+  parent's page lists only the children the reader may see ("Audiences, staff
+  routes and search").
 
 ### The module: `help`
 
@@ -3396,7 +3423,9 @@ Both are lines in `CLAUDE.md`, amended in the same PR as this record.
    reference data. What it gives up: a curator who spots a wrong answer must
    ask a keeper.
 2. **What is public.** "The compendium is the one public surface of data" gains
-   `/help` and its sub pages, open and indexable, carrying no workspace data.
+   `/help` and its sub pages for `public` rows, open and indexable, carrying no
+   workspace data. `staff` and `keeper` rows are not public: they sit behind
+   `/help/staff`.
    That is no new kind of exposure, since the pages hold only text a keeper
    chose to publish, and the public finders take no session and cannot reach a
    workspace row.
@@ -3413,17 +3442,19 @@ public pages (M17.16), not before.
 
 ### The build
 
-| Task                                                       | What it builds                                                                   |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| M17.13 — Add the Help Articles Table                       | The table, with nullable `parent_id`; prerequisite MB.175                        |
-| M17.14 — Help Article Services and GraphQL                 | The services, the keeper's GraphQL and the cache; after M17.13                   |
-| M17.15 — The Keepers' Help Page                            | `/keepers/help`; after M17.14                                                    |
-| M17.16 — The Public Help Pages, the Glossary and Sub Pages | `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`; after M17.14 |
-| M17.17 — Seed the Help Articles and the Glossary           | The `help` seed target and the terms; after M17.13                               |
+| Task                                                       | What it builds                                                                            |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| M17.13 — Add the Help Articles Table                       | The table, with nullable `parent_id`, `audience` and `search_vector`; prerequisite MB.175 |
+| M17.14 — Help Article Services and GraphQL                 | The services, the keeper's GraphQL and the cache; after M17.13                            |
+| M17.15 — The Keepers' Help Page                            | `/keepers/help`; after M17.14                                                             |
+| M17.16 — The Public Help Pages, the Glossary and Sub Pages | `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`; after M17.14          |
+| M17.17 — Seed the Help Articles and the Glossary           | The `help` seed target and the terms; after M17.13                                        |
 
 ### What it rules out
 
 - Help text kept in the repository, for the reasons above.
+- A cache of anything staff or keeper rows can reach: only the public finder is cached.
+- A staff page under `(public)`, where no guard test reaches it.
 - A tree of articles deeper than one level, or a child with a glossary term
   beneath it.
 - A curator writing help text. A keeper-only rule is easy to widen later; a wide one is
