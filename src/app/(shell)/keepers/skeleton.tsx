@@ -4,7 +4,10 @@ import Skeleton from '@/components/Skeleton';
 
 export const KeepersSkeleton = () => (
   <div className="admin-index">
-    <PageHeader title="Keepers" />
+    <PageHeader
+      title="Keepers"
+      lede="Here you answer the help requests people send, and manage who uses the site. Pick a page below, or from the links at the top of any Keepers page."
+    />
     <Skeleton shape="line" count={5} quiet />
   </div>
 );

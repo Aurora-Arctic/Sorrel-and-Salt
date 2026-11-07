@@ -4,7 +4,10 @@ import Skeleton from '@/components/Skeleton';
 
 export const CuratorSkeleton = () => (
   <div className="admin-index">
-    <PageHeader title="Curator" />
+    <PageHeader
+      title="Curator"
+      lede="Here you curate what every coven reads from. Pick a page below, or from the links at the top of any Curator page."
+    />
     <Skeleton shape="line" count={5} quiet />
   </div>
 );
