@@ -39,7 +39,7 @@ import {
 // error alone. CupboardEntryForm also imports ListField and MultiSelectField.
 
 /**
- * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick fills the field with
+ * A text field whose box suggests as it is typed in (claude-docs/components/combobox.md): a pick fills the field with
  * the suggestion's value, and free text stays as typed. What a pick links is the caller's, told of
  * each pick and each edit; what it adds to the box is its qualifier.
  */

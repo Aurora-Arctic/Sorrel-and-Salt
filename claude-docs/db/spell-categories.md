@@ -44,8 +44,8 @@ nothing can: the two are the same pair of columns pointing at the same
   constraints: §5 names none, and between the key and the two foreign keys there
   is nothing about an assignment left to constrain.
 - **No `workspace_id`.** §5 names none, and a spell's workspace is the spell's.
-  That is also why this table cannot self-scope under CLAUDE.md rule 5 — §14
-  names it explicitly, alongside `spell_ingredients`: the service loads the
+  That is also why this table cannot self-scope under CLAUDE.md rule 5, as
+  `spell_ingredients` cannot: the service loads the
   parent spell under the `Membership` proof and derives scope from it, so a
   guard that infers the workspace-scoped set from a column name would silently
   exempt both tables.

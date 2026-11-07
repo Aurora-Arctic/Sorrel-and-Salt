@@ -11,15 +11,15 @@ Each is global and keeper-curated, carries the columns §5 lists, and lists alph
 
 A category reaches an ingredient through [`ingredient_categories`](categories.md) and a spell through [`spell_categories`](spell-categories.md), both join tables and so both hard-deleted — each has its own section.
 
-**Groups are rows, not enums, because a keeper mutation cannot run DDL** — the argument, and why there is no order column, is §14's.
+**Groups are rows, not enums, because a keeper mutation cannot run DDL** (MB.35).
 
-**Two group tables, not one with a `kind` column**, so a category pointing at a form group is a foreign-key violation rather than an empty chip section (§5, §14).
+**Two group tables, not one with a `kind` column**, so a category pointing at a form group is a foreign-key violation rather than an empty chip section (§5).
 
-**Both `groupId`s are foreign keys, and a variant's `form` is not — that is a rule, not an inconsistency**: a member writes `form`, and only keepers write either side of a group link (§5, §14).
+**Both `groupId`s are foreign keys, and a variant's `form` is not — that is a rule, not an inconsistency**: a member writes `form`, and only keepers write either side of a group link (§5).
 
-**A group's colour is §5's pair of hexes on the row, not a build-time token**, and §14 says why one per theme. A Sass token per group key cannot exist for a group created at runtime, so the colours are seed data: the owner's hand-tuned pairs in `src/db/seed/category-groups.ts` are their only source, and there is no Sass map ([category-seed.md](category-seed.md)). The chip reads the row: `chip()` takes the pair ([`styling.md`](../styling.md), "Chips, badges and the solid-fill rule"). The validation is in the shared input schema the service parses and not a CHECK constraint, because the failure needs a readable message and the ground to compare against: `colorDark` is checked against the dark card only, `colorLight` against the light page, the harder of each theme's two surfaces, so each floor is exact and holds wherever a chip sits. What a keeper adds is legible in both themes but does not join the hue rotation — the accepted cost of an open set, stated in §6.
+**A group's colour is §5's pair of hexes on the row, not a build-time token**, one per theme because each is contrast-checked against its own theme's surface. A Sass token per group key cannot exist for a group created at runtime, so the colours are seed data: the owner's hand-tuned pairs in `src/db/seed/category-groups.ts` are their only source, and there is no Sass map ([category-seed.md](category-seed.md)). The chip reads the row: `chip()` takes the pair ([`styling.md`](../styling.md), "Chips, badges and the solid-fill rule"). The validation is in the shared input schema the service parses and not a CHECK constraint, because the failure needs a readable message and the ground to compare against: `colorDark` is checked against the dark card only, `colorLight` against the light page, the harder of each theme's two surfaces, so each floor is exact and holds wherever a chip sits. What a keeper adds is legible in both themes but does not join the hue rotation — the accepted cost of an open set, stated in §6.
 
-**The colour lives on the group only, and a category has none** — a single category column could hold neither half of the pair; §14 has the rest of the argument.
+**The colour lives on the group only, and a category has none** — a single category column could hold neither half of the pair.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four tables** — `category_groups_slug_unique`, `categories_slug_unique`, `ingredient_form_groups_slug_unique` and `ingredient_forms_slug_unique`, the [partial-index convention](soft-delete.md). Slug uniqueness is global rather than per group on both child tables: the slug is what a chip filter and the seed's idempotency keys read, and none of them carries a group alongside it. Display names carry no constraint: two groups may each want a "Protection", and the slug is what tells them apart.
 

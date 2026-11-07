@@ -35,7 +35,7 @@ values alone, so a row one holds is not deleted and a rename carries onto it
 ([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).
 `nomenclature` and `element` stay enums — closed
 sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
-`none` and `unknown` and could not read a table (DESIGN.md §14).
+`none` and `unknown` and could not read a table.
 
 **Two tables, not one with a `kind` column**, for the reason the group tables
 are two: a suggestion query that forgot the `kind` predicate would offer a

@@ -252,7 +252,7 @@ this is what holds it in the database.
 
 - **`ingredient_id` is nullable, and the foreign key stays.** Nullability costs
   nothing in integrity because the first CHECK below forbids the row that would
-  exploit it — §14's "nullable FKs plus `num_nonnulls`" idiom.
+  exploit it — the "nullable FKs plus `num_nonnulls`" idiom of [`../design-decisions/mb.40-custom-spell-ingredients.md`](../design-decisions/mb.40-custom-spell-ingredients.md).
 - **The CHECKs**, each named so a refusal says which rule it broke:
   `spell_steps_one_identity` is `num_nonnulls(ingredient_id, name) <= 1`, so
   a step never names both; `spell_steps_not_empty` is

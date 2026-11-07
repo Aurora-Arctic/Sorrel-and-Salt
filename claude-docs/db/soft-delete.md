@@ -13,7 +13,7 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
 - **`findOne(table, where?)`** — the first row `findMany` returns, or
   `undefined`. There is no separate unfiltered path underneath it.
 - **`findManyIncludingSoftDeleted(table, where?)`** — the dedicated escape
-  hatch, for admin restore paths only (DESIGN.md §14's trash view / undo). Its
+  hatch, for admin restore paths only (a trash view or undo). Its
   name says what it does at the call site rather than a `{ includeDeleted }`
   flag a later edit could default the wrong way; nothing else may bypass the
   filter, so a second bypass is a decision argued for in the diff, not a

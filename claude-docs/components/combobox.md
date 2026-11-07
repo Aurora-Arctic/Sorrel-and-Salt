@@ -1,6 +1,6 @@
 # Combobox
 
-`src/components/Combobox/` is a text box that suggests as it is typed in, built on Downshift's `useCombobox` (DESIGN.md §14). The hook owns the ARIA and the keyboard state; the markup, the rows and the Sass are ours. It is also the closed-set boxes (select-only, type-ahead, multi-select), the chip a list draws inside its control, and a sortable list of chips on dnd-kit.
+`src/components/Combobox/` is a text box that suggests as it is typed in, built on Downshift's `useCombobox` ([`../design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)). The hook owns the ARIA and the keyboard state; the markup, the rows and the Sass are ours. It is also the closed-set boxes (select-only, type-ahead, multi-select), the chip a list draws inside its control, and a sortable list of chips on dnd-kit.
 
 | File                                              | What it holds                                                                                                                |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ Downshift's open callback fires only when the open state differs from the props 
 
 ## Where the list opens
 
-`useListPosition` (`position.ts`) places the open list on Floating UI's `useFloating` (DESIGN.md §14), which owns the flip, the room, and following a scroll or resize.
+`useListPosition` (`position.ts`) places the open list on Floating UI's `useFloating`, which owns the flip, the room, and following a scroll or resize.
 
 - **As wide as its anchor**: `listAnchor`, else the control.
 - **Never off the screen.** It opens beneath the box, flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll. Its side is `data-placement`.
@@ -98,7 +98,7 @@ Users: "See All Results" ends the ingredient search's dropdown when there is ano
 
 ## The select-only box
 
-`ComboboxSelect` (`select.tsx`) is a closed set on the same control and list, for a field nothing is typed into: every closed enum DESIGN.md §14 names. It replaces the native `<select>` so a form's fields share one look ([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)). The DateField's month and year pickers are two of these ([`date-field.md`](date-field.md)).
+`ComboboxSelect` (`select.tsx`) is a closed set on the same control and list, for a field nothing is typed into: every closed enum. It replaces the native `<select>` so a form's fields share one look ([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)). The DateField's month and year pickers are two of these ([`date-field.md`](date-field.md)).
 
 - **It is Downshift's `useSelect`**, ARIA 1.2's select-only combobox: the control itself is the `role="combobox"` element, a `div` in the tab order, labelled through `aria-labelledby` and carrying the field's hint, error, `aria-invalid` and `aria-required`. A press, ArrowDown or ArrowUp opens the list on the current choice; the arrows move, Enter or Space chooses, Escape closes and keeps the choice, and a letter jumps to the choice it starts. Without `labelId`, `label` is its `aria-label`.
 - **A choice with value `''`** clears the set ("None"). `placeholder` shows while the value is none of the choices and is never in the list.
@@ -170,7 +170,7 @@ Users: "See All Results" ends the ingredient search's dropdown when there is ano
 
 ## A sortable list
 
-`ComboboxSortableEntries({ entries, onMove })` is what a list whose order means something passes in place of its own `ul.combobox__entries`. Each entry is a chip's props with an `id`, its identity as it moves (a react-hook-form list takes it from its field array's `id`); `onMove(from, to)` gives indexes into `entries` and the caller reorders. It is on dnd-kit's sortable preset, a standard package rather than a bespoke one (DESIGN.md §14, "A library to move a list's entries?").
+`ComboboxSortableEntries({ entries, onMove })` is what a list whose order means something passes in place of its own `ul.combobox__entries`. Each entry is a chip's props with an `id`, its identity as it moves (a react-hook-form list takes it from its field array's `id`); `onMove(from, to)` gives indexes into `entries` and the caller reorders. It is on dnd-kit's sortable preset, a standard package rather than a bespoke one.
 
 - **Each chip's handle is its grip and its text, one button**: six muted dots ahead of the text, a real `<button>` in the tab order before the ×, with the focus ring, named for its entry ("Move Mars"), carrying `aria-roledescription="sortable"`, described by the list's error and the entry's detail, then by how it moves ("Press Space or Enter to pick it up, the arrow keys to move it, and Space or Enter to put it down, or Escape to cancel."). Its focus opens the chip's tooltip. A list that is not sortable draws its text bare.
 - **By pointer**, the chip is dragged onto another's place, the others sliding aside. A mouse or pen drag starts after 4px of movement, so a press focuses the handle and opens its tooltip rather than dragging. A finger drags after resting `TOUCH_DRAG_DELAY_MS` (250ms, moving no more than 5px) on dnd-kit's `TouchSensor`; the pointer sensor skips touch so the two never race. The constant in [`src/lib/sortable`](../../src/lib/sortable/index.ts) sets it for every sortable list. `touch-action: none` on the handle lets a touch drag move the chip, not the page. The chip is over the place whose centre is nearest its own (closest-centre collision).

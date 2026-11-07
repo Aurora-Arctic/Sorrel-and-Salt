@@ -1,6 +1,6 @@
 # IngredientForm
 
-`src/components/IngredientForm/` holds every property of an ingredient, on react-hook-form with the Zod resolver (DESIGN.md §14): a coven's new ingredient, or a compendium entry, new or edited. It validates with the shared `LocalIngredientInput`, or `CompendiumIngredientInput` on the compendium, before the mutation is sent, sends `createWorkspaceIngredient` or the compendium mutations, and puts an error from either side beside the field it names. It is built standalone: the add and edit modals and the admin compendium page wrap it rather than containing their own form. The file layout is the directory; each file's top comment says what it holds.
+`src/components/IngredientForm/` holds every property of an ingredient, on react-hook-form with the Zod resolver: a coven's new ingredient, or a compendium entry, new or edited. It validates with the shared `LocalIngredientInput`, or `CompendiumIngredientInput` on the compendium, before the mutation is sent, sends `createWorkspaceIngredient` or the compendium mutations, and puts an error from either side beside the field it names. It is built standalone: the add and edit modals and the admin compendium page wrap it rather than containing their own form. The file layout is the directory; each file's top comment says what it holds.
 
 ## Contracts
 

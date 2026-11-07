@@ -4,7 +4,7 @@ Single route handler at `/api/graphql`. No separate service, no additional hosti
 
 **Stack:** GraphQL Yoga (server), Pothos (code-first schema, no ORM plugin — §2), DataLoader, graphql-codegen for client types.
 
-**Client:** a small `fetch` wrapper in `src/lib/graphql-client.ts` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen (`client-preset`, reading the committed SDL) generates a typed document node per operation into `src/gql/`, and no hooks: the request function runs a typed document through TanStack Query. Forms are react-hook-form with the Zod resolver; the suggesting fields of M5.10a are a headless combobox on Downshift, not react-select — §14 carries both arguments.
+**Client:** a small `fetch` wrapper in `src/lib/graphql-client.ts` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen (`client-preset`, reading the committed SDL) generates a typed document node per operation into `src/gql/`, and no hooks: the request function runs a typed document through TanStack Query. Forms are react-hook-form with the Zod resolver; the suggesting fields of M5.10a are a headless combobox on Downshift, not react-select ([`../design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)).
 
 **Four rules follow from dropping the Drizzle plugin (MB.20), and bind every M3 task:**
 

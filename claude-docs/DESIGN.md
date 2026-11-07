@@ -1,7 +1,7 @@
 # Sorrel and Salt — Design Doc
 
 **Repo:** `Aurora-Arctic/Sorrel-and-Salt`
-**Status:** Approved; revised 7 September 2026 (post-draft scope changes — see §14)
+**Status:** Approved; revised 7 September 2026 (post-draft scope changes — see [`design-decisions/INDEX.md`](design-decisions/INDEX.md))
 **Date:** 6 September 2026, revised 7 September 2026
 
 ---
@@ -602,7 +602,7 @@ Story coverage is tracked separately from the 80% line threshold, because they m
 
 `src/lib/` carries the heaviest coverage:
 
-- There is no `filterIngredients()`: the search is the `compendium` query's, in SQL (M8.5; §14), because rule 8 means the browser never holds the whole list
+- There is no `filterIngredients()`: the search is the `compendium` query's, in SQL (M8.5; [`design-decisions/m8.5-compendium-queries.md`](design-decisions/m8.5-compendium-queries.md)), because rule 8 means the browser never holds the whole list
 - `unitConvert()` — lives in the ingredients module, `src/modules/ingredients/units/convert.ts`, built from the unit table in `src/modules/ingredients/units/` and reaching no database code, not in `src/lib/`; within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
@@ -746,7 +746,7 @@ There are two suites. The story suite (`tests/e2e/stories/`, `npm run test:stori
 
 **Manual setup:** enable "Require merge queue" in Settings → Branches on both `main` and `staging`, or `merge_group` never fires. No workflow handles `merge_group` yet (M7.A.1).
 
-**Docs:** adopt the `claude-docs/` convention — a summary per subsystem, corrected in the PR that stales it, and one doc per component. The append-only transcript and the scheduled compression pass were part of this convention and are retired (MB.31, §14).
+**Docs:** adopt the `claude-docs/` convention — a summary per subsystem, corrected in the PR that stales it, and one doc per component. The append-only transcript and the scheduled compression pass were part of this convention and are retired (MB.31).
 
 ---
 
@@ -970,7 +970,7 @@ The owner means to charge for the site eventually. What is wanted, written down 
 | Free until a keeper clears it          | Nothing                                                                                                                                                                               | A flag on `workspaces`, written through `withAudit` by a keeper mutation and read by the entitlement check before any subscription row. A 100% coupon would also work, but its truth would live in Stripe, unaudited                                                             |
 | Less for someone in several workspaces | Nothing: the upgrade call takes no coupon or discount                                                                                                                                 | Computed by a service and applied as a Stripe coupon, at checkout through `getCheckoutSessionParams` and afterwards through the Stripe API. It needs a definition first: a workspace has one paying customer, so it must say whose invoice a member's other memberships discount |
 
-**It carries MB.30's two structural costs.** Its `subscription` table and `users.stripeCustomerId` are written by Better Auth's adapter and by the webhook handler, with no audit columns and no path through `withAudit`, and the webhook has no session to stamp from. It mounts upgrade, list, cancel, restore and billing-portal routes under `/api/auth/subscription/*`, browser-facing and outside `/api/graphql`, the objection §14 records against the organization plugin's routes. Its row is also a copy of Stripe's state, stale until the next event arrives. The webhook route is not a cost of the plugin: Stripe calls it, so it is a plain route whichever way this goes.
+**It carries MB.30's two structural costs.** Its `subscription` table and `users.stripeCustomerId` are written by Better Auth's adapter and by the webhook handler, with no audit columns and no path through `withAudit`, and the webhook has no session to stamp from. It mounts upgrade, list, cancel, restore and billing-portal routes under `/api/auth/subscription/*`, browser-facing and outside `/api/graphql`, the objection [`design-decisions/mb.30-organization-plugin.md`](design-decisions/mb.30-organization-plugin.md) records against the organization plugin's routes. Its row is also a copy of Stripe's state, stale until the next event arrives. The webhook route is not a cost of the plugin: Stripe calls it, so it is a plain route whichever way this goes.
 
 **Decided (M17.1, 2026-11-06).** The research, the price list, the payer modes, the pause, lapsed-member and switch rules, the processor, the data model and the running costs are in `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` and `claude-docs/billing/`. Billing attaches to the workspace, and entitlement and the admin exemption live in this schema, under `withAudit`, whatever carries the payment. The build is [Wave 21](waves/wave-21.md), M21.1 → M21.20; the plugin-or-SDK choice is settled by the proof of concept, M21.1, against Stripe's test mode. Nothing in v1 leaves a hook for it; a billing reference on `workspaces` is purely additive when it comes.
 
@@ -985,7 +985,7 @@ Git history holds the old log, a table of questions and answers, for anyone who 
 
 ## 15. Open questions
 
-The post-draft scope changes (notes → v2, no personal workspaces, invite-gating, spell visibility, invitable roles, unit dimensions) are recorded in §14 and reflected throughout. None remain open. All prior questions are resolved:
+The post-draft scope changes (notes → v2, no personal workspaces, invite-gating, spell visibility, invitable roles, unit dimensions) are reflected throughout. None remain open. All prior questions are resolved:
 
 - Framework, database, ORM, auth, API, hosting — §2
 - Sharing model — workspaces with three roles, §5
