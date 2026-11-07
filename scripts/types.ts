@@ -32,5 +32,6 @@ export interface AssertionResult {
 export interface ProbeResult {
   ok: boolean;
   identity?: { database: string; user: string; version: string };
+  /** Already scrubbed of secrets, so safe to print. */
   description?: string;
 }

@@ -121,6 +121,7 @@ export function validateDatabaseUrl(raw: string | undefined): Verdict {
   return { ok: true };
 }
 
+/** One line per key: its name, classification and length, never its value. */
 export function reportLines(env: Map<string, string>): string[] {
   const keys = [...env.keys()].sort();
   const width = keys.reduce((longest, key) => Math.max(longest, key.length), 0);

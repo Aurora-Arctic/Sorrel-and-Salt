@@ -9,6 +9,7 @@ import { basename, extname, join } from 'node:path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { slugify } from '../src/lib/slugify.ts';
 
+// Absolute, so a lane in a worktree reads the one copy in /app.
 const DEFAULT_LIBRARY = '/app/.library';
 
 export function bookFolder(library: string, file: string): string {
