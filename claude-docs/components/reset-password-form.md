@@ -6,13 +6,7 @@ calls Better Auth's `resetPassword` (through `src/lib/auth-client.ts`). The
 wiring behind it is [`auth/passwords.md`](../auth/passwords.md), "Reset and
 change".
 
-## Props
-
-`ResetPasswordFormProps` (`types.ts`):
-
-| Prop    | What it is                                                                                                                  |
-| ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `token` | Optional: the link's token. The page passes it only when the URL carries a non-empty `token` and no `error` (Better Auth's) |
+Props: `token` is optional (`types.ts`). The page passes it only when the URL carries a non-empty `token` and no `error` (Better Auth's).
 
 ## Contracts
 
@@ -35,26 +29,13 @@ change".
   notice that the new password is set and every device signed in to the
   account has been signed out, and a "Sign In" link styled as a button to
   `/sign-in`. A reset gives no session.
+- **A submit's result takes focus**: the invalid field, else the notice (`useResultFocus`).
 
 ## Styling
 
 `.reset-password-form` is a column with the standard gap, inside the page's
 `.page-frame--narrow` and `.panel`. Nothing past the tokens.
 
-## Stories
+## Stories and tests
 
-[`index.stories.tsx`](../../src/components/ResetPasswordForm/index.stories.tsx),
-titled "Sign In / Reset Password Form": `States`, with Default (a token to
-spend) and Spent Link (no token), each inside the page's own frame, panel and
-heading. Nothing is mocked: a submit in the workshop fails into the alert
-region.
-
-## Testing
-
-`tests/components/ResetPasswordForm/index.test.tsx`: the form with and without
-a token, the call Better Auth gets, each refusal and where it lands, the
-refused token, and the success notice and link. `tests/app/reset-password-page.test.tsx`:
-which URLs pass a token. Story 71 walks it in the browser
-(`tests/e2e/stories/16-password.spec.ts`).
-
-The result of a submit takes focus: the invalid field, else the notice (`useResultFocus`).
+`src/components/ResetPasswordForm/index.stories.tsx` (nothing is mocked: a submit in the workshop fails into the alert region); `tests/components/ResetPasswordForm/index.test.tsx`; `tests/app/reset-password-page.test.tsx` (which URLs pass a token); story 71 in `tests/e2e/stories/16-password.spec.ts`.
