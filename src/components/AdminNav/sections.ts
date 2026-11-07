@@ -98,6 +98,14 @@ export const ADMIN_PAGES = {
       { href: '/keepers/documents', label: 'Email Updates', shape: 'sections', sections: 1 },
     ],
   },
+  help: {
+    label: 'Help',
+    icon: 'support',
+    adminOnly: true,
+    description:
+      'The help articles, FAQ entries and glossary terms the site shows, written in Markdown with a preview.',
+    tabs: [{ href: '/keepers/help', label: 'Help' }],
+  },
   businessCards: {
     label: 'Business Cards',
     icon: 'businessCards',
@@ -129,6 +137,7 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.invitations,
       ADMIN_PAGES.support,
       ADMIN_PAGES.documents,
+      ADMIN_PAGES.help,
     ],
   },
   {

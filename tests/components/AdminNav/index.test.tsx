@@ -29,6 +29,7 @@ const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
 const DOCUMENTS = '/keepers/documents/terms';
 const BUSINESS_CARDS = '/keepers/business-cards';
+const HELP = '/keepers/help';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
 
@@ -62,12 +63,12 @@ describe('AdminNav, the Keepers nav', () => {
     pathname.mockReturnValue('/keepers');
   });
 
-  it('links a keeper to Support, People, Invitations, Documents and Business Cards, and to no curation page', () => {
+  it('links a keeper to Support, People, Invitations, Documents, Help and Business Cards, and to no curation page', () => {
     render(<AdminNav managesPeople />);
 
     const links = hrefs(linksIn(keepersNav()));
     expect(sorted(links)).toEqual(
-      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, BUSINESS_CARDS]),
+      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, HELP, BUSINESS_CARDS]),
     );
     expect(within(keepersNav()).getByRole('link', { name: 'People' })).toHaveAttribute(
       'href',

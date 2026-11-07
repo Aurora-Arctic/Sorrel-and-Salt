@@ -55,6 +55,9 @@ type Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
+    "\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateHelpArticleDocument,
+    "\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateHelpArticleDocument,
+    "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n": typeof types.DeleteHelpArticleDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": typeof types.AddCupboardEntryDocument,
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": typeof types.RemoveCupboardEntryDocument,
     "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": typeof types.MakeItOursDocument,
@@ -188,6 +191,9 @@ const documents: Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
+    "\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateHelpArticleDocument,
+    "\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateHelpArticleDocument,
+    "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n": types.DeleteHelpArticleDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": types.AddCupboardEntryDocument,
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": types.RemoveCupboardEntryDocument,
     "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": types.MakeItOursDocument,
@@ -458,6 +464,18 @@ export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input:
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
