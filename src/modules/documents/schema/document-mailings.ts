@@ -13,8 +13,7 @@ export const documentMailingStatus = pgEnum('document_mailing_status', [
   'paused',
 ]);
 
-// One email to every account, listing the versions its `document_mailing_items` name. Marked `namedWrites`: its status and
-// finish time are stamped by its own methods alone.
+// Marked `namedWrites`: its status and finish time are stamped by its own methods alone.
 export const documentMailings = namedWrites(
   pgTable(
     'document_mailings',

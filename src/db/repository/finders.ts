@@ -21,7 +21,6 @@ import type {
   ReadRow,
 } from './types';
 
-/** All matching, non-soft-deleted rows. The default and normal-use finder. */
 export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped>(
   table: TTable,
   where?: SQL,
@@ -31,7 +30,6 @@ export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & No
   return selectFrom(table, and(notSoftDeleted(table), where));
 }
 
-/** The first matching, non-soft-deleted row, or `undefined`. */
 export async function findOne<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,
 >(table: TTable, where?: SQL): Promise<ReadRow<TTable> | undefined> {
@@ -39,28 +37,18 @@ export async function findOne<
   return row;
 }
 
-/**
- * The live row with this id, or `undefined`. The read-side twin of
- * `write.updateById`: a service cannot build `eq(table.id, id)` itself.
- */
 export function findOneById<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, id: string): Promise<ReadRow<TTable> | undefined> {
   return findOne(table, eq(table.id, id));
 }
 
-/**
- * The live row holding this slug, or `undefined` — the read an admin page
- * opens a row by, for a table no proof scopes. Every slug index is partial on
- * `deleted_at IS NULL`, so at most one live row answers.
- */
 export function findOneBySlug<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Slugged,
 >(table: TTable, slug: string): Promise<ReadRow<TTable> | undefined> {
   return findOne(table, eq(table.slug, slug));
 }
 
-/** The live rows among these ids, in no particular order — a loader's batch read. */
 export async function findManyByIds<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, ids: readonly string[]): Promise<ReadRow<TTable>[]> {
@@ -68,7 +56,6 @@ export async function findManyByIds<
   return findMany(table, inArray(table.id, [...ids]));
 }
 
-/** All matching, non-soft-deleted rows inside the workspace the proof names. */
 export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped>(
   membership: Membership,
   table: TTable,
@@ -77,7 +64,6 @@ export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & N
   return selectFrom(table, and(scopedTo(membership, table), notSoftDeleted(table), where));
 }
 
-/** The first such row, or `undefined` — including when it belongs to another workspace. */
 export async function findOneInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped,
 >(membership: Membership, table: TTable, where?: SQL): Promise<ReadRow<TTable> | undefined> {
@@ -85,21 +71,12 @@ export async function findOneInWorkspace<
   return row;
 }
 
-/**
- * The live row with this id in the proof's workspace, or `undefined` (including another workspace's id): the scoped
- * twin of `findOneById`, for a service that cannot build `findOneInWorkspace`'s `where`.
- */
 export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
 >(membership: Membership, table: TTable, id: string): Promise<ReadRow<TTable> | undefined> {
   return findOneInWorkspace(membership, table, eq(table.id, id));
 }
 
-/**
- * One page of live rows in `(...sort, id)` order, each with the cursor it was found at (CLAUDE.md rule 8). `order` is the
- * sort or a `ListOrder` with a join, threshold and carried values; the id is always the table's. `page` comes from
- * `resolvePage` in `src/lib/pagination.ts`, already clamped.
- */
 export function findPage<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
   Carried extends object,
@@ -112,17 +89,12 @@ export function findPage<
   return readPage(table, notSoftDeleted(table), order, page, where);
 }
 
-/**
- * How many live rows `findPage` pages under the same `order` and `where`, and how many come before `start`, for
- * "Page X of Y"; one statement over the page's own key, join and threshold.
- */
 export function findPageCount<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, order: PageOrder, start: Cursor | undefined, where?: SQL): Promise<PageCount> {
   return readCount(table, notSoftDeleted(table), order, start, where);
 }
 
-/** The same, inside the workspace the proof names. */
 export function findPageInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
   Carried extends object,
@@ -159,7 +131,6 @@ export function findPageInTiers<
   return readPage(table, readableInTiers(memberships, table), order, page, where);
 }
 
-/** `findPageCount` for `findPageInTiers`: the same rows, counted. */
 export function findPageCountInTiers<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
 >(
@@ -198,10 +169,6 @@ export function findPageInReadableSpells<
   );
 }
 
-/**
- * How many rows `findPageInReadableSpells` would page under the same order and `where`, and how many sit before `start`,
- * under the same `readableSpells` rule, so a private spell never reaches another member's count.
- */
 export function findPageCountInReadableSpells<
   TTable extends PgTable &
     Identified &
@@ -246,7 +213,6 @@ export function findPageInScope<TTable extends PgTable & Identified, Carried ext
   return readPage(table, and(scope, notSoftDeleted(table)), order, page, where);
 }
 
-/** `findPageCount` for `findPageInScope`: the same rows, counted. */
 export function findPageCountInScope(
   table: PgTable & Identified,
   scope: SQL,
@@ -275,7 +241,6 @@ export function findPageInScopeIncludingSoftDeleted<
   return readPage(table, scope, order, page, where);
 }
 
-/** `findPageCount` for `findPageInScopeIncludingSoftDeleted`: the same rows, counted. */
 export function findPageCountInScopeIncludingSoftDeleted(
   table: PgTable & Identified,
   scope: SQL,
@@ -286,7 +251,6 @@ export function findPageCountInScopeIncludingSoftDeleted(
   return readCount(table, scope, order, start, where);
 }
 
-/** A page of `table` under its finder's `scope` and the caller's `where`, cut at the page's bounds. */
 function readPage<TTable extends PgTable & Identified, Carried extends object>(
   table: TTable,
   scope: SQL | undefined,
@@ -298,7 +262,6 @@ function readPage<TTable extends PgTable & Identified, Carried extends object>(
   return selectFrom(table, and(scope, where, pageBounds(keyset)), keyset);
 }
 
-/** The rows `readPage` pages under the same scope, `where` and order, counted. */
 function readCount(
   table: PgTable & Identified,
   scope: SQL | undefined,
@@ -309,7 +272,6 @@ function readCount(
   return selectFrom(table, and(scope, where), { count: keyOf(table, order), start });
 }
 
-/** `order` keyed on the table's own id, so a page and its count key alike. */
 function keyOf<Carried extends object>(
   table: Identified,
   order: PageOrder<Carried>,

@@ -5,8 +5,7 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 import { documentMailings } from './document-mailings';
 
-// One account in a mailing, with the time its mail went out, or the time it was given up on: one row per account, so a retried batch mails no one twice. Marked
-// `namedWrites`: rows are added and stamped sent by their own methods alone.
+// One row per account, so a retried batch mails no one twice. Marked `namedWrites`: rows are added and stamped sent by their own methods alone.
 export const documentMailingRecipients = namedWrites(
   pgTable(
     'document_mailing_recipients',
@@ -19,7 +18,6 @@ export const documentMailingRecipients = namedWrites(
       userId: uuid('user_id')
         .notNull()
         .references(() => users.id, { onDelete: 'cascade' }),
-      // Null until the mail has gone out.
       sentAt: timestamp('sent_at'),
       // Set instead of `sent_at` for an account that can never be mailed (gone, or its address refused for good); null otherwise.
       skippedAt: timestamp('skipped_at'),
