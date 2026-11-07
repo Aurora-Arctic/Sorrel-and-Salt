@@ -24,7 +24,7 @@ import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
 } from '../validation/help';
-import { assertMarksExist } from './marks';
+import { assertMarksExist, assertWidgetsKnown } from './marks';
 import { toHelpArticles } from './rows';
 
 // The keeper's writing of the help centre. Every call is a keeper's alone: a curator reads staff help and writes none of it.
@@ -112,6 +112,7 @@ export async function createHelpArticle(
   };
   await checkSlug(merged.kind, slug, null);
   await checkStructure(merged, null);
+  assertWidgetsKnown(values.body);
   await assertMarksExist(values.body, { kind: merged.kind, title: values.title, slug });
 
   const [row] = await withAudit(session, (write) =>
@@ -157,12 +158,14 @@ export async function updateHelpArticle(
   };
   if (slug !== current.slug) await checkSlug(current.kind, slug, id);
   await checkStructure(merged, id);
-  if (values.body != null && values.body !== current.body)
+  if (values.body != null && values.body !== current.body) {
+    assertWidgetsKnown(values.body);
     await assertMarksExist(values.body, {
       kind: current.kind,
       title: values.title ?? current.title,
       slug,
     });
+  }
 
   const [row] = await withAudit(session, (write) =>
     write.updateById(helpArticles, id, {

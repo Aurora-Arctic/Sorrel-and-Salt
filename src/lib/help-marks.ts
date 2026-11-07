@@ -51,11 +51,16 @@ function textNodes(node: Root | RootContent, found: string[]): void {
   if ('children' in node) for (const child of node.children) textNodes(child, found);
 }
 
-/** The term each mark in a Markdown body names, in order; marks in code are not marks. */
-export function marksInMarkdown(body: string): string[] {
+/** Each run of text in a Markdown body, in order, leaving out code, which is shown as written. */
+export function textRuns(body: string): string[] {
   const runs: string[] = [];
   textNodes(parser.parse(body), runs);
-  return runs.flatMap((run) => [...run.matchAll(MARK)].map((match) => match[1].trim()));
+  return runs;
+}
+
+/** The term each mark in a Markdown body names, in order; marks in code are not marks. */
+export function marksInMarkdown(body: string): string[] {
+  return textRuns(body).flatMap((run) => [...run.matchAll(MARK)].map((match) => match[1].trim()));
 }
 
 const PHRASING = new Set([

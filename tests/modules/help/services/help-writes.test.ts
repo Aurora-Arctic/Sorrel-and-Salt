@@ -632,3 +632,63 @@ describe('the glossary marks in a body', () => {
     expect(created.body).toContain('[[Testwort Absent]]');
   });
 });
+
+describe('the widget tags in a body', () => {
+  it.each([
+    ['an article', { kind: 'article' as const }],
+    ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
+  ])(
+    'refuses to create %s that names a widget the list does not hold, naming it',
+    async (_name, shape) => {
+      const error = await createHelpArticle(asUser(E), {
+        ...shape,
+        title: 'Testwort Widgeted',
+        body: 'Intro.\n\n::widget[testwort-gadget]',
+      }).then(
+        () => {
+          throw new Error('accepted a tag naming no widget');
+        },
+        (reason: unknown) => reason,
+      );
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).message).toContain('testwort-gadget');
+      expect((error as ValidationError).issues.map((issue) => issue.path[0])).toContain('body');
+      expect(await liveCount()).toBe(0);
+    },
+  );
+
+  it('accepts a body that names a widget the list holds', async () => {
+    const body = 'Intro.\n\n::widget[unit-converter]';
+
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Widgeted',
+      body,
+    });
+
+    expect(created.body).toBe(body);
+  });
+
+  it('refuses an update whose new body names an unknown widget, and leaves the row as it was', async () => {
+    const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Widgeted' });
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), created.id, { body: '::widget[testwort-gadget]' }),
+      'body',
+    );
+
+    const [{ body }] = await sql`select body from help_articles where id = ${created.id}`;
+    expect(body).toBe(article.body);
+  });
+
+  it('reads a tag in code as written, not as a tag', async () => {
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Widgeted',
+      body: 'Type `::widget[testwort-gadget]` to place one.',
+    });
+
+    expect(created.body).toContain('::widget[testwort-gadget]');
+  });
+});
