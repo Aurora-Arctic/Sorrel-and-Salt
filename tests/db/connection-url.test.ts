@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { CLIENT_ONLY_PARAMS, withoutClientOnlyParams } from '../../src/db/connection-url';
+import {
+  CLIENT_ONLY_PARAMS,
+  MIGRATION_LOCK_TIMEOUT,
+  withMigrationLockTimeout,
+  withoutClientOnlyParams,
+} from '../../src/db/connection-url';
 
 const BASE = 'postgresql://testuser:testpass@ep-fixture-host-pooler.example.test/testdb';
 
@@ -41,5 +46,21 @@ describe('withoutClientOnlyParams', () => {
 
   it('returns an unparseable string unchanged', () => {
     expect(withoutClientOnlyParams('not a url')).toBe('not a url');
+  });
+});
+
+describe('withMigrationLockTimeout', () => {
+  it('sets the lock timeout as a startup option and keeps the rest of the URL', () => {
+    const url = new URL(withMigrationLockTimeout(`${BASE}?sslmode=require`));
+    expect(url.searchParams.get('options')).toBe(`-c lock_timeout=${MIGRATION_LOCK_TIMEOUT}`);
+    expect(url.searchParams.get('sslmode')).toBe('require');
+    expect(url.password).toBe('testpass');
+  });
+
+  it('adds the lock timeout after options the URL already carries', () => {
+    const url = new URL(withMigrationLockTimeout(`${BASE}?options=endpoint%3Dep-fixture`));
+    expect(url.searchParams.get('options')).toBe(
+      `endpoint=ep-fixture -c lock_timeout=${MIGRATION_LOCK_TIMEOUT}`,
+    );
   });
 });

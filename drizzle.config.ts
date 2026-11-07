@@ -1,6 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
 
-import { withoutClientOnlyParams } from './src/db/connection-url';
+import { withMigrationLockTimeout, withoutClientOnlyParams } from './src/db/connection-url';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set');
@@ -11,6 +11,7 @@ export default defineConfig({
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: withoutClientOnlyParams(process.env.DATABASE_URL),
+    // Every migration statement gives up a lock it cannot take within the timeout rather than queue the site behind it.
+    url: withMigrationLockTimeout(withoutClientOnlyParams(process.env.DATABASE_URL)),
   },
 });
