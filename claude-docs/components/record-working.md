@@ -1,32 +1,17 @@
 # Record Working
 
-`src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one
-
-| File                  | What it holds                                                                                                                                                   |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types                |
-| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                       |
-| `form.tsx`            | The form inside it                                                                                                                                              |
-| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Mark Complete                                                                                                |
-| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                              |
-| `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-sentence count of ingredients completing takes nothing for, in words (no `'use client'`) |
-| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                                 |
-| `types.ts`            | The props                                                                                                                                                       |
+`src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one. `warnings.ts` (`SKIP_REASON`, `skipSummary`) has no `'use client'`, so a server component can word a skip.
 
 ## Recording and editing
 
-`RecordWorkingButton` takes `{ workspaceId, spellId, spellName, spellVisibility, recorder, steps }`;
-`spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with
-the spell's name. The recipe
-page shows it to a role that may create a working (steward and practitioner) on a complete spell, and
+`spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with the spell's name. The recipe page shows it to a role that may create a working (steward and practitioner) on a complete spell, and
 passes `recorder` (`{ userId, name }`, the signed-in member, named from `viewerOf()`, which the shell
 layout already read that request) and `steps` (`{ id, name }` for each ingredient step). A spell card's
 Record a Working holds the same form but reads `steps` itself once its dialog opens
 ([`spell-card.md`](spell-card.md), "Record a Working, Edit and the More menu").
 
-The dialog holds a date (today by default), participants (a `Combobox` with chips that searches the coven's members as the user types;
-a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. The participant box asks `workspace(id).members(query:)` through `/api/graphql` (`RecordWorkingMembers`, on the shared `useLookup` hook: 300ms debounce, ten rows), only once text is typed, since the box takes the focus when the dialog opens; an empty box suggests nobody. The members already taking part are left out of the answer, and a member the server cannot name is "A former member". Visibility never exceeds the
-spell's, and is the same `VisibilitySwitch` (in `Field`) the spell builder uses, here in its long form labelled Share With the Coven and start-aligned by `.working-form .switch` as the ingredient form's Toxic switch is: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorder`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
+Participants is a `Combobox` with chips that searches the coven's members as the user types; a typed name is added as a name chip. It is a `<fieldset>`, so while a save runs it shuts with the other fields. The participant box asks `workspace(id).members(query:)` through `/api/graphql` (`RecordWorkingMembers`, on the shared `useLookup` hook: 300ms debounce, ten rows), only once text is typed, since the box takes the focus when the dialog opens; an empty box suggests nobody. The members already taking part are left out of the answer, and a member the server cannot name is "A former member". Visibility never exceeds the
+spell's, and is the spell builder's `VisibilitySwitch`: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorder`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
 Save Working keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete
@@ -35,9 +20,7 @@ draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn
 What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
 is empty outside a completion; `skipSummary` words the draft row's count.
 
-`RecordWorkingDialog` takes the same props plus `onClose`, `returnTo` and an optional `working`
-(`{ id, workedOn, note, visibility, status, participants }`). With `working` it is titled "Edit
-Working", calls `updateWorking` and closes on Save. Only the recorder or a member named on the working may edit (the service
+With the optional `working`, `RecordWorkingDialog` is titled "Edit Working", calls `updateWorking` and closes on Save. Only the recorder or a member named on the working may edit (the service
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
@@ -76,18 +59,14 @@ or "Completing this working takes nothing from the coven’s jars." when no line
 before and after. Beside it, Keep as Draft goes back without completing: the working is already saved as a draft. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 
-`CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label?, workedOn? }` and is what a
-draft working's row puts beside its other actions. The recipe page sets `label` to "Complete Working <date>".
+`CompleteWorkingAction` is what a draft working's row puts beside its other actions.
 
 Browser flows: `tests/e2e/stories/06-grimoire.spec.ts`.
 
 ## Styling
 
-`index.scss`:
-
-- **The form** (`.working-form`) starts Share With the Coven's switch at the line's start, as the ingredient form's Toxic switch is, rather than centred as the filter bar's.
-- **The deduction preview** (`.working-deductions`) is a column of `JarLine`s `space(3)` apart with no marker. A long name wraps rather than being cut, and each line's parts wrap whole at `type-size('small')` with tabular figures. A short line (`.working-deductions__short`) is in `$warning`.
+`.working-form .switch` start-aligns Share With the Coven's switch, as the ingredient form's Toxic switch is. A short deduction line (`.working-deductions__short`) is in `$warning`.
 
 ## Not here
 
-Stories: `src/components/RecordWorking/index.stories.tsx` (`Grimoire / Record Working`, one `States` story).
+Stories: `src/components/RecordWorking/index.stories.tsx`.
