@@ -357,8 +357,8 @@ skeleton that draws its own context row inside the cover is left alone.
 
 ### A skeleton runs no query
 
-A skeleton must not render a component that runs a data hook such as a query: the skeleton is drawn
-outside the providers that hook needs, and the page would fetch to draw a placeholder. Draw the
+A skeleton must not render a component that runs a data hook such as a query: it would fetch, or fail
+without the provider, only to draw a placeholder. Draw the
 component's markup with the same classes instead, as `DocumentEditorSkeleton` does for the editor's
 head and toolbar. `tests/guards/skeleton-heading.test.tsx` renders every registered skeleton and fails
 on a query hook (it reports "No QueryClient set").
