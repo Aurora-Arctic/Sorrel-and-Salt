@@ -143,6 +143,17 @@ describe('HelpSearchResults emphasis and no-match state', () => {
     expect(within(item).getByRole('link', { name: 'Testwort Stock Levels' })).toBeInTheDocument();
   });
 
+  it('marks the searched words literally when they hold regular expression characters', () => {
+    const result = { ...RESULTS[0]!, title: 'Testwort ab a+b (c Notes', summary: null };
+    render(<HelpSearchResults query="a+b (c" results={[result]} />);
+
+    expect(
+      within(itemOf(/Testwort ab/))
+        .getAllByRole('mark')
+        .map((mark) => mark.textContent),
+    ).toEqual(['a+b', '(c']);
+  });
+
   it('marks nothing in a result the words do not appear in', () => {
     render(<HelpSearchResults query="zzz" results={RESULTS.slice(0, 1)} />);
 
