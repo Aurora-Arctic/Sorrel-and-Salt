@@ -329,6 +329,8 @@ the generated `.reports/` and local env/state from the build context.
 
 ## The dev container
 
+Before the first start, `npm run setup` copies `Docker/.env.example` to `Docker/.env`, beside the root and editor examples, and keeps any copy that already exists.
+
 **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay
 merged on top of `Docker/docker-compose.yaml`. The overlay adds one service,
 `devcontainer`, mirroring `app` (same `development` stage, `..:/app` bind

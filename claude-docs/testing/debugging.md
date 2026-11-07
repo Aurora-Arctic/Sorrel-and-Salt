@@ -19,6 +19,8 @@ cp .vscode/launch.example.json .vscode/launch.json
 cp .vscode/tasks.example.json .vscode/tasks.json
 ```
 
+`npm run setup` makes both copies, with the env files, and keeps any that already exist.
+
 `launch.json`/
 `tasks.json` themselves stay out of git (`.gitignore`'s `.vscode/*` deny,
 with the two `.example.json` files carved out as the exceptions) — they're
