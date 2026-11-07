@@ -15,7 +15,7 @@ const HelpArticleView = ({
 }: HelpArticleViewProps): ReactElement => {
   const { content } = renderMarkdown(body, {}, [], true);
   return (
-    <article className="help-article">
+    <article className="help-page help-article">
       <PageHeader title={heading} />
       <HelpSearchForm />
       <h2>{title}</h2>

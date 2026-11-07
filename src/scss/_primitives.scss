@@ -720,6 +720,22 @@
     }
   }
 
+  // The help centre's one reading column, public and staff alike, so the two cannot differ: everything on a help
+  // page shares the text's edges. A primitive, as a route loads a component's stylesheet only when it draws the
+  // component, and the public layout's `.page-column` is the wide box (claude-docs/components/help-pages.md, "Layout").
+  .help-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $measure;
+    margin-inline: auto;
+  }
+
+  // An article with a contents menu takes the document pages' pair instead, which centres on its own.
+  .help-page.page-with-nav {
+    max-width: none;
+    @include page-with-nav-grid($document-menu-column, $measure);
+  }
+
   .provider-mark {
     display: inline-flex;
     flex-shrink: 0;

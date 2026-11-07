@@ -16,7 +16,7 @@ const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
     return content;
   });
   return (
-    <div className="help-glossary">
+    <div className="help-page help-glossary">
       <PageHeader title="Help" />
       <HelpSearchForm />
       <h2>Glossary</h2>

@@ -9,7 +9,7 @@ const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
 // The search box holding the words, then the results in the order handed (the search's rank). No results draws no
 // list, so the empty and the unmatched cases say so in words (claude-docs/components/help-pages.md).
 const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
-  <div className="help-results">
+  <div className="help-page help-results">
     <PageHeader title="Help" />
     <HelpSearchForm query={query} />
     <h2>Search Help</h2>

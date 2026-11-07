@@ -17,7 +17,7 @@ const HelpIndex = ({ faq, articles, heading = 'Help' }: HelpIndexProps): ReactEl
     return content;
   });
   return (
-    <div className="help-index">
+    <div className="help-page help-index">
       <PageHeader title={heading} />
       <HelpSearchForm />
       {articles.length > 0 && (
