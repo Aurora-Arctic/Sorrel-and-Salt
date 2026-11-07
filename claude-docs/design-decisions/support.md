@@ -3458,6 +3458,10 @@ public pages (M17.16), not before.
 
 A writer marks a term in Markdown; nothing is matched by itself, so a common word is never linked by accident. The mark is `[[Term]]` or `[[Term|shown text]]`, matched to a term row by title in any case or by slug. A mark is drawn as a link to the glossary anchor with a tooltip, so the link works without script and a touch reader still reaches the definition. The definitions come from the cached public finder with the rest of the page, not one read per term. A save that marks a term with no row is refused, so a dead mark cannot be published; a term deleted later leaves its marks showing as plain text. The cost is that a Keeper adds a term before the prose that marks it.
 
+### Callouts
+
+A help body marks a callout as a blockquote whose first words are one of three bold labels: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. It is drawn as a notice named by its label, so a reader of the source sees an ordinary blockquote and a reader of the page sees the label above the text. A blockquote opening with any other words stays a blockquote. Word labels rather than icons, so the kind does not rest on a picture or a colour. Only help bodies read callouts: the site documents and the keeper's preview keep their blockquotes, as they do their glossary marks (claude-docs/components/help-pages.md, "Callouts").
+
 ### What it rules out
 
 - Help text kept in the repository, for the reasons above.

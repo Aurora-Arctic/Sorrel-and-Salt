@@ -285,7 +285,7 @@ Pieces around a field and a form's buttons that more than one form shares are ea
 - `.filter-row`: a list's filter form, a toolbar that applies as it changes: the search, its choices and switches, and Clear while a filter is shown, wrapping, and stacked on a phone. Widths, the busy fade and the type-ahead's width rule are [`components/filter-form.md`](components/filter-form.md#styling). The filter type-ahead is 14rem wide; the longest seeded name ("Anglo-Saxon & Continental Germanic") is 18rem as drawn and runs on inside the box, its option drawn whole.
 - `.list-frame`: a list page's root, a `ListFrame` ([`components/list-frame.md`](components/list-frame.md)): its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own. Its `.list-frame__body`, the list under the filter, is spaced the same, and fades in when a new page replaces the skeleton.
 
-Form-control details: an undo/redo pair uses width 0 rather than transparent, so neither the dashed disabled edge nor a held modal's brings a border back; in a modal it stands at the end of the header slot row, stretched to row height, elsewhere at the start of the form. The compact field size is `$control-height-compact` with caption-size text. The switch's pressed state stretches the thumb towards its end before the switch turns. Radio strip, segmented and cards layouts take arrow keys, checked state and label as the list does.
+Form-control details: an undo/redo pair uses width 0 rather than transparent, so neither the dashed disabled edge nor a held modal's brings a border back; in a modal it stands at the end of the header slot row, stretched to row height, elsewhere at the start of the form. The compact field size is `$control-height-compact` with caption-size text. The hero size, `$hero-control-height` (3rem) with lead-size text, is the help front page's search box alone. The switch's pressed state stretches the thumb towards its end before the switch turns. Radio strip, segmented and cards layouts take arrow keys, checked state and label as the list does.
 
 ## The page frame
 
@@ -402,6 +402,10 @@ The faded-underline mixes 55% (resting) and 65% (pointed or focused) are the low
 ### Whole-card links
 
 A stretched-link card is plain ink with an empty `::after` over the card, and the ring is drawn on that overlay so it rounds the card. It is not an `<a>` around the card, which a screen reader reads whole and which cannot hold a button. `$ring: false` is for a card whose layers paint over the overlay.
+
+### Quiet cards and figures
+
+`.card--quiet` is a hairline surface card that takes the highlight edge and fill on hover and focus within; a whole-card link inside it uses `card-link`. `.figure` frames a screenshot or a widget in running text, at most `$measure` wide, its `figcaption` muted beneath. Both are primitives in `_primitives.scss`.
 
 ### Loading motion
 

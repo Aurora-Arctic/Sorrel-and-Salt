@@ -34,17 +34,39 @@ Only the FAQ entries (`HelpIndex`) and the terms (`HelpGlossary`) carry an id, t
 
 Every help page but the front page (`/help`, and the staff index, whose h1 is Staff Help) is headed by a level-one "Help" ("Staff Help" on a staff article), then the search box, then the page's own title as a level-two heading: the article's title, "Glossary" or "Search Help". The document `<title>` and metadata keep the page's own title. The Markdown body is drawn with `renderMarkdown(body, placeholders, reserved, true)`, whose last argument moves every heading down a level (h2 becomes h3), so the outline stays h1, h2, h3; the seed text is unchanged. The glossary does the same for its definitions.
 
-- **A sub page links its parent** between the search box and its title ("Back to Your Coven"), and nothing more: the tree is two levels below the index, so one link stands in for a trail. The page reads the parent for its title, by the same finder that answered the sub page, so a parent the reader may not open is a 404.
+- **A sub page links its parent** between the search box and its title ("Back to Your Coven"), drawn as the entry page's muted chevron back link (`.back-link` and `BackChevron` from `IngredientEntry/back-link`, without its history behaviour), and nothing more: the tree is two levels below the index, so one link stands in for a trail. The page reads the parent for its title, by the same finder that answered the sub page, so a parent the reader may not open is a 404.
 - **An article with three or more `##` sections draws a contents menu**, `PageNav` labelled "On This Page", collapsible and non-sticky, as the document pages do; fewer sections are in view without one. The entries are read before the headings move down, so each jumps to an `h3`.
+- **The pages beneath an article** are a numbered list (`ol`) in a hairline frame, the `nav` labelled "In This Guide" with the same words as a visible eyebrow hidden from assistive technology, each number in the heading face and each summary muted.
 - **The index lists the glossary among the guides**, as a described item ("The words Sorrel & Salt uses, and what each one means."), so the Guides section is always drawn. The FAQ is open text with no accordion, and the glossary has no A–Z bar.
-- **Search results** open with a count ("7 results for “steward”", an `output`), then each result under a label of its kind (Question, Guide or Term) and, for a row whose audience is not `public`, "Staff"; the staff search is the only one that returns such rows. A query that finds nothing says so and links the guides and the glossary; an empty query draws neither results nor links.
+- **Search results** open with a count ("7 results for “steward”", an `output`), then each result under a chip of its kind (Question, Guide or Term, the `muted` badge palette) and, for a row whose audience is not `public`, a "Staff" chip (the `local` palette); the staff search is the only one that returns such rows. Each searched word is wrapped in a `<mark>` wherever the title or summary holds it, in any case, and drawn by weight with no fill. A query that finds nothing draws the site's No Matches state, as the coven's Ingredients list does: a `role="status"` region named "No Matches" holding a muted sentence, then links to the guides and the glossary. An empty query draws neither results nor links.
+
+## The front page
+
+`HelpIndex` draws, beneath the h1, a band (`.help-index__band`, a hairline surface card) holding a lede, the search box at its `hero` size and the quick links; then the guides and the FAQ.
+
+- **The hero search box** (`HelpSearchForm size="hero"`) is `$hero-control-height` tall at the lead size, with a magnifier drawn inside the box and a "Search Help" placeholder; the button drops beneath the box below 20rem. Every other help page draws the standard box.
+- **Quick links** are a list named "Quick Links", read on each request by `quickLinks(HELP_QUICK_LINKS, readHelpArticle)` (`src/lib/help-quick-links.ts`). `HELP_QUICK_LINKS` names articles by `slugify` of their titles; the title and the address come from the finder, so a slug that no longer answers as a public article drops out. `tests/lib/help-quick-links.test.ts` fails when a named slug is not a public article in the shipped seed. The staff index passes none.
+- **Each guide is a card** (`.card--quiet`) with a left bar of `$rule-heavy` that turns accent on hover and focus, a kind eyebrow ("Guide", or "Reference" for the glossary), the title as an h3 whose link covers the card (`card-link`), and the muted summary. One column on a phone, two from 40rem.
+- **The FAQ** rules each entry with a hairline above it and sets the question at the h4 size; a "Back to Top" link to `#main` (the skip target both frames draw) follows the last entry.
+
+## The glossary page
+
+One row per term, ruled above: the term beside its definition from 40rem (11rem and the rest), stacked on a phone. The term is in the heading face at the h4 size, and holds a link to its own anchor, named "Link to <Term>" and drawn as a "#" by CSS so the term's text stays its title; it shows on hovering the row or focusing the link.
+
+## Callouts
+
+A help body marks a callout as a blockquote whose first words are a bold label: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. `renderMarkdown` draws it as a `.notice` (plain, `.notice--tip` or `.notice--warn`) with `role="note"`, named by its label, the label shown above the text as `.notice__label` and hidden from assistive technology. Every paragraph of the blockquote stays inside. Any other blockquote, and every blockquote in a site document or the `HelpArticleForm` preview (which pass no terms), stays a blockquote. `tests/components/DocumentPage/help-callouts.test.tsx` holds the cases.
+
+## Look
+
+A section heading in an article body (an h3) has a short hairline above it (`short-hairline`). A screenshot or a widget in the text sits in a `.figure` frame with its caption beneath (`_primitives.scss`).
 
 ## Glossary marks
 
 A body marks a glossary term as `[[Term]]`, or `[[Term|shown text]]` to show other words. The part before the bar matches a term row's title in any case, or its slug through `slugify`. Nothing is matched without a mark.
 
 - **Where they render.** `renderMarkdown` takes the terms as its last argument and the help views pass them (`HelpArticleView`, `HelpIndex`, `HelpGlossary`), so the site documents, which pass none, are unchanged. The terms come from the cached public glossary read (tag `help`, `readGlossaryTerms` in `src/lib/help-glossary.ts`), once per page, never per mark. Staff pages read the same public terms.
-- **What a mark becomes.** A [HelpTerm](help-term.md): a link to `/help/glossary#<slug>` with a tooltip of the term's title and its definition as plain text. A mouse click or Enter follows the link; a touch or pen tap opens the tooltip instead, whose "See in Glossary" link goes to the anchor, and a second tap, a tap outside or Escape closes it. A mark naming no row shows its shown text and no link.
+- **What a mark becomes.** A [HelpTerm](help-term.md): a link to `/help/glossary#<slug>` with a tooltip of the term's title and its definition as plain text, drawn as a lifted card (`$surface-card`, a hairline, `$shadow-floating`) with the title in the heading face above the definition. A mouse click or Enter follows the link; a touch or pen tap opens the tooltip instead, whose "See in Glossary" link goes to the anchor, and a second tap, a tap outside or Escape closes it. A mark naming no row shows its shown text and no link.
 - **Where they do not.** A heading, a link and a code span or block hold no mark: in a heading or link the shown text is plain, and in code the mark stays as typed so the syntax can be written down. The body preview in `HelpArticleForm` passes no terms and shows marks as typed.
 - **The glossary page** links a mark in a definition to its anchor with no tooltip, since every definition is on the page.
 - **Summaries** (search results, index and sub page lists, the page description) show the shown text as plain text.
