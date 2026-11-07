@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { helpTerms, marksInMarkdown } from '@/lib/help-marks';
+import { slugify } from '@/lib/slugify';
 import { loadHelpArticles } from '@/db/seed/help';
 import type { SeedHelpArticle } from '@/db/seed/types';
 
@@ -264,5 +266,25 @@ describe('the shipped help list', () => {
       // Widgets are a later task: the renderer does nothing with the tag yet, so a seeded one would print as text.
       expect(article.body, article.title).not.toMatch(/::widget\[/);
     }
+  });
+
+  it('marks only glossary terms the seed holds, and marks some', () => {
+    const terms = helpTerms(
+      ofKind('term').map((term) => ({
+        slug: slugify(term.title),
+        title: term.title,
+        body: term.body,
+      })),
+    );
+    let marked = 0;
+    for (const article of articles) {
+      const names = marksInMarkdown(article.body);
+      marked += names.length;
+      expect(
+        names.filter((name) => !terms.find(name)),
+        article.title,
+      ).toEqual([]);
+    }
+    expect(marked).toBeGreaterThan(0);
   });
 });

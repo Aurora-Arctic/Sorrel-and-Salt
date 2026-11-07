@@ -4,22 +4,22 @@ export const FAQ_ENTRIES = [
   faq(
     1,
     'Do I Need an Account to Read the Compendium?',
-    "No. The Compendium, the shared reference of ingredients, and each of its entry pages can be read without an account. Your coven's own ingredients and grimoire need an account and a seat in that coven.",
+    `No. The [[Compendium]], the shared reference of ingredients, and each of its entry pages can be read without an account. Your [[Coven|coven]]'s own ingredients and [[Grimoire|grimoire]] need an account and a seat in that coven.`,
   ),
   faq(
     2,
     'Why Did Signing In Only Give Me the Demo Coven?',
-    "The site is invite-gated. Signing in by any method creates an account and gives you an Observer seat in the Demo Coven, which is read-only. A coven of your own, or a seat in someone else's, comes from an invitation, a printed card, or a Keeper granting it.",
+    `The site is invite-gated. Signing in by any method creates an account and gives you an [[Observer]] seat in the [[Demo Coven]], which is read-only. A [[Coven|coven]] of your own, or a seat in someone else's, comes from an invitation, a printed card, or a [[Keeper]] granting it.`,
   ),
   faq(
     3,
     'How Do I Get My Own Coven?',
-    'You need permission to create one. Accepting an invitation, redeeming a printed card, or a Keeper granting it gives you that permission, and only a Keeper takes it away. Once you have it, choose "Create Coven" in the coven switcher.',
+    `You need permission to create one. Accepting an invitation, redeeming a printed card, or a [[Keeper]] granting it gives you that permission, and only a Keeper takes it away. Once you have it, choose "Create Coven" in the [[Coven|coven]] switcher.`,
   ),
   faq(
     4,
     'Who Can See My Spells?',
-    'A private spell is seen by its author alone. A spell shared with the coven is seen by every member, Observers included. Other covens never see either.',
+    `A private spell is seen by its author alone. A spell shared with the [[Coven|coven]] is seen by every member, [[Observer|Observers]] included. Other covens never see either.`,
   ),
   faq(
     5,
@@ -34,12 +34,12 @@ export const FAQ_ENTRIES = [
   faq(
     7,
     "What's the Difference Between the Compendium and My Ingredients?",
-    "The Compendium is the shared reference of what exists, curated by the site's Keepers and curators. Ingredients are your coven's own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.",
+    `The [[Compendium]] is the shared reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|curators]]. Ingredients are your [[Coven|coven]]'s own: what you have, with your stock. You can add a Compendium entry to your Ingredients, or make an ingredient of your own.`,
   ),
   faq(
     8,
     "Why Can't I Edit a Compendium Entry?",
-    'Only curators and Keepers edit the Compendium. You can add your own notes with "Annotate", or choose "Make It Ours" to turn the entry into your coven\'s own ingredient, which you can then edit.',
+    `Only [[Curator|curators]] and [[Keeper|Keepers]] edit the [[Compendium]]. You can add your own notes with "Annotate", or choose "Make It Ours" to turn the entry into your [[Coven|coven]]'s own ingredient, which you can then edit.`,
   ),
   faq(
     9,
@@ -54,11 +54,11 @@ export const FAQ_ENTRIES = [
   faq(
     11,
     'How Do I Leave a Coven?',
-    'Open the coven and choose "Leave Coven". You lose access to its ingredients and its grimoire until a Steward invites you back, and your own entries stay with the coven. The last Steward cannot leave: make another member a Steward first, or delete the coven if you are the only member.',
+    `Open the [[Coven|coven]] and choose "Leave Coven". You lose access to its ingredients and its [[Grimoire|grimoire]] until a [[Steward]] invites you back, and your own entries stay with the coven. The last Steward cannot leave: make another member a Steward first, or delete the coven if you are the only member.`,
   ),
   faq(
     12,
     'How Do I Ask for Help or Report an Accessibility Bug?',
-    'Send a support request. Pick the topic that fits, such as Accessibility ("Something you cannot use or read.") or Bug ("Something is broken or wrong."), give a subject and a message, and choose "Send Request". You can send one without signing in; we reply to the email address you give.',
+    `Send a [[Support Request|support request]]. Pick the topic that fits, such as Accessibility ("Something you cannot use or read.") or Bug ("Something is broken or wrong."), give a subject and a message, and choose "Send Request". You can send one without signing in; we reply to the email address you give.`,
   ),
 ];

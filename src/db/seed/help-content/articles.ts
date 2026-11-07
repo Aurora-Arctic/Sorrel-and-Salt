@@ -4,7 +4,7 @@ const gettingStarted = article(
   1,
   'Getting Started',
   'How to sign in, what the Demo Coven is, and how invitations and printed cards bring you into a coven.',
-  `Sorrel & Salt is invite-gated. Signing in by any method gives you an account and an Observer seat in the Demo Coven, and nothing else. The Compendium is the one part anyone can read without an account.
+  `Sorrel & Salt is invite-gated. Signing in by any method gives you an account and an [[Observer]] seat in the [[Demo Coven]], and nothing else. The [[Compendium]] is the one part anyone can read without an account.
 
 The sub pages below cover signing in, the Demo Coven, and invitations and printed cards.`,
 );
@@ -29,20 +29,20 @@ If you have turned on two-factor sign-in, the next step asks for "Code From Your
     2,
     'The Demo Coven',
     'The shared practice coven every new account is seated in.',
-    `The Demo Coven is a coven that exists on every copy of the site and cannot be deleted. Signing up seats you in it as an Observer, so you can read its ingredients and grimoire but write nothing. It is listed last in your coven switcher.
+    `The [[Demo Coven]] is a [[Coven|coven]] that exists on every copy of the site and cannot be deleted. Signing up seats you in it as an [[Observer]], so you can read its ingredients and [[Grimoire|grimoire]] but write nothing. It is listed last in your coven switcher.
 
-Keepers hold a Steward seat there. A Keeper has no access to any other coven's ingredients or grimoire.`,
+[[Keeper|Keepers]] hold a [[Steward]] seat there. A Keeper has no access to any other coven's ingredients or grimoire.`,
   ),
   subPage(
     gettingStarted,
     3,
     'Accepting an Invitation or a Printed Card',
     'What an invitation or a printed card does when you use it.',
-    `An invitation seats you in a coven as an Observer or a Practitioner. To accept it, your account's verified email address must match the address the invitation was sent to. Accepting also lets you create covens of your own.
+    `An invitation seats you in a [[Coven|coven]] as an [[Observer]] or a [[Practitioner]]. To accept it, your account's verified email address must match the address the invitation was sent to. Accepting also lets you create covens of your own.
 
 An invitation never lowers a role you already hold. If the link does not work, the page says why: the invitation is invalid, already accepted, declined, revoked or expired, it was sent to a different address, your address is not yet confirmed, or the coven has since been deleted.
 
-A printed card seats you nowhere and grants no role. It lets your account create a coven, once per account. A Keeper mints cards; see the Keeper pages.`,
+A printed card seats you nowhere and grants no role. It lets your account create a coven, once per account. A [[Keeper]] mints cards; see the Keeper pages.`,
   ),
 ];
 
@@ -50,9 +50,9 @@ const compendium = article(
   2,
   'The Compendium',
   'The shared reference of ingredients, readable by anyone.',
-  `The Compendium is the global reference of what exists, curated by the site's Keepers and curators. Its pages are readable without an account. Nothing about any coven follows you out of it.
+  `The [[Compendium]] is the global reference of what exists, curated by the site's [[Keeper|Keepers]] and [[Curator|curators]]. Its pages are readable without an account. Nothing about any [[Coven|coven]] follows you out of it.
 
-Each entry has a formal name, which identifies it, and may list folk names, a description, safety notes, a toxic mark, correspondences and the sources it rests on. You cannot edit an entry, but you can add it to your coven's Ingredients.`,
+Each entry has a [[Formal Name|formal name]], which identifies it, and may list folk names, a description, safety notes, a toxic mark, correspondences and the sources it rests on. You cannot edit an entry, but you can add it to your coven's Ingredients.`,
 );
 const compendiumPages = [
   subPage(
@@ -65,21 +65,21 @@ const compendiumPages = [
 - Categories, with "Match" set to All (an entry must be in every chosen category) or Any (in at least one).
 - Forms.
 - Toxic: Any, Toxic or Not Toxic.
-- Source: All, Local or Compendium.
+- Source: All, Local or [[Compendium]].
 - In Stock, and Low Stock Only.
-- In My Covens.
+- In My [[Coven|Covens]].
 - Elements, Celestial Bodies, Zodiac and Deities.
 
-Some filters, such as Reviewed, are for curators only.`,
+Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
   ),
   subPage(
     compendium,
     2,
     'Reading an Entry and Its Sources',
     'What an entry page shows and where its claims come from.',
-    `An entry's page shows its formal name, folk names, description, safety notes, correspondences and categories, and each form it comes in as its own variant beneath it.
+    `An entry's page shows its [[Formal Name|formal name]], folk names, description, safety notes, correspondences and categories, and each form it comes in as its own [[Variant|variant]] beneath it.
 
-What the Compendium says, it sources. A source is a reference: a work with a locator pointing to where in it the claim is found. A source can also say what it supports, and the basis of a name.`,
+What the [[Compendium]] says, it sources. A source is a reference: a work with a locator pointing to where in it the claim is found. A source can also say what it supports, and the basis of a name.`,
   ),
   subPage(
     compendium,
@@ -96,7 +96,7 @@ const yourCoven = article(
   3,
   'Your Coven',
   'Roles, invitations, and joining or leaving a coven.',
-  `A coven is a group that shares ingredients and a grimoire. Every member has one of three roles, shown as Steward, Practitioner or Observer.`,
+  `A [[Coven|coven]] is a group that shares ingredients and a [[Grimoire|grimoire]]. Every member has one of three roles, shown as [[Steward]], [[Practitioner]] or [[Observer]].`,
 );
 const yourCovenPages = [
   subPage(
@@ -104,29 +104,29 @@ const yourCovenPages = [
     1,
     'Steward, Practitioner and Observer',
     'What each coven role can do.',
-    `- **Observer**: reads ingredients, stock, spells and workings, and the coven itself. Writes nothing.
-- **Practitioner**: adds, edits and removes ingredients, spells and workings, reads and updates stock, and sees the other members.
-- **Steward**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and editing or deleting the coven.
+    `- **[[Observer]]**: reads ingredients, stock, spells and workings, and the [[Coven|coven]] itself. Writes nothing.
+- **[[Practitioner]]**: adds, edits and removes ingredients, spells and workings, reads and updates stock, and sees the other members.
+- **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and editing or deleting the coven.
 
-A Steward cannot be paused. A Keeper's site role is separate from these.`,
+A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
   ),
   subPage(
     yourCoven,
     2,
     'Inviting Someone',
     'How a Steward invites a new member.',
-    `A Steward chooses "Invite", which opens "Invite Someone". Enter their "Email Address", pick a "Role", and choose "Send Invitation".
+    `A [[Steward]] chooses "Invite", which opens "Invite Someone". Enter their "Email Address", pick a "Role", and choose "Send Invitation".
 
-An invitation grants Observer or Practitioner only. A Steward makes someone a Steward afterwards. An invitation lasts seven days, and a second invitation to the same address replaces the pending one. An address that already belongs to a member is refused, and invitations are limited to 20 in 60 minutes.`,
+An invitation grants [[Observer]] or [[Practitioner]] only. A Steward makes someone a Steward afterwards. An invitation lasts seven days, and a second invitation to the same address replaces the pending one. An address that already belongs to a member is refused, and invitations are limited to 20 in 60 minutes.`,
   ),
   subPage(
     yourCoven,
     3,
     'Removing Members and Leaving',
     'How a seat ends, by removal or by leaving.',
-    `A Steward can remove a member. The seat is ended, and the member invited back has the same seat revived. The last Steward cannot be removed.
+    `A [[Steward]] can remove a member. The seat is ended, and the member invited back has the same seat revived. The last Steward cannot be removed.
 
-Any member, a paused one too, can choose "Leave Coven". You lose access to its ingredients and its grimoire until a Steward invites you back, and your own entries stay with the coven. If you are the last Steward, make another member a Steward first. If you are the only member, delete the coven instead.`,
+Any member, a paused one too, can choose "Leave Coven". You lose access to its ingredients and its [[Grimoire|grimoire]] until a Steward invites you back, and your own entries stay with the [[Coven|coven]]. If you are the last Steward, make another member a Steward first. If you are the only member, delete the coven instead.`,
   ),
 ];
 
@@ -134,7 +134,7 @@ const ingredients = article(
   4,
   'Ingredients',
   "Your coven's own ingredients and stock: what you have.",
-  `Ingredients are your coven's own list of what it holds. They come from the Compendium or are made by you, and each can carry stock.
+  `Ingredients are your [[Coven|coven]]'s own list of what it holds. They come from the [[Compendium]] or are made by you, and each can carry stock.
 
 The sub pages cover adding, forms, stock and filters.`,
 );
@@ -144,9 +144,9 @@ const ingredientPages = [
     1,
     'Adding From the Compendium or Making Your Own',
     'The two ways an ingredient joins your list.',
-    `Choose "Add Ingredient". The form asks for a classification and a formal name, then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, Correspondences, Relations and Sources. Correspondences also holds Colours and Deities, and Relations holds Categories and Substitute Ingredients.
+    `Choose "Add Ingredient". The form asks for a classification and a [[Formal Name|formal name]], then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, Correspondences, Relations and Sources. Correspondences also holds Colours and Deities, and Relations holds Categories and Substitute Ingredients.
 
-If the formal name matches a Compendium entry, the form offers "Add to My Ingredients: <name>" so you can hold the shared entry instead of a duplicate.
+If the formal name matches a [[Compendium]] entry, the form offers "Add to My Ingredients: <name>" so you can hold the shared entry instead of a duplicate.
 
 An entry's menu offers Annotate, Make It Ours, Remove, Edit Stock and Delete Ingredient. "Make It Ours" turns a held Compendium entry into your own.`,
   ),
@@ -155,7 +155,7 @@ An entry's menu offers Annotate, Make It Ours, Remove, Edit Stock and Delete Ing
     2,
     'Variants and Forms',
     'How one ingredient comes in several forms.',
-    `An ingredient's identity is its formal name alone. Each form it comes in, such as dried or fresh, is a variant beneath it. A variant adds to its ingredient and never removes anything from it. A form is plain text, not a choice from a list.
+    `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is plain text, not a choice from a list.
 
 A form can have its own safety notes and toxic mark.`,
   ),
@@ -164,7 +164,7 @@ A form can have its own safety notes and toxic mark.`,
     3,
     'Stock Levels',
     'How quantity, units and the low-stock badge work.',
-    `Each form has one stock jar per coven. A jar holds a "Quantity" (which may be blank), a "Unit", a source and an acquired date.
+    `Each form has one stock jar per [[Coven|coven]]. A jar holds a "Quantity" (which may be blank), a "Unit", a source and an acquired date.
 
 "Low Stock At" sets the amount at or below which the jar is badged Low Stock, and zero turns the badge off. A jar at nothing shows Out of Stock. If you set no threshold, a counted unit defaults to 3, and grams and millilitres to 10 g or 15 ml; a jar without a unit has none.
 
@@ -185,7 +185,7 @@ const grimoire = article(
   5,
   'Grimoire',
   "Your coven's spells: what you make.",
-  `The Grimoire is your coven's list of spells. A spell has a title, an intent, a jar description, seal wax, steps, optional timing and notes, and categories.`,
+  `The [[Grimoire]] is your [[Coven|coven]]'s list of spells. A spell has a title, an intent, a jar description, seal wax, steps, optional timing and notes, and categories.`,
 );
 const grimoirePages = [
   subPage(
@@ -216,7 +216,7 @@ The "Category Match" panel compares them in three rows: Carried (intended and pr
     4,
     'Drafts, Private and Shared',
     'The status and visibility of a spell.',
-    `A spell is a draft or complete. It is private, seen by its author alone, or shared with the coven, seen by every member including Observers. A complete spell needs a title.
+    `A spell is a draft or complete. It is private, seen by its author alone, or shared with the [[Coven|coven]], seen by every member including [[Observer|Observers]]. A complete spell needs a title.
 
 A complete spell shared with the coven cannot be made private again, and a complete spell cannot go back to a draft. The page says: "Duplicate it to get a private copy you can change, or delete it if it should not be there."`,
   ),
@@ -239,7 +239,7 @@ A complete spell shared with the coven cannot be made private again, and a compl
     7,
     'Moon Phase and Day Filters',
     'Finding spells by when they are worked.',
-    `The Grimoire can be filtered by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday.
+    `The [[Grimoire]] can be filtered by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday.
 
 Orders are recently updated, recently created and title.`,
   ),
@@ -257,7 +257,7 @@ const workingPages = [
     1,
     'Recording a Working',
     'How to record that you worked a spell.',
-    `On a spell, choose "Record a Working". Set the Date, name the Participants, who must be members of the coven, and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell. Nothing leaves your jars until the working is completed.`,
+    `On a spell, choose "Record a Working". Set the Date, name the Participants, who must be members of the [[Coven|coven]], and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell. Nothing leaves your jars until the working is completed.`,
   ),
   subPage(
     workings,
@@ -315,7 +315,7 @@ const support = article(
   8,
   'Support',
   'How to ask for help and follow a reply.',
-  `Support requests go to the site's Keepers and curators. Observers can send them too.`,
+  `[[Support Request|Support requests]] go to the site's [[Keeper|Keepers]] and [[Curator|curators]]. [[Observer|Observers]] can send them too.`,
 );
 const supportPages = [
   subPage(
@@ -323,7 +323,7 @@ const supportPages = [
     1,
     'Sending a Request and Reading Replies',
     'The request form and where replies arrive.',
-    `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The signed-in form offers Accessibility, Bug, Account & Sign-In, Compendium Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
+    `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The signed-in form offers Accessibility, Bug, Account & Sign-In, [[Compendium]] Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
 
 A reply is read on the support page behind sign-in, and the email only tells you one has arrived. A signed-out sender is mailed the reply whole. Reply with "Your Reply". A reply is at most 4,000 characters. A request you sent while signed out moves to your account once the account has that address verified.`,
   ),
