@@ -1,0 +1,10 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The switcher's place in the skeleton's context row: a bar as wide as the switcher, so the
+// row's lead keeps its size.
+.skeleton-frame__lead {
+  display: block;
+  inline-size: 12rem;
+  block-size: 2.8125rem;
+}

@@ -9,14 +9,16 @@ import Skeleton from '@/components/Skeleton';
 // are the ones every member sees.
 export const CovenHomeSkeleton = () => (
   <PageWithNav as="div">
-    <PageHeader eyebrow="Coven" pendingTitle />
-    <PageNav
-      label="On This Page"
-      entries={[
-        { href: '#coven-contents', label: 'Contents' },
-        { href: '#coven-membership', label: 'Your Membership' },
-      ]}
+    <PageHeader
+      eyebrow="Coven"
+      pendingTitle={2}
+      lede={
+        <span className="skeleton-lede">
+          <Skeleton shape="line" count={3} quiet />
+        </span>
+      }
     />
+    <PageNav label="On This Page" entries={[]} pending={3} />
     <section className="page-frame__section">
       <Skeleton shape="line" count={4} quiet />
     </section>

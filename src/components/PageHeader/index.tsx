@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import Skeleton from '../Skeleton';
 import type { PageHeaderProps } from './types';
+import './index.scss';
 
 const classes = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
@@ -31,7 +32,11 @@ const PageHeader = ({
   // A pending title draws a bar the height of the heading in the same box, so the head keeps its
   // size; the heading is named Loading, so a wait keeps its one level-one heading.
   const heading = pendingTitle ? (
-    <Heading id={id} className={headingClassName}>
+    <Heading
+      id={id}
+      className={headingClassName}
+      data-pending-lines={pendingTitle === 2 ? 2 : undefined}
+    >
       <span className="visually-hidden">Loading</span>
       <Skeleton shape="line" quiet />
     </Heading>

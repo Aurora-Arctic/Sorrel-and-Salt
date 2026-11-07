@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { framed } from '../../components/SkeletonFrame';
 import { skeletons } from '../../app/skeletons';
 import { covenSlugOf } from '../coven-path';
 import { matchRoute } from './route-match';
@@ -47,6 +48,6 @@ export function skeletonFor(
     { host: SkeletonHost; Skeleton: ComponentType } | undefined;
   if (!entry) return null;
   const standing = entry.host !== 'main' && hostStands(entry.host, pathname, destination);
-  if (body === 'main') return standing ? null : entry.Skeleton;
+  if (body === 'main') return standing ? null : framed(entry.host, entry.Skeleton);
   return entry.host === body && standing ? entry.Skeleton : null;
 }

@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 export interface PageHeaderProps {
   /** The page's `h1`, title case, and what its tab title says too. */
   title?: string;
-  /** Draws a placeholder bar in the `h1` in place of the title, for a head whose title is not known yet: a skeleton's. */
-  pendingTitle?: boolean;
+  /** Draws a placeholder bar in the `h1` in place of the title, for a head whose title is not known yet: a skeleton's. `2` stands for a title that wraps to two lines. */
+  pendingTitle?: boolean | 2;
   /** The heading element, `h1` unless the page already has its `h1` above this head. */
   level?: 'h1' | 'h2';
   /** A line set above the title inside the heading, so the heading reads as one phrase, as "Welcome to Sorrel & Salt". */

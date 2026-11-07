@@ -1,0 +1,35 @@
+@use '../../scss/variables' as *;
+
+// A pending title that stands for a title of two lines (a name long enough to wrap): its bar is two
+// lines of the heading's height.
+[data-pending-lines='2'] .skeleton__line {
+  block-size: 2lh;
+}
+
+// A pending lede of lines each as tall as the text they stand for: two lines on a wide screen and
+// three at phone width, where the lede wraps, so what follows stands where it will.
+.skeleton-lede .skeleton__shapes {
+  gap: 0;
+}
+
+.skeleton-lede .skeleton__line {
+  block-size: 1lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
+}
+
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .skeleton-lede .skeleton__line:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+// The remainder the real lede's lines leave beneath them, measured against the coven home.
+.skeleton-lede {
+  display: block;
+  padding-block-end: 0.5rem;
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    padding-block-end: 0.875rem;
+  }
+}
