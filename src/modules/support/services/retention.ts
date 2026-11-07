@@ -24,9 +24,7 @@ import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types
 // ids due for each stage a page at a time and hands each page to a batch, and each batch reads its rows' status and dates again
 // before it writes, so a batch run twice, two runs at once, or a batch that follows a reopen, changes nothing.
 
-/** The day after resolving from which the closing-soon notice is due. */
 export const NOTICE_AFTER_DAYS = 5;
-/** How many months a closed request keeps its sender's text. */
 export const ANONYMISE_AFTER_MONTHS = 12;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -107,7 +105,6 @@ export function findRetentionDue(
   }
 }
 
-/** The latest resolution a closing-soon notice is due for as of `now` (milliseconds). */
 function noticeDueBy(now: number): Date {
   return new Date(now - NOTICE_AFTER_DAYS * DAY_MS);
 }

@@ -20,7 +20,6 @@ export interface TimeoutNotifier {
   origin(): Promise<string>;
 }
 
-/** One support time-out mail, as its job carries it: the time-out's id and the origin, and nothing of the user's. */
 export type SupportTimeoutMail = {
   kind: 'support-time-out';
   timeoutId: string;
@@ -32,14 +31,12 @@ export interface SupportNotifier {
   origin(): Promise<string>;
 }
 
-/** One received or resolved mail, as its job carries it: the request id and the origin, and nothing of the sender's. */
 export type SupportStatusMail = {
   kind: 'received' | 'resolved';
   requestId: string;
   origin: string;
 };
 
-/** One support-retention stage: the closing-soon notice, the close, or the anonymising. */
 export type RetentionStage = 'notice' | 'close' | 'anonymise';
 
 /**

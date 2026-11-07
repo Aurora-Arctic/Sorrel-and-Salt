@@ -32,7 +32,6 @@ const DAY_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
 /** Replies one signed-out request may take through its link in 24 hours. */
 export const SIGNED_OUT_REPLY_REQUEST_LIMIT = 5;
 
-/** How long a mailed token opens its request, from the mail that minted it. */
 const VIEW_TOKEN_DAYS = 30;
 
 /** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */

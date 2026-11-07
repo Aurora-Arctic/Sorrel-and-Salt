@@ -11,9 +11,7 @@ export const supportTimeouts = pgTable(
     id: idColumn(),
     // Null on a time-out set on a signed-out request, which binds its address alone; a claim of that address sets it.
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-    // Null for a time-out with no end date.
     until: timestamp('until'),
-    // Why it was set, for staff: every time-out has one.
     note: text('note').notNull(),
     message: text('message'),
     // The HMAC key of the address the sender wrote from (`src/lib/send-count-key.ts`), never the address, so the time-out also binds
