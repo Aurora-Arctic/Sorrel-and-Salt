@@ -55,7 +55,7 @@ One row per term, ruled above: the term beside its definition from 40rem (11rem 
 
 ## Callouts
 
-A help body marks a callout as a blockquote whose first words are a bold label: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. `renderMarkdown` draws it as a `.notice` (plain, `.notice--tip` or `.notice--warn`) with `role="note"`, named by its label, the label shown above the text as `.notice__label` and hidden from assistive technology. Every paragraph of the blockquote stays inside. Any other blockquote, and every blockquote in a site document or the `HelpArticleForm` preview (which pass no terms), stays a blockquote. `tests/components/DocumentPage/help-callouts.test.tsx` holds the cases.
+A help body marks a callout as a blockquote whose first words are a bold label: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. `renderMarkdown` draws it as a `.notice` (plain, `.notice--tip` or `.notice--warn`) with `role="note"`, named by its label, the label shown above the text as `.eyebrow.notice__label` and hidden from assistive technology. Every paragraph of the blockquote stays inside. Any other blockquote, and every blockquote in a site document or the `HelpArticleForm` preview (which pass no terms), stays a blockquote. `tests/components/DocumentPage/help-callouts.test.tsx` holds the cases.
 
 ## Look
 

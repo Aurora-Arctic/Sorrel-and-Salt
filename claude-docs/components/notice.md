@@ -20,7 +20,7 @@ How a click outside a form says its result and its failure is [`click-feedback.m
 
 ## Styling
 
-None of its own: the `.notice` primitive, with `.notice__label` for a help callout's label above its text ([`help-pages.md`](help-pages.md), "Callouts"), in `_primitives.scss` draws every kind, so the directory has no `index.scss`.
+None of its own: the `.notice` primitive, with `.notice__label` (beside `.eyebrow`, which draws it) for a help callout's label above its text ([`help-pages.md`](help-pages.md), "Callouts"), in `_primitives.scss` draws every kind, so the directory has no `index.scss`.
 
 There is no box. A 3px bar runs down the start edge, with a tint of the bar's colour behind the text, mixed with transparent so it reads the same on the page and on a card. The tint's strength is `--notice-tint`, set per theme in `_mixins.scss` (7% light, 8% dark, where the same strength reads fainter). A notice that leads with the triangle pads its start by `$notice-mark-size`; the click callout and the ingredient form's notices read the same two tokens (`$notice-mark-size`, `$notice-mark-drop`).
 
