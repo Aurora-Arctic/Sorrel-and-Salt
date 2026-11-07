@@ -13,12 +13,7 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 ## Props
 
-`SourcingScoreProps` (`types.ts`):
-
-| Prop           | What it is                                                                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sourcing`     | The `SourcingScore` the curator read returns: `score` and its `facts` list.                                                                  |
-| `headingLevel` | The heading's level: 4 (the default) in the edit dialog, 3 on the entry page, under its References h2. The size is the h4's at either level. |
+`SourcingScoreProps` (`types.ts`). `headingLevel` is 4 (the default) in the edit dialog and 3 on the entry page, under its References h2; the size is the h4's at either level.
 
 ## On the entry page
 
@@ -26,10 +21,10 @@ The entry page shows the same panel, whole and always open, as the last block of
 
 ## Where it shows
 
-The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](ingredient-form.md#compendium-entry-form), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or keeper; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The entry page also shows it at the foot of its References section, from the same read.
-
-## Testing
-
-`tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/curator/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it. The heading level prop is tested in the same file, and `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` checks who is handed the score. The service refusal is `tests/modules/ingredients/services/compendium-sourcing.test.ts`.
+The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](ingredient-form.md#compendium-entry-form), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or keeper; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it.
 
 **Forced colours.** The bar's track takes a 1px `CanvasText` border, the gains are `Highlight` and the losses `CanvasText`.
+
+## Tests
+
+`tests/components/SourcingScore/index.test.tsx`, `tests/app/(shell)/curator/compendium/compendium-dialog.test.tsx` (the edit dialog shows it; the heading level), `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` (who is handed the score) and `tests/modules/ingredients/services/compendium-sourcing.test.ts` (the service refusal).
