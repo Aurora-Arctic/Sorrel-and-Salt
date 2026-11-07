@@ -7,7 +7,6 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { entryDetail } from '../../../../../support/entry-detail';
 
-
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
   slug: 'fixture-coven',

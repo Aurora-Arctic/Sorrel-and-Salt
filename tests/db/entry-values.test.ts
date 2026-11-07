@@ -22,9 +22,6 @@ import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
-// src/app/entry-values.ts: the values an edit modal opens with, for the admin's compendium entry or a coven's own.
-// They must hold every value and link of the entry, so saving the form untouched changes nothing.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -32,7 +29,6 @@ useTestDatabase((client) => {
 
 const admin = asUser(E);
 
-/** The curated rows the entry picks, and what each is filed under, read from the seed. */
 let herb: { id: string; group: string };
 let oil: string;
 let hecate: { id: string; tradition: string };
@@ -61,18 +57,15 @@ beforeAll(async () => {
     select id from categories where name = 'Healing' and deleted_at is null`;
   healing = category.id as string;
 
-  // The substitute's entry and the source, seeded rather than written by the code under test.
   mockwort = await insertIngredient(
     sql,
     makeIngredient({ name: 'Mockwort', canonicalName: 'Fixtura mockalis' }),
     A.id,
   );
-  // A form of the substitute, which a substitute may name.
   mockoil = await insertVariant(sql, mockwort, { form: 'Mockoil' }, A.id);
   book = await insertReference(sql, {}, E.id);
 });
 
-/** Testwort with every relation an entry can hold, each curated value as the admin picks it, and a form holding every relation a form can. */
 const everything = (): CompendiumWrite => ({
   name: 'Testwort',
   nomenclature: 'botanical',
@@ -123,15 +116,11 @@ const everything = (): CompendiumWrite => ({
 });
 
 async function rowOf(id: string) {
-  // `updated_at` is the trigger's and moves on any write, a no-op included.
-  // `curator_reviewed_at` moves on a curator's save, untouched or not (tests/modules/ingredients/services/compendium-review.test.ts).
-  // `revision` is the trigger's counter and rises on every update, a no-op included.
   const [{ updated_at: _updated, curator_reviewed_at: _reviewed, revision: _revision, ...row }] =
     await sql`select * from ingredients where id = ${id}`;
   return row;
 }
 
-/** What the entry links, live, read past the services, so a link the values dropped shows as one the save took away. */
 async function childrenOf(id: string) {
   const [folkNames, substitutes, deities, references, categories, variants, variantReferences] =
     await Promise.all([
@@ -150,7 +139,6 @@ async function childrenOf(id: string) {
       sql`
       select category_id, variant_id from ingredient_categories
       where ingredient_id = ${id} order by variant_id nulls first`,
-      // `updated_at` is the trigger's, as the row's is.
       sql`
       select id, form, form_id, description, safety_notes, elements, celestial_bodies, zodiac_signs, colors
       from ingredient_variants where ingredient_id = ${id} and deleted_at is null`,
@@ -170,7 +158,6 @@ async function childrenOf(id: string) {
   };
 }
 
-/** The input the form sends for an edit, as IngredientForm's mutation builds it. */
 function editInput(values: Parameters<typeof toInput>[0]): CompendiumWrite {
   return toInput(values) as CompendiumWrite;
 }
@@ -184,7 +171,6 @@ describe('entryValues', () => {
 
   it('reads every value and link of the entry as the form shows it', async () => {
     const values = await entryValues(created, null);
-    // insertReference's default book, as a row links it.
     const BOOK_LINK = {
       id: book,
       isGlobal: true,
@@ -214,7 +200,6 @@ describe('entryValues', () => {
           substitutes: expect.arrayContaining([
             {
               value: 'Mockwort',
-              // Its forms, which the second picker offers, and the one named.
               link: expect.objectContaining({
                 id: mockwort,
                 variants: expect.arrayContaining([{ id: mockoil, form: 'Mockoil', group: null }]),
@@ -231,7 +216,6 @@ describe('entryValues', () => {
           formLink: expect.objectContaining({ id: oil, name: 'Oil' }),
           description: '',
           safetyNotes: '',
-          // Its own flag, off, beside the entry's on: never read from the entry.
           toxic: false,
           elements: [],
           celestialBodies: [],
@@ -267,13 +251,11 @@ describe('entryValues', () => {
       safetyNotes: 'Not for eating.',
       references: [
         {
-          // insertReference's default book.
           value: citationText({
             kind: 'book',
             title: 'A Herbal of Fixture Covens',
             published: '1988',
           }),
-          // With the fields its short form is made of.
           link: BOOK_LINK,
           locator: 'p. 12',
         },
@@ -281,7 +263,6 @@ describe('entryValues', () => {
       categoryIds: [healing],
     });
     expect(values.folkNames).toHaveLength(2);
-    // Each carries the id of its live row, which promoting it names.
     const live = await liveFolkNames(sql, created.id);
     expect(values.folkNames).toEqual(
       expect.arrayContaining(live.map(({ id, name }) => ({ value: name, id }))),
@@ -336,8 +317,6 @@ describe("entryValues, for a coven's own entry", () => {
   let own: IngredientRow;
 
   beforeAll(async () => {
-    // The coven's own Testwort, written as a member writes it, with a folk
-    // name, a category, a curated form and a substitute linking the compendium.
     own = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...everything(),
       name: 'Testwort',

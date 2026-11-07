@@ -15,9 +15,6 @@ import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
 
-// Through Better Auth's real endpoints: an account claims the requests sent signed out from its address once it holds a
-// session with that address verified, or verifies it, so a visitor who wrote with no account gets back to them (claude-docs/design-decisions/m15.48-mailed-link.md, "Claim by verified email").
-
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 const startJob = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => 'run-id'));
@@ -26,7 +23,6 @@ vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@support-claim.test';
 const CLAIMER = `claimer${DOMAIN}`;
-// The address as the visitor typed it on the form: the claim compares lower-cased.
 const AS_TYPED = `Claimer${DOMAIN.toUpperCase()}`;
 const PASSWORD = 'Testwort climbs the northern wall';
 
@@ -58,7 +54,6 @@ beforeEach(async () => {
   send.mockReset();
 });
 
-/** A password sign-up for CLAIMER, which signs it in unverified; returns its id and its cookie. */
 async function signUp() {
   const response = await post(auth, '/sign-up/email', {
     name: 'Fixture Person',
@@ -70,7 +65,6 @@ async function signUp() {
   return { id, cookie: cookieHeader(response) };
 }
 
-/** The verification link the sign-up mailed. */
 function mailedLink(): string {
   const link = send.mock.calls
     .map(([message]) => message.text.match(/https?:\/\/\S+\/verify-email\?[^\s\]]+/)?.[0])
@@ -79,7 +73,6 @@ function mailedLink(): string {
   return link;
 }
 
-/** Requests sent signed out from the claimer's address, as typed and as stored, each with a sender reply and a staff reply. */
 async function signedOutRequests() {
   const fromTyped = await insertSupportRequest(sql, {
     createdBy: SIGNED_OUT_SENDER_ID,
@@ -103,14 +96,11 @@ async function signedOutRequests() {
       body: 'Testwort.',
     });
   }
-  // A mailed link stands on each, which the claim must spend.
   await sql`update support_requests set view_token_hash = md5(id::text) where id in (${fromTyped}, ${fromSignedOut})`;
-  // Another visitor's, from another address: it never moves.
   const elsewhere = await insertSupportRequest(sql, {
     createdBy: SIGNED_OUT_SENDER_ID,
     senderEmail: `someone-else${DOMAIN}`,
   });
-  // A signed-in sender's own: owned by a real account, it never moves.
   const owned = await insertSupportRequest(sql, { createdBy: B.id });
   return { fromTyped, fromSignedOut, elsewhere, owned };
 }

@@ -9,7 +9,6 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 
-
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
   slug: 'fixture-coven',
