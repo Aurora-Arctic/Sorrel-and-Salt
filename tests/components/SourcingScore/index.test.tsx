@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 import SourcingScore from '@/components/SourcingScore';
 import type { SourcingScore as Score } from '@/modules/ingredients';
 
-// The admin entry dialog's sourcing score: the total, a bar of what was gained and what it cost,
-// then every fact that made it, gains first, each with its points.
 const SCORE: Score = {
   score: 7,
   facts: [
