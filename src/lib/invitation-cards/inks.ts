@@ -18,6 +18,7 @@ const hexRgb = (hex: string): Rgb => {
 const luminance = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
 const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v));
 
+// No colour profile is applied: the printer's own sets the printed result.
 function toCmyk(rgb: Rgb, g: number): Cmyk {
   const [c, m, y] = rgb.map((v) => 1 - v / 255);
   const k = g * Math.min(c, m, y);
