@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 @use './sorrel' as *;
 
-// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element (claude-docs/components/backdrop.md, "Stacking").
+// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element (claude-docs/components/backdrop.md, "Contracts").
 .backdrop {
   position: fixed;
   z-index: -1;
