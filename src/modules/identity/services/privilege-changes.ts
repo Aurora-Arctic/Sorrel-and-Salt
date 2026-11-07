@@ -15,15 +15,13 @@ import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../types';
 
-// The privilege ledger's reads, behind `/keepers/privilege-changes` and GraphQL's
-// `privilegeChanges`: only a site keeper reads it, checked here by direct call
-// (claude-docs/auth/admin-users.md, "The privilege ledger").
+// Only a site keeper reads the ledger, checked here by direct call (claude-docs/auth/admin-users.md, "The privilege ledger").
 
 const REFUSAL = 'Only a site keeper may read the privilege ledger';
 
 /**
- * One page of the privilege ledger under `filter`, newest first. A subject that is
- * not an id is refused rather than read, so it is not taken for a bad cursor.
+ * A subject that is not an id is refused rather than read, so it is not taken for a bad cursor.
+ *
  *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `filter.userId` is not an id.
@@ -38,9 +36,6 @@ export async function listPrivilegeChanges(
 }
 
 /**
- * How many changes `listPrivilegeChanges` pages under `filter`, and how many come
- * before `start`: the "Page X of Y" on `/keepers/privilege-changes`.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `filter.userId` is not an id.
  */
@@ -53,7 +48,6 @@ export async function countPrivilegeChanges(
   return findPrivilegeChangeCount(admin, parsedFilter(filter), start);
 }
 
-/** The filter as the repository takes it, its subject checked to be an id and a blank query no query. */
 function parsedFilter({ userId, privilege, query }: PrivilegeChangeFilter): PrivilegeChangeFilter {
   const trimmed = query?.trim();
   return {
@@ -63,17 +57,12 @@ function parsedFilter({ userId, privilege, query }: PrivilegeChangeFilter): Priv
   };
 }
 
-/**
- * Whether `/keepers/users` lists this user: everyone but the seed's bootstrap user (claude-docs/auth/admin-users.md, "The user list").
- */
+/** Everyone but the seed's bootstrap user (claude-docs/auth/admin-users.md, "The user list"). */
 export function listedOnUserList(userId: string): boolean {
   return userId !== BOOTSTRAP_USER_ID;
 }
 
-/**
- * The live user behind each id, null where none is live: a DataLoader's batch for the ledger's subjects and actors.
- * A site admin's alone: every slot of anyone else's batch is a `Forbidden`.
- */
+/** A DataLoader's batch. A site admin's alone: every slot of anyone else's batch is a `Forbidden`. */
 export async function usersForAdmin(
   session: Session,
   userIds: readonly string[],

@@ -40,7 +40,7 @@ export async function promotePrimaryAdmin(
 }
 
 /**
- The caller must have checked that the link was honoured from a session holding the row, since that is what makes the mail vouch.
+ * The caller must have checked that the link was honoured from a session holding the row, since that is what makes the mail vouch.
  */
 export async function promotePrimaryAdminAtVerification(
   session: Session,

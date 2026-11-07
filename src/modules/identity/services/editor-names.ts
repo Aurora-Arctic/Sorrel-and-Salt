@@ -6,14 +6,10 @@ import { users } from '../schema/users';
 import { assertCurator } from './site-admin';
 import type { EditorName } from '../types';
 
-// The "last edited by" names of the admin curated lists, which a curator reads
-// too. `usersForAdmin` refuses a curator; this read answers an id and a name and
-// nothing else.
+// `usersForAdmin` refuses a curator; this read answers an id and a name and nothing else.
 
 /**
- * The live user behind each id, as the id and display name an Updated stamp
- * shows: one answer per id in the order given, null where none. One query
- * whatever the batch size.
+ * One answer per id in the order given, null where none; one query whatever the batch size.
  *
  * @throws {Forbidden} not a curator or keeper.
  */

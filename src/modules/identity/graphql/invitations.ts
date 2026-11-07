@@ -50,9 +50,7 @@ export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').impl
   }),
 });
 
-// The site admin's alone, scoped here and refused again by the service, which
-// is the real gate and also refuses another admin than the primary one while
-// admin changes are paused. The actor is the session's, never an argument.
+// Scoped here and refused again by the service, the real gate, which also refuses another admin than the primary one while changes are paused.
 builder.mutationField('createAdminInvitation', (t) =>
   t.field({
     type: InvitationRef,
@@ -99,9 +97,7 @@ builder.mutationField('acceptInvitation', (t) =>
   }),
 );
 
-// The account page's accept: a coven invitation by the id the page
-// lists, for a person whose mail never arrived. The same service checks, the
-// session's verified address matched in SQL, and the site tier out of reach.
+// By the id the page lists, for a person whose mail never arrived: the session's verified address matched in SQL, the site tier out of reach.
 builder.mutationField('acceptInvitationById', (t) =>
   t.field({
     type: InvitationRef,
@@ -113,8 +109,7 @@ builder.mutationField('acceptInvitationById', (t) =>
   }),
 );
 
-// The account page's Decline: the accept by id's checks, and the
-// invitation stamped declined rather than accepted; nothing is granted.
+// Stamped declined rather than accepted; nothing is granted.
 builder.mutationField('declineInvitationById', (t) =>
   t.field({
     type: InvitationRef,

@@ -19,27 +19,18 @@ function refuseUnverified(session: Session): void {
 declare const curatorBrand: unique symbol;
 declare const adminBrand: unique symbol;
 
-/**
- * Proof that `assertCurator` found this user a curator or a keeper.
- * It names no workspace: a curator curates the compendium and reaches no coven.
- */
+/** Names no workspace: a curator curates the compendium and reaches no coven. */
 export type Curator = {
   readonly userId: string;
   readonly [curatorBrand]: true;
 };
 
-/**
- * Proof that `assertSiteAdmin` found this user a site keeper. It is a `Curator` with a brand of its own; a curator's proof is not one.
- */
+/** A `Curator` with a brand of its own; a curator's proof is not one. */
 export type SiteAdmin = Curator & {
   readonly [adminBrand]: true;
 };
 
 /**
- * The curation check, for what a curator may do and a keeper with them: the
- * compendium-tier writes and the keeper-curated vocabularies. Reads only the
- * session's role, as `assertSiteAdmin` does.
- *
  * @throws {Forbidden} the email address is unverified, or the role is neither `curator` nor `admin`.
  */
 export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
@@ -49,9 +40,8 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
 }
 
 /**
- * The site-role check, for what only a site keeper may do: the people page and the
- * workshop. Reads only the session's role. `reason` is what the refusal says when
- * the caller has a more particular one than the default.
+ * `reason` is what the refusal says when the caller has a more particular one than the default.
+ *
  *
  * @throws {Forbidden} the email address is unverified, or the role is not `admin`.
  */

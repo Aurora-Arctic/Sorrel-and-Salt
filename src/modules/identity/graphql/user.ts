@@ -15,10 +15,7 @@ import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
 
-/**
- * A user's own business, not a co-member's: readable on one's own row and by a site admin, else `Forbidden`
- * (claude-docs/graphql/schema.md, "Auth scopes").
- */
+/** Readable on one's own row and by a site admin, else `Forbidden` (claude-docs/graphql/schema.md, "Auth scopes"). */
 const selfOrAdmin = (user: UserRow) => ({ self: user.id, admin: true });
 
 export const UserRef = builder.objectRef<UserRow>('User').implement({
@@ -61,9 +58,7 @@ builder.queryField('me', (t) =>
   }),
 );
 
-// Returns the row as it is: the address counts once the mailed link is
-// followed, so the answer's `email` is still the old one. `next` is where
-// the link's landing goes on to.
+// Returns the row as it is: `email` is still the old one until the mailed link is followed.
 builder.mutationField('setEmail', (t) =>
   t.field({
     type: UserRef,
@@ -74,9 +69,7 @@ builder.mutationField('setEmail', (t) =>
   }),
 );
 
-// The account page's Password section, for an account with no password yet: a
-// change goes to Better Auth's own `/change-password`, which asks for the
-// current one. A refusal is `VALIDATION` on `newPassword`.
+// A change goes to Better Auth's own `/change-password`, which asks for the current one.
 builder.mutationField('setPassword', (t) =>
   t.boolean({
     args: { newPassword: t.arg.string({ required: true }) },
@@ -86,8 +79,6 @@ builder.mutationField('setPassword', (t) =>
   }),
 );
 
-// The account page's Name section: the session's own row, renamed
-// through the audited write; a refusal is `VALIDATION` on `name`.
 builder.mutationField('setName', (t) =>
   t.field({
     type: UserRef,
@@ -97,7 +88,6 @@ builder.mutationField('setName', (t) =>
   }),
 );
 
-// The three version numbers an agreement covers, the joint version `terms.disclaimer.ethics` the terms page shows.
 const AgreementVersionInput = builder.inputType('AgreementVersionInput', {
   fields: (t) => ({
     terms: t.int({ required: true }),
@@ -106,7 +96,6 @@ const AgreementVersionInput = builder.inputType('AgreementVersionInput', {
   }),
 });
 
-// The terms page's Agree button. It names the versions the page showed, and the service refuses any but the ones in force.
 builder.mutationField('agreeToTerms', (t) =>
   t.field({
     type: UserRef,
@@ -116,9 +105,7 @@ builder.mutationField('agreeToTerms', (t) =>
   }),
 );
 
-// The admin user list: a read, so the service's own check refuses a
-// non-admin rather than the mutation scope. Its nodes are the ordinary
-// `User`, so `email` resolves through the scope above and no second path.
+// The service's own check refuses a non-admin rather than the mutation scope; `email` resolves through the scope above and no second path.
 builder.queryField('users', (t) =>
   t.pagedConnection({
     type: UserRef,
@@ -144,9 +131,7 @@ builder.queryField('users', (t) =>
   }),
 );
 
-// The approval and its revoke: the site admin's alone, scoped here and
-// refused again by the service, which is the real gate. Each answers the row,
-// so the list re-reads it.
+// Scoped here and refused again by the service, which is the real gate.
 const CREATION_WRITES = [
   {
     field: 'grantWorkspaceCreation',
@@ -166,7 +151,6 @@ for (const { field, description, write } of CREATION_WRITES) {
     t.field({
       type: UserRef,
       description,
-      // The note is the confirmation's optional reason, kept on the ledger row.
       args: { userId: t.arg.id({ required: true }), note: t.arg.string() },
       authScopes: { admin: true },
       resolve: (_root, { userId, note }, context) =>
@@ -175,9 +159,7 @@ for (const { field, description, write } of CREATION_WRITES) {
   );
 }
 
-// The role change: the site admin's alone, scoped here and refused again by the
-// service, the real gate. `note` is the confirmation's optional reason, kept on
-// the ledger row; the actor is the session's, never an argument.
+// Scoped here and refused again by the service, the real gate; the actor is the session's, never an argument.
 builder.mutationField('setUserRole', (t) =>
   t.field({
     type: UserRef,
@@ -194,9 +176,7 @@ builder.mutationField('setUserRole', (t) =>
   }),
 );
 
-// The pause switch: the site admin's scope here, and the service refuses every
-// admin but the primary one. Each answers whether changes are paused now, so a
-// second click answers the state rather than an error.
+// The service refuses every admin but the primary one. Answers the state, so a second click gets no error.
 builder.mutationField('pauseAdminRoleChanges', (t) =>
   t.boolean({
     description:

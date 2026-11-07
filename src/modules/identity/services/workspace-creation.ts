@@ -7,13 +7,11 @@ import { adminDeclaration, liveUser } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { UserRow } from '../types';
 
-// The approval route and its undoing: a keeper lets someone with no invitation create a workspace, or stops them. Each change is
-// declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger
-// (claude-docs/auth/admin-users.md, "Approving workspace creation").
+// Each change is declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
 const REFUSAL = 'Only a site keeper may change who can create a coven';
 
-/** Writes the flag as a keeper's act, answering the row. The ledger row is the trigger's, carrying `note` (blank as none). */
+/** The ledger row is the trigger's, carrying `note` (blank as none). */
 async function setFlag(
   session: Session,
   userId: string,
@@ -34,9 +32,6 @@ async function setFlag(
 }
 
 /**
- * Lets a live user who lacks it create a workspace, stamped as the approving admin
- * and recorded as a `grant` with `note`; answers the row as written.
- *
  * @throws {Forbidden} not a keeper; keeper changes are paused and the caller is not the primary keeper; or the user may already create one.
  * @throws {NotFound} no live user has this id.
  */
@@ -52,8 +47,7 @@ export async function grantWorkspaceCreation(
 }
 
 /**
- * Stops a live user creating workspaces, recorded as a `revoke` with `note`;
- * answers the row as written. The workspaces they created stay theirs.
+ * The workspaces they created stay theirs.
  *
  * @throws {Forbidden} not a keeper; keeper changes are paused and the caller is not the primary keeper; the user cannot create one already; or the user is a keeper or curator, whom the users CHECK holds to the flag.
  * @throws {NotFound} no live user has this id.

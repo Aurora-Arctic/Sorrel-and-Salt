@@ -26,9 +26,7 @@ const PrivilegeRouteEnum = builder.enumType('PrivilegeRoute', {
   values: userPrivilegeRoute.enumValues,
 });
 
-// One row of the privilege ledger. `audit.createdAt` is when, `actor` who, and
-// `createdBy` read as a user is the one field the trigger, not the actor, wrote.
-// Subject and actor share the page's one `usersByIdForAdmin` read (rule 9).
+// `createdBy` read as a user is the one field the trigger, not the actor, wrote. Subject and actor share the page's one `usersByIdForAdmin` read (rule 9).
 const PrivilegeChangeRef = builder.objectRef<PrivilegeChangeRow>('PrivilegeChange').implement({
   fields: (t) => ({
     id: t.exposeID('id'),
@@ -55,8 +53,7 @@ const PrivilegeChangeRef = builder.objectRef<PrivilegeChangeRow>('PrivilegeChang
   }),
 });
 
-// The privilege ledger, newest first: the site admin's alone,
-// scoped here and refused again by the service, which is the real gate.
+// Scoped here and refused again by the service, which is the real gate.
 builder.queryField('privilegeChanges', (t) =>
   t.pagedConnection({
     type: PrivilegeChangeRef,

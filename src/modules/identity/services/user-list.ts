@@ -7,16 +7,11 @@ import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import type { UserFilter, UserRow } from '../types';
 
-// The admin user list's reads, and its count. A read, so the mutation sweep
-// does not reach it: the check is here, by direct call, and the page confers
-// no workspace access (claude-docs/auth/admin-users.md, "The user list").
+// A read, so the mutation sweep does not reach it: the check is here, by direct call, and the page confers no workspace access (claude-docs/auth/admin-users.md, "The user list").
 
 const REFUSAL = 'Only a site keeper may list users';
 
 /**
- * One page of the live users under `filter`, to a site keeper. A blank query
- * is no query.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function listUsers(
@@ -29,9 +24,6 @@ export async function listUsers(
 }
 
 /**
- * How many users `listUsers` pages under `filter`, and how many come before
- * `start`: the user list's "Page X of Y".
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function countUsers(
@@ -43,15 +35,11 @@ export async function countUsers(
   return findUserCount(admin, trimmedFilter(filter), start);
 }
 
-/** The filter as the repository takes it, a blank query no query. */
 function trimmedFilter(filter: UserFilter): UserFilter {
   return { ...filter, query: filter.query?.trim() || undefined };
 }
 
-/**
- * The providers linked to each user named, sorted: a DataLoader's batch. A site admin's alone, their own row included:
- * every slot of anyone else's batch is a `Forbidden`.
- */
+/** A DataLoader's batch. A site admin's alone, their own row included: every slot of anyone else's is a `Forbidden`. */
 export async function providersOf(
   session: Session,
   userIds: readonly string[],

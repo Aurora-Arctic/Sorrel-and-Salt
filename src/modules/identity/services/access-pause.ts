@@ -19,7 +19,6 @@ import { isPrimaryAdmin } from './primary-admin';
 import { mailPausedUser } from './access-pause-start';
 import { assertSiteAdmin } from './site-admin';
 
-// The site access pause: a keeper closes the site but support to a user, until a time or with no end, and may lift it early.
 // Setting one ends every session the user holds; every signed-in request reads `standingAccessPause` through
 // src/lib/request-session.ts (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
@@ -34,9 +33,7 @@ const NO_NOTE = 'Write a note saying why';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
- * Pauses a user's access until `until`, or with no end when `until` is `null`, and
- * ends every session they hold. The user is mailed, with `message` if one is
- * written, once the pause is saved (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
+ * Ends every session the user holds; the mail goes once the pause is saved (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
  *
  * @throws {Forbidden} not a keeper; the user is the primary keeper, the caller, or the System or signed-out sender account; or keeper changes are paused and the user is a keeper.
  * @throws {NotFound} no live user has this id.
@@ -98,8 +95,6 @@ export async function pauseUserAccess(
 }
 
 /**
- * Lifts the pause standing on a user's access now, and answers it.
- *
  * @throws {Forbidden} the session is not a keeper.
  * @throws {NotFound} no live user has this id, or no pause stands on them: lifted already, or run out.
  */
@@ -115,17 +110,12 @@ export async function liftUserAccessPause(
   return row;
 }
 
-/**
- * The pause standing on a user's access, or `undefined`: what each signed-in request reads. Takes no session, as it decides
- * what the session may reach; it answers only for the account the session belongs to.
- */
+/** Takes no session, as it decides what the session may reach; it answers only for the account the session belongs to. */
 export function standingAccessPause(userId: string): Promise<UserAccessPauseRow | undefined> {
   return findStandingUserAccessPause(userId);
 }
 
 /**
- * One page of every pause set on a user, standing, run out and lifted alike, newest first: the user modal's history.
- *
  * @throws {Forbidden} the caller is not a site keeper.
  * @throws {ValidationError} the id is malformed.
  */
@@ -139,10 +129,7 @@ export async function listUserAccessPauses(
   return findUserAccessPausePage(admin, id, page);
 }
 
-/**
- * The pause standing on each user, in the order asked, undefined where none stands: one query for a page of the user list.
- * To a site keeper alone.
- */
+/** In the order asked, undefined where none stands; to a site keeper alone. */
 export async function standingAccessPausesOf(
   session: Session,
   userIds: readonly string[],

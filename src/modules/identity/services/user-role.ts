@@ -17,17 +17,13 @@ import type { UserRow } from '../types';
 
 const REFUSAL = 'Only a site keeper may change a site role';
 
-/** The role's name in a refusal: "already a curator". */
 const ROLE_NOUNS: Record<UserRole, string> = {
   user: 'a user',
   curator: 'a curator',
   admin: 'an admin',
 };
 
-/**
- * The grant of a curating role every route but the bootstrap shares, inside the caller's transaction. It sets the creation flag too,
- * since the users CHECK refuses a curator or a keeper without it.
- */
+/** Sets the creation flag too, since the users CHECK refuses a curator or a keeper without it. */
 export async function writeSiteRoleGrant(
   write: AuditWriter,
   userId: string,
@@ -39,10 +35,7 @@ export async function writeSiteRoleGrant(
   return written;
 }
 
-/**
- * Seats the user as steward of the demo coven in the caller's transaction, doing nothing where there is no demo coven: a removed seat is
- * revived, a live one promoted, and a missing one inserted. Identity services hold no membership of that coven, so the writes take none.
- */
+/** Does nothing where there is no demo coven. Identity services hold no membership of it, so the writes take none. */
 async function seatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
   const demo = await findDemoWorkspace();
   if (!demo) return;
@@ -52,16 +45,12 @@ async function seatDemoOwner(write: AuditWriter, userId: string): Promise<void> 
   if (!promoted) await write.insertMembership(demo.id, userId, 'owner');
 }
 
-/** Returns a keeper's seat in the demo coven to an observer's, in the caller's transaction; a user with no live seat is left without one. */
 async function unseatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
   const demo = await findDemoWorkspace();
   if (demo) await write.setSeatRole(demo.id, userId, 'viewer');
 }
 
-/**
- * The role write, inside the caller's transaction. Leaving `admin` first locks the live keepers and counts them,
- * so two revokes at once cannot leave none. Moving to `user` leaves the flag.
- */
+/** Leaving `admin` first locks the live keepers and counts them, so two revokes at once cannot leave none. Moving to `user` leaves the flag. */
 async function writeRole(
   write: AuditWriter,
   admin: SiteAdmin,
@@ -93,9 +82,8 @@ async function writeRole(
 }
 
 /**
- * Gives a live user a site role, stamped as the acting keeper and recorded by the
- * trigger with `note`, a blank one as none. Answers the row as written
- * (claude-docs/auth/admin-users.md, "Changing a site role").
+ * Recorded by the trigger with `note`, a blank one as none (claude-docs/auth/admin-users.md, "Changing a site role").
+ *
  *
  * @throws {Forbidden} not a keeper; the user already holds the role; the user is the primary keeper and the role is not `admin`; the change would leave no live keeper; or keeper changes are paused and the caller is another keeper.
  * @throws {NotFound} no live user has this id.

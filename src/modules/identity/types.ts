@@ -18,18 +18,13 @@ export type {
 
 export type UserRow = typeof users.$inferSelect;
 
-/** What an Updated stamp shows of an editor: the account and its display name, no ledger field. */
 export type EditorName = Pick<UserRow, 'id' | 'name'>;
 
-/** What `/keepers/invitations` is narrowed by. Each part is optional, and absent means no filter. */
 export interface AdminInvitationFilter {
-  /** A fragment of the invited address, case-insensitive. */
   email?: string;
-  /** Only the invitations lapsing within the next 24 hours. */
   expiringSoon?: boolean;
 }
 
-/** One site access pause: standing, run out or lifted. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
 /** The origin a site access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
@@ -45,7 +40,6 @@ export type AccessPauseMail = {
   origin: string;
 };
 
-/** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 
 /** What the provider said at this callback — never the stored row, which a later feature may set. */
@@ -69,14 +63,8 @@ export type PrimaryAdminOutcome =
  * GraphQL context, because it reaches Better Auth and a service may not.
  */
 export interface EmailVerificationSender {
-  /** Mails the row's own, still-unverified address its link again, landing on the way to `next`. */
   resend(email: string, next?: string): Promise<void>;
-  /**
-   * Mails account `userId`'s pending address a link that, followed from the row's session, makes it the row's address,
-   * landing on the way to `next`.
-   */
   requestChange(userId: string, next?: string): Promise<void>;
-  /** Whether the request's session was created less than `seconds` ago. */
   sessionIsFresh(seconds: number): Promise<boolean>;
   /** Tells account `userId`'s address, the one being left, that a change to its pending address was asked for. Names that address's domain only; never throws on a failed send. */
   notifyChangeRequested(userId: string): Promise<void>;
@@ -99,7 +87,6 @@ export interface PasswordSetter {
   sessionIsFresh(): Promise<boolean>;
 }
 
-/** Whether keeper changes are paused, and whether the asking admin may switch that. */
 export interface AdminRoleChangePauseState {
   paused: boolean;
   /** Only the primary keeper may pause or resume. */
@@ -118,7 +105,6 @@ export interface InvitationSender {
   invitation(invitationId: string): Promise<void>;
 }
 
-/** An invitation into a coven: it names the workspace and the role it seats the person at. */
 export type WorkspaceInvitationRow = InvitationRow & {
   workspaceId: string;
   role: NonNullable<InvitationRow['role']>;
@@ -133,17 +119,14 @@ export interface ReceivedInvitation {
   covenName: string;
   covenSlug: string;
   role: NonNullable<InvitationRow['role']>;
-  /** Null once the sender's account is gone. */
   inviterName: string | null;
   expiresAt: Date;
   note: string | null;
 }
 
-/** Why an invitation link cannot be accepted by this session, one reason per link. */
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
-  /** A card the signed-in account itself accepted. */
   | 'used-by-you'
   | 'declined'
   | 'revoked'
@@ -153,9 +136,7 @@ export type InvitationRefusal =
   | 'unverified'
   | 'paused';
 
-/** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
-  /** The site role accepting grants, curator or keeper. */
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
   /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }
@@ -163,7 +144,6 @@ export type InvitationStanding =
   | { acceptable: true; tier: 'card' }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
-/** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
 export type InvitationCheck =
   /** `card` when the link is a card's, found or shaped like one, so the words fit a printed card. */
   | { refusal: InvitationRefusal; card?: boolean }
@@ -174,11 +154,9 @@ export type InvitationCheck =
       tier: 'workspace';
       invitation: WorkspaceInvitationRow;
       user: UserRow;
-      /** The live coven, as the invited account may be told it. */
       coven: InvitedCoven;
     };
 
-/** Where a card stands: pending until accepted, revoked or past its date. */
 export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
 
 /** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
@@ -193,13 +171,9 @@ export interface MintedCards {
  * address or the link. The step reads the address and the token, or signs one, when it sends.
  */
 export type SecretLink =
-  /** The sign-up or resend verification link, landing on the way to `next`. */
   | { kind: 'verification'; userId: string; authBase: string; next: string | null }
-  /** The password reset link. */
   | { kind: 'reset'; userId: string; authBase: string }
-  /** The lockout notice, with its reset link, for a lock of `minutes`. */
   | { kind: 'lockout'; userId: string; authBase: string; minutes: number }
-  /** The change-of-address link, sent to the row's pending address and landing on the way to `next`. */
   | { kind: 'change'; userId: string; authBase: string; next: string | null }
   /** An address invitation's link, coven or admin, on a token its step mints when it sends, so only the newest mailed link works. */
   | { kind: 'invitation'; invitationId: string; origin: string };
@@ -209,11 +183,7 @@ export type SecretLink =
  * the address from the row when it sends.
  */
 export type AccountNotice =
-  /** Tells the address being left that a change to the row's pending address was asked for. */
   | { kind: 'change-requested'; userId: string; origin: string }
-  /** Tells the account a sign-up arrived for its address, in place of the second account that is not made. */
   | { kind: 'account-exists'; userId: string; origin: string }
-  /** Tells the account its password was just replaced, and `how`. */
   | { kind: 'password-changed'; userId: string; origin: string; how: 'reset' | 'change' | 'set' }
-  /** Tells the address a completed change left, held in the row's `former_email`, where the account went. */
   | { kind: 'change-completed'; userId: string; origin: string };

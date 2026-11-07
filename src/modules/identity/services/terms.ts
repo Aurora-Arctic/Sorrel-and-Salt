@@ -12,8 +12,8 @@ import type { UserRow } from '../types';
 // terms include the other two (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 /**
- Refuses any combination but the one in force, so a page left open across a publish cannot agree to text it did not show.
-  *
+ * Refuses any combination but the one in force, so a page left open across a publish cannot agree to text it did not show.
+ *
  *
  * @throws {ValidationError} `version` is not the combination in force.
  * @throws {NotFound} the row is gone, though the session outlives it.

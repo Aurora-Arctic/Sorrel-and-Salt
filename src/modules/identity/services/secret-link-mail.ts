@@ -67,7 +67,7 @@ export async function secretLinkMessage(link: SecretLink): Promise<Message | nul
 }
 
 /**
- The row's hash is swapped for the new token's, so a retried step mails a fresh link and every earlier one stops working.
+ * The row's hash is swapped for the new token's, so a retried step mails a fresh link and every earlier one stops working.
  */
 async function invitationMessage(
   link: Extract<SecretLink, { kind: 'invitation' }>,

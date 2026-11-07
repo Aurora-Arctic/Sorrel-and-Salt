@@ -12,10 +12,7 @@ import type { ReceivedInvitation } from '../types';
 // The coven invitations addressed to the signed-in account. No permission to assert: the session is the scope and the repository
 // matches its verified address in SQL. The site tier is never listed (claude-docs/design-decisions/m10.32-accept-from-the-landing.md).
 
-/**
- * One page of the coven invitations still pending for the session's account, newest first, with each coven's and sender's name.
- * Three statements however long the page; a row whose coven was deleted between the reads is left out.
- */
+/** Three statements however long the page; a row whose coven was deleted between the reads is left out. */
 export async function listReceivedInvitations(
   session: Session,
   page: PageRequest,
@@ -55,7 +52,6 @@ export async function listReceivedInvitations(
   });
 }
 
-/** How many invitations `listReceivedInvitations` pages, and how many come before `start`: the account page's "Page X of Y". */
 export function countReceivedInvitations(
   session: Session,
   start: Cursor | undefined,

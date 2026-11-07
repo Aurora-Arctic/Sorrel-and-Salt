@@ -48,7 +48,7 @@ export async function sendAccountNotice(notice: AccountNotice): Promise<boolean>
 }
 
 /**
- Clears the address only once the transport took it, matched on it and on the move the mail named, so a move made while it was going out is still told.
+ * Clears the address only once the transport took it, matched on it and on the move the mail named, so a move made while it was going out is still told.
  */
 async function sendChangeCompleted(notice: AccountNotice): Promise<boolean> {
   const user = await findOneById(users, notice.userId);

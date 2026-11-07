@@ -36,7 +36,6 @@ import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import type { CardState, MintedCards } from '../types';
 
-// The keeper's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -70,10 +69,7 @@ function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
 const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
 
 /**
- * Mints `sheets` sheets of `CARDS_PER_SHEET` pending cards each, sharing one batch,
- * `expiresAt` and a trimmed `note`, and answers their tokens: the only time any is
- * readable, as the rows hold the hash alone.
- *
+ * Answers the tokens: the only time any is readable, as the rows hold the hash alone.
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `sheets` is not a whole number from 1 to `MAX_SHEETS_PER_BATCH`; `expiresAt` is not a future date; `note` is over `MAX_NOTE_LENGTH`.
  */
@@ -112,8 +108,6 @@ export async function mintInvitationCards(
 }
 
 /**
- * Withdraws every pending card of a batch; the accepted ones stay. Answers the cards withdrawn, none for a batch with
- * nothing pending.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `batchId` is not an id.
@@ -132,8 +126,6 @@ export async function revokeInvitationCardBatch(
 }
 
 /**
- * One page of the batches, newest first, each as the batch's first card (its batch id and dates).
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function listCardBatches(
@@ -146,8 +138,6 @@ export async function listCardBatches(
 }
 
 /**
- * How many batches `listCardBatches` pages, and how many come before `start`: "Page X of Y".
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function countCardBatches(
@@ -160,8 +150,6 @@ export async function countCardBatches(
 }
 
 /**
- * The place in its batch of each named card, from 1; null for a card minted before places were kept. A card not named is absent.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function cardPositions(
@@ -173,8 +161,6 @@ export async function cardPositions(
 }
 
 /**
- * The cards, accepted cards and pending cards of each named batch, counted in SQL.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function cardBatchTotals(
@@ -196,8 +182,6 @@ export function cardState(
 }
 
 /**
- * One page of the accounts that arrived by card, newest first.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function listCardArrivals(
@@ -210,8 +194,6 @@ export async function listCardArrivals(
 }
 
 /**
- * How many arrivals `listCardArrivals` pages, and how many come before `start`.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function countCardArrivals(
@@ -226,16 +208,11 @@ export async function countCardArrivals(
 const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch', 'Covens Owned'];
 const ARRIVAL_PAGE = 100;
 
-/** The names of the covens each account owns, keyed by account id, for every id asked in one call. */
 export type OwnedCovenLookup = (
   userIds: string[],
 ) => Promise<ReadonlyMap<string, readonly string[]>>;
 
 /**
- * Every arrival as CSV text, newest first, as the Card Sign-Ups table shows them.
- * `identity` may import no module, so the caller supplies `ownedCovens`, asked
- * once for every account. A cell opening with a formula character is prefixed with an apostrophe.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function cardArrivalsCsv(
@@ -289,8 +266,6 @@ function csvCell(value: string): string {
 }
 
 /**
- * One page of the refused opens of a batch's cards, latest first: a row per card, account and reason.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} on `batchId`: not a row id.
  */
@@ -304,8 +279,6 @@ export async function listCardAttempts(
 }
 
 /**
- * How many rows `listCardAttempts` pages for the batch, and how many come before `start`.
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function countCardAttempts(
