@@ -103,3 +103,5 @@ dot is hidden from the accessibility tree in both states and carries
 `is-pending` only when pending. It reads the class because the class is the
 state and the dot has no role. `LinkIconHint` is tested the same way: no dot at
 rest, the ring and `is-pending` while pending, the icon again after.
+
+**Forced colours.** The pending dot is painted `LinkText`, the ink of the link it follows.

@@ -127,6 +127,19 @@
   }
 }
 
+// An open button wears the Highlight fill, so its ink is HighlightText; after the inks above, which
+// would otherwise set it.
+.icon-tip__edit--plain,
+.icon-tip__edit--ink,
+.icon-tip__more,
+.icon-tip__look {
+  @include forced-colors {
+    &[aria-expanded='true'] {
+      color: HighlightText;
+    }
+  }
+}
+
 // The small eye (the spell builder's step rows and inventory lines): the mark at `$glyph-size` in a 24px `$icon-size` box, the smallest hit area.
 .icon-tip__look--small {
   width: $icon-size;

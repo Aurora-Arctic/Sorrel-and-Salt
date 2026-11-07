@@ -65,10 +65,34 @@
     color: $text-muted;
     cursor: default;
   }
+
+  // The tint is dropped, so hover takes a Highlight edge and a shut chip GrayText.
+  @include forced-colors {
+    &:hover {
+      border-color: Highlight;
+    }
+
+    &:disabled {
+      color: GrayText;
+      border-color: GrayText;
+    }
+  }
 }
 
 .facet-chip__details[open] > .facet-chip__summary {
   border-color: $accent;
+
+  // The fills are dropped, so an open chip takes the Highlight fill.
+  @include forced-colors {
+    border-color: Highlight;
+    background-color: Highlight;
+    color: HighlightText;
+
+    // The name and caret set their own muted ink.
+    * {
+      color: inherit;
+    }
+  }
 }
 
 // The name is the quieter half of the chip: the caption size the counts use, in the muted ink,

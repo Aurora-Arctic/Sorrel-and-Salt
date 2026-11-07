@@ -118,6 +118,12 @@
   margin-inline: -1px;
   vertical-align: text-bottom;
   background-color: currentcolor;
+
+  // The fill is dropped, so the caret is painted in the text colour.
+  @include forced-colors {
+    background-color: CanvasText;
+  }
+
   animation: search-sentence-caret 1s steps(1) infinite;
 }
 
