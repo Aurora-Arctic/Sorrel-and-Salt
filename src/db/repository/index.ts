@@ -137,6 +137,7 @@ export {
   findCardCount,
   findCardPositions,
   findInvitationByToken,
+  hasAcceptedCard,
   findInvitationInWorkspace,
   findInvitedCoven,
   findReceivedInvitation,

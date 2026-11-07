@@ -16,6 +16,7 @@ import {
   countCardBatches,
   listCardArrivals,
   listCardBatches,
+  liveCardOf,
   mintInvitationCards,
   revokeInvitationCardBatch,
 } from '@/modules/identity';
@@ -78,7 +79,7 @@ describe('who may mint, list and revoke', () => {
 });
 
 describe('mintInvitationCards', () => {
-  it('writes nine pending cards a sheet sharing one batch and the chosen expiry, and returns each token once', async () => {
+  it('writes ten pending cards a sheet sharing one batch and the chosen expiry, and returns each token once', async () => {
     const expiresAt = NEXT_WEEK();
 
     const minted = await mintInvitationCards(asUser(E), 2, expiresAt);
@@ -110,6 +111,18 @@ describe('mintInvitationCards', () => {
     expect(await notes(blank.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
   });
 
+  it('marks every card of a beta batch as beta, and no card of a plain one', async () => {
+    const beta = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, true);
+    const plain = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, false);
+    const unsaid = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+
+    const flags = async (batchId: string) =>
+      (await sql`select beta from invitations where batch_id = ${batchId}`).map((row) => row.beta);
+    expect(await flags(beta.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(true));
+    expect(await flags(plain.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(false));
+    expect(await flags(unsaid.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(false));
+  });
+
   it('takes a note of the longest length and refuses one a character over, writing nothing', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), 'x'.repeat(MAX_NOTE_LENGTH));
     expect(await cards()).toHaveLength(CARDS_PER_SHEET);
@@ -138,7 +151,9 @@ describe('mintInvitationCards', () => {
 
     const rows =
       await sql`select token_hash, position from invitations where kind = 'card' order by position`;
-    expect(rows.map((row) => row.position)).toEqual(Array.from({ length: 18 }, (_, i) => i + 1));
+    expect(rows.map((row) => row.position)).toEqual(
+      Array.from({ length: 2 * CARDS_PER_SHEET }, (_, i) => i + 1),
+    );
     expect(rows.map((row) => row.token_hash)).toEqual(minted.tokens.map(sha256));
   });
 
@@ -155,8 +170,8 @@ describe('mintInvitationCards', () => {
   it(`mints ${MAX_SHEETS_PER_BATCH} sheets in one call and refuses one more`, async () => {
     const minted = await mintInvitationCards(asUser(E), MAX_SHEETS_PER_BATCH, NEXT_WEEK());
     expect(minted.tokens).toHaveLength(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET);
-    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(495);
-    expect(await cards()).toHaveLength(495);
+    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(500);
+    expect(await cards()).toHaveLength(500);
 
     const refused = await mintInvitationCards(
       asUser(E),
@@ -164,8 +179,8 @@ describe('mintInvitationCards', () => {
       NEXT_WEEK(),
     ).catch((error: unknown) => error);
     expect(refused).toBeInstanceOf(ValidationError);
-    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 55 sheets/);
-    expect(await cards()).toHaveLength(495);
+    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 50 sheets/);
+    expect(await cards()).toHaveLength(500);
   });
 
   it.each([0, -1, 1.5, Number.NaN])('refuses %s sheets, a part sheet included', async (sheets) => {
@@ -183,6 +198,33 @@ describe('mintInvitationCards', () => {
       ValidationError,
     );
     expect(await cards()).toHaveLength(0);
+  });
+});
+
+describe('liveCardOf', () => {
+  it("answers a pending card with its batch's beta flag, reading with no session", async () => {
+    const beta = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), undefined, true);
+    const plain = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+
+    expect(await liveCardOf(beta.tokens[0]!)).toEqual({ beta: true });
+    expect(await liveCardOf(plain.tokens[0]!)).toEqual({ beta: false });
+  });
+
+  it('answers null for an accepted, revoked or expired card, an unknown token and an address invitation', async () => {
+    const minted = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), undefined, true);
+    const [accepted, revoked, expired, live] = minted.tokens;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where token_hash = ${sha256(accepted!)}`;
+    await sql`update invitations set revoked_at = now() where token_hash = ${sha256(revoked!)}`;
+    await sql`update invitations set expires_at = now() - interval '1 second' where token_hash = ${sha256(expired!)}`;
+    await sql`
+      insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at)
+      values ('wort@example.test', ${sha256('addresstoken')}, 'curator', ${E.id}, ${E.id}, now() + interval '7 days')
+    `;
+    // The batch is beta and one card of it is still live, so a null below is the card's own state.
+    expect(await liveCardOf(live!)).toEqual({ beta: true });
+
+    for (const token of [accepted!, revoked!, expired!, 'nosuchtoken', 'addresstoken'])
+      expect(await liveCardOf(token)).toBeNull();
   });
 });
 
@@ -290,11 +332,20 @@ describe('the arrivals CSV', () => {
     const csv = await cardArrivalsCsv(asUser(E));
 
     const lines = csv.trimEnd().split('\r\n');
-    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Covens Owned');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Beta,Covens Owned');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe(
-      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)},`,
+      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)},No,`,
     );
+  });
+
+  it('says Yes in the Beta column for an account that arrived by a beta card', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, true);
+    const [first] = await cards();
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${first!.id}`;
+
+    const [, row] = (await cardArrivalsCsv(asUser(E))).trimEnd().split('\r\n');
+    expect(row).toMatch(/,[0-9a-f]{8},Yes,$/);
   });
 
   it('holds only the arrivals the filter keeps', async () => {
@@ -311,7 +362,7 @@ describe('the arrivals CSV', () => {
     expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
     expect(byName).toContain(B.email);
     expect(byName).not.toContain(A.email);
-    expect(byNoBatch).toBe('Account,Email,Accepted On,Batch,Covens Owned\r\n');
+    expect(byNoBatch).toBe('Account,Email,Accepted On,Batch,Beta,Covens Owned\r\n');
   });
 
   it('lists the covens each account owns from one lookup for every row, joined and guarded', async () => {
@@ -336,7 +387,7 @@ describe('the arrivals CSV', () => {
   it('is only a header when nobody arrived', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     expect(await cardArrivalsCsv(asUser(E))).toBe(
-      'Account,Email,Accepted On,Batch,Covens Owned\r\n',
+      'Account,Email,Accepted On,Batch,Beta,Covens Owned\r\n',
     );
   });
 });

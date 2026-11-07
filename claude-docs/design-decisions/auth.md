@@ -910,6 +910,14 @@ until M15.18, which adds the `card` value to `user_privilege_route` in its own
 migration. Every existing writer inserts an address row, and the column
 default makes that so.
 
+### Beta batches and one card per account
+
+- **`invitations.beta`** (`boolean NOT NULL DEFAULT false`) marks a card minted for beta testers. The CHECK `invitations_beta_card_only` refuses it on a row that is not a card. It is written on every card of the batch at minting and never changed.
+- **On every row, not on a batches table.** A batch is still the rows sharing one `batch_id`; a flag set once at minting and read with the card needs no table of its own, and the column is additive.
+- **One card per account.** An account that has accepted a card is refused a second with `used-another-card`, and the second card stays pending for someone else. The service checks it and the accept statement's card arm adds `NOT EXISTS` an accepted card by the session's account, so a call that skips the service stamps nothing. The account that accepted this card is still told `used-by-you`. The refusal records no card attempt, since the card still admits someone.
+- **The landing page reads without a session.** `/i/<token>` shows a welcome while the card is pending, and a beta tester's section when its batch is beta, through `liveCardOf(token)`, which answers only whether the card is live and whether it is beta.
+- **Beta and billing** is in DESIGN.md §13, "Subscription billing": a first coven gets one free month, a beta tester's first coven three.
+
 ## The invitation mail mints its token in the job step
 
 ### The rule

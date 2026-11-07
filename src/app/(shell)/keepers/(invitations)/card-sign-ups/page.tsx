@@ -55,6 +55,7 @@ const readArrivals = cache(
         accountEmail: !account || account instanceof Error ? '' : account.email,
         acceptedAt: node.acceptedAt,
         batchId: node.batchId,
+        beta: node.beta,
         account:
           !account || account instanceof Error
             ? null

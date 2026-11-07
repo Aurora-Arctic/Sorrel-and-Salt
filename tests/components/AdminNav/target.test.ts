@@ -67,3 +67,14 @@ describe('adminTarget for the documents', () => {
     expect(target.action).toBeFalsy();
   });
 });
+
+describe('adminTarget for the business cards', () => {
+  it('draws the business-card page as a titled form with no tabs, filter or action', () => {
+    const target = adminTarget('/keepers/business-cards');
+
+    expect(target).toMatchObject({ region: 'admin', shape: 'form', title: true });
+    expect(target.tabs).toBeFalsy();
+    expect(target.filter).toBeFalsy();
+    expect(target.action).toBeFalsy();
+  });
+});

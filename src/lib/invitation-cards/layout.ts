@@ -1,16 +1,29 @@
 import type { Font } from '@pdf-lib/fontkit';
 import { BACK_LEDE, BACK_NOTE, type FrontCopy, SITE_ADDRESS, WORDMARK } from './copy';
-import { baselineOffset, normalLineHeight, type TextStyle, wrap, wrapBalanced } from './text';
+import {
+  baselineOffset,
+  inkedWidth,
+  inkExtent,
+  normalLineHeight,
+  textWidth,
+  type TextStyle,
+  wrap,
+  wrapBalanced,
+} from './text';
 
-// Every length here is a pixel of the approved canvas's card artboard, drawn at twice
-// 96 px per inch: 720 × 552 px is the 3.75 × 2.875 in bleed box, and the trim sits 24 px in.
+// Every length here is a pixel of the card artboard, drawn at twice 96 px per inch:
+// 720 × 432 px is the 3.75 × 2.25 in bleed box, and the 3.5 × 2 in trim sits 24 px in.
 
-export const ARTBOARD = { width: 720, height: 552, trimInset: 24 } as const;
+export const ARTBOARD = { width: 720, height: 432, trimInset: 24 } as const;
 export const PX_PER_INCH = 192;
 
 export const CHALK = '#ebe4d4';
 export const MUTED = '#c0baac';
 export const SOOT = '#14120e';
+/** The sheet label's grey, in the page margin. */
+export const LABEL = '#555555';
+/** The business card's rule: the site's $sorrel-bright. */
+export const SORREL_BRIGHT = '#88b669';
 
 export type FontKey = 'cormorant600' | 'lexend300' | 'lexend400' | 'lexend500';
 export type CardFonts = Record<FontKey, Font>;
@@ -21,6 +34,7 @@ export interface TextItem {
   letterSpacing: number;
   colour: string;
   x: number;
+  /** The baseline, measured down from the artboard's top. */
   baseline: number;
   text: string;
 }
@@ -39,18 +53,24 @@ export interface QrItem {
   size: number;
 }
 
-export const COLUMN = { left: 72, top: 72, width: 290, height: 408 } as const;
+/** The front's text column, its top left and bottom 1/8 in (24 px) inside the trim. */
+export const COLUMN = { left: 48, top: 48, width: 290, height: 336 } as const;
 const BODY_WIDTH = 280;
 const GROUP_GAP = 18;
-const FOOT_GAP = 6;
+// Both front columns run between the safe area's top and bottom, 1/8 in inside the trim, by their inked edges.
+const SAFE_TOP = COLUMN.top;
+const SAFE_BOTTOM = COLUMN.top + COLUMN.height;
+/** The safe area's right edge, 1/8 in inside the trim, where the front's expiry line ends its ink. */
+export const SAFE_RIGHT = ARTBOARD.width - ARTBOARD.trimInset - PX_PER_INCH / 8;
 
 /** The headline size; `tests/lib/invitation-cards/headline.test.ts` holds every headline to two lines at it. */
 export const HEADLINE_SIZE = 52;
 export const HEADLINE_MAX_LINES = 2;
 
-// The salt fills the artboard's bottom-right corner, bleed included, as the canvas draws it,
-// so it runs under the words of the cards beside and below and is clipped only at the block's edge.
-const SALT = { width: 460, height: 307 };
+// The salt fills the artboard's bottom-right corner, bleed included, so it runs under the words of the cards
+// beside and below and is clipped only at the block's edge. It is scaled with the card's height, so its bright
+// bowl sits beside and below the QR code rather than under it, where it would wash the code out.
+const SALT = { width: 360, height: 240 };
 
 export const FRONT_PICTURE: PictureItem = {
   picture: 'salt',
@@ -60,7 +80,7 @@ export const FRONT_PICTURE: PictureItem = {
   height: SALT.height,
 };
 
-/** Already mirrored in its file. */
+/** The sorrel, already mirrored in its file, clear of every edge at the back's top right. */
 export const BACK_PICTURE: PictureItem = {
   picture: 'sorrel',
   x: 287,
@@ -69,7 +89,36 @@ export const BACK_PICTURE: PictureItem = {
   height: 288,
 };
 
-export const FRONT_QR: QrItem = { x: 438, y: 185, size: 182 };
+/**
+ * The QR code's height on the front and its size, between the wordmark and address above it and the expiry below, each
+ * line centred on it. Down, it stands where the column's gaps run 1 : 2 : 2 with the wordmark's top and the expiry's
+ * bottom on the safe area's edges. Across, it depends on the batch's expiry date: frontCode places it.
+ */
+export const FRONT_QR: Omit<QrItem, 'x'> = { y: 143.364, size: 182 };
+
+/** The smallest lines, the front's expiry and the back's note and batch, at 15 px (5.6 pt). */
+const SMALL_SIZE = 15;
+const SMALL_SPACING = SMALL_SIZE * 0.12;
+
+/**
+ * Places a batch's code across, where its expiry line, centred on the code, ends its ink on the safe area's right edge;
+ * every card in the batch carries the same date, so a short date stands its column further right than a long one.
+ * layout.test.ts measures it.
+ */
+export function frontCode(fonts: CardFonts, validUntil: string): QrItem {
+  const style = { font: fonts.lexend500, size: SMALL_SIZE, letterSpacing: SMALL_SPACING };
+  const text = validUntil.toUpperCase();
+  const width = textWidth(style, text) - SMALL_SPACING;
+  const centre = SAFE_RIGHT - inkedWidth(style, text) + width / 2;
+  return { x: centre - FRONT_QR.size / 2, ...FRONT_QR };
+}
+
+/**
+ * The soft shadow behind the code column, in the ground ink with no offset: its blur radius, 3 pt as artboard px, is
+ * twice the Gaussian's standard deviation, and its opacity is the shadow's darkest point.
+ */
+export const SHADOW_RADIUS = (3 / 72) * PX_PER_INCH;
+export const SHADOW_OPACITY = 0.5;
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };
@@ -135,7 +184,16 @@ function lexend(fonts: CardFonts, font: FontKey, size: number, letterSpacing = 0
   return { font: fonts[font], size, letterSpacing };
 }
 
-export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string): TextItem[] {
+/**
+ * The front's words: the top group in the text column, and beside it a column centred on the QR code, the wordmark
+ * and the address above the code and the expiry below it.
+ */
+export function frontText(
+  fonts: CardFonts,
+  copy: FrontCopy,
+  validUntil: string,
+  code: QrItem,
+): TextItem[] {
   const tagline = lexend(fonts, 'lexend400', 19.5);
   const rest = lexend(fonts, 'lexend300', 16.5);
   const top = stack(
@@ -180,47 +238,85 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     COLUMN.top,
     GROUP_GAP,
   );
-  const footBlocks = [
-    {
-      block: {
-        font: 'cormorant600',
-        size: 22,
-        letterSpacing: 22 * 0.04,
-        colour: CHALK,
-        lines: [WORDMARK],
-      } satisfies Block,
-      marginBottom: 2,
-    },
-    {
-      block: {
-        font: 'lexend500',
-        size: 13,
-        letterSpacing: 13 * 0.12,
-        colour: MUTED,
-        lines: [SITE_ADDRESS.toUpperCase()],
-      } satisfies Block,
-    },
-    {
-      block: {
-        font: 'lexend500',
-        size: 13,
-        letterSpacing: 13 * 0.12,
-        colour: MUTED,
-        lines: [validUntil.toUpperCase()],
-      } satisfies Block,
-    },
+  const paragraphs = [
+    headlineLines(fonts, copy.headline).length,
+    wrap(tagline, copy.tagline, BODY_WIDTH).length,
+    wrap(rest, copy.howTo, BODY_WIDTH).length,
+    wrap(rest, copy.admits, BODY_WIDTH).length,
   ];
-  const footHeight = stack(fonts, footBlocks, 0, 0, FOOT_GAP).height;
-  const foot = stack(
-    fonts,
-    footBlocks,
-    COLUMN.left,
-    COLUMN.top + COLUMN.height - footHeight,
-    FOOT_GAP,
-  );
-  return [...top.items, ...foot.items];
+  return [...spread(fonts, top.items, paragraphs), ...codeColumnText(fonts, validUntil, code)];
 }
 
+/** The column centred on the QR code: the wordmark and the address above the code, and the expiry below it. */
+export function codeColumnText(fonts: CardFonts, validUntil: string, code: QrItem): TextItem[] {
+  const line = (
+    font: FontKey,
+    size: number,
+    letterSpacing: number,
+    colour: string,
+    text: string,
+  ) => {
+    const { above, below } = inkExtent(fonts[font], size, text);
+    return { item: { font, size, letterSpacing, colour, x: 0, baseline: 0, text }, above, below };
+  };
+  const wordmark = line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK);
+  const address = line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase());
+  const expiry = line('lexend500', SMALL_SIZE, SMALL_SPACING, MUTED, validUntil.toUpperCase());
+  // The wordmark's top and the expiry's bottom sit on the safe area's edges; the address takes a third of the room
+  // between the wordmark and the code, so the gap above it is half the gap below it.
+  const wordmarkBaseline = SAFE_TOP + wordmark.above;
+  const wordmarkBottom = wordmarkBaseline + wordmark.below;
+  const addressGap = (code.y - wordmarkBottom - address.above - address.below) / 3;
+  const addressBaseline = wordmarkBottom + addressGap + address.above;
+  const expiryBaseline = SAFE_BOTTOM - expiry.below;
+  return [
+    { ...wordmark.item, baseline: wordmarkBaseline },
+    { ...address.item, baseline: addressBaseline },
+    { ...expiry.item, baseline: expiryBaseline },
+  ].map((item) => centredOnCode(fonts, item, code));
+}
+
+/**
+ * Moves the paragraphs, `counts` lines each, so the first's inked top sits on the safe area's top and the last's inked
+ * bottom on its bottom. The room gained is shared between the gaps in proportion to their sizes, so the rhythm stays
+ * and the lines within a paragraph keep their spacing.
+ */
+function spread(fonts: CardFonts, items: TextItem[], counts: number[]): TextItem[] {
+  const ink = (item: TextItem) => inkExtent(fonts[item.font], item.size, item.text);
+  let start = 0;
+  const groups = counts.map((count) => items.slice(start, (start += count)));
+  const tops = groups.map((group) => group[0].baseline - ink(group[0]).above);
+  const bottoms = groups.map((group) => {
+    const last = group[group.length - 1];
+    return last.baseline + ink(last).below;
+  });
+  const gaps = tops.slice(1).map((top, i) => top - bottoms[i]);
+  const room = SAFE_BOTTOM - SAFE_TOP - (bottoms[bottoms.length - 1] - tops[0]);
+  const stretch = room / gaps.reduce((sum, gap) => sum + gap, 0);
+  let shift = SAFE_TOP - tops[0];
+  return groups.flatMap((group, i) => {
+    if (i > 0) shift += gaps[i - 1] * stretch;
+    return group.map((item) => ({ ...item, baseline: item.baseline + shift }));
+  });
+}
+
+// The inked width leaves out the letter spacing set after the last letter, so a spaced line centres on what prints.
+function centredOnCode(fonts: CardFonts, item: TextItem, code: QrItem): TextItem {
+  const width =
+    textWidth(
+      { font: fonts[item.font], size: item.size, letterSpacing: item.letterSpacing },
+      item.text,
+    ) - item.letterSpacing;
+  return { ...item, x: code.x + code.size / 2 - width / 2 };
+}
+
+// The sorrel's leftmost inked column beside the back's sentence, where it prints 5% of the way from the ground to
+// chalk; the picture's rectangle starts further left, where it has faded to nothing. layout.test.ts measures it.
+const SORREL_INKED_LEFT = 455;
+// The sentence wraps at one width, 1/16 in short of that edge, so no line runs over the sorrel or its stem.
+const BACK_WORDS_WIDTH = SORREL_INKED_LEFT - PX_PER_INCH / 16 - COLUMN.left;
+
+/** The back's words, the canvas's `Back` artboard. */
 export function backText(fonts: CardFonts, batch: string): TextItem[] {
   const lede = lexend(fonts, 'lexend300', 18);
   const words = stack(
@@ -241,32 +337,32 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
           size: 18,
           lineHeight: 18 * 1.5,
           colour: CHALK,
-          lines: wrap(lede, BACK_LEDE, 500),
+          lines: wrapBalanced(lede, BACK_LEDE, BACK_WORDS_WIDTH),
         },
       },
       {
         block: {
           font: 'lexend500',
-          size: 13,
-          letterSpacing: 13 * 0.12,
+          size: SMALL_SIZE,
+          letterSpacing: SMALL_SPACING,
           colour: MUTED,
           lines: [BACK_NOTE.toUpperCase()],
         },
       },
     ],
-    72,
-    72,
+    COLUMN.left,
+    COLUMN.top,
     12,
   ).items;
   return [...words, backBatchText(batch)];
 }
 
-/** So a card handed back names the batch to revoke. */
+/** The batch's short name, small at the foot of the text column on a back, so a card handed back names the batch to revoke. */
 function backBatchText(batch: string): TextItem {
   return {
     font: 'lexend500',
-    size: 13,
-    letterSpacing: 13 * 0.12,
+    size: SMALL_SIZE,
+    letterSpacing: SMALL_SPACING,
     colour: MUTED,
     x: COLUMN.left,
     baseline: COLUMN.top + COLUMN.height - 3,
@@ -274,22 +370,24 @@ function backBatchText(batch: string): TextItem {
   };
 }
 
-/** Names the batch and the sheet, so a printed sheet can be matched to the batch to revoke. */
+/**
+ * The sheet's label for the page margin below the block, between its first two crop marks, at `x` and `baseline` in the
+ * page frame's points. It names the batch and the sheet, so a printed sheet can be matched to the batch to revoke.
+ */
 export function marginText(
   batch: string,
   sheet: number,
   sheets: number,
   face: 'front' | 'back',
-  block: { x: number; y: number; height: number },
-  bleed: number,
+  { x, baseline }: { x: number; baseline: number },
 ): TextItem {
   return {
     font: 'lexend400',
-    size: 6,
+    size: 5,
     letterSpacing: 0,
-    colour: '#555555',
-    x: block.x + bleed + 8,
-    baseline: block.y + block.height + 10,
+    colour: LABEL,
+    x,
+    baseline,
     text: `Batch ${batch}, sheet ${sheet} of ${sheets}, ${face === 'front' ? 'fronts' : 'backs'}`,
   };
 }

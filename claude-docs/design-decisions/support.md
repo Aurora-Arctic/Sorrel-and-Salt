@@ -3477,3 +3477,37 @@ This diff is prose only, so I run `npm run format:check` and `npm run lint`, and
 ### After MB.175
 
 M17.3 rebases onto staging and names M17.16 (the public pages) as M20.15's prerequisite. Nothing in this PR edits the M17.3 branch.
+
+## Promotional email needs recorded consent, withdrawn in one click
+
+The site sends no promotional mail; every template is transactional. This decides how consent is gathered and recorded before the first one. The law, the provider rules and the class of every template are in [`../email/promotional-consent.md`](../email/promotional-consent.md); the build work is Wave 22 ([`../waves/wave-22.md`](../waves/wave-22.md)).
+
+### The decision
+
+- **One global standard.** Every user gets the strictest combination of the US, UK, EU and Canadian rules, because the site holds no location: a separate unticked box, a request naming the sender, the purpose and the right to withdraw, a stored record, an unsubscribe in every promotional mail, and the sender's identity and postal address in every one.
+- **Consent counts at once.** Ticking the box and pressing Save is the consent; no confirmation mail follows. No statute read requires double opt-in, and the user is signed in with a verified address. This departs from M3AAWG's best practice, and the record then proves a signed-in account ticked a box, not that the address's holder read a mail.
+- **Asked once, kept in `/account`.** After sign-in the site asks once, with an unticked box and Save and No Thanks buttons. The same choice lives permanently in `/account`. Consent is never part of sign-up or the terms.
+- **The wording is versioned in code.** A grant records the version the user saw.
+- **The record** is one live row per grant in its own audited table, written only through `withAudit`: who, when, the wording version and the source (`prompt`, `account`, `link` or `one-click`), plus when, by whom and by which source it was withdrawn.
+- **Three ways to withdraw, each at once:** the RFC 8058 one-click route, a link in the mail body, and `/account`. The token lasts at least 60 days.
+- **`POST /api/unsubscribe` is a sessionless route and a named exception to rule 1.** RFC 8058 forbids cookies, authorisation headers and redirects, so it cannot use `/api/graphql`. A hashed token authorises it (32 random bytes, only the SHA-256 hash stored), it is rate limited, and it is written as a seeded system account through `withAudit`.
+- **A paused account gets no promotional mail.** Its consent row is kept, and mail resumes when the pause lifts.
+- **The postal address is an environment variable.** A promotional send is refused with a named error while it is unset. The value is never written into the repository.
+- **The four support mails can be switched off from `/account`:** received, resolved, closing soon and the reply notice. Each is on by default, and turning the reply notice off shows a warning. A signed-out sender has no account, so their support mails always send.
+- **Every other mail always sends:** verification, address change, account exists, password, lock, invitation, pause, time-out and document update.
+- **Consent is not refreshed at intervals.** The EDPB only recommends it, and no law read sets a lifetime.
+
+### Why
+
+GDPR Article 7 and EDPB guidelines 05/2020 require the controller to demonstrate consent and withdrawal as easy as giving it; CASL section 13 puts the proof on the sender; a box bundled with the terms is presumed not freely given (EDPB paragraph 13). Gmail requires RFC 8058 one-click for bulk promotional mail. Withdrawing at once is inside every deadline read (CAN-SPAM and CASL 10 business days, Yahoo 2 days). CAN-SPAM and CASL's request both require a postal address, and refusing the send is a mechanical guard where a reminder is only a hope. The security and account-standing mails fall in FTC categories 2 and 3 (16 CFR 316.3(c)). The support switches are an owner's courtesy, not a legal requirement. The sources, with the claims that rest on a search summary, are in the findings document.
+
+### Rules out
+
+- A standard per country: it would need a location the site does not hold.
+- The US opt-out standard alone, or the UK soft opt-in: the UK, EU and Canada need prior consent, and a free invited account has no sale or negotiation.
+- Double opt-in: one more mail and step for every consenting user, and no law read requires it. Revisit if a complaint rate or a provider rule demands it.
+- A box at sign-up, a prompt on every sign-in, or the `/account` setting alone.
+- A column on `users` for consent: it keeps no history.
+- A `mailto:` header only, a link that needs sign-in, a GraphQL mutation or a server action for unsubscribe.
+- A keeper-edited setting or a hard-coded address for the postal address.
+- Switching off security, pause or document mail.

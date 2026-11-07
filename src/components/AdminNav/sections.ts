@@ -7,12 +7,14 @@ import type { GroupedValueKind } from '../GroupedValueForm/types';
 import type { PageTab } from '../TabbedPage/types';
 import type { AdminPage, AdminSection } from './types';
 
+/** A curated list's tab, at its kind's address and under its title: it opens with a filter. */
 const valueTab = (kind: GroupedValueKind): PageTab => ({
   href: VALUE_KINDS[kind].path,
   label: VALUE_KINDS[kind].title,
   filtered: true,
 });
 
+/** A group list's tab, "Groups" or "Traditions": it opens with no filter. */
 const groupTab = (kind: GroupKind): PageTab => ({
   href: GROUP_KINDS[kind].path,
   label: capitalise(GROUP_KINDS[kind].plural),
@@ -60,6 +62,7 @@ export const ADMIN_PAGES = {
     description: 'Every account and its role, and who changed which privilege.',
     tabs: [
       { href: '/keepers/users', label: 'Users', filtered: true },
+      // Who holds which privilege, and who changed it.
       { href: '/keepers/privilege-changes', label: 'Privilege Changes', filtered: true },
     ],
   },
@@ -71,6 +74,7 @@ export const ADMIN_PAGES = {
       'The admin invitations waiting, the printed invitation cards, and who arrived by them.',
     tabs: [
       { href: '/keepers/invitations', label: 'Invitations' },
+      // Printed cards that admit one account each, and who arrived by them.
       { href: '/keepers/invitation-cards', label: 'Invitation Cards' },
       { href: '/keepers/card-sign-ups', label: 'Card Sign-Ups' },
     ],
@@ -101,8 +105,17 @@ export const ADMIN_PAGES = {
       { href: '/keepers/documents', label: 'Email Updates', shape: 'sections', sections: 1 },
     ],
   },
+  businessCards: {
+    label: 'Business Cards',
+    icon: 'businessCards',
+    adminOnly: true,
+    description:
+      'A Letter sheet of ten business cards with your name, email and phone, ready to print.',
+    tabs: [{ href: '/keepers/business-cards', label: 'Business Cards' }],
+  },
 } as const satisfies Record<string, AdminPage>;
 
+/** The `/curator` area: the curation pages, for a curator and a keeper alike. */
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
@@ -116,6 +129,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
+/** The `/keepers` area: the people, invitation, document and business-card pages, which are a keeper's, and Support, which a curator has too. */
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
@@ -125,6 +139,10 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.support,
       ADMIN_PAGES.documents,
     ],
+  },
+  {
+    name: 'Print',
+    pages: [ADMIN_PAGES.businessCards],
   },
 ];
 

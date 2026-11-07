@@ -118,6 +118,12 @@ function verifiedBySession(session: AuditSession) {
   return existsIn(users, and(eq(users.id, session.userId), eq(users.emailVerified, true)));
 }
 
+// The session's account has accepted no card yet: an account takes one card, so the next stays free for someone else.
+function noCardAcceptedBySession(session: AuditSession) {
+  const used = alias(invitations, 'used_card');
+  return sql`not exists (select 1 from ${invitations} as ${sql.identifier('used_card')} where ${used.kind} = 'card' and ${used.acceptedBy} = ${session.userId} and ${used.deletedAt} is null)`;
+}
+
 // What the finders by id and the accept by id share: a coven invitation, never
 // the site tier's, addressed to the session's verified address. The two pagers
 // spell the same two terms as scope and filter, since a scope is not optional.
@@ -134,6 +140,15 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
     invitations,
     and(notSoftDeleted(invitations), eq(invitations.tokenHash, hashToken(token))),
   );
+}
+
+/** Whether the account has accepted a card, any card in any batch. No proof: the accept service asks it of the session's own account. */
+export async function hasAcceptedCard(userId: string): Promise<boolean> {
+  const row = await selectOne(
+    invitations,
+    and(notSoftDeleted(invitations), cardKind(), eq(invitations.acceptedBy, userId)),
+  );
+  return row !== undefined;
 }
 
 /**
@@ -618,7 +633,7 @@ export function invitationWrites({
     // and bound to nothing. Not `insert`, which stamps one row.
     insertInvitationCards: (
       _admin: SiteAdmin,
-      { tokens, batchId, expiresAt, note }: CardInvitationValues,
+      { tokens, batchId, expiresAt, note, beta }: CardInvitationValues,
     ) =>
       tokens.length === 0
         ? Promise.resolve([])
@@ -633,6 +648,7 @@ export function invitationWrites({
                       kind: 'card',
                       batchId,
                       note,
+                      beta,
                       expiresAt,
                       tokenHash: hashToken(token),
                       position: index + 1,
@@ -677,7 +693,7 @@ export function invitationWrites({
         .returning() as never,
     // The match in the statement, not only in the accept service: the service checks first to say why, and this is
     // what holds if it forgot. An address invitation needs the invited address, verified; a card needs a verified
-    // account and no address.
+    // account that has accepted no card before, and no address.
     acceptInvitation: (token: string) =>
       update(
         invitations,
@@ -686,7 +702,7 @@ export function invitationWrites({
           eq(invitations.tokenHash, hashToken(token)),
           or(
             and(addressKind(), heldVerifiedBySession(session), inLiveWorkspaceOrSite()),
-            and(cardKind(), verifiedBySession(session)),
+            and(cardKind(), verifiedBySession(session), noCardAcceptedBySession(session)),
           ),
         ),
       ),

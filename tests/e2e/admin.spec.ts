@@ -45,6 +45,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
     ['Documents', '/keepers/documents/terms'],
+    ['Business Cards', '/keepers/business-cards'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   for (const [name, href] of pages) {
@@ -248,6 +249,7 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
     '/keepers/card-sign-ups',
     '/keepers/documents/privacy',
     '/keepers/documents/disclaimer',
+    '/keepers/business-cards',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
   }

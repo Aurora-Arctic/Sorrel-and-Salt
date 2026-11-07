@@ -8,11 +8,11 @@
 
 - **Expires** is the day the card was chosen to last through (`2026-10-30`), read back from the stored instant by `printedDayOf`, never a time.
 - **Minted On, the Refused Opens dates and Card Sign-Ups Accepted On** are `2026-10-30 2:05 pm` in the viewer's own zone, through [`LocalTime`](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is.
-- **The Card Sign-Ups CSV keeps its own date format** and has the table's headings (Account, Email, Accepted On, Batch, Covens Owned) with the same short batch name. Covens Owned joins the covens the account owns with "; ". The coven module's resolver supplies them from one batched memberships read for every account on the list, because `identity` may import no module.
+- **The Card Sign-Ups CSV keeps its own date format** and has the table's headings (Account, Email, Accepted On, Batch, Beta, Covens Owned) with the same short batch name; Beta is Yes or No, as a CSV cell cannot draw a mark. Covens Owned joins the covens the account owns with "; ". The coven module's resolver supplies them from one batched memberships read for every account on the list, because `identity` may import no module.
 
 ### Invitation Cards (`index.tsx`)
 
-- **A region named "Invitation Cards" with one row per batch**: batch (the first block of the batch id, `batchName`), status, cards, accepted, refused opens, minted on, expires, and Revoke Batch. Counts come from SQL. Table cell values are sentence case.
+- **A region named "Invitation Cards" with one row per batch**: batch (the first block of the batch id, `batchName`), status, **Beta** (a check for a batch minted for beta testers, a cross otherwise, with "Yes" or "No" as hidden text), cards, accepted, refused opens, minted on, expires, and Revoke Batch. Counts come from SQL. Table cell values are sentence case.
 - **Status is `batchStatus()` in `batches.ts`, read from the counts**, not from one card's `revokedAt`, since the head card may have been accepted. Any card pending is Live. Otherwise, every card accepted is Used up. Otherwise, a passed expiry is Expired. Otherwise Revoked.
 - **Revoke Batch shows while a card of the batch is pending.** Revoking is by batch only. `ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted keep their access. The Revoke column is red like the People table's Impersonate column.
 
@@ -45,12 +45,13 @@ Each batch shows its count of refused opens across all its cards. Above zero, an
 
 A link to `?mint`, which opens a modal.
 
-- **Number of Sheets**, 1 to 55 (`MAX_SHEETS_PER_BATCH`; a Letter sheet holds nine cards), with the total shown as typed ("27 cards"). The sheet hint is the field's hint, so it joins the input's description.
+- **Number of Sheets**, 1 to 50 (`MAX_SHEETS_PER_BATCH`; a Letter sheet holds ten cards), with the total shown as typed ("30 cards"). The sheet hint is the field's hint, so it joins the input's description.
   - The live total sits in the field's `after` slot, directly under the input and beneath any error, with one line always reserved so it never moves another field.
-  - An out-of-range typed count shows "A batch is from 1 to 55 sheets" in the total line's place, so the row keeps its height. Mint Cards stays enabled, and a press refuses the count and focuses the field.
+  - An out-of-range typed count shows "A batch is from 1 to 50 sheets" in the total line's place, so the row keeps its height. Mint Cards stays enabled, and a press refuses the count and focuses the field.
 - **Expires On** is a `DateField` whose earliest day is tomorrow in UTC, with no `max` (so it ends at the end of next year). It opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a calendar day. It is sent as the end of that day in UTC-12 (`expiryOfDay`: the next day at 12:00 UTC), so a card works through its printed day in every zone. The submit stays disabled until both dates are given.
-- **Print Backs** is a `SwitchField`, on by default. Off, the PDF holds the fronts alone (`backs: false` in `CardSheetsInput`). It is a choice of the build and is not stored, since the PDF is built once, in the dialog. The sheet count counts sheets of nine cards, which the choice does not change.
-- **Layout.** Number of Sheets, Expires On and Print Backs share one row (`admin-cards__when`), top-aligned with their label rows set to one height, so the three controls start on one line and the switch's track starts at its label's left edge.
+- **Print Backs** is a `SwitchField`, on by default. Off, the PDF holds the fronts alone (`backs: false` in `CardSheetsInput`). It is a choice of the build and is not stored, since the PDF is built once, in the dialog. The sheet count counts sheets of ten cards, which the choice does not change.
+- **Layout.** Number of Sheets and Expires On share one row (`admin-cards__when`), top-aligned with their label rows set to one height. Below the Note field, a row of its own (`admin-cards__switches`) holds the two toggles side by side from the form's left edge, each track starting at its label's left edge.
+- **Beta Testers** is a `SwitchField`, off by default. On, it marks every card of the batch as minted for beta testers and is sent as `beta`. It is set at minting and cannot be changed afterwards, and ticking it counts as a change for the discard question.
 - **Note** is a textarea of at most 500 characters (`MAX_NOTE_LENGTH`), trimmed, a blank stored as nothing. It records what the batch is for. It is set at minting, cannot be edited afterwards, and the Batch search finds it.
 - **After minting**, the dialog (`minted.tsx`) shows the notice, then a result block naming the batch, card count, sheets and expiry, then the buttons. Focus moves to that block, since the form that minted has gone and focus would otherwise fall to the page.
   - The answer carries each token once, and the tokens live only in that dialog's state. The PDF prints the batch name small on each back and, in each sheet's margin outside the trim, "Batch 7c2d0000, sheet 2 of 3, fronts" (or "backs").
@@ -61,7 +62,7 @@ A link to `?mint`, which opens a modal.
 
 ### Card Sign-Ups (`arrivals.tsx`)
 
-- **Every account that accepted a card**, as a **Name** and an **Email** column (empty for a removed account), **Accepted On**, the batch, and **Covens Owned** ("None yet" when none). An account that can no longer be read keeps its row as plain "Removed account" text.
+- **Every account that accepted a card**, as a **Name** and an **Email** column (empty for a removed account), **Accepted On**, the batch, **Beta** (the batch's flag, a check or a cross), and **Covens Owned** ("None yet" when none). An account that can no longer be read keeps its row as plain "Removed account" text.
 - **The name opens that account's user modal on this page** (`/keepers/card-sign-ups?user=<id>`, the page's own `UserDialog`, read by the shared `readOpenedUser`). Closing it returns to the list at the same cursor.
 - **Download CSV** reads `cardArrivalsCsv` through GraphQL and hands the string to the browser as `card-sign-ups.csv`. A failure shows as the button's click feedback. The service refuses anyone but a keeper.
 - **The filter** (`arrivals-filter.tsx`) is the shared `FilterForm` ("Filter Card Sign-Ups") with one search box, **Name, Email or Batch** (`query`, held in the URL, sent by the magnifier or Enter). It keeps a sign-up whose account name or email holds the text, or whose batch number starts with it, case-folded. An info tip beside the label says so. `cardArrivals` and its count filter in SQL and page through `findPage`. Download CSV sends the same `query` to `cardArrivalsCsv`, so the file holds the filtered rows.

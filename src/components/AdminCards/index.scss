@@ -44,6 +44,8 @@
   }
 }
 
+// A refused open's count and dates under its reason, muted at caption size; each date stays on one line, the
+// reason above may wrap.
 .admin-cards__refusal-when {
   display: block;
   color: $text-muted;
@@ -90,10 +92,9 @@
     flex: 0 1 auto;
   }
 
-  // The sheets label carries an info tip and so stands taller than the other two; every label row here takes that
-  // height so the three controls start on one line.
-  .field__label-row,
-  > .switch > .field__label {
+  // The sheets label carries an info tip and so stands taller than the date's; both label rows take that height so the
+  // two controls start on one line.
+  .field__label-row {
     min-block-size: 24px;
   }
 
@@ -102,12 +103,16 @@
     flex-wrap: nowrap;
     white-space: nowrap;
   }
+}
 
-  > .switch > .field__label {
-    display: flex;
-    align-items: center;
-  }
+// The two print choices sit side by side from the form edge.
+.admin-cards__switches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: space(6);
 
+  // The shared switch centres its track under its label; here the track starts at the label's left edge.
   > .switch {
     align-items: flex-start;
   }
@@ -141,6 +146,8 @@
   position: relative;
 }
 
+// Beside the two range fields on a wide drawer the status keeps the width its longest option
+// needs, and the ranges share the rest; stacked, it is as wide as the drawer.
 .admin-cards__status {
   @media (min-width: $shell-tablet-width) {
     flex: none;
@@ -163,6 +170,7 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 2;
 }

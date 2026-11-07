@@ -2,6 +2,7 @@ import type { NavigationTarget } from '../../lib/navigation';
 
 type Parts = Omit<NavigationTarget, 'region'>;
 
+/** A curated list's first tab: the tab row, Add beside the heading, a filter, a table. */
 const CURATED: Parts = { shape: 'table', title: true, tabs: true, action: true, filter: true };
 
 /**
@@ -20,6 +21,7 @@ const PARTS: Record<string, Parts> = {
   '/curator/forms': CURATED,
   '/curator/deities': CURATED,
   '/curator/celestial-bodies': CURATED,
+  // The view tabs on a line beneath the heading, a three-control filter and the nine columns of SupportRequests.
   '/keepers/support': {
     shape: 'table',
     title: true,
@@ -29,10 +31,15 @@ const PARTS: Record<string, Parts> = {
     fields: SUPPORT_FIELDS,
     columns: SUPPORT_COLUMNS,
   },
+  // The four document editors, the tab row on a line beneath the heading, with no action or filter.
   '/keepers/documents/terms': { shape: 'document', title: true, tabs: true, tabsBelow: true },
+  // A form's fields and buttons under the heading; one tab, so no tab row.
+  '/keepers/business-cards': { shape: 'form', title: true },
+  // Its action is the pause control; the filter is the user search.
   '/keepers/users': CURATED,
 };
 
+// Any other keeper address (a later tab) is a titled table with no filter.
 const FALLBACK: Parts = { shape: 'table', title: true };
 
 export const adminTarget = (href: string): NavigationTarget => ({

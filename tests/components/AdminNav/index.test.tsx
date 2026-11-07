@@ -28,6 +28,8 @@ const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
 const DOCUMENTS = '/keepers/documents/terms';
+// The business-card sheet: a keeper's alone.
+const BUSINESS_CARDS = '/keepers/business-cards';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
 
@@ -61,11 +63,13 @@ describe('AdminNav, the Keepers nav', () => {
     pathname.mockReturnValue('/keepers');
   });
 
-  it('links a keeper to Support, People, Invitations and Documents, and to no curation page', () => {
+  it('links a keeper to Support, People, Invitations, Documents and Business Cards, and to no curation page', () => {
     render(<AdminNav managesPeople />);
 
     const links = hrefs(linksIn(keepersNav()));
-    expect(sorted(links)).toEqual(sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS]));
+    expect(sorted(links)).toEqual(
+      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, BUSINESS_CARDS]),
+    );
     expect(within(keepersNav()).getByRole('link', { name: 'People' })).toHaveAttribute(
       'href',
       PEOPLE,
@@ -73,6 +77,10 @@ describe('AdminNav, the Keepers nav', () => {
     expect(within(keepersNav()).getByRole('link', { name: 'Invitations' })).toHaveAttribute(
       'href',
       INVITATIONS,
+    );
+    expect(within(keepersNav()).getByRole('link', { name: 'Business Cards' })).toHaveAttribute(
+      'href',
+      BUSINESS_CARDS,
     );
   });
 
@@ -93,6 +101,7 @@ describe('AdminNav, the Keepers nav', () => {
     ['/keepers/support', [SUPPORT]],
     ['/keepers/documents/privacy', [DOCUMENTS]],
     ['/keepers/documents/disclaimer', [DOCUMENTS]],
+    ['/keepers/business-cards', [BUSINESS_CARDS]],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 

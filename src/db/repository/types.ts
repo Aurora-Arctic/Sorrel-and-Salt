@@ -1313,6 +1313,8 @@ export interface CardInvitationValues {
   batchId: string;
   expiresAt: Date;
   note: string | null;
+  /** Whether the batch is for beta testers, written on every card of it. */
+  beta: boolean;
 }
 
 /** A card's place in its batch, from 1; null for an older card. */
