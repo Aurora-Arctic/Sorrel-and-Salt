@@ -788,6 +788,15 @@ $action-look-glyph-size: $action-glyph-size * $action-mark-scale;
 // user list's locked-control tip each wrote 18rem.
 $tip-width: 18rem;
 
+// A floating menu's width: the account menu and the workspace switcher's list are at least
+// the narrower and never wider than the wider (a long name wraps), and never narrower than the
+// control that opens them. A search field's suggestions are not menus: they stay at the field's width.
+$panel-min-width: 15rem;
+$panel-max-width: 18rem;
+
+// A floating menu's row: the account menu's and the workspace switcher's, so both stand 45px tall.
+$panel-row-height: 2.8125rem;
+
 // A filter's type-ahead field, the curated lists' Group and Tradition: one width for the native
 // select the server draws and the type-ahead that replaces it once hydrated, so the swap moves
 // nothing. 14rem: most names fit, and the longest seeded one, "Anglo-Saxon & Continental Germanic"

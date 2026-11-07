@@ -855,7 +855,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // a button taller than the text; only while it is a table. Nest inside the table's selector.
 @mixin data-table-roomy {
   @container data-table not (max-width: #{$table-stack-width}) {
-    td {
+    :is(td, th) {
       padding-block: space(3);
       vertical-align: middle;
     }
@@ -869,7 +869,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // table's selector.
 @mixin data-table-nowrap {
   > thead > tr > th,
-  > tbody > tr > td {
+  > tbody > tr > :is(td, th) {
     white-space: nowrap;
   }
 
@@ -880,7 +880,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @container data-table (max-width: #{$table-stack-width}) {
     &.data-table--stack {
       > thead > tr > th,
-      > tbody > tr > td {
+      > tbody > tr > :is(td, th) {
         white-space: normal;
       }
     }

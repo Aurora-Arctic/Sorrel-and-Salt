@@ -393,7 +393,7 @@ describe('a curated value page, for each other kind', () => {
     expect(deityOtherNamesOf.mock.calls).toEqual([[[VALUE.id]], [[VALUE.id]]]);
     const table = screen.getByRole('table');
     expect(
-      within(table).getByRole('cell', { name: 'Testwort Shard Also called Testrina, Tess' }),
+      within(table).getByRole('rowheader', { name: 'Testwort Shard Also called Testrina, Tess' }),
     ).toBeInTheDocument();
     const dialog = screen.getByRole('dialog', {
       name: 'Edit Deity, Testwort Shard, Fixture Protection',

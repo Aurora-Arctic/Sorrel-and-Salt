@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { RevokeControlProps } from './types';
 
 // A declined invitation's Remove: it asks first, then sends `revokeInvitation`, which stamps a

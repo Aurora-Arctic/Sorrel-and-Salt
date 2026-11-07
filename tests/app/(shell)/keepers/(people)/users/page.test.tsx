@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
+import { rowCells } from '../../../../../support/table';
 
 // The `/keepers/users` page: the guard, then the identity reads (a page of users and its count), the search parameters turned into the filter and the page, and the pager's links keeping the filter.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/user-list.test.ts's.
@@ -102,7 +103,7 @@ async function renderPage(params: Record<string, string> = {}) {
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
-  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+  return rowCells(row)[headings.indexOf(heading)] as HTMLElement;
 }
 
 function lastRequest(): PageRequest {

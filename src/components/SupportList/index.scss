@@ -47,10 +47,6 @@
   list-style: none;
 }
 
-.support-list__empty {
-  margin: 0;
-}
-
 // Two lines: the subject, then the meta row. The subject takes the row's width on one line and ends in an
 // ellipsis when it is longer; `min-inline-size: 0` lets it shrink below its text.
 .support-list__item {
@@ -81,6 +77,11 @@
 .support-list__item:focus-within {
   background-color: $surface-card-hover;
   box-shadow: $shadow-lifted;
+}
+
+// The row link is stretched over the row, so its ring is drawn on the row.
+.support-list__item:has(:focus-visible) {
+  @include focus-ring;
 }
 
 // The subject is the row's one link, stretched over the whole row.

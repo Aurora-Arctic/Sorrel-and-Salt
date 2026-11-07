@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
@@ -41,7 +41,7 @@ function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
     (filter): filter is string => Boolean(filter),
   );
-  return noMatchText('invitations', filters, emptyList('admin invitations'));
+  return noMatchText('invitations', filters, emptyList('keeper invitations'));
 }
 
 const RevokeAdminInvitationDocument = graphql(`

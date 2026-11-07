@@ -11,7 +11,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { AdminCardsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import CardAttempts from './attempts';
 import { batchName, STATUS_LABEL } from './batches';
 import CardsFilterForm from './filter';

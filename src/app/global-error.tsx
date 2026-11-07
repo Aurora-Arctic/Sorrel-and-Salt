@@ -1,6 +1,7 @@
 'use client';
 
 import ErrorPage from '../components/ErrorPage';
+import { SupportIcon } from '../components/IconTip/icons';
 import './globals.scss';
 
 // The sign-in-free address of the bug form for this error; the digest rides as `ref`.
@@ -15,9 +16,15 @@ const addFrom = (link: HTMLAnchorElement): void => {
 
 // The boundary for an error in the root layout itself, which `error.tsx` cannot catch. It replaces
 // that layout, so it draws its own document and imports the global styles. Plain anchors rather than
-// `next/link`, and no Report This (which reads the router): the router may be the thing that failed, and a
+// `next/link`, and no ReportThis component (which reads the router): the router may be the thing that failed, and a
 // full load starts clean.
-export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+export default function GlobalError({
+  error,
+  retry,
+}: {
+  error: Error & { digest?: string };
+  retry: () => void;
+}) {
   return (
     <html lang="en">
       <body>
@@ -26,17 +33,21 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           reason="The site could not be shown. Trying again often works."
           reference={error.digest}
         >
+          <button type="button" className="btn btn--solid" onClick={() => retry()}>
+            Try Again
+          </button>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- see above */}
-          <a className="btn btn--solid" href="/">
+          <a className="btn btn--quiet" href="/">
             Back to Sorrel &amp; Salt
           </a>
           <a
-            className="btn btn--quiet"
+            className="btn btn--quiet btn--icon"
             href={reportHref(error.digest)}
             data-digest={error.digest}
             onClick={(event) => addFrom(event.currentTarget)}
           >
-            Report This
+            <SupportIcon />
+            <span className="visually-hidden">Report This</span>
           </a>
         </ErrorPage>
       </body>

@@ -65,7 +65,7 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
     await page.keyboard.press('ArrowDown');
   }
   await page.keyboard.press('Enter');
-  const ask = page.getByRole('dialog', { name: 'Make It Ours' });
+  const ask = page.getByRole('alertdialog', { name: 'Make It Ours' });
   await expect(ask).toBeVisible();
   await assertNoAccessibilityViolations(page);
   await ask.getByRole('button', { name: 'Make It Ours' }).focus();

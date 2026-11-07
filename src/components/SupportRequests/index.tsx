@@ -261,6 +261,7 @@ const SupportRequests = ({
             rows={requests}
             rowKey={(request) => request.id}
             empty={emptyText(filter)}
+            emptyQuiet
             className="data-table--nowrap"
           />
           <Pager previousHref={previousHref} nextHref={nextHref} position={position} />

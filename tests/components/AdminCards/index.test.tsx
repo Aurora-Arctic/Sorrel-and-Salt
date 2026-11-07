@@ -21,6 +21,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { rowCells } from '../../support/table';
 
 // The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what a keeper sees of it
 // and sends (claude-docs/components/admin-cards.md).
@@ -224,7 +225,7 @@ describe('AdminCards', () => {
     // Four columns: the reason, count and dates share the Refusal column.
     const headings = within(list).getAllByRole('columnheader');
     expect(headings.map((h) => h.textContent)).toEqual(['Name', 'Email', 'Card', 'Refusal']);
-    const cells = within(row).getAllByRole('cell');
+    const cells = rowCells(row);
     expect(within(cells[0]).getByRole('link', { name: 'Other Wort' })).toBeInTheDocument();
     expect(cells[1]).toHaveTextContent('other@example.test');
   });
@@ -304,7 +305,7 @@ describe('AdminCards', () => {
     expect(within(list).queryByRole('link')).toBeNull();
     // The Email cell is empty, not a placeholder.
     const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
-    expect(within(removed).getAllByRole('cell')[1]).toBeEmptyDOMElement();
+    expect(rowCells(removed)[1]).toBeEmptyDOMElement();
   });
 
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
@@ -638,7 +639,7 @@ describe('AdminArrivals', () => {
     expect(within(head).queryByRole('columnheader', { name: 'Account' })).toBeNull();
     expect(within(head).getByText('Accepted On')).toBeInTheDocument();
     expect(within(head).getByText('Covens Owned')).toBeInTheDocument();
-    const cells = within(first).getAllByRole('cell');
+    const cells = rowCells(first);
     expect(within(cells[0]).getByRole('link', { name: 'Wort Tester' })).toBeInTheDocument();
     expect(cells[1]).toHaveTextContent('wort@example.test');
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();

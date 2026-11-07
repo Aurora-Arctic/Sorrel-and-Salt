@@ -241,7 +241,7 @@ describe('CupboardActions on the public page', () => {
 
       await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
       expect(calls).toEqual([{ workspaceId: place(1).workspaceId, ingredientId: INGREDIENT }]);
-      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByRole('alertdialog')).toBeNull();
     });
 
     it("gives way to the card's check once every coven holds the entry (the owner's call, 2026-10-20)", () => {
@@ -273,7 +273,7 @@ describe('CupboardActions on the public page', () => {
       place(2).annotateHref,
     );
     fireEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     // One coven holds it, so nothing to ask.
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     press(within(dialog).getByRole('button', { name: 'Remove' }));
@@ -289,7 +289,7 @@ describe('CupboardActions on the public page', () => {
     show(props([place(1, { held: true }), place(2, { held: true })]));
 
     choose('Remove');
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     expect(within(dialog).getByRole('combobox', { name: 'Coven' })).toHaveTextContent(
       place(1).name,
     );
@@ -314,7 +314,7 @@ describe('CupboardActions on the public page', () => {
     );
 
     choose('Remove');
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     fireEvent.click(within(dialog).getByRole('combobox', { name: 'Coven' }));
 
     expect(
@@ -330,7 +330,7 @@ describe('CupboardActions on the public page', () => {
     });
     const rendered = show(props([place(1, { held: true }), place(2, { held: true })]));
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
 
     // The re-read: the first coven no longer holds it, so its confirmation closes.
@@ -339,11 +339,11 @@ describe('CupboardActions on the public page', () => {
     await act(async () => {
       rendered.rerender(view(props([place(1), place(2, { held: true })])));
     });
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     choose('Remove');
 
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
     ).toBeEnabled();
     // The dots' tip, shown by the focus the first close handed them, fades out as the dialog
     // takes the focus: its fade timer ends inside an act, not after the test.

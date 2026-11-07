@@ -3,12 +3,8 @@
 
 // The closed box's narrowest width, so a short coven name still reads as a control with room
 // before its chevron rather than shrinking to the word. A width, not a gap, so off the space
-// scale; the list's below, like AccountMenu's 13rem, is a floating-panel width.
+// scale. The open list takes the floating menus' width, $panel-min-width to $panel-max-width.
 $switcher-min-width: 12rem;
-// The open list's narrowest width: wider than the closed box, so under a
-// short chosen name the list still has room for a longer one and for the
-// Create Coven row with its plus.
-$switcher-list-min-width: 15rem;
 
 // The coven's name as the context row's lead: the chosen name in the display face with a chevron
 // inside a hairline border, so the name is also the control; a long one wraps to two lines. The
@@ -68,6 +64,13 @@ $switcher-list-min-width: 15rem;
 
   .combobox__list {
     z-index: layer('floating');
-    min-width: $switcher-list-min-width;
+    min-width: max(#{$panel-min-width}, 100%);
+    max-width: max(#{$panel-max-width}, 100%);
+  }
+
+  .combobox__option {
+    box-sizing: border-box;
+    justify-content: center;
+    min-height: $panel-row-height;
   }
 }

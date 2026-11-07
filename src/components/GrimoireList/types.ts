@@ -60,5 +60,5 @@ export interface GrimoireFilterProps extends Pick<
 
 export interface EmptyGrimoireProps extends Pick<
   GrimoireListProps,
-  'status' | 'filter' | 'canCreate'
+  'status' | 'filter' | 'canCreate' | 'path'
 > {}

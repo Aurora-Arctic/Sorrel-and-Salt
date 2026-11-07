@@ -1,11 +1,14 @@
 import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 import { Forbidden } from './lib/errors';
+import { matchPattern } from './lib/navigation/match-pattern';
+import { PAGE_PATTERNS, PUBLIC_FILES } from './lib/page-routes';
 import { RETURN_PATH_HEADER, signInPath } from './lib/sign-in';
 import { assertWorkshopAccess } from '@/modules/identity';
 
-// Route protection's first layer: deny by default, so a route nobody thought
-// about is protected rather than open. The check is optimistic — is a session
+// Route protection's first layer: deny by default, so a page nobody thought
+// about is protected rather than open. An address that is no page or file at all
+// passes to the 404 (see `isKnownAddress`). The check is optimistic — is a session
 // cookie present — and never touches the database; `requireSession()` in the
 // page is the check that does — except under /workshop, below. See
 // claude-docs/auth/route-protection.md, "Route protection".
@@ -56,6 +59,18 @@ function isPublic(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) =>
     route.endsWith('/*') ? pathname.startsWith(route.slice(0, -1)) : pathname === route,
   );
+}
+
+/**
+ * Whether an address is a page or a file the app serves. An address that is neither holds nothing to
+ * protect, so a signed-out visitor is let through to the 404 rather than sent to sign in for a page
+ * that does not exist. `/coven/<any slug>` is a page, so it still redirects and no coven's existence
+ * shows. The list is generated from `src/app` and `public/` (claude-docs/design-decisions/mb.124-signed-out-404-route-list.md).
+ */
+function isKnownAddress(pathname: string): boolean {
+  // An empty segment (`//host/x`) is never an ordinary mistyped address, so it keeps the redirect.
+  if (pathname.includes('//')) return true;
+  return PUBLIC_FILES.includes(pathname) || matchPattern(PAGE_PATTERNS, pathname) !== null;
 }
 
 /**
@@ -122,7 +137,11 @@ async function route(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
-  if (!isPublic(pathname) && !getSessionCookie(request)) {
+  if (
+    !isPublic(pathname) &&
+    (isKnownAddress(pathname) || isWorkshop(pathname)) &&
+    !getSessionCookie(request)
+  ) {
     return NextResponse.redirect(new URL(signInPath(returnPath), request.url));
   }
 

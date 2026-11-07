@@ -69,7 +69,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `canToggle`, and `inviting` only while not locked. `InviteAdmin` takes
   `locked`, and the `filter` and `cursor` its link keeps.
 - **The user list's own parts.** Revoke asks first through
-  `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
+  `ConfirmedAction/index.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
   it was withdrawn." Once revoked, the page's status region says "The
   invitation to <address> is revoked."; a refusal is said in a callout under

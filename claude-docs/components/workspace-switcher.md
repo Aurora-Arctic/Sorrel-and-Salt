@@ -120,10 +120,7 @@ is outweighed by one more class, so no Combobox variant was needed.
   `$text-primary` while open (a change of weight, not of hue). It is at least
   `$control-height` tall, with the chevron on the right.
 - **Two widths are named at the head of `index.scss`**:
-  `$switcher-min-width`, 12rem, the closed box's narrowest, so a short name
-  still reads as a control; and `$switcher-list-min-width`, 15rem, the open
-  list's narrowest, so the list can be wider than a short chosen name. MB.124
-  weighs both against the account menu's 13rem for one floating-panel width.
+  `$switcher-min-width`, 12rem, the closed box's narrowest, so a short name still reads as a control. The open list takes the shared `$panel-min-width` (15rem) and `$panel-max-width` (18rem), or the box's own width if greater, as the account menu's panel does (MB.124). Its rows are `$panel-row-height` tall (2.8125rem, 45px), as the account menu's are. At a phone's width the list keeps the box's edge instead of the 8px gutter `Combobox/position.ts` otherwise keeps, so it sits flush under the box.
 - A long name wraps (`white-space: normal`) rather than being cut. **At or under
   `$shell-phone-width` the control fills the row's width** and is otherwise the
   same as on a desktop (the owner's call).

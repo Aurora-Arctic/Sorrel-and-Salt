@@ -4,6 +4,7 @@ import { type ReactElement, useContext, useEffect, useRef, useState } from 'reac
 import { createPortal } from 'react-dom';
 import { useLeaveGuard } from '@/lib/navigation';
 import { CloseGuardContext } from './close-guard';
+import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
 import Modal from './modal';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
@@ -95,21 +96,16 @@ function OnPage({ guard }: DiscardQuestionProps): ReactElement {
       {(close) => (
         <>
           <p>You have unsaved changes. Discard them?</p>
-          <div className="modal__actions">
-            <button
-              type="button"
-              className="btn btn--destructive"
-              onClick={() => {
-                discard();
-                close();
-              }}
-            >
-              Discard Changes
-            </button>
-            <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={close}>
-              Keep Editing
-            </button>
-          </div>
+          <ConfirmAnswersRow
+            label="Discard Changes"
+            onConfirm={() => {
+              discard();
+              close();
+            }}
+            safeLabel="Keep Editing"
+            safeRef={keepEditingRef}
+            onSafe={close}
+          />
         </>
       )}
     </Modal>,
@@ -132,14 +128,13 @@ function InModal({ guard }: DiscardQuestionProps): ReactElement {
       <output className="visually-hidden">
         {flashes > 0 && `You have unsaved changes.${flashes % 2 ? '' : '\u00a0'}`}
       </output>
-      <div className="modal__actions">
-        <button type="button" className="btn btn--destructive" onClick={discard}>
-          Discard Changes
-        </button>
-        <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={keepEditing}>
-          Keep Editing
-        </button>
-      </div>
+      <ConfirmAnswersRow
+        label="Discard Changes"
+        onConfirm={discard}
+        safeLabel="Keep Editing"
+        safeRef={keepEditingRef}
+        onSafe={keepEditing}
+      />
     </ConfirmOverlay>
   );
 }

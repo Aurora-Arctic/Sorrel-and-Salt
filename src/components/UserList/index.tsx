@@ -14,6 +14,8 @@ import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
+import { PendingLink } from '../../lib/navigation';
+import { USERS_PATH } from './href';
 import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
@@ -37,6 +39,16 @@ function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFi
     paused && 'Access Paused',
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText('users', filters, emptyList('users'));
+}
+
+function isFiltered({
+  query,
+  role,
+  awaitingApproval,
+  timedOut,
+  paused,
+}: UserListFilterProps): boolean {
+  return Boolean(query || role || awaitingApproval || timedOut || paused);
 }
 
 /**
@@ -196,6 +208,16 @@ const UserList = ({
         rows={users}
         rowKey={(user) => user.id}
         empty={noMatch({ query, role, awaitingApproval, timedOut, paused })}
+        emptyLabel={
+          isFiltered({ query, role, awaitingApproval, timedOut, paused }) ? 'No Matches' : undefined
+        }
+        emptyAction={
+          isFiltered({ query, role, awaitingApproval, timedOut, paused }) ? (
+            <PendingLink href={USERS_PATH} className="btn btn--quiet">
+              Clear Filters
+            </PendingLink>
+          ) : undefined
+        }
         className="data-table--roomy data-table--nowrap"
       />
 

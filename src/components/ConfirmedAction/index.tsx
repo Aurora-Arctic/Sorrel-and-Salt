@@ -3,17 +3,17 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
-import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { ReasonField } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
 import Notice from '../Notice';
+import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import type { ConfirmAnswersProps, ConfirmedActionProps, ConfirmStep } from './types';
-import './controls.scss';
+import './index.scss';
 
 // An action that asks first, in a modal: the confirm sends the write and stays busy until the
 // page is read again. A refusal closes the modal and says why in a callout under the button.
-// (claude-docs/components/user-list.md, "Actions that ask first")
+// (claude-docs/components/confirmed-action.md)
 
 const ConfirmedAction = ({
   label,
@@ -110,14 +110,14 @@ const ConfirmedAction = ({
           the description of the button the focus lands on, and an alert would
           say it twice. */}
       {warning && (
-        <Notice kind="warn" quiet id={warningId} className="user-list__warning">
+        <Notice kind="warn" quiet id={warningId} className="confirmed-action__warning">
           {warning}
         </Notice>
       )}
       {typeof choices === 'function' ? choices(sending) : choices}
       {withNote && (
         <ReasonField
-          className="user-list__note"
+          className="confirmed-action__note"
           value={note}
           onChange={setNote}
           disabled={sending}
@@ -198,30 +198,19 @@ function Answers({
   onCancel,
 }: ConfirmAnswersProps): ReactElement {
   return (
-    <div className="modal__actions">
-      {/* Described by the warning: the focus lands here as the modal opens,
-          so the warning is read with what it confirms. */}
-      <BusyButton
-        ref={confirmRef}
-        className={confirmClass}
-        aria-describedby={describedBy}
-        disabled={sending || disabled}
-        busy={sending}
-        busyLabel={busy}
-        onClick={onConfirm}
-      >
-        {label}
-      </BusyButton>
-      <button
-        ref={cancelRef}
-        className="btn btn--quiet"
-        type="button"
-        disabled={sending}
-        onClick={onCancel}
-      >
-        Cancel
-      </button>
-    </div>
+    <ConfirmAnswersRow
+      label={label}
+      className={confirmClass}
+      busyLabel={busy}
+      busy={sending}
+      disabled={sending || disabled}
+      describedBy={describedBy}
+      confirmRef={confirmRef}
+      onConfirm={onConfirm}
+      safeRef={cancelRef}
+      safeDisabled={sending}
+      onSafe={onCancel}
+    />
   );
 }
 

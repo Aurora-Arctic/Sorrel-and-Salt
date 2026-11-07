@@ -178,7 +178,7 @@
   gap: space(3);
 
   // Compounded with `.notice`, whose primitive is `body .notice` in the app,
-  // as `.notice.user-list__warning` is: a lone class loses to it there.
+  // as `.notice.confirmed-action__warning` is: a lone class loses to it there.
   .notice.user-list__pause-state {
     margin: 0;
   }

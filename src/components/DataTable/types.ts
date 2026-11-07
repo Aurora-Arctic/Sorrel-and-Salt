@@ -78,6 +78,12 @@ export interface StackTableProps<Row> {
   rowKey: (row: Row) => string;
   /** What shows in the table's place when there are no rows. */
   empty: ReactNode;
+  /** The empty state's name, "No Matches" where a filter matched nothing. */
+  emptyLabel?: string;
+  /** What to do next from the empty state: Clear Filters. */
+  emptyAction?: ReactNode;
+  /** Leaves the empty state without a status role, where the page already announces its count. */
+  emptyQuiet?: boolean;
   /** The table's name, where its page names more than one thing: "Categories". */
   'aria-label'?: string;
   /** Modifiers past the stacking table's own: `data-table--roomy`, `data-table--nowrap`. */

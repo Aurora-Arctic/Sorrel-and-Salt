@@ -2,7 +2,8 @@ import { expect } from '../fixtures';
 import { recreateE2eDatabase } from '../database';
 import { wsEndpoint } from '../slots';
 import { withSql } from './accounts-setup';
-import { scanBothThemes, signInWithPasskey, test } from './passkeys-setup';
+import { scanBothThemes } from '../axe';
+import { signInWithPasskey, test } from './passkeys-setup';
 
 // Adding, renaming and removing a passkey from the account page, with Chromium's virtual authenticator, at the slot
 // server's localhost address (passkeys-setup.ts).

@@ -41,7 +41,7 @@ const SignOutButton = (): ReactElement => {
           to the page, where a failure's callout could not keep it. */}
       <BusyButton
         ref={anchorRef}
-        className="btn"
+        className="account-menu__item"
         aria-disabled={pending || undefined}
         busy={pending}
         busyLabel="Signing Out"

@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from '../axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, scanBothThemes } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import type { Locator, Page } from '@playwright/test';
@@ -17,15 +17,6 @@ test.beforeAll(async () => {
 // with aria-disabled, with or without a developer's .env.local. CI cannot finish a live OAuth round trip, so
 // the sign-in is walked up to the provider's door.
 const PROVIDER_NAMES = ['Discord', 'Google', 'Microsoft'];
-
-/** Scans `page` in each theme in turn: a Playwright page is light unless told. */
-async function scanBothThemes(page: Page): Promise<void> {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
-  }
-}
 
 /** Presses Tab until `target` holds the focus, bounded so a lost focus fails rather than hangs. */
 async function tabTo(page: Page, target: Locator): Promise<boolean> {

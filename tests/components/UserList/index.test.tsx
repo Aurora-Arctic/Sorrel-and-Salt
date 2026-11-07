@@ -16,6 +16,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { rowCells } from '../../support/table';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -90,7 +91,7 @@ const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
-  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+  return rowCells(row)[headings.indexOf(heading)] as HTMLElement;
 }
 
 describe('UserList, standing support time-outs and access pauses', () => {
@@ -180,8 +181,8 @@ describe('UserList', () => {
       expect(row).toHaveTextContent(date);
     }
     // The mark's word is the flag's one rendering: a keeper holds it, Bo does not.
-    expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
-    expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
+    expect(within(rowCells(ada)[3]).getByText('Yes')).toBeInTheDocument();
+    expect(within(rowCells(bo)[3]).getByText('No')).toBeInTheDocument();
   });
 
   // Change Role, Approve and Revoke are the user modal's alone, so a row is an index into it
@@ -213,7 +214,7 @@ describe('UserList', () => {
           'href',
           `/keepers/privilege-changes?query=${encodeURIComponent(user.email)}`,
         );
-        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+        expect(rowCells(row)[0]).toContainElement(link);
       }
     });
 
@@ -237,7 +238,7 @@ describe('UserList', () => {
         const row = screen.getByRole('row', { name: new RegExp(user.name) });
         const link = within(row).getByRole('link', { name: user.name });
         expect(link).toHaveAttribute('href', user.openHref);
-        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+        expect(rowCells(row)[0]).toContainElement(link);
       }
     });
 
@@ -266,6 +267,18 @@ describe('UserList', () => {
     render(<UserList {...props({ users: [], query: 'nobody' })} />);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  // A filter that matched nothing offers the way back to every user: the page's own address, every filter
+  // dropped.
+  it('offers Clear Filters where a filter matched no user, back to the list with no filter', () => {
+    render(<UserList {...props({ users: [], query: 'nobody', awaitingApproval: true })} />);
+
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      '/keepers/users',
+    );
   });
 });
 
@@ -605,25 +618,20 @@ describe('UserList keeper changes switch', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('shows another keeper the state and the switch, aria-disabled and described by the reason', () => {
+  // Only the primary keeper may pause, so another keeper is shown no switch at all.
+  it('shows another keeper no switch while changes run', () => {
     render(<PauseControl paused={false} canToggle={false} />);
 
-    const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
-    expect(pause).toBeEnabled();
-    expect(pause).toHaveAttribute('aria-disabled', 'true');
-    expect(pause).toHaveAccessibleDescription(/\S/);
+    expect(screen.queryByRole('button', { name: 'Pause Keeper Changes' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Resume Keeper Changes' })).toBeNull();
+    expect(screen.queryAllByRole('status').filter((region) => region.textContent)).toHaveLength(0);
   });
 
-  // One sentence on the page: the notice; the switch's
-  // own reason is in its tip.
-  it('shows another keeper the paused notice and a locked Resume whose reason is a tip', () => {
+  it('shows another keeper only the paused notice while changes are paused', () => {
     render(<PauseControl paused canToggle={false} />);
 
-    const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
-    // The locked control wraps the button with its tip; the notice stands before it.
-    expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
-    expect(resume).toHaveAttribute('aria-disabled', 'true');
-    expect(resume).toHaveAccessibleDescription(/\S/);
-    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/\S/);
+    expect(screen.queryByRole('button', { name: 'Resume Keeper Changes' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Pause Keeper Changes' })).toBeNull();
   });
 });

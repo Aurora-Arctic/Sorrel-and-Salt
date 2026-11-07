@@ -342,11 +342,7 @@ head, both built by the page per row, as the other admin lists carry
   re-reads the page, and the status region then says changes are paused or
   resumed. A refusal says why in a callout under the button pressed, which
   keeps the focus: Resume is `aria-disabled` while it sends, not
-  `disabled`, so the focus is not lost. For any other keeper it is `locked-control.tsx`'s
-  `LockedControl`, as the primary keeper's Change Role is: in view,
-  `aria-disabled`, its reason in a tip, "Only the primary keeper can pause or
-  resume keeper changes.", that describes it and that each try mounts afresh as
-  an alert.
+  `disabled`, so the focus is not lost. Any other keeper is shown no control at all: the page's one sentence about the pause says whether changes are on, and "Keeper changes are paused." while they are paused (MB.124).
 - **While paused, a keeper the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
   and the user modal's role and creation controls, for an observer who is not the primary keeper

@@ -392,6 +392,12 @@
     }
   }
 
+  // The head of a page that is one card, its title and lede centred: the sign-in cards', the
+  // password pages', the invitation's and Create Coven's, each with its h1 at the h2 size (`auth-title`).
+  .card-page-header {
+    text-align: center;
+  }
+
   // Inside a head's `.header` column the column's gap spaces it, as it spaces the eyebrow and the lede.
   .header > .page-header {
     margin-bottom: 0;
@@ -938,6 +944,11 @@
     thead th {
       vertical-align: bottom;
       border-bottom: 1px solid $text-muted;
+    }
+
+    // A row header names its row but is not a heading in weight: it reads as the cell it replaces.
+    tbody th {
+      font-weight: inherit;
     }
 
     tbody tr:nth-child(even) {

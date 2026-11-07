@@ -56,7 +56,7 @@ const GrimoireList = ({
       position={position}
     >
       {spells.length === 0 ? (
-        <EmptyGrimoire status={status} filter={filter} canCreate={canCreate} />
+        <EmptyGrimoire status={status} filter={filter} canCreate={canCreate} path={path} />
       ) : (
         <>
           <SpellCardFilters />

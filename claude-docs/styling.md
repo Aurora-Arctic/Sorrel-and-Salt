@@ -1029,6 +1029,10 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   reads apart from both (the owner's call). It names both classes to outrank
   `.notice`'s zero margin, which comes later in the file.
 
+### Three column types
+
+Every page is one of three, and each is centred in the window (MB.124, pick 14). A **list** runs the frame's full width from the 16px gutter. A **reading page** (a document, a recipe) is a 660px column starting at 310px on a 1280px window. A **form or tabbed page** is `$narrow-column` (28rem, 448px) starting at 416px. The narrow frame is `.page-frame--narrow`; no rule in the code sets it to any other width. A **card page** (sign-in, forgot and reset password, the invitation, Create Coven) puts its heading at `.auth-title` size, centred with its lede (`.card-page-header` on its `PageHeader`).
+
 ## The page column
 
 `.page-column` is the frame every `/keepers` page sits in (MB.115), and the
