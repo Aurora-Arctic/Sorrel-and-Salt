@@ -9,7 +9,7 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
 import type { PickerCategory } from '../CategoryPicker/types';

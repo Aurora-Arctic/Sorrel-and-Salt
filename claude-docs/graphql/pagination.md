@@ -29,8 +29,14 @@ an id is still the row's own uuid. Its offset-based helpers
 It runs in three layers, so the transport, the service and the repository
 each keep to their own rules:
 
-- **`src/lib/pagination.ts`** is pure. It holds the two numbers and
-  `resolvePage`, which decodes the cursors and clamps the size with
+- **`src/lib/cursor.ts`** holds the page sizes and the cursor codec, and
+  imports nothing from the server, because the browser loads it too: an
+  address's hand-edited cursor is checked before it is sent. It encodes with
+  `btoa` and `TextEncoder` rather than `Buffer`, which the browser would need
+  a copy of, and writes the same base64url `Buffer` did, so a cursor in an old
+  link still reads.
+- **`src/lib/pagination.ts`** is pure. It re-exports `cursor.ts` for the
+  server and holds `resolvePage`, which decodes the cursors and clamps the size with
   `@pothos/core`'s `parseCursorConnectionArgs`. It then asks for one row more
   than the page, because the extra row says whether another page follows, and
   builds `edges` and `pageInfo` from the answer. The `Cursor`, the

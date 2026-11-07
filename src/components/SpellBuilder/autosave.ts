@@ -1,4 +1,4 @@
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import type { SpellBuilderInput, SpellBuilderSpell } from './types';
 

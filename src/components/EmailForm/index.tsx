@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { FieldShell, FormActions, fieldDescription } from '../Field';

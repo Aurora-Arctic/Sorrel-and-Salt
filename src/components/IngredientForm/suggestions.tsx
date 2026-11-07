@@ -6,7 +6,7 @@ import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,

@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
