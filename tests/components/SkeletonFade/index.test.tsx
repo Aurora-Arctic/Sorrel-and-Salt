@@ -53,7 +53,6 @@ describe('useLeavingSkeleton', () => {
     act(() => void vi.advanceTimersByTime(500));
     expect(result.current).toBeNull();
 
-    // The new wait ends in its turn, with its own full fade.
     rerender({ el: null });
     expect(result.current).toBe(second);
     act(() => void vi.advanceTimersByTime(199));
