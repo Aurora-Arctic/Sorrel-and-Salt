@@ -7,36 +7,13 @@
   color: $text-muted;
 }
 
-// Each row a two-column grid: the chips down the start, the title and summary beside them, a hairline between rows.
+// Each result a quiet card, as the guides on the help front page and the compendium's cards are: the title, whose link
+// covers the card (card-link), with the chips at the top of the row's end, and the summary beneath at the card's full width.
 .help-results__list {
   @include list-reset;
 
-  > li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0 space(3);
-    align-items: baseline;
-    padding-block: space(3);
-  }
-
-  > li + li {
-    border-block-start: 1px solid $hairline;
-  }
-
-  a {
-    grid-column: 2;
-    font-size: $nav-link-size;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  p:not(.help-results__labels) {
-    grid-column: 2;
-    margin-block: space(1) 0;
-  }
+  display: grid;
+  gap: space(3);
 
   // The searched words, picked out by weight, not a highlighter's fill.
   mark {
@@ -46,16 +23,38 @@
   }
 }
 
-// The chips stand at the row's start, in one column wide enough for the longest kind, so every title starts level.
+.help-results__item {
+  position: relative;
+}
+
+.help-results__head {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.help-results__title {
+  @include card-link;
+
+  font-size: $nav-link-size;
+}
+
 .help-results__labels {
   display: flex;
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  flex-direction: column;
+  flex: none;
+  flex-wrap: wrap;
   gap: space(1);
-  align-items: flex-start;
-  min-width: 4.5rem;
+  justify-content: flex-end;
   margin: 0;
+  // The chips sit level with the title's first line, not its top edge.
+  padding-block-start: space(1);
+}
+
+.help-results__summary {
+  margin-block: space(1) 0;
+  color: $text-muted;
+  font-size: type-size('small');
 }
 
 .help-results__kind {
