@@ -18,11 +18,12 @@
     flex-direction: column;
   }
 
-  // Off-screen cards skip layout and paint; `auto` keeps each card's drawn height for the scrollbar.
+  // Cards below the window skip layout and paint (`data-skippable`, set at the first scroll); `auto` keeps
+  // each card's drawn height for the scrollbar.
   // A hovered, focused or panel-open card opts out: paint containment would clip its tips and
   // re-anchor the fixed category panel. Enhancement only: without it every card draws.
   @supports (content-visibility: auto) {
-    > li:not(:hover, :focus-within, :has(.category-more__panel.is-open)) {
+    > li[data-skippable]:not(:hover, :focus-within, :has(.category-more__panel.is-open)) {
       // stylelint-disable-next-line plugin/use-baseline -- enhancement: every card draws where unsupported
       content-visibility: auto;
       // stylelint-disable-next-line plugin/use-baseline -- enhancement: pairs with content-visibility above
