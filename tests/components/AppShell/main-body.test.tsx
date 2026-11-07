@@ -144,6 +144,23 @@ describe('MainBody', () => {
     expect(skeleton('Forms skeleton')).toBeInTheDocument();
   });
 
+  // Both admin layouts draw the Staff Help link above their section body, so the frame holds it too.
+  it("draws an admin page's Staff Help link in its frame", async () => {
+    renderBody('/compendium');
+
+    await act(async () => go('/curator/forms'));
+    expect(skeleton('Forms skeleton')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Staff help' })).toBeInTheDocument();
+  });
+
+  it("draws no Staff Help link in a coven page's frame", async () => {
+    renderBody('/compendium');
+
+    await act(async () => go('/coven/testwort-circle/ingredients'));
+    expect(skeleton('Ingredients skeleton')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Staff help' })).not.toBeInTheDocument();
+  });
+
   // The curator and keepers areas are separate layouts, each with its own host.
   it("draws a curator page from the keepers' area, whose host does not stand for it", async () => {
     renderBody('/keepers/users');
