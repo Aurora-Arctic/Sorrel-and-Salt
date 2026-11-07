@@ -13,7 +13,13 @@ import { slugify } from '@/lib/slugify';
 import { parseInput } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
-import type { HelpArticle, HelpArticleInput, HelpArticlePatch, HelpAudience } from '../types';
+import type {
+  HelpArticle,
+  HelpArticleInput,
+  HelpArticleKind,
+  HelpArticlePatch,
+  HelpAudience,
+} from '../types';
 import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
@@ -35,12 +41,23 @@ interface Merged {
   parentId: string | null;
 }
 
-async function checkSlug(slug: string, selfId: string | null): Promise<void> {
+const KIND_NAMES: Record<HelpArticleKind, string> = {
+  faq: 'FAQ entry',
+  article: 'article',
+  term: 'term',
+};
+
+async function checkSlug(
+  kind: HelpArticleKind,
+  slug: string,
+  selfId: string | null,
+): Promise<void> {
   if (slug === '')
     throw fieldRefusal('slug', 'Give the article a slug that holds a letter or a number');
   if (RESERVED_SLUGS.includes(slug)) throw fieldRefusal('slug', `“${slug}” is a page of its own`);
-  const holder = await findHelpArticleHoldingSlug(slug);
-  if (holder && holder.id !== selfId) throw fieldRefusal('slug', 'Another article holds that slug');
+  const holder = await findHelpArticleHoldingSlug(kind, slug);
+  if (holder && holder.id !== selfId)
+    throw fieldRefusal('slug', `Another ${KIND_NAMES[kind]} holds that slug`);
 }
 
 /** The structure rules, on the row as it would stand after the write. SQL scopes the audience of a read; these rules hold the shape of a write. */
@@ -92,7 +109,7 @@ export async function createHelpArticle(
     position: values.position ?? null,
     parentId: values.parentId ?? null,
   };
-  await checkSlug(slug, null);
+  await checkSlug(merged.kind, slug, null);
   await checkStructure(merged, null);
 
   const [row] = await withAudit(session, (write) =>
@@ -136,7 +153,7 @@ export async function updateHelpArticle(
     position: values.position === undefined ? current.position : values.position,
     parentId: values.parentId === undefined ? current.parentId : values.parentId,
   };
-  if (slug !== current.slug) await checkSlug(slug, id);
+  if (slug !== current.slug) await checkSlug(current.kind, slug, id);
   await checkStructure(merged, id);
 
   const [row] = await withAudit(session, (write) =>

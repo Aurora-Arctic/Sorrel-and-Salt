@@ -1,8 +1,13 @@
 import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { helpArticles, helpAudience } from '../../modules/help/schema/help-articles';
+import {
+  helpArticleKind,
+  helpArticles,
+  helpAudience,
+} from '../../modules/help/schema/help-articles';
 type HelpAudience = (typeof helpAudience.enumValues)[number];
 type HelpReach = HelpAudience;
+type HelpArticleKind = (typeof helpArticleKind.enumValues)[number];
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { findPage } from './finders';
 import { foldedWordMatch, notSoftDeleted } from './predicates';
@@ -67,14 +72,19 @@ export function findHelpArticleStaffPage(
   return findPage(helpArticles, A_TO_Z, page, admits(reach));
 }
 
-/** The live row under `slug` among the audiences `reach` admits, or `undefined`. */
+/** The live article under `slug` among the audiences `reach` admits, or `undefined`; a slug is unique within a kind, so a page lookup names the kind. */
 export function findHelpArticleBySlug(
   slug: string,
   reach: HelpReach,
 ): Promise<HelpArticleRow | undefined> {
   return selectOne(
     helpArticles,
-    and(notSoftDeleted(helpArticles), eq(helpArticles.slug, slug), admits(reach)),
+    and(
+      notSoftDeleted(helpArticles),
+      eq(helpArticles.kind, 'article'),
+      eq(helpArticles.slug, slug),
+      admits(reach),
+    ),
   );
 }
 
@@ -105,8 +115,14 @@ export function findAllHelpArticleChildren(parentId: string): Promise<HelpArticl
 }
 
 /** The live row holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. */
-export function findHelpArticleHoldingSlug(slug: string): Promise<HelpArticleRow | undefined> {
-  return selectOne(helpArticles, and(notSoftDeleted(helpArticles), eq(helpArticles.slug, slug)));
+export function findHelpArticleHoldingSlug(
+  kind: HelpArticleKind,
+  slug: string,
+): Promise<HelpArticleRow | undefined> {
+  return selectOne(
+    helpArticles,
+    and(notSoftDeleted(helpArticles), eq(helpArticles.kind, kind), eq(helpArticles.slug, slug)),
+  );
 }
 
 export interface HelpScore {
