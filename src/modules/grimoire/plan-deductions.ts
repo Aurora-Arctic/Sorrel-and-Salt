@@ -20,9 +20,11 @@ export interface PlanJar {
   variantId: string;
   quantityOnHand: string | number | null;
   unit: Unit | null;
+  /** The Low mark, `numeric` text from the column, or a number. */
   lowStockThreshold: string | number | null;
 }
 
+/** `units-differ` is drift since the spell was saved: a unit the jar cannot be measured in. */
 export type NotDeductedReason =
   'custom' | 'unstocked' | 'no-quantity' | 'units-differ' | 'jar-not-measured';
 
@@ -34,6 +36,7 @@ export type StepPlan =
       amount: number;
       unit: Unit;
       shortfall: number;
+      /** In the jar's unit, as `lowStockThreshold` is. */
       before: number;
       lowStockThreshold: number | null;
     }

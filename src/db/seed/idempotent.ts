@@ -73,6 +73,7 @@ export async function insertMissing<TTable extends PgTable, W, K>(
     existing: (tx: SeedTransaction) => Promise<Iterable<K>>;
     keyOf: (item: W) => K;
     toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
+    /** Who the rows are stamped by: the bootstrap user unless a seeded row is a member's own. */
     session?: AuditSession;
   },
 ): Promise<void> {

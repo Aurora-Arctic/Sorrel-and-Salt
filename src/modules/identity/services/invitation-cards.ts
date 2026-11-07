@@ -213,6 +213,8 @@ export type OwnedCovenLookup = (
 ) => Promise<ReadonlyMap<string, readonly string[]>>;
 
 /**
+ * `identity` may import no module, so the caller supplies `ownedCovens`. A formula-opening cell
+ * is prefixed with an apostrophe.
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function cardArrivalsCsv(

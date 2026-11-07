@@ -15,6 +15,7 @@ export const spellWorkingParticipants = pgTable(
       .references(() => spellWorkings.id),
     userId: uuid('user_id').references(() => users.id),
     name: text('name'),
+    // The order they were entered in, stored and never inferred.
     position: integer('position').notNull(),
     ...auditStampColumns,
   },

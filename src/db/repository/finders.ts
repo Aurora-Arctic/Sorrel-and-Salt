@@ -49,6 +49,7 @@ export function findOneBySlug<
   return findOne(table, eq(table.slug, slug));
 }
 
+/** The live rows among these ids, in no particular order. */
 export async function findManyByIds<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, ids: readonly string[]): Promise<ReadRow<TTable>[]> {
@@ -64,6 +65,7 @@ export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & N
   return selectFrom(table, and(scopedTo(membership, table), notSoftDeleted(table), where));
 }
 
+/** The first such row, or `undefined` — including when it belongs to another workspace. */
 export async function findOneInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped,
 >(membership: Membership, table: TTable, where?: SQL): Promise<ReadRow<TTable> | undefined> {
@@ -71,12 +73,16 @@ export async function findOneInWorkspace<
   return row;
 }
 
+/** The live row with this id in the proof's workspace; another workspace's id answers
+ * `undefined`. */
 export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
 >(membership: Membership, table: TTable, id: string): Promise<ReadRow<TTable> | undefined> {
   return findOneInWorkspace(membership, table, eq(table.id, id));
 }
 
+/** One page in `(...sort, id)` order; `page` comes from `resolvePage`
+ * (src/lib/pagination.ts), already clamped. */
 export function findPage<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
   Carried extends object,
@@ -169,6 +175,8 @@ export function findPageInReadableSpells<
   );
 }
 
+/** Counted under the same `readableSpells` rule, so a private spell never reaches another
+ * member's count. */
 export function findPageCountInReadableSpells<
   TTable extends PgTable &
     Identified &

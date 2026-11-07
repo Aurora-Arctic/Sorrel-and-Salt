@@ -11,6 +11,8 @@ import type {
   LoaderName,
 } from './types';
 
+// Written once for the seven curated vocabularies (claude-docs/graphql/schema.md, "Curated
+// vocabularies").
 // The writes are scoped to the site admin here and refused again by the service, the real gate. Every description is the caller's, so the SDL is what each file declared by hand.
 
 export function curatedVocabularyWrites<

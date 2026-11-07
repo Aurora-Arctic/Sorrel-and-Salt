@@ -490,6 +490,7 @@ function mostUsed(spellings: readonly string[]): string {
   return spelling;
 }
 
+/** Code-unit order, the same on every server whatever its locale. */
 function byCodeUnit(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }

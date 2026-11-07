@@ -55,6 +55,7 @@ export async function secretLinkMessage(link: SecretLink): Promise<Message | nul
       providers,
     );
   }
+  // A reset reaches only an inbox the account has proved.
   if (!user.emailVerified) return null;
   const token = await findNewestResetToken(user.id);
   if (!token) return null;

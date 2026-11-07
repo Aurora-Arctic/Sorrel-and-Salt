@@ -49,6 +49,7 @@ export interface AccountExistsProps extends BaseEmailProps {
 }
 
 export interface ResetPasswordProps extends BaseEmailProps {
+  /** Better Auth's reset link, which checks the token and opens `/reset-password` carrying it. */
   url: string;
 }
 
@@ -61,6 +62,7 @@ export interface PasswordChangedProps extends BaseEmailProps {
 
 export interface PasswordLockedProps extends BaseEmailProps {
   url: string;
+  /** How long the lock lasts, in minutes. */
   minutes: number;
   providers?: readonly ProviderId[];
   hasPasskey?: boolean;
@@ -86,9 +88,11 @@ export interface SupportStatusProps extends BaseEmailProps {
   viewLink?: boolean;
 }
 
+/** `url` opens the request, or the support page for a signed-out sender. */
 export type SupportReceivedProps = SupportStatusProps;
 export type SupportResolvedProps = SupportStatusProps;
 export interface SupportClosingSoonProps extends SupportStatusProps {
+  /** How long until it closes, in milliseconds, as of the send. */
   timeLeftMs: number;
 }
 
@@ -101,20 +105,27 @@ export interface SupportEmailReplyProps extends BaseEmailProps {
 
 export interface SupportTimedOutProps extends BaseEmailProps {
   url: string;
+  /** When the time-out ends, or `null` when it has no end date. */
   until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
   message: string | null;
 }
 
+/** `url` opens the support page, which a paused account can still reach. */
 export interface AccessPausedProps extends BaseEmailProps {
   url: string;
+  /** When the pause ends, or `null` when it has no end date. */
   until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
   message: string | null;
 }
 
 export interface CovenAccessPausedProps extends BaseEmailProps {
   url: string;
   covenName: string;
+  /** When the pause ends, or `null` when it has no end date. */
   until: Date | null;
+  /** What the steward wrote to the member, or `null` when they wrote none. */
   message: string | null;
 }
 

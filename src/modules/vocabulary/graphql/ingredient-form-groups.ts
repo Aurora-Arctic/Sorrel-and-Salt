@@ -12,6 +12,8 @@ import { curatedVocabularyWrites } from './curated';
 
 // A form's group and its writes. A form's slug is its name and its group, so a rename moves its forms' slugs and a delete moves its forms to `moveTo`, re-slugged there.
 
+// An enum on the wire, so a value outside the six is refused before a resolver runs; null is the
+// generic icon.
 export const FormGroupIconEnum = builder.enumType('FormGroupIcon', { values: FORM_GROUP_ICONS });
 
 const iconInput = (t: InputFieldBuilder<BuilderTypes, 'InputObject'>) => ({

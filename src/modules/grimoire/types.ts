@@ -74,6 +74,7 @@ export interface WorkingDeductionPreview {
   warnings: WorkingWarning[];
 }
 
+/** Every amount is in the jar's own unit; `shortfall` is what the jar could not cover. */
 export interface PlannedDeduction {
   stepId: string;
   inventoryItemId: string;

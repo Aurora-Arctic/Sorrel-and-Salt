@@ -356,6 +356,7 @@ export type SeedCompendiumEntry = Pick<
  */
 export type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
 
+/** The two trailing sections an entry file may end with, neither hashed nor seeded. */
 export interface CompendiumFileSections {
   /** `#### Questions for the Curator`: the doubt a `needs-review` file asks the curator to settle. */
   questions?: string;
@@ -440,8 +441,10 @@ export interface SeedWorking {
   /** The member who recorded it, and so the one stamped on every row. */
   recorder: string;
   status: 'draft' | 'complete';
+  /** The day it was made, `YYYY-MM-DD`. */
   workedOn: string;
   note: string | null;
+  /** Never wider than its spell's. */
   visibility: 'private' | 'workspace';
   /** In order, from position 0: a coven member, or a name typed for someone without an account. */
   participants: ({ userId: string } | { name: string })[];
@@ -501,6 +504,7 @@ export interface SeedDocument {
   key: string;
   title: string;
   lede: string;
+  /** The day version 1 is dated, at midnight UTC. */
   publishedOn: Date;
   body: string;
 }

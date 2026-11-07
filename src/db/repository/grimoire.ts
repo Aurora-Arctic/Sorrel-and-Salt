@@ -23,6 +23,7 @@ import { weightedSearch } from './weighted-search';
 
 // The grimoire list's read, apart from `spells.ts` so `finders.ts` and this file do not import each other.
 
+/** An instant, newest first: a page's key is ascending, so it is negated. */
 const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt): SortPart => ({
   // `numeric` keeps the microseconds a `Date` would drop from a cursor.
   expression: sql`-extract(epoch from ${column})`,

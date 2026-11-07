@@ -50,6 +50,8 @@ export interface SchemaTypes {
   DefaultEdgesNullability: { list: false; items: false };
   DefaultNodeNullability: false;
   // The schema's second check, behind the service layer's (DESIGN.md §7).
+  // `self` takes a user id and holds when it is the session's own; `curator` holds for a curator
+  // and an admin, `admin` for an admin alone.
   AuthScopes: {
     signedIn: boolean;
     admin: boolean;
@@ -77,6 +79,8 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
+  /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause
+   * with no end. */
   pausedUntil?: string | null;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };

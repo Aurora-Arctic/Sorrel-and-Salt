@@ -4,6 +4,7 @@ import type { AgreedVersion } from './types';
 import type { users } from '../modules/identity/schema/users';
 
 // Not Better Auth's `sessions` row. Extends `AuditSession` so the acting and the stamped identity are one field (CLAUDE.md rule 3; claude-docs/auth/service-session.md, "The service-level session, and the three errors").
+// Apart from `types.ts`, which imports nothing: these read the `users` table and Better Auth.
 
 export type UserRole = (typeof users.$inferSelect)['role'];
 

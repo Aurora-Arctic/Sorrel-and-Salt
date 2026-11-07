@@ -141,6 +141,7 @@ export function foldedWordMatch(query: string): WordMatch {
  */
 export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
 
+/** `value` sorted under `NATURAL_COLLATION`: the one place the COLLATE clause is written. */
 export function naturally(value: SQL | AnyPgColumn): SQL {
   return sql`${value} collate ${NATURAL_COLLATION}`;
 }

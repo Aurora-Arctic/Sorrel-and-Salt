@@ -70,6 +70,7 @@ function workshopPolicy(request: NextRequest): string {
   return `connect-src ${browserHost(request)}${WORKSHOP}/`;
 }
 
+// A host with an optional port, nothing that could end the CSP source.
 const HOST = /^(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/i;
 
 /**

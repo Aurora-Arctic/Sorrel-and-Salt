@@ -15,6 +15,7 @@ export const userAccessPauses = namedWrites(
       userId: uuid('user_id')
         .notNull()
         .references(() => users.id, { onDelete: 'cascade' }),
+      // Null for a pause with no end date.
       until: timestamp('until'),
       note: text('note').notNull(),
       message: text('message'),

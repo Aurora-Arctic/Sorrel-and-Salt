@@ -11,6 +11,7 @@ export const supportTimeouts = pgTable(
     id: idColumn(),
     // Null on a time-out set on a signed-out request, which binds its address alone; a claim of that address sets it.
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    // Null for a time-out with no end date.
     until: timestamp('until'),
     note: text('note').notNull(),
     message: text('message'),

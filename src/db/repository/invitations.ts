@@ -38,6 +38,8 @@ import type {
   WriterContext,
 } from './types';
 
+// Both tiers and the accept and token reads under no proof (claude-docs/db/invitations.md,
+// "Invitations").
 function addressKind(): SQL {
   return eq(invitations.kind, 'address');
 }
@@ -569,6 +571,8 @@ export function findCardAttemptCount(
   );
 }
 
+/** The table's only writes (`namedWrites`); each decides the tier from the proof, never
+ * from `values`. */
 export function invitationWrites({
   tx,
   session,

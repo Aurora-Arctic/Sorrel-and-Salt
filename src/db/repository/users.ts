@@ -39,6 +39,7 @@ export async function findUserByEmail(
 
 const USER_ORDER: readonly SortPart[] = [users.name];
 
+/** The users the list holds under `filter`: all but the three system users. */
 function listedUsers(filter: UserFilter): SQL | undefined {
   return and(
     ne(users.id, BOOTSTRAP_USER_ID),
@@ -250,6 +251,7 @@ export async function findNewestResetToken(
   return newest?.identifier.slice(RESET_IDENTIFIER_PREFIX.length);
 }
 
+/** How Better Auth names a reset link's row in `verifications`: this, then the token. */
 const RESET_IDENTIFIER_PREFIX = 'reset-password:';
 
 export function userWrites({

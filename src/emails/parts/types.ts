@@ -8,6 +8,7 @@ export interface EmailLayoutProps {
   children?: ReactNode;
 }
 
+/** A run of text in the anchor Zoho Mail leaves alone (`Ink` in layout.ts). */
 export interface InkProps {
   className: string;
   color: string;

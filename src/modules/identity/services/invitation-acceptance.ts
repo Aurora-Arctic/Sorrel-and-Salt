@@ -195,6 +195,7 @@ export async function acceptInvitationById(session: Session, id: string): Promis
 export async function declineInvitationById(session: Session, id: string): Promise<InvitationRow> {
   const standing = await standingById(session, id);
   if (standing.refusal) throw refusalError(standing.refusal, true);
+  // The received read never reaches the site tier; this only narrows the type.
   if (standing.tier !== 'workspace') throw refusalError('invalid', true);
 
   // The writer's own match is the last word: a change that committed since the checks leaves nothing to stamp.
@@ -223,6 +224,8 @@ async function acceptChecked(
   const accepted = await withAudit(
     session,
     async (write) => {
+      // The writer's own match is the last word: a change committed since the checks leaves
+      // nothing to stamp.
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {

@@ -91,6 +91,7 @@ export function buildLoaders<F extends Record<string, LoaderFactory<never, unkno
   ) as Built<F>;
 }
 
+/** The request's loaders: a fresh set every call, never shared. */
 export function createLoaders(session: Session | null): Loaders {
   return buildLoaders(LOADERS, session);
 }

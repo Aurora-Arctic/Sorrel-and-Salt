@@ -146,6 +146,7 @@ export async function setEmail(
   }
 
   if (unchanged) {
+    // Better Auth's endpoint: its hook stamps the row and mails.
     await sender.resend(email, next);
     return me;
   }

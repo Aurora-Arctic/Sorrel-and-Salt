@@ -37,6 +37,8 @@ export function createBuilder() {
         complexity: { field: 1, multiplier: 1 },
       },
       nodeFieldOptions: { nullable: false },
+      // Every connection costs the page it will actually fetch: 25 unsized, never more than 100,
+      // whether `first` is a literal or a variable.
       defaultConnectionFieldOptions: {
         complexity: (args) => ({ field: 1, multiplier: pageSize(args) }),
       },

@@ -35,7 +35,8 @@ export const invitations = namedWrites(
       kind: text('kind').notNull().default('address'),
       // The mint a card came from; null on an address row. Not a foreign key: a batch has no table, only its cards.
       batchId: uuid('batch_id'),
-      // Null on an address row and on a card minted before this was kept.
+      // A card's place in its batch from 1, in the order the PDF lays the fronts out; null on an
+      // address row and on an older card.
       position: smallint('position'),
       ...auditColumns,
     },

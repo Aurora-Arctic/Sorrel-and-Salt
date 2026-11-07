@@ -54,6 +54,8 @@ import type {
   VocabularySuggestion,
 } from './types';
 
+// Curated forms: live, with a live group. Public reference data, so no proof
+// (claude-docs/db/compendium-read.md, "Vocabulary finders").
 export function findIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
@@ -170,6 +172,8 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
   );
 }
 
+/** Group name, own name (natural collation), then id, so namesakes in different groups sit
+ * apart. The page and its count share it. */
 function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   const grouped = sql.identifier('grouped');
   return {
@@ -214,6 +218,8 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
 }
 
+/** The live other names of these deities, in no particular order: a loader's batch read. No
+ * proof: global data. */
 export function findDeityOtherNames(
   deityIds: readonly string[],
 ): Promise<(typeof deityOtherNames.$inferSelect)[]> {

@@ -153,6 +153,8 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
+/** The sender is in the group. A beta tester accepted a printed card: derived from the
+ * invitation, never stored. */
 function senderArm(group: SupportSenderGroup): SQL {
   switch (group) {
     case 'beta_tester':
@@ -236,6 +238,7 @@ export function findSupportRequestForReader(reader: SupportReader, id: string) {
   ).then(oneAsOfNow);
 }
 
+/** One page of the sender's own requests, newest first. The finder ANDs `created_by` itself. */
 export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
@@ -310,6 +313,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
   ).then(oneAsOfNow);
 }
 
+/** The public replies on a request, oldest first: no internal note among them. */
 export function findPublicSupportReplies(requestId: string) {
   return selectFrom(
     supportReplies,
@@ -380,6 +384,7 @@ export async function findStandingSupportTimeoutByAddress(
   return latestEnd(rows);
 }
 
+/** The latest end among standing time-outs: none at all (no end date) wins over any date. */
 function latestEnd(rows: readonly { until: Date | null }[]): StandingTimeout | undefined {
   if (rows.length === 0) return undefined;
   if (rows.some((row) => row.until === null)) return { until: null };
@@ -562,6 +567,8 @@ function internalNotesScope(viewer: SupportViewer): SQL | undefined {
   );
 }
 
+/** The ids among `userIds` that accepted a printed card: derived from the invitation, never
+ * stored. */
 export async function findCardAcceptorIds(userIds: readonly string[]): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
   const rows = await selectFrom(
@@ -575,6 +582,8 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
 
+/** The live time-outs set on these senders, newest first. The service lets a keeper alone
+ * ask. */
 export function findSupportTimeoutsFor(userIds: readonly string[]) {
   if (userIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -583,6 +592,8 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
   );
 }
 
+/** The live time-outs set on these addresses, newest first. The service lets a keeper alone
+ * ask. */
 export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
   if (addressKeys.length === 0) return Promise.resolve([]);
   return selectFrom(

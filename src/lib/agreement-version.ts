@@ -24,6 +24,8 @@ export function agreedVersionOfColumns(row: AgreedColumns): AgreedVersion {
   };
 }
 
+/** The joint version, `terms.disclaimer.ethics`, with 0 for a document that has no
+ * published version. */
 export function formatAgreementVersion(version: AgreedVersion): string {
   return AGREEMENT_DOCUMENTS.map(({ part }) => version[part] ?? 0).join('.');
 }

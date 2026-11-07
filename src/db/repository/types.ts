@@ -152,6 +152,7 @@ export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListO
  */
 export interface KeysetCount {
   count: KeyOrder;
+  /** A page's first row. None on an empty page, whose `countBefore` is null. */
   start: Cursor | undefined;
 }
 
@@ -208,9 +209,12 @@ export interface Aggregate<TRow extends Record<string, unknown>> {
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
+  /** The most rows read, after `orderBy`; every row without. */
   limit?: number;
 }
 
+/** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table
+ * too. */
 export interface AggregateJoin {
   type: 'inner' | 'left' | 'right';
   table: PgTable;
@@ -1311,6 +1315,7 @@ export interface CardInvitationValues {
   note: string | null;
 }
 
+/** A card's place in its batch, from 1; null for an older card. */
 export type CardPosition = { id: string; position: number | null };
 
 /** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
@@ -1387,6 +1392,7 @@ export interface GrimoireQuery {
   query?: string;
   /** Only the spells assigned these categories, by id; absent or empty means no filter. */
   categoryIds?: readonly string[];
+  /** Whether a spell needs every chosen category ('all', the default) or any of them. */
   categoryMode?: CategoryMode;
   /**
    * Only the spells whose moon phase is any of these, trimmed and ignoring case; absent or empty means no filter.
@@ -1404,6 +1410,7 @@ export interface GrimoireQuery {
 }
 
 export interface GrimoireFacetCounts {
+  /** Each moon phase written on a readable spell, as the most-used spelling of it. */
   moonPhases: FacetCount[];
   daysOfWeek: FacetCount[];
   visibilities: FacetCount<'private' | 'workspace'>[];
@@ -1474,11 +1481,13 @@ export interface GroupFilter {
   query?: string;
 }
 
+/** A user's display name only, never the rest of the row: what a co-member may read. */
 export interface UserName {
   id: string;
   name: string;
 }
 
+/** One provider account linked to a user, without the tokens its row holds. */
 export interface LinkedProvider {
   userId: string;
   providerId: string;

@@ -686,6 +686,8 @@ function heldInAnyOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), heldBy(memberships)) as SQL;
 }
 
+/** A compendium entry no live cupboard row of the proofs' covens names; a removed row does
+ * not hold it. */
 function heldInNoneOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), not(heldBy(memberships))) as SQL;
 }
