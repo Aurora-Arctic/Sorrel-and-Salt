@@ -2,7 +2,7 @@
 
 `src/components/CovenNav/` is the section nav of a coven's pages: a `<nav>`
 labelled "Coven" that the `/coven/[slug]` layout draws in the context row,
-beside the coven switcher (M9.15, MB.7). It links each section of the coven
+beside the coven switcher. It links each section of the coven
 the viewer is in. It is a thin wrapper around [`SectionNav`](section-nav.md),
 which draws the tabs, the bar along the foot of a phone's screen, and the mark
 on the page you are on.
@@ -20,17 +20,17 @@ on the page you are on.
 
 ## The sections
 
-| Label       | Route                       | Icon        | Shown to                     | Built by |
-| ----------- | --------------------------- | ----------- | ---------------------------- | -------- |
-| Overview    | `/coven/[slug]`             | overview    | every role                   | M9.15    |
-| Ingredients | `/coven/[slug]/ingredients` | ingredients | every role                   | M9.6     |
-| Grimoire    | `/coven/[slug]/grimoire`    | grimoire    | every role                   | M10.11   |
-| Members     | `/coven/[slug]/members`     | members     | roles holding `member: read` | M6.13    |
+| Label       | Route                       | Icon        | Shown to                     |
+| ----------- | --------------------------- | ----------- | ---------------------------- |
+| Overview    | `/coven/[slug]`             | overview    | every role                   |
+| Ingredients | `/coven/[slug]/ingredients` | ingredients | every role                   |
+| Grimoire    | `/coven/[slug]/grimoire`    | grimoire    | every role                   |
+| Members     | `/coven/[slug]/members`     | members     | roles holding `member: read` |
 
 Members stays the open section on `/coven/[slug]/invitations` too, since
-Invitations is a tab on the same page (its `matches`, M7.6). Members is
+Invitations is a tab on the same page (its `matches`). Grimoire is current on its Drafts tab too, which lies beneath it. Members is
 `apart`, a group of its own behind a hairline, as People is in the admin nav:
-it is the coven's people, not its contents (M10.11). Today a steward and a
+it is the coven's people, not its contents. A steward and a
 member see all four sections and an observer sees Overview, Ingredients and
 Grimoire.
 
@@ -77,27 +77,6 @@ use the same mapping. What the target does is
 
 All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
-## Stories
+## Stories and tests
 
-`index.stories.tsx`, titled "Coven / Nav", render-only, on the coven index (the toolbar viewport menu shows the nav at 375px, the bar along the foot of the screen). `States` is a grid:
-
-- Overview Current: as a member sees it, Overview current, Ingredients and Members beside it.
-- Ingredients Current, Members Current, and Members Current On Its Invitations Tab: the other pages as current.
-- Viewer: as an observer sees it, Overview and Ingredients.
-
-The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
-row is `ContextRow`'s Coven cell and the workshop's shell frame.
-
-## Testing
-
-`tests/components/CovenNav/index.test.tsx`: the nav, named "Coven", links the
-index at the slug's address, marks it current there and not on a page beneath
-it, and links the ingredients page for every caller, and the members page only for one who may read members.
-
-## The sections list
-
-`sections.ts` is the one list the nav reads, in order. Three rules shape it.
-
-- A row is added together with the page it links to, because `typedRoutes` refuses a link to a route the build does not contain.
-- Grimoire counts as current on its Drafts tab too, which lies beneath it.
-- Members is shown by what the caller's role may do (`member: read`), never by a rank, so an observer is not offered a page that answers 404. The layout passes that in as a boolean because the file loads in the workshop's browser build, where the server-only access-control module cannot.
+`src/components/CovenNav/index.stories.tsx` ("Coven / Nav", render-only; the toolbar viewport menu shows the bar along the foot of the screen at 375px) and `tests/components/CovenNav/`. The shapes the nav takes by width are `SectionNav`’s stories; the nav in its row is `ContextRow`’s Coven cell and the workshop’s shell frame.

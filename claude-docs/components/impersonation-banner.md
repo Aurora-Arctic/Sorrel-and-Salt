@@ -35,8 +35,7 @@ carries Stop Impersonating
 
 ## Styling
 
-The motion, the width, the rule and the button size are the owner's calls,
-made during MB.53. It is a wrapping row of the sentence and the button,
+It is a wrapping row of the sentence and the button,
 padded with `space()`, on `$surface-card` over a `$rule-heavy` (3px)
 `$secondary` rule, heavy enough to read by its weight as well as its colour.
 The button is

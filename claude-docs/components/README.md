@@ -3,9 +3,7 @@
 One Markdown file per standalone component, lower-kebab-named after the
 component directory (`theme-toggle.md` ↔ `src/components/ThemeToggle/`).
 
-Several tasks name a component doc as an acceptance criterion, and the component
-workshop discovers components by their `index.stories.tsx`; a component that
-ships without its doc is an incomplete task.
+The component workshop discovers components by their `index.stories.tsx`. A component that ships without its doc is an incomplete task.
 
 A component doc records what someone needs to know before changing the
 component that is not obvious from the code:
@@ -22,9 +20,9 @@ State the decision, not how it was reached. The reasoning behind a single
 contested choice belongs in a decision record; blow-by-blow history belongs in
 the PR that made it.
 
-## The Navigation Shell (MB.7)
+## The Navigation Shell
 
-These five docs are written with the shell's components. The reasoning behind the
+These docs cover the shell's components. The reasoning behind the
 design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
 
 | Doc                                                          | Component                                                                                                                                    |

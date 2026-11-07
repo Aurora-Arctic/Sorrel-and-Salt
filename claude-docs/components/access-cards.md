@@ -6,14 +6,7 @@ It is server rendered with no script: each card is a native `<details>` element,
 
 ## Props
 
-`AccessCardsProps` (`types.ts`):
-
-| Prop    | What it is                                                                                                                     |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `roles` | The roles in column order, each an `AccessRole`: its full `name`, read in the open card, and the `short` label over its column |
-| `rows`  | One `AccessRow` per kind of data: the `data` it is about and one `AccessCell` per role, in the roles' order                    |
-
-An `AccessCell` is the cell's full `text` and its `mark`, one of `yes`, `part` or `no`. The mark is data set beside the text, never read out of it, so a reworded cell keeps the mark its author gave it until the author changes that too. The privacy page sets each mark by the cell's opening words: a cell that starts "Yes" is `yes`, one that starts "No" is `no`, and one that starts "Only" or "Which" is `part`.
+`AccessCardsProps` (`types.ts`). A cell’s mark is data set beside its text, never read out of it, so a reworded cell keeps the mark its author gave it until the author changes that too. The privacy page sets each mark by the cell’s opening words: “Yes” is `yes`, “No” is `no`, and “Only” or “Which” is `part`.
 
 ## The three marks
 

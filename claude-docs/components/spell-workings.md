@@ -1,6 +1,6 @@
 # SpellWorkings
 
-`src/components/SpellWorkings/` is the Workings section of the recipe page (M13.8, story 79). It
+`src/components/SpellWorkings/` is the Workings section of the recipe page. It
 lists a spell's workings, newest `workedOn` first, in the order the connection returns them.
 
 ## Where it sits
@@ -47,17 +47,7 @@ An empty list reads "This spell has not been worked yet."
 
 ## Stories
 
-`src/components/SpellWorkings/index.stories.tsx`, titled "Grimoire / Spell Workings": `States`,
-with a control that chooses one state, each with the recipe page's own controls (Record a Working,
-Complete and the Edit pencil), drawn by `.storybook/grimoire-workings.tsx`:
-
-- Every Kind of Row: a draft, a private working the viewer recorded, and one another member
-  recorded.
-- None, and None for a Viewer: no workings, with and without Record a Working.
-- Draft and Private: one row of each kind.
-- A Viewer Reads Them: a complete working, with no controls.
-
-What each control opens is drawn in Grimoire / Record Working ([record-working.md](record-working.md)).
+`src/components/SpellWorkings/index.stories.tsx` ("Grimoire / Spell Workings"), whose controls come from `.storybook/grimoire-workings.tsx`. What each control opens is drawn in Grimoire / Record Working ([record-working.md](record-working.md)).
 
 ## Reading
 
