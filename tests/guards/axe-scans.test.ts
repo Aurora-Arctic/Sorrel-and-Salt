@@ -16,6 +16,12 @@ const MODAL_PARTS = new Set([
   'src/components/Modal/route-modal.tsx',
   'src/components/Modal/modal-button.tsx',
 ]);
+// A file that draws only the loading frame of a modal whose code loads when first asked for, mapped to the file that
+// draws the modal itself: the modal is scanned, and the frame holds a loading skeleton in its place for a moment.
+const LOADING_FRAMES: Record<string, string> = {
+  'src/components/IngredientForm/lazy-quick-look.tsx':
+    'src/components/IngredientForm/quick-look.tsx',
+};
 /** An element that draws a dialog: the modal components opened as JSX, a native dialog, or the ARIA role. */
 const DRAWS_DIALOG = /<(?:Modal|RouteModal|ModalButton)\s|<dialog\s|role="dialog"/;
 
@@ -82,6 +88,7 @@ describe('the accessibility scan list', () => {
         SOURCE_FILE.test(file) &&
         !STORY_FILE.test(file) &&
         !MODAL_PARTS.has(file) &&
+        !(file in LOADING_FRAMES) &&
         DRAWS_DIALOG.test(readFileSync(file, 'utf8')),
     );
     const sources = MODAL_SCANS.map(({ source }) => source as string);
@@ -91,6 +98,17 @@ describe('the accessibility scan list', () => {
     expect(drawing).toContain('src/components/StockDialog/index.tsx');
     expect(drawing.some((file) => file.startsWith('src/app/'))).toBe(true);
     expect(drawing.filter((file) => !sources.includes(file))).toEqual([]);
+    // Each loading frame stands in front of a scanned modal, and loads that file.
+    for (const [frame, modal] of Object.entries(LOADING_FRAMES)) {
+      expect(files).toContain(frame);
+      expect(sources).toContain(modal);
+      expect(readFileSync(frame, 'utf8')).toContain(
+        `import('./${modal
+          .split('/')
+          .pop()!
+          .replace(/\.tsx$/, '')}')`,
+      );
+    }
     expect([...new Set(sources)].filter((source) => !drawing.includes(source))).toEqual([]);
   });
 

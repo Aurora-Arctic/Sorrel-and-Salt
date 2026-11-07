@@ -141,6 +141,14 @@ async function renderPage(search: Record<string, string> = {}) {
     searchParams: Promise.resolve(search),
   });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  // An opened entry's details load on first open: wait for them to replace the dialog's loading status.
+  if (search.entry) {
+    await waitFor(() =>
+      expect(
+        screen.queryAllByRole('status').filter((status) => status.textContent === 'Loading'),
+      ).toHaveLength(0),
+    );
+  }
 }
 
 beforeEach(() => {
