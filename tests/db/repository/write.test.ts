@@ -159,6 +159,7 @@ describe('app.current_user_id', () => {
   });
 
   it('does not leak across pooled connections under concurrency', async () => {
+    // More callers than pool connections, at once; each must see its own id.
     // Transaction-scoped `set_config(.., true)` is what makes that true — a
     // session-level `SET` would fail this.
     const actors = Array.from({ length: 24 }, (_, index) => ({
@@ -276,6 +277,8 @@ describe('app.current_user_id', () => {
   });
 });
 
+// A finder inside a `withAudit` callback runs on its transaction: it sees the write and its actor,
+// and never queues on a second connection behind the write's own lock.
 describe('a finder inside a withAudit callback', () => {
   async function seedHerb(name: string) {
     const [row] = await sql`
@@ -722,6 +725,8 @@ describe('the compendium tier, under the Curator proof', () => {
 });
 
 // A table marked `namedWrites` is reached only through its own named writer methods, and the mark is the whole refusal: no column name is read (claude-docs/db/write-path.md, "Table marks").
+// No body runs: each `@ts-expect-error` fails `npm run typecheck` once a generic method
+// stops demanding `Generic`, which a runtime assertion cannot see.
 describe('a table marked namedWrites, refused by every generic writer method', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const id = session.userId;

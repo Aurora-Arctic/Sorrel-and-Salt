@@ -122,6 +122,7 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
   });
 });
 
+// A closed list, so an enum, and nullable: NULL is the generic icon, not a missing answer.
 describe('ingredient_form_groups.icon', () => {
   it('holds exactly the six icons, as the code declares them', async () => {
     const [range] = await sql`select enum_range(null::form_group_icon)::text[] as icons`;

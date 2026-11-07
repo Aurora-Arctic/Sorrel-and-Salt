@@ -239,6 +239,8 @@ describe('the admin writes', () => {
         E.id,
       );
       const session = asUser(E);
+      // One set of loaders across the three, so the read before fills the cache the write must
+      // clear.
       const context = { loaders: createLoaders(session) };
       const before = await send(session, PICKED, { id: picked }, context);
       expect(before.data).toEqual({

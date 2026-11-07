@@ -489,6 +489,7 @@ const mailsNothing: InvitationSender = {
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
+// Run as B, a member of W (or A, its owner, when the probe says), so only the id can refuse.
 export async function runProbe(
   probe: WorkspaceIdProbe,
   workspaceId: string,

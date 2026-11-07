@@ -48,6 +48,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 let auth: AuthInstance;
+// Imported after `importAuth` resets the module registry,
+// so the setter and its errors share this `auth`'s modules.
 let passwordSetter: typeof PasswordSetterFactory;
 let ValidationError: typeof ValidationErrorClass;
 let Forbidden: typeof ForbiddenClass;

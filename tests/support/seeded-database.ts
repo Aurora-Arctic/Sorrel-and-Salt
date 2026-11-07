@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import postgres from 'postgres';
 
 // The one place a test database is made from the migrated schema and the `standard` scenario (claude-docs/testing/where-tests-live.md, "Where tests live").
+// Migrate and seed run the npm scripts compose's `db-init` runs, so local and CI run the same ones.
 
 /** The baked-in base: extensions only, no schema. Never written to. */
 export const BASE_TEMPLATE = 'sorrel_template';

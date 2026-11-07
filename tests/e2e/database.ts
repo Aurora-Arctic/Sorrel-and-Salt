@@ -2,6 +2,8 @@ import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../suppo
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 
+// One database per worker slot, read by that slot's server: global-setup.ts clones each from a
+// seeded template, and a db-touching spec file recreates its own in `beforeAll`.
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 export const CONFIGURED_PROVIDERS_DATABASE = 'sorrel_e2e_providers';
 /** The compendium-cache server's, which no spec reseeds: its cache would not follow. */

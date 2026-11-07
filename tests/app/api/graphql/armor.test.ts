@@ -12,6 +12,7 @@ vi.mock('@/lib/request-session', () => ({
   }),
 }));
 
+// The mocked schema nests without end, so only the limits can refuse a query.
 vi.mock('@/graphql/schema', async () => {
   const { createBuilder } = await import('@/graphql/builder');
   const scratch = createBuilder();

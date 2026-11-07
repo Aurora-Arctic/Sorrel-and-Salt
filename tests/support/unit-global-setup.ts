@@ -17,6 +17,7 @@ declare module 'vitest' {
 // One scan for every guard (claude-docs/testing/layer-ownership.md, "The owning layer"): a fixed cost paid
 // per run, not per file. The probes are removed as soon as oxlint has read them, so no test sees them on disk.
 
+/** The spelling scripts/doc-citations.mjs uses, so the two sweeps see one tree. */
 function listRepoFiles(): string[] {
   // `-c safe.directory=*`: CI's vitest job runs as root over a checkout owned
   // by uid 1000, which git refuses as "dubious ownership".

@@ -21,6 +21,7 @@ vi.mock('@/components/DocumentPage', () => ({ default: documentPage }));
 type Page = (props?: unknown) => Promise<unknown>;
 type VersionMetadata = (props: { params: Promise<{ number: string }> }) => Promise<Metadata>;
 
+// Literal paths, so the bundler resolves each route.
 const PAGES: Record<
   string,
   {

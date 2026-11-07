@@ -81,6 +81,7 @@ async function userRow(email: string) {
     { id: string; email_verified: boolean; updated_by: string; updated_at: Date } | undefined;
 }
 
+/** Stamps the row as bootstrap, so `updated_by` moves only if an update hook restamps it. */
 async function restamp(email: string): Promise<void> {
   await asTouch(
     sql,

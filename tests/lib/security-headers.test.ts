@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { contentSecurityPolicy } from '@/lib/security-headers';
 import { nextConfig } from '../../next.config';
 
+// Next reads a `source` as path-to-regexp; the rules here are one regex group, which a RegExp
+// reads too.
 async function headersFor(path: string): Promise<Record<string, string>> {
   const rules = (await nextConfig.headers?.()) ?? [];
   const applied: Record<string, string> = {};

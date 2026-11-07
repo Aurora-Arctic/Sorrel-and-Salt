@@ -175,6 +175,7 @@ const documentMailing = async () =>
     recipient_count: 1,
   });
 
+// Keyed by index, not table: one table's indexes can hold rows either side of a predicate.
 const ROWS: Record<string, PartialIndexRow> = {
   // `(true)` where open: at most one open pause, whatever it holds.
   admin_role_change_pauses_one_open: { row: async () => stamped({}) },

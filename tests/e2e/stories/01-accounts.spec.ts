@@ -58,6 +58,8 @@ test.describe('signing in', () => {
       await page.reload();
       await expect(page.getByRole('button', { name: 'Continue with Discord' })).toBeVisible();
       const focusedNames = new Set<string>();
+      // Spare presses beyond the provider buttons tolerate another tab stop; the theme toggle is
+      // one.
       for (let i = 0; i < PROVIDER_NAMES.length + 3; i++) {
         await page.keyboard.press('Tab');
         const text = await page.evaluate(() => document.activeElement?.textContent?.trim());

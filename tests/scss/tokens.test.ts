@@ -133,6 +133,7 @@ describe('the brand and text colours clear their floors on the page and the card
       row(`${token} on the page`, tokens[token], page, 4.5);
       row(`${token} on the card`, tokens[token], card, 4.5);
     }
+    // The banner's heavy foot rule is a line, not text, so it needs 3:1, not 4.5:1.
     row('the banner rule on the page', tokens['--secondary'], page, 3);
     // The user list's Impersonate column: wax text on a wax tint, 6% over the
     // page and 5% over a banded row's card (UserList/index.scss).

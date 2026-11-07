@@ -308,6 +308,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
   await expect(options.first()).toBeVisible();
 
   // The panel that clips the rows: the listbox, or the popup around it. Its
+  // box is what a row has to lie inside to be seen.
   const clip = await listbox.evaluateHandle((el) => {
     for (let n: Element | null = el; n; n = n.parentElement) {
       if (n.scrollHeight > n.clientHeight + 1 && getComputedStyle(n).overflowY !== 'visible')
@@ -1009,7 +1010,9 @@ for (const [label, width, height] of [
   });
 }
 
-// than three categories, so the test seeds its own with four, named to sort first.
+// The +N panel floats over the rows below; only a browser shows that the table frame does not
+// clip it. No seeded entry has more than three categories, so the test seeds its own with four,
+// named to sort first.
 const CHIPWORT = 'Aaa Chipwort';
 
 async function seedChipwort(userId: string) {

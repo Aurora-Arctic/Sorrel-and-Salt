@@ -71,6 +71,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await builder.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
   await expect(save).toBeEnabled();
   await save.click();
+  // Saved: the address now names the saved draft, so a reload or Back opens it rather than an
   // empty form, and the same dialog is headed as the saved spell, with nothing left to save.
   await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
   const drafted = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });

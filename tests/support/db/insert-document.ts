@@ -11,6 +11,7 @@ export interface DocumentVersionSeed {
   number: number;
   body?: string;
   status?: 'draft' | 'published';
+  /** As stored: a `timestamp` without a zone, read as UTC. */
   published_at?: string | null;
   deleted_at?: Date | null;
 }

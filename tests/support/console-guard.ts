@@ -15,6 +15,10 @@ let unexpected: string[] = [];
 const format = (args: unknown[]): string =>
   args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(' ');
 
+/**
+ * The call is swallowed, and the test fails if it never comes; declare it again for each further
+ * call.
+ */
 export function expectConsole(level: Level, pattern: RegExp): void {
   declared.push({ level, pattern, matched: false });
 }

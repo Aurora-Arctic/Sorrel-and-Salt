@@ -86,6 +86,7 @@ async function removeRow(email = OWNER) {
   await sql`delete from sign_in_failures where user_id = (select id from users where email = ${email})`;
 }
 
+/** Moves the lock into the past, so no timer needs faking inside scrypt. */
 async function expireLock(email = OWNER) {
   await sql`
     update sign_in_failures set locked_until = now() - interval '1 second'

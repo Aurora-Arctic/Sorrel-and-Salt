@@ -259,6 +259,7 @@ describe('a null session at every Query field', () => {
   it.each(Object.entries(PROBES))('%s: %o', expectOutcome);
 });
 
+// A null `workspaceId` asks for the compendium alone, and must not be a way round the session.
 const nullWorkspaceSuggestion = (field: string): ScopeProbe => ({
   source: `query ($workspaceId: ID) {
     ${field}(workspaceId: $workspaceId, first: 1) { edges { node { value } } }

@@ -6,6 +6,7 @@ import { addressCountKey } from '@/lib/send-count-key';
 // audit and starts no mail (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 export interface SupportTimeoutFixture {
+  /** A Postgres interval from now, such as `'2 days'`; negative for a time-out that has run out. */
   endsIn?: string | null;
   lifted?: boolean;
   address?: string;

@@ -261,6 +261,7 @@ describe('a paused viewer', () => {
     membershipsOf.mockResolvedValue([[membership('fixture-coven', 'Fixture Coven', 'owner')]]);
     countReceivedInvitations.mockResolvedValue({ totalCount: 2, countBefore: null });
     getMySupportCounts.mockResolvedValue({ assignedOpen: 3, waitingOnMe: 1 });
+    // The precondition: unpaused, the same viewer draws the coven, curation and the counts.
     const open = (await viewerFor({ session: { ...SESSION, role: 'admin' } })).viewer;
     expect(open).toMatchObject({
       canCurate: true,

@@ -156,6 +156,7 @@ export async function insertStock(
   });
 }
 
+/** Raw SQL, since the spell factory imports the whole seed. */
 export async function insertSpell(
   sql: postgres.Sql,
   covenId: string,

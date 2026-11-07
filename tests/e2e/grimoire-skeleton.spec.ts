@@ -5,6 +5,7 @@ import { signInAgainAs, signInAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 
+/** How far a placeholder card's height may differ from a real card's: a line of text. */
 const HEIGHT_TOLERANCE = 12;
 
 let coven: Coven;
@@ -113,6 +114,9 @@ for (const width of [1280, 375]) {
   });
 }
 
+/**
+ * How far a placeholder region may differ from the loaded page's, in either axis: a line of text.
+ */
 const REGION_TOLERANCE = 12;
 const SPELL_TITLE = 'Calm Charm';
 

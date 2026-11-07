@@ -205,6 +205,7 @@ describe('X-Robots-Tag', () => {
     '/terms',
     '/code-of-ethics',
     '/coven/hearth',
+    // A filter is the page's own metadata to mark, not the proxy's.
     '/compendium?query=wort',
   ])('is absent on production at %s', async (path) => {
     vi.stubEnv('VERCEL_ENV', 'production');

@@ -8,6 +8,8 @@ import { truncateAllTables } from '../support/seeded-database';
 import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
+// One function attached to every audited table
+// (claude-docs/db/updated-at.md, "`updated_at` is the database's").
 const FUNCTION = 'set_updated_at';
 const TRIGGER = 'set_updated_at';
 
@@ -21,6 +23,7 @@ const CATEGORY = '55555555-5555-5555-5555-555555555555';
 
 const THE_MILLENNIUM = '2000-01-01 00:00:00';
 
+/** Read as the column reads it: `timestamp`, not `timestamptz`. */
 async function databaseNow(): Promise<Date> {
   const [{ now }] = await sql<{ now: Date }[]>`select now()::timestamp as now`;
   return now;
@@ -52,6 +55,7 @@ async function insertUser(id = randomUUID(), overrides = ''): Promise<string> {
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
+  // Emptied first so beforeEach's delete of users finds nothing seeded still pointing at a user.
   await truncateAllTables(sql);
 
   await insertUser(AUTHOR);
@@ -163,6 +167,8 @@ describe('the updated_at trigger', () => {
 
     it('stores the database clock, not the application’s', async () => {
       const id = await insertUser();
+      // Only `Date` is faked, so the driver's timers stay real: `applyAudit` sends the year 2000
+      // and the column gets this year.
       vi.useFakeTimers({ toFake: ['Date'], now: new Date(`${THE_MILLENNIUM}Z`) });
 
       const [returned] = await withAudit(session, (write) =>

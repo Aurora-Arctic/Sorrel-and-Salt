@@ -5,6 +5,7 @@ warmImport(() => import('@/app/api/graphql/route'));
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
+// Signed out: the real session reader loads Better Auth, which needs secrets in production.
 vi.mock('@/lib/request-session', () => ({
   sessionStateFromHeaders: async () => ({
     session: null,
@@ -16,6 +17,7 @@ vi.mock('@/lib/request-session', () => ({
 
 type Route = typeof import('@/app/api/graphql/route');
 
+// The route reads NODE_ENV once at import, so each environment needs a fresh module.
 function routeIn(nodeEnv: string): () => Route {
   let route: Route;
   beforeAll(async () => {

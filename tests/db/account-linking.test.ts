@@ -16,6 +16,8 @@ import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
+// A second provider is added with /link-social, then signs in by its account id
+// (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 

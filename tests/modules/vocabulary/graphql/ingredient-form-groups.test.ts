@@ -125,6 +125,7 @@ describe('updateIngredientFormGroup', () => {
     const id = await seedGroup('Fixture Matter');
     await seedForm('Fixture Shard', id, 'Fixture Matter');
     const session = asUser(E);
+    // One set of loaders across the three, so the read before fills the cache the write must clear.
     const context = { loaders: createLoaders(session) };
     const READ = `query { ingredientFormValues(query: "Fixture Shard") { edges { node { slug group { name } } } } }`;
     const before = await run(session, READ, {}, context);

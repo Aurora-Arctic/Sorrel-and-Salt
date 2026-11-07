@@ -34,6 +34,8 @@ async function seedAll(): Promise<void> {
   await seedSources(db);
 }
 
+// The two days as text, as Drizzle reads them: postgres.js would hand back a `Date`,
+// which the renderer does not print.
 const REFERENCE =
   'select *, accessed::text as accessed_day, modified::text as modified_day from "references"';
 

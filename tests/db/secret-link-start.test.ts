@@ -9,6 +9,7 @@ import type { Message } from '@/lib/types';
 import { placeholderEmail } from '@/modules/identity';
 import type { AuthInstance } from '../support/types';
 
+// The run is started with ids and an origin, never the address, the token or the link.
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 const delivered = vi.hoisted(() => [] as Message[]);

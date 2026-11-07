@@ -84,6 +84,7 @@ describe('updateCategoryGroup', () => {
       insert into categories (name, slug, description, group_id, created_by, updated_by)
       values ('Testcraft Filed', 'testcraft-filed', 'Seeded', ${id}, ${E.id}, ${E.id})`;
     const session = asUser(E);
+    // One set of loaders across the three, so the read before fills the cache the write must clear.
     const context = { loaders: createLoaders(session) };
     const READ = `query { categories(query: "Testcraft Filed") { edges { node { group { name } } } } }`;
     const before = await run(session, READ, {}, context);

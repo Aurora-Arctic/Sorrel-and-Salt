@@ -57,6 +57,7 @@ export async function dragByPointer(handle: HTMLElement, x: number) {
   const { left, width } = handle.getBoundingClientRect();
   const from = { clientX: left + width / 2, clientY: 12, isPrimary: true, button: 0 };
   fireEvent.pointerDown(handle, from);
+  // Past the few pixels a press may wander before it counts as a drag.
   fireEvent.pointerMove(document, { ...from, clientX: from.clientX + 10 });
   await tick();
   fireEvent.pointerMove(document, { ...from, clientX: x });

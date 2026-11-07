@@ -91,6 +91,7 @@ function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
   return Object.fromEntries(facets[kind].map(({ value, count }) => [value, count]));
 }
 
+// Order of each kind's values (claude-docs/design-decisions/m12.52-facet-sort-order.md).
 describe("the order of each kind's values", () => {
   const ids = new Map<string, string>();
   const idsOf = (...names: string[]) => names.map((name) => ids.get(name) as string);

@@ -15,6 +15,8 @@ import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
 
+// Through Better Auth's real endpoints.
+// (claude-docs/design-decisions/m15.48-mailed-link.md, "Claim by verified email")
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 const startJob = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => 'run-id'));

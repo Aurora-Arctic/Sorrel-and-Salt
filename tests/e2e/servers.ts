@@ -71,6 +71,8 @@ const serverEnv = (
   ...providers,
 });
 
+// The first slot's server builds; Playwright starts the entries in order, so every later
+// one serves the build the first has finished.
 export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
   command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
   url: serverUrl(slotPort(slot)),

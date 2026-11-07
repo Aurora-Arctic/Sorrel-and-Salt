@@ -138,6 +138,7 @@ describe('Keyset pagination through the repository', () => {
 
     const { ids, sizes } = await walkForward(7);
 
+    // 7 is odd, so page boundaries fall between two rows named alike.
     expect(sizes).toHaveLength(9);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual(expected);

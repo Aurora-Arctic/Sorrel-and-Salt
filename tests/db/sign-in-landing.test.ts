@@ -47,6 +47,8 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
+// Provider credentials are read at import, the primary keeper's address per request, so it is
+// stubbed beside them for the whole file.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
@@ -56,11 +58,13 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
+// The harness re-clones per file, not per test, so each test clears this domain's rows.
 beforeEach(async () => {
   await sql`
     delete from workspace_members
     where workspace_id in (select id from workspaces where name like ${`${COVEN_PREFIX}%`})`;
   await sql`delete from workspaces where name like ${`${COVEN_PREFIX}%`}`;
+  // Ledger first: a promotion's rows name the users deleted below; only a truncate empties it.
   await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;

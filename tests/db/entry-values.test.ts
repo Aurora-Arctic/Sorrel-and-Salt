@@ -116,6 +116,8 @@ const everything = (): CompendiumWrite => ({
 });
 
 async function rowOf(id: string) {
+  // `updated_at`, `curator_reviewed_at` and `revision` move on any save, a no-op included,
+  // so they are left out of the comparison.
   const [{ updated_at: _updated, curator_reviewed_at: _reviewed, revision: _revision, ...row }] =
     await sql`select * from ingredients where id = ${id}`;
   return row;

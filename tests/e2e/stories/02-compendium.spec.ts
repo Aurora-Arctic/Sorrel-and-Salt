@@ -42,6 +42,7 @@ function compendiumSearch(page: Page) {
 /** The action slot on a card, matched without regard to case: the entry spells it "Add to my ingredients", the label is title case. */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
+/** Mirrors `CARD_PAGE_SIZE`, which is 24 so the grid ends on a full row. */
 const PAGE_SIZE = 24;
 
 test(

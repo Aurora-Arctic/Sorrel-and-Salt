@@ -59,6 +59,7 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
             global_name: 'Fixture Person',
             discriminator: '0',
             avatar: null,
+            // Discord answers `null` for an account with no verified address.
             email: profile.email ?? null,
             verified: profile.verified,
           }),
