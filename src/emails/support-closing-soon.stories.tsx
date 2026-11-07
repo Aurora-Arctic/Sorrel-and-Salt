@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { supportClosingSoonMessage } from './support-closing-soon';
 
-// Render-only; content is asserted in tests/emails/support-closing-soon.test.tsx.
 const meta = {
   title: 'Emails / Support Closing Soon',
 } satisfies Meta;

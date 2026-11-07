@@ -4,7 +4,6 @@ import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { accountExistsMessage } from './account-exists';
 import type { ProviderId } from '../lib/types';
 
-// Render-only; content is asserted in tests/emails/account-exists.test.tsx.
 const meta = {
   title: 'Emails / Account Exists',
 } satisfies Meta;

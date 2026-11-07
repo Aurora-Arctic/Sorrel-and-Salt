@@ -4,7 +4,6 @@ import type { PasswordChange, PasswordChangedProps } from './types';
 
 const SUBJECT = 'Your Password Was Changed';
 
-// The inbox line beside the subject.
 const PREVIEW = 'The password of your Sorrel & Salt account was just changed.';
 
 const WHAT_HAPPENED: Record<PasswordChange, string> = {
@@ -36,5 +35,4 @@ export function PasswordChanged({
   );
 }
 
-/** The notice of a new password for `to`, rendered to the html and plain text `send` takes. */
 export const passwordChangedMessage = defineMessage<PasswordChangedProps>(SUBJECT, PasswordChanged);

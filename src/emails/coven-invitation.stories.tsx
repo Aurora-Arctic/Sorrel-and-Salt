@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { covenInvitationMessage } from './coven-invitation';
 
-// Render-only; content is asserted in tests/emails/coven-invitation.test.tsx.
 const meta = {
   title: 'Emails / Coven Invitation',
 } satisfies Meta;

@@ -4,7 +4,6 @@ import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { passwordChangedMessage } from './password-changed';
 import type { PasswordChange } from './types';
 
-// Render-only; content is asserted in tests/emails/password-changed.test.tsx.
 const meta = {
   title: 'Emails / Password Changed',
 } satisfies Meta;

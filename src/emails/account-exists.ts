@@ -5,7 +5,6 @@ import type { AccountExistsProps } from './types';
 
 const SUBJECT = 'You Already Have an Account';
 
-// The inbox line beside the subject.
 const PREVIEW = 'Someone tried to sign up with this address, which already has an account.';
 
 function howToSignIn(providers: AccountExistsProps['providers'], hasPassword: boolean): string {
@@ -48,5 +47,4 @@ export function AccountExists({
   );
 }
 
-/** The notice for an address that already has an account, rendered to the html and plain text `send` takes. */
 export const accountExistsMessage = defineMessage<AccountExistsProps>(SUBJECT, AccountExists);

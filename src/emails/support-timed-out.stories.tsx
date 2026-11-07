@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { supportTimedOutMessage } from './support-timed-out';
 
-// Render-only; content is asserted in tests/emails/pause-notices.test.tsx.
 const meta = {
   title: 'Emails / Support Timed Out',
 } satisfies Meta;
@@ -18,7 +17,6 @@ const message = () =>
     origin: WORKSHOP_ORIGIN,
   });
 
-// With no end date and no message, the shortest the mail gets.
 const bare = () =>
   supportTimedOutMessage({
     to: 'someone@example.com',

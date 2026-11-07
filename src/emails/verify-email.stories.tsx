@@ -4,7 +4,6 @@ import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { verifyEmailMessage } from './verify-email';
 import type { ProviderId } from '../lib/types';
 
-// Render-only; content is asserted in tests/emails/verify-email.test.tsx.
 const meta = {
   title: 'Emails / Verify Email',
 } satisfies Meta;
@@ -37,10 +36,8 @@ const defaultNode = <EmailPreview message={oneProvider} />;
 
 const twoProvidersNode = <EmailPreview message={twoProviders} />;
 
-// No linked account on record: the sentence stops at the address.
 const noProviderNode = <EmailPreview message={noProvider} />;
 
-// An existing account asking for this address: the first sentence changes.
 const changeNode = <EmailPreview message={change} />;
 
 const STATES_STATES: Record<string, ReactNode> = {

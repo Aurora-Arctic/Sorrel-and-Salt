@@ -1,18 +1,14 @@
 import type { ReactNode } from 'react';
 
 export interface EmailLayoutProps {
-  /** The line a client shows beside the subject in the inbox. */
   preview: string;
   heading: string;
-  /** The site's origin, which serves the images and fonts under /email/. */
   origin: string;
   /** Optional in the type because `createElement` passes children apart from the props. */
   children?: ReactNode;
 }
 
-/** A run of text in the anchor Zoho Mail leaves alone (`Ink` in layout.tsx). */
 export interface InkProps {
-  /** The class the light theme's rule targets. */
   className: string;
   color: string;
   /** Repeated on the anchor for Word, which does not always inherit it. */
@@ -21,8 +17,5 @@ export interface InkProps {
   children?: ReactNode;
 }
 
-/**
- * Which part of the message is rendering. A prop, never React context or state: src/lib/auth.ts imports the
- * templates, so Next compiles them as server components, where `createContext` does not exist.
- */
+/** A prop, never React context: Next compiles these as server components (src/lib/auth.ts imports them), where `createContext` does not exist. */
 export type Part = 'html' | 'text';

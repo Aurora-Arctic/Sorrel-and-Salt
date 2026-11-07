@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { documentUpdatedMessage } from './document-updated';
 
-// Render-only; the mail's content is asserted in tests/modules/documents/jobs.
 const meta = {
   title: 'Emails / Document Updated',
 } satisfies Meta;

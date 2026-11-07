@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { supportReplyNoticeMessage } from './support-reply-notice';
 
-// Render-only; content is asserted in tests/emails/support-reply-notice.test.tsx.
 const meta = {
   title: 'Emails / Support Reply Notice',
 } satisfies Meta;

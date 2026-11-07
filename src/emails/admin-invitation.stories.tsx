@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { adminInvitationMessage } from './admin-invitation';
 
-// Render-only; content is asserted in tests/emails/admin-invitation.test.tsx.
 const meta = {
   title: 'Emails / Admin Invitation',
 } satisfies Meta;
@@ -32,7 +31,6 @@ const curatorMessage = () =>
 
 const defaultNode = <EmailPreview message={message} />;
 
-// The same mail inviting to the curator role.
 const curatorNode = <EmailPreview message={curatorMessage} />;
 
 const STATES_STATES: Record<string, ReactNode> = {

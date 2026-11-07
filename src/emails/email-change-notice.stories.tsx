@@ -3,8 +3,6 @@ import type { ReactNode } from 'react';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { emailChangeNoticeMessage } from './email-change-notice';
 
-// Render-only; content is asserted in tests/emails/email-change-notice.test.tsx. The time and
-// domain are invented.
 const meta = {
   title: 'Emails / Email Change Notice',
 } satisfies Meta;

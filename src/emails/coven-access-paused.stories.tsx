@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { covenAccessPausedMessage } from './coven-access-paused';
 
-// Render-only; content is asserted in tests/emails/pause-notices.test.tsx.
 const meta = {
   title: 'Emails / Coven Access Paused',
 } satisfies Meta;
@@ -19,7 +18,6 @@ const message = () =>
     origin: WORKSHOP_ORIGIN,
   });
 
-// With no end date and no message, the shortest the mail gets.
 const bare = () =>
   covenAccessPausedMessage({
     to: 'someone@example.com',

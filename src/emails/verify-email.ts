@@ -12,7 +12,6 @@ import type { VerifyEmailProps } from './types';
 
 const SUBJECT = 'Confirm Your Email Address';
 
-// The inbox line beside the subject.
 const PREVIEW = {
   'sign-up': 'Confirm the address you signed up with. The link works for one hour.',
   change: 'Confirm this address for your account. The link works for one hour.',
@@ -52,5 +51,4 @@ export function VerifyEmail({
   );
 }
 
-/** The verification mail for `to`, rendered to the html and plain text `send` takes. */
 export const verifyEmailMessage = defineMessage<VerifyEmailProps>(SUBJECT, VerifyEmail);
