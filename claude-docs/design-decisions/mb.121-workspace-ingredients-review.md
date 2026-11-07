@@ -297,27 +297,3 @@ not;[^baymard] the sentence is that overview. No change.
 
 None found that needs a task of its own. The focus rings were under an hour
 and are fixed in this branch.
-
-## Sources
-
-[^wcag141]: W3C, "Understanding SC 1.4.1: Use of Color," WCAG 2.2 Understanding Docs, accessed October 23, 2026, <https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html>.
-
-[^govuktag]: GOV.UK Design System, "Tag," accessed October 23, 2026, <https://design-system.service.gov.uk/components/tag/>.
-
-[^harley]: Aurora Harley, "Icon Usability," Nielsen Norman Group, July 27, 2014, <https://www.nngroup.com/articles/icon-usability/>.
-
-[^flaherty]: Kim Flaherty, "Indicators, Validations, and Notifications: Pick the Correct Communication Option," Nielsen Norman Group, January 17, 2024, <https://www.nngroup.com/articles/indicators-validations-notifications/>.
-
-[^apg]: W3C Web Accessibility Initiative, "Dialog (Modal) Pattern," ARIA Authoring Practices Guide, accessed October 23, 2026, <https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/>.
-
-[^lawson]: Nolan Lawson, "Dialogs and Shadow DOM: Can We Make It Accessible?," Read the Tea Leaves (blog), June 14, 2022, <https://nolanlawson.com/2022/06/14/dialogs-and-shadow-dom-can-we-make-it-accessible/>.
-
-[^kaplan]: Kate Kaplan, "Designing Empty States in Complex Applications: 3 Guidelines," Nielsen Norman Group, September 19, 2021, <https://www.nngroup.com/articles/empty-state-interface-design/>.
-
-[^baymard]: Kathryn Reeves, "Display 'Applied Filters' in an Overview (28% Don't)," Baymard Institute, October 6, 2020, updated May 13, 2026, <https://baymard.com/research-articles/how-to-design-applied-filters>.
-
-[^pernice]: Kara Pernice, "F-Shaped Pattern of Reading on the Web: Misunderstood, But Still Relevant (Even on Mobile)," Nielsen Norman Group, November 12, 2017, <https://www.nngroup.com/articles/f-shaped-pattern-reading-web-content/>.
-
-[^govuksection]: GOV.UK Design System, "Section Break," accessed October 23, 2026, <https://design-system.service.gov.uk/styles/section-break/>.
-
-[^harleyregion]: Aurora Harley, "The Principle of Common Region: Containers Create Groupings," Nielsen Norman Group, July 12, 2020, <https://www.nngroup.com/articles/common-region/>.

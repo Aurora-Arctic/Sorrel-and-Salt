@@ -42,51 +42,6 @@ builds a layer — and a breaking change to `SpellIngredient.ingredient`'s
 nullability in the snapshot-tested SDL. Nullable from the first line, it is a
 branch every consumer has always had.
 
-## Why not the alternatives
-
-- **A `spell_custom_ingredients` table of its own.** Pure foreign keys and an
-  expand-only migration, and rejected for one reason that does not go away:
-  layer ordering would span two tables, and no constraint can span tables.
-  `(spell_id, layer_order)` uniqueness would be service discipline or a
-  cross-table PL/pgSQL trigger — absent rather than impossible, the sweep-task
-  rule's own tell. Every jar read becomes a `UNION ALL … ORDER BY layer_order`
-  across M10.9, MB.6, M10.19 and M10.22; M10.16's reorder rewrites two tables
-  in one transaction; the GraphQL type becomes a union every query needs
-  fragments for; and quantity, unit, layer order, note and the stamps exist
-  twice, free to drift. It would have been the right shape only if a custom
-  ingredient carried fields a layer never has — a description, a source, a
-  photo — and it carries none.
-- **A surrogate `id` on the join.** The M10.2 schema comment argued against
-  one: it would let the same ingredient into one jar twice with nothing
-  downstream able to tell the rows apart. That argument survives the key move
-  — the partial index on `(spell_id, ingredient_id)` is what holds it now —
-  and an `id` would still say nothing about the jar. **Superseded by MB.110:**
-  once a removed layer is a tombstone, a key on the layer would hold its depth
-  for good, so the key is a surrogate `id` after all. One ingredient per jar
-  is still the partial index's, over live rows.
-- **A flag on a workspace-local `ingredients` row.** No new table, no join
-  changes, and the row is still on the workspace's ingredients page unless a
-  flag hides it, still in M8.3's suppression unless the anti-join learns the
-  flag, still label-unique against the workspace's real ingredients, and still
-  a workspace-level name for content that may belong to a private spell. Every
-  place the flag has to be remembered is a place rule 4's own argument says it
-  will not be.
-- **`form` as a foreign key to `ingredient_forms`.** The same answer as
-  `ingredients.form` (DESIGN.md §14): a vocabulary a member writes is text,
-  because the member must be able to write `rhizome` before anyone curates it.
-- **Name plus form in the custom-name index.** `ingredients` folds `form` into
-  `canonicalKey` because two entries are matched against each other on it. A
-  custom row is never matched against anything, so there is no identity key
-  for `form` to be part of, and the nearer precedent is
-  `ingredients_workspace_label_unique` on `lower(name)` alone: inside one jar,
-  as inside one drawer, an ambiguous label is a mistake rather than a
-  distinction. A jar that wants valerian root and valerian leaf writes two
-  names. This is the one judgment call in the shape; if it proves wrong, the
-  index is one migration and no code.
-- **Keep the old layer index beside the new key.** A primary key is a unique
-  btree on the same two columns in the same order. Keeping both would be a
-  duplicate index for no guarantee.
-
 ## What makes this safe
 
 - **The exclusive-or is a CHECK, not a convention.** `num_nonnulls` is the

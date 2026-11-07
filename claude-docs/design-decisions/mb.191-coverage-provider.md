@@ -22,27 +22,6 @@ code nobody measures. Which wins depends on how much of a worker's time is
 spent outside `src/`, and in a suite whose slowest files render through jsdom
 that is a measurement, not a known answer.
 
-## Method
-
-Both providers at 5.0.3, matching `vitest`. Each run was a full
-`npm run test:coverage` with `--coverage.provider=<name>` on the command line
-and nothing else changed between runs, plus `--reporter=json` for the per-file
-`startTime`/`endTime` that MB.180's block reads. Runs alternated v8, istanbul,
-v8, istanbul on the 12-core devcontainer, under the shared Vitest lock; the
-machine is shared, so each provider ran more than once. One plain `vitest run`
-with no coverage gives the floor.
-
-- **Wall** is the time from taking the lock to the run's exit, which agrees
-  with Vitest's own `Duration` to within a second.
-- **Summed** is the sum of every file's `endTime − startTime`, the figure the
-  slowest-files block is built from. The per-project figures split it by the
-  config's four globs (`rsc` is at most 0.1 s in every run and is left out).
-
-The second v8 run (v8-2 below) lost six `db` files at setup to
-`permission denied to terminate process` — another session's connections to
-the shared template — so its coverage and summed time are not comparable, and
-a third pair was run. It is listed for completeness and left out of the means.
-
 ## Local numbers
 
 ### Time

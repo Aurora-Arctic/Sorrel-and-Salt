@@ -44,48 +44,6 @@ the `::uuid` cast in the first case, zero rows in the second. Nothing planned
 would have caught it: M6.5 asserts a read is _refused_, which is what a totally
 broken read path looks like.
 
-## Options weighed
-
-**`FORCE` alone, keeping one role.** Cheapest edit — one clause in M6.4's
-migration. Rejected as the primary mechanism: `FORCE` applies to the owner, so
-migrations and the seed would then need their own bypass, which puts a
-`BYPASSRLS` role back on the table anyway. It also leaves the application
-connected as the owner of every table it queries, which is the condition that
-made this bug possible and would make the next one possible too.
-
-**Role split, no `FORCE`.** The standard shape, and the primary decision below.
-Considered sufficient on its own, then rejected as _only_ sufficient when
-`DATABASE_URL` resolves to the role we expect. On Neon it frequently will not:
-the integration injects `neondb_owner`, and the per-PR hotfix previews get an
-endpoint minted at deploy time.
-
-**Both.** Chosen. Once the owner holds `BYPASSRLS`, which outranks `FORCE`,
-adding `FORCE` costs nothing already being paid and converts the worst
-misconfiguration — connecting as some other table-owning role — from "returns
-every workspace's rows" to "returns none".
-
-**Neon: derive vs. provision.** The problem is that no `DATABASE_URL` can be
-pre-set for an endpoint host that does not exist until deploy time, so "set it
-explicitly per environment" is not an available answer. _Provisioning_ —
-`neonctl branches create` plus `neonctl connection-string --role-name`, dropping
-the integration's auto-branching — works but reimplements the integration and
-adds Neon API surface to `deploy.yml`. _Deriving_ was chosen: take whatever
-`DATABASE_URL` the platform supplies and swap only username and password,
-keeping host, database and `sslmode`. Because it never names the host it is
-correct on an ephemeral branch, on staging, in production, in Docker and in CI,
-without having to determine which of those a given deploy is. Provisioning stays
-the documented fallback if role inheritance across Neon branches does not hold.
-
-**Read transactions: per query vs. per request.** Wrapping each read in its own
-transaction is simplest and costs two extra round trips per query, which
-DESIGN.md §2 already flags as a billing problem and not only a latency one.
-Per-request is cheaper but has no single establishment point in RSC, where a
-layout cannot hold a transaction across a render tree. Resolved by making
-`withViewer` **re-entrant**: services establish it, and the GraphQL route
-establishes an outer one alongside the per-request DataLoaders, so an operation
-collapses to one `BEGIN` and one `set_config` while a server-component render
-still gets one short transaction per distinct `cache()`-deduped service call.
-
 ## Decided
 
 - **`sorrel` keeps its identity and gains `BYPASSRLS`.** It remains owner of the
@@ -134,24 +92,6 @@ PRIVILEGES` so future migrations are covered without anyone remembering a
 - Workspace-scoped is not the same as "has a `workspace_id` column".
   `spell_ingredients` and `spell_categories` reach their workspace through
   `spells`. Guards must enumerate the set, not infer it from a column name.
-
-## Cross-task impact
-
-- **MB.25** implements the role split, the derived connection and the startup
-  assertion. It must land before **M1.27** bakes the Postgres image. _(Both
-  halves of that are now moot: MB.25 was retired by MB.29, and M1.27 does not
-  bake the image — see
-  [`m1.27-template-at-setup-not-in-image.md`](m1.27-template-at-setup-not-in-image.md).)_
-- **MB.26** implements `withViewer`. It must land before **M6.4**, or M6.4's
-  policies make every workspace-scoped read return nothing.
-- **M6.4** is reduced to the policies themselves plus `FORCE` and the two
-  helpers; its seed criterion is struck, answered by `sorrel`'s `BYPASSRLS`.
-- **M6.5** gains the precondition assertions described above.
-- **M10.3** reads identity through the same helper, and must refuse a private
-  spell's `spell_ingredients` and `spell_categories` rows, not merely the spell.
-- **MB.27** is not RLS work but was found here: `deploy.yml` calls `vercel pull`
-  without `--git-branch`, so M1.1's branch-scoped `staging` override has never
-  reached a build.
 
 ## Not decided here
 

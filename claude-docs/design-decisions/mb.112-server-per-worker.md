@@ -23,43 +23,6 @@ Swapping the variable in the worker moves only what runs there —
 in to its own database while the page it opened read the server's. A
 database per worker needs something on the server's side to match it.
 
-## The options
-
-### A server per slot, declared up front
-
-`webServer` is an array, and Playwright starts its entries one after another
-before any worker exists. Slot 0's entry builds and serves on 8001; each
-further slot's runs `npm run start` over that build on `8001 + slot`,
-against `sorrel_e2e_<slot>`. Measured in the devcontainer: one more
-`next start` over the built `.next-e2e` answers in about 0.5 s and holds
-about 180 MB resident, and since the entries start in turn, each slot adds
-about half a second to startup.
-
-The cost is that the worker count has to be known when the config loads, so
-it becomes a config value — `E2E_WORKERS` — rather than `--workers`, and a
-worker past it has to fail rather than find no server.
-
-### A server each worker starts for itself
-
-A worker-scoped fixture could start `next start` on `8001 + parallelIndex`
-and stop it when the worker ends, with no count fixed in advance. But
-Playwright replaces a worker after every failed test, and worker fixtures
-die with it, so every failed test reboots a server. A worker
-that crashes rather than exits can leave its server running on the port the
-slot's next worker needs. And the harness would take over what `webServer`
-does now: polling for readiness, carrying the server's output, and
-`reuseExistingServer` for a local run against servers already up.
-
-### One server, choosing its database per request
-
-The browser could send its slot in a header and the one server pick the
-database from it. That puts a database switch controlled by the request into
-`src/db/connection.ts`, which would have to read Next's request headers:
-test-only behaviour in the module every query passes through. And it does
-not keep the slots apart where the app caches: M8.6's compendium read sits
-under `unstable_cache`, keyed by nothing request-specific, so one process
-would serve one slot's cached compendium to every slot.
-
 ## Decided
 
 **A server per slot, declared up front**, the owner's choice.
