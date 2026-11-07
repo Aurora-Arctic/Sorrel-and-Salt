@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
+import { categoryRefs } from '../../../components/IngredientCard/category-refs';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
@@ -195,6 +196,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])
       : [undefined, undefined];
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
+  // By id: the cards read each category's name and colours from `categories`, which the page sends once.
+  const known = new Set(categories.map(({ id }) => id));
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. An observer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
@@ -248,7 +251,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       slug: node.slug,
       canonicalName: node.canonicalName,
       nomenclature: node.nomenclature,
-      categories: chips[i],
+      categories: categoryRefs(chips[i], known),
       variants: page.variants[i],
       toxic: node.toxic,
       safetyNotes: node.safetyNotes,

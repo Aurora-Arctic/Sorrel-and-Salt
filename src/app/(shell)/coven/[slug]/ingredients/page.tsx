@@ -14,6 +14,7 @@ import type {
 import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
 import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
+import { categoryRefs } from '../../../../../components/IngredientCard/category-refs';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
 import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
@@ -95,6 +96,7 @@ export default async function CovenIngredientsPage({
 
   // The address names categories and deities by slug; the service filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
+  const known = new Set(categories.map(({ id }) => id));
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
@@ -119,7 +121,8 @@ export default async function CovenIngredientsPage({
       },
       canonicalName: shown.canonicalName,
       nomenclature: shown.nomenclature,
-      categories: page.categories[i],
+      // By id: the cards read each category's name and colours from `categories`, sent once.
+      categories: categoryRefs(page.categories[i], known),
       variants: page.variants[i],
       toxic: shown.toxic,
       safetyNotes: shown.safetyNotes,

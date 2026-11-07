@@ -6,6 +6,8 @@ import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
+import { categoryRefs } from '@/components/IngredientCard/category-refs';
+import { CardCategoryVocabulary } from '@/components/IngredientCard/category-vocabulary';
 import { StockBadge } from '@/components/StockBadge';
 
 // (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
@@ -162,6 +164,40 @@ describe('IngredientCard', () => {
     render(<IngredientCard {...BASE} categories={categories} />);
 
     expect(screen.getByRole('button', { name: /3 more categories for/i })).toHaveTextContent('+3');
+  });
+
+  // A list sends each category's name once, in its vocabulary, and its cards name categories by id.
+  describe('categories named by id', () => {
+    const group = { colorDark: '#112233', colorLight: '#445566' };
+    const VOCABULARY = [
+      { id: 'c-known', name: 'Fixture Known', group },
+      { id: 'c-other', name: 'Fixture Other', group },
+    ];
+    const KNOWN = { category: { id: 'c-known', name: 'Fixture Known' }, group };
+    const UNLISTED = { category: { id: 'c-unlisted', name: 'Fixture Unlisted' }, group };
+
+    it('draws a chip for an id from the vocabulary above it, and a whole category as given', () => {
+      render(
+        <CardCategoryVocabulary categories={VOCABULARY}>
+          <IngredientCard {...BASE} categories={[{ id: 'c-known' }, UNLISTED]} />
+        </CardCategoryVocabulary>,
+      );
+
+      expect(screen.getByText('Fixture Known')).toBeInTheDocument();
+      expect(screen.getByText('Fixture Unlisted')).toBeInTheDocument();
+      // Only the card's own categories are drawn, not the whole vocabulary.
+      expect(screen.queryByText('Fixture Other')).toBeNull();
+    });
+
+    it('names by id only the categories the vocabulary holds, and keeps the rest whole', () => {
+      expect(categoryRefs([KNOWN, UNLISTED], new Set(['c-known']))).toEqual([
+        { id: 'c-known' },
+        UNLISTED,
+      ]);
+      expect(categoryRefs([{ ...KNOWN, forms: ['testoil'] }], new Set(['c-known']))).toEqual([
+        { id: 'c-known', forms: ['testoil'] },
+      ]);
+    });
   });
 
   describe('safety', () => {

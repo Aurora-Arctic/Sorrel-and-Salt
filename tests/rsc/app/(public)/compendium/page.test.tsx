@@ -34,8 +34,8 @@ vi.mock('@/modules/ingredients', () => ({
 }));
 
 const GROUP = { id: 'g-ward', name: 'Fixture Wards', colorDark: '#4e8bc2', colorLight: '#0c5393' };
-// The one category and the one deity this file follows; no card wears either, so every copy of
-// their names in the payload is the vocabulary's.
+// The one category and the one deity this file follows. Both cards wear the category, so a card that
+// named its own categories would carry its name again.
 const CATEGORY = {
   id: 'c-tw',
   slug: 'testward',
@@ -96,7 +96,8 @@ vi.mock('@/app/compendium-reads', () => ({
   readFormIcons: async () => new Map(),
   readDeities: async () => [DEITY, OTHER_DEITY],
   readCategories: async () => [CATEGORY, OTHER_CATEGORY],
-  readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
+  readCardCategories: async (ids: readonly string[]) =>
+    ids.map(() => [{ category: { id: CATEGORY.id, name: CATEGORY.name }, group: GROUP }]),
 }));
 
 // React's `cache()` follows a request through `AsyncLocalStorage`, a global Next sets on the server.
@@ -155,8 +156,8 @@ describe('the public compendium page’s data for the browser', () => {
     // The panel offers both as choices: they reached the payload at all.
     expect(text).toContain('"testward"');
     expect(text).toContain('"testgod-fixture-rite"');
-    // Once each, as a vocabulary row: the facet choices name them by id, and the browser
-    // looks the rest up there.
+    // Once each, as a vocabulary row: the facet choices and the cards name them by id, and the
+    // browser looks the rest up there.
     expect(occurrences(text, CATEGORY.name)).toBe(1);
     expect(occurrences(text, DEITY.name)).toBe(1);
   });

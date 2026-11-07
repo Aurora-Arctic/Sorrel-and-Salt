@@ -10,6 +10,7 @@ import FormIcon from '../FormIcon';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
+import { useNamedCategories } from './category-vocabulary';
 import type { IngredientCardProps } from './types';
 import './index.scss';
 
@@ -36,6 +37,7 @@ const CardFace = ({
   children,
 }: IngredientCardProps): ReactElement => {
   const Heading = `h${level}` as const;
+  const named = useNamedCategories(categories);
   const formal = (formalName ?? '').trim();
 
   // Without a mark each holder is left out, not left empty, so it adds no gap.
@@ -108,7 +110,7 @@ const CardFace = ({
             </div>
           )}
         </div>
-        <CategoryChips categories={categories} label={label} />
+        <CategoryChips categories={named} label={label} />
         {forms && variants.length > 0 && (
           <p className="ingredient-card__forms">
             {variants.map((variant, at) => (

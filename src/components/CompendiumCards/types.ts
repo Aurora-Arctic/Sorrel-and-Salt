@@ -3,7 +3,7 @@ import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { CompendiumCoven } from '../AddIcon/types';
 import type { CompendiumListProps } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
-import type { CardCategory } from '../IngredientCard/types';
+import type { CardCategory, CardCategoryRef } from '../IngredientCard/types';
 import type { CupboardPlace } from '../IngredientEntry/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { MyCoven } from '../FacetPanel/types';
@@ -48,7 +48,7 @@ export interface CompendiumCardEntry {
   /** The formal name, null for none; it tells two entries of one name apart. */
   canonicalName: string | null;
   nomenclature: NomenclatureKind;
-  categories: readonly CardCategory[];
+  categories: readonly (CardCategory | CardCategoryRef)[];
   /** Its live forms, each with its group's icon. */
   variants: readonly SafetyVariant[];
   toxic: boolean;

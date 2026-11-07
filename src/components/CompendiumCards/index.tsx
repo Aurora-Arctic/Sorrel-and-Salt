@@ -5,6 +5,7 @@ import { emptyText } from '../CompendiumList';
 import { facetChoices, vocabulariesOf } from '../CompendiumList/facets';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
+import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
 import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
@@ -137,28 +138,30 @@ const CompendiumCards = ({
         )}
       </p>
     ) : (
-      <IngredientCardList label="Compendium">
-        {entries.map((entry) => (
-          <IngredientCard
-            key={entry.id}
-            href={entryHref(entry)}
-            label={entry.name}
-            formalName={entry.canonicalName}
-            nomenclature={entry.nomenclature}
-            categories={entry.categories}
-            variants={entry.variants}
-            toxic={entry.toxic}
-            safetyNotes={entry.safetyNotes}
-            kind="compendium"
-            recency={entry.recency}
-            actions={footOf(entry, action, workspaceId, covens)}
-            startActions={
-              // The Quick Look eye at the card's bottom left, for everyone.
-              entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
-            }
-          />
-        ))}
-      </IngredientCardList>
+      <CardCategoryVocabulary categories={categories}>
+        <IngredientCardList label="Compendium">
+          {entries.map((entry) => (
+            <IngredientCard
+              key={entry.id}
+              href={entryHref(entry)}
+              label={entry.name}
+              formalName={entry.canonicalName}
+              nomenclature={entry.nomenclature}
+              categories={entry.categories}
+              variants={entry.variants}
+              toxic={entry.toxic}
+              safetyNotes={entry.safetyNotes}
+              kind="compendium"
+              recency={entry.recency}
+              actions={footOf(entry, action, workspaceId, covens)}
+              startActions={
+                // The Quick Look eye at the card's bottom left, for everyone.
+                entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
+              }
+            />
+          ))}
+        </IngredientCardList>
+      </CardCategoryVocabulary>
     )}
   </IngredientSearch>
 );
