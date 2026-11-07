@@ -5,8 +5,7 @@ import { spellStatus, spellVisibility } from '@/modules/grimoire/schema/spells';
 import { SpellInput, UpdateSpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellStepInput } from '@/modules/grimoire/validation/spell-step';
 
-// The schema mirrors spell_steps' CHECKs so the database is never what a user
-// sees refuse a step; each CHECK has a row here, named by its constraint.
+// The schema mirrors spell_steps' CHECKs so the database never refuses a step a user sees; each CHECK has a row here, named by its constraint.
 
 const INGREDIENT = '11111111-1111-4111-8111-111111111111';
 const VARIANT = '22222222-2222-4222-8222-222222222222';

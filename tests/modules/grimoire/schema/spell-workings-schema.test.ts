@@ -18,7 +18,6 @@ import {
 } from '../../../support/db/table-metadata';
 import { makeSpell } from '../../../support/fixtures';
 
-// DESIGN.md §5: a spell is the recipe and a working is the record of making it once.
 const WORKING_COLUMNS = [
   'id',
   'spell_id',
@@ -47,8 +46,7 @@ describe('the workings tables, in code', () => {
     expect(columnsOf(spellWorkings)).toEqual([...WORKING_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // A working is a record a person can delete; the other two are replaced
-  // wholesale or written once, so a tombstone would hold nothing.
+  // A working is a record a person can delete; the other two are replaced wholesale or written once.
   it.each([
     ['spell_working_participants', spellWorkingParticipants, PARTICIPANT_COLUMNS],
     ['spell_working_deductions', spellWorkingDeductions, DEDUCTION_COLUMNS],
@@ -130,8 +128,7 @@ describe('spell_workings', () => {
     expect(error.constraint_name).toBe('spell_workings_note_not_blank');
   });
 
-  // The spell's own filter hides a working, not a cascade: the working row
-  // is still there, live, when the spell is deleted.
+  // The spell's own filter hides a working, not a cascade: the working row is still there, live, when the spell is deleted.
   it('is unreachable through findWorkingsInSpell once its spell is deleted', async () => {
     const id = await working();
     const membership = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
@@ -182,7 +179,6 @@ describe('spell_working_participants', () => {
     // Why the refusals are the index's: the same two are fine on another working.
     await participant(other, { userId: AUTHOR }, 1);
     await participant(other, { name: 'Testwort' }, 2);
-    // Two different members, and two typed names, coexist.
     await participant(id, { userId: OTHER }, 3);
     await participant(id, { name: 'Moonwort' }, 4);
   });

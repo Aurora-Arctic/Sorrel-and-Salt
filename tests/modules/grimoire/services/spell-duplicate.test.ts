@@ -13,12 +13,7 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import type { SpellOverrides } from '../../../support/fixtures/types';
 
-// Duplicating a spell: a new private draft in the same coven, written by the caller, holding the
-// original's fields, categories and live steps in order. Who may read which spell is
-// spell-reads.test.ts's; here is who may duplicate, what is copied, and that it is one transaction.
-
-// `withAudit` as it is, with one seam: a test may wrap the writer so a failure between the
-// copy's writes can be staged and the transaction shown to roll all of them back.
+// `withAudit` as it is, with one seam: a test may wrap the writer so a failure between the copy's writes shows the transaction rolling all of them back.
 const seam = vi.hoisted(() => ({
   wrap: undefined as ((write: AuditWriter) => AuditWriter) | undefined,
 }));
@@ -91,7 +86,6 @@ describe('duplicateSpell', () => {
         { name: 'Fixture Ash', form: 'ash', quantity: '1.000', unit: 'pinch' },
       ],
     });
-    // A step removed before the copy is not part of the recipe.
     await sql`
       insert into spell_steps (spell_id, body, position, created_by, updated_by, deleted_at, deleted_by)
       values (${id}, 'Gone.', 9, ${A.id}, ${A.id}, now(), ${A.id})`;
@@ -125,7 +119,6 @@ describe('duplicateSpell', () => {
     expect(copied.map((row) => row.position)).toEqual([1, 2, 3]);
     expect(copied[0]).toMatchObject({ ingredient_id: ingredientId, variant_id: variantId });
 
-    // The original is untouched, its stamp included, and nothing was worked.
     const [after] =
       await sql`select title, status, visibility, updated_at, revision from spells where id = ${id}`;
     expect(after).toMatchObject({
@@ -167,8 +160,7 @@ describe('duplicateSpell', () => {
 
   it('refuses a viewer by direct id, who reads the spell', async () => {
     const id = await seed(B);
-    // Why this could have succeeded: C is a live member of W and reads this very spell; a member
-    // of W with `spell: create` duplicates it (above). C's role lacks the permission.
+    // Why this could have succeeded: C is a live member of W and reads this very spell; a member with `spell: create` duplicates it (above), but C's role lacks it.
     await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
 
     await expect(duplicateSpell(asUser(C), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(Forbidden);
@@ -178,8 +170,7 @@ describe('duplicateSpell', () => {
 
   it('refuses a member of another coven by direct id, in either coven’s name', async () => {
     const id = await seed(B);
-    // Why this could have succeeded: D holds a live membership, of X, with `spell: create` there
-    // (D duplicates X's own spell); the id is real. D is not in W.
+    // Why this could have succeeded: D holds a live membership of X with `spell: create` there and the id is real; D is not in W.
     const own = await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_X_ID }), D.id);
     await expect(duplicateSpell(asUser(D), WORKSPACE_X_ID, own)).resolves.toMatchObject({
       createdBy: D.id,
@@ -194,8 +185,7 @@ describe('duplicateSpell', () => {
 
   it('refuses another member’s private spell as if it did not exist', async () => {
     const hidden = await seed(A, { visibility: 'private' });
-    // Why this could have succeeded: B is a member of W with `spell: create` and the spell is in
-    // W; its author duplicates the same row. B may not read it.
+    // Why this could have succeeded: B is a member of W with `spell: create` and the spell is in W; its author duplicates the same row, but B may not read it.
     await expect(readSpell(asUser(B), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
 
     await expect(duplicateSpell(asUser(B), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(

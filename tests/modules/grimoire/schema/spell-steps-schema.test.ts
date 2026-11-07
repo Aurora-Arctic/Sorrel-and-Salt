@@ -6,8 +6,6 @@ import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { StepRow } from './types';
 
-// §5's columns; `name` and `form` are a custom one-off layer's, in place of an
-// `ingredient_id`, and `body` is a step's instruction.
 const OWN_COLUMNS = [
   'id',
   'spell_id',
@@ -21,9 +19,7 @@ const OWN_COLUMNS = [
   'body',
 ];
 
-// A removed step is a tombstone that must not hold its place, so the key is a
-// surrogate id and the place is unique among live rows — claude-docs/db/grimoire.md,
-// "Position is the identity, and what that costs the reorder".
+// A removed step is a tombstone that must not hold its place, so the place is unique among live rows (claude-docs/db/grimoire.md, "Position is the identity, and what that costs the reorder").
 const POSITION_INDEX = 'spell_steps_spell_id_position_unique';
 const VARIANT_KEY = 'spell_steps_variant_fk';
 const CHECK_VARIANT_WITH_INGREDIENT = 'spell_steps_variant_with_ingredient';
@@ -40,8 +36,7 @@ const CHECK_BODY_NOT_BLANK = 'spell_steps_body_not_blank';
 describe('spell_steps schema', () => {
   const { byName } = tableFacts(spellSteps);
 
-  // The full six: a spell is a recipe that keeps what went into its jar, so a step
-  // pulled out of it is a tombstone rather than gone.
+  // The full six: a step pulled out of a recipe is a tombstone rather than gone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -58,15 +53,11 @@ let ROSEMARY: string;
 let hearthGuard: string;
 let otherSpell: string;
 
-/** The ingredient's seeded variant, the first it was given, as a subquery, for a layer that names no other. */
 const liveVariantOf = (ingredientId: string) => sql`
   select id from ingredient_variants where ingredient_id = ${ingredientId} and deleted_at is null
   order by created_at, id limit 1
 `;
 
-/**
- * One step, a linked layer of Mugwort by default.
- */
 async function layer({
   spellId = hearthGuard,
   ingredientId = MUGWORT,
@@ -89,12 +80,10 @@ async function layer({
   `;
 }
 
-/** A custom, one-off layer: a name in place of an ingredient id. */
 async function custom(name: string | null, overrides: Omit<StepRow, 'name'> = {}): Promise<void> {
   await layer({ ingredientId: null, name, ...overrides });
 }
 
-/** An instruction alone: no ingredient, no name, no amount. */
 async function instruction(
   body: string | null,
   overrides: Omit<StepRow, 'body'> = {},
@@ -102,7 +91,6 @@ async function instruction(
   await layer({ ingredientId: null, quantity: null, unit: null, body, ...overrides });
 }
 
-/** Pulls the live step at `position` out of the jar, as `B`. */
 async function removeStep(position: number, spellId: string = hearthGuard): Promise<void> {
   await sql`
     update spell_steps set deleted_at = now(), deleted_by = ${REMOVER}
@@ -155,13 +143,11 @@ describe('spell_steps table', () => {
       where spell_id = ${hearthGuard}
     `;
 
-    // `numeric`, not a float: 0.125 comes back as 0.125.
     expect(row.quantity).toBe('0.125');
     expect(row.unit).toBe('tsp');
     expect(row.position).toBe(3);
   });
 
-  // Set NOT NULL by 0089.
   it('refuses a step with no position', async () => {
     const error = await failureOf(sql`
       insert into spell_steps (spell_id, ingredient_id, variant_id, created_by, updated_by)
@@ -171,7 +157,6 @@ describe('spell_steps table', () => {
     expect(error.code).toBe('23502');
   });
 
-  // A step is an instruction, an ingredient, or both.
   describe('a step is an instruction, an ingredient, or both', () => {
     it('stores an instruction alone, an ingredient alone, and both in one step', async () => {
       await instruction('Sweep the threshold.', { position: 1 });
@@ -189,10 +174,8 @@ describe('spell_steps table', () => {
       ]);
     });
 
-    // Why the refusal could have succeeded: the same step with a body is
-    // admitted above.
+    // Why the refusal could have succeeded: the same step with a body is admitted above.
     it('refuses an empty step', async () => {
-      // 23514 is check_violation, named: the refusal is the CHECK's.
       const error = await failureOf(instruction(null));
 
       expect(error.code).toBe('23514');
@@ -206,9 +189,7 @@ describe('spell_steps table', () => {
       expect(error.constraint_name).toBe(CHECK_BODY_NOT_BLANK);
     });
 
-    // An amount says how much of an ingredient; on an instruction alone it
-    // is about nothing. Admitted beside an
-    // ingredient, as the first test of this table shows.
+    // An amount says how much of an ingredient; on an instruction alone it is about nothing.
     it('refuses a quantity or a unit on an instruction alone', async () => {
       const quantity = await failureOf(instruction('Stir.', { quantity: '1.000' }));
       const unit = await failureOf(instruction('Stir.', { unit: 'pinch' }));
@@ -253,7 +234,6 @@ describe('spell_steps table', () => {
       expect(row.ingredient_id).toBeNull();
       expect(row.name).toBe('Garden dust');
       expect(row.form).toBe('powder');
-      // And with no form at all.
       await expect(custom('Threshold salt', { position: 2 })).resolves.toBeUndefined();
     });
 
@@ -264,9 +244,7 @@ describe('spell_steps table', () => {
       expect(error.constraint_name).toBe(CHECK_ONE_IDENTITY);
     });
 
-    // `form` beside an ingredient id would duplicate half that ingredient's
-    // identity. The positive case above is why this refusal could have
-    // succeeded: the same `form` is accepted once `ingredient_id` is null.
+    // `form` beside an ingredient id would duplicate half that ingredient's identity; the same `form` is accepted once `ingredient_id` is null.
     it('refuses a form beside an ingredient id', async () => {
       const error = await failureOf(layer({ form: 'powder' }));
 
@@ -290,10 +268,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // One live step per place in a recipe, whichever kind of step it is.
   describe('the position is the identity', () => {
-    // 23505 is unique_violation, named: the refusal is the position index's,
-    // across the kinds of step.
     it('refuses a second live step at a place, whichever kind either is', async () => {
       await layer();
       const linked = await failureOf(layer({ ingredientId: ROSEMARY }));
@@ -308,8 +283,7 @@ describe('spell_steps table', () => {
       }
     });
 
-    // Why those refusals could have succeeded: the index leads on `spell_id`,
-    // and a custom row and an instruction follow a linked one at the next places.
+    // Why those refusals could have succeeded: the index leads on `spell_id`, and a custom row and an instruction follow a linked one at the next places.
     it('records the order a recipe is written in, each spell from its own first step', async () => {
       await layer({ position: 1 });
       await custom('Garden dust', { position: 2 });
@@ -358,7 +332,6 @@ describe('spell_steps table', () => {
     });
   });
 
-  // A linked layer names the form it lays, a custom layer none.
   describe('a linked layer names a variant of its ingredient', () => {
     it('refuses a linked layer without a variant, and a custom one with a variant', async () => {
       const [mugwortHerb] = await liveVariantOf(MUGWORT);
@@ -374,14 +347,12 @@ describe('spell_steps table', () => {
       }
     });
 
-    // Why it could have been admitted: the variant exists and is live, only
-    // another ingredient's.
+    // Why it could have been admitted: the variant exists and is live, only another ingredient's.
     it("refuses another ingredient's variant beside its ingredient", async () => {
       const [rosemaryHerb] = await liveVariantOf(ROSEMARY);
 
       const error = await failureOf(layer({ variantId: rosemaryHerb.id as string }));
 
-      // 23503 is foreign_key_violation, named: the composite key refused.
       expect(error.code).toBe('23503');
       expect(error.constraint_name).toBe(VARIANT_KEY);
     });
@@ -450,8 +421,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // Pulled out is a tombstone; that it frees the depth, the
-  // ingredient and the custom name is the partial-unique sweep's.
+  // Pulled out is a tombstone; that it frees the depth, the ingredient and the custom name is the partial-unique sweep's.
   describe('removal is a soft delete', () => {
     it('keeps the removed step, stamped by whoever removed it', async () => {
       await layer();

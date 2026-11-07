@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WorkingInput } from '@/modules/grimoire/validation/working';
 
-// The input mirrors spell_workings' and spell_working_participants' CHECKs, so the
-// database is never what a user sees refuse a working.
+// The input mirrors the CHECKs of spell_workings and spell_working_participants, so the database never refuses a working a user sees.
 
 const MEMBER = '11111111-1111-4111-8111-111111111111';
 const OTHER = '22222222-2222-4222-8222-222222222222';
@@ -45,7 +44,6 @@ describe('WorkingInput', () => {
         0,
       ]);
     }
-    // A blank name is refused on the name, where the dialog shows it.
     expect(failedPaths({ ...base, participants: [{ name: '  ' }] })).toContainEqual([
       'participants',
       0,

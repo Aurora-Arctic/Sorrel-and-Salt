@@ -11,9 +11,6 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The spell builder's Add to Jar: a step names an ingredient and the form laid, as the ingredient and variant ids, and never the coven's cupboard entry or jar of it.
-// Every assertion reads the rows a save left behind, raw.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -28,7 +25,6 @@ interface Form {
   variantId: string;
 }
 
-/** An ingredient in `workspaceId` (null: the compendium) with one form, `Testform`. */
 async function formOf(
   name: string,
   workspaceId: string | null = null,
@@ -42,7 +38,6 @@ async function formOf(
   return { ingredientId, variantId: await variantIdOf(sql, ingredientId, 'Testform') };
 }
 
-/** Every step row of the spell, live and tombstoned, in place order. */
 const stepRowsOf = (spellId: string) =>
   sql`
     select * from spell_steps where spell_id = ${spellId} order by position, id`;
@@ -83,10 +78,8 @@ describe('an ingredient step', () => {
       variant_id: rosewort.variantId,
       name: null,
     });
-    // No column of the row holds the cupboard entry's id or the jar's.
     expect(Object.values(row)).not.toContain(cupboardId);
     expect(Object.values(row)).not.toContain(jarId);
-    // Nor could one: no key of the table points at either.
     const targets = await sql<{ target: string }[]>`
       select confrelid::regclass::text as target from pg_constraint
       where conrelid = 'spell_steps'::regclass and contype = 'f'`;
@@ -125,14 +118,12 @@ describe('an ingredient step', () => {
       update ingredient_variants set deleted_at = now(), deleted_by = ${E.id}
       where id = ${rosewort.variantId}`;
 
-    // The saved step comes back with the save and is kept.
     await updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
       expectedRevision: null,
       steps: [{ id: saved.id as string, ...rosewort, quantity: 3, unit: 'g' }],
     });
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
 
-    // The same form on a new step is refused, and the recipe is left alone.
     const before = await revisionOf(spell.id);
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
@@ -145,8 +136,7 @@ describe('an ingredient step', () => {
   });
 
   it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid', async () => {
-    // A live form beneath a soft-deleted compendium entry, as migration 0090
-    // leaves a form a coven holds, and the coven's cupboard row naming it.
+    // A live form beneath a soft-deleted compendium entry, as a form a coven holds is left by migration 0090, and the coven's cupboard row naming it.
     const rosewort = await formOf('Fixture Rosewort');
     const cupboard = await insertCupboardEntry(
       sql,
@@ -162,8 +152,7 @@ describe('an ingredient step', () => {
       update ingredients set deleted_at = now(), deleted_by = ${E.id}
       where id = ${rosewort.ingredientId}`;
 
-    // Why access could have succeeded: the coven's cupboard row is live, and
-    // so is the form; only the entry is retired.
+    // Why access could have succeeded: the coven's cupboard row is live, and so is the form; only the entry is retired.
     const [held] =
       await sql`select deleted_at from workspace_compendium_entries where id = ${cupboard}`;
     const [form] =
@@ -174,14 +163,12 @@ describe('an ingredient step', () => {
     expect(form.deleted_at).toBeNull();
     expect(entry.deleted_at).not.toBeNull();
 
-    // The step already laid comes back with the save and is kept.
     await updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
       expectedRevision: null,
       steps: [{ id: saved.id as string, ...rosewort, quantity: 3, unit: 'g' }],
     });
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
 
-    // The same form as a new step, on this spell or a new one, is refused.
     const before = await revisionOf(spell.id);
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
@@ -210,7 +197,6 @@ describe('an ingredient step', () => {
     expect(saved).toHaveLength(3);
     expect(saved.filter((row) => row.variant_id === rosewort.variantId)).toHaveLength(2);
 
-    // Swapped ends: both rows move through the same form at once.
     const [first, stir, last] = saved.map((row) => row.id as string);
     await updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
       expectedRevision: null,
@@ -242,8 +228,7 @@ describe('adding an ingredient step by direct id', () => {
   it('is refused to a member of another coven, through either coven’s id', async () => {
     const rosewort = await formOf('Fixture Rosewort');
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Fixture Working' });
-    // Why it could have succeeded: D lays the same compendium form in their
-    // own coven's spell, and B lays it in this one.
+    // Why it could have succeeded: D lays the same compendium form in their own coven's spell, and B lays it in this one.
     const own = await createSpell(asUser(D), WORKSPACE_X_ID, { title: 'Fixture Own' });
     await updateSpell(asUser(D), WORKSPACE_X_ID, own.id, {
       expectedRevision: null,
@@ -278,8 +263,7 @@ describe('adding an ingredient step by direct id', () => {
   it('is refused to a viewer of the spell’s own coven', async () => {
     const rosewort = await formOf('Fixture Rosewort');
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Fixture Working' });
-    // Why it could have succeeded: C reads the spell, and B's identical save
-    // is written.
+    // Why it could have succeeded: C reads the spell, and B's identical save is written.
     await expect(readSpell(asUser(C), WORKSPACE_W_ID, spell.id)).resolves.toBeDefined();
     const twin = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Fixture Twin' });
     await updateSpell(asUser(B), WORKSPACE_W_ID, twin.id, {

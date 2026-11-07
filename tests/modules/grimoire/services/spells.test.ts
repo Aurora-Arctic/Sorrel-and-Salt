@@ -19,10 +19,6 @@ import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixture
 import type { SpellVisibility } from '@/modules/grimoire';
 import type { Session } from '@/lib/session';
 
-// The grimoire's service: members and owners write, viewers read, and
-// a private spell is its author's alone. Every row a result could come from is
-// one this file wrote, through the raw client.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -32,7 +28,6 @@ beforeEach(async () => {
   await sql`truncate spells, ingredients cascade`;
 });
 
-/** A spell in `workspaceId`, written by `author`, as setup rather than through the service. */
 function seed(
   author: typeof A,
   visibility: SpellVisibility = 'workspace',
@@ -42,7 +37,6 @@ function seed(
   return insertSpell(sql, makeSpell({ workspaceId, visibility, ...extra }), author.id);
 }
 
-/** A spell and its steps as the API reads them: `readSpell`, then `Spell.steps`' batch. */
 async function readWithSteps(session: Session, workspaceId: string, spellId: string) {
   const spell = await readSpell(session, workspaceId, spellId);
   const [steps] = await stepsOfSpells(session, [spell]);
@@ -189,7 +183,6 @@ describe('updateSpell', () => {
           title: 'Foreign Edit',
         }),
       ).rejects.toBeInstanceOf(Forbidden);
-      // Naming X as the coven does not open W's row either.
       await expect(
         updateSpell(asUser(D), WORKSPACE_X_ID, id, {
           expectedRevision: null,
@@ -371,11 +364,6 @@ describe('a linked step’s ingredient', () => {
   });
 });
 
-// A save writes the spell's fields and its whole recipe, one ordered
-// list of steps, in one transaction. What each test asserts is the rows the
-// save left behind, read raw, tombstones included.
-
-/** An ingredient in `workspaceId` (null: the compendium) with one form, `Testform`: its ids. */
 async function ingredientWithForm(
   name: string,
   workspaceId: string | null = WORKSPACE_W_ID,
@@ -390,7 +378,6 @@ async function ingredientWithForm(
   return { ingredientId, variantId: await variantIdOf(sql, ingredientId, 'Testform') };
 }
 
-/** Every step row of the spell, live and tombstoned, by the place each was given. */
 function stepRowsOf(spellId: string) {
   return sql`
     select id, position, body, ingredient_id, variant_id, name, form, quantity,
@@ -398,7 +385,6 @@ function stepRowsOf(spellId: string) {
     from spell_steps where spell_id = ${spellId} order by position, id`;
 }
 
-/** The live steps in recipe order, as a reader sees them. */
 async function liveRecipe(spellId: string, user: typeof A = B) {
   return (await readWithSteps(asUser(user), WORKSPACE_W_ID, spellId)).steps;
 }
@@ -471,7 +457,6 @@ describe('createSpell, with its recipe', () => {
       unit: 'tsp',
       body: 'Lay the leaf.',
     });
-    // The instruction-only step reads back in its place.
     const recipe = await liveRecipe(spell.id);
     expect(recipe.map((step) => step.body ?? step.name ?? step.ingredient?.name)).toEqual([
       'Cleanse the jar.',
@@ -507,8 +492,7 @@ describe('createSpell, with its recipe', () => {
 
   it('refuses a link to a deleted ingredient, a deleted form, or another coven’s ingredient', async () => {
     const live = await ingredientWithForm('Fixture Leaf');
-    // Why each could have succeeded: the same step linking a live coven
-    // ingredient is written.
+    // Why each could have succeeded: the same step linking a live coven ingredient is written.
     await expect(
       createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Live Link', steps: [live] }),
     ).resolves.toBeDefined();
@@ -518,7 +502,6 @@ describe('createSpell, with its recipe', () => {
     const formGone = await ingredientWithForm('Fixture Formless');
     await sql`update ingredient_variants set deleted_at = now(), deleted_by = ${B.id} where id = ${formGone.variantId}`;
     const foreign = await ingredientWithForm('Fixture Foreign', WORKSPACE_X_ID);
-    // A real form, but of another ingredient than the step names.
     const mismatched = { ingredientId: live.ingredientId, variantId: foreign.variantId };
     const before = await countSpells();
 
@@ -535,7 +518,6 @@ describe('createSpell, with its recipe', () => {
 });
 
 describe('updateSpell, with its recipe', () => {
-  /** A spell B wrote through the service, so its steps are what a save writes. */
   async function saved(steps: Parameters<typeof createSpell>[2]['steps']) {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Working Jar', steps });
     const ids = (await liveRecipe(spell.id)).map((step) => step.id);
@@ -600,8 +582,7 @@ describe('updateSpell, with its recipe', () => {
       ],
     });
 
-    // The same three rows, none soft-deleted and none added: a move, never a
-    // Remove and a fresh Add, which would leave a tombstone behind.
+    // The same three rows, none soft-deleted and none added: a move, never a Remove and a fresh Add, which would leave a tombstone.
     const rows = await stepRowsOf(id);
     expect(rows).toHaveLength(3);
     expect(rows.every((row) => row.deleted_at === null)).toBe(true);
@@ -651,7 +632,6 @@ describe('updateSpell, with its recipe', () => {
       [ids[0], undefined],
     ]);
 
-    // The same link, on a step the save adds, is refused and nothing changes.
     const before = await revisionOf(id);
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, id, {
@@ -751,8 +731,7 @@ describe('updateSpell, with its recipe', () => {
 
   it('refuses a viewer by direct id, touching neither the spell nor its steps', async () => {
     const { id, ids } = await saved([{ body: 'One' }]);
-    // Why it could have succeeded: C reads the spell, and a member's identical
-    // save is written.
+    // Why it could have succeeded: C reads the spell, and a member's identical save is written.
     await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
     const save = { expectedRevision: null, title: 'Edited', steps: [{ body: 'Replaced' }] };
     const other = await saved([{ body: 'One' }]);
@@ -848,7 +827,6 @@ describe('a spell’s assigned categories', () => {
   const idOf = async (name: string): Promise<string> =>
     (await sql`select id from categories where name = ${name} and deleted_at is null`)[0].id;
 
-  /** The spell's assigned categories by name, read raw, so a soft-deleted one shows too. */
   const assigned = async (spellId: string): Promise<string[]> =>
     (
       await sql`
@@ -932,8 +910,7 @@ describe('a spell’s assigned categories', () => {
   it('refuses a viewer by direct id, and leaves the categories as they were', async () => {
     const id = await seed(B, 'workspace', { categories: ['Protection'] });
     const save = { expectedRevision: null, categoryIds: [await idOf('Release')] };
-    // Why it could have succeeded: C reads the spell, and a member's identical
-    // save is written.
+    // Why it could have succeeded: C reads the spell, and a member's identical save is written.
     await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
     const other = await seed(B, 'workspace', { categories: ['Protection'] });
     await updateSpell(asUser(B), WORKSPACE_W_ID, other, save);
@@ -948,8 +925,7 @@ describe('a spell’s assigned categories', () => {
   it('refuses a member of another coven by direct id, naming either coven', async () => {
     const id = await seed(B, 'workspace', { categories: ['Protection'] });
     const save = { expectedRevision: null, categoryIds: [await idOf('Release')] };
-    // Why this could have succeeded: D assigns categories to their own coven's
-    // spell with the same save.
+    // Why this could have succeeded: D assigns categories to their own coven's spell with the same save.
     const own = await seed(D, 'workspace', {}, WORKSPACE_X_ID);
     await updateSpell(asUser(D), WORKSPACE_X_ID, own, save);
     expect(await assigned(own)).toEqual(['Release']);
@@ -963,7 +939,6 @@ describe('a spell’s assigned categories', () => {
 });
 
 describe('updateSpell, against the revision it was read at', () => {
-  /** A spell two members have both read at the same revision. */
   async function readByBoth() {
     const id = await seed(A, 'workspace', { title: 'Shared Jar' });
     const readByA = await readSpell(asUser(A), WORKSPACE_W_ID, id);
@@ -987,7 +962,6 @@ describe('updateSpell, against the revision it was read at', () => {
     });
     await expect(second).rejects.toThrow(StaleWrite);
     await expect(second).rejects.toMatchObject({ currentRevision: revision + 1 });
-    // Nothing of B's landed.
     const [row] = await sql<{ title: string; revision: number }[]>`
       select title, revision from spells where id = ${id}`;
     expect(row).toEqual({ title: 'Renamed by A', revision: revision + 1 });
@@ -1005,7 +979,6 @@ describe('updateSpell, against the revision it was read at', () => {
       expectedRevision: revision,
       title: 'Renamed by A',
     });
-    // The revision D names is stale: a member naming it is told so.
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: revision, title: 'By B' }),
     ).rejects.toThrow(StaleWrite);
