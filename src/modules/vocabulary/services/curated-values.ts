@@ -10,10 +10,6 @@ const VOCABULARY_OF = { celestialBodies, zodiacSigns } satisfies Record<CuratedF
 
 const PICKED_FROM = { form: ingredientForms, deities } satisfies Record<PickedField, unknown>;
 
-/**
- * A value as the curated vocabularies match it: trimmed and lower-cased, the
- * fold the suggestions use (claude-docs/db/member-autofill.md).
- */
 export function foldVocabularyValue(value: string): string {
   return value.trim().toLowerCase();
 }

@@ -53,10 +53,8 @@ export interface CuratedVocabulary<TTable extends CuratedTable = CuratedTable> {
   addressHint?: string;
 }
 
-/** The tables whose rows are filed under a group, and move when it goes. */
 export type GroupedTable = typeof categories | typeof ingredientForms | typeof deities;
 
-/** The tables that group a curated vocabulary. */
 export type GroupTable =
   typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions;
 
@@ -73,7 +71,6 @@ export interface MovedRows<
   under: (groupId: string) => Promise<TTable['$inferSelect'][]>;
 }
 
-/** A group table, and the rows filed under it. */
 export interface CuratedGroup<
   TTable extends GroupTable = GroupTable,
 > extends CuratedVocabulary<TTable> {

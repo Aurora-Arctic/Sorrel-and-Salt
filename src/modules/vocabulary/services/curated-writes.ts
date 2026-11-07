@@ -41,8 +41,6 @@ export async function refuseSlugCollision(
 }
 
 /**
- * The live row `id` names in the vocabulary.
- *
  * @throws {NotFound} none does, an id that is not a uuid included.
  */
 export async function liveRow<TTable extends CuratedTable>(
@@ -54,7 +52,6 @@ export async function liveRow<TTable extends CuratedTable>(
   return row;
 }
 
-/** The input parsed, its group checked live, and the group, whose name a form's or a deity's slug carries. */
 export async function parseUnderLiveParent<
   Schema extends ZodType<Record<Column, string>>,
   Column extends string,
@@ -71,7 +68,6 @@ export async function parseUnderLiveParent<
   return { fields, parent: row };
 }
 
-/** The live group a delete's `count` rows move to, or the refusal on `moveTo` when none is named or it names no other live group. */
 export async function moveTarget<TTable extends GroupTable>(
   group: CuratedGroup<TTable>,
   id: string,
@@ -159,7 +155,6 @@ export async function deleteGroup(
 
   await withAudit(session, async (write) => {
     for (const { row, slug } of moves) {
-      // The column is the descriptor's own, so the values are built by name.
       const values = { [members.parentColumn]: target?.id, ...(members.slugOf && { slug }) };
       await write.updateById(members.table, row.id, values);
     }
@@ -171,7 +166,6 @@ export async function deleteGroup(
   });
 }
 
-/** The rows, each beside the slug `groupName` gives it: its own where the group is no part of it. */
 function movedUnder(
   members: MovedRows,
   rows: readonly GroupMove['row'][],

@@ -24,10 +24,6 @@ import { liveRow, refuseSlugCollision } from './curated-writes';
 import { refuseWhileHeld } from './held-entries';
 import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../types';
 
-// The two curated astrology vocabularies, one code path keyed by the ingredient list each curates. Reads are public; writes are
-// for a curator or a keeper alone (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
-
-/** What each vocabulary is called, read and checked by. */
 const VOCABULARY = {
   celestialBodies: {
     table: celestialBodies,
@@ -47,7 +43,6 @@ const VOCABULARY = {
   },
 } as const satisfies Record<CuratedField, unknown>;
 
-/** Either vocabulary's table, so a shared step reads whichever `field` names. */
 type AstrologyTable = (typeof VOCABULARY)[CuratedField]['table'];
 
 // The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md); keyed by the field's name since the arguments are the cache key.
@@ -62,7 +57,6 @@ const cachedCount = cachedCompendiumRead(
     findAstrologyValueCount(VOCABULARY[field].table, filter, start),
 );
 
-/** One page of `field`'s vocabulary under `filter`, alphabetical by name: a public read, so no session. A blank query is no query. */
 export function listAstrologyValues(
   field: CuratedField,
   filter: AstrologyValueFilter,
@@ -71,7 +65,6 @@ export function listAstrologyValues(
   return cachedPage(field, readableFilter(filter), page);
 }
 
-/** How many rows `listAstrologyValues` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countAstrologyValues(
   field: CuratedField,
   filter: AstrologyValueFilter,
@@ -81,8 +74,6 @@ export function countAstrologyValues(
 }
 
 /**
- * The live row of `field`'s vocabulary at this address, for an admin page to edit.
- *
  * @throws {NotFound} no live row holds the slug.
  */
 export async function getAstrologyValueBySlug(
@@ -95,8 +86,6 @@ export async function getAstrologyValueBySlug(
 }
 
 /**
- * Adds a celestial body or a sign, its slug derived from the name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks the vocabulary's schema, or its slug is a live row's.
  */

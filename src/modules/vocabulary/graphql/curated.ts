@@ -11,13 +11,8 @@ import type {
   LoaderName,
 } from './types';
 
-// A curated vocabulary's type, its input and its three admin writes, written once for the seven (claude-docs/graphql/schema.md, "Curated vocabularies").
 // The writes are scoped to the site admin here and refused again by the service, the real gate. Every description is the caller's, so the SDL is what each file declared by hand.
 
-/**
- * Implements `ref` as `id`, `name`, `slug`, `description`, the parent and `fields`; registers `<Type>Input` (whole, no slug, which follows the name)
- * and the create, update and delete mutations, the delete answering the id. Answers the implemented ref.
- */
 export function curatedVocabularyWrites<
   Row extends CuratedRow & Record<Key, string>,
   Extra extends InputFieldMap = {},
@@ -57,7 +52,6 @@ export function curatedVocabularyWrites<
       ...vocabulary.input?.(t),
     }),
   });
-  // The input as the services take it: a null optional field made absent.
   const inputOf = (args: { input: object }) => definedArgs(args.input) as CuratedInput<Extra, Key>;
 
   builder.mutationField(`create${type}`, (t) =>
