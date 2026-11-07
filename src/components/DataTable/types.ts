@@ -64,6 +64,8 @@ export interface SortSelectProps {
   choices: readonly SortChoice[];
   /** The address of the order the list is in now. */
   current: Route | undefined;
+  /** Drawn but out of use, for a table on its way. */
+  disabled?: boolean;
 }
 
 export interface StackTableProps<Row> {
@@ -90,7 +92,7 @@ export interface StackTableProps<Row> {
   className?: string;
   /** Orders beside the sortable columns', offered first in the phone's sort select: a search's Best Match. */
   otherOrders?: readonly OtherOrder[];
-  /** Draws this many placeholder rows under the real headings in place of the rows, for a table on its way: hidden from assistive technology, with no sort links and no controls. */
+  /** Draws this many placeholder rows under the real headings in place of the rows, for a table on its way: hidden from assistive technology, with no sort links and no controls; a sortable column still shows its heading's arrow and the phone's sort select. */
   pendingRows?: number;
   /** With `pendingRows`: the list, so at phone width each placeholder row is one block as tall as that list's real stacked row. */
   pendingKind?: StackRowKind;

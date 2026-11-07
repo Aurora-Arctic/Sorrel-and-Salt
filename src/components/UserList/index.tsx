@@ -201,7 +201,7 @@ const UserList = ({
       paused={paused}
     />
 
-    <ListBody skeleton={<UserListBodySkeleton />}>
+    <ListBody skeleton={<UserListBodySkeleton canImpersonate={canImpersonate} />}>
       {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
       <StackTable
         columns={columns(canImpersonate)}

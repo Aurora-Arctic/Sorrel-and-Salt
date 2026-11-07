@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
-import { ListBodySkeleton } from '../ListFrame/skeleton';
+import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
+import GroupedValueListFilter from './filter';
 import { KINDS } from './kinds';
 
 /** A curated list's rows with nothing in them yet: its headings, with the group column where the kind has one. */
@@ -14,8 +15,20 @@ export const GroupedValueListBodySkeleton = ({
     <ListBodySkeleton
       label={title}
       rowKind="values"
-      headings={['Name', ...(group ? [group.label] : []), 'Description', 'Edit']}
+      tableClassName={kind === 'category' ? 'data-table--roomy' : undefined}
+      headings={['Name', ...(group ? [group.label] : []), 'Description', 'Updated', 'Edit']}
       actions={['Edit']}
+      hidden={['Edit']}
     />
   );
 };
+
+/** A curated list with nothing in it yet: its own filter row, unfiltered, over the placeholder rows. */
+export const GroupedValueListSkeleton = ({ kind }: { kind: GroupedValueKind }): ReactElement => (
+  <ListFilterFrame
+    className={`grouped-value-list--${kind}`}
+    filter={<GroupedValueListFilter kind={kind} filter={{ query: '', group: '' }} groups={[]} />}
+  >
+    <GroupedValueListBodySkeleton kind={kind} />
+  </ListFilterFrame>
+);

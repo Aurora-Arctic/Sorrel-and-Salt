@@ -2,6 +2,10 @@ import { AdminPageSkeleton, withSkeletons } from '@/components/AdminNav/skeleton
 import { ADMIN_PAGES } from '@/components/AdminNav/sections';
 import { BusinessCardsBodySkeleton } from '@/components/BusinessCards/skeleton';
 import TabbedPage from '@/components/TabbedPage';
+import type { SupportRequestsFilter } from '@/components/SupportRequests/types';
+import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
+import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
+import { DEFAULT_SUPPORT_VIEW, SUPPORT_VIEWS, type SupportView } from '@/lib/support-path';
 import PageHeader from '@/components/PageHeader';
 import Skeleton from '@/components/Skeleton';
 
@@ -28,8 +32,30 @@ export const InvitationCardsSkeleton = () => (
 export const CardSignUpsSkeleton = () => (
   <AdminPageSkeleton page="invitations" open="/keepers/card-sign-ups" />
 );
+const SUPPORT_FILTER: SupportRequestsFilter = {
+  about: '',
+  view: DEFAULT_SUPPORT_VIEW,
+  errorCode: '',
+  sender: '',
+};
+// Two views drawn with a one-digit count and the rest with none, which stands the tabs as wide as the page's.
+const PLACEHOLDER_COUNTS = Object.fromEntries(
+  SUPPORT_VIEWS.map(({ value }, index) => [value, index < 2 ? 1 : 0]),
+) as Record<SupportView, number>;
+
 export const KeepersSupportSkeleton = () => (
-  <AdminPageSkeleton page="support" open="/keepers/support" />
+  <TabbedPage
+    as="div"
+    title="Support"
+    tabs={supportViewTabs(SUPPORT_FILTER, PLACEHOLDER_COUNTS).map((tab) => ({
+      ...tab,
+      skeleton: <SupportListSkeleton />,
+    }))}
+    open={supportHref(SUPPORT_FILTER)}
+    tabsBelow
+  >
+    <SupportListSkeleton />
+  </TabbedPage>
 );
 // The documents' layout: a column the editor's width, no action, the tab row beneath the heading.
 // The Email Updates page is a bare section: a heading and its status, with no lede.

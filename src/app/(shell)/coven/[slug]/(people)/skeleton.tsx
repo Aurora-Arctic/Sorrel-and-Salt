@@ -1,15 +1,23 @@
 'use client';
 
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import ListFrame from '@/components/ListFrame';
+import { SoleStewardNotice } from './sole-steward-notice';
 import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
+import { ButtonFace } from '@/components/ActionFace';
 import { MemberListBodySkeleton } from '@/components/MemberList/skeleton';
 import { PendingInvitationsBodySkeleton } from '@/components/PendingInvitations/skeleton';
 import { useCovenSlug } from '@/lib/use-coven-slug';
 
 /** The Members tab's list: the table's headings over placeholder rows. */
-export const MembersPanelSkeleton = MemberListBodySkeleton;
+export const MembersPanelSkeleton = (): ReactElement => (
+  <ListFrame disabled>
+    <SoleStewardNotice />
+    <MemberListBodySkeleton />
+  </ListFrame>
+);
 
 /** The Invitations tab's list. */
 export const InvitationsPanelSkeleton = PendingInvitationsBodySkeleton;
@@ -37,7 +45,13 @@ const PeopleSkeleton = ({
     },
   ];
   return (
-    <TabbedPage as="div" title="Members" tabs={tabs} open={`/coven/${slug}/${open}`}>
+    <TabbedPage
+      as="div"
+      title="Members"
+      tabs={tabs}
+      open={`/coven/${slug}/${open}`}
+      action={<ButtonFace>Invite</ButtonFace>}
+    >
       {children}
     </TabbedPage>
   );

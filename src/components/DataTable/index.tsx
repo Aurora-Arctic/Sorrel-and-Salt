@@ -104,12 +104,13 @@ function StackTable<Row>({
       </EmptyState>
     );
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
-  const sorting =
-    !pending && shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
+  const sorting = shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
   return (
     <div className="data-table-frame">
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
-      {sorting && <SortSelect choices={sorting.choices} current={sorting.current} />}
+      {sorting && (
+        <SortSelect choices={sorting.choices} current={sorting.current} disabled={pending} />
+      )}
       <table
         aria-hidden={pending || undefined}
         className={[
@@ -136,6 +137,11 @@ function StackTable<Row>({
                   <span className="visually-hidden">{column.heading}</span>
                 ) : column.sort && !pending ? (
                   <SortHeading heading={column.heading} sort={column.sort} />
+                ) : column.sort ? (
+                  <span className="data-table__sort-link">
+                    <span>{column.heading}</span>
+                    <SortArrow current={undefined} />
+                  </span>
                 ) : (
                   column.heading
                 )}

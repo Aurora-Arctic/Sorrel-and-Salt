@@ -91,7 +91,7 @@ const GrimoireSearchMatchesDocument = graphql(`
 `);
 
 /** The words the box uses for what it searches: an ingredient's name, or a spell's title. */
-const WORDING = {
+export const WORDING = {
   ingredient: {
     label: 'Name',
     placeholder: 'Search',
