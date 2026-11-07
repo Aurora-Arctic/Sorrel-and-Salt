@@ -16,7 +16,7 @@ The long form of `CLAUDE.md`'s GitHub task tracking section. claude-docs/task-tr
 
 The issues and `TASKS.md` are expected to agree. A task minted as an issue gets its entry in `claude-docs/tasks/<milestone>.md` in the same pass, or the docs silently fall behind; and **an entry edited afterwards is synced to its issue in the same pass**, `node scripts/task-board.mjs sync <ID> …`, which brings the title, body and `Estimate` to the entry (claude-docs/task-tracking.md, "Sync").
 
-A closed-wave task entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
+A closed task's entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
 
 ## Everything goes through `gh`
 

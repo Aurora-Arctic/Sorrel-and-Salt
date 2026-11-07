@@ -192,7 +192,7 @@ hour.
 
 ## Sync
 
-A closed-wave task entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
+A closed task's entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
 
 **An issue mirrors its entry, and stays mirrored.** Its title is the entry's
 heading, `<ID> — <title>`, a retired one's struck-through title written
