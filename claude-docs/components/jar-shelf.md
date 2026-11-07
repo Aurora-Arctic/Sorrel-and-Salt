@@ -22,8 +22,6 @@ This doc also covers `JarLine` and `JarLines`, which draw jars in lists.
 
 `fillOf` in `level.ts` turns a jar into `{ level, mark }`, each a fraction of the glass (0 empty, 1 full); `mark` is where the dashed low-stock line sits. A jar at its threshold stands half full; at twice its threshold or more, full. A jar with a threshold and quantity 0 is empty with its mark half way. An unmeasured jar, and a held one with no threshold, stands at 0.7 so "held but not measured" is not read as empty.
 
-TODO(owner): this rule is the builder's. The mock gave example heights only.
-
 **The drawing**
 
 - The wave is drawn one period past each side of the 48-wide box so it could slide and still cover the body; the shelf does not slide it.
