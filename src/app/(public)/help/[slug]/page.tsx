@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath } from '@/lib/help-paths';
@@ -12,7 +12,7 @@ type Props = { params: Promise<{ slug: string }> };
 async function topLevel(slug: string) {
   const found = await orNotFound(() => readHelpArticle(slug));
   if (found.kind !== 'article' || found.audience !== 'public') notFound();
-  if (found.parentSlug) permanentRedirect(helpPath(found));
+  if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return found;
 }
 
