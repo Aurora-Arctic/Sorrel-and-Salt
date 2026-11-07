@@ -1,8 +1,6 @@
-// The one runtime import of `dataloader` (enforced by lint and pinned by
-// tests/guards/lint-loader-boundary.test.ts): a loader's cache lives as long
-// as its instance, so one built at module level would serve one request's
-// answers to the next. This file hands out factories instead, and only the
-// request context calls them.
+// The one runtime import of `dataloader`: a loader's cache lives as long as its instance, so module-level
+// loaders would leak across requests (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at
+// module level").
 // oxlint-disable-next-line no-restricted-imports
 import DataLoader from 'dataloader';
 import { Forbidden } from '../../lib/errors';

@@ -3,10 +3,8 @@ import { dirname } from 'node:path';
 import { wikiKey } from './audit';
 import type { PageInfo, PageLookup } from './audit-resolve';
 
-// Wikipedia's answer to "what page does this title land on?" (`--resolve`): the MediaWiki API follows redirects and flags disambiguation
-// pages, which a title alone cannot show. Answers are cached in one JSON file
-// outside git, so the resolving run itself reads only local data and a second
-// run asks nothing; only `--fetch` goes to the network.
+// Wikipedia title resolution for `--resolve`, cached in one JSON file outside git; only `--fetch` goes to the
+// network (claude-docs/compendium/compendium-seed/README.md, "Matching a mineral or chemical page").
 
 const API = 'https://en.wikipedia.org/w/api.php';
 /** The API takes at most 50 titles to a request. */

@@ -45,10 +45,8 @@ const SEARCH_WORD_SIMILARITY_THRESHOLD = 0.5;
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Where a read query is built — this, and `existsIn` below for a correlated
-// subquery. Exported for the finders beside it and nowhere else: the index
-// leaves both out and a deep import is banned, so no public handle skips the
-// filter.
+// Where a read query is built, with `existsIn`; exported to the finders beside it only, so no public handle
+// skips the filter.
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,

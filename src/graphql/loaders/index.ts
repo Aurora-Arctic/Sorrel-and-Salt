@@ -43,9 +43,8 @@ import {
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
 
-// Every loader the context builds, by the name a resolver reads it as. Each
-// is added by the task that adds its schema, off its module's index
-// (claude-docs/graphql/loaders.md, "Loaders").
+// Every loader the context builds, by the name a resolver reads it as, each off its module's index
+// (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at module level").
 const LOADERS = {
   memberEmailsByMember,
   membershipsByUser,

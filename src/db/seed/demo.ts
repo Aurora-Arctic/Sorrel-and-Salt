@@ -1160,10 +1160,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     // Inside the same transaction: every spell points at rows `standard` writes.
     // A deity pick someone deleted stays deleted, as a spell does.
     await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
-    // The curated compendium, after standard so its fixture entries keep their
-    // rows and a curated entry of the same identity is skipped. Demo is for a
-    // person exploring the app; standard stays the test fixture cast
-    // (claude-docs/db/demo-scenario.md).
+    // The curated compendium goes after `standard` so fixture entries keep their rows
+    // (claude-docs/db/demo-scenario.md, "The demo scenario").
     await seedCompendiumContent(tx, CURATED_FILES);
     // Reference data on every environment, so the scenario shows it too; `standard` leaves it out.
     await seedDemoCovenSeats(tx);

@@ -365,11 +365,7 @@ function checkSubstitutes(
   }
 }
 
-/**
- * The owner's rule as code: at least one citation, each naming a source that
- * resolves, a book or chapter with its locator, no source cited twice on one
- * row, and every populated field supported by some citation.
- */
+/** A row needs a citation per populated field (claude-docs/compendium/compendium-seed/README.md, "How an entry is sourced"). */
 function checkCitations<Field extends string>(
   citations: readonly SeedCitation<Field>[],
   populated: readonly Field[],
@@ -404,10 +400,8 @@ function checkCitations<Field extends string>(
   }
 }
 
-// The files' rules: what a folder of entry files must satisfy over and
-// above what the entries themselves must, which `checkCompendium` keeps
-// checking (claude-docs/db/compendium-seed/README.md, "An entry, field by field" and
-// "Write-once, and how a correction lands"). Each is a rule a shard literal had no room to break.
+// The files' rules, over and above `checkCompendium`'s (claude-docs/compendium/compendium-seed/README.md, "An
+// entry, field by field" and "Write-once, and how a correction lands").
 
 /** The branches the seed deploys from (DESIGN.md §12): a `draft` file is refused on each. */
 export const RELEASE_BRANCHES: readonly string[] = ['staging', 'main'];

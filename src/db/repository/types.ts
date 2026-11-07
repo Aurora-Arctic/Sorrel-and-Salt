@@ -859,10 +859,9 @@ export interface AuditWriter {
    */
   recordCardAttempt(invitationId: string, reason: CardAttemptReason): Promise<CardAttemptRow[]>;
   /**
-   * Accept the pending invitation a link's token names, on either tier, as the session's user: stamps `accepted_at` and `accepted_by`.
-   * Under no proof, since the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified.
-   * No row comes back for a token naming no pending invitation, or a user whose live row holds another address or holds it unverified.
-   * A card names no address: any verified account is admitted, once.
+   * Accepts the pending invitation a token names, under no proof. No row comes back unless the user holds the
+   * invited address, verified; a card admits any verified account once (claude-docs/db/invitations.md,
+   * "Accepting from the account page").
    */
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
@@ -1514,11 +1513,7 @@ export interface PrivilegeChangeFilter {
   userId?: string;
   /** Only the changes to this privilege. */
   privilege?: (typeof userPrivilegeChanges.$inferSelect)['privilege'];
-  /**
-   * Only the changes to a live user whose name or email holds this,
-   * case-insensitively, its `%` and `_` read literally, as the user list's
-   * `query` matches.
-   */
+  /** A live user's name or email holds this, matched as `SiteInvitationFilter.email` is. */
   query?: string;
 }
 

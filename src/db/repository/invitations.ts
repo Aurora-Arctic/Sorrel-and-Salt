@@ -71,10 +71,8 @@ function inTierOf(proof: Membership | SiteAdmin): SQL {
   return 'workspaceId' in proof ? scopedTo(proof, invitations) : onSiteTier();
 }
 
-// A pending invitation: neither accepted, declined nor revoked, and not yet
-// expired. Every stamp matches only one, so none overwrites another or itself.
-// Not the live filter, which the writer ANDs onto every write and each finder
-// below ANDs itself.
+// A pending invitation: not accepted, declined, revoked or expired. Not the live filter, which the writer and
+// each finder AND on themselves.
 function pendingInvitation(...which: (SQL | undefined)[]) {
   return and(
     ...which,
@@ -639,10 +637,8 @@ export function invitationWrites({
   | 'revokePendingInvitationsTo'
 > {
   return {
-    // The columns named rather than spread, as `workspaceId` is placed last
-    // in `insertInWorkspace`: an invitation starts pending, in the proof's
-    // tier, even if a cast smuggled a stamp, a workspace or a role in, and
-    // grants only its own tier's role.
+    // The columns are named, not spread: an invitation starts pending in the proof's tier whatever a cast
+    // carries in.
     insertInvitation: (
       proof: Membership | SiteAdmin,
       values: WorkspaceInvitationValues | SiteInvitationValues,

@@ -5,10 +5,8 @@ import type { Session } from '../lib/session';
 import { builder } from './builder';
 import type { BuilderTypes, Context, Defined, Suggest } from './types';
 
-// What a resolver adds to the service it calls, written once: the session as
-// the service's type takes it, GraphQL's null as the service's absent, and the
-// one suggestion field six pickers read (claude-docs/graphql/schema.md,
-// "Resolver helpers"). None of it decides who may: that is the service's.
+// What a resolver adds to the service it calls (claude-docs/graphql/schema.md, "Resolver helpers"); none of
+// it decides who may.
 
 /**
  * The request's session, or `Forbidden` for a signed-out caller and `AccessPaused` for a paused one. A narrowing for the

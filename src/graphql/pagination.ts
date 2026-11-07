@@ -11,10 +11,8 @@ import { decodeCursor, resolvePage } from '../lib/pagination';
 import type { ConnectionArgs, PageCount } from '../lib/types';
 import type { PagedConnectionOptions, Counted } from './types';
 
-// `t.pagedConnection`, added to every field builder the way the Relay plugin
-// adds `t.connection`: a method, so the parent's shape comes from the builder
-// rather than being inferred through it. Imported by `builder.ts` for that
-// side effect.
+// `t.pagedConnection`, added to every field builder as the Relay plugin adds `t.connection`; imported by
+// `builder.ts` for that side effect.
 
 declare global {
   export namespace PothosSchemaTypes {
