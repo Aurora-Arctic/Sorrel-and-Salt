@@ -28,7 +28,7 @@ ALTER TABLE "help_articles" ADD CONSTRAINT "help_articles_parent_id_help_article
 ALTER TABLE "help_articles" ADD CONSTRAINT "help_articles_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "help_articles" ADD CONSTRAINT "help_articles_updated_by_users_id_fk" FOREIGN KEY ("updated_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "help_articles" ADD CONSTRAINT "help_articles_deleted_by_users_id_fk" FOREIGN KEY ("deleted_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "help_articles_slug_unique" ON "help_articles" USING btree ("slug") WHERE "help_articles"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "help_articles_slug_unique" ON "help_articles" USING btree ("kind","slug") WHERE "help_articles"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "help_articles_seed_key_unique" ON "help_articles" USING btree ("seed_key") WHERE "help_articles"."seed_key" is not null and "help_articles"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "help_articles_search_vector_idx" ON "help_articles" USING gin ("search_vector");--> statement-breakpoint
 CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON "help_articles" FOR EACH ROW EXECUTE FUNCTION set_updated_at();

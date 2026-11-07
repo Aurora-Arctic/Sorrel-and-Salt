@@ -3346,7 +3346,7 @@ Decided by the owner on 2026-11-07. These decisions amend the sections around th
 - A signed-out visitor is sent to sign in. A signed-in user who is neither keeper nor curator gets the styled not-authorized page, as `/curator` does. A curator asking for a `keeper` row gets 404. A public article is never served under `/help/staff/…`, and a staff article is never served under `/help/[slug]` (404). A staff child requested at `/help/staff/[slug]` is answered like the public rule: 308 to the nested address.
 - The pages are dynamic, uncached and `noindex`, and are kept out of `PUBLIC_ROUTES` and the sitemap. `/curator` and `/keepers` link to `/help/staff`.
 - The staff reads take the session, run the check and filter by audience in SQL. They are never cached, because their result depends on the viewer (CLAUDE.md rule 6). Only the public finder is cached, under the tag `help`.
-- The slugs `glossary`, `staff` and `search` are reserved, refused on create and rename: `staff` and `search` would collide with `/help/[slug]`.
+- The slugs `glossary`, `staff` and `search` are reserved for every kind, refused on create and rename: `staff` and `search` would collide with `/help/[slug]`.
 
 **Search.**
 
@@ -3389,10 +3389,14 @@ one general page and one per practice.
 - **Only an `article` has a parent, and only an `article` is one.** A CHECK
   holds the first half; the rest need a look at a second row, so the service
   enforces them and a test asserts them.
-- **Slugs stay unique across all rows**, children included. A child's page
-  is then identified by its own slug and its parent's, and `/help/[slug]` for
-  a child's slug answers 308 to the nested address, so the child has one
-  canonical address.
+- **A slug is unique within its kind**, children included (owner, 2026-11-07).
+  The article "Ingredients" and the term "Ingredients" both slugify to
+  `ingredients`, and each keeps it. The unique index is on `(kind, slug)` among
+  live rows. The addresses are an article `/help/[slug]`, an FAQ entry
+  `/help#[slug]` and a term `/help/glossary#[slug]`. A page lookup by slug
+  reads kind `article` only. A child's page is identified by its own slug and
+  its parent's, and `/help/[slug]` for a child's slug answers 308 to the nested
+  address, so the child has one canonical address.
 - **A parent with live children cannot be deleted** until they are moved or
   deleted, and the error says so.
 - **A child's audience** is equal to its parent's or narrower, and the

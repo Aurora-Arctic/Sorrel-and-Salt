@@ -41,7 +41,7 @@ export const helpArticles = pgTable(
     ...auditColumns,
   },
   (table) => [
-    liveUnique('help_articles_slug_unique', table, table.slug),
+    liveUnique('help_articles_slug_unique', table, table.kind, table.slug),
     seedKeyUnique('help_articles_seed_key_unique', table),
     index('help_articles_search_vector_idx').using('gin', table.searchVector),
     // A glossary term has no order and no parent, and is public.

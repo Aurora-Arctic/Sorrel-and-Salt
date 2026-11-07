@@ -2837,6 +2837,12 @@
           "name": "help_articles_slug_unique",
           "columns": [
             {
+              "expression": "kind",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
               "expression": "slug",
               "isExpression": false,
               "asc": true,
