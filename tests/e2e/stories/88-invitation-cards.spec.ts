@@ -30,7 +30,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     const welcome = page.getByRole('heading', { name: 'Welcome to Sorrel & Salt' });
     const betaTester = page.getByRole('heading', { name: "You're a Beta Tester" });
 
-    await test.step('the admin mints a beta sheet of twelve, downloads the PDF and sees one beta batch', async () => {
+    await test.step('the admin mints a beta sheet of ten, downloads the PDF and sees one beta batch', async () => {
       await page.goto('/keepers/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
@@ -39,7 +39,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await dialog.getByRole('checkbox', { name: 'Beta Testers' }).check();
       const minted = mintedLinks(page);
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/12 cards minted/)).toBeVisible();
+      await expect(dialog.getByText(/10 cards minted/)).toBeVisible();
       const printed = await minted;
 
       const pdfDownload = page.waitForEvent('download');
@@ -61,14 +61,14 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(batch).toContainText('Harvest fair stall');
       await expect(batch.getByText('Yes', { exact: true })).toHaveCount(1);
 
-      expect(printed, 'a sheet of twelve links').toHaveLength(12);
+      expect(printed, 'a sheet of ten links').toHaveLength(10);
       for (const link of printed) {
         // The short form, on this site: the token is the last path segment.
         expect(link).toMatch(
           new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
         );
       }
-      expect(new Set(printed).size).toBe(12);
+      expect(new Set(printed).size).toBe(10);
       links.push(...printed);
     });
 
@@ -128,7 +128,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const batch = page
         .getByRole('row')
         .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
-      await expect(batch).toContainText('12');
+      await expect(batch).toContainText('10');
       await expect(batch).toContainText('1');
       await page.getByRole('button', { name: /^Revoke Batch / }).click();
       await page

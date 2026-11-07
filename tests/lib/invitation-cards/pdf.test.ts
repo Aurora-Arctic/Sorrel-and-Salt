@@ -43,11 +43,14 @@ const links = (n: number) =>
     (_, i) => `https://sorrelandsalt.com/i/card${String(i).padStart(12, '0')}`,
   );
 
-// Letter, and the block of twelve cards with bleed on the portrait page: 8.25 × 10.75 in, 1/8 in from every edge.
+// Letter, and the block of ten cards with bleed on the portrait page: 7.25 × 10.25 in, centred, 5/8 in from each side
+// and 3/8 in from the top and the bottom.
 const LETTER = { width: 612, height: 792 };
-const BLOCK = { left: 9, right: 603, bottom: 9, top: 783 };
-// A card's trim on the page: the frame turns a quarter, so its 2 in height runs across the page and its 3.5 in width up it.
-const CARD = { across: 144, up: 252 };
+const BLOCK = { left: 45, right: 567, bottom: 27, top: 765 };
+// A card's trim on the page: the cards stand upright, so its 3.5 in width runs across the page and its 2 in height up it.
+const CARD = { across: 252, up: 144 };
+// What a print shop's or office printer's unprintable edge may clip: nothing is drawn nearer the paper's edge than this.
+const PAPER_CLEARANCE = 18;
 
 interface Box {
   left: number;
@@ -247,7 +250,7 @@ function pictures(doc: PDFDocument, pageIndex: number, picture: ImageKind): Box[
     .map((image) => image.box);
 }
 
-// The cell of the 3 × 3 block a picture's centre falls in, counted across and up the portrait page.
+// The cell of the block a picture's centre falls in, counted across and up the portrait page.
 function cell({ left, right, bottom, top }: Box): string {
   const x = (left + right) / 2;
   const y = (bottom + top) / 2;
@@ -266,20 +269,20 @@ async function build(n: number) {
 }
 
 describe('the card sheets PDF', () => {
-  let twelve: PDFDocument;
-  let twelveBytes: Uint8Array;
+  let ten: PDFDocument;
+  let tenBytes: Uint8Array;
   beforeAll(async () => {
-    ({ doc: twelve, bytes: twelveBytes } = await build(12));
+    ({ doc: ten, bytes: tenBytes } = await build(10));
   });
 
   it.each([
     [1, 2],
-    [12, 2],
-    [13, 4],
-    [24, 4],
-    [25, 6],
+    [10, 2],
+    [11, 4],
+    [20, 4],
+    [21, 6],
   ])(
-    'gives %i cards %i Letter pages: per sheet of twelve, the fronts then the backs',
+    'gives %i cards %i Letter pages: per sheet of ten, the fronts then the backs',
     async (n, pages) => {
       const { doc } = await build(n);
       expect(doc.getPageCount()).toBe(pages);
@@ -296,9 +299,9 @@ describe('the card sheets PDF', () => {
   );
 
   it.each([
-    [12, 1],
-    [13, 2],
-    [25, 3],
+    [10, 1],
+    [11, 2],
+    [21, 3],
   ])('gives %i cards %i pages of fronts alone when the backs are left out', async (n, pages) => {
     const bytes = await renderCardSheets(
       { links: links(n), batch: 'b4444444', expiresAt: EXPIRES, backs: false },
@@ -310,30 +313,30 @@ describe('the card sheets PDF', () => {
     expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'salt'))).toHaveLength(n);
   });
 
-  it('fills, and clips to, an 8.25 × 10.75 in block 1/8 in from every edge of each page', () => {
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      const page = drawn(twelve, i);
+  it('fills, and clips to, a 7.25 × 10.25 in block centred on each page, 5/8 in from each side and 3/8 in from the top and bottom', () => {
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      const page = drawn(ten, i);
       expect(page.fills[0]).toEqual(BLOCK);
       expect(page.clips).toEqual([BLOCK]);
-      expect((BLOCK.right - BLOCK.left) / 72).toBe(8.25);
-      expect((BLOCK.top - BLOCK.bottom) / 72).toBe(10.75);
+      expect((BLOCK.right - BLOCK.left) / 72).toBe(7.25);
+      expect((BLOCK.top - BLOCK.bottom) / 72).toBe(10.25);
       expect(BLOCK.left).toBe(LETTER.width - BLOCK.right);
       expect(BLOCK.bottom).toBe(LETTER.height - BLOCK.top);
-      expect(BLOCK.bottom).toBe(9);
-      expect(BLOCK.left).toBe(9);
+      expect(BLOCK.left / 72).toBe(5 / 8);
+      expect(BLOCK.bottom / 72).toBe(3 / 8);
     }
   });
 
-  it('draws 18 crop marks per page, each on a cut line, 2.25 pt clear of the block and 6 pt long', () => {
+  it('draws 18 crop marks per page, each on a cut line, 2.25 pt clear of the block, 6 pt long and 1/4 in clear of the paper edge', () => {
     // The cuts run 1/8 in inside the block's edge and every card's height or width apart.
-    const cutsX = [0, 1, 2, 3, 4].map((k) => BLOCK.left + 9 + CARD.across * k);
-    const cutsY = [0, 1, 2, 3].map((k) => BLOCK.bottom + 9 + CARD.up * k);
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      const marks = drawn(twelve, i).strokes;
+    const cutsX = [0, 1, 2].map((k) => BLOCK.left + 9 + CARD.across * k);
+    const cutsY = [0, 1, 2, 3, 4, 5].map((k) => BLOCK.bottom + 9 + CARD.up * k);
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      const marks = drawn(ten, i).strokes;
       expect(marks).toHaveLength(18);
-      // Each cut line has a mark at both ends: four lines one way and five the other.
-      expect(marks.filter(({ from, to }) => from[0] === to[0])).toHaveLength(10);
-      expect(marks.filter(({ from, to }) => from[1] === to[1])).toHaveLength(8);
+      // Each cut line has a mark at both ends: three lines down the page and six across it.
+      expect(marks.filter(({ from, to }) => from[0] === to[0])).toHaveLength(6);
+      expect(marks.filter(({ from, to }) => from[1] === to[1])).toHaveLength(12);
       for (const { from, to } of marks) {
         const box = boxOf([from, to]);
         expect(Math.hypot(to[0] - from[0], to[1] - from[1])).toBeCloseTo(6);
@@ -356,10 +359,11 @@ describe('the card sheets PDF', () => {
             BLOCK,
           ),
         ).toBe(false);
-        expect(box.left).toBeGreaterThanOrEqual(0);
-        expect(box.right).toBeLessThanOrEqual(LETTER.width);
-        expect(box.bottom).toBeGreaterThanOrEqual(0);
-        expect(box.top).toBeLessThanOrEqual(LETTER.height);
+        // The stroke's half width counts, as it inks past the line's ends' sides.
+        expect(box.left - 0.375).toBeGreaterThanOrEqual(PAPER_CLEARANCE);
+        expect(box.right + 0.375).toBeLessThanOrEqual(LETTER.width - PAPER_CLEARANCE);
+        expect(box.bottom - 0.375).toBeGreaterThanOrEqual(PAPER_CLEARANCE);
+        expect(box.top + 0.375).toBeLessThanOrEqual(LETTER.height - PAPER_CLEARANCE);
         const vertical = from[0] === to[0];
         if (vertical) expect(cutsX).toContainEqual(from[0]);
         else expect(cutsY).toContainEqual(from[1]);
@@ -368,34 +372,39 @@ describe('the card sheets PDF', () => {
   });
 
   it('puts each back behind its front when the sheet is turned over its long edge', async () => {
-    const { doc } = await build(4);
+    const { doc } = await build(10);
     const fronts = pictures(doc, 0, 'salt').map(cell);
     // A long-edge turn mirrors the page left to right, so a back's cell, mirrored, is its front's.
     const backs = pictures(doc, 1, 'sorrel').map((box) =>
       cell({ ...box, left: LETTER.width - box.right, right: LETTER.width - box.left }),
     );
-    expect(new Set(fronts).size).toBe(4);
+    expect(new Set(fronts).size).toBe(10);
     expect(backs).toEqual(fronts);
   });
 
   it('stands each back right way up when the card is turned side over side, like a book page', () => {
-    const [front] = drawn(twelve, 0).images;
-    const backs = drawn(twelve, 1).images;
-    expect(backs).toHaveLength(12);
+    const [front] = drawn(ten, 0).images;
+    const backs = drawn(ten, 1).images;
+    expect(backs).toHaveLength(10);
+    // The fronts stand upright on the portrait page: a card's top toward the page's top, its right toward the page's right.
+    expect(front.up).toEqual([0, 1]);
+    expect(front.right).toEqual([1, 0]);
     // A long-edge print turns the sheet over its long side, which mirrors the back page left to right.
     const turnSheet = ([x, y]: Vector): Vector => [0 - x, y];
     for (const back of backs) {
       // A side-over-side turn spins the card about its own up line, so its up holds and its right reverses.
       expect(turnSheet(back.up)).toEqual(front.up);
       expect(turnSheet(back.right)).toEqual(front.right.map((v) => 0 - v));
+      // So the back page takes no half turn: a portrait page turned over its long edge keeps its top at the top.
+      expect(back.up).toEqual([0, 1]);
     }
     // Every front faces the same way, so the first one stands for them all.
-    for (const other of drawn(twelve, 0).images) expect(other.up).toEqual(front.up);
+    for (const other of drawn(ten, 0).images) expect(other.up).toEqual(front.up);
   });
 
   it('keeps every picture inside the block', () => {
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      for (const { box } of drawn(twelve, i).images) {
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      for (const { box } of drawn(ten, i).images) {
         expect(box.left).toBeGreaterThanOrEqual(BLOCK.left);
         expect(box.right).toBeLessThanOrEqual(BLOCK.right);
         expect(box.bottom).toBeGreaterThanOrEqual(BLOCK.bottom);
@@ -405,29 +414,29 @@ describe('the card sheets PDF', () => {
   });
 
   it("runs each front's salt 1/8 in past its card's trim at the bottom right, at 360 × 240 artboard px", () => {
-    const fronts = pictures(twelve, 0, 'salt');
-    expect(fronts).toHaveLength(12);
+    const fronts = pictures(ten, 0, 'salt');
+    expect(fronts).toHaveLength(10);
     for (const box of fronts) {
       const [cx, cy] = cell(box).split(',').map(Number);
       const trim = {
         left: BLOCK.left + 9 + CARD.across * cx,
         bottom: BLOCK.bottom + 9 + CARD.up * cy,
       };
-      // The frame turns a quarter clockwise, so a card's right edge lies at the page's bottom and its bottom at the left.
+      // The card stands upright, so the salt runs past its trim's right edge and its bottom.
+      expect(box.right - (trim.left + CARD.across)).toBeCloseTo(9);
       expect(trim.bottom - box.bottom).toBeCloseTo(9);
-      expect(trim.left - box.left).toBeCloseTo(9);
-      expect(box.top - box.bottom).toBeCloseTo((360 * 72) / 192);
-      expect(box.right - box.left).toBeCloseTo((240 * 72) / 192);
+      expect(box.right - box.left).toBeCloseTo((360 * 72) / 192);
+      expect(box.top - box.bottom).toBeCloseTo((240 * 72) / 192);
     }
   });
 
   it('prints card i with front text i, and the expiry date on every front', async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    const pdf = await pdfjs.getDocument({ data: twelveBytes.slice() }).promise;
+    const pdf = await pdfjs.getDocument({ data: tenBytes.slice() }).promise;
     const text = await (await pdf.getPage(1)).getTextContent();
     const page = text.items.map((item) => ('str' in item ? item.str : '')).join('\n');
     // Letter spacing reads back as a space between letters, so the spaced lines are compared without spaces.
-    expect(page.replace(/ /g, '').match(/VALIDUNTIL31MARCH2027/g)).toHaveLength(12);
+    expect(page.replace(/ /g, '').match(/VALIDUNTIL31MARCH2027/g)).toHaveLength(10);
     // Cards are drawn in order, so each tagline's opening appears in the order of the texts.
     const starts = FRONT_COPY.map((copy) => page.indexOf(copy.tagline.slice(0, 12)));
     expect(starts.every((start) => start >= 0)).toBe(true);
@@ -435,37 +444,40 @@ describe('the card sheets PDF', () => {
     const backs = (await (await pdf.getPage(2)).getTextContent()).items
       .map((item) => ('str' in item ? item.str : ''))
       .join('\n');
-    expect(backs.replace(/ /g, '').match(/BYINVITATIONONLY\./g)).toHaveLength(12);
+    expect(backs.replace(/ /g, '').match(/BYINVITATIONONLY\./g)).toHaveLength(10);
     // The batch name sits on every back, and in each page's margin with the sheet number.
-    expect(backs.replace(/ /g, '').match(/BATCHB4444444/g)).toHaveLength(12);
+    expect(backs.replace(/ /g, '').match(/BATCHB4444444/g)).toHaveLength(10);
     expect(page).toContain('Batch b4444444, sheet 1 of 1, fronts');
     expect(backs).toContain('Batch b4444444, sheet 1 of 1, backs');
   });
 
-  it('sets each sheet label at 5 pt in the margin below the block, 2.5 pt from the edge and 8 pt in from the first trim', async () => {
+  it('sets each sheet label at 5 pt in the margin below the block, upright, 8 pt in from the first trim and 1/4 in clear of the paper edge', async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    const pdf = await pdfjs.getDocument({ data: twelveBytes.slice() }).promise;
+    const pdf = await pdfjs.getDocument({ data: tenBytes.slice() }).promise;
     const label = async (page: number, text: string) => {
       const items = (await (await pdf.getPage(page)).getTextContent()).items;
       const item = items.find((it) => 'str' in it && it.str === text);
       if (!item || !('transform' in item)) throw new Error(`no label ${text}`);
       return item.transform as number[];
     };
-    // The fronts' frame turns a quarter clockwise, so the margin below its block is the page's left edge, read top down.
-    const front = await label(1, 'Batch b4444444, sheet 1 of 1, fronts');
-    expect(Math.hypot(front[0], front[1])).toBeCloseTo(5);
-    expect(front[4]).toBeCloseTo(2.5);
-    expect(front[5]).toBeCloseTo(BLOCK.top - 9 - 8);
-    // The backs' frame turns the other way, so its margin is the page's right edge, read bottom up.
-    const back = await label(2, 'Batch b4444444, sheet 1 of 1, backs');
-    expect(Math.hypot(back[0], back[1])).toBeCloseTo(5);
-    expect(back[4]).toBeCloseTo(LETTER.width - 2.5);
-    expect(back[5]).toBeCloseTo(BLOCK.bottom + 9 + 8);
+    for (const [page, face] of [
+      [1, 'fronts'],
+      [2, 'backs'],
+    ] as const) {
+      const [a, b, c, d, x, baseline] = await label(page, `Batch b4444444, sheet 1 of 1, ${face}`);
+      // Upright at 5 pt on both pages, as neither page is turned.
+      expect([a, b, c, d]).toEqual([5, 0, 0, 5]);
+      expect(x).toBeCloseTo(BLOCK.left + 9 + 8);
+      // Its descenders, a quarter of the size below the baseline, stay 1/4 in clear of the paper edge, and its
+      // ascenders, the size above it, stay below the block.
+      expect(baseline - 5 / 4).toBeGreaterThanOrEqual(PAPER_CLEARANCE);
+      expect(baseline + 5).toBeLessThanOrEqual(BLOCK.bottom);
+    }
   });
 
-  it('builds 500 cards on 84 pages, with each font and picture embedded once', async () => {
-    const { doc } = await build(500);
-    expect(doc.getPageCount()).toBe(84);
+  it('builds 495 cards on 100 pages, with each font and picture embedded once', async () => {
+    const { doc } = await build(495);
+    expect(doc.getPageCount()).toBe(100);
     const objects = doc.context.enumerateIndirectObjects().map(([, object]) => object);
     const dictOf = (object: unknown) =>
       object instanceof PDFRawStream ? object.dict : object instanceof PDFDict ? object : undefined;
@@ -473,9 +485,9 @@ describe('the card sheets PDF', () => {
       objects.filter((object) => dictOf(object)?.get(PDFName.of(key)) === PDFName.of(value));
     expect(ofType('Subtype', 'Type0')).toHaveLength(4);
     // Each picture is one image and one soft mask, its alpha, and so is each front's shadow.
-    expect(ofType('Subtype', 'Image')).toHaveLength(4 + 2 * 500);
-    const saltPage = pictures(doc, 82, 'salt');
-    expect(saltPage).toHaveLength(500 - 41 * 12);
+    expect(ofType('Subtype', 'Image')).toHaveLength(4 + 2 * 495);
+    const saltPage = pictures(doc, 98, 'salt');
+    expect(saltPage).toHaveLength(495 - 49 * 10);
   }, 60_000);
 
   it('embeds every glyph it draws with the outline the shipped font gives it', () => {
@@ -486,7 +498,7 @@ describe('the card sheets PDF', () => {
       'Lexend-Regular': assets.lexend400,
       'Lexend-Medium': assets.lexend500,
     };
-    const descriptors = twelve.context
+    const descriptors = ten.context
       .enumerateIndirectObjects()
       .map(([, object]) => object)
       .filter(
@@ -501,7 +513,7 @@ describe('the card sheets PDF', () => {
       const outlines = new Set(
         Array.from({ length: source.numGlyphs }, (_, id) => source.getGlyph(id).path.toSVG()),
       );
-      const file = twelve.context.lookup(descriptor.get(PDFName.of('FontFile2'))) as PDFRawStream;
+      const file = ten.context.lookup(descriptor.get(PDFName.of('FontFile2'))) as PDFRawStream;
       const font = fontkit.create(decodePDFRawStream(file).decode());
       expect(font.numGlyphs).toBeGreaterThan(20);
       for (let id = 1; id < font.numGlyphs; id += 1) {
@@ -514,16 +526,16 @@ describe('the card sheets PDF', () => {
 });
 
 describe("the card sheets PDF's inks", () => {
-  let twelve: PDFDocument;
+  let ten: PDFDocument;
   beforeAll(async () => {
-    ({ doc: twelve } = await build(12));
+    ({ doc: ten } = await build(10));
   });
   const same = (a: number[], b: readonly number[]) =>
     a.length === 4 && a.every((v, i) => Math.abs(v - b[i]) < 1e-4);
 
   it('paints every fill and stroke in DeviceCMYK, and nothing in RGB, grey or a named colour space', () => {
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      const { operators } = drawn(twelve, i);
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      const { operators } = drawn(ten, i);
       expect(operators.has('k'), `page ${i} fills in CMYK`).toBe(true);
       expect(operators.has('K'), `page ${i} strokes in CMYK`).toBe(true);
       for (const op of ['rg', 'RG', 'g', 'G', 'sc', 'SC', 'scn', 'SCN', 'cs', 'CS'])
@@ -532,16 +544,16 @@ describe("the card sheets PDF's inks", () => {
   });
 
   it('fills the block with the ground ink', () => {
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      const page = drawn(twelve, i);
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      const page = drawn(ten, i);
       expect(page.fills[0]).toEqual(BLOCK);
       expect(same(page.fillInks[0], GROUND_INK), `page ${i}: ${page.fillInks[0]}`).toBe(true);
     }
   });
 
   it('writes the words in the heading and muted inks, and the sheet label in the label ink', () => {
-    for (let i = 0; i < twelve.getPageCount(); i += 1) {
-      const { textInks } = drawn(twelve, i);
+    for (let i = 0; i < ten.getPageCount(); i += 1) {
+      const { textInks } = drawn(ten, i);
       const label = textInks[textInks.length - 1];
       expect(same(label, LABEL_INK), `page ${i} label: ${label}`).toBe(true);
       const cards = textInks.slice(0, -1);
@@ -553,28 +565,25 @@ describe("the card sheets PDF's inks", () => {
   });
 
   it('draws each code in the muted ink', () => {
-    const { pathInks } = drawn(twelve, 0);
+    const { pathInks } = drawn(ten, 0);
     // Per code, three finder rings, three finder centres and one fill of every dot.
-    expect(pathInks).toHaveLength(12 * 7);
+    expect(pathInks).toHaveLength(10 * 7);
     for (const ink of pathInks) expect(same(ink, MUTED_INK), `${ink}`).toBe(true);
-    expect(drawn(twelve, 1).pathInks).toHaveLength(0);
+    expect(drawn(ten, 1).pathInks).toHaveLength(0);
   });
 
   it.each(['salt', 'sorrel'] as const)(
     'embeds the %s picture as CMYK tinted between the ground and chalk, with its alpha as a grey soft mask',
     (picture) => {
       const page = picture === 'salt' ? 0 : 1;
-      const names = imageNames(twelve, page);
+      const names = imageNames(ten, page);
       const name = Object.keys(names).find((n) => names[n] === picture)!;
-      const xObjects = twelve
-        .getPage(page)
-        .node.Resources()!
-        .lookup(PDFName.of('XObject'), PDFDict);
-      const image = twelve.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
+      const xObjects = ten.getPage(page).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
+      const image = ten.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
       expect(image.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceCMYK'));
       expect(image.dict.get(PDFName.of('Filter'))).toBe(PDFName.of('FlateDecode'));
       expect(image.dict.lookup(PDFName.of('BitsPerComponent'), PDFNumber).asNumber()).toBe(8);
-      const mask = twelve.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
+      const mask = ten.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
       expect(mask.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceGray'));
 
       const png = UPNG.decode(assets[picture].slice().buffer);
@@ -639,21 +648,21 @@ describe("the card sheets PDF's inks", () => {
   });
 
   it('shades each front behind its code column with solid ground ink through a grey soft mask, over the salt and under the words', () => {
-    const names = imageNames(twelve, 0);
-    const page = drawn(twelve, 0);
+    const names = imageNames(ten, 0);
+    const page = drawn(ten, 0);
     const shadows = page.images.filter((image) => names[image.name] === 'shadow');
-    expect(shadows).toHaveLength(12);
+    expect(shadows).toHaveLength(10);
     const lastSalt = page.images.map((image) => names[image.name]).lastIndexOf('salt');
     for (const shadow of shadows) {
       expect(page.images.indexOf(shadow)).toBeGreaterThan(lastSalt);
       expect(shadow.textsBefore).toBe(0);
       expect(shadow.pathsBefore).toBe(0);
     }
-    expect(Object.values(imageNames(twelve, 1))).not.toContain('shadow');
+    expect(Object.values(imageNames(ten, 1))).not.toContain('shadow');
 
-    const xObjects = twelve.getPage(0).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
+    const xObjects = ten.getPage(0).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
     for (const name of new Set(shadows.map((shadow) => shadow.name))) {
-      const image = twelve.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
+      const image = ten.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
       expect(image.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceCMYK'));
       expect(image.dict.lookup(PDFName.of('BitsPerComponent'), PDFNumber).asNumber()).toBe(8);
       const cmyk = decodePDFRawStream(image).decode();
@@ -662,7 +671,7 @@ describe("the card sheets PDF's inks", () => {
       for (let i = 0; i < cmyk.length; i += 4)
         if (ground.some((v, c) => cmyk[i + c] !== v))
           throw new Error(`pixel ${i / 4} is not the ground ink`);
-      const mask = twelve.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
+      const mask = ten.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
       expect(mask.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceGray'));
       const alpha = decodePDFRawStream(mask).decode();
       expect(alpha).toHaveLength(cmyk.length / 4);

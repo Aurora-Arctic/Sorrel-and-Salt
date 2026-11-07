@@ -57,31 +57,38 @@ import { glyphAdvances } from './text';
 import type { RoundedSquare } from '../qr/types';
 import type { CardAssets, CardSheetsInput } from './types';
 
-// Every length below is in points (72 to the inch) on the landscape frame the canvas turns onto the page,
-// measured from the frame's top left with y running down.
+// Every length below is in points (72 to the inch) on the portrait page, measured from its top left with y running down.
 
 const PT = 72;
 export const PAGE = { width: 8.5 * PT, height: 11 * PT };
-/** The landscape frame the cards are laid out on, before it is turned onto the portrait page. */
-const FRAME = { width: PAGE.height, height: PAGE.width };
 const TRIM = { width: 3.5 * PT, height: 2 * PT };
 const BLEED = 0.125 * PT;
-/** Three cards across the frame's long side and four down. */
-const COLUMNS = 3;
+/** Two cards across the page and five down, each standing upright. */
+const COLUMNS = 2;
 const ROWS = CARDS_PER_SHEET / COLUMNS;
-/** The block of twelve cards and its bleed, 1/8 in from every edge of the page. */
-export const BLOCK = {
-  x: 0.125 * PT,
-  y: 0.125 * PT,
+const BLOCK_SIZE = {
   width: COLUMNS * TRIM.width + 2 * BLEED,
   height: ROWS * TRIM.height + 2 * BLEED,
 };
+/**
+ * The block of ten cards and its bleed, 7.25 × 10.25 in, centred: 5/8 in from each side and 3/8 in from the top and the
+ * bottom, so a printer's unprintable edge clips neither the bleed nor the crop marks outside it.
+ */
+export const BLOCK = {
+  x: (PAGE.width - BLOCK_SIZE.width) / 2,
+  y: (PAGE.height - BLOCK_SIZE.height) / 2,
+  ...BLOCK_SIZE,
+};
 const ARTBOARD_SCALE = PT / PX_PER_INCH;
 
-// Crop marks sit on each cut line's extension, clear of the bleed, short enough for the 1/8 in margin on every side.
+// Crop marks sit on each cut line's extension, clear of the bleed; at the top and bottom they end 18.75 pt from the paper's
+// edge, outside the 1/4 in a printer may leave unprinted.
 const MARK = { width: 0.75, gap: 2.25, length: 6 };
-/** The sheet label's place: in the margin below the block, its baseline 2.5 pt from the frame's edge, 8 pt in from the first trim. */
-const LABEL_AT = { x: BLOCK.x + BLEED + 8, baseline: FRAME.height - 2.5 };
+/**
+ * The sheet label's place: in the margin below the block, 8 pt in from the first trim, its baseline 21 pt from the paper's
+ * edge, so its 5 pt letters stand clear of the block above and of the 1/4 in a printer may leave unprinted below.
+ */
+const LABEL_AT = { x: BLOCK.x + BLEED + 8, baseline: PAGE.height - 21 };
 
 interface Sheet {
   fronts: PDFPage;
@@ -95,7 +102,7 @@ interface Embedded {
   pictures: Record<PictureItem['picture'], PDFRef>;
 }
 
-/** The top left of card i's trim on its sheet: three across the frame's long side, four down. */
+/** The top left of card i's trim on its sheet: two across the page, five down. */
 function cardTrim(i: number): { x: number; y: number } {
   return {
     x: BLOCK.x + BLEED + (i % COLUMNS) * TRIM.width,
@@ -109,13 +116,12 @@ export function backPosition(i: number): number {
 }
 
 /**
- * Starts a page with the frame's axes, y running down: the fronts' frame turned a quarter clockwise onto the portrait page,
- * the backs' a quarter anticlockwise, so a cut card turned side over side, like a book page, shows its back right way up.
+ * Starts a page with y running down from its top left. Both faces stand upright: a portrait page turned over its long edge
+ * keeps its top at the top, so the backs need no half turn, and a cut card turned side over side, like a book page, shows
+ * its back right way up.
  */
-function frameOperators(face: 'front' | 'back'): Operator[] {
-  return face === 'front'
-    ? [concatTransformationMatrix(0, -1, -1, 0, PAGE.width, PAGE.height)]
-    : [concatTransformationMatrix(0, 1, 1, 0, 0, 0)];
+function frameOperators(): Operator[] {
+  return [concatTransformationMatrix(1, 0, 0, -1, 0, PAGE.height)];
 }
 
 /** Moves the origin to card i's artboard, its trim on the card's cut, in the artboard's pixels. */
@@ -257,7 +263,6 @@ function cropMarkOperators(): Operator[] {
  */
 function drawPage(
   page: PDFPage,
-  face: 'front' | 'back',
   cards: {
     position: number;
     picture: PictureItem;
@@ -268,7 +273,7 @@ function drawPage(
   embedded: Embedded,
   margin: TextItem,
 ) {
-  const ops: Operator[] = [pushGraphicsState(), ...frameOperators(face), pushGraphicsState()];
+  const ops: Operator[] = [pushGraphicsState(), ...frameOperators(), pushGraphicsState()];
   ops.push(rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height), clip(), endPath());
   ops.push(
     setFillingCmykColor(...GROUND_INK),
@@ -398,7 +403,6 @@ export async function renderCardSheets(
     };
     drawPage(
       sheet.fronts,
-      'front',
       sheetLinks.map((link, i) => ({
         position: i,
         picture: FRONT_PICTURE,
@@ -412,7 +416,6 @@ export async function renderCardSheets(
     if (sheet.backs)
       drawPage(
         sheet.backs,
-        'back',
         sheetLinks.map((_, i) => ({
           position: backPosition(i),
           picture: BACK_PICTURE,

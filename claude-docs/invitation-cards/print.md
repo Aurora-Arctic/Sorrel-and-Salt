@@ -17,16 +17,15 @@ The design is the approved card canvas: the `Main` artboard is the front and the
 
 Every page is US Letter, portrait (8.5 × 11 in).
 
-- **Twelve cards to a sheet**, three across and four down. A card is 3.5 × 2 in at the trim, the size of a business card, so three across the long side make 10.5 in and four down make 8 in. That block only fits on the page turned on its side, so the cards are laid out on a landscape frame turned a quarter turn onto the portrait page.
-- **Bleed only on the block's outer edge.** Neighbouring cards share a cut line with no gap between them, so there is no bleed between cards; the block has 1/8 in of bleed all round its outside. With it, the block is 8.25 × 10.75 in.
-- **Where the block sits.** It fills the page bar a 1/8 in margin on every side.
-- **Eighteen crop marks** sit outside the block, one on each end of every cut line: 8 for the four lines between and beside the columns, 10 for the five lines between and beside the rows. Each mark is on the cut line's extension, clear of the bleed, and all are the same short size to fit the 1/8 in margin: 2.25 pt of gap after the bleed, 6 pt long, in a 0.75 pt line.
-- **Two pages to a sheet.** For each sheet of twelve, the PDF has a page of fronts and then a page of backs, so `N` links give `2 × ceil(N / 12)` pages.
-- **The card turns like a book page.** A cut card, turned over side to side (its left edge over to the right, as a book page turns), shows its back right way up. For that, the fronts' frame is turned a quarter clockwise onto the page and the backs' frame a quarter anticlockwise. On the paper, every front's top points to the page's right and every back's top to the page's left. Turned top over bottom instead, the back would be upside down.
-- **The backs are mirrored by column.** Back `i` takes position `floor(i / 3) × 3 + (2 − i mod 3)`: within each row of the frame the first and last cards swap places. With the backs' frame turned the other way, this puts each back at the same height on the page as its front, mirrored left to right. Printed two-sided and flipped on the long edge, each back lands behind its own front.
+- **Ten cards to a sheet**, two across and five down, each standing upright on the portrait page. A card is 3.5 × 2 in at the trim, the size of a business card, so two across make 7 in and five down make 10 in. Ten is the most that fits upright with a margin a printer can print in: twelve would fill the page bar 1/8 in, which a print shop's or an office printer's unprintable edge clips.
+- **Bleed only on the block's outer edge.** Neighbouring cards share a cut line with no gap between them, so there is no bleed between cards; the block has 1/8 in of bleed all round its outside. With it, the block is 7.25 × 10.25 in.
+- **Where the block sits.** It is centred on the page, which leaves 5/8 in at each side and 3/8 in at the top and the bottom.
+- **Eighteen crop marks** sit outside the block, one on each end of every cut line: 6 for the three lines between and beside the columns, 12 for the six lines between and beside the rows. Each mark is on the cut line's extension, clear of the bleed: 2.25 pt of gap after the bleed, 6 pt long, in a 0.75 pt line. A mark therefore ends 8.25 pt (about 0.11 in) beyond the bleed, so 18.75 pt (about 0.26 in) from the top and bottom edges of the paper and 36.75 pt (about 0.51 in) from its sides: outside the 1/4 in a printer may leave unprinted.
+- **Two pages to a sheet.** For each sheet of ten, the PDF has a page of fronts and then a page of backs, so `N` links give `2 × ceil(N / 10)` pages.
+- **The card turns like a book page.** A cut card, turned over side to side (its left edge over to the right, as a book page turns), shows its back right way up. Both pages stand upright: a portrait page turned over its long edge keeps its top at the top, so the back page needs no half turn. Turned top over bottom instead, the back would be upside down.
+- **The backs are mirrored by column.** Back `i` takes position `floor(i / 2) × 2 + (1 − i mod 2)`: within each row the two cards swap places. Printed two-sided and flipped on the long edge, which mirrors the page left to right, each back lands behind its own front.
 - **A part-filled last sheet** keeps the full soot block, and the positions with no card stay plain soot, front and back. The block then prints and cuts exactly as a full one, with no bare paper showing at a cut.
-- **The crop marks need a printer that prints close to the edge.** Every mark sits in the 1/8 in margin; a printer with a wider unprintable margin crops them.
-- **The sheet label** names the batch, the sheet number and the face. It sits in the margin below the block (in the frame's terms), in Lexend 400 at 5 pt, its baseline 2.5 pt from the frame's edge and its start 8 pt in from the first card's trim, between the first two crop marks.
+- **The sheet label** names the batch, the sheet number and the face. It sits in the margin below the block, upright, in Lexend 400 at 5 pt, its baseline 21 pt from the paper's bottom edge and its start 8 pt in from the first card's trim, between the first two crop marks. Its letters stand clear of the block above and at least 1/4 in from the paper's edge below.
 
 The layers on each page are drawn in this order: the soot fill, then every picture, then every front's shadow, then every card's words and QR code, then the crop marks. Everything except the marks is clipped to the block's outer edge, so a picture never lands on a neighbouring card's words.
 
@@ -106,14 +105,14 @@ jsPDF's higher-level text and font calls were not tested against these four need
 `pdf.test.ts` reads a built PDF back with pdf-lib and with a small interpreter of the page's drawing operators. It proves:
 
 - every page is Letter;
-- the page count is `2 × ceil(N / 12)` for 1, 12, 13, 24 and 25 cards, and the card count matches the batch;
+- the page count is `2 × ceil(N / 10)` for 1, 10, 11, 20 and 21 cards, and the card count matches the batch;
 - the block's size and position;
-- the 18 crop marks, on the cut lines, short, and outside the block;
-- the sheet label at 5 pt in the margin below the block;
-- each back lands behind its own front under a long-edge flip, and stands right way up when the card is turned side over side;
+- the 18 crop marks, on the cut lines, short, outside the block and at least 1/4 in from the paper edge;
+- the sheet label at 5 pt in the margin below the block, at least 1/4 in from the paper edge;
+- every front stands upright on the page, each back lands behind its own front under a long-edge flip, and stands right way up when the card is turned side over side, with no half turn of the back page;
 - every picture lies inside the block;
 - the expiry date and every tagline appear in order;
-- a 500-card batch builds 84 pages with each font and picture embedded once, and one shadow per front;
+- a 495-card batch builds 100 pages with each font and picture embedded once, and one shadow per front;
 - each front's shadow is solid ground ink through a grey soft mask that peaks at the shadow opacity, drawn over the salt and under the words;
 - every embedded glyph is intact.
 

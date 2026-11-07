@@ -218,7 +218,7 @@ describe('AdminCards', () => {
       'href',
       '/keepers/users?user=u1&from=invitation-cards',
     );
-    expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
+    expect(within(row).getByText('Sheet 2, Card 7')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText(/^2 times,/)).toBeInTheDocument();
     const times = row.querySelectorAll('time');
@@ -380,11 +380,11 @@ describe('AdminCards', () => {
     expect(mint()).toBeDisabled();
     expect(
       within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }),
-    ).toHaveAccessibleDescription('A Letter sheet holds 12 cards.');
+    ).toHaveAccessibleDescription('A Letter sheet holds 10 cards.');
     fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '3' },
     });
-    expect(within(dialog()).getByText('36 cards')).toBeInTheDocument();
+    expect(within(dialog()).getByText('30 cards')).toBeInTheDocument();
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
@@ -410,13 +410,13 @@ describe('AdminCards', () => {
     );
     render(<AdminCards batches={[]} minting />);
     const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
-    const refusal = 'A batch is from 1 to 41 sheets';
+    const refusal = 'A batch is from 1 to 49 sheets';
 
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
-    fireEvent.change(sheets, { target: { value: '42' } });
+    fireEvent.change(sheets, { target: { value: '50' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
     expect(sheets).toBeInvalid();
-    fireEvent.change(sheets, { target: { value: '41' } });
+    fireEvent.change(sheets, { target: { value: '49' } });
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
     fireEvent.change(sheets, { target: { value: '0' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
@@ -425,13 +425,13 @@ describe('AdminCards', () => {
 
     // jsdom does not move the focus; the browser does, from its own report of the invalid field.
     const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
-    fireEvent.change(sheets, { target: { value: '42' } });
+    fireEvent.change(sheets, { target: { value: '50' } });
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
     expect(calls).toHaveLength(0);
     expect(report).toHaveBeenCalled();
-    expect(sheets).toHaveValue(42);
+    expect(sheets).toHaveValue(50);
   });
 
   it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {

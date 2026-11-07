@@ -85,7 +85,7 @@ describe('the card operations', () => {
     expect(rows.every((row) => row.revoked_at === null)).toBe(true);
   });
 
-  it('mints twelve pending cards a sheet sharing one batch and the chosen expiry', async () => {
+  it('mints ten pending cards a sheet sharing one batch and the chosen expiry', async () => {
     const expiresAt = nextWeek();
 
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 2, expiresAt });
