@@ -1,0 +1,19 @@
+# Backend DRY review — plan (MB.206–MB.214)
+
+**Status:** decided and built. Only the decisions, the reasons and what they rule out are kept here.
+
+## Rules every task follows
+
+- **Pure refactor unless the entry says otherwise.** The service, repository and validation tests are the proof: they stay as they are and stay green. A test that has to change is a behaviour change and is named in the PR body. The three behaviour changes are named below (MB.209's `RowId`, MB.208's seed GUCs, MB.214's CHECK).
+- **Constraints kept:** authorization in services with the `Membership`/`SiteAdmin` proof taken first; only `src/db/repository/` imports the client and only `select.ts`/`write.ts` build queries; no `drizzle-orm` at runtime above the repository; every list through `t.pagedConnection` + `findPage`; loaders through `define-loader.ts`; types in type-only files (`tests/guards/types-in-type-files.test.ts`); modules reach each other through `@/modules/<name>` only (vocabulary may not import ingredients); every service opens with `import 'server-only'`; migrations forward-only, so no column or index is renamed to tidy a schema.
+- **A new helper file inside a module is not re-exported from the module's index** (`group-moves.ts` and `held-entries.ts` are the precedent), unless another module needs it.
+- **Mechanism + guard where a guard is cheap** (the sweep-task rule): the soft-delete finder guard's regex widens for each new predicate name in the same PR; a lint `no-restricted-syntax` entry keeps the session narrowing out of resolvers once `sessionOf` exists.
+- **Coverage must not drop per touched `src/` directory**, compared in `.reports/coverage/coverage-summary.json` before and after.
+- **Docs in the same PR** (MB.31): a `claude-docs/` section that describes a shape that moved is corrected in that task; a comment keeps saying why a thing is not the obvious alternative (MB.50).
+- **Verification for every task:** `npm run test:coverage`, `npm run pre-commit`, the e2e specs of the touched area, then `node scripts/task-board.mjs sync <ID>` after the entry is edited. No commit, push or PR unless the owner asks in their own message.
+
+## MB.209 — Validation: one `requiredText`, one `RowId`, one link-or-name rule · 1.5h
+
+**Bug fix first, regression test first:** `vocabulary/validation/category.ts:14`, `deity.ts:17` and `ingredient-form-value.ts:17` use `z.uuid({ error })`; `RowId = z.guid()` (`src/lib/validation.ts:15`) exists because a hand-written fixture id fails `z.uuid()`. The test gives such an id as `groupId` and expects the service to reach the "no such group" path, not a format refusal; then the three take `RowId`. `src/lib/validation.ts` gains `requiredText(message)` and `optionalText()` (the copies at `ingredients/validation/ingredient.ts:27-40`, `stock.ts:28-32`, `compendium-filter.ts:11-15`, `reference.ts:26-34`) and `curatedValueInput(noun)` for the six name/description pairs (`astrology-value.ts` is the factory precedent). `ingredients/validation/ingredient.ts:275-326` becomes `linkOrNameRules(field, idKey, messages)` with `LinkOrName<IdKey>` types in `validation/types.ts`; the case-folded seen-set loop (`:203-217, 256-266`) once. `ReferenceTextField` = `Exclude<keyof CitationFields, 'kind'>`; `REFERENCE_TEXT_FIELDS` exported from `reference-format.ts`'s `FORMAT_OF` for MB.212 to build the GraphQL types from; `ISO_DAY` and the quotation-mark set live in `lib/citation.ts`, which validation may import. The two date messages become one. `lib/contrast.ts` exports `HEX_COLOR` for `vocabulary/validation/category-group.ts:20` and `channels` for `group-colors.ts:30`; the two component copies are MB.115's.
+
+_Acceptance criteria:_ the regression test fails on `staging` and passes here · `tests/modules/*/validation/**` otherwise unchanged · no validation file declares its own `requiredText` or hex/day regex.
