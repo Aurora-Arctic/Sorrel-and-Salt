@@ -4437,7 +4437,7 @@ _Acceptance criteria:_
 
 **Amended 2026-10-30 by the review itself** ([`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md), plan in [`design-decisions/mb.123-plan.md`](../design-decisions/mb.123-plan.md)): the review changed three rules. The destructive-controls rule in `.claude/rules/components.md` (Delete and Remove live in the edit dialog; a row's Remove or Revoke is drawn plain; red also marks the two high-risk controls, Impersonate and Pause Keeper Changes). The page-head rule in `claude-docs/styling.md`, guarded by `tests/guards/page-heads.test.ts`. The stylelint token rules in `.stylelintrc.json`. It also added a non-blocking knip leg to CI. The estimate is now 11h. That figure is the wall-clock time of the agent run (a floor), not an estimate of human hours.
 
-**MB.124 — Design review: error, loading and empty states, and the whole site** · 7h
+**MB.124 — Design review: error, loading and empty states, and the whole site** · 14h
 
 _Story:_ As a user, I want errors, loading and empty pages to look as finished as the rest, and the whole site to feel like one thing, so that nothing looks broken.
 
