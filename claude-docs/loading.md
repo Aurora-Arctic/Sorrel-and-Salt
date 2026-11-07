@@ -331,8 +331,9 @@ Rules the spec follows:
 - It waits until nothing on the page has `aria-busy="true"` before measuring. A part that loads after
   the page arrives (the document editor, which `next/dynamic` loads) must mark its own placeholder
   `aria-busy="true"` so the spec measures it once it is drawn.
-- The origin page is scrolled so the clicked link is on screen. A page that resets its scroll on
-  arrival can therefore show a frame move the skeleton cannot remove.
+- The origin page is scrolled so the clicked link is on screen. The window goes to the top when the
+  skeleton appears (see "Frames, context rows and the scroll"), so the frame moves once, at the tap,
+  and not again on arrival; the skeleton-to-page comparison is the one that must hold.
 
 To run it for named routes (the pattern is the route name followed by `at`):
 
@@ -341,7 +342,7 @@ BETTER_AUTH_SECRET=local-dev-not-a-real-secret \
   npx playwright test tests/e2e/skeleton-layout.spec.ts --grep "(keepers-document|keepers-documents) at "
 ```
 
-### Frames, context rows and the pin
+### Frames, context rows and the scroll
 
 Some pages sit in a layout that draws a row of its own above the page: the context row (the coven
 switcher or the admin area's row). A skeleton for such a page is drawn without that row when the host
@@ -350,10 +351,13 @@ stands, because the layout keeps it up. When the host does not stand, `framed(ho
 (`.page-column` or `.coven-layout`), so the frame is the same either way. `skeletonFor` does this for
 every `main` skeleton that is not standing, so a registered skeleton never draws a frame itself.
 
-The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`). The context row is not
-sticky and scrolls away, so when the real row is above the cover (the row stays up and the cover holds
-only the page) the pin is lowered by the row's height, using the same height tokens as the row. A
-skeleton that draws its own context row inside the cover is left alone.
+The window scrolls to the top, instantly, as a host (`MainBody` or `SectionBody`) starts drawing a
+destination's skeleton. It runs once per wait, in `useLeavingSkeleton` (`src/components/SkeletonFade`),
+which both hosts call. A click made far down the page therefore moves the page once, at the tap, and
+the arrived page has no scroll left to reset. A navigation that draws no host skeleton (a pager, a
+filter, a sort) and a route modal do not scroll. Next's own scroll on arrival is left on and has
+nothing to do. The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`); with the page
+at the top, the context row above the cover needs no extra allowance.
 
 ### A skeleton runs no query
 
