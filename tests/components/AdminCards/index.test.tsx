@@ -410,13 +410,13 @@ describe('AdminCards', () => {
     );
     render(<AdminCards batches={[]} minting />);
     const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
-    const refusal = 'A batch is from 1 to 49 sheets';
+    const refusal = 'A batch is from 1 to 50 sheets';
 
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
-    fireEvent.change(sheets, { target: { value: '50' } });
+    fireEvent.change(sheets, { target: { value: '51' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
     expect(sheets).toBeInvalid();
-    fireEvent.change(sheets, { target: { value: '49' } });
+    fireEvent.change(sheets, { target: { value: '50' } });
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
     fireEvent.change(sheets, { target: { value: '0' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
@@ -425,13 +425,13 @@ describe('AdminCards', () => {
 
     // jsdom does not move the focus; the browser does, from its own report of the invalid field.
     const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
-    fireEvent.change(sheets, { target: { value: '50' } });
+    fireEvent.change(sheets, { target: { value: '51' } });
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
     expect(calls).toHaveLength(0);
     expect(report).toHaveBeenCalled();
-    expect(sheets).toHaveValue(50);
+    expect(sheets).toHaveValue(51);
   });
 
   it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {

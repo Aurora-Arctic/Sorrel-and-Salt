@@ -170,8 +170,8 @@ describe('mintInvitationCards', () => {
   it(`mints ${MAX_SHEETS_PER_BATCH} sheets in one call and refuses one more`, async () => {
     const minted = await mintInvitationCards(asUser(E), MAX_SHEETS_PER_BATCH, NEXT_WEEK());
     expect(minted.tokens).toHaveLength(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET);
-    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(490);
-    expect(await cards()).toHaveLength(490);
+    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(500);
+    expect(await cards()).toHaveLength(500);
 
     const refused = await mintInvitationCards(
       asUser(E),
@@ -179,8 +179,8 @@ describe('mintInvitationCards', () => {
       NEXT_WEEK(),
     ).catch((error: unknown) => error);
     expect(refused).toBeInstanceOf(ValidationError);
-    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 49 sheets/);
-    expect(await cards()).toHaveLength(490);
+    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 50 sheets/);
+    expect(await cards()).toHaveLength(500);
   });
 
   it.each([0, -1, 1.5, Number.NaN])('refuses %s sheets, a part sheet included', async (sheets) => {

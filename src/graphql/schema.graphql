@@ -1082,7 +1082,7 @@ type Mutation {
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
 
   """
-  Mints `sheets` sheets of ten cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 49 sheets.
+  Mints `sheets` sheets of ten cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 50 sheets.
   """
   createInvitationCards(
     """

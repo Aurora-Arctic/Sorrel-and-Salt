@@ -878,7 +878,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
   `requireAdminSession()`, which answers a curator with the styled not-authorized page.
 - **Minting.** `createInvitationCards(sheets, expiresAt, beta, note)` makes ten cards per sheet in one transaction under
-  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (49 sheets, 490 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). `beta` marks every card of the batch as
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (50 sheets, 500 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). `beta` marks every card of the batch as
   minted for beta testers (`invitations.beta`); it is written at minting and never changed, and a CHECK refuses it on any row
   that is not a card. The
   mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
