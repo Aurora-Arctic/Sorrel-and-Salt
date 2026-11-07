@@ -9,7 +9,7 @@ import { totpCode, wrongTotpCode } from '../support/two-factor';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 75 through Better Auth's real endpoints: an authenticator-app step after a right password, and the
+// Two-factor (@story-75) through Better Auth's real endpoints: an authenticator-app step after a right password, and the
 // versioned secrets its stored secret is encrypted under (DESIGN.md §8; claude-docs/auth/two-factor.md).
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

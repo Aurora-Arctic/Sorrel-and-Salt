@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 
-/** The day Expires On opens on, 90 days from today (UTC), as the batch table's Expires column prints it: "2027-01-28". */
+/** The day Expires On opens on, 90 days from today (UTC), as the batch table's Expires column prints it. */
 export function defaultExpiryDay(now = new Date()): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 90))
     .toISOString()

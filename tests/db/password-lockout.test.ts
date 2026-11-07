@@ -8,7 +8,7 @@ import { get, post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 72 through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
+// Password lockout (@story-72) through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
 // claude-docs/auth/passwords.md, "Lockout". Counts are seeded in SQL rather than reached by a hundred sign-ins.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

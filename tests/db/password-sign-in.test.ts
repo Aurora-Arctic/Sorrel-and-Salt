@@ -17,7 +17,7 @@ import { BREACHED_CHECK_TIMEOUT_MS } from '@/lib/breached-password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 70 through Better Auth's real endpoints, with the breached-password service stubbed at the network:
+// Password sign-in (@story-70) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

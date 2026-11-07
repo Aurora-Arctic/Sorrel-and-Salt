@@ -6,8 +6,8 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { sendAs } from './send-as';
 
-// What a curator sees of /keepers/support (M15.31): the requests marked for curators and the ones assigned to them, and nothing
-// else. Story 90 walks the admin side; this proves what no story walks, the curator's narrower page.
+// What a curator sees of /keepers/support: the requests marked for curators and the ones assigned to them, and nothing
+// else. @story-90 walks the admin side; this proves what no story walks, the curator's narrower page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

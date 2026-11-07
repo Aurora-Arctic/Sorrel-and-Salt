@@ -701,7 +701,7 @@ test(
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
     await dialog.getByRole('button', { name: 'Save Working' }).click();
-    // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
+    // Save keeps the draft and closes the dialog. The row is read from the database, not the Workings list.
     await expect(dialog).toBeHidden();
     await expect(recordButton).toBeFocused();
     await assertNoAccessibilityViolations(page);

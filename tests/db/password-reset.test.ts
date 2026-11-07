@@ -19,7 +19,7 @@ import type { setPassword as SetPasswordService } from '@/modules/identity';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 71 through Better Auth's real endpoints, with the breached-password service stubbed at the network:
+// Password reset (@story-71) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md, "Reset and change".
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

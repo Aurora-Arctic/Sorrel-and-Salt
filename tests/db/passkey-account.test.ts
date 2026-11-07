@@ -13,7 +13,7 @@ import { softKey } from '../support/passkey-authenticator';
 import { enrol } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 
-// Story 74 through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
+// Passkey management (@story-74) through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
 // never the last way it has to sign in (claude-docs/auth/plugins.md, "Passkeys").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

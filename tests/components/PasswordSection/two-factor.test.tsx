@@ -9,7 +9,7 @@ import TwoFactorSettings, {
 import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
 import { makeQueryClient } from '@/lib/graphql-client';
 
-// Story 75's switch on the account page. Better Auth's client is mocked at the three calls it makes;
+// The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;
 // tests/db/two-factor.test.ts proves what the server does with each.
 const enable = vi.fn();
 const disable = vi.fn();

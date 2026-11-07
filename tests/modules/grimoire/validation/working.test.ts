@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WorkingInput } from '@/modules/grimoire/validation/working';
 
-// The input mirrors spell_workings' and spell_working_participants' CHECKs (M13.4), so the
+// The input mirrors spell_workings' and spell_working_participants' CHECKs, so the
 // database is never what a user sees refuse a working.
 
 const MEMBER = '11111111-1111-4111-8111-111111111111';

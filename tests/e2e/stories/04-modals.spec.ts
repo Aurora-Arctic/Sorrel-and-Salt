@@ -515,7 +515,7 @@ test(
       B: 'member',
     });
     await page.goto(`/coven/${coven.slug}`);
-    // The ingredient dialogs save on Close instead of asking (M13.24), so the question is walked on a keeper
+    // The ingredient dialogs save on Close instead of asking, so the question is walked on a keeper
     // form, which still asks (claude-docs/components/modal.md, "Unsaved changes").
     await signInAs(page, 'groups@story-32.test', ['discord'], 'admin');
     await page.goto('/curator/category-groups');

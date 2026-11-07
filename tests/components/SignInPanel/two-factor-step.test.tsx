@@ -8,7 +8,7 @@ import {
 } from '@/components/SignInPanel/two-factor-step';
 import { setQuery } from './search-params';
 
-// Story 75's second step. Better Auth's client is mocked at the calls the step makes, so each test sets
+// The second sign-in step (@story-75). Better Auth's client is mocked at the calls the step makes, so each test sets
 // the answer the server gives; tests/db/two-factor.test.ts proves the server gives it.
 vi.mock('next/navigation', async () => ({
   useSearchParams: (await import('./search-params')).useSearchParams,

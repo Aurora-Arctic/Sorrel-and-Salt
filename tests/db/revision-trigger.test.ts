@@ -120,7 +120,7 @@ describe('a spell’s revision', () => {
   });
 });
 
-// `ingredients` holds a coven's own entries and the compendium's alike, so one column guards both forms (M13.23).
+// `ingredients` holds a coven's own entries and the compendium's alike, so one column guards both forms.
 describe('an ingredient’s revision', () => {
   const ingredient = (workspaceId: string | null) =>
     insertIngredient(sql, makeIngredient({ workspaceId, nomenclature: 'none' }), A.id);
@@ -163,7 +163,7 @@ describe('an ingredient’s revision', () => {
   });
 });
 
-// A coven's annotation of a compendium entry autosaves, so it counts saves as an ingredient does (M13.24).
+// A coven's annotation of a compendium entry autosaves, so it counts saves as an ingredient does.
 describe('a cupboard entry’s revision', () => {
   beforeEach(async () => {
     await sql`truncate ingredients cascade`;

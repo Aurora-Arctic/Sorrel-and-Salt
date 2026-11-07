@@ -4,7 +4,7 @@ import { decodePdfLinks, defaultExpiryDay } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
-// Story 88: a keeper mints a batch of cards, and a brand-new account opens a card's link and may then start a coven. The
+// @story-88: a keeper mints a batch of cards, and a brand-new account opens a card's link and may then start a coven. The
 // QR image is decoded rather than looked at: its content must be the link a person scanning it opens.
 
 test.beforeAll(async () => {

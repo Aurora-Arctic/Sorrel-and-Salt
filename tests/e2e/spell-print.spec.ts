@@ -11,7 +11,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The spell recipe page's print layout (M10.22): Print for any role, its own button for a viewer, and
+// The spell recipe page's print layout: Print for any role, its own button for a viewer, and
 // under print media a one-page sheet with the Ingredients summary, the steps, formal names on shared
 // labels, and none of the page's controls or the shell's bar.
 
