@@ -32,14 +32,6 @@ function onPageShow(event: PageTransitionEvent): void {
  * stays on until the page is restored from the back-forward cache: nothing
  * on this page can tell when the other one has loaded.
  */
-/** A fresh page is not leaving: the provider calls this as it mounts, so a report left from a page before it is not carried over. */
-export function clearLeaving(): void {
-  if (!leaving) return;
-  leaving = false;
-  window.removeEventListener('pageshow', onPageShow);
-  publish();
-}
-
 export function reportLeaving(): void {
   if (typeof window === 'undefined') return;
   leaving = true;

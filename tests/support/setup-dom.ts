@@ -89,3 +89,9 @@ vi.mock('@/lib/jobs/runtime', () => ({
   sleep: async () => undefined,
   start: async () => ({ runId: 'run-stub' }),
 }));
+
+// A page that reported it was leaving (src/lib/navigation/store.ts) stays leaving until the browser restores it
+// from the back-forward cache. Restored here after every test, so one test's report is not the next one's busy hint.
+afterEach(() => {
+  window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+});
