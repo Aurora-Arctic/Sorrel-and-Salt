@@ -754,16 +754,11 @@
     border: 1px solid $hairline;
     border-radius: radius('surface');
     background-color: $surface-card;
-    @include theme-transition(background-color, border-color);
 
     &:hover,
     &:focus-within {
       border-color: $edge-highlight;
       background-color: $fill-highlight-field;
-    }
-
-    @include reduced-motion {
-      transition: none;
     }
   }
 

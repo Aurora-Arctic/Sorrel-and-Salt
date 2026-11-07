@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { FormActions, SelectField, TextField } from '../Field';
