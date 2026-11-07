@@ -27,13 +27,11 @@ export interface AdminInvitationFilter {
 
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
-/** The origin a site access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
 export interface AccessPauseNotifier {
   /** The origin a mailed link is built on. @throws {Error} where none resolves. */
   origin(): Promise<string>;
 }
 
-/** One site access pause mail, as its job carries it: the pause's id and the origin, and nothing of the user's. */
 export type AccessPauseMail = {
   kind: 'access-pause';
   pauseId: string;
@@ -58,10 +56,7 @@ export type PrimaryAdminOutcome =
   | 'unverified'
   | 'profile-email-differs';
 
-/**
- * How what the email service decides gets delivered. Built per request by the
- * GraphQL context, because it reaches Better Auth and a service may not.
- */
+/** Built per request by the GraphQL context, because it reaches Better Auth and a service may not. */
 export interface EmailVerificationSender {
   resend(email: string, next?: string): Promise<void>;
   requestChange(userId: string, next?: string): Promise<void>;
@@ -72,16 +67,9 @@ export interface EmailVerificationSender {
   defer(task: () => Promise<void>): void;
 }
 
-/**
- * How a password is added to an account that has none. Built per request by the GraphQL context, as
- * `EmailVerificationSender` is, because Better Auth's set-password endpoint is reachable only on the server.
- */
+/** Built per request by the GraphQL context, as `EmailVerificationSender` is, because Better Auth's set-password endpoint is reachable only on the server. */
 export interface PasswordSetter {
-  /**
-   * Gives the request's signed-in account `newPassword`, under every rule a sign-up's password obeys, and
-   * mails the account a notice. @throws {ValidationError} on `newPassword` when a rule refuses it, the
-   * breached-password check cannot answer, or the account already has a password.
-   */
+  /** @throws {ValidationError} on `newPassword` when a rule refuses it, the breached-password check cannot answer, or the account already has a password. */
   set(newPassword: string): Promise<void>;
   /** Whether the request's session is younger than Better Auth's `freshAge`; `false` with no session. */
   sessionIsFresh(): Promise<boolean>;
@@ -93,15 +81,9 @@ export interface AdminRoleChangePauseState {
   canToggle: boolean;
 }
 
-/**
- * How an invitation's link, admin or coven, reaches the invited address. Built per request by the GraphQL context, as
- * `EmailVerificationSender` is, because a service may not import Better Auth's origin resolution.
- */
+/** Built per request by the GraphQL context, because a service may not import Better Auth's origin resolution. */
 export interface InvitationSender {
-  /**
-   * Mails the invited address of the address invitation `invitationId` the link that accepts it, through the secret-link job: the
-   * run holds the id and the origin, and its step gives the invitation a fresh token when it sends. Never throws on a failed send.
-   */
+  /** The run holds the id and the origin, and its step gives the invitation a fresh token when it sends. Never throws on a failed send. */
   invitation(invitationId: string): Promise<void>;
 }
 
@@ -110,10 +92,7 @@ export type WorkspaceInvitationRow = InvitationRow & {
   role: NonNullable<InvitationRow['role']>;
 };
 
-/**
- * A pending coven invitation as its invitee's `/coven` landing shows it: coven, role, sender and expiry.
- * Never the token, which no response carries, nor the invited address.
- */
+/** Never the token, which no response carries, nor the invited address. */
 export interface ReceivedInvitation {
   id: string;
   covenName: string;
@@ -128,7 +107,6 @@ export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
   | 'used-by-you'
-  /** A card, refused because the signed-in account has already accepted another. */
   | 'used-another-card'
   | 'declined'
   | 'revoked'
@@ -140,9 +118,8 @@ export type InvitationRefusal =
 
 export type InvitationStanding =
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
-  /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
+  /** The name goes to the matching verified account alone. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }
-  /** A card: it names no coven, role or batch, and accepting lands on the account's own page. */
   | { acceptable: true; tier: 'card' }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
@@ -161,22 +138,17 @@ export type InvitationCheck =
 
 export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
 
-/** A pending card as its landing page tells a signed-out visitor of it: whether its batch was minted for beta testers. */
 export interface LiveCard {
   beta: boolean;
 }
 
-/** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
 export interface MintedCards {
   batchId: string;
   expiresAt: Date;
   tokens: string[];
 }
 
-/**
- * A mail carrying a secret link, as its job's run holds it: ids and the request's `/api/auth` base, never the token, the
- * address or the link. The step reads the address and the token, or signs one, when it sends.
- */
+/** Ids and the request's `/api/auth` base, never the token, the address or the link. */
 export type SecretLink =
   | { kind: 'verification'; userId: string; authBase: string; next: string | null }
   | { kind: 'reset'; userId: string; authBase: string }
@@ -185,10 +157,7 @@ export type SecretLink =
   /** An address invitation's link, coven or admin, on a token its step mints when it sends, so only the newest mailed link works. */
   | { kind: 'invitation'; invitationId: string; origin: string };
 
-/**
- * An account notice, as its job's run holds it: ids, a kind and the site origin, never the address or the mail. The step reads
- * the address from the row when it sends.
- */
+/** Ids, a kind and the site origin, never the address or the mail. */
 export type AccountNotice =
   | { kind: 'change-requested'; userId: string; origin: string }
   | { kind: 'account-exists'; userId: string; origin: string }

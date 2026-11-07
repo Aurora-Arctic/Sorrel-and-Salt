@@ -104,7 +104,6 @@ async function checkInvitation(
   if (dead) return { refusal: dead, card };
 
   const user = await findOneById(users, session.userId);
-  // A card is bound to no address, so any verified account admits; every other kind is held by its address.
   if (invitation.kind === 'card') {
     if (!user) return { refusal: 'invalid', card };
     if (!user.emailVerified) return { refusal: 'unverified', card };
@@ -229,8 +228,7 @@ async function acceptChecked(
   const accepted = await withAudit(
     session,
     async (write) => {
-      // The writer's own match is the last word: a change committed since the checks leaves
-      // nothing to stamp.
+      // The writer's own match is the last word.
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
@@ -284,10 +282,7 @@ function recordableReason(card: InvitationRow, userId: string): CardAttemptReaso
   return undefined;
 }
 
-/**
- * Works out the reason itself and records nothing for an unknown token, an address invitation, a pending card, an
- * unverified account or the account that accepted the card; the caller names the token and nothing else.
- */
+/** Records nothing for an unknown token, an address invitation, a pending card, an unverified account or the account that accepted the card. */
 export async function recordCardAttempt(session: Session, token: string): Promise<void> {
   const card = await findInvitationByToken(token);
   if (!card || card.kind !== 'card') return;
