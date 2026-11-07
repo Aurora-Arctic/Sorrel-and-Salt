@@ -166,7 +166,18 @@ The help centre holds three kinds of entry: FAQ questions, articles and glossary
 
 To delete an entry, choose Delete in its form and confirm. Deleting an article that still has sub pages is refused, and the form shows why: delete or move the sub pages first.
 
-A save changes the public pages at once. The shipped entries are loaded by the seed. It restates an entry nobody has edited to the seed's current text, leaves an entry a person edited as they wrote it, and never brings back one that has been deleted.`,
+A save changes the public pages at once. The shipped entries are loaded by the seed. It restates an entry nobody has edited to the seed's current text, leaves an entry a person edited as they wrote it, and never brings back one that has been deleted.
+
+A body can place a widget: a small working part of the app drawn from the rules the app itself checks, so its wording never drifts from the app. Put the tag on a paragraph of its own. The widgets are:
+
+- \`::widget[unit-converter]\`: converts an amount within one dimension, and shows the refusal for a conversion across dimensions or involving a count.
+- \`::widget[invitation-refusals]\`: lists every reason an invitation or a printed card is refused.
+- \`::widget[role-permission-table]\`: shows what each coven role may do.
+- \`::widget[autosave-status]\`: shows each state of the save status and the retries.
+
+A save naming any other widget is refused on "Body". A tag inside a sentence, or in code, stays as text.
+
+A screenshot is a paragraph of one image, written \`![alt text](/help/screens/<name>.png "caption")\`. Readers see it as a figure with the caption beneath. The alt text says what the picture shows. An image from another site is shown as its alt text.`,
   'keeper',
 );
 const writingHelpPages = [

@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { helpTerms, marksInMarkdown } from '@/lib/help-marks';
+import { HELP_WIDGETS, widgetsInMarkdown } from '@/lib/help-widgets';
 import { slugify } from '@/lib/slugify';
 import { loadHelpArticles } from '@/db/seed/help';
 import type { SeedHelpArticle } from '@/db/seed/types';
@@ -35,6 +38,20 @@ const FAQ: string[] = [
   'How Do I Leave a Coven?',
   'How Do I Ask for Help or Report an Accessibility Bug?',
 ];
+
+/** The one article each widget lives in; every other page that needs it points there. */
+const WIDGET_HOMES: Record<string, string> = {
+  'role-permission-table': 'Steward, Practitioner and Observer',
+  'autosave-status': 'Your Spell Saves Itself',
+  'invitation-refusals': 'My Invitation Link Does Not Work',
+  'unit-converter': 'I Cannot Convert a Unit',
+};
+
+/** The article each committed screenshot belongs to. */
+const SCREENSHOT_HOMES: Record<string, string> = {
+  'Read an Entry and Its Sources': 'compendium-entry.png',
+  'Build a Spell': 'spell-builder.png',
+};
 
 /** Each parent with its sub pages, every sub page at its parent's audience unless named. */
 const SECTIONS: { title: string; audience: Audience; children: (string | Expected)[] }[] = [
@@ -300,13 +317,38 @@ describe('the shipped help list', () => {
     expect(TERMS.filter((term) => !titles.has(term))).toEqual([]);
   });
 
-  it('gives every entry a title and a body, and a body no widget tag', () => {
+  it('gives every entry a title and a body', () => {
     for (const article of articles) {
       expect(article.title.trim(), article.seedKey).not.toBe('');
       expect(article.body.trim(), article.title).not.toBe('');
-      // Widgets are a later task: the renderer does nothing with the tag yet, so a seeded one would print as text.
-      expect(article.body, article.title).not.toMatch(/::widget\[/);
     }
+  });
+
+  it('places each widget once, in the article that is its home, and no unknown widget', () => {
+    const placed = articles.flatMap((article) =>
+      widgetsInMarkdown(article.body).map((name) => [name, plain(article.title)] as const),
+    );
+
+    expect(Object.fromEntries(placed)).toEqual(WIDGET_HOMES);
+    expect(placed).toHaveLength(HELP_WIDGETS.length);
+  });
+
+  it('shows each screenshot in its article, as an image the site serves with alt text and a caption', () => {
+    for (const [title, file] of Object.entries(SCREENSHOT_HOMES)) {
+      const article = articles.find((row) => plain(row.title) === title);
+      const image = /^!\[([^\]]+)\]\((\/help\/screens\/[^\s)]+) "([^"]+)"\)$/m.exec(
+        article?.body ?? '',
+      );
+
+      expect(image?.[2], title).toBe(`/help/screens/${file}`);
+      expect(existsSync(join('public', 'help', 'screens', file)), file).toBe(true);
+    }
+  });
+
+  it('names every widget in the keepers’ Writing Help Articles', () => {
+    const guide = articles.find((row) => plain(row.title) === 'Writing Help Articles');
+
+    expect(HELP_WIDGETS.filter((name) => !guide?.body.includes(`::widget[${name}]`))).toEqual([]);
   });
 
   it('marks only glossary terms the seed holds, and marks some', () => {

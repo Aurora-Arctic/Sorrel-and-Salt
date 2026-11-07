@@ -101,7 +101,9 @@ Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
     'What an entry page shows and where its claims come from.',
     `An entry's page shows its [[Formal Name|formal name]], folk names, description, safety notes, correspondences and categories, and each form it comes in as its own [[Variant|variant]] beneath it.
 
-What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]: a work with a locator pointing to where in it the claim is found. A reference can also say what it supports, and the basis of a name.`,
+What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]: a work with a locator pointing to where in it the claim is found. A reference can also say what it supports, and the basis of a name.
+
+![The Rosemary entry page in the Compendium, showing its formal name, folk names, description, safety notes, correspondences, categories and forms](/help/screens/compendium-entry.png "An entry page, read without signing in.")`,
   ),
   subPage(
     compendium,
@@ -131,6 +133,10 @@ const yourCovenPages = [
     `- **[[Observer]]**: reads ingredients, stock, spells and workings, and the [[Coven|coven]] itself. Writes nothing.
 - **[[Practitioner]]**: adds, edits and removes ingredients, spells and workings, reads and updates stock, and sees the other members.
 - **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and deleting the coven.
+
+The table shows each thing a role may do, from the rules the app checks:
+
+::widget[role-permission-table]
 
 A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
   ),
@@ -267,7 +273,9 @@ const grimoirePages = [
     1,
     'Build a Spell',
     'The parts of a spell and where each goes.',
-    `In the spell builder, fill in "Title", "Intent", "Jar Description" and "Seal Wax". Add steps. Under "When to Work It", pick "Moon Phase" and "Day"; these are suggestions. Add a note under Notes, and assign categories.`,
+    `In the spell builder, fill in "Title", "Intent", "Jar Description" and "Seal Wax". Add steps. Under "When to Work It", pick "Moon Phase" and "Day"; these are suggestions. Add a note under Notes, and assign categories.
+
+![The spell builder open on a draft spell, Hearth Protection Jar, with every section open and three steps: Rosemary, Bay Laurel and Selenite](/help/screens/spell-builder.png "The spell builder, every section open.")`,
   ),
   subPage(
     grimoire,
@@ -334,7 +342,9 @@ On a spell's page, the preview has a "Screen Awake" toggle, with the tips "Keep 
 
 A save starts 3 seconds after your last change, and at most 30 seconds into a long run of changes. It also saves when the tab is hidden or focus leaves the form. A copy is kept in your browser until the server confirms the save, and the browser asks before the tab closes with an unsaved change.
 
-The status shows "Saving…", then "Saved <time>", or "Draft saved <time>" for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at "Could not save." with "Retry". If someone else changed the same thing first, you can choose "Reload Latest" or "Keep My Version".
+The status shows "Saving…", then "Saved <time>", or "Draft saved <time>" for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at "Could not save." with "Retry". If someone else changed the same thing first, you can choose "Reload Latest" or "Keep My Version". Each state looks like this:
+
+::widget[autosave-status]
 
 The spell builder saves first when you choose Close, and it never sends a blank new instruction.`,
   ),
@@ -476,21 +486,11 @@ const troubleshootingPages = [
     2,
     'My Invitation Link Does Not Work',
     'The reason each refusal gives and what to do.',
-    `The page tells you the reason. The messages are:
+    `The page tells you the reason. Each reason, and what to do about it:
 
-- "This invitation link isn't valid. Check that you opened the whole link from the email."
-- "This invitation has already been accepted."
-- "This invitation was declined. If you change your mind, ask whoever sent it for a new one."
-- "This invitation was withdrawn. Ask whoever sent it for a new one."
-- "This invitation has expired. Ask whoever sent it for a new one."
-- "The coven this invitation was for has been deleted, so it can't be accepted."
-- "This invitation was sent to a different email address. Sign in with the account that uses that address."
-- "Your email address isn't confirmed yet. Confirm it, then open this link again to accept."
-- "Keeper changes are paused, so this invitation can't be accepted until they are resumed." This one applies to invitations from a Keeper only.
-- A printed card you have used: "You've already used this card. You can start a coven from your account."
-- A second printed card: "You've already used an invitation card, so this one stays free for someone else."
+::widget[invitation-refusals]
 
-A printed card has three wordings of its own. An unknown code says "That code doesn't match a card. Check the link or the QR code printed on the card and try again." A withdrawn card says "This card has been withdrawn." An expired card says "This card has expired." Each is followed by "You can still join by invitation: ask a coven to invite you."`,
+The reason "Keeper changes are paused" applies to invitations from a [[Keeper]] only.`,
   ),
   subPage(
     troubleshooting,
@@ -509,7 +509,9 @@ A printed card has three wordings of its own. An unknown code says "That code do
     4,
     'I Cannot Convert a Unit',
     'Why a conversion is refused.',
-    `Conversion works within one dimension only: weight to weight, or volume to volume. A weight cannot become a volume, because no table of densities exists. A count (pieces, drops and pinches) cannot be converted at all. The refusal is given as a result, never a guess.
+    `Conversion works within one dimension only: weight to weight, or volume to volume. A weight cannot become a volume, because no table of densities exists. A count (pieces, drops and pinches) cannot be converted at all. The refusal is given as a result, never a guess. Try a conversion here; it uses the same rule as the app:
+
+::widget[unit-converter]
 
 Within volume, a teaspoon is 5 ml, a tablespoon is 15 ml and a cup is 250 ml. Changing the unit on a jar keeps the numbers as typed and does not convert them.`,
   ),
