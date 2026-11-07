@@ -240,29 +240,7 @@ stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
-**The page.** The Sign-In Methods section of the Sign-In tab, `/account/sign-in`
-(["The account page"](#the-account-page) below), which calls
-`requireSession()`, so an unverified account never reaches it, though
-Better Auth itself would link to an unverified row. The page reads
-`linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
-`listUserAccounts` with the request headers) and `sessionIsFresh()`, and
-renders `SignInMethods`
-([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
-link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
-and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
-Sign-In tab, `/account/sign-in`, with `?error=` and `?provider=` when it failed, so
-the page can put the sentence in the row of the provider that failed.
-
-**The sign-in page's side.** `account_not_linked` has one sentence
-("Provisional accounts" below). At a sign-in, `unable_to_link_account`
-means only that writing the account row failed, and gets the plain retry
-sentence. The link-only codes (`email_does_not_match`,
-`account_already_linked_to_different_user`) land on `/account` and are
-`linkErrorMessage`'s.
-
-Provider vouching: inside an explicit link every provider vouches, the value feeding only Better Auth's link gate; the account signs in by its id from then on; on a sign-in each provider keeps its own answer.
-
-validateUserInfo only records what the provider said, for the hook below; it is not run on an explicit link, whose vouch vouchWhenLinking lent and which must not reach promotion; Better Auth names an implicit link at sign-in link-account too, so the state, not source.action, tells them apart.
+**The page.** The Sign-In Methods section of the Sign-In tab, `/account/sign-in` ("The account page" below), behind `requireSession()`, so an unverified account never reaches it, though Better Auth itself would link to an unverified row. A failed link lands back on the tab with `?error=` and `?provider=`; `linkErrorMessage` (`src/lib/sign-in.ts`) turns the code into the sentence, and `unlinkErrorMessage` does the same for an unlink refusal. On the sign-in page, `account_not_linked` has one sentence ("Provisional accounts" below), and `unable_to_link_account` means only that writing the account row failed, so it gets the plain retry sentence. The link-only codes (`email_does_not_match`, `account_already_linked_to_different_user`) are `linkErrorMessage`'s.
 
 ### Provisional accounts
 
@@ -513,22 +491,7 @@ the tests [`tests.md`](tests.md).
   over its own and appends cookies. A verified sign-in lands where it
   asked, or with no return path on its role's landing
   (["Route protection"](route-protection.md)).
-- **The page.** `src/app/(shell)/account/email/page.tsx` calls `requireSession()`
-  and `getMe`, and passes the form `''` for a placeholder, `next` through
-  `safeReturnPath`, the seconds left on the mail clock, `?error=` through
-  `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
-  Better Auth or the gate appends, never the code), and the session's
-  `signedInLanding` as `landing`, which Continue takes when there is no
-  `next`. That is `/keepers` for a keeper, `/curator` for a curator, a primary keeper a followed link
-  has just promoted included, since the page reads the role after the
-  link's write; a member's first coven; or `/coven` for someone in none. `EmailForm` has two views: `?verified` on a verified row is
-  the confirmed one, the address and Continue with nothing to edit;
-  otherwise the field, prefilled and always editable, which is how any
-  account changes its address later. Its success message names the typed
-  address, since the row's is unchanged until the link is followed. Inside
-  the card, a verified account gets a quiet button to the account page,
-  reading "Continue to Account" (["The account page"](#the-account-page) below), where
-  the same field changes the address on a visit to the account.
+- **The page.** `src/app/(shell)/account/email/page.tsx` calls `requireSession()`. `EmailForm` has two views: `?verified` on a verified row is the confirmed one (the address and Continue, nothing to edit); otherwise the prefilled, always-editable field, which is how any account changes its address later. A placeholder address shows as empty. `?error=` goes through `verifyErrorMessage` (`src/lib/account-email.ts`), one sentence per code. Continue takes `next`, or the session's `signedInLanding`: `/keepers` for a keeper, `/curator` for a curator (a primary keeper a followed link has just promoted included, since the page reads the role after the link's write), a member's first coven, or `/coven` for someone in none. The success message names the typed address, since the row's is unchanged until the link is followed.
 - **The front page offers it directly.** `/` is public, and for an unverified
   signed-in account its Continue points at `/account/email?next=<landing>`
   rather than at a page that would send it there.
@@ -546,10 +509,6 @@ the tests [`tests.md`](tests.md).
   thrown"). `/api/graphql` is not gated the same way — the context reads
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
-
-Placeholder email: a provider that shared no address (Discord without a verified one, Facebook under narrowed permissions) would end the callback at email_not_found; the placeholder lets the row and session exist so /account/email can ask for one.
-
-Sign-in landing: an unverified account can do nothing else so it lands on the email page, address prefilled, until the address is proven; where the sign-in was going rides along; the endpoint's own redirect is the location already in the response headers and its cookies stay. With no return path the landing is the role's as it stands after any promotion just now; otherwise the endpoint's redirect goes where the sign-in asked, /coven included; a member goes into their first coven (signedInLanding).
 
 ### The terms page
 
@@ -623,49 +582,12 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/password-section.md`](../components/password-section.md) and
 [`components/received-invitations.md`](../components/received-invitations.md).
 
-- **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an
-  unverified account is sent to the email page instead, and reads `getMe`,
-  `linkedAccounts()`, `sessionIsFresh()` and one page of
-  `listReceivedInvitations`. Under its `<h1>` "Your
-  Account" are three sections, each a region named by its own `<h2>`, which
-  the page writes in a `.header` with the section's intro as its `.lede`:
-  Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
-  (`EmailForm`, embedded, whose own status line says what the section is
-  for) and Invitations ("Covens that have invited
-  this email address to join them.", then `ReceivedInvitations`, M10.32). It
-  carries no link to `/account/email`.
-  Under the heading, a nav labelled "On This Page"
-  (the Sign-In tab has one too, to its four sections) links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-invitations`).
-  The Invitations section is always shown, with the table's empty state when
-  none wait. It pages with `?after=` and `?before=`, and its pager links keep
-  `#account-invitations`. Its id, `ACCOUNT_INVITATIONS_ID`, and the link to it,
-  `ACCOUNT_INVITATIONS_PATH`, are in `src/lib/sign-in.ts`; the `/coven`
-  landing's notice and the account menu's count both link to it. Each section stands on its
-  own `.panel`, which parts it from the next, so no rule is drawn between
-  them. A
-  section a link lands on stops clear of the top inset. The frame, the
-  sections and the panels are primitives
-  (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
-  [`styling.md`](../styling.md), "The page frame"), so the page has no stylesheet of its own beyond `.page-with-nav` in `_primitives.scss`, shared with the coven index: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
-  lands back on the Sign-In tab with `?error=` and `?provider=`: that page turns the code into
-  a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
-  the provider, when it is one on the roster, so the sentence shows in that
-  provider's row. The heading stands alone; Sign Out is in the shell's account menu
-  (`SignOutButton`,
-  [`components/account-menu.md`](../components/account-menu.md)):
-  Better Auth's own sign-out, then a full load of `/`.
-- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
-- **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
-- **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
-- **Passkeys (M16.8, Story 74).** A Passkeys section follows Password and Two-Factor Sign-In, at `/account/sign-in#passkeys`. Its intro says a passkey is tied
-  to this website's address and to the device or password manager that holds
-  it; that a passkey made on one Sorrel & Salt site, such as staging, does not
-  work on another is in the plugin's notes, not on the page ([`plugins.md`](plugins.md), "Passkeys"). The page reads the
-  list with `accountPasskeys()` in `src/lib/request-session.ts`, the plugin's
-  `listPasskeys` cut to id, name and day added, and hands it to `Passkeys`
-  ([`components/passkeys.md`](../components/passkeys.md)), whose Add a
-  Passkey, Rename and Remove call the plugin's own routes.
+- **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an unverified account is sent to the email page instead. Its three sections, Name, Email and Invitations, each stand on a `.panel` of the page frame ([`styling.md`](../styling.md), "The page frame"). The Invitations section is always shown and pages with `?after=` and `?before=`; the `/coven` landing's notice and the account menu's count link to it (`ACCOUNT_INVITATIONS_PATH`, `src/lib/sign-in.ts`). Sign Out is in the shell's account menu, not on the page.
+- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one tabbed page (`ACCOUNT_TABS`, `src/lib/sign-in.ts`); `/account/email` sits outside it. Each page runs its own `requireSession()`. The Sign-In tab stacks Sign-In Methods (which also takes the failed-link `?error=` and `?provider=` and shows the sentence in that provider's row), Password, Two-Factor Sign-In and Passkeys. Sign-In Methods lists the password and the passkeys too ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
+- **Two-Factor Sign-In.** For an account with no password the section says so and links to Password, since two-factor guards password sign-ins alone ([`components/password-section.md`](../components/password-section.md), "Two-factor").
+- **Passkeys.** The intro says a passkey is tied to this website's address and to the device or password manager that holds it; that one made on another Sorrel & Salt site, such as staging, does not work here is in the plugin's notes, not on the page ([`plugins.md`](plugins.md), "Passkeys"). The list is `accountPasskeys()` in `src/lib/request-session.ts`; the actions call the plugin's own routes ([`components/passkeys.md`](../components/passkeys.md)).
+- **The email page stays, for the flows that are not a visit to the account.** Every unverified sign-in lands there, it is the only protected page a provisional account can reach, a mailed link lands on its confirmed view, and a link opened from the wrong browser is explained there.
+- **The Email section is `EmailForm`, not a second form:** the same field, `setEmail` mutation, cooldown and field errors, with `embedded` set, so it has no page heading and never shows the confirmed view. A change link it asks for lands on the email page's confirmed view.
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only protected page a
   provisional account can reach, a mailed link lands on its confirmed view,
@@ -794,24 +716,11 @@ pause on every session, an impersonation's included, as `accessPause`. From ther
 The paused page's address carries nothing: the page reads the pause itself. A keeper impersonating a paused user is shown all of this as the user is
 (`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
 
-**The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as
-signed out, and it sits outside the app shell and is not indexed. It reads the viewer's own standing pause through
-`getShellSession()`, as the shell does: a dated pause names its end with `LocalTime`, the format the site prints an end in,
-and an open-ended one says it has no end date. A visitor with no session is sent to `/sign-in`, and a session with no pause
-standing, lifted or ended, to `/`. Its Support link is a `SupportLink`, so it opens the Support dialog over the page as the
-footer's does; a paused account sends from it signed in. The page has no account menu, so it also links "your requests" to
-`/account/support` itself. It reads the viewer's standing support time-out through `getMySupportTimeout`, skipped for an
-unverified account, whose support reads refuse it. With one standing, the page drops that paragraph and its Support link,
-since the dialog could send nothing, and says instead "You cannot send a support request until …", in `LocalTime`'s long
-form, or with no end "You cannot send a support request: you are timed out with no end date.", then "You can still read your requests.", with "read your requests" linking
-to `/account/support`. It also links to the compendium, which it reads as any signed-out visitor.
+**The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as signed out; it sits outside the app shell and is not indexed. A visitor with no session goes to `/sign-in`, and a session with no standing pause to `/`. A standing support time-out (`getMySupportTimeout`, skipped for an unverified account) replaces the Support link, since the dialog could send nothing, and the page says the requests can still be read at `/account/support`.
 
 **Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
 Either way the next request of a session signed in while paused reaches the whole site.
-**In the user modal.** The People page's user modal has a Site Access section (`claude-docs/components/user-detail.md`)
-where a keeper sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
-absent on the primary keeper and on the admin's own account. The history is read through `listUserAccessPauses`, a
-keyset page newest first, which GraphQL serves as the paged `userAccessPauses` query for site keepers.
+**In the user modal.** A Site Access section (`claude-docs/components/user-detail.md`) sets, lifts and lists pauses, with who set and who lifted each; it is absent on the primary keeper and the admin's own account. `userAccessPauses` is the paged, site-keeper-only query behind it.
 
 ### The self-created user
 
@@ -874,13 +783,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   has a token, hash or link field, and a test fails if one appears.
 - **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
   card already accepted stays accepted. A single card is never revoked on its own.
-- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
-  counted in SQL. The Invitation Cards tab at `/keepers/invitation-cards` shows it; the QR codes cannot be
-  redrawn from it.
-- **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
-  account owns (read as a keeper may read anyone's memberships). `cardArrivalsCsv` returns the same as
-  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
-  would read as a formula. The Card Sign-Ups tab at `/keepers/card-sign-ups` offers it as a download.
+- **Listing and sign-ups.** `invitationCardBatches` pages one row per batch, counted in SQL; `cardArrivals` pages every accepted card with the account, the date and the covens that account owns (read as a keeper may read anyone's memberships); `cardArrivalsCsv` returns the same as CSV, with a leading apostrophe on any cell a spreadsheet would read as a formula. The tabs are `/keepers/invitation-cards` and `/keepers/card-sign-ups`; the QR codes cannot be redrawn from a batch row.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
   and the service writes one row per card, account and reason, counting repeats

@@ -1,17 +1,14 @@
-## The user list
-
 `/keepers/users` lists everyone with an account, so a keeper can act on a person
-without being sent their id: M5.8's approval control and MB.59's grant control
-(Change Role since M11.20) act on a user from the modal each row's name opens, and MB.53 picks an impersonation target from it. Each row
-shows the name, the email, the role, whether the user may create a workspace,
-when the account was made, the providers linked to it, and whether its address
-is verified. The last two are what a keeper changing a role is asked to judge
-the person by. The role column names `User`, `Curator` or `Admin`, the last two in bold; the
-coven-creation column and its control show for a `user` only, since every curator and keeper holds the flag.
+without being sent their id: approval, role change and impersonation start from
+the modal each row's name opens. Each row shows the name, the email, the role
+(`User`, `Curator` or `Admin`), whether the user may create a workspace (shown
+for a `user` only, since every curator and keeper holds the flag), when the
+account was made, the providers linked to it, and whether its address is
+verified. The last two are what a keeper changing a role judges the person by.
 
 **It confers no workspace access.** Reading who has an account is what the
 admin role already implies. The page reads a user's memberships — each
-coven's name and the user's role in it — for the modal (M9.19), and nothing
+coven's name and the user's role in it — for the modal, and nothing
 beneath them: no ingredient, spell or member list. It offers no control over
 any workspace. It is not one more
 thing a keeper curates, either: CLAUDE.md's "and nothing else" governs what a keeper
@@ -22,9 +19,7 @@ may _change_.
   (`src/modules/identity/services/user-list.ts`) are a site admin's alone. Each asserts the role itself, by direct call, so a
   non-keeper is refused at the service and not merely kept off the page. The
   page calls them under `requireAdminSession()`, and GraphQL's `users` query
-  and `User.providers` field end at the same two functions. The list is a read,
-  so M5.7's mutation sweep does not reach it, and the query carries no Pothos
-  scope of its own.
+  and `User.providers` field end at the same two functions. The list is a read, so the query carries no Pothos scope of its own.
 - **Under the `SiteAdmin` proof.** `findUserPage`, `findUserCount` and `findProvidersOfUsers`
   (`src/db/repository/users.ts`) take the proof first, so the repository
   cannot be asked for the list by a caller that has not checked the role
@@ -34,44 +29,29 @@ may _change_.
 - **Not Better Auth's `listUsers`.** The `admin` plugin ships one, but it
   would put a database read outside the repository and a browser-initiated
   read outside `/api/graphql`: rules 2 and 1 in one call.
-- **Paged by the M3.6 helper.** The order is name then id, with a keyset
-  cursor and no offset, and a page holds 25 rows. The page reads it through
-  `readNumberedPage` (`src/lib/numbered-page.ts`), which pages it with
-  `resolveNumberedPage` and counts it with `countUsers`, so the pager says
-  "Page 2 of 3" between Prev and Next as every admin list does: the
-  count is every user the filter keeps, and how many of them come before the
-  page's first row. GraphQL's `users` connection pages with `resolvePage` and
-  is not counted. `?after=` and `?before=` carry the cursor. A cursor the codec
-  cannot read, or one it reads that names no row of this list, as a cursor
-  copied from another list does, gets the first page rather than an error.
-- **Five filters, all in SQL.** `?query=` matches a substring of the name or
-  the email, case-insensitively, with `%` and `_` read literally, through
-  the repository's `containsText`, which the category and form lists share. It
-  is an `ilike` rather than a trigram match, because a keeper looks a person
-  up by part of an address, which similarity scores poorly. `?awaiting`, a flag read by
-  its presence, narrows to `canCreateWorkspace = false`, the to-do
-  list M5.8 acts on. `?role=admin`, `?role=curator` or `?role=user` narrows to that site role
-  (M5.8, on the owner's review); any other value is no role, since only a
-  hand-edited address carries one. `?timed-out` narrows to the users a support
-  time-out stands on, and `?paused` to those a site access pause stands on, each a
-  flag read by its presence (M15.56). "Stands" is the test the Support and Access
-  columns read by: not lifted, not deleted, and `until` null or still ahead, so a
-  time-out or pause that has run out or been lifted narrows to nothing. Each is a
-  semi-join (`EXISTS`) in `findUserPage` and `findUserCount`, sharing
-  `timeoutStands` (`support.ts`) and `pauseStands` (`user-access-pauses.ts`)
-  with the column reads, so the filter and the marks cannot disagree and paging
-  stays in the cursor helper. GraphQL's `users` takes them as `timedOut` and
-  `paused`. The filter is a GET form to the page
-  itself, so a filtered page is an address.
+- **Paged by the cursor helper** (CLAUDE.md rule 8): name then id, keyset, 25
+  rows. The page reads it through `readNumberedPage`
+  (`src/lib/numbered-page.ts`) with `countUsers`, so the pager says "Page 2 of
+  3" as every admin list does; GraphQL's `users` connection pages with
+  `resolvePage` and is not counted. A cursor the codec cannot read, or that
+  names no row of this list, gets the first page rather than an error.
+- **Five filters, all in SQL**, in a GET form, so a filtered page is an address.
+  `?query=` matches a substring of the name or the email, case-insensitively,
+  with `%` and `_` read literally (the repository's `containsText`, shared with
+  the category and form lists); it is an `ilike` rather than a trigram match
+  because a keeper looks a person up by part of an address, which similarity
+  scores poorly. `?awaiting` narrows to `canCreateWorkspace = false`.
+  `?role=admin|curator|user` narrows to that site role; any other value is no
+  role. `?timed-out` and `?paused` narrow to the users a support time-out or a
+  site access pause stands on: not lifted, not deleted, and `until` null or
+  still ahead. Each is a semi-join (`EXISTS`) in `findUserPage` and
+  `findUserCount` sharing `timeoutStands` (`support.ts`) and `pauseStands`
+  (`user-access-pauses.ts`) with the column reads, so the filter and the marks
+  cannot disagree. GraphQL's `users` takes them as `timedOut` and `paused`.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build
   one.
-- **`User.email` keeps its one scope.** The `users` connection's nodes are the
-  ordinary `User`, so `email`, `role`, `canCreateWorkspace` and the new
-  `emailVerified` resolve through `selfOrAdmin` as they do on `me`. This page
-  is the first consumer that passes that scope as a keeper, rather than as the
-  user themselves
-  ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
+- **`User.email` keeps its one scope.** The `users` nodes are the ordinary `User`, so `email`, `role`, `canCreateWorkspace` and `emailVerified` resolve through `selfOrAdmin` as on `me` ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
 - **`User.providers` is a keeper's alone**, the user's own row included. It
   resolves through the `providersByUser` loader. A user's own providers come
   from Better Auth, on `/account`, whose table it is.
@@ -86,40 +66,21 @@ may _change_.
   a keeper does to a person applies to it, and `findUserPage` drops it in SQL
   beside the soft-delete filter.
 
-**Tests.** `tests/modules/identity/services/user-list.test.ts` covers the
-order, the cursor, both filters, the literal wildcards, the bootstrap user,
-soft-deleted rows, the count under each filter and before a page, and
-the refusal of a non-keeper fixture user by direct call, list and count alike,
-after proving that the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
-the transport's half: the default page of 25, the resumed cursor, the
-filters reaching the service, and that the nodes are the same `User` as
-`me`'s; a signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
-`tests/app/admin/(people)/users/page.test.tsx` covers the guard running first and the
-search parameters becoming the filter, the count and the pager's links and
-position, and a foreign cursor reading the first page.
-`tests/e2e/admin.spec.ts` checks the page a keeper sees against the built
-server, with axe.
+## The user modal
 
-## The user modal (M9.19)
-
-Pressing a user's name on the list opens a modal over it, so a keeper sees
-what a person already holds before approving, revoking, changing their role or
-impersonating them. The owner narrowed story 19 for this: "private data" is a
-workspace's contents, and which covens someone belongs to is not among them
-([`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
+Pressing a user's name on the list opens a modal over it, so a keeper sees what a person already holds before approving, revoking, changing their role or impersonating them. "Private data" is a workspace's contents; which covens someone belongs to is not among them ([`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
 
 - **The address is `?user=<id>`.** The press opens the modal at once, over a
-  skeleton, through M9.18's `RouteModal`; the list keeps its filter and page
+  skeleton, through `RouteModal`; the list keeps its filter and page
   beneath it, and Close drops `?user=`. A request that arrives with a live
   `?user=` renders the modal on the server.
-- **The head** is the eyebrow "User", the name as the title and the email on a line beneath it as
-  the qualifier. The body is `UserDetail`
-  ([`components/user-detail.md`](../components/user-detail.md)): every fact
-  the list's row shows (the page reads them with the user, so the modal holds
-  the whole row), with Change Role and Approve or Revoke
-  beside the facts they change, asking inside the modal; the modal is the one
-  place they are, the rows holding the facts alone. Then a Covens list (each coven's name, with its role and joining date beneath), stewards first, then members, then observers, each
-  by name. Coven names are text, not links: a keeper reaches no coven, and
+- **The head** is the eyebrow "User", the name as the title and the email as the
+  qualifier. The body is `UserDetail`
+  ([`components/user-detail.md`](../components/user-detail.md)): every fact the
+  list's row shows, with Change Role and Approve or Revoke beside the facts
+  they change, asking inside the modal (the modal is the one place they are),
+  then a Covens list, stewards first, then members, then observers, each by
+  name. Coven names are text, not links: a keeper reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under
   `requireAdminSession()`: `usersForAdmin` for the user, `membershipsOf` for
@@ -138,14 +99,7 @@ workspace's contents, and which covens someone belongs to is not among them
   (`src/components/UserList/impersonation.tsx`). The modal offers no other
   control.
 
-**Tests.** `tests/modules/coven/services/memberships.test.ts` (a keeper is
-answered, with the preconditions; another member is still refused),
-`tests/db/workspace-isolation.test.ts` (E reads D's membership of X and is
-still refused X's contents by direct id), `tests/modules/identity/graphql/users.test.ts`,
-the page and component tests, and an e2e test in `tests/e2e/admin.spec.ts`
-tagged `@story-19`, which passes an axe scan with the modal open.
-
-## Approving workspace creation (M5.8)
+## Approving workspace creation
 
 A keeper approves someone who has no invitation from that person's user modal on
 `/keepers/users`, so a person starting a coven of their own gets in without
@@ -167,8 +121,7 @@ created, and their ownership of it
 - **Each change is a ledger row, in the same transaction.** The flag is an
   `updateById` on the user's row through `withAudit`, declared
   `{ via: 'admin', note }`, `note` being the confirmation's optional reason, a
-  blank one stored as none (added 2026-10-10 beside MB.59's, on the owner's
-  call), and the trigger on `users` writes a `create_workspace`
+  blank one stored as none, and the trigger on `users` writes a `create_workspace`
   `grant` or `revoke` row in `user_privilege_changes` beside it, stamped as
   the admin from the session, never the request. The service writes
   no ledger row itself. The row's own `updated_by` goes with its next update;
@@ -193,19 +146,7 @@ created, and their ownership of it
   approves. Each takes the same optional Reason as Change Role
   ([`components/user-list.md`](../components/user-list.md)).
 
-**Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
-each write, its stamps and its ledger row; each non-keeper fixture user refused
-by direct call, with the same call proven to succeed for E; the repeated
-change refused with nothing written; a keeper's flag refused; A's ownership
-of W surviving a revoke; and a soft-deleted or unknown user. The transport's
-half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
-signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
-`tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
-approving with a reason read back off the ledger. The note on the ledger, trimmed or none, is
-the service test's, and the transport test asserts the actor is the
-session's whatever the request carries.
-
-## Changing a site role (MB.59, M11.20)
+## Changing a site role
 
 A keeper gives another user a site role, `user`, `curator` or `admin`, from
 that person's row on `/keepers/users`, so a second keeper is no longer an `UPDATE`
@@ -229,8 +170,7 @@ the shape.
   with a line on what it allows, and an optional reason. Nothing is preselected,
   and the confirm button reads Promote or Demote by the ladder `user` <
   `curator` < `admin`, a demotion styled as destructive
-  ([`components/user-list.md`](../components/user-list.md)). It replaces the
-  old pair of Promote and Revoke buttons.
+  ([`components/user-list.md`](../components/user-list.md)).
 - **Each change is a ledger row, written by the database.** The role is an
   `updateById` on the user's row through `withAudit`, declared
   `{ via: 'admin', note }`, `note` being the confirmation's optional reason, a
@@ -251,8 +191,7 @@ the shape.
 
 - **Becoming a curator or a keeper sets `canCreateWorkspace` in the same
   write**, since the `users_privileged_can_create_workspace` CHECK
-  (`role = 'user' or can_create_workspace`, replacing MB.177's
-  `users_admin_can_create_workspace`) holds every curator and every keeper to
+  (`role = 'user' or can_create_workspace`) holds every curator and every keeper to
   the flag, so a promotion of a user without it is two rows at one instant.
   **Becoming a user leaves the flag**, the grant having been a vouching too,
   and leaves memberships and the `created_by` of everything the person wrote:
@@ -260,9 +199,9 @@ the shape.
 - **Any live user may be changed, verified or not.** Confirming who someone is
   is the changing admin's job, from the row's sign-in methods and verified
   mark; the dialog warns when the address is unverified, **on a promotion
-  only**, since a promotion, like an approval, keeps the account from MB.67's
-  sweep. The user must already have an account; inviting by
-  email is MB.70's, below.
+  only**, since a promotion, like an approval, keeps the account from the
+  provisional-account job. The user must already have an account; inviting by
+  email is below.
 - **A change that changes nothing is refused**, with a `Forbidden` naming the
   user ("is already a curator"): the same role as the one held. No column
   changes, so the trigger records nothing.
@@ -284,7 +223,7 @@ the shape.
   before the new address's first qualifying sign-in, or for good if it never
   makes one.
 - **Paused with the rest.** `setUserRole` stays behind the primary keeper's
-  pause (MB.63, below), for a curator change as for a keeper one.
+  pause (below), for a curator change as for a keeper one.
 - **A change takes effect on the next request.** A demoted admin's sessions
   stay valid, since they are still a user, and no new session is issued; their
   next request reads the new role off the users row, so `/admin`'s people pages
@@ -300,33 +239,14 @@ the shape.
 on the Vercel project and redeploy ([`config.md`](config.md)); the new address
 is promoted at its next Google or Discord sign-in, or when it verifies the
 address by mail ([`admin-bootstrap.md`](admin-bootstrap.md)). The previous
-primary keeper keeps `role: 'admin'` and is simply no longer protected: any
-admin may now demote them like any other. Between the redeploy and the new
-address's promotion nobody is protected, and the count above is what keeps a
-demotion from leaving no keeper.
+primary keeper keeps `role: 'admin'` and is no longer protected. Until the new
+address is promoted nobody is protected, and the count above keeps a demotion
+from leaving no keeper.
 
 **Any future user-deletion path must refuse the primary keeper.** v1 deletes no
 user but the provisional-account sweep, which only ever reaches an unverified
 account holding no privilege. A path added later that soft-deletes or removes
 a `users` row must call `isPrimaryAdmin` and refuse, as the role change does.
-
-**Tests.** `tests/modules/identity/services/user-role.test.ts` covers each
-write, its stamps and its ledger rows; the unverified user; the trigger
-refusing the same write undeclared; each non-keeper fixture user, F the curator
-included, refused by direct call, with the same call proven to succeed for E;
-the repeated change refused with nothing written; memberships and `created_by`
-surviving a demotion; the primary keeper refused for another keeper and for
-itself, with the same demotion succeeding once the variable names someone else;
-the last keeper refused with no primary keeper in the fixture; and two real
-concurrent demotions leaving one keeper. `tests/db/privilege-change-trigger.test.ts`
-covers the curator and keeper ledger rows,
-`tests/modules/identity/services/curator-boundary.test.ts` that a curator
-reaches nothing on the people page, and `tests/db/admin-revocation.test.ts`
-reads a demoted admin's next request through the real session reader.
-`tests/modules/identity/graphql/user-role.test.ts` is the transport's half, a
-signed-out caller and the scope are `tests/db/graphql-query-scopes.test.ts`'s,
-and `tests/e2e/admin.spec.ts` changes a role through the dialog against the
-built server.
 
 ## Pausing keeper changes
 
@@ -357,7 +277,7 @@ the good ones while it is dealt with, and back on. The argument is
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good keepers is the same attack from the
   other side.
-- **Coven creation pauses too** (amended 2026-10-10, on the owner's call):
+- **Coven creation pauses too**:
   `grantWorkspaceCreation` and `revokeWorkspaceCreation` open with the same
   `assertAdminChangesOpen` guard, exported from `admin-role-pause.ts` — the
   site-role check, then `assertChangesOpen` — so another
@@ -376,34 +296,9 @@ the good ones while it is dealt with, and back on. The argument is
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
 
-**Tests.** `tests/modules/identity/services/admin-role-pause.test.ts` covers
-pausing and resuming and their stamps; a second pause and a second resume;
-another live keeper refused, with that keeper proven able to grant; nobody
-allowed while the variable names no one; each non-keeper fixture user; a grant
-and a revoke by another keeper refused while paused, writing no ledger row,
-and the same calls succeeding once resumed; and the primary keeper's grant and
-revoke recorded while paused.
-`tests/modules/identity/services/workspace-creation.test.ts` covers another
-admin's approve and revoke refused while paused with no ledger row, the same
-calls succeeding once resumed, and the primary keeper's recorded as usual.
-`tests/modules/identity/graphql/admin-role-pause.test.ts` is the transport's
-half, the stamps the session's whatever the request carries, and
-`tests/e2e/admin.spec.ts` pauses, refuses another keeper's grant, and resumes
-against the built server.
-
 ## Inviting a keeper
 
-A keeper can make someone a keeper who has not signed in yet, by inviting
-their address, or since M11.20 a curator, the role picked in the invite form:
-M2.9's option B
-([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The
-approaches"), on the site tier of MB.201's `invitations`
-([`db/invitations.md`](../db/invitations.md)). The link is mailed to the
-address and accepted only by an account that has proved it holds it, so no
-one is handed a bearer token for the site's highest privilege (story 62).
-The names in code still say "admin invitation" for both roles: a keeper is
-who sends one, and renaming the mutation and the services would buy no
-behaviour.
+A keeper can make someone a keeper or a curator, the role picked in the invite form, before they have signed in, by inviting their address: option B of [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The approaches", on the site tier of `invitations` ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the address and accepted only by an account that has proved it holds it, so no one is handed a bearer token for the site's highest privilege. The names in code still say "admin invitation" for both roles: a keeper is who sends one.
 
 - **A repeat invitation replaces the pending one**. Inviting an address
   that already has a pending site-tier invitation, keeper or curator, stamps that
@@ -420,7 +315,7 @@ filter, page)` is one page of the pending list, newest first, and
   the page calls through `resolveNumberedPage` as every admin list does,
   25 to a page; no GraphQL query lists invitations. Its filter is
   `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
-  the invitations lapsing within 24 hours, each narrowed in the
+  the invitations lapsing within `EXPIRING_SOON_HOURS`, each narrowed in the
   repository's SQL ([`db/invitations.md`](../db/invitations.md)).
 - **The token is the mail's alone.** The invitation is inserted through the
   repository's `insertInvitation(admin, …)` holding the hash of a token
@@ -454,23 +349,24 @@ filter, page)` is one page of the pending list, newest first, and
   accepted, or the admin withdraws it.
 - **Paused with the rest.** While keeper changes are paused, inviting
   and withdrawing are refused for every keeper but the primary one, by the
-  shared `assertAdminChangesOpen` and in its words, naming nobody.
+  shared `assertAdminChangesOpen` and in its words, naming nobody. The list is
+  open to every keeper, paused or not, since it is where an invitation is seen.
+  Withdrawing kills the link from now on, and it says so.
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
-  (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
-  entry describes, built by MB.70 with the site tier's branch, and by M7.5
-  with the workspace's; M10.32 added `acceptInvitationById`, the workspace
-  tier alone, which runs the same checks over the row the session's verified
-  address holds rather than the one a token names. It checks, in this order:
+  (`src/modules/identity/services/invitation-acceptance.ts`) serves both;
+  `acceptInvitationById` is the workspace tier alone, running the same checks
+  over the row the session's verified address holds rather than the one a token
+  names. It checks, in this order:
   1. The token names a live invitation, or the link is invalid (`NotFound`).
      The token is hashed in the repository, so a hash read off a dumped row
      names nothing.
   2. The link is not dead: **accepted, then declined, then revoked, then
      expired**, so a link in two states always reports the same one reason, an
-     act before the clock. Declined (M10.34) is the invitee's own no, from the
+     act before the clock. Declined is the invitee's own no, from the
      account page, on the workspace tier alone; it outranks revoked so that a
      declined link keeps saying so after a steward removes it from their list.
      Each is a `Forbidden` in words of its own, and none names a
-     workspace (M7.7, which asserts them on the workspace tier).
+     workspace.
   3. The tier: the site tier's branch, below, or the workspace's (M7.5), which
      seats the person at the invited role: a removed member's row is revived
      (`reviveMembership`, `joinedAt` restarted), a live member's is left
@@ -519,8 +415,7 @@ filter, page)` is one page of the pending list, newest first, and
   lands a new curator or keeper on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/keepers/invitations`**, the People page's Invitations tab (beneath
-  the user list on `/keepers/users` until MB.115), every keeper sees Invite
+- **On `/keepers/invitations`**, the People page's Invitations tab, every keeper sees Invite
   Admin, whose form asks for the address, the role (Curator chosen to begin
   with, so granting the People page is a choice) and an optional reason, and
   the pending invitations 25 to a page, each with
@@ -535,33 +430,7 @@ sent: the pending list is where a keeper sees them and acts. An accepted
 invitation is already in the privilege ledger as its `invitation` row, so no
 list of past invitations is kept.
 
-**Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
-creating, with the real sender over a mocked transport, so the link that
-reaches the address is the one read back; the role recorded, and each
-address refused for already holding the role or a higher one beside the
-curator invited to become a keeper; revoking and listing; the list's
-pages, newest first and by id within an instant, the filter narrowing every
-page, and its count; each
-non-keeper fixture user refused by direct call, with E proven able; and the
-pause, with the same calls succeeding once resumed.
-`tests/modules/identity/services/invitation-acceptance.test.ts` covers the
-grant of each role and its ledger rows, and an account already a curator or
-a keeper accepting a curator invitation, lowered and recorded nowhere; the same write undeclared refused by the trigger;
-the unverified match and the different address, each beside the call that
-succeeds; each dead link, the two-state links, a second use, a hashed token
-and a workspace invitation; and the pause, by whom the invitation was sent.
-`tests/modules/identity/graphql/admin-invitations.test.ts` is the
-transport's half, the scope is `tests/db/graphql-query-scopes.test.ts`'s, and
-story 62's browser flow is in `tests/e2e/stories/08-email-and-admin.spec.ts`.
-
-## The privilege ledger
-
-Every change to who is a keeper or a curator and who may create a coven is a row of
-`user_privilege_changes`, which the database writes and nothing in the
-application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
-and MB.200 its page, `/keepers/privilege-changes`, now the People page's
-Privilege Changes tab: the whole ledger, newest
-first, for the keeper who suspects misuse (story 61).
+Every change to who is a keeper or a curator and who may create a coven is a row of `user_privilege_changes`, which the database writes and nothing in the application inserts into (DESIGN.md §5). `/keepers/privilege-changes`, the People page's Privilege Changes tab, shows the whole ledger, newest first, for the keeper who suspects misuse.
 
 - **One service, two transports.** `listPrivilegeChanges`
   (`src/modules/identity/services/privilege-changes.ts`) is a site admin's
@@ -586,7 +455,7 @@ first, for the keeper who suspects misuse (story 61).
   `.actor` (the row's `created_by`) both load through `usersByIdForAdmin`,
   whose service, `usersForAdmin(session, userIds)`, answers a site keeper each
   live user, null where none is live, and refuses every slot to anyone else.
-  It is the keeper's whole row, not MB.10's display-name `usersById`.
+  It is the keeper's whole row, not the display-name `usersById`.
 - **One page, not one per privilege.** `/keepers/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
   the privilege changes icon before each name on `/keepers/users` opens with
@@ -603,32 +472,4 @@ first, for the keeper who suspects misuse (story 61).
 - **A row links its people to their `/keepers/users` rows**, the list filtered
   to their address, except the seed's bootstrap user, which the list leaves
   out (`listedOnUserList`).
-- **No index beyond the key.** The plan does not want one: the ledger holds a
-  row per privilege a keeper, an invitation or the bootstrap changes, a few
-  rows a user, and the planner seq-scans it whole. At ten thousand rows an
-  index on `(user_id, created_at desc)` serves only the subject's filter, as
-  a bitmap scan; it cannot serve the order, which is on the negated
-  expression, and every page still sorts.
-
-**Tests.** `tests/modules/identity/services/privilege-changes.test.ts` covers
-the order, each filter and both together, a walk two rows at a time each way
-across shared instants and a microsecond pair, the malformed subject, and each
-non-keeper fixture user refused by direct call with E proven to read the same
-rows. `tests/modules/identity/graphql/privilege-changes.test.ts` holds the
-transport's half: every field, the filters reaching the service, subject and
-actor in one user read per page by query count, and the scope's own refusal.
-A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
-half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
-browser flow is `tests/e2e/stories/08-email-and-admin.spec.ts`'s, and
-`tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
-the history icon link against the built server, with axe.
-
-## Admin invitation service details
-
-`src/modules/identity/services/admin-invitations.ts` is the site tier of `invitations`: a keeper invites an address to become a keeper or a curator. The names still say "admin invitation", since a keeper is who sends one. Who may invite, the role ladder and the pause are this service's; the token's hash, the expiry and the pending predicate are the repository's named writes'. Accepting is `invitation-acceptance.ts`'s.
-
-- Inviting stamps the admin, mails the token through `sender` after the commit (so a mailed link always names a row) and stores its hash alone. `note` is the optional reason, a blank one stored as none, which accepting records on the ledger row. A failed send is the transport's to log: the invitation stays pending and can be withdrawn and sent again.
-- A second invitation to an address already invited replaces the pending site-tier one, stamped revoked by the admin in the same write, so a failed insert leaves it pending. A coven's invitation to the address is left alone.
-- It is refused when the session's role is not `admin`, or when the primary keeper has paused keeper changes and the caller is another keeper. The email is refused when malformed, unmailable, or a live account's that holds the role or above, which accepting would leave as it is.
-- Withdrawing kills the link from now on, and it says so.
-- The list is open to every keeper, paused or not, since it is where an invitation is seen. `email` narrows by a trimmed fragment of the address and `expiringSoon` keeps only those lapsing within `EXPIRING_SOON_HOURS`, both in the finder's SQL.
+- **No index beyond the key**: the ledger holds a few rows a user, so the planner seq-scans it whole. An index on `(user_id, created_at desc)` would serve only the subject's filter, never the order, which is on the negated expression.
