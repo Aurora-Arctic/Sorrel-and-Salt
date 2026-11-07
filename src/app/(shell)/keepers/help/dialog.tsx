@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import HelpArticleForm from '../../../../components/HelpArticleForm';
 import type {
@@ -16,7 +17,7 @@ export default function HelpDialog({
   opened,
   parents,
 }: {
-  closeHref: string;
+  closeHref: Route;
   opened: undefined | { heading: ModalHeading; article?: HelpArticleFormValue };
   parents: readonly HelpParentChoice[];
 }): ReactElement {

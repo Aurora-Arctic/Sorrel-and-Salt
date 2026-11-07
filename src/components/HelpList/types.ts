@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ModalHeading } from '../Modal/types';
 
 export interface HelpListEntry {
@@ -6,12 +7,12 @@ export interface HelpListEntry {
   kind: 'faq' | 'article' | 'term';
   audience: 'public' | 'staff' | 'keeper';
   position: number | null;
-  editHref: string;
+  editHref: Route;
   editHeading: ModalHeading;
 }
 
 export interface HelpListProps {
   articles: readonly HelpListEntry[];
-  previousHref?: string;
-  nextHref?: string;
+  previousHref?: Route;
+  nextHref?: Route;
 }
