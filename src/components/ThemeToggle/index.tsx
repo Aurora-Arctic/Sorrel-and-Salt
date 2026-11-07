@@ -98,7 +98,14 @@ const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => 
     if (outgoingFacet && prefersReducedMotion()) {
       parkFacet(outgoingFacet);
     }
-    applyTheme(isLight ? 'dark' : 'light');
+    const next = isLight ? 'dark' : 'light';
+    // One cross-fade of the whole page where the browser has the View Transitions API (past the
+    // browser floor, so behind an `in` check); elsewhere, and under reduced motion, the swap is instant.
+    if ('startViewTransition' in document && !prefersReducedMotion()) {
+      document.startViewTransition(() => applyTheme(next));
+    } else {
+      applyTheme(next);
+    }
     buttonRef.current?.setAttribute('aria-pressed', String(!isLight));
   };
 

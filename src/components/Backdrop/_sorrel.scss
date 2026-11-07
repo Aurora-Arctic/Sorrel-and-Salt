@@ -58,9 +58,4 @@
 @mixin sorrel-blend($blend, $opacity) {
   mix-blend-mode: $blend;
   opacity: $opacity;
-  @include theme-transition(opacity);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }

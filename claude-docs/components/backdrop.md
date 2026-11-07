@@ -98,8 +98,8 @@ having to establish a stacking context of its own. They are the last children
 so a tool that ignores `aria-hidden` still meets them after the content.
 
 **Each corner is two sibling layers, one per blend mode, not one element with
-two pseudo-elements.** A blend mode cannot animate, so the theme toggle
-cross-fades their opacities on the same 400ms as every other colour; and a
+two pseudo-elements.** A blend mode cannot animate, so a theme change shows them
+cross-fading with the rest of the page (one View Transition, no per-layer transition); and a
 fixed element is a stacking context, so a layer nested inside it would blend
 with its transparent parent rather than with the page and come out plain
 grey. As siblings in the root stacking context, each blends with the page.

@@ -57,7 +57,7 @@ so the page holds one disc.
 Tokens only: the shell bar's height and hairline, `$surface-card`, `$wide-column`,
 the control height and `$brand-size`. Mixins used: `heading-face` (the brand),
 `list-reset`, `focus-ring` (inset on a nav link, which fills the bar and would
-clip an outside ring), `theme-transition` on the nav link, and `nav-current`
+clip an outside ring), `state-fade` on the nav link, and `nav-current`
 for the current page: weight and a `$rule-heavy` accent rule drawn as a border,
 which forced colours keeps and a box-shadow it drops. The shell's nav draws the
 same mark from the same mixin.

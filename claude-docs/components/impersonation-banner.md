@@ -77,7 +77,7 @@ badge ([`click-feedback.md`](click-feedback.md)).
 - **It also opens on focus and while Stop is pending or has failed.**
   `:focus-within` lets a keyboard reach Stop. The `--open` modifier keeps
   the failure sentence from sliding away unread.
-- **Standard motion.** The transform moves with `theme-transition`, the
+- **Standard motion.** The transform moves with `motion()`, the
   shared 400ms `ease-in-out`. Under reduced motion it jumps instead.
 
 ## Stories

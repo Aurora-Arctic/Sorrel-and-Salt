@@ -117,7 +117,7 @@ The dialog is a container of its own, so it is the dialog's width and not the sc
 
 A form in the list is positioned for its badge, which sits beside the button at the end of the name's line, the top right. The space before a mark is its own margin rather than a column gap, because the spoken commas between the parts are flex items of no size and a gap would stand either side of each.
 
-The pointer's answer comes at its own pace, not the theme's 400ms fade. Every state is in the accent's green, a step apart: a hovered form is halfway to the chosen look, and the chosen one is a touch stronger under the pointer. Each hover names whether it is chosen, so neither rests on the other's order in the sheet. The shared focus ring is inside, since the button fills its row.
+The pointer's answer comes at its own pace, not a slow fade. Every state is in the accent's green, a step apart: a hovered form is halfway to the chosen look, and the chosen one is a touch stronger under the pointer. Each hover names whether it is chosen, so neither rests on the other's order in the sheet. The shared focus ring is inside, since the button fills its row.
 
 The Edited mark is in the edit pencil's green (`icon-button-edit`), so it reads as the edit it records. On the chosen form the accent is also its wash, and light-theme `$accent` fell below 4.5:1 against it, so the chosen form's mark takes the accent's hover ink. The mark on a form the refused save named is drawn as a warning and read as "Needs a Fix" in the list button's name. A form on its way out is struck through and muted until Save or Undo. Add Form and its Add button sit on one line, under the list.
 

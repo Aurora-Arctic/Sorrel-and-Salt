@@ -51,16 +51,11 @@ body {
   // whatever is tapped, unthemed. Inherited, so this covers every link and
   // button; their own :active and focus styles are the feedback instead.
   -webkit-tap-highlight-color: transparent;
-  @include theme-transition(background-color, color);
 }
 
 @include reduced-motion {
   html {
     scroll-behavior: auto;
-  }
-
-  body {
-    transition: none;
   }
 }
 

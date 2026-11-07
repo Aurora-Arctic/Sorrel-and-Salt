@@ -100,10 +100,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 // colour transitions are restated beside it (claude-docs/components/modal.md, "The fade's colour transitions").
 .modal.modal-dialog {
   opacity: 1;
-  transition:
-    opacity $modal-fade,
-    background-color $theme-transition-duration $theme-transition-easing,
-    color $theme-transition-duration $theme-transition-easing;
+  transition: opacity $modal-fade;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
   // fading in, widely available 2027-02-06

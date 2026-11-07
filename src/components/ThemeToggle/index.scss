@@ -16,7 +16,6 @@ $theme-toggle-icon-arc: 130deg;
 .theme-toggle {
   border: none;
   cursor: pointer;
-  @include theme-transition(background-color, color, transform);
 }
 
 // The pinned corner (the root layout, for pages with no application shell).
@@ -55,6 +54,7 @@ $theme-toggle-icon-arc: 130deg;
   &:hover {
     background-color: $accent-hover;
     transform: scale(1.07);
+    @include state-fade(background-color, transform);
   }
 }
 
@@ -94,7 +94,6 @@ $theme-toggle-facet: 1.1875rem;
     border-radius: 50%;
     background-color: $accent;
     color: $text-on-color;
-    @include theme-transition(background-color);
   }
 
   .theme-toggle__facets {
@@ -105,6 +104,7 @@ $theme-toggle-facet: 1.1875rem;
 
   &:hover .theme-toggle__disc {
     background-color: $accent-hover;
+    @include state-fade(background-color);
   }
 
   &:focus-visible {
@@ -132,7 +132,7 @@ $theme-toggle-facet: 1.1875rem;
   height: 100%;
   // Pivot at the icon's top-right corner, the one the button is pinned to.
   transform-origin: 100% 0;
-  @include theme-transition(transform);
+  @include motion(transform);
   transform: rotate(0deg);
 
   // Raw palette, not the runtime tokens: the knotwork is not themed, so only the

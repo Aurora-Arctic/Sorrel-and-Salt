@@ -83,6 +83,15 @@ zeroing a transition also removes the event something was waiting on.
 `aria-label` is "Toggle light and dark mode"; there is no tooltip, since the
 label already names the action for sighted and screen-reader users alike.
 
+## The theme swap
+
+**The page cross-fades once; no element fades its own colours.** `handleToggle` swaps the theme inside `document.startViewTransition`'s update callback, so the browser takes a picture of the old page, applies the new theme, and fades from one picture to the other. The browser's default cross-fade is used unstyled: no `::view-transition-*` rule exists. Before this, about 300 elements each ran their own 400ms colour fade, and a switch on a slow phone froze the page for about half a second.
+
+- **The API is past the browser floor**, so the call sits behind `'startViewTransition' in document`. A browser without it swaps the theme at once.
+- **Reduced motion skips the API.** `prefersReducedMotion()` is read at click time, and the theme swaps with no cross-fade.
+- **The theme ends up set on every path.** `applyTheme` (the attribute and the stored choice) is the update callback on one path and a direct call on the other.
+- **Nothing in the stylesheets transitions on a theme change.** The `theme-transition` mixin and `$theme-transition-*` are gone and `tests/guards/no-theme-transition.test.ts` keeps them gone. A hover or focus fade is set on the hover and focus rule with `state-fade()`, so it runs into that state and never on a theme change.
+
 ## Icons
 
 Celtic knotwork, inline SVG, no raster and no external asset: a woven crescent
@@ -106,19 +115,19 @@ bottom edges so its top-right pivot stays put. Sized via the box rather than
 ## Styling
 
 Only the shared tokens and mixins: `$text-primary`, `$accent`,
-`theme-transition()`, `focus-ring()`, `reduced-motion`. No new hand-picked
+`motion()`, `state-fade()`, `focus-ring()`, `reduced-motion`. No new hand-picked
 colour. `$theme-toggle-icon-arc` is the one component-local constant — it
 describes the facet swap's rotation geometry, not a colour or duration the rest
 of the app shares, so it is not a token.
 
-- `fill` is deliberately **not** in the facet's `theme-transition()` — only
+- `fill` is deliberately **not** in the facet's `motion()` — only
   `transform` is, so the swap is purely the rotate.
 - Hover is `background-color: $accent-hover` **plus** `transform: scale(1.07)`
   from the pinned corner. On the dark theme `$accent` and `$accent-hover` are
   only a shade apart, so the colour step alone reads as almost nothing; the
   scale carries the hover and lands the same in both themes without forking a
-  second hover colour per theme. It rides the shared `theme-transition()`
-  duration/easing, and `reduced-motion` zeroes it with the rest.
+  second hover colour per theme. It rides `state-fade()`
+  (the shared long duration and easing), and `reduced-motion` zeroes it with the rest.
 - **`z-index: layer('toggle')`, above the tucked impersonation banner** (MB.53),
   which is `layer('banner')` where a pointer can hover and runs the window's width beneath
   this corner. The toggle stays reachable while the banner is open, and

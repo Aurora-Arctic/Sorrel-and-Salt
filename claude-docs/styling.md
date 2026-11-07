@@ -368,8 +368,8 @@ carries the photograph's levelled luminance, so a blend mode is what keeps its
 tones the right way round on both themes — the salt bright, the wood dark —
 where any single tint, lighter or darker than the page, moved the whole subject
 one way. Two opacities rather than one blend-mode token because a blend mode
-cannot animate and an opacity can: the toggle cross-fades the layers on the
-same 400ms as every other colour. Decorative, so no contrast table: nothing is
+cannot animate and an opacity can: the theme swap cross-fades the layers with
+the rest of the page. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
@@ -1343,7 +1343,7 @@ kept. Each rule sits in a `forced-colors` block, uses only `Canvas`, `CanvasText
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `theme-transition`, `nav-current` (a bar link's current-page mark: weight and a
+  `motion` (a transition list for a state change) and `state-fade` (a hover or focus fade, snapped under reduced motion), `nav-current` (a bar link's current-page mark: weight and a
   `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
   `font-smoothing-antialiased`, `notice-row` (a notice laid out as a row of sentence and buttons, as the recovery and conflict notices are under a dialog's title),
   `heading-face` (the headings' family, weight and letter spacing).

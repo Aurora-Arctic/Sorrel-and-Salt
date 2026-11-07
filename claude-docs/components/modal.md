@@ -1042,9 +1042,9 @@ The dialog's name is the eyebrow and the heading together ("Edit Ingredient, Mug
 
 `overflow: hidden` still lets a script or a focus scroll an element, and a field's `scrollIntoView` did: it lifted the header out of view and left blank space beneath the body. Clipping makes the dialog no scroll container at all. It is border-box, so the primitive's padding sits inside the limits (the long form overran the screen by it), a column with the header over the body, which scrolls beneath it while the dialog holds still, and styled when open only, since the closed element's `display: none` is the browser's.
 
-### The fade's colour transitions
+### The fade
 
-The dialog is compounded with `.modal`, whose primitive sets its own `transition` as `body .modal`, so the theme's colour transitions are restated beside the fade for both to run. A modal that replaces another (`data-handover`) starts its backdrop dimmed, so the page never shows between the two; it still fades out at its own close.
+The dialog fades by opacity alone; a theme change runs no colour transition on it (the page cross-fades, `components/theme-toggle.md`). A modal that replaces another (`data-handover`) starts its backdrop dimmed, so the page never shows between the two; it still fades out at its own close.
 
 ## The modal's head
 
