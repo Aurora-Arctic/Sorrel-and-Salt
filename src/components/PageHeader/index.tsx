@@ -10,6 +10,8 @@ const classes = (...names: (string | false | undefined)[]): string =>
 // directly; an action that needs the browser is a client component of its own.
 const PageHeader = ({
   title,
+  level = 'h1',
+  greeting,
   id,
   eyebrow,
   lede,
@@ -22,16 +24,23 @@ const PageHeader = ({
   suffix,
 }: PageHeaderProps): ReactElement => {
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
+  const Heading = level;
   const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
   const heading = tag ? (
-    <h1 id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
+    <Heading id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
-    </h1>
+    </Heading>
   ) : (
-    <h1 id={id} className={headingClassName} {...focus}>
-      {title}
+    <Heading id={id} className={headingClassName} {...focus}>
+      {greeting ? (
+        <>
+          <span className="page-title__greeting">{greeting}</span> <span>{title}</span>
+        </>
+      ) : (
+        title
+      )}
       {suffix && <> {suffix}</>}
-    </h1>
+    </Heading>
   );
   const column = Boolean(eyebrow) || Boolean(lede);
   const line =

@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import {
   acceptInvitation,
+  acceptInvitationById,
   invitationStanding,
   mintInvitationCards,
   pauseAdminRoleChanges,
@@ -616,6 +617,71 @@ describe('acceptInvitation, on a card', () => {
     expect((await invitation()).accepted_by).toBe(STRANGER);
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
       reason: 'accepted',
+    });
+  });
+
+  // One card per account: a second card stays free for someone else, refused in the service and again in the accept statement.
+  describe('a second card for an account that has used one', () => {
+    const SECOND = 'fixture-token-dddddddddddddddddddddddddddddddd';
+    const secondCard = async () =>
+      (
+        await sql`select accepted_at, accepted_by from invitations where token_hash = ${sha256(SECOND)}`
+      )[0];
+
+    beforeEach(async () => {
+      await invite({ card: true });
+      await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+    });
+
+    // Why the refusals could have succeeded: the second card is live, the account verified, and another verified account may take it.
+    async function expectSecondCardLive(id: string) {
+      expect((await sql`select email_verified from users where id = ${STRANGER}`)[0]).toMatchObject(
+        {
+          email_verified: true,
+        },
+      );
+      expect(
+        (
+          await sql`select revoked_at, expires_at > now() as live from invitations where id = ${id}`
+        )[0],
+      ).toMatchObject({ revoked_at: null, live: true });
+      expect(await invitationStanding(asUser(AS_GRANTEE), SECOND)).toEqual({
+        acceptable: true,
+        tier: 'card',
+      });
+    }
+
+    it('refuses it by token and by id, and leaves it pending', async () => {
+      const id = await invite({ card: true, token: SECOND });
+      await expectSecondCardLive(id);
+
+      expect(await invitationStanding(asUser(AS_STRANGER), SECOND)).toMatchObject({
+        acceptable: false,
+        reason: 'used-another-card',
+      });
+      await expect(acceptInvitation(asUser(AS_STRANGER), SECOND)).rejects.toThrow(Forbidden);
+      await expect(acceptInvitationById(asUser(AS_STRANGER), id)).rejects.toThrow(NotFound);
+
+      expect(await secondCard()).toEqual({ accepted_at: null, accepted_by: null });
+      // The card it did accept still tells it so.
+      expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+        reason: 'used-by-you',
+      });
+    });
+
+    it('is refused by the accept statement itself, which still stamps it for another account', async () => {
+      const id = await invite({ card: true, token: SECOND });
+      await expectSecondCardLive(id);
+
+      const stamped = await withAudit(asUser(AS_STRANGER), (write) =>
+        write.acceptInvitation(SECOND),
+      );
+      expect(stamped).toEqual([]);
+      expect(await secondCard()).toEqual({ accepted_at: null, accepted_by: null });
+
+      const taken = await withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(SECOND));
+      expect(taken).toHaveLength(1);
+      expect(await secondCard()).toMatchObject({ accepted_by: GRANTEE });
     });
   });
 

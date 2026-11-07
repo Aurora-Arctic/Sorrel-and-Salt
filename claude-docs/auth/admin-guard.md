@@ -110,6 +110,7 @@ redirected first, as everywhere.
 | `/curator` and `/keepers` layouts and indexes, `/keepers/support`, the compendium, categories, forms, deities and astrology pages                                                | `requireCuratorSession()` | The page       |
 | `/keepers/documents/[key]`, the four documents' tabs                                                                                                                             | `requireAdminSession()`   | **403**        |
 | `/keepers/users`, `/keepers/privilege-changes` (the `(people)` group), `/keepers/invitations`, `/keepers/invitation-cards`, `/keepers/card-sign-ups` (the `(invitations)` group) | `requireAdminSession()`   | **403**        |
+| `/keepers/business-cards`, a keeper's own business cards                                                                                                                         | `requireAdminSession()`   | **403**        |
 | The workshop (`assertWorkshopAccess`)                                                                                                                                            | `assertSiteAdmin`         | Refused        |
 
 - **The layout cannot guard the people pages.** Both layouts run
