@@ -160,11 +160,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   .document-page__sources a {
     color: $text-primary;
     @include faded-underline;
+    @include state-fade(color);
 
     &:hover,
     &:focus-visible {
       color: $accent-hover;
-      @include state-fade(color);
     }
 
     &:focus-visible {

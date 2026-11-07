@@ -90,7 +90,7 @@ label already names the action for sighted and screen-reader users alike.
 - **The API is past the browser floor**, so the call sits behind `'startViewTransition' in document`. A browser without it swaps the theme at once.
 - **Reduced motion skips the API.** `prefersReducedMotion()` is read at click time, and the theme swaps with no cross-fade.
 - **The theme ends up set on every path.** `applyTheme` (the attribute and the stored choice) is the update callback on one path and a direct call on the other.
-- **Nothing in the stylesheets transitions on a theme change.** The `theme-transition` mixin and `$theme-transition-*` are gone and `tests/guards/no-theme-transition.test.ts` keeps them gone. A hover or focus fade is set on the hover and focus rule with `state-fade()`, so it runs into that state and never on a theme change.
+- **Nothing in the stylesheets transitions on a theme change.** The `theme-transition` mixin and `$theme-transition-*` are gone and `tests/guards/no-theme-transition.test.ts` keeps them gone. A hover or focus fade is set on the element's own rule with `state-fade()`, so it runs into the state and back out of it. `swapTheme` holds every transition off (`html[data-theme-swap]` in `globals.scss`) while it applies the theme and reads the new styles, on both paths, so no fade runs on a theme change; the toggle's own facets keep theirs.
 
 ## Icons
 

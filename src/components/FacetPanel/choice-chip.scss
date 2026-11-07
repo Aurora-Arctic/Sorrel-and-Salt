@@ -42,6 +42,7 @@
   white-space: nowrap;
   cursor: pointer;
   list-style: none;
+  @include state-fade(background-color);
 
   &::-webkit-details-marker {
     display: none;
@@ -49,7 +50,6 @@
 
   &:hover {
     background-color: color-mix(in srgb, $accent 12%, $surface-card);
-    @include state-fade(background-color);
   }
 
   &:focus-visible {

@@ -53,11 +53,11 @@
   font-size: type-size('small');
   text-decoration: none;
   white-space: nowrap;
+  @include state-fade(background-color, color);
 
   &:hover {
     background-color: $fill-quiet;
     color: $text-primary;
-    @include state-fade(background-color, color);
   }
 
   // Inside the tab, where the row's edge would clip an outside ring.

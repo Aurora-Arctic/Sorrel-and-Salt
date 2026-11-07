@@ -22,6 +22,13 @@ html[data-theme='light'] {
   @include theme-light;
 }
 
+// While ThemeToggle swaps the theme no element runs a transition, so the hover and focus fades set
+// on the elements' own rules do not also fire as the colours change. The toggle's own facets keep
+// theirs: they turn on the click, not on the colours. `!important` outweighs every component rule.
+html[data-theme-swap] :is(*, ::before, ::after):not(.theme-toggle__facet) {
+  transition: none !important;
+}
+
 // A jump to a section (PageNav) glides rather than cuts; the page scrolls at
 // the root. Switched off for a reader who asks for less motion.
 html {

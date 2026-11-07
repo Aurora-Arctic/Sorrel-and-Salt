@@ -59,10 +59,10 @@
     color: $text-primary;
     text-decoration: none;
     white-space: nowrap;
+    @include state-fade(background-color);
 
     &:hover {
       background-color: $fill-quiet;
-      @include state-fade(background-color);
     }
 
     // Inside the link, where the bar's edge would clip an outside ring.

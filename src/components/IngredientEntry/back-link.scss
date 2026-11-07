@@ -12,6 +12,7 @@
   color: $text-muted;
   font-size: type-size('small');
   text-decoration: none;
+  @include state-fade(color);
 
   // The chevron steps back and grows on hover and focus, in place of an underline, at twice the
   // short motion; it holds still under reduced motion.
@@ -23,7 +24,6 @@
   &:hover,
   &:focus-visible {
     color: $text-primary;
-    @include state-fade(color);
 
     > svg {
       // A fifth of its own 1em box, so the step follows the link's size.

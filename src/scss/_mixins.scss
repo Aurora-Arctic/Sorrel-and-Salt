@@ -16,8 +16,8 @@
   transition: $transitions;
 }
 
-// A hover or focus fade of `$props`, set on the hover and focus rule so it runs into that state and
-// never on a theme change; snapped under reduced motion.
+// A hover or focus fade of `$props`, set on the element's own rule so it runs into the state and back out; a theme
+// change holds every transition off (globals.scss); snapped under reduced motion.
 @mixin state-fade($props...) {
   @include motion($props...);
 
@@ -1009,6 +1009,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   background-color: transparent;
   color: $text-muted;
   cursor: $cursor;
+  @include state-fade(background-color, color);
 
   svg {
     width: $glyph;
@@ -1018,7 +1019,6 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   &:hover,
   &:focus-visible {
     color: $text-primary;
-    @include state-fade(background-color, color);
   }
 
   // A button takes the shared ring; Chromium otherwise draws its own default one. A link keeps the
@@ -1256,6 +1256,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 @mixin icon-link {
   color: $text-primary;
   text-decoration: none;
+  @include state-fade(color);
 
   svg {
     width: 1em;
@@ -1269,7 +1270,6 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   &:hover,
   &:focus-visible {
     color: $accent;
-    @include state-fade(color);
 
     svg {
       transform: scale(1.2);

@@ -1343,7 +1343,7 @@ kept. Each rule sits in a `forced-colors` block, uses only `Canvas`, `CanvasText
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `motion` (a transition list for a state change) and `state-fade` (a hover or focus fade, snapped under reduced motion), `nav-current` (a bar link's current-page mark: weight and a
+  `motion` (a transition list for a state change) and `state-fade` (a hover or focus fade, set on the element's own rule so it runs into and out of the state, and snapped under reduced motion), `nav-current` (a bar link's current-page mark: weight and a
   `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
   `font-smoothing-antialiased`, `notice-row` (a notice laid out as a row of sentence and buttons, as the recovery and conflict notices are under a dialog's title),
   `heading-face` (the headings' family, weight and letter spacing).

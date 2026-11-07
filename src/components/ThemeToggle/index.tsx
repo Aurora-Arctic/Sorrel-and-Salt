@@ -17,6 +17,20 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
   }
 };
 
+// Swaps the theme with every transition held off (globals.scss), so a hover or focus fade on any
+// element does not run on the colour change. The style read makes the browser compute the new theme
+// while the hold is on; the hold lifts afterwards, with nothing left to animate.
+const swapTheme = (theme: 'light' | 'dark'): void => {
+  const root = document.documentElement;
+  root.setAttribute('data-theme-swap', '');
+  try {
+    applyTheme(theme);
+    void getComputedStyle(root).getPropertyValue('color');
+  } finally {
+    root.removeAttribute('data-theme-swap');
+  }
+};
+
 // Mirrors globals.scss's three-state cascade: only a stored choice sets the
 // attribute, so on a light system with nothing stored it is absent while the
 // page is light. Asks for `light` so "no preference" resolves to dark.
@@ -102,9 +116,9 @@ const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => 
     // One cross-fade of the whole page where the browser has the View Transitions API (past the
     // browser floor, so behind an `in` check); elsewhere, and under reduced motion, the swap is instant.
     if ('startViewTransition' in document && !prefersReducedMotion()) {
-      document.startViewTransition(() => applyTheme(next));
+      document.startViewTransition(() => swapTheme(next));
     } else {
-      applyTheme(next);
+      swapTheme(next);
     }
     buttonRef.current?.setAttribute('aria-pressed', String(!isLight));
   };

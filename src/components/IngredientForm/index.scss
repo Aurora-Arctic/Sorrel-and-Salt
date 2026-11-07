@@ -357,13 +357,13 @@ $skeleton-fade: 300ms;
     .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
+      @include state-fade(color);
 
       &:hover,
       &:focus-visible,
       &:hover:where(:visited),
       &:focus-visible:where(:visited) {
         color: $accent-hover;
-        @include state-fade(color);
       }
 
       &:where(:visited) {

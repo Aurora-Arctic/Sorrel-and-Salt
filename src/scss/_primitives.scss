@@ -166,12 +166,12 @@
     text-decoration: none;
     cursor: pointer;
     box-shadow: $shadow-floating;
+    @include state-fade(background-color, color);
 
     &:hover,
     &:focus-visible {
       background-color: $accent;
       color: $text-on-color;
-      @include state-fade(background-color, color);
     }
 
     &:focus-visible {
@@ -1510,6 +1510,7 @@
     font-family: $font-body;
     font-size: type-size('body');
     font-weight: 400;
+    @include state-fade(border-color);
 
     &::placeholder {
       color: $text-placeholder;
@@ -1518,7 +1519,6 @@
 
     &:hover {
       border-color: $text-primary;
-      @include state-fade(border-color);
     }
 
     &:focus-visible {
@@ -2032,11 +2032,11 @@
     border: 1px solid $hairline;
     border-radius: radius('surface');
     background-color: $surface-page;
+    @include state-fade(border-color, background-color);
 
     &:hover:not(:has(input:disabled)) {
       border-color: $accent;
       background-color: $surface-card-hover;
-      @include state-fade(border-color, background-color);
     }
 
     &:has(input:checked) {
@@ -2117,6 +2117,7 @@
     box-sizing: border-box;
     inline-size: 3rem;
     block-size: 3rem;
+    @include state-fade(background-color);
 
     // Hidden but still focusable and reachable, as a screen-reader-only
     // control is: its own ring is drawn on the segment by :has below.
@@ -2137,7 +2138,6 @@
 
     &:hover {
       background-color: color-mix(in srgb, $accent 12%, $surface-card);
-      @include state-fade(background-color);
     }
 
     &:has(input:checked) {

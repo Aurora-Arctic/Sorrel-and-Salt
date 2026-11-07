@@ -27,11 +27,11 @@
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the entry wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
     box-shadow: inset $rule-heavy 0 0 0 transparent;
+    @include state-fade(background-color, color);
 
     &:hover {
       background: $fill-quiet;
       color: $text-primary;
-      @include state-fade(background-color, color);
     }
 
     &:focus-visible {
@@ -141,6 +141,7 @@
     cursor: pointer;
     font-weight: 400;
     list-style: none;
+    @include state-fade(background-color);
 
     &::-webkit-details-marker {
       display: none;
@@ -148,7 +149,6 @@
 
     &:hover {
       background-color: $fill-highlight-field;
-      @include state-fade(background-color);
     }
 
     @include forced-colors {

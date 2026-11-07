@@ -163,11 +163,10 @@ $account-menu-avatar: 2rem;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  @include state-fade(background-color, color);
 
   &:hover {
     background-color: $fill-highlight;
-    // The wash eases in as the button's does, rather than snapping.
-    @include state-fade(background-color, color);
   }
 
   &:focus-visible {
