@@ -348,13 +348,15 @@ const layoutOf = (page: Page, inSkeleton: boolean) =>
       const rect = element.getBoundingClientRect();
       return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
     };
-    const table = find('table');
+    // A document's body is published text, so a table or list inside it sits wherever the text puts it.
+    const listed = (element: Element) => shown(element) && !element.closest('.document-page__body');
+    const table = [...(root?.querySelectorAll('table') ?? [])].find(listed) ?? null;
     const list =
       table ??
       [
         ...(root?.querySelectorAll('ul[aria-label], ol[aria-label], [role="list"][aria-label]') ??
           []),
-      ].find((element) => shown(element) && !element.closest('nav, header, form')) ??
+      ].find((element) => listed(element) && !element.closest('nav, header, form')) ??
       null;
     const item = table ? table.querySelector('tbody tr') : (list?.firstElementChild ?? null);
     let frame = table?.parentElement ?? null;
