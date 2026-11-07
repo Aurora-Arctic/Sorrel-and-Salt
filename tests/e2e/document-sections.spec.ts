@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 
-// Each document page's sections and sources as the reader meets them (claude-docs/design-decisions/m15.59-document-editor-scope.md).
+// Each document page's sections and sources as the reader meets them (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
 
 interface Section {
   heading: string;

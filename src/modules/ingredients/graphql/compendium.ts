@@ -18,7 +18,7 @@ import { CompendiumFacetsRef } from './ingredient-facets';
 // The filtering is the service's, in SQL (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
- * The six facet arguments the compendium and a coven's ingredient list share (claude-docs/design-decisions/m11.22-search-facets.md):
+ * The six facet arguments the compendium and a coven's ingredient list share (claude-docs/design-decisions/ingredients.md, "Search facets take lists and a toxic setting"):
  * any value within a list matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({

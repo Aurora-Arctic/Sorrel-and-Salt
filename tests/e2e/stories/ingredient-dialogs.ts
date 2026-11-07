@@ -109,7 +109,7 @@ export async function expectFieldError(field: Locator, valid: readonly string[])
   }
 }
 
-/** Editing lives where an ingredient is shown, never in the shell (claude-docs/design-decisions/mb.7-navigation.md, "DESIGN §9 Is Corrected, And Editing Lives Where An Ingredient Is Shown"). */
+/** Editing lives where an ingredient is shown, never in the shell (claude-docs/design-decisions/ui.md, "DESIGN §9 Is Corrected, And Editing Lives Where An Ingredient Is Shown"). */
 export function shellEditControls(page: Page): Locator {
   const shell = page.getByRole('banner').or(page.getByRole('navigation'));
   return shell

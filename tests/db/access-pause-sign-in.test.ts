@@ -22,7 +22,7 @@ import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
 
 // A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
 // and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
-// GraphQL route (claude-docs/design-decisions/m15.52-site-access-pause.md, "A paused user may sign in to reach support"). Pages
+// GraphQL route (claude-docs/design-decisions/auth.md, "A paused user may sign in to reach support"). Pages
 // are request-session.test.ts's. The two-factor step's session is made by the same call as a password's.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

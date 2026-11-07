@@ -40,7 +40,7 @@ import type {
   WriterContext,
 } from './types';
 
-// A request is the account's, not a coven's: its reader scope is SQL here (claude-docs/design-decisions/m15.1-support-form.md, "The curator view").
+// A request is the account's, not a coven's: its reader scope is SQL here (claude-docs/design-decisions/support.md, "The curator view").
 
 export const RESOLVED_CLOSES_AFTER_DAYS = 7;
 

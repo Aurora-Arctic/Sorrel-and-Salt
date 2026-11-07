@@ -36,7 +36,7 @@ import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import type { CardState, MintedCards } from '../types';
 
-// What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
+// What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/auth.md, "An invitation card is a third shape of `invitations`").
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 

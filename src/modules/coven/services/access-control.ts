@@ -5,7 +5,7 @@ import type { WorkspaceRole } from '../types';
 
 // The site role is not read here, as a keeper reaches no workspace. Permission statements rather than a rank comparison, so a role off the
 // observer < practitioner < steward line cannot make an "at least member" check mean something nobody checked
-// (claude-docs/design-decisions/m6.3-permission-statements.md).
+// (claude-docs/design-decisions/auth.md, "Permission statements over a role rank").
 
 const statements = {
   /** Never the compendium, which is curated by site role. */

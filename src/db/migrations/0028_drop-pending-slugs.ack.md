@@ -21,4 +21,4 @@ Production's last release stops at migration 0022, before MB.81's 0025 added the
 
 ## What is lost
 
-Nothing. The columns held MB.81's pending slug claims, and MB.82 replaced those claims with a confirmed takeover before any service wrote one (`claude-docs/design-decisions/mb.82-slug-takeover.md`). Every row on staging holds null in both. A rollback to a deploy that predates MB.82 would find the columns gone, which CLAUDE.md rule 10's forward-only migrations already rule out: the way back is a forward fix.
+Nothing. The columns held MB.81's pending slug claims, and MB.82 replaced those claims with a confirmed takeover before any service wrote one (`claude-docs/design-decisions/data.md`, "A taker ends a retired slug's redirect, once confirmed"). Every row on staging holds null in both. A rollback to a deploy that predates MB.82 would find the columns gone, which CLAUDE.md rule 10's forward-only migrations already rule out: the way back is a forward fix.

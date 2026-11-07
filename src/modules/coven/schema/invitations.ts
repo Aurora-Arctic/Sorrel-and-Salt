@@ -9,7 +9,7 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // A default, not a policy: omitting an expiry must not mean forever (claude-docs/db/invitations.md, "Invitations").
 const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
-// Three shapes: `address`, `card`, and a site-tier row. Only the token's hash is stored (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
+// Three shapes: `address`, `card`, and a site-tier row. Only the token's hash is stored (claude-docs/design-decisions/auth.md, "Workspace and admin invitations are one two-tier table").
 export const invitations = namedWrites(
   pgTable(
     'invitations',

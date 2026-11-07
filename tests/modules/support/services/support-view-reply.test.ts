@@ -22,7 +22,7 @@ import { insertSupportRequest } from '../../../support/db/insert-support-request
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
 
-// Every way the token could be stale answers the same not-found (claude-docs/design-decisions/m15.48-mailed-link.md, "The mailed link and the signed-out reply").
+// Every way the token could be stale answers the same not-found (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply").
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
 vi.mock('@/lib/mail', () => ({

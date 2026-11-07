@@ -10,7 +10,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import type { ReceivedInvitation } from '../types';
 
 // The coven invitations addressed to the signed-in account. No permission to assert: the session is the scope and the repository
-// matches its verified address in SQL. The site tier is never listed (claude-docs/design-decisions/m10.32-accept-from-the-landing.md).
+// matches its verified address in SQL. The site tier is never listed (claude-docs/design-decisions/auth.md, "A coven invitation is accepted from the account page as well as from the mail").
 
 /** Three statements however long the page; a row whose coven was deleted between the reads is left out. */
 export async function listReceivedInvitations(

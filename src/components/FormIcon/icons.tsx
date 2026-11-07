@@ -73,7 +73,7 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
 };
 
 // The generic: a salt spoon drawn on the Backdrop's `salt-spoon.webp`, also the admin nav's Forms mark
-// (claude-docs/design-decisions/m12.6-form-icons.md). Scaled to match the six; each grain is a
+// (claude-docs/design-decisions/ui.md, "Form icons: on the group, with a generic"). Scaled to match the six; each grain is a
 // zero-length stroke the round caps swell into a dot.
 export const SPOON: ReactElement = (
   <g transform="translate(12 12) scale(1.05) translate(-12.23 -12.23)">

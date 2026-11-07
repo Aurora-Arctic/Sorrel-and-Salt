@@ -56,7 +56,7 @@ async function readPausesOf(
 /**
  * The user `?user=` names, with their covens; none when the list does not show them (not live, or
  * the seed's bootstrap user). Read through the services GraphQL ends at (rule 1;
- * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached, so a second render in the request reads once.
+ * claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to"). Cached, so a second render in the request reads once.
  */
 export const readOpenedUser = cache(async (session: Session, raw: string) => {
   const parsed = RowId.safeParse(raw);

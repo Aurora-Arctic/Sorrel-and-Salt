@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { NavigationProvider, reportLeaving, useNavigationState, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// The one way the site navigates (claude-docs/design-decisions/m12.33-loading-standard.md).
+// The one way the site navigates (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site").
 
 const COVEN_CARDS = { region: 'coven', shape: 'cards' } as const;
 

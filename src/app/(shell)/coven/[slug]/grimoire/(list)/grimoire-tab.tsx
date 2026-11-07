@@ -31,7 +31,7 @@ import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
 // One grimoire tab, Spells or Drafts. Per request, never cached (rule 6). A function, not a component, so a test awaits
-// each page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
+// each page whole. Dialogs: claude-docs/design-decisions/grimoire.md, "The spell builder is a modal".
 const editHrefOf = (closeHref: Route, id: string): Route => withParam(closeHref, 'edit', id);
 
 /**

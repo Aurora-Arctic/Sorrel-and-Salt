@@ -6,7 +6,7 @@ import type { Session } from '../../../lib/session';
 import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 
 // The primary keeper is promoted at sign-in or at first-party verification
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary keeper";
+// (claude-docs/design-decisions/auth.md, "The primary keeper";
 // claude-docs/auth/admin-bootstrap.md, "Admin bootstrap and the self-created user").
 
 /**

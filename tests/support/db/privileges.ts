@@ -2,7 +2,7 @@ import type postgres from 'postgres';
 
 // The trigger on `users` refuses a privilege change that declares no route, from any client, so a test's
 // setup changing `role` or `can_create_workspace` by hand declares itself a `psql` fix
-// (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
+// (claude-docs/design-decisions/auth.md, "One privilege ledger, written by the database").
 
 export async function asManualFix(
   sql: postgres.Sql,

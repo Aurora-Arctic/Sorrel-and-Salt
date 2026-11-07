@@ -13,7 +13,7 @@ import { insertSupportRequest } from '../../../support/db/insert-support-request
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verification';
 
-// Every signed-out request is written as the one seeded stand-in, so the time-out names the address's HMAC key and no account (claude-docs/design-decisions/m15.48-mailed-link.md).
+// Every signed-out request is written as the one seeded stand-in, so the time-out names the address's HMAC key and no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
 const {
   liftSupportTimeout,

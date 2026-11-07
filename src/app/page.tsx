@@ -10,7 +10,7 @@ import { TWITTER_CARD } from '../lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
-// unverified account gets the email page. See claude-docs/design-decisions/mb.57-post-sign-in-landing.md.
+// unverified account gets the email page. See claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives".
 const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
 
 // Absolute, so the layout's template does not add the site's name twice.

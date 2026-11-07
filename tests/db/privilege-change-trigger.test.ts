@@ -8,7 +8,7 @@ import { users } from '@/modules/identity/schema/users';
 import type { PrivilegeLedgerRow } from './types';
 
 // `users` fills `user_privilege_changes` itself: a change to `role` or `can_create_workspace` writes one row per column, its route read from `app.privilege_route` and refused when none is declared
-// (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
+// (claude-docs/design-decisions/auth.md, "One privilege ledger, written by the database").
 
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));

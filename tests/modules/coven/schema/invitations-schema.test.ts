@@ -10,7 +10,7 @@ import type { Membership } from '@/modules/coven';
 import { invitations } from '@/modules/coven/schema/invitations';
 import type { SiteAdmin } from '@/modules/identity';
 
-// The named writes are the only ones to reach it (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
+// The named writes are the only ones to reach it (claude-docs/design-decisions/auth.md, "Workspace and admin invitations are one two-tier table").
 
 const OWN_COLUMNS = [
   'id',

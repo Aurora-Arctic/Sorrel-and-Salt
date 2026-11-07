@@ -21,7 +21,7 @@ export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencin
 
 // A counter the database adds one to on every UPDATE, through the shared `bump_revision()` trigger each table attaches in its
 // own migration. A save names the revision it read and is refused if the row has moved. Named `revision`, not `version`, which v2
-// keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
+// keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/grimoire.md, "Long forms autosave, and edits of one row can conflict").
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
@@ -65,7 +65,7 @@ export const users = pgTable(
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
     // The flag lets anyone create a workspace, so every role but `user` holds it and the gate never reads `role` beside it.
-    // Not partial: it states a fact about the row, deleted or not (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+    // Not partial: it states a fact about the row, deleted or not (claude-docs/design-decisions/auth.md, "Every admin holds `canCreateWorkspace`").
     // It names `user`, not the privileged roles, so the migration adding `curator` need not use the new value it adds.
     check(
       'users_privileged_can_create_workspace',

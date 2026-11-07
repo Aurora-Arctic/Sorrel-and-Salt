@@ -4,7 +4,7 @@ import { describe, expect, inject, it } from 'vitest';
 
 import { fromRoot } from '../support/paths';
 
-// A web API not yet widely available may be used only behind a `typeof` or `in` check on the same line (claude-docs/styling.md, "Binding rules"; claude-docs/design-decisions/m10.24-browser-floor.md).
+// A web API not yet widely available may be used only behind a `typeof` or `in` check on the same line (claude-docs/styling.md, "Binding rules"; claude-docs/design-decisions/ui.md, "The browser floor").
 // The list prunes itself: an entry fails with "delete this entry" once its `web-features` id is widely available.
 
 interface PastTheFloor {

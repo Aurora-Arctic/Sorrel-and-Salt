@@ -3,7 +3,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 
 // The vocabularies behind `ingredients.celestialBodies` and `ingredients.zodiacSigns`, deliberately not foreign key targets for them, so a member can write
-// `Eris` before anyone curates it. Two tables, one tier, a nullable `position` for facet order (claude-docs/design-decisions/m12.52-facet-sort-order.md;
+// `Eris` before anyone curates it. Two tables, one tier, a nullable `position` for facet order (claude-docs/design-decisions/ingredients.md, "How each search facet sorts its values";
 // claude-docs/db/categories.md, "Vocabulary schema details"). The description is search surface.
 export const celestialBodies = pgTable(
   'celestial_bodies',

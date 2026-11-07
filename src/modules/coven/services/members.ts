@@ -8,7 +8,7 @@ import { assertMembership } from './membership';
 import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
- * One coven at a time, not batched (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
+ * One coven at a time, not batched (claude-docs/design-decisions/data.md, "A coven's members are read a coven at a time, without a loader").
  *
  * @throws {Forbidden} the caller holds no live seat, or holds one without `member: read`, which an observer lacks.
  */

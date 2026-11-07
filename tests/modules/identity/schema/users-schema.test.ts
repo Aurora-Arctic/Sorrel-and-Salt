@@ -94,8 +94,8 @@ describe('users email case', () => {
   });
 });
 
-// The flag is what lets anyone create a workspace, keepers included, so a CHECK holds every keeper to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-// It holds for every role but `user`, curators included (claude-docs/design-decisions/m11.20-curator-role.md).
+// The flag is what lets anyone create a workspace, keepers included, so a CHECK holds every keeper to it rather than the gate reading `role` beside it (claude-docs/design-decisions/auth.md, "Every admin holds `canCreateWorkspace`").
+// It holds for every role but `user`, curators included (claude-docs/design-decisions/auth.md, "A third site role, `curator`").
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {

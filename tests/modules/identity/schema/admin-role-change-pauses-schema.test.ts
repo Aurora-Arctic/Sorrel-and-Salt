@@ -10,7 +10,7 @@ import type { NamedWrites } from '@/db/types';
 import type { PauseRow } from './types';
 
 // The pause switch, table half. One row per pause rather than one row of settings, so no migration seeds a row it has no user to stamp with, and every pause keeps who began it and who ended it
-// (claude-docs/design-decisions/mb.62-pause-ledger.md).
+// (claude-docs/design-decisions/auth.md, "The admin-role-change pause is a ledger, not a settings row").
 
 const ENDED_TOGETHER = 'admin_role_change_pauses_ended_together';
 const ONE_OPEN = 'admin_role_change_pauses_one_open';

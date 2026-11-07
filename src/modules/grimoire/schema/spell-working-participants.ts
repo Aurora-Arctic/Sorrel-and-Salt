@@ -5,7 +5,7 @@ import { idColumn } from '../../../db/schema-parts';
 import { spellWorkings } from './spell-workings';
 
 // Rows are replaced wholesale when participants change, so the table has the four stamp columns and no `deleted_at`
-// (claude-docs/design-decisions/m13.4-spell-workings.md).
+// (claude-docs/design-decisions/grimoire.md, "A working is the record of one making, in three tables").
 export const spellWorkingParticipants = pgTable(
   'spell_working_participants',
   {

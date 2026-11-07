@@ -17,7 +17,7 @@ import { mailPausedMember } from './member-pause-start';
 import { assertMembership } from './membership';
 
 // The member keeps the seat; `assertMembership` refuses them with AccessPaused while the pause stands
-// (claude-docs/design-decisions/m15.55-coven-access-pause.md).
+// (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way").
 
 const NOTE_MAX_LENGTH = 500;
 const OWNER_REFUSAL =

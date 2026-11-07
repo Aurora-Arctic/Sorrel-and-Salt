@@ -10,7 +10,7 @@ import type { CompendiumDialogProps } from './types';
 
 // The page's `RouteModal` (claude-docs/components/modal.md, "RouteModal"). It keeps a router of its
 // own because a save moves the modal from `?new` to the entry's `?edit=`. A client part, as the form's
-// handlers cannot cross from a server page (claude-docs/design-decisions/m5.5-admin-compendium.md).
+// handlers cannot cross from a server page (claude-docs/design-decisions/ingredients.md, "The admin compendium page: its size, its modal, its lookups").
 export default function CompendiumDialog({
   place,
   opened,

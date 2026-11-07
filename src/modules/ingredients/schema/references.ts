@@ -74,7 +74,7 @@ export const references = pgTable(
 
     // The four that make the renderer total: every row admitted renders
     // without a branch for a missing required field
-    // (claude-docs/design-decisions/mb.151-references.md, "Decided").
+    // (claude-docs/design-decisions/ingredients.md, "Decided").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

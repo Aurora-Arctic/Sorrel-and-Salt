@@ -155,7 +155,7 @@ describe('requireSignedIn', () => {
   });
 });
 
-// A paused user signs in to a view of the site with support in it and nothing else (claude-docs/design-decisions/m15.52-site-access-pause.md,
+// A paused user signs in to a view of the site with support in it and nothing else (claude-docs/design-decisions/auth.md, "What the site access pause closes, and what it decides along the way",
 // "A paused user may sign in to reach support"); a keeper impersonating them is shown the same.
 describe('a paused session', () => {
   const UNTIL = new Date('2030-01-01T00:00:00.000Z');

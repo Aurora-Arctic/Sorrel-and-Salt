@@ -21,7 +21,7 @@ import { C, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// Only the newest mailed link works (claude-docs/design-decisions/m15.48-mailed-link.md, "The mailed link and the signed-out reply"); the last describe holds every GraphQL answer to carrying neither token nor hash.
+// Only the newest mailed link works (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply"); the last describe holds every GraphQL answer to carrying neither token nor hash.
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
 vi.mock('@/lib/mail', () => ({

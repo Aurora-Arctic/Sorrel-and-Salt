@@ -10,7 +10,7 @@ Destructive DDL acknowledged: the amount CHECK is rewritten without `note`, beca
 
 ## Why it is one PR
 
-The CHECK is dropped and added back in the same migration, so there is no moment without it. The column `note` is not dropped here: M13.9 drops it, per rule 10 (`claude-docs/design-decisions/pr1308-step-note-retired.md`).
+The CHECK is dropped and added back in the same migration, so there is no moment without it. The column `note` is not dropped here: M13.9 drops it, per rule 10 (`claude-docs/design-decisions/grimoire.md`, "The step note is retired (PR #1308)").
 
 ## The rollout window
 

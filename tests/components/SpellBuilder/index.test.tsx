@@ -221,7 +221,7 @@ describe('SpellBuilder', () => {
   });
 
   // A new spell is created once; a later save is that spell's update, at the
-  // revision the last save answered (claude-docs/design-decisions/m13.14-autosave.md).
+  // revision the last save answered (claude-docs/design-decisions/grimoire.md, "Long forms autosave, and edits of one row can conflict").
   it('saves again as an update of the spell it created, at its revision', async () => {
     const created = acceptCreate('s9');
     const updated = acceptUpdate();

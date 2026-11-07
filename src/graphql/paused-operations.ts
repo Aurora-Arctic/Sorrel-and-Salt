@@ -1,7 +1,7 @@
 import { Kind, parse, type OperationDefinitionNode } from 'graphql';
 
 // The root fields a paused account's session may still act through: the signed-in support form's, and nothing else, so a
-// paused user can ask about the pause and read the answer (claude-docs/design-decisions/m15.52-site-access-pause.md).
+// paused user can ask about the pause and read the answer (claude-docs/design-decisions/auth.md, "What the site access pause closes, and what it decides along the way").
 
 const SUPPORT_FIELDS = new Set([
   '__typename',

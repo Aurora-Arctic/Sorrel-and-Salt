@@ -28,7 +28,7 @@ export const ingredientSubstitutes = pgTable(
   (table) => [
     // The read by parent, taking links and names alike. No index leads on
     // `substitute_id`: nothing reads from a linked ingredient back to its linkers
-    // (claude-docs/design-decisions/mb.138-substitute-links.md, "Decided").
+    // (claude-docs/design-decisions/ingredients.md, "Decided").
     index('ingredient_substitutes_ingredient_id')
       .on(table.ingredientId)
       .where(sql`${table.deletedAt} is null`),

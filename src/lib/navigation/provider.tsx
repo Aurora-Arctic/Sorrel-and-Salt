@@ -25,7 +25,7 @@ export type NavigationActions = {
 export const ActiveNavigationContext = createContext<ActiveNavigation | undefined>(undefined);
 export const NavigationActionsContext = createContext<NavigationActions | null>(null);
 
-/** Mounted once and never unmounts, so a wait is never lost with the control that began it; React puts the optimistic wait back when the transition ends. A mounted form with unsaved changes is waited on first (claude-docs/design-decisions/m12.33-loading-standard.md, "Navigation provider"). */
+/** Mounted once and never unmounts, so a wait is never lost with the control that began it; React puts the optimistic wait back when the transition ends. A mounted form with unsaved changes is waited on first (claude-docs/design-decisions/ui.md, "Navigation provider"). */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);

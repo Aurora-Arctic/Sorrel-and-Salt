@@ -44,7 +44,7 @@ describe('SpellStepInput', () => {
     expect(SpellStepInput.parse(input)).toMatchObject(input);
   });
 
-  // The step note is retired: `body` is the one text (pr1308-step-note-retired.md).
+  // The step note is retired: `body` is the one text (design-decisions/grimoire.md, "The step note is retired (PR #1308)").
   it('drops a note an old client still sends', () => {
     expect(SpellStepInput.parse({ body: 'Stir', note: 'old' })).toEqual({ body: 'Stir' });
   });

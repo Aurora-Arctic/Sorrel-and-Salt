@@ -11,7 +11,7 @@ const COMPENDIUM_URL = siteUrl('/compendium');
 
 const TERM_SET = { '@type': 'DefinedTermSet', name: 'Compendium', url: COMPENDIUM_URL };
 
-/** Other names go in `alternateName`; the entry's sources are left out (claude-docs/design-decisions/mb.84-page-metadata.md). */
+/** Other names go in `alternateName`; the entry's sources are left out (claude-docs/design-decisions/ui.md, "Robots, sitemap, page metadata and structured data"). */
 export function entryJsonLd(entry: {
   name: string;
   canonicalName: string | null;

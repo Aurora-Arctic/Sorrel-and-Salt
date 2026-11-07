@@ -7,7 +7,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 
-// claude-docs/design-decisions/m15.48-mailed-link.md
+// claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link"
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({

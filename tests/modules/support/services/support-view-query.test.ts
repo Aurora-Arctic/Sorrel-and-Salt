@@ -13,7 +13,7 @@ import {
   insertSupportRequest,
 } from '../../../support/db/insert-support-request';
 
-// The link carries its token in the URL fragment, which the browser never sends (claude-docs/design-decisions/m15.48-mailed-link.md).
+// The link carries its token in the URL fragment, which the browser never sends (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
 const { mintSupportViewToken } = support;
 const viewLimit = () =>

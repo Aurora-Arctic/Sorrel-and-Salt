@@ -205,7 +205,7 @@ describe('listCompendium', () => {
   });
 });
 
-// The facets (claude-docs/design-decisions/m11.22-search-facets.md): four lists, any value matching within one, and a toxic setting, the kinds ANDed.
+// The facets (claude-docs/design-decisions/ingredients.md, "Search facets take lists and a toxic setting"): four lists, any value matching within one, and a toxic setting, the kinds ANDed.
 // What each arm matches is tests/db/repository/ingredients.test.ts's; this holds what the service parses.
 describe('listCompendium, under the facets', () => {
   let hecate: string;

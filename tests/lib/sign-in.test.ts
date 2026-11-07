@@ -16,7 +16,7 @@ import {
 
 // Where a sign-in with no return path lands, decided by the role the account holds once the
 // callback has run. Not `/`: `/` is the public front door, and someone who just signed in has
-// been through it already (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+// been through it already (claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives").
 describe('postSignInLanding', () => {
   it('sends a keeper to the keepers area', () => {
     expect(postSignInLanding('admin')).toBe('/keepers');

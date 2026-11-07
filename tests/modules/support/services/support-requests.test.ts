@@ -35,7 +35,7 @@ import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
-// Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
+// Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/support.md, "A support form, reviewed by keepers").
 
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),

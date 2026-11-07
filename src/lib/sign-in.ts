@@ -5,7 +5,7 @@ import { SUPPORT_LIST_PATH } from './support-path';
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone but a curator or an admin: the post-sign-in
- * landing, not the public front door `/` (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+ * landing, not the public front door `/` (claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives").
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 

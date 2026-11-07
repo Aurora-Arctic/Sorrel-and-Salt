@@ -8,7 +8,7 @@ import type { MembershipOfUser } from '../types';
 /**
  * A caller lists their own covens and a site keeper anyone's; any other id is a `Forbidden` in its own slot. An unverified
  * session gets an empty list in every slot, not a refusal: the shell draws the email page and the public pages from this call.
- * The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
+ * The admin read yields no `Membership` proof (claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to").
  */
 export async function membershipsOf(
   session: Session,

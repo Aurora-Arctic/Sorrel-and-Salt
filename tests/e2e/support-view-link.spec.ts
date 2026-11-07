@@ -5,7 +5,7 @@ import type { Page } from '@playwright/test';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 
-// Against the built server: the token rides in the URL fragment, never sent to the server (claude-docs/design-decisions/m15.48-mailed-link.md, "The mailed link and the signed-out reply").
+// Against the built server: the token rides in the URL fragment, never sent to the server (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply").
 // Which tokens the query honours is tests/modules/support/services/support-view-query.test.ts's.
 
 const SUBJECT = 'The Testwort jar will not open';

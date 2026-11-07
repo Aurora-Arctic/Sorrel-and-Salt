@@ -11,7 +11,7 @@ import './index.scss';
 
 // What a click outside a form says when it fails: the service's sentence in an alert callout under the
 // control, a badge that brings it back, and the control described by the failure until a later try
-// clears it (claude-docs/components/click-feedback.md; claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md §5).
+// clears it (claude-docs/components/click-feedback.md; claude-docs/design-decisions/ui.md, "Feedback from a click outside a form" §5).
 
 /**
  * The control's own document, for its listeners and events: in a story Storybook draws into an iframe,

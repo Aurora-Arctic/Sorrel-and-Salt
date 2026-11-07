@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 
-// The check every Vercel Cron route makes before it starts its job (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md).
+// The check every Vercel Cron route makes before it starts its job (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting").
 
 /** Compared as digests, so the time taken says nothing of the secret. False for every request while it is unset. */
 export function cronAuthorised(request: Request): boolean {

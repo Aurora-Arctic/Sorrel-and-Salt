@@ -222,7 +222,7 @@ describe('spell_steps table', () => {
   });
 
   // A layer is an ingredient or a custom name, never both — the
-  // "nullable FKs plus num_nonnulls" idiom (claude-docs/design-decisions/mb.40-custom-spell-ingredients.md). Neither is an instruction alone.
+  // "nullable FKs plus num_nonnulls" idiom (claude-docs/design-decisions/grimoire.md, "A custom, one-off spell ingredient is a row in `spell_ingredients`, not a table of its own"). Neither is an instruction alone.
   describe('a layer names an ingredient or a custom name, never both', () => {
     it('stores a custom ingredient by name and form, with no ingredient row', async () => {
       await custom('Garden dust', { form: 'powder' });

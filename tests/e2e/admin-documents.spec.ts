@@ -4,8 +4,8 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/m15.59-document-editor-scope.md).
-// The Email Updates tab mails one email per change (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+// Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/support.md, "A keeper editor for the site's documents").
+// The Email Updates tab mails one email per change (claude-docs/design-decisions/support.md, "One joint email about every changed document").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -207,7 +207,7 @@ test('a curator is refused every document editor and the Email Updates page with
   await assertNoAccessibilityViolations(page);
 });
 
-// One email covers every document changed since the last (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+// One email covers every document changed since the last (claude-docs/design-decisions/support.md, "One joint email about every changed document").
 test('an admin publishes the privacy policy and the code of ethics, then emails every account one email about both', async ({
   page,
 }) => {

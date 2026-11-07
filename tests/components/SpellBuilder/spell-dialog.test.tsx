@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: SpellDialog } = await import('@/components/SpellBuilder/spell-dialog');
 
-// claude-docs/design-decisions/m10.12-spell-builder-modal.md
+// claude-docs/design-decisions/grimoire.md, "The spell builder is a modal"
 
 const CLOSE = '/coven/fixture-coven/grimoire' as Route;
 const editHref = (id: string) => `/coven/fixture-coven/grimoire?edit=${id}` as Route;

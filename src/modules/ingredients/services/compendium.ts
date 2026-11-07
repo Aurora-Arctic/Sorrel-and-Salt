@@ -377,7 +377,7 @@ export function readCompendiumEntry(slug: string): Promise<CompendiumEntryPage> 
 
 /**
  * A curator's read of the entry page, for the address the public read found nothing at: the entry whether it is shown or hidden.
- * Not cached, since what it returns depends on who asks (claude-docs/design-decisions/m14.35-curators-see-hidden-entry-pages.md).
+ * Not cached, since what it returns depends on who asks (claude-docs/design-decisions/ingredients.md, "A curator or keeper still sees the page of a hidden entry").
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} nothing live is at `slug` and nothing redirects from it.

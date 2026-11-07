@@ -18,7 +18,7 @@ import { insertDocument, insertDocumentVersion } from '../../../support/db/inser
 // The versions in force are each agreed document's highest published version number: the terms, the disclaimer and the code of
 // ethics, which the terms include. An account has agreed when it recorded all three. Agreement is recorded by the service alone,
 // stamped with the session's user, and only at the three numbers in force, so a page left open across a publish cannot agree to the
-// text it showed (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md).
+// text it showed (claude-docs/design-decisions/support.md, "Agreeing to the terms covers the disclaimer and the code of ethics").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

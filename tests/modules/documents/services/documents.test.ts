@@ -7,7 +7,7 @@ import { E } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 
-// No read takes a session or answers with a draft or deleted row (claude-docs/design-decisions/m15.59-document-editor-scope.md, "History").
+// No read takes a session or answers with a draft or deleted row (claude-docs/design-decisions/support.md, "History").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -27,7 +27,7 @@ export const NEW_SPELL_PREFIX = 'spell-';
 
 /**
  * The `?new` values that are a word alone, reserved as slugs. The others start with a fixed prefix (`spell-`,
- * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+ * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/grimoire.md, "The spell builder is a modal").
  */
 const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
 

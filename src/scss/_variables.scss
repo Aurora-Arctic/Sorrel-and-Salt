@@ -709,7 +709,7 @@ $text-stroke-hairline: 0.6px;
 // Twice `$motion-short`, as a block of text changing height needs longer than a thumb sliding to read as one move.
 $motion-medium: 300ms;
 
-// The loading standard (claude-docs/design-decisions/m12.33-loading-standard.md). How long a wait must last before an indicator
+// The loading standard (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"). How long a wait must last before an indicator
 // shows, so a quick answer never flashes one; skeletons are not held back.
 $loading-delay: 100ms;
 $spin-duration: 0.8s;

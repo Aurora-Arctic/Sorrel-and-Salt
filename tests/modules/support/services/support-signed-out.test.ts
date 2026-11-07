@@ -16,7 +16,7 @@ import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// A signed-out send sets no cookie and makes no account (claude-docs/design-decisions/m15.48-mailed-link.md); tests/e2e/support-signed-out-sender.spec.ts walks the cookie half.
+// A signed-out send sets no cookie and makes no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link"); tests/e2e/support-signed-out-sender.spec.ts walks the cookie half.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

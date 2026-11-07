@@ -7,7 +7,7 @@ import type {
 } from './types';
 
 // An account agrees to the terms, the disclaimer and the code of ethics at once, and the agreement reads as one joint version,
-// `terms.disclaimer.ethics` (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md). Pure, so the gate, the
+// `terms.disclaimer.ethics` (claude-docs/design-decisions/support.md, "Agreeing to the terms covers the disclaimer and the code of ethics"). Pure, so the gate, the
 // agreement page and the keeper's screens share it.
 
 export const AGREEMENT_DOCUMENTS: readonly { part: AgreementPart; key: AgreementDocumentKey }[] = [

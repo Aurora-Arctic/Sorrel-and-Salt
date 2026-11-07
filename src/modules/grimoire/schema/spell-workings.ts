@@ -9,7 +9,7 @@ import { spells, spellVisibility } from './spells';
 export const workingStatus = pgEnum('working_status', ['draft', 'complete']);
 
 // No `workspace_id`: the service reaches it through its parent spell, so a working of a deleted spell is unreachable by the spell's
-// own filter, not by a cascade (claude-docs/design-decisions/m13.4-spell-workings.md).
+// own filter, not by a cascade (claude-docs/design-decisions/grimoire.md, "A working is the record of one making, in three tables").
 export const spellWorkings = pgTable(
   'spell_workings',
   {

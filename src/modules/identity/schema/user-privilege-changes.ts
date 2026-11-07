@@ -22,7 +22,7 @@ export const userPrivilegeRoute = pgEnum('user_privilege_route', [
 
 // The one privilege ledger: one row per change to a privilege column on `users`, since the next update overwrites its `updated_by`.
 // Append-only by the database, not by the writer's types: the `forbid_rewrite` trigger refuses every update and delete
-// (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
+// (claude-docs/design-decisions/auth.md, "One privilege ledger, written by the database").
 export const userPrivilegeChanges = pgTable('user_privilege_changes', {
   id: idColumn(),
   userId: uuid('user_id')

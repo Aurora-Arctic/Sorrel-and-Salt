@@ -6,7 +6,7 @@ import { idColumn } from '../../../db/schema-parts';
 import { spellSteps } from './spell-steps';
 import { spellWorkings } from './spell-workings';
 
-// Written once at completion and never edited, so it carries the four stamp columns and no `deleted_at` (claude-docs/design-decisions/m13.4-spell-workings.md).
+// Written once at completion and never edited, so it carries the four stamp columns and no `deleted_at` (claude-docs/design-decisions/grimoire.md, "A working is the record of one making, in three tables").
 export const spellWorkingDeductions = pgTable(
   'spell_working_deductions',
   {

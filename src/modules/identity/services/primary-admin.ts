@@ -5,7 +5,7 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// Who the primary keeper is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/m2.9-granting-admin.md,
+// Who the primary keeper is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/auth.md, "Granting and revoking admin",
 // "The primary keeper"). Its own file so the role service and the pause both ask it without importing each other.
 
 /** Nobody is while ADMIN_BOOTSTRAP_EMAIL is unset. */

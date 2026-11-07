@@ -1,7 +1,7 @@
 import type { NameBasis, ReferenceKind } from './ingredient-enums';
 
 // Every number the sourcing score uses, read by the pure function and by the repository's sort expression, so the two cannot drift:
-// change a weight here and both follow (claude-docs/design-decisions/m14.24-plan.md, "The score").
+// change a weight here and both follow (claude-docs/design-decisions/ingredients.md, "The score").
 
 export const SOURCING_FACTS = [
   'sources',

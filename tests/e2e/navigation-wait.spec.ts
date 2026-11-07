@@ -16,7 +16,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// Every loading wait looks the same (claude-docs/design-decisions/m12.33-loading-standard.md), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
+// Every loading wait looks the same (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
 const PULSE = 'loading-pulse';
 

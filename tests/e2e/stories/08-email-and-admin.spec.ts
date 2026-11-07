@@ -7,7 +7,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md.
+// claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/auth.md, "First-party email verification and email delivery".
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
