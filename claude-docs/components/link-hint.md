@@ -40,7 +40,7 @@ place of `<LinkIcon /><LinkHint />`:
 
 It draws one `1em` box (`span.link-icon-hint`) holding the icon, and while the
 link is pending (the same state as the dot, `useLinkPending`) the shared
-[`Spinner`](spinner.md) in the same box, with `is-pending` on the box. Nothing
+[`Spinner`](busy-button.md#spinner) in the same box, with `is-pending` on the box. Nothing
 shifts. The icon is hidden when the ring appears, both after `$loading-delay`,
 so a quick navigation changes nothing; the ring pulses under reduced motion as
 it does everywhere. The link keeps `aria-busy`. Used by the Compendium list's

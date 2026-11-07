@@ -35,3 +35,38 @@ client component taking `path` (the page the request is about), and optionally `
   number, with a Copy button.
 
 - **The signed-out form offers five of the seven topics** (Accessibility, Bug, Account & Sign-In, Privacy & Data, Question), with the same labels and hints as this form, from `SUPPORT_ABOUTS`. `SIGNED_OUT_ABOUTS` in `src/modules/support/validation/support.ts` is the service's list; Compendium Entry and Feedback need an account.
+
+## Support panel
+
+`src/components/SupportPanel/` — the body of `/support` and of the Support dialog. It takes the state the page or the dialog's slot worked out and
+draws one of three things: Sign In for a signed-out visitor, the end of a time-out, or that it has no end date, in place of the form,
+or [`SupportForm`](support-form.md). `returnTo` is where Sign In brings the visitor back (the support page by default; the dialog passes its own address) and `onDone` closes the dialog. The caller decides the state; the panel decides nothing about access.
+
+For a signed-out visitor the Sign In notice and `SignedOutSupportForm` sit in one `.support-panel--signed-out` grid, `space(4)` apart. The notice has no margin, and the form's first group has none above it and its legend none above it, so the grid gap is the whole distance.
+
+The signed-out state carries the same optional `support` topic as the form state, and passes it to `SignedOutSupportForm` as `about`.
+
+## Support link
+
+`src/components/SupportLink/` — a link that opens the Support dialog over the page it is on, by adding
+a bare `?support=` to the current address and keeping its other parameters. The footer
+and the account menu use it; the dialog is in every page. Until the address is known it renders a link to `/support`.
+
+It is a `ModalLink` (`scroll={false}`), so opening the dialog does not scroll the page behind it to the top ([`modal.md`](modal.md)).
+
+Both links carry `rel="nofollow"`, which asks a search engine's crawler not to fetch the address. Each is a copy of a page with the dialog asked for, and `robots.txt` blocks the home page's copy, `/?support=`, so a crawler that followed it would report a blocked link.
+
+The optional `about` prop names a topic from the form’s own list (`SUPPORT_ABOUTS`), so the dialog opens with it chosen: the link adds `?support=<about>` instead of a bare `?support=`, and the no-JavaScript link goes to `/support?support=<about>`. The page the request is about is the address the link sits on. A signed-out visitor gets the topic chosen only when it is one of the five open without an account (accessibility, bug, account, privacy, question); a topic that needs an account, such as the compendium, leaves nothing chosen.
+
+## Support dialog
+
+`src/components/SupportDialog/` — the Support dialog, drawn once by the root layout, with no props, on every page. The layout reads nothing for it. It is open while the
+address carries `?support=<about>`; `?error=<status>` adds an error number, and `?from=<path>` names the
+page the request is about when it is not the page the dialog sits on. Closing drops the parameters and
+keeps the page.
+
+### Contracts
+
+- Asks what the visitor may do when it opens, through `/api/graphql` (the `supportDialogState` query, open to a signed-out caller and answered under the caller’s own session by `getMySupportDialogState`), and asks again at every open. The answer is `signedOut` (Sign In and the signed-out form), `unverified` (a line and a link to the email page instead of the form), `timedOut` (when the time-out ends, or null for one with no end date) or `form`. Until it arrives the dialog shows a form skeleton, and a failed read shows the generic failure notice, never an empty form.
+- The body is [`SupportPanel`](support-form.md#support-panel), which draws [`SupportForm`](support-form.md) for a sender who may write, inside a `RouteModal` titled Contact Support.
+- Reads the address through `useSearchParams`, so it sits in a Suspense boundary.

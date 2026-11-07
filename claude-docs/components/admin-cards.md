@@ -29,7 +29,7 @@ Expires is the day the card was chosen to last through, `2026-10-30`, read back 
   name, clamped to two lines (`admin-cards__note`). It applies from the magnifier or Enter. The drawer holds one line, which stacks below the tablet width:
   **Status**, a select-only `ComboboxSelect` (Any, Live, Revoked, Expired or Used Up; the options are labels, so title
   case, while the table's cells keep sentence case), then **Minted** and **Expires**, each a
-  [`DateRangeField`](date-range-field.md) with quick picks (Minted: Today, Last 7 Days, Last 30 Days, This Month, Last
+  [`DateRangeField`](date-field.md#date-range-field) with quick picks (Minted: Today, Last 7 Days, Last 30 Days, This Month, Last
   Month; Expires: Today, Next 7 Days, Next 30 Days, This Month, Next Month). Days are UTC days and inclusive at both
   ends (`mintedFrom=2026-10-01&mintedTo=2026-10-31` holds the 1st and the 31st). The Filters count counts the status
   and each range with a day in it, one apiece whether it has one end or both, so it reads Filters (3) at most. The drawer holds

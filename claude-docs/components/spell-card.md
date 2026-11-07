@@ -105,7 +105,7 @@ the address, and closing returns there with focus back on the eye. What the moda
 
 The layout is the Foundations specimen (`.specimen` in `_primitives.scss`). The card is
 IngredientCard's sibling (the owner's request, 2026-10-28): the same surface, shadow, radius,
-padding, title size, medium badges and category chips. The Draft and Private badges are drawn by `SpellMarks` ([spell-marks.md](spell-marks.md)) and sit under
+padding, title size, medium badges and category chips. The Draft and Private badges are drawn by `SpellMarks` ([spell-marks.md](entry-marks.md#spell-marks)) and sit under
 the title as an ingredient card's marks sit under its name, the last-edit line is in the foot,
 the intent stops at three lines with an ellipsis (`-webkit-line-clamp`, the unprefixed `line-clamp` beside it
 as an enhancement), and the made count shares the last-edit line: `.spell-card__foot-line` is a wrapping flex row

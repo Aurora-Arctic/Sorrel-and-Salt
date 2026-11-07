@@ -35,3 +35,13 @@ A source is a markdown footnote. Its number in the text is a superscript link wr
 ## The text itself
 
 Each document's text lives in a markdown file under `documents/`, which `npm run db:seed:documents` writes to the database as a new published version when the text differs. The public routes read the database: `/<key>` shows the current version and `/<key>/versions/<n>` one earlier version. A version page is titled with the document and its number, such as "Terms of Use, Version 1". Its canonical address, the one a search engine treats as the real page, is the document page while it is the current version, and itself once a newer version is published (`versionDocumentMetadata` in `src/app/(public)/_documents.tsx`). Its working notes, which cite the file or `DESIGN.md` section behind every claim, live in `claude-docs/design-decisions/` beside the task's record: `m15.2-privacy-policy-notes.md` for the privacy policy, `m15.3-disclaimer-notes.md` for the disclaimer, `m15.4-code-of-ethics-notes.md` for the code of ethics. A document that cites a source lists it at its end in Chicago form, as the compendium's references are.
+
+## Disclaimer notice
+
+`src/components/DisclaimerNotice/` — the one line under an ingredient's safety notes saying the notes are not complete, with a link to the disclaimer page (`/disclaimer`, read on [`DocumentPage`](document-page.md)). It takes no props and reads nothing.
+
+The line is drawn whether or not there are notes: an ingredient with no safety note is exactly the case the disclaimer covers, so the line cannot depend on [`SafetyNote`](safety-note.md), which draws nothing when there is nothing to say. [`IngredientEntry`](ingredient-entry.md) places it after `SafetyNote` in the Details section and in each form's section, on the compendium page and on a coven's entry page alike; the details modal and the cards, which summarise, do not carry it.
+
+It is a `<p role="note">`, so a screen reader hears it as an aside to the section rather than as part of the notes, and its link is named "Read the Disclaimer". The text is muted and small (`.disclaimer-notice`), a step of air below the notes.
+
+`tests/components/DisclaimerNotice/index.test.tsx` proves the link and its role; `tests/components/IngredientEntry/index.test.tsx` proves the line is in the Details section and in every form's, with notes and without; `tests/e2e/compendium-entry.spec.ts` and `tests/e2e/cupboard-entry.spec.ts` find it on a built page of each route and pass axe with it there.

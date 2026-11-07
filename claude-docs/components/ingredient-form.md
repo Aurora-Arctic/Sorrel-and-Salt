@@ -1444,7 +1444,7 @@ parses the sent input with that schema to show it.
 
 ## Autosave
 
-The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Could not save." with Retry, or the conflict notice.
+The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](../autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Could not save." with Retry, or the conflict notice.
 
 - **A new ingredient is created at its first save, once it has a name.** The coven gate is the display name; a "none" or "unknown" entry has no formal name, so the name alone opens the gate. The create returns the row's id, slug and revision, the form keeps them, and every later save is an update that sends `expectedRevision`. The host moves the address (`onCreated`): see [`modal.md`](modal.md#add-ingredient) for the coven dialog and the compendium dialog.
 - **Save is disabled once an autosave has filed every edit.** There is nothing left to save, and that is the design: a test that edits and then waits for Save to enable depends on the autosave pause. The stories hold the form's save request until after the click on Save (`holdSaves`), so they do not depend on it.
@@ -1456,7 +1456,7 @@ The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
 - **An autosave of an existing ingredient tells the page (`onAutosaved`).** `persist` calls it with the saved row after any write that did not create the row, and not on Close. The admin compendium dialog replaces its address with the saved slug (`replace`, no scroll) and fetches the page again, so the heading shows the saved name. The coven entry dialog only fetches again, since its address names the id; the compendium entry dialog moves the address as Save does. The form is keyed by entry id and reads `entry` only for its starting values, so the fresh props do not reset it: what was typed after the autosave stays.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
-- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
+- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](../autosave.md#save-status)), with Keep and Discard.
 - **No Discard question, and no Cancel.** The form no longer uses the unsaved-changes guard: Close saves first, so a Cancel beside the saves would only be a second Close, and the form draws none in any dialog ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
 
 ## After a save
@@ -1673,7 +1673,7 @@ deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
 and references (MB.221), a linked substitute carrying the forms its second
 picker offers — so opening the modal sends no browser read
-(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, which draws the form through [`CompendiumEntryForm`](compendium-entry-form.md), a
+(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, which draws the form through [`CompendiumEntryForm`](ingredient-form.md#compendium-entry-form), a
 `RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
@@ -2423,3 +2423,17 @@ A compendium match's + sends the entry under its own name, with what else was ty
 ## Panel head layout
 
 The reference panel's head holds the note if there is one, the panel's Undo and Redo, the How to Cite tip and the ×. The tip and the × abut, each its full `$icon-size` target. Narrow, they are one line with the group at the end. Where the note would be squeezed under 14rem the group drops to a line of its own straight beneath it, still at the right. Wide enough for the legend and the group side by side, the group goes up onto the top border at its right end, level with the legend and, like it, on the card's surface so the line stops either side of it. The note is then the first line inside. It is a container query, since it is the panel's width that decides, not the window's.
+
+## Compendium entry form
+
+`src/components/CompendiumEntryForm/` is the compendium's ingredient form as both edit dialogs draw it: the admin compendium's `compendium-dialog.tsx` and the compendium branch of the entry page's `entry-dialog.tsx`. It exists so the two are one piece of code. It renders `IngredientForm` with `workspaceId={null}` and `mayPromote` fixed, and turns its `sourcing` prop into the form's `sourcesIntro`, a [`SourcingScore`](sourcing-score.md) panel.
+
+### Props
+
+`CompendiumEntryFormProps` (`types.ts`) is `IngredientForm`'s props for the compendium, less `workspaceId`, `mayPromote` and `sourcesIntro`, plus:
+
+| Prop       | What it is                                                                           |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `sourcing` | The entry's `SourcingScore`, or null; left out, there is no panel (an add has none). |
+
+Each dialog passes its own `onSaved`, `onAutosaved`, `onDeleted`, `duplicateHref`, `entryHref` and the rest, as each has its own addresses. A coven's own entry does not use this component.

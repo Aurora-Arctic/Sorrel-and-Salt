@@ -29,7 +29,7 @@ rule beats the browser's `hidden`, and puts the fade on that state. The 100ms
 hold-back before it shows is the component's timer, not a CSS delay, so a
 navigation that ends first can cancel it. The bar reads the site-wide wait
 from `NavigationProvider`, which React ends by itself when the navigation's
-transition ends; see [`../loading.md`](../loading.md).
+transition ends; see [`../loading.md`](loading.md).
 
 The stylesheet is imported where the app's other global sheets are
 (`src/app/providers.tsx`).

@@ -18,7 +18,7 @@ care (M8.13a, story 53). Four components share the directory:
   `ToxicMark` when the ingredient or a shown form is flagged, else `CautionMark`, else
   nothing. Toxic says more, so the two never share a row. It takes both marks' props.
 
-What the notes are not, the one line under each saying they are incomplete and linking `/disclaimer`, is [`DisclaimerNotice`](disclaimer-notice.md)'s, drawn by the entry page beside each `SafetyNote`.
+What the notes are not, the one line under each saying they are incomplete and linking `/disclaimer`, is [`DisclaimerNotice`](document-page.md#disclaimer-notice)'s, drawn by the entry page beside each `SafetyNote`.
 
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)

@@ -41,7 +41,7 @@ On a saved spell, `SpellDialog` given `canDelete` (a role that may delete; the g
 ## Saving
 
 **It autosaves** (M13.17, story 81) through the shared engine
-([`autosave.md`](autosave.md)): three seconds after the last change, thirty at
+([`autosave.md`](../autosave.md)): three seconds after the last change, thirty at
 most while typing, with the status (`SaveStatus`) beside Save. Every way of
 saving (the autosave, Save, Close, Mark Complete and Share) goes through one
 function, `persist` in `index.tsx`, which checks the form, calls
@@ -71,7 +71,7 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
 - **The browser copy.** Every change is mirrored to localStorage, keyed
   `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
   newer than the spell's `updatedAt` exists when the builder opens, a banner
-  (`RecoveryNotice`, from [`SaveStatus`](save-status.md)) reads "Restored unsaved changes from 2:02 pm." with Keep (load the copy into
+  (`RecoveryNotice`, from [`SaveStatus`](../autosave.md#save-status)) reads "Restored unsaved changes from 2:02 pm." with Keep (load the copy into
   the form, unsaved) and Discard (forget it). In the dialog it sits under the
   title, in the modal's header note ([`modal.md`](modal.md), "A control in the
   header"), as the conflict notice does, so it is in view however far the form
@@ -146,7 +146,7 @@ Two members can have one spell open at once, and each save names the
 revision it was read at (`expectedRevision`; M13.15, M13.16). The second of two
 saves written against the same revision is refused by the service with
 `StaleWrite`, which reaches the builder as a `STALE_WRITE` answer carrying the
-spell's revision now ([`autosave.md`](autosave.md), "The server's half").
+spell's revision now ([`autosave.md`](../autosave.md), "The server's half").
 Nothing of the refused save lands: the service and resolver tests in
 `tests/modules/grimoire/` prove the row is as the first save left it. The
 builder then (M13.18, story 81):
@@ -173,7 +173,7 @@ builder then (M13.18, story 81):
 
 There is no merge of the two texts, no diff and no history. A conflict is
 settled by one of the two buttons, never by a page reload: the engine's
-`resolveConflict` ([`autosave.md`](autosave.md)) is what moves the status on.
+`resolveConflict` ([`autosave.md`](../autosave.md)) is what moves the status on.
 A draft and a complete spell meet it alike, since both save to the one row.
 
 ## Visibility
@@ -273,7 +273,7 @@ fields, or for a pick at `['categoryIds', index]`, show beneath that field after
 quantity or unit (`steps.<i>.quantity`, `steps.<i>.unit`). Anything else, such as an observer's `FORBIDDEN`, goes to
 the `Notice` above the fields, in the server's words. The reading is
 `placeServerIssues`, and a section holding a refused field opens (`openErred`). Beside Save,
-`SaveStatus` says the save failed ([`save-status.md`](save-status.md)). The schema's one rule a
+`SaveStatus` says the save failed ([`save-status.md`](../autosave.md#save-status)). The schema's one rule a
 field can break in the browser is the title a complete spell needs.
 
 ## Closing

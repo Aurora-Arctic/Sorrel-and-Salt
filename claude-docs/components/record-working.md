@@ -47,7 +47,7 @@ With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also dr
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens, drawing a `Skeleton shape="line"`, a line for each ingredient step, until it arrives, and lists the spell's
 ingredient steps in order, one line each, as the jar the recipe page's In the Cupboard panel draws, both through `JarLine`
-([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
+([`jar-line.md`](jar-shelf.md#jar-line): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
 
 - A take: "takes X · have Y · left Z", all in the jar's unit. A jar that cannot cover the step reads
   "needs X · have Y · short by N" instead, with "short by N" in the warning colour: it is emptied, so

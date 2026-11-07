@@ -124,7 +124,7 @@ With `$items: false`, the mixin's `> li::before { content: none }` (bullets off)
 
 On an editable jar the hover shakes the drawing once, gently, and the name grows a little. It applies only where there is a button, so an observer's shelf is still, and only on a device that really hovers, so a touch screen is not left with a jar stuck mid-shake. Keyboard focus does both too, as `:focus-visible` so a mouse click does not repeat it. Those rules sit outside the hover query, since a keyboard on a touch device has no hover to wait for.
 
-The rules are the `jar-press-motion` mixin in `src/scss/_jar-motion.scss`, which `JarLine` ([`jar-line.md`](jar-line.md)) includes too for the recipe page's inventory and the Complete Working preview, so a pressable jar moves the same everywhere. The amounts (how far the name grows, how long the shake lasts) are in `_variables.scss`.
+The rules are the `jar-press-motion` mixin in `src/scss/_jar-motion.scss`, which `JarLine` ([`jar-line.md`](jar-shelf.md#jar-line)) includes too for the recipe page's inventory and the Complete Working preview, so a pressable jar moves the same everywhere. The amounts (how far the name grows, how long the shake lasts) are in `_variables.scss`.
 
 The shake moves the jar's whole `svg` (the cell's own child, never the amount's Low or Out symbol), not the level inside it, which has its own transform transition (`__rise`). The drawing pivots on its base, the plank. The name is `inline-block`, since a transform has no effect on an inline box, and the scale grows from the middle of the name and moves nothing around it. The wobble is a few degrees to one side and the other, each swing smaller than the last, then still. It is in degrees, not a token, because no token holds an angle.
 
@@ -139,3 +139,58 @@ The spell jar's ingredient bands are two tints of the one ink, alternating, with
 Low and Out are drawn after the base paint so they win by order as well as by the extra class. Low draws the glass, the level and the wave in the warning amber, with the threshold mark solid and a little heavier, as the line the level has fallen to. Out draws the glass, lid and facets in solid red, never dashed, so it cannot be read as the dashed outline of a form with no jar, and the glass is faintly tinted. The jar is already empty, so the wave, mark, cork and cloth are left off, since an empty jar has no surface to ripple. The red is the Out of Stock badge's ink.
 
 The Low or Out amount button looks like the text it is, with no box and no tint, and shows the help cursor. The badge's drawing before it is one line of the caption tall, in the amount's own ink.
+
+## Jar line
+
+`src/components/JarLine/`: one line of a list that shows a jar beside a name and some words. The recipe page's In the Cupboard panel (`SpellBuilder/inventory.tsx`) and the Complete Working preview (`RecordWorking/completion.tsx`) both draw their lines through it, so the two behave the same.
+
+### Props
+
+`seed` and `kind` (the form's text) pick the vessel (`pickJarShape`; it is not shown). `held` and `tone` draw the level and the paint (`ok`, `low`, `out`, `empty`, which is the shelf's `jar-shelf__jar--*` modifiers). `oneOff` draws a muted jar at the middling level and gives the line no press. `name` and `words` are what the caller passes in: the inventory sends need, have and a verdict mark, and the preview sends takes, have, left, short by, one-off or no jar. `look` is a control in a column of its own at the right. `press` is the Edit Stock door: `StockJarButton`'s props, which the line wraps around the name.
+
+### Hover, focus and motion
+
+The button holds the name and is stretched over the jar by its `::after`, as the shelf stretches its own. Pointing at it, or focusing it with the keyboard, shakes the jar once and grows the name. A line without a press stays still. The rules are the `jar-press-motion` mixin in `src/scss/_jar-motion.scss`, the one place that says them; the entry page's shelf (`JarShelf`, [`jar-shelf.md`](jar-shelf.md), "Hover, focus and motion") includes the same mixin with its own selectors. The mixin's keyframes (`jar-shake-keyframes`) are included once, by the shelf's sheet, which is loaded wherever a jar is drawn. The amounts are `$jar-name-grow` and `$jar-shake-duration` in `_variables.scss`.
+
+Reduced motion: no shake and no transition on the name, which still changes size.
+
+### Styling
+
+A caller styles its list and any context it needs through its own wrapper class: the inventory trims the eye and wraps names in a narrow column; the preview wraps long names and sets the words smaller.
+
+### Stories
+
+`src/components/JarLine/index.stories.tsx`, titled "Ingredients / Jar Line": `States`, one list of four lines: an ok jar with an Edit Stock press, a low jar without one, an empty form with no jar, and a one-off. Pointing at the first line shakes its jar and grows its name.
+
+## Jar lines
+
+`src/components/JarLines/` — the jar lines of an ingredient card (M9.6): what the coven holds of an entry, one line per jar, drawn into the card's `children` slot ([`ingredient-card.md`](ingredient-card.md)).
+
+### Props
+
+`jars`: a list of plain data, `{ id, form, icon, quantity, unit, threshold }` (`types.ts`).
+
+- `form` is the variant's form as stored; the line writes it through `formLabel`, which the lint rule `sorrel/form-shown-through-form-label` holds.
+- `icon` is the form group's icon or `null`; `FormIcon` draws the generic spoon for `null`.
+- `quantity`: a number is on hand, `0` is out, `null` is held but not measured and reads "Unmeasured".
+- `unit` follows the quantity; `threshold` only feeds the badge.
+
+### What a line holds
+
+One `li` per jar in a `ul` that the card's `.specimen__stock > ul` primitive lays out: the form icon and name, a decorative dot with the comma a screen reader hears in its place (the owner's rule is "dot, never a comma"), the quantity and unit, and [`StockBadge`](stock-badge.md) last, at the right-hand end of the line, which draws Low Stock, Out of Stock or nothing under its own table.
+
+### Where the badge sits
+
+The badge is centred on the same vertical line as the icon below it in the card's actions (the owner's call, 2026-10-20), the rightmost of Edit, Annotate or the three dots. The jar lines and the actions row share a right edge (measured: both run 32 to 303 at 1280 wide and 32 to 358 at 390), and the actions' buttons are the large icon button (`$icon-size-large`, 32px) while the badge is `$stock-badge-size` (24px), so `.specimen__stock > ul > li` in `_primitives.scss` insets its end by half the difference, `calc((#{$icon-size-large} - #{$stock-badge-size}) / 2)`, and no pixel value is written down. Measured with Playwright on the demo seed's Whitethorn Coven: badge centre against the three dots' centre was 291 against 287 at 1280 and 346 against 342 at 390 before the inset, and 287 against 287 and 342 against 342 after. The inset lives in the shared primitive, so every card that draws jar lines above its actions (the coven card and [`IngredientCard`](ingredient-card.md) are one component) follows it.
+
+### One source
+
+The workshop's card stories (`IngredientCard/story-jars.tsx`, `IngredientCardList/story-fixtures.tsx`) draw their jar lines through this component, so no story keeps a copy of the markup.
+
+### Stories
+
+`src/components/JarLines/index.stories.tsx`, titled "Ingredients / Jar Lines": `Default`, the list's markup with no card around it.
+
+### Tests
+
+`tests/components/JarLines/index.test.tsx`: one item per jar, the form through `formLabel`, the quantity, the badge per jar, a jar held without a quantity, and the hidden dot with its spoken comma.

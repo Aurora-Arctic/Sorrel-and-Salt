@@ -19,7 +19,7 @@ section's page.
 
 ## Contracts
 
-- **When the wait ends, the skeleton fades out over the arrived page** rather than vanishing: it is kept for 200ms as an `aria-hidden`, absolutely placed overlay on the section frame (which takes the `skeleton-fade-host` class), then unmounts. See [`SkeletonFade`](skeleton-fade.md).
+- **When the wait ends, the skeleton fades out over the arrived page** rather than vanishing: it is kept for 200ms as an `aria-hidden`, absolutely placed overlay on the section frame (which takes the `skeleton-fade-host` class), then unmounts. See [`SkeletonFade`](skeleton.md#skeleton-fade).
 
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
@@ -29,7 +29,7 @@ section's page.
   with no dimming. The page stays mounted at its full height inside the
   section frame, so its flex column and gap are untouched, and the skeleton is
   laid over it in a copy of that frame, pinned under the bar
-  ([`SkeletonFade`](skeleton-fade.md), "The page is held, not swapped"; MB.271). Nobody can act on the wrong coven's data in the wait. The
+  ([`SkeletonFade`](skeleton.md#skeleton-fade), "The page is held, not swapped"; MB.271). Nobody can act on the wrong coven's data in the wait. The
   shape is the destination's. In the coven it is the section's (compact `cards` for
   Ingredients and the grimoire, `table` for the people pages, `page` for the home), worked out
   by `WorkspaceSwitcher` or `CovenNav` when the navigation starts. In admin it
