@@ -3330,6 +3330,14 @@ public finders. `position` orders the FAQ and is unused by a term. The slug is
 unique across all three kinds among live rows, so an article's address and a
 term's anchor never clash. Columns are in `DESIGN.md` §5.
 
+### Audiences and search
+
+Decided by the owner on 2026-11-07.
+
+- `audience` is an enum `help_audience`: `public` (anyone), `staff` (site keepers and curators, the `assertCurator` check) or `keeper` (site keepers only, `assertSiteAdmin`). It is not null and defaults to `public`. A CHECK keeps every `term` `public`, since the glossary is one public page.
+- The services (M17.14) keep a child's audience equal to its parent's, move the children with a parent whose audience changes, filter by audience in SQL, and reserve the slugs `glossary`, `staff` and `search`.
+- `search_vector` is a generated `tsvector` column (`english`; title weight A, summary B, body C, the summary coalesced to an empty string) with a GIN index, so the help search (M17.14) ranks with `ts_rank` and needs no maintenance code.
+
 ### The glossary
 
 A glossary term is a third `kind`, `term`, rather than a separate table: its

@@ -479,6 +479,8 @@ An FAQ, a set of help articles on how the site is used, and a glossary of the si
 - `article`: a help page on how the site is used. It has a `title`, a `summary` for the index and a Markdown `body`.
 - `term`: one glossary entry. Its `title` is the term and its `body` a short Markdown definition. `position` is unused.
 
+**Audiences.** Each row has an `audience`: `public` (anyone), `staff` (site keepers and curators) or `keeper` (site keepers only). A `term` is always `public`. `search_vector` is a generated `tsvector` over the title, summary and body (weights A, B, C) with a GIN index, for the help search.
+
 **Sub pages.** An `article` may have a parent `article` through a nullable `parentId`. It is one level deep: a child has no children, a `term` or `faq` has no parent. A child's address sits under its parent's, e.g. `/help/closed-practices/<practice>`, which M19.8's closed-practice pages need: one general page, and one per practice. The parent's page lists its children.
 
 **The glossary.** `/help/glossary` lists every term from A to Z with an anchor from its slug, so another page or article links to one term as `/help/glossary#steward`. The slug `glossary` is reserved, so no article takes that address. The seed ships the site's own terms, each defined the way `CLAUDE.md`'s Vocabulary and domain invariants use it: Compendium, Ingredients, Grimoire, Coven, Steward, Practitioner, Observer, Keeper, Curator, Spell, Working, Variant and Form, and any more the docs use as a fixed word. The screens say Steward, Practitioner, Observer and Keeper; the glossary says which code name each stands for only where the definition needs it.
