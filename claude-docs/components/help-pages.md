@@ -51,7 +51,7 @@ Every help page but the front page (`/help`, and the staff index, whose h1 is St
 
 ## The glossary page
 
-One row per term, ruled above: the term beside its definition from 40rem (11rem and the rest), stacked on a phone. The term is in the heading face at the h4 size, and holds a link to its own anchor, named "Link to <Term>" and drawn as a "#" by CSS so the term's text stays its title; it shows on hovering the row or focusing the link.
+One row per term, ruled above, and the last below too: the term beside its definition from 40rem (11rem and the rest), stacked on a phone. The term is in the heading face at the h4 size, and holds a link to its own anchor, named "Link to <Term>" and drawn as a small, light "#" by CSS so the term's text stays its title; it shows on hovering the row or focusing the link.
 
 ## Callouts
 
