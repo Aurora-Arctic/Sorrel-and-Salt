@@ -15,10 +15,14 @@ export const DocumentEditorSkeleton = (): ReactElement => (
       <Skeleton shape="line" quiet />
     </h2>
     <div className="lede skeleton-lede">
-      <Skeleton shape="line" count={2} quiet />
+      <Skeleton shape="line" count={3} quiet />
     </div>
     <div className="document-page__body document-editor__text">
-      <div className="document-editor__toolbar" aria-hidden="true">
+      <div
+        role="toolbar"
+        aria-label="Document Text Formatting"
+        className="document-editor__toolbar"
+      >
         {GROUP_SIZES.map((size, group) => (
           <div key={group} className="document-editor__group">
             {Array.from({ length: size }, (_, at) => (
