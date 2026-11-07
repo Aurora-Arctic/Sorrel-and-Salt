@@ -22,8 +22,7 @@ import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what a keeper sees of it
-// and sends (claude-docs/components/admin-cards.md).
+// claude-docs/components/admin-cards.md
 
 vi.mock('@/lib/invitation-cards', () => ({
   cardQrSvg: (link: string) =>
@@ -97,7 +96,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// Opens the Expires On calendar and picks 1 February 2027, a month on from the default day, which the calendar opens at.
 function pickFirstOfFebruary() {
   fireEvent.click(within(dialog()).getByRole('button', { name: /Expires On/ }));
   fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
@@ -221,7 +219,6 @@ describe('AdminCards', () => {
     expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/);
     expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
-    // Four columns: the reason, count and dates share the Refusal column.
     const headings = within(list).getAllByRole('columnheader');
     expect(headings.map((h) => h.textContent)).toEqual(['Name', 'Email', 'Card', 'Refusal']);
     const cells = within(row).getAllByRole('cell');
@@ -302,7 +299,6 @@ describe('AdminCards', () => {
     expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
-    // The Email cell is empty, not a placeholder.
     const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
     expect(within(removed).getAllByRole('cell')[1]).toBeEmptyDOMElement();
   });
@@ -432,7 +428,6 @@ describe('AdminCards', () => {
     const open = screen.getByRole('button', { name: /^Revoke Batch b1111111/ });
     expect(open).toHaveClass('btn--destructive');
     fireEvent.click(open);
-    // Asking comes first: the open alone sends nothing.
     expect(calls).toEqual([]);
     expect(
       within(screen.getByRole('dialog')).getByText(/minted 1 October 2026\?/),
@@ -584,7 +579,6 @@ describe('Mint Cards default expiry', () => {
     );
     render(<AdminCards batches={[]} minting />);
 
-    // 30 October 2026 plus 90 days is 28 January 2027.
     expect(within(dialog()).getByRole('button', { name: /Expires On/ })).toHaveTextContent(
       /28 January 2027/,
     );
@@ -683,8 +677,6 @@ describe('AdminArrivals', () => {
   });
 });
 
-// The Cards tab's filter. The shared rows assert the address it builds and which values count as a filter;
-// the rest proves each field writes the URL and the table shows what the URL holds.
 describe('AdminCards filter', () => {
   const NONE = {
     batch: '',
@@ -716,7 +708,6 @@ describe('AdminCards filter', () => {
       list: <AdminCards batches={BATCHES} filter={FILTER} cursor={{ after: 'c25' }} />,
       sends: send('b11', 'live', '2026-10-01', '2026-10-31', '2026-11-01', '2026-12-31'),
     },
-    // The batch alone draws Clear; a part the drawer holds draws its Clear All instead, below.
     alone: [
       {
         list: <AdminCards batches={[]} filter={{ ...NONE, batch: 'b11' }} />,
@@ -734,7 +725,6 @@ describe('AdminCards filter', () => {
     fireEvent.click(screen.getByRole('option', { name }));
   };
 
-  // The drawer is the non-modal panel at the tablet width and up.
   beforeEach(() => {
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: query.includes('min-width'),
@@ -848,7 +838,6 @@ describe('AdminCards filter', () => {
     render(<AdminCards batches={[BATCHES[0]]} filter={FILTER} />);
 
     expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
-    // The status and each range count one apiece, a range with both its ends included.
     expect(screen.getByRole('button', { name: /^Filters\D*3/ })).toBeInTheDocument();
     openFilters();
     expect(statusBox()).toHaveTextContent('Live');
