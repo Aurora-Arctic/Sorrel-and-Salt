@@ -4,6 +4,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { insertHelpArticle } from '../support/db/insert-help-article';
+import { CONVERSION_REFUSALS } from '@/components/HelpWidget/conversion-refusals';
 import type { HelpWidgetName } from '@/lib/help-widgets';
 
 // One public article per help widget, each read signed out on the built server: the widget draws in place of its
@@ -59,8 +60,7 @@ test('the unit converter converts within a dimension and shows the refusal acros
   await expect(result).toContainText('2000');
 
   await page.getByLabel('To', { exact: true }).selectOption('ml');
-  await expect(result).not.toContainText(/NaN|\d/);
-  await expect(result).not.toBeEmpty();
+  await expect(result).toHaveText(CONVERSION_REFUSALS.dimension);
 
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);

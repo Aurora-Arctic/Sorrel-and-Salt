@@ -5,6 +5,6 @@ export type ConversionRefusal = Extract<ReturnType<typeof unitConvert>, { ok: fa
 /** What the converter says for each refusal `unitConvert` returns; the refusal itself is the app's. */
 export const CONVERSION_REFUSALS: Readonly<Record<ConversionRefusal, string>> = {
   dimension:
-    'These two units measure different things, a weight and a volume, so neither converts to the other.',
+    'These two units measure different things, and a unit converts only to one that measures the same thing.',
   count: 'A piece, a drop or a pinch is counted, not measured, so it converts to no other unit.',
 };
