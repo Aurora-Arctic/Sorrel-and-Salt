@@ -11,6 +11,7 @@ import {
   useOptimistic,
   useState,
 } from 'react';
+import { clearLeaving } from './store';
 import { LeaveGuardContext, holdTraversals, leaveGuardSlot } from './leave-guard';
 import type { NavigateOptions } from './types';
 
@@ -36,6 +37,7 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);
   const [guards] = useState(leaveGuardSlot);
   useEffect(() => holdTraversals(guards), [guards]);
+  useEffect(() => clearLeaving(), []);
 
   const actions = useMemo<NavigationActions>(
     () => ({
