@@ -19,16 +19,38 @@
     }
   }
 
+  // Each quick link a pill on the guide cards' surface and hover pair, so the ways in above the guides look like the guides.
+  // A link's own spacing on the pill, so the skeleton's unlinked titles (a span) take the links' widths.
   &__quick {
+    @include list-reset;
+
     display: flex;
     flex-wrap: wrap;
-    gap: space(2) space(4);
-    margin-block: space(3) 0;
-    padding: 0;
-    list-style: none;
-    font-size: type-size('small');
-    // A link's own spacing, so the skeleton's unlinked titles take the links' widths.
-    letter-spacing: 0.02em;
+    gap: space(2);
+    margin-block: space(4) 0;
+
+    > li > * {
+      display: inline-block;
+      padding: space(1) space(3);
+      border: 1px solid $hairline;
+      border-radius: radius('pill');
+      background-color: $surface-card;
+      color: $text-primary;
+      font-size: type-size('small');
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      @include state-fade(background-color, border-color);
+    }
+
+    > li > a:hover {
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+      color: $text-primary;
+    }
+
+    > li > a:focus-visible {
+      @include focus-ring;
+    }
   }
 
   &__guides {

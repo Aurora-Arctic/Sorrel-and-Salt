@@ -30,7 +30,9 @@ export const HelpIndexSkeleton = ({
         <HelpSearchForm size="hero" />
         <ul className="help-index__quick" aria-label="Quick Links">
           {HELP_QUICK_LINKS.map((title) => (
-            <li key={title}>{title}</li>
+            <li key={title}>
+              <span>{title}</span>
+            </li>
           ))}
         </ul>
       </div>
