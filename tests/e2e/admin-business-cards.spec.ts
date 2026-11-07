@@ -1,0 +1,119 @@
+import { readFile } from 'node:fs/promises';
+import { PDFDocument } from 'pdf-lib';
+import type { Page } from '@playwright/test';
+import { test, expect } from './fixtures';
+import { assertNoAccessibilityViolations } from './axe';
+import { recreateE2eDatabase } from './database';
+import { signInAs } from './session';
+
+// The business-card page: a keeper fills in a name, an email address and a phone number, and the browser builds a Letter
+// sheet of ten cards from files it already holds. Who may open it, what Generate waits for, and that building the PDF asks
+// the server for nothing (claude-docs/components/business-cards.md).
+test.beforeAll(async () => {
+  await recreateE2eDatabase();
+});
+
+const PATH = '/keepers/business-cards';
+
+const notAuthorized = (page: Page) =>
+  page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' });
+
+test('a keeper opens Business Cards from the Keepers index and from the Keepers nav', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signInAs(page, 'a-keeper@business-cards.test', ['discord'], 'admin');
+
+  await page.goto('/keepers');
+  await page.getByRole('main').getByRole('link', { name: 'Business Cards' }).click();
+  await expect(page).toHaveURL(PATH);
+  await expect(
+    page.getByRole('main').getByRole('heading', { level: 1, name: 'Business Cards' }),
+  ).toBeVisible();
+
+  await page.goto('/keepers/support');
+  const nav = page.getByRole('navigation', { name: 'Keepers' });
+  await nav.getByRole('link', { name: 'Business Cards' }).click();
+  await expect(page).toHaveURL(PATH);
+  await expect(nav.getByRole('link', { name: 'Business Cards' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await assertNoAccessibilityViolations(page);
+});
+
+test('Generate waits for a name, an email address and a phone number, and builds the sheet without asking the server for anything', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-printer@business-cards.test', ['discord'], 'admin');
+  await page.goto(PATH);
+  const main = page.getByRole('main');
+  const generate = main.getByRole('button', { name: 'Generate' });
+  const backs = main.getByRole('switch', { name: 'Include Backs' });
+  await expect(backs).not.toBeChecked();
+  await expect(generate).toBeDisabled();
+
+  await main.getByRole('textbox', { name: 'Name' }).fill('Testwort Hollin');
+  await main.getByRole('textbox', { name: 'Phone' }).fill('555.010.0199');
+  await expect(generate).toBeDisabled();
+  // Not an email address: Generate stays off, and leaving the field says why.
+  await main.getByRole('textbox', { name: 'Email' }).fill('testwort at example');
+  await main.getByRole('textbox', { name: 'Email' }).blur();
+  await expect(generate).toBeDisabled();
+  await expect(main.getByRole('textbox', { name: 'Email' })).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await main.getByRole('textbox', { name: 'Email' }).fill('testwort@example.test');
+  await expect(generate).toBeEnabled();
+
+  // Every request from here on: the PDF is built from the fonts and pictures fetched when the page opened, and
+  // writes nothing anywhere, since a write would be a request.
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (/^https?:/.test(request.url())) requests.push(request.url());
+  });
+
+  const frontsOnly = page.waitForEvent('download');
+  await generate.click();
+  const fronts = await frontsOnly;
+  expect(fronts.suggestedFilename()).toBe('business-cards-testwort-hollin.pdf');
+  const frontsPdf = await PDFDocument.load(await readFile((await fronts.path())!));
+  expect(frontsPdf.getPageCount()).toBe(1);
+
+  await backs.click();
+  await expect(backs).toBeChecked();
+  const withBacks = page.waitForEvent('download');
+  await generate.click();
+  const both = await withBacks;
+  const bothPdf = await PDFDocument.load(await readFile((await both.path())!));
+  expect(bothPdf.getPageCount()).toBe(2);
+
+  expect(requests).toEqual([]);
+  await assertNoAccessibilityViolations(page);
+});
+
+// The page refuses anyone but a keeper itself, whatever the nav shows. Why each could have reached it: the keeper above
+// opens the same address, the curator opens Support under the same Keepers layout, and every account is signed in.
+test('a curator and a signed-in account that is not a keeper get the styled not-authorized page', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-curator@business-cards.test', ['discord'], 'curator');
+  expect((await page.goto('/keepers/support'))?.status()).toBe(200);
+  expect((await page.goto(PATH))?.status()).toBe(403);
+  await expect(notAuthorized(page)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Generate' })).toHaveCount(0);
+
+  await signInAs(page, 'not-a-keeper@business-cards.test');
+  expect((await page.goto('/account'))?.status()).toBe(200);
+  expect((await page.goto(PATH))?.status()).toBe(403);
+  await expect(notAuthorized(page)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Generate' })).toHaveCount(0);
+});
+
+test('a signed-out visitor is sent to sign in, and back to the page afterwards', async ({
+  page,
+}) => {
+  await page.goto(PATH);
+  await expect(page).toHaveURL(`/sign-in?next=${encodeURIComponent(PATH)}`);
+});

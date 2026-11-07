@@ -105,6 +105,13 @@ export const ADMIN_PAGES = {
       { href: '/keepers/documents', label: 'Email Updates', shape: 'sections', sections: 1 },
     ],
   },
+  businessCards: {
+    label: 'Business Cards',
+    icon: 'businessCards',
+    adminOnly: true,
+    description: 'A Letter sheet of ten business cards with your name, email and phone, ready to print.',
+    tabs: [{ href: '/keepers/business-cards', label: 'Business Cards' }],
+  },
 } as const satisfies Record<string, AdminPage>;
 
 /** The `/curator` area: the curation pages, for a curator and a keeper alike. */
@@ -121,7 +128,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
-/** The `/keepers` area: the people, invitation and document pages, which are a keeper's, and Support, which a curator has too. */
+/** The `/keepers` area: the people, invitation, document and business-card pages, which are a keeper's, and Support, which a curator has too. */
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
@@ -131,6 +138,10 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.support,
       ADMIN_PAGES.documents,
     ],
+  },
+  {
+    name: 'Print',
+    pages: [ADMIN_PAGES.businessCards],
   },
 ];
 

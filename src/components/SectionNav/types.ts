@@ -15,7 +15,8 @@ export type SectionIconName =
   | 'people'
   | 'invitations'
   | 'support'
-  | 'documents';
+  | 'documents'
+  | 'businessCards';
 
 /**
  * One section: a tab on a wide screen, an item in the bottom bar on a phone.
