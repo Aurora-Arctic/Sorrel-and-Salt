@@ -185,6 +185,52 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
   });
 }
 
+/** An image the site serves: a path on this site, never another's, so a body cannot pull in a picture from elsewhere. */
+const SITE_IMAGE = /^\/(?!\/)/;
+
+/**
+ * Turns a paragraph that is one image into a `.figure`, its title the caption beneath, and an image from another
+ * site into its alt text (claude-docs/components/help-pages.md, "Screenshots").
+ */
+function shapeFigures(children: ElementContent[]): ElementContent[] {
+  const siteImages = (nodes: ElementContent[]): ElementContent[] =>
+    nodes.flatMap((child) => {
+      if (!isElement(child)) return [child];
+      child.children = siteImages(child.children);
+      if (child.tagName !== 'img') return [child];
+      const src = child.properties.src;
+      return typeof src === 'string' && SITE_IMAGE.test(src)
+        ? [child]
+        : [text(String(child.properties.alt ?? ''))];
+    });
+  return siteImages(children).map((child) => {
+    if (!isElement(child) || child.tagName !== 'p') return child;
+    const parts = child.children.filter((part) => part.type !== 'text' || part.value.trim() !== '');
+    const image = parts[0];
+    if (parts.length !== 1 || !isElement(image) || image.tagName !== 'img') return child;
+    const caption = image.properties.title;
+    delete image.properties.title;
+    return {
+      type: 'element',
+      tagName: 'figure',
+      properties: { className: ['figure'] },
+      children: [
+        image,
+        ...(typeof caption === 'string' && caption !== ''
+          ? [
+              {
+                type: 'element' as const,
+                tagName: 'figcaption',
+                properties: {},
+                children: [text(caption)],
+              },
+            ]
+          : []),
+      ],
+    };
+  });
+}
+
 function reactProcessorFor(placeholders: DocumentPlaceholders, widgets: HelpWidgets) {
   return unified().use(rehypeReact, {
     Fragment: runtime.Fragment,
@@ -351,6 +397,7 @@ export function renderMarkdown(
   if (terms) {
     tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
     tree.children = shapeCallouts(tree.children as ElementContent[]) as RootContent[];
+    tree.children = shapeFigures(tree.children as ElementContent[]) as RootContent[];
   }
   tree.children = markWidgets(tree.children as ElementContent[], widgets) as RootContent[];
   tree.children = markPlaceholders(
