@@ -150,26 +150,26 @@ CASL's definition of a commercial electronic message, and any transactional exem
 
 `src/emails/` holds 17 mail templates, all listed in [`email.md`](../email.md), "What is sent". FTC categories are numbered 1 to 5 as in the list under "United States: CAN-SPAM"; the assignment to a template is the researcher's reading **(own reading)**.
 
-| Template | What it does | Rule that classes it (all transactional) |
-| --- | --- | --- |
-| `verify-email.ts` (sign-up) | Sends the link that verifies an address for an account the reader just made | FTC category 1 (confirms an account the reader asked for) and category 2 (security). |
-| `verify-email.ts`, `purpose: 'change'` | Sends the link that verifies a new address the account holder asked to switch to | FTC category 1 and category 2, as above. |
-| `email-change-notice.ts` | Tells the old and new holder that an address change was asked for or finished | FTC category 2 (security information). |
-| `account-exists.ts` | Tells an address's holder that someone tried to sign up with it and nothing was made | FTC category 2 (security information). |
-| `reset-password.ts` | Sends the single-use link the reader asked for from the forgot-password page | FTC category 1 (completes what the reader asked for) and category 2. |
-| `password-changed.ts` | Tells the holder the password was reset, changed or added | FTC category 2 (security information). |
-| `password-locked.ts` | Tells the holder that repeated wrong passwords paused password sign-in, with a reset link | FTC category 2 (security information). |
-| `admin-invitation.ts` | Invites a person to hold a site-keeper or curator role, with the single-use invitation link | FTC category 1 (it delivers the access the inviter granted; own reading, see below). |
-| `coven-invitation.ts` | Invites a person into a coven, with the single-use invitation link | FTC category 1, as above. |
-| `support-received.ts` | Confirms the reader's support request arrived | FTC category 1 (confirms a transaction the reader started). |
-| `support-reply-notice.ts` | Tells a signed-in sender that staff replied, with a link to the request | FTC category 5 (delivers the service the reader asked for) and category 1. |
-| `support-email-reply.ts` | Tells a signed-out sender that staff replied, with the mailed link to the request | FTC category 5 and category 1, as above. |
-| `support-resolved.ts` | Tells the sender the request is resolved | FTC category 1 (completes the request). |
-| `support-closing-soon.ts` | Tells the sender a resolved request will close soon | FTC category 3 (change in standing of the reader's own request) and category 1. |
-| `access-paused.ts` | Tells a user a keeper paused their site access | FTC category 3 (a change in standing of an ongoing account). |
-| `coven-access-paused.ts` | Tells a member a coven steward paused their access to that coven | FTC category 3, as above. |
-| `support-timed-out.ts` | Tells a user a keeper set a support time-out | FTC category 3, as above. |
-| `document-updated.ts` | Tells every account a site document changed, and that the account will be asked to agree | FTC category 3 (changed terms of an ongoing account). |
+| Template                               | What it does                                                                                | Rule that classes it (all transactional)                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `verify-email.ts` (sign-up)            | Sends the link that verifies an address for an account the reader just made                 | FTC category 1 (confirms an account the reader asked for) and category 2 (security). |
+| `verify-email.ts`, `purpose: 'change'` | Sends the link that verifies a new address the account holder asked to switch to            | FTC category 1 and category 2, as above.                                             |
+| `email-change-notice.ts`               | Tells the old and new holder that an address change was asked for or finished               | FTC category 2 (security information).                                               |
+| `account-exists.ts`                    | Tells an address's holder that someone tried to sign up with it and nothing was made        | FTC category 2 (security information).                                               |
+| `reset-password.ts`                    | Sends the single-use link the reader asked for from the forgot-password page                | FTC category 1 (completes what the reader asked for) and category 2.                 |
+| `password-changed.ts`                  | Tells the holder the password was reset, changed or added                                   | FTC category 2 (security information).                                               |
+| `password-locked.ts`                   | Tells the holder that repeated wrong passwords paused password sign-in, with a reset link   | FTC category 2 (security information).                                               |
+| `admin-invitation.ts`                  | Invites a person to hold a site-keeper or curator role, with the single-use invitation link | FTC category 1 (it delivers the access the inviter granted; own reading, see below). |
+| `coven-invitation.ts`                  | Invites a person into a coven, with the single-use invitation link                          | FTC category 1, as above.                                                            |
+| `support-received.ts`                  | Confirms the reader's support request arrived                                               | FTC category 1 (confirms a transaction the reader started).                          |
+| `support-reply-notice.ts`              | Tells a signed-in sender that staff replied, with a link to the request                     | FTC category 5 (delivers the service the reader asked for) and category 1.           |
+| `support-email-reply.ts`               | Tells a signed-out sender that staff replied, with the mailed link to the request           | FTC category 5 and category 1, as above.                                             |
+| `support-resolved.ts`                  | Tells the sender the request is resolved                                                    | FTC category 1 (completes the request).                                              |
+| `support-closing-soon.ts`              | Tells the sender a resolved request will close soon                                         | FTC category 3 (change in standing of the reader's own request) and category 1.      |
+| `access-paused.ts`                     | Tells a user a keeper paused their site access                                              | FTC category 3 (a change in standing of an ongoing account).                         |
+| `coven-access-paused.ts`               | Tells a member a coven steward paused their access to that coven                            | FTC category 3, as above.                                                            |
+| `support-timed-out.ts`                 | Tells a user a keeper set a support time-out                                                | FTC category 3, as above.                                                            |
+| `document-updated.ts`                  | Tells every account a site document changed, and that the account will be asked to agree    | FTC category 3 (changed terms of an ongoing account).                                |
 
 The two least certain rows are the invitations. The FTC's category 1 speaks of a transaction "the recipient agreed to", and an invited person has agreed to nothing yet **(own reading)**. The mail is still not an advertisement: it is a single message from a named person that carries the access they were offered and no promotion. If a regulator read it otherwise, the exposure is the same as for any commercial mail without consent, and the site's invitations are sent one at a time on a person's request, never in bulk.
 
