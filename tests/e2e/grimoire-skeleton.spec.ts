@@ -7,6 +7,7 @@ import type { Coven } from './stories/coven-ingredients';
 
 // The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder
 // card is as tall as a real spell card and the grid has as many columns, at a desktop and a phone width.
+// At Compact, the wait's cards are as tall as the loaded compact cards.
 // The wait on a spell page draws the recipe's own frame, where the spell will stand, under the page bar.
 
 /** How far a placeholder card may be from a real card's height: a line of text's worth. */
@@ -121,6 +122,53 @@ for (const width of [1280, 375]) {
       expect(waiting.columns).toBe(spells.columns);
       expect(Math.abs(waiting.height - spells.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
     }
+  });
+}
+
+for (const width of [1280, 375]) {
+  test(`at ${width}px with the Grimoire set to Compact, its wait draws compact cards as tall as the loaded ones`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signInAgainAs(page, coven.users.A);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await expect(page.getByRole('list', { name: 'Spells' })).toBeVisible();
+    const compact = page.getByRole('main').getByLabel('Compact', { exact: true });
+
+    // Why the comparison means something: Compact (the default) draws a shorter card than Regular.
+    await expect(compact).toBeChecked();
+    const loaded = (await cardGrid(page, false))!;
+    await compact.uncheck();
+    await expect(compact).not.toBeChecked();
+    await expect
+      .poll(async () => (await cardGrid(page, false))!.height)
+      .toBeGreaterThan(loaded.height);
+    const regular = (await cardGrid(page, false))!;
+    await compact.check();
+    await expect(compact).toBeChecked();
+    await expect.poll(async () => (await cardGrid(page, false))!.height).toBe(loaded.height);
+
+    const server = await holdServerAnswers(page);
+    server.hold();
+    await page.getByRole('link', { name: 'Drafts', exact: true }).click();
+    await expect.poll(server.held).toBeGreaterThan(0);
+    await expect(page.getByRole('main').getByRole('status')).toHaveCount(1);
+    await expect.poll(() => cardGrid(page, true)).not.toBeNull();
+    const waiting = (await cardGrid(page, true))!;
+    await server.release();
+    await expect(page.getByRole('list', { name: 'Drafts' })).toBeVisible();
+    await expect(compact).toBeChecked();
+
+    test.info().annotations.push({
+      type: 'card heights',
+      description: `regular ${regular.height}, compact ${loaded.height}, waiting ${waiting.height}`,
+    });
+    expect(waiting.columns).toBe(loaded.columns);
+    expect(Math.abs(waiting.height - loaded.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
+    // The two densities are closer than the tolerance, so the wait must also be nearer Compact than Regular.
+    expect(Math.abs(waiting.height - loaded.height)).toBeLessThan(
+      Math.abs(waiting.height - regular.height),
+    );
   });
 }
 
