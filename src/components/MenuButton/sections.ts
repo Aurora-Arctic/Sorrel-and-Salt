@@ -1,6 +1,5 @@
 import type { MenuButtonItem, MenuSection } from './types';
 
-/** Where the viewer is, which decides the section that comes first: the compendium's or the coven's. */
 export type Viewing = 'compendium' | 'coven';
 
 /**

@@ -6,9 +6,6 @@ import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mo
 import { press, setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import InviteDialog from '.';
 
-// Render-only; behaviour is asserted in tests/components/InviteDialog. Sending
-// is answered by the workshop's fake API (.storybook/mock-api.ts): accepted,
-// refused as a whole, or refused for the address alone, as the state asks.
 const meta = {
   title: 'Coven / Invite Dialog',
 } satisfies Meta;
@@ -42,7 +39,6 @@ const ADDRESS_REFUSED = [
   ),
 ];
 
-// Driven as a person would: Invite pressed, then whatever the state needs.
 const Driven = ({
   steps = [],
   answers = SENT,
@@ -69,14 +65,12 @@ const INVITE_STATES: Record<string, ReactNode> = {
   'Invitation Sent': (
     <Driven steps={[typeEmail('testwort@example.test'), () => submitForm('form.form')]} />
   ),
-  // A refusal of the whole request lands in the alert.
   'Send Failed': (
     <Driven
       answers={REFUSED}
       steps={[typeEmail('testwort@example.test'), () => submitForm('form.form')]}
     />
   ),
-  // A refusal that names the address lands under the field.
   'Address Refused By The Server': (
     <Driven
       answers={ADDRESS_REFUSED}
@@ -85,9 +79,6 @@ const INVITE_STATES: Record<string, ReactNode> = {
   ),
 };
 
-// One story with a control to choose the state: the open ones are dialogs, too
-// big to sit beside the others (claude-docs/workshop.md, rule 5). A modal draws
-// in the page's own document, so the story sits in a frame of its own.
 export const States: Story = {
   args: { state: 'Closed' },
   argTypes: {

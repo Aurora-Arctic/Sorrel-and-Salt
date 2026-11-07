@@ -73,8 +73,6 @@ const columns = (
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   updatedColumn('member-list__fact'),
-  // A green check while the member's access is open, a red cross while a pause stands, its end or that it has none
-  // in the tip and in hidden text, as the admin user list marks a site pause.
   Boolean(showAccess) && {
     heading: 'Access',
     className: 'member-list__mark-column',

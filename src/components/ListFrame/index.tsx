@@ -9,11 +9,6 @@ import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind 
 // filter and pager ends navigate through it, so the row greys out and the list shows the tabs'
 // skeleton; a direct request has none (claude-docs/components/list-frame.md).
 
-/**
- * Whether a page of the list is on its way, and the way to open one.
- * Exported for the workshop, whose stub router goes nowhere, to draw a list
- * on its way.
- */
 export const ListNavigationContext = createContext<ListNavigation | null>(null);
 
 /**
@@ -28,9 +23,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const keepPlace = useRef(false);
   const [heldHeight, setHeldHeight] = useState<number>();
-  // The kind of the navigation last started; read only while one is pending.
   const [kind, setKind] = useState<ListNavigationKind>();
-  // The address of the navigation last started, read only while one is pending.
   const [target, setTarget] = useState<string>();
 
   // A pager end's page: once the transition ends the new page has rendered, so bring the
@@ -59,7 +52,6 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
 
   const value: ListNavigation = outer ?? {
     pending,
-    // A filter's navigation is always soft; a pager end's is `page` or `full`.
     searching: pending && kind === 'soft',
     target: pending ? target : undefined,
     heldHeight,

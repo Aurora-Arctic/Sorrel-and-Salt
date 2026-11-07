@@ -11,7 +11,6 @@
   border-radius: 50%;
   background: $accent;
 
-  // The link's own ink, as the fill is dropped.
   @include forced-colors {
     background-color: LinkText;
   }
@@ -33,8 +32,6 @@
   }
 }
 
-// In the accent colour at full strength, pulsing to half: at the link's own colour and a
-// third of its strength the dot was too faint to notice.
 @keyframes link-hint-in {
   to {
     opacity: 1;
@@ -58,8 +55,6 @@
   vertical-align: -0.125em;
   flex: none;
 
-  // Doubled class: out-ranks the `icon-link` mixin's and the entry page's own `svg` rules,
-  // whose margin belongs to the box now, not to the svg inside it.
   &.link-icon-hint > svg,
   &.link-icon-hint > .spinner {
     grid-area: 1 / 1;

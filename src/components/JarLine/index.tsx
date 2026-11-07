@@ -8,7 +8,6 @@ import './index.scss';
 // completion preview draw their lines through it, so the shake and the name's growth are one thing
 // (claude-docs/components/jar-shelf.md).
 
-/** One `li`: the jar, the name (the Edit Stock button where there is one), an optional control, and the words. */
 export default function JarLine({
   seed,
   kind,
@@ -30,8 +29,6 @@ export default function JarLine({
       </span>
       <span className="jar-line__title">
         {press && !oneOff ? (
-          // The button is the name, stretched over the jar by its `::after`; the control at the
-          // right and the words' marks are raised above the stretch to keep their own press.
           <StockJarButton {...press} className="jar-line__press">
             {nameText}
           </StockJarButton>

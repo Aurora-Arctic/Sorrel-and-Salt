@@ -26,14 +26,11 @@ const CreateInvitationDocument = graphql(`
   }
 `);
 
-/** The roles on offer, least first. Steward is not one: the schema's enum has no such value. */
 const ROLES: readonly InviteRole[] = ['viewer', 'member'];
 
-/** What holds whichever role is chosen, read with the group. */
 const STEWARDSHIP_NOTE =
   'A steward can make them a steward from the members page once they have joined.';
 
-/** The button, and the modal's head. */
 const INVITE_LABEL = 'Invite';
 const INVITE_TITLE = 'Invite Someone';
 
@@ -49,21 +46,17 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   const [role, setRole] = useState<InviteRole>('viewer');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
-  // The address the mail went to, once it has: what the confirmation names.
   const [sentTo, setSentTo] = useState<string>();
   const { aria: emailAria, ...emailField } = fieldDescription({
     id: emailId,
     error: failure.field?.message,
   });
 
-  // Anything typed is a change: Cancel, and every other way out, asks first
-  // (as the admin invitation form does); a sent invitation does not.
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const address = email.trim();
-    // The same rule the service applies, said before anything is sent.
     const issue = validateEmailAddress(normaliseEmail(address));
     if (issue) return setFailure({ field: { name: 'email', message: issue.message } });
 
@@ -113,7 +106,6 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
           disabled={sending}
           onChange={(event) => {
             setEmail(event.target.value);
-            // The refusal was of what was typed, which has changed.
             if (failure.field) setFailure({});
           }}
         />

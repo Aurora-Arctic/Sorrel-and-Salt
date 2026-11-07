@@ -30,25 +30,21 @@ const RecordCardAttemptDocument = graphql(`
   }
 `);
 
-/** What a site invitation grants, by the role it names. */
 const SITE_GRANTS = {
   curator: "You've been invited to be a curator of Sorrel & Salt.",
   admin: "You've been invited to be a keeper of Sorrel & Salt.",
 } as const;
 
-/** What a coven's invitation grants when the page has not the coven's own name. */
 const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
 
-/** What a card grants, and what a signed-out visitor holding one is told: no address, no batch. */
 const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 
 const CARD_SIGNED_OUT_GRANT =
   "You've been given a card to join Sorrel & Salt. Sign in with any account, once its email address is verified.";
 
-/** The sentence under the heading, or none for a refusal: its alert says all there is to say. */
 function grantOf(props: InvitationAcceptanceProps): string | undefined {
   if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
   if (props.status !== 'acceptable') return undefined;
@@ -84,7 +80,6 @@ const Accept = ({
     }
   }
 
-  // A `div`, not the other states' `p`: the callout is a `div`.
   return (
     <div className="invitation-acceptance__actions">
       {/* `aria-disabled` rather than `disabled` while it sends: a disabled
@@ -104,8 +99,6 @@ const Accept = ({
   );
 };
 
-// Tells the server a signed-in account opened a link it refused, once per view. The service decides whether
-// the open is worth a row; a failure is ignored, as the refusal on the page already says all there is to say.
 const RecordRefusal = ({ token }: { token: string }): null => {
   const sent = useRef(false);
   useEffect(() => {

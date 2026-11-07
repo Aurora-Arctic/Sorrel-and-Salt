@@ -1,14 +1,10 @@
 import type { HeldJar } from './types';
 
-/** How far up the glass a jar's contents stand, and where its low-stock mark sits, as fractions of a full jar. */
 export interface Fill {
-  /** 0 is empty, 1 is full. */
   level: number;
-  /** The low-stock threshold's fraction, or `null` for no mark. */
   mark: number | null;
 }
 
-/** What an unmeasured jar, or one with no threshold to scale by, stands at. */
 const STEADY = 0.7;
 
 /**

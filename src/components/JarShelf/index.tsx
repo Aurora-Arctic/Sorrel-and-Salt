@@ -16,7 +16,6 @@ import './index.scss';
 // A shelf of small drawn jars, one per form of an ingredient, showing what the coven holds of each
 // (claude-docs/components/jar-shelf.md, "Contracts").
 
-/** The amount of a Low or Out jar as the button that opens its tip: the badge's `StockTip` on text, named by amount and state. */
 function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): ReactElement {
   const amount = amountText(jar.quantity, jar.unit);
   return (
@@ -40,17 +39,12 @@ function Part({ part }: { part: JarPart }): ReactElement {
   return <path className={className} {...part.attrs} />;
 }
 
-// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
-// unmeasured jar stands at the middling level, in muted ink; the caller's stylesheet mutes it.
 export const ONE_OFF_HELD = { quantity: null, threshold: null };
 
-/** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
-/** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
 const HALF = 6;
 
-/** The most a wave rises above its boundary, in drawing units, plus the 0.6 the top band's level line sits above its fill. */
 const MAX_RISE = 2.2;
 
 /** The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of that to lie wholly above the fill. */
@@ -79,20 +73,17 @@ function waveOf(k: number): Wave {
   return { start, end: start + segments.length * HALF, amp, segments };
 }
 
-/** The wave left to right, `dy` lower, as an open path. */
 const waveForward = (w: Wave, dy: number): string =>
   `M${w.start} ${+(dy - w.amp).toFixed(2)}${w.segments
     .map((g) => `Q${g.cx} ${+(dy + g.cy).toFixed(2)} ${g.to} ${+(dy - w.amp).toFixed(2)}`)
     .join('')}`;
 
-/** The same wave right to left, `dy` lower, to continue a path from its right end. */
 const waveBack = (w: Wave, dy: number): string =>
   [...w.segments]
     .reverse()
     .map((g) => `Q${g.cx} ${+(dy + g.cy).toFixed(2)} ${g.from} ${+(dy - w.amp).toFixed(2)}`)
     .join('');
 
-/** One band, `height` tall: its top is boundary `top`'s wave and its bottom the wave below, so stacked bands tile with no gap. */
 function bandPath(height: number, index: number): string {
   const top = waveOf(index + 1);
   const closing =
@@ -105,7 +96,6 @@ function bandPath(height: number, index: number): string {
   return waveForward(top, 0) + closing;
 }
 
-/** A group's colours on a band, for the stylesheet to pick from by theme; React types no custom property. */
 const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
   ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
 
@@ -117,7 +107,6 @@ export function JarDrawing({
 }: {
   shape: keyof typeof SHAPES;
   held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
-  /** Equal bands stacked from the base, one per ingredient (the spell's jar), each holding one group colour or null for the muted ink. */
   bands?: readonly (GroupColors | null)[];
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
@@ -222,8 +211,6 @@ function Jar({
     <li className={`jar-shelf__jar${modifier}`}>
       <JarDrawing shape={pick(seed, form)} held={jar} />
       {edit ? (
-        // The button is the form's name, stretched over the whole jar by its `::after`; a Low or
-        // Out amount is its own button beside it.
         <StockJarButton
           {...edit}
           openOn={variantId}
