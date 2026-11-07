@@ -13,10 +13,8 @@ const addFrom = (link: HTMLAnchorElement): void => {
   link.href = `${reportHref(link.getAttribute('data-digest') ?? undefined)}&from=${encodeURIComponent(window.location.pathname)}`;
 };
 
-// The boundary for an error in the root layout itself, which `error.tsx` cannot catch. It replaces
-// that layout, so it draws its own document and imports the global styles. Plain anchors rather than
-// `next/link`, and no Report This (which reads the router): the router may be the thing that failed, and a
-// full load starts clean.
+// The boundary for an error in the root layout itself, which `error.tsx` cannot catch. Plain anchors, not `next/link`,
+// and no Report This: the router may be what failed, and a full load starts clean.
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   return (
     <html lang="en">

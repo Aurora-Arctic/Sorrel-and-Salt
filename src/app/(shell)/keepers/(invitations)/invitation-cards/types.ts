@@ -1,5 +1,4 @@
 export interface CardsPageProps {
-  // A promise in Next 16: it must be awaited before use.
   searchParams: Promise<CardsSearchParams>;
 }
 
@@ -17,7 +16,6 @@ export interface CardsSearchParams {
 }
 
 export interface ArrivalsPageProps {
-  // A promise in Next 16: it must be awaited before use.
   searchParams: Promise<ArrivalsSearchParams>;
 }
 

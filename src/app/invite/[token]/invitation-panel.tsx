@@ -20,10 +20,8 @@ const CARD_LANDING = '/coven/new' satisfies Route;
 // The same page with the marker that makes it say what the card gave. A cast, as the built routes know no query.
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
-// The one accept panel for `/invite/[token]` and `/i/[token]`, public in src/proxy.ts. `getSession()`,
-// not `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect
-// would drop the reason (claude-docs/auth/admin-users.md, "Inviting a keeper"). `here` is the path
-// the visitor came by, so sign-in and the email page return to it.
+// The one accept panel for `/invite/[token]` and `/i/[token]`, public in src/proxy.ts. `getSession()`, not
+// `requireSession()`: an unverified account is told why it cannot accept yet (claude-docs/auth/admin-users.md, "Inviting a keeper").
 export default async function InvitationPanel({ token, here }: { token: string; here: string }) {
   const session = await getSession();
 

@@ -6,9 +6,7 @@ import { signedInLanding } from '../../lib/landing';
 import { getSession, sessionIsVerified } from '../../lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
 import { siteUrl } from '../../lib/site';
-// Server-only, as social-providers-config.ts's own header says. This page is a server component, so
-// the env var names this reads never reach the client bundle; only the resulting `configured` ids are
-// passed as a prop.
+// Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';

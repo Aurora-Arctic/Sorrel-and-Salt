@@ -1,14 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/site';
 
-// The only paths a crawler may fetch: the home page, sign-in, the public compendium, the public
-// documents, the public files, the sitemap, the build's files under `/_next/` (CSS, JavaScript and
-// images, without which a crawler renders a page unstyled) and the home page's share card.
-// `Allow` beats `Disallow: /` as the longer match (RFC 9309, 2.2.2); `/robots.txt` is listed for
-// tools that skip that rule. `/$` not `/`: a bare `/` allows every path by prefix, and `$` ends the
-// pattern (RFC 9309, 2.2.3). The home page must be crawlable for Google to read a site name.
-// `/support` is fetchable only so a crawler reads its noindex: a blocked page can still be listed
-// from links.
+// The only paths a crawler may fetch. `Allow` beats `Disallow: /` as the longer match (RFC 9309, 2.2.2); `/$` not `/`,
+// as a bare `/` allows every path by prefix (RFC 9309, 2.2.3). `/support` is fetchable only so a crawler reads its
+// noindex: a blocked page can still be listed from links.
 export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',

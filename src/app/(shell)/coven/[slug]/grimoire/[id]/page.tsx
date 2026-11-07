@@ -32,11 +32,9 @@ import { readRecipeAsideOf } from './recipe-aside';
 import { workingStepsOf } from './recipe-steps';
 import type { SpellRecipeParams } from './types';
 
-// One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger,
-// another coven's spell and another member's private spell all read as the same 404. Per request,
-// never cached (rule 6). The page calls `requireSession()` and draws its own `<main>`; the
-// RouteModalProvider serves `?edit=<id>` for this page's own spell and a role that may update it.
-// Delete Spell leaves for the tab the spell was listed on, naming it in `?deleted`.
+// One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger, another coven's
+// spell and another member's private spell all read as the same 404. Per request, never cached (rule 6).
+// The page calls `requireSession()` and draws its own `<main>`.
 
 // One read per request, shared by the metadata and the page. The guard runs first.
 const spellOf = cache(async (slug: string, id: string) => {

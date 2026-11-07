@@ -16,9 +16,7 @@ export const metadata: Metadata = {
 };
 
 // Where a paused account's pages send it (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). It reads the
-// viewer's own standing pause, as the shell does, so the address says nothing: signed out it sends the visitor to sign in,
-// and with no pause standing, lifted or ended, to the entry page. No AppShell, since the shell would draw the pause notice
-// that links here, so the page links to the viewer's own requests itself: without the account menu there is no other way.
+// viewer's own pause, so the address says nothing. No AppShell, since the shell would draw the notice that links here.
 export default async function AccessPausedPage() {
   const shell = await getShellSession();
   if (!shell) redirect('/sign-in');
