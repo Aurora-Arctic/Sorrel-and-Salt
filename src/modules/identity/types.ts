@@ -145,6 +145,8 @@ export type InvitationRefusal =
   | 'accepted'
   /** A card the signed-in account itself accepted. */
   | 'used-by-you'
+  /** A card, refused because the signed-in account has already accepted another. */
+  | 'used-another-card'
   | 'declined'
   | 'revoked'
   | 'expired'
