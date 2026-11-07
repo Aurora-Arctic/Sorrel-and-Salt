@@ -55,6 +55,8 @@ Every help page but the front page (`/help`, and the staff index, whose h1 is St
 
 One row per term, ruled above, and the last below too: the term beside its definition from 40rem (11rem and the rest), stacked on a phone. The term is in the heading face at the h4 size, and holds a link to its own anchor, named "Link to <Term>" and drawn as a small, light "#" by CSS so the term's text stays its title; it shows on hovering the row or focusing the link.
 
+The row an address names (`/help/glossary#steward`) is marked by CSS `:target` alone, with no script: a `::before` behind the row, reaching `space(3)` past each side so the rules stay their width, holds an accent edge of `$rule-heavy` on its start, so the mark is not colour alone, and the `$fill-highlight-field` tint. The tint arrives stronger and settles over three times `$motion-long`, and stays still under reduced motion. The row's `scroll-margin-top` keeps it clear of the shell bar.
+
 ## Callouts
 
 A help body marks a callout as a blockquote whose first words are a bold label: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. `renderMarkdown` draws it as a `.notice` (plain, `.notice--tip` or `.notice--warn`) with `role="note"`, named by its label, the label shown above the text as `.eyebrow.notice__label` and hidden from assistive technology. Every paragraph of the blockquote stays inside. Any other blockquote, and every blockquote in a site document or the `HelpArticleForm` preview (which pass no terms), stays a blockquote. `tests/components/DocumentPage/help-callouts.test.tsx` holds the cases.
