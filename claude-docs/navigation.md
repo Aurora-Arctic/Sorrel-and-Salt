@@ -1,20 +1,13 @@
 # Navigation Bar
 
-`src/lib/navigation/navigation-bar.tsx` (the behaviour) and
-`navigation-bar.scss` (the look), M12.33. The page part of every wait: a thin
-bar along the bottom edge of the global bar while a navigation is on its way.
+`src/lib/navigation/navigation-bar.tsx` (the behaviour) and `navigation-bar.scss` (the look). The page part of every wait: a thin bar along the bottom edge of the global bar while a navigation is on its way.
 
 ## The look
 
-- 3px tall, in `$accent`, `position: fixed` on the bottom edge of the global bar, above the
-  page (`layer('banner')`), and never takes a click.
-- Where a page draws no global bar (`/` shows the site name alone) it sits at the top of the
-  window. A `:root:has(.app-shell__bar, .public-frame__bar)` rule lowers it onto the bar's edge
-  only when a frame draws one; a browser without `:has()` leaves it at the top.
-- A segment 40% of the width sweeps across every `$shimmer-duration` (1.4s)
-  through `loading-motion`. Under reduced motion the segment fills the bar and
-  pulses on `loading-pulse` instead.
-- It fades out over `$motion-short` (150ms).
+- 3px tall, in `$accent`, `position: fixed`, above the page (`layer('banner')`), and it never takes a click.
+- Where a page draws no global bar (`/` shows the site name alone) it sits at the top of the window. A `:root:has(.app-shell__bar, .public-frame__bar)` rule lowers it onto the bar's edge only when a frame draws one; a browser without `:has()` leaves it at the top.
+- A segment 40% of the width sweeps across every `$shimmer-duration` through `loading-motion`. Under reduced motion the segment fills the bar and pulses on `loading-pulse` instead.
+- It fades out over `$motion-short`.
 
 ## The three states
 
@@ -24,34 +17,14 @@ bar along the bottom edge of the global bar while a navigation is on its way.
 | Shown  | neither                     | Yes                 |
 | Fading | `hidden` and `data-leaving` | Yes, fading to none |
 
-The stylesheet's `[data-leaving]` rule sets `display: block` so the author
-rule beats the browser's `hidden`, and puts the fade on that state. The 100ms
-hold-back before it shows is the component's timer, not a CSS delay, so a
-navigation that ends first can cancel it. The bar reads the site-wide wait
-from `NavigationProvider`, which React ends by itself when the navigation's
-transition ends; see [`../loading.md`](loading.md).
+The `[data-leaving]` rule sets `display: block` so the author rule beats the browser's `hidden`, and puts the fade on that state. The hold-back before the bar shows (`$loading-delay`) and the fade are timed in JavaScript, not by CSS delays, because a CSS `animation-delay` cannot be cancelled by a navigation that settles first; the values mirror the Sass tokens `$loading-delay` and `$arrive-duration`. The bar reads the site-wide wait from `NavigationProvider`, which React ends by itself when the navigation's transition ends ([`loading.md`](loading.md)). The stylesheet is imported in `src/app/providers.tsx`.
 
-The stylesheet is imported where the app's other global sheets are
-(`src/app/providers.tsx`).
+The workshop story `Feedback / Navigation Bar` (`.storybook/navigation-bar.stories.tsx`) shows each state inside the shell frame. The reduced-motion pulse is seen with the OS or devtools setting; the story pin does not reach a CSS media query.
 
-## Stories
+## Holding back and forward
 
-`Feedback / Navigation Bar` (`.storybook/navigation-bar.stories.tsx`), each inside
-the shell frame so the bar sits under the global bar as it does in the app:
-`Default`, `Leaving`, and `Navigating`, which loops a whole navigation on the
-story's own timer (idle, the 100ms hold-back, the bar for 2.5s, the fade, idle)
-using `LOADING_DELAY_MS` and `BAR_FADE_MS`, with no store or router. The
-reduced-motion pulse is seen with the OS or devtools setting; the story pin does
-not reach a CSS media query.
+A traversal is cancelable only inside the top-level document, and one from the browser's own buttons only after the person has used the page (the HTML standard's "history-action activation"). The leave guard reads `event.cancelable` and lets anything else go through.
 
-### Holding Back and Forward
+## The actual pathname
 
-Leave guard traversal: a traversal is cancelable only inside the top-level document, and one from the browser's own buttons only after the person has used the page (the HTML standard's "history-action activation"), so event.cancelable is read and anything else goes through.
-
-### Loading bar timing
-
-Navigation timing: the values mirror the Sass tokens $loading-delay and $arrive-duration (the page bar's stylesheet); the bar's delay and fade are timed in JavaScript since a CSS animation-delay cannot be cancelled by a navigation that settles first.
-
-### The actual pathname
-
-Actual pathname: Next's usePathname answers /_not-found for an address no route matches, since that screen is prerendered under the framework's own route, so a screen that reports or names the page reads the address bar once it is in the browser; before that it gives the router's path unless that is the framework's, then null.
+Next's `usePathname` answers `/_not-found` for an address no route matches, since that screen is prerendered under the framework's own route. A screen that reports or names the page therefore reads the address bar once it is in the browser; before that it uses the router's path unless that is the framework's, then null.
