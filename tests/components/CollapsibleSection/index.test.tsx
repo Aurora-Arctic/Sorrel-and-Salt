@@ -3,10 +3,6 @@ import { type ReactElement, useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 
-// The shared folding section: the heading is the
-// toggle, the closed line describes it, the fields stay in the page while
-// hidden, and an error is flagged open or closed.
-
 function Harness({
   open = false,
   invalid = false,
