@@ -44,7 +44,6 @@ beforeEach(async () => {
 const FORMS = ['Herb', 'Oil'] as const;
 type Form = (typeof FORMS)[number];
 
-/** A fixture with the two forms, in the compendium unless a coven is named. */
 const twoForms = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ variants: FORMS.map((form) => makeVariant({ form })), ...overrides });
 
@@ -54,7 +53,6 @@ const local = () =>
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
 const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id);
 
-/** The fixture as a whole-row write, the ingredient's flag as `toxic` and each form's as `toxicForms` names it, every form kept by its id. */
 async function input(
   id: string,
   fixture: IngredientFixture,
@@ -87,7 +85,6 @@ async function input(
   };
 }
 
-/** The flags as the rows hold them: the ingredient's, and each live form's by name. */
 async function flagsOf(id: string) {
   const [row] = await sql`select toxic, updated_by from ingredients where id = ${id}`;
   const forms = await sql`

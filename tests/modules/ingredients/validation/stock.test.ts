@@ -50,7 +50,6 @@ describe('StockInput', () => {
     }
   });
 
-  // The units module's list, so the one list is what is accepted.
   it('takes a unit the units module names, and refuses one it does not', () => {
     for (const unit of ['fl_oz_uk', 'fl_oz_us']) {
       expect(StockInput.safeParse({ unit }).success, unit).toBe(true);

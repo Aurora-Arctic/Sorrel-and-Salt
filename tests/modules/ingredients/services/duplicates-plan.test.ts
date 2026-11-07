@@ -30,13 +30,11 @@ beforeEach(() => {
   logged.length = 0;
 });
 
-/** Every statement the service sent, in order, from one call. */
 async function statementsFor(name: string): Promise<Logged[]> {
   await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, name, { limit: 26, inverted: false });
   return [...logged];
 }
 
-/** The one statement reading `ingredients`, which is the match itself. */
 function match(statements: Logged[]): Logged {
   const reads = statements.filter(({ query }) => /from "ingredients"/.test(query));
   expect(reads).toHaveLength(1);

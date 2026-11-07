@@ -48,7 +48,6 @@ beforeEach(async () => {
   otherForm = await variantIdOf(sql, entry, 'Otherform');
 });
 
-/** The coven's live cupboard rows for an ingredient, read raw. */
 async function rowsOf(ingredientId: string) {
   return sql`
     select * from workspace_compendium_entries
@@ -62,7 +61,6 @@ async function liveRows(): Promise<number> {
   return row.count as number;
 }
 
-/** The fixture as a save's input, as the form sends it. */
 function inputOf(fixture: IngredientFixture) {
   const { workspaceId: _tier, categories: _c, variants, substitutes, deities, ...input } = fixture;
   return {

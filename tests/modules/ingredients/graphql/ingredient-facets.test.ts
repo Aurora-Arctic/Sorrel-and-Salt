@@ -42,7 +42,6 @@ useTestDatabase((client) => {
 let hecate: string;
 let protection: string;
 
-/** Two compendium entries, one toxic, linked to Hecate, filed in Protection and fire, and both coming as a resin; and W's own entry in a form of its own. */
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   [{ id: hecate }] = await sql`select id from deities where name = 'Hecate' and deleted_at is null`;
@@ -64,7 +63,6 @@ beforeEach(async () => {
   });
 });
 
-/** An entry, compendium by default, with no formal name. */
 function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
@@ -251,7 +249,6 @@ describe('workspaceIngredientFacets', () => {
     expect(await forms({})).toEqual(covenform);
     expect(await forms({ source: 'local' })).toEqual(covenform);
     expect(await forms({ source: 'compendium' })).toEqual([]);
-    // Covenwort has no jar, so it is out of stock.
     expect(await forms({ inStock: true })).toEqual([]);
     expect(await forms({ inStock: false })).toEqual(covenform);
   });

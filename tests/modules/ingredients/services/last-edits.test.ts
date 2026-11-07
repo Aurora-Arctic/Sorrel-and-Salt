@@ -38,7 +38,6 @@ interface Seeded {
   forms: [string, string];
 }
 
-/** A live ingredient row as the list hands it over, with its first form. */
 async function seed(workspaceId: string | null, author: string, name: string): Promise<Seeded> {
   const id = await insertIngredient(
     sql,
@@ -60,7 +59,6 @@ async function seed(workspaceId: string | null, author: string, name: string): P
   };
 }
 
-/** The entry as it stands now: an edit after the seed moved its stamp. */
 async function reread(entry: Seeded): Promise<Seeded> {
   const [row] = await sql`select updated_by, updated_at from ingredients where id = ${entry.id}`;
   return { ...entry, updatedBy: row.updated_by as string, updatedAt: row.updated_at as Date };
@@ -109,7 +107,6 @@ describe('lastEditsOf', () => {
 
   it('shows a compendium entry with no jar of the coven as no edit', async () => {
     const entry = await seed(null, E.id, 'Compendiumwort');
-    // Another coven's jar of it is not this coven's edit.
     await jarOf(entry, D.id, 0, WORKSPACE_X_ID);
 
     await expect(lastEditsOf(asUser(A), WORKSPACE_W_ID, [entry])).resolves.toEqual([null]);
@@ -119,12 +116,10 @@ describe('lastEditsOf', () => {
     const entry = await seed(WORKSPACE_W_ID, A.id, 'Covenwort');
     await jarOf(entry, B.id);
 
-    // The jar is newer than the entry.
     await sql`select pg_sleep(0.01)`;
     let [edit] = await lastEditsOf(asUser(A), WORKSPACE_W_ID, [entry]);
     expect(edit?.by).toBe(B.name);
 
-    // Then the entry is edited, by A, after the jar.
     await sql`select pg_sleep(0.01)`;
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${A.id}, true)`;
@@ -253,7 +248,6 @@ describe('lastEditsOf', () => {
     await expect(sql`select 1 from ingredients where id = ${entry.id}`).resolves.toHaveLength(1);
 
     await expect(lastEditsOf(asUser(D), WORKSPACE_W_ID, [entry])).rejects.toBeInstanceOf(Forbidden);
-    // A site keeper holds no seat either.
     await expect(lastEditsOf(asUser(E), WORKSPACE_W_ID, [entry])).rejects.toBeInstanceOf(Forbidden);
   });
 });

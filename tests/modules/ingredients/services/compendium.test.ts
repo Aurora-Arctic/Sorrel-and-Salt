@@ -258,7 +258,6 @@ describe('listCompendium, under the facets', () => {
 
   type Filter = Parameters<typeof listCompendium>[0];
 
-  /** The labels the page lists under `filter`, checking the count agrees. */
   async function names(filter: Filter): Promise<string[]> {
     const listed = (await listCompendium(filter, PAGE)).map((entry) => entry.node.name).sort();
     const { totalCount } = await countCompendium(filter, undefined);

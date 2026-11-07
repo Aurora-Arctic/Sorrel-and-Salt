@@ -29,7 +29,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-/** A compendium entry's one form, W's own entry's, and X's own entry's. */
 let compendiumForm: string;
 let compendiumIngredient: string;
 let ownForm: string;
@@ -55,7 +54,6 @@ beforeEach(async () => {
   otherCovenForm = await variantIdOf(sql, otherCovenIngredient, 'Testform');
 });
 
-/** A jar of the compendium form in W, written raw by A. */
 function seedJar(overrides: Partial<Parameters<typeof insertStock>[1]> = {}) {
   return insertStock(
     sql,
@@ -72,7 +70,6 @@ function seedJar(overrides: Partial<Parameters<typeof insertStock>[1]> = {}) {
   );
 }
 
-/** Every row of `inventory_items`, tombstones included, oldest first. */
 function jars() {
   return sql`
     select id, workspace_id, variant_id, quantity_on_hand, unit, unit_dimension,
@@ -81,7 +78,6 @@ function jars() {
     from inventory_items order by created_at, id`;
 }
 
-/** An input as a caller might send it, a field the schema does not hold included. */
 function withDimension(input: StockValues, unitDimension: string): StockValues {
   return { ...input, unitDimension } as StockValues;
 }
@@ -178,7 +174,6 @@ describe('createStock', () => {
   });
 
   it('refuses D in W, and refuses W’s own entry’s form under X', async () => {
-    // D may stock X's own forms in X.
     await expect(createStock(asUser(D), WORKSPACE_X_ID, otherCovenForm, {})).resolves.toBeDefined();
 
     await expect(createStock(asUser(D), WORKSPACE_W_ID, compendiumForm, {})).rejects.toThrow(
@@ -189,7 +184,6 @@ describe('createStock', () => {
   });
 
   it('refuses another coven’s form by direct id', async () => {
-    // The form is real and stockable — by the coven that owns it.
     await expect(createStock(asUser(D), WORKSPACE_X_ID, otherCovenForm, {})).resolves.toBeDefined();
 
     await expect(createStock(asUser(A), WORKSPACE_W_ID, otherCovenForm, {})).rejects.toThrow(

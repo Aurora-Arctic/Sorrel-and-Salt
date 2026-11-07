@@ -29,7 +29,6 @@ function add(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
-/** The service's answer for the entry `id`, read as a member of its own coven. */
 async function replacedBy(id: string, workspaceId: string | null, asMember = A) {
   const membership = workspaceId
     ? await assertMembership(asUser(A), workspaceId, { ingredient: ['read'] })

@@ -72,7 +72,6 @@ beforeEach(async () => {
   localVariant = { id: variantId, ingredientId: id, workspaceId: WORKSPACE_W_ID };
 });
 
-/** One batch read, asked for the coven's entry (or its form) alone. */
 type BatchRead = (session: Session | null) => Promise<unknown[]>;
 
 const BATCH_READS: [string, BatchRead][] = [
