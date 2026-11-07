@@ -543,7 +543,7 @@ the tests [`tests.md`](tests.md).
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
 
-### The terms page (M15.57)
+### The terms page
 
 `/account/terms`, protected, is where an account agrees to the terms of use
 (the text is the public page `/terms`). The terms include the disclaimer and
@@ -735,7 +735,7 @@ rest of the keeper machinery:
   endpoints reachable, since the rest would grant admin or delete users outside
   `withAudit` ([`impersonation.md`](impersonation.md)).
 
-### Pausing a user's access (M15.52)
+### Pausing a user's access
 
 Specified in DESIGN.md §8, "An admin can pause a user's access", and argued in
 [`design-decisions/m15.52-site-access-pause.md`](../design-decisions/m15.52-site-access-pause.md).
@@ -849,7 +849,7 @@ keyset page newest first, which GraphQL serves as the paged `userAccessPauses` q
 - **No `user.fields` mapping.** `name`/`image` keep Better Auth's own
   column names ([`tables.md`](tables.md) has the reverted rename).
 
-## Invitation cards (M15.17–M15.19)
+## Invitation cards
 
 An invitation card is a printed QR code that admits one signed-in account. It is a row in `invitations`
 with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the batch it was minted in, and
@@ -883,6 +883,6 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).
 
-### Claiming signed-out support requests (M15.48)
+### Claiming signed-out support requests
 
 A signed-out support send makes no account and no session: the request is written as the seeded signed-out sender account with its `sender_email`. When an account gains a session or verifies its email, every request whose `sender_email` matches the verified address moves to it, with the sender's replies and any time-out bound to that address; an unverified account claims nothing. Record: `design-decisions/m15.48-mailed-link.md`.
