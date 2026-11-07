@@ -18,7 +18,7 @@ width"). Render-only, so a server component's list stays a server component.
 `<StackTable columns rows rowKey empty>` draws a `.data-table-frame` (the
 frame that scrolls the table sideways and is the container the cards are
 measured against), holding a `table.data-table.data-table--stack`. With no
-rows it draws `empty` in a `<p>` instead.
+rows it draws `empty` in an `EmptyState` ([`empty-state.md`](empty-state.md)) instead. The first column's cell is a row header (`th scope="row"`), so a screen reader moving down the table hears which row it is in.
 
 `StackTableProps` (`types.ts`):
 

@@ -66,7 +66,7 @@ panel it opens (MB.7). It is a client component.
   `src/components/AccountMenu/sign-out-button.tsx`: a client component with no
   props, and drawn nowhere else (it sat beside the account page's heading until
   MB.7; added in MB.63's PR, on the owner's call, since no task builds a way to
-  sign out). A plain full-size `.btn`, its label in title case.
+  sign out). A plain row like the others (`.account-menu__item`), its label in title case, under a hairline that sets it apart from them (pick 12 of MB.124).
   - **Better Auth's own sign-out.** It calls `src/lib/auth-client.ts`'s
     `signOut`, which posts to `/api/auth/sign-out`: the one path outside
     GraphQL, carrying the session and no application data
@@ -106,18 +106,14 @@ goes, and the button is a `$control-height` square, since with the name an
 admin's bar ran past the window from 642px up (the owner's finding at MB.7's
 review, 2026-10-12). The panel hangs from the
 button's right edge at `layer('floating')`, on `$surface-card` with a
-hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, at
-least 13rem wide. Rows are a control tall and run edge to edge of the panel, with no padding
-around them, no gap between them and no rounding; no list markers. Sign Out alone has padding around it (`.account-menu__signout`), and its
-`.btn` keeps its outline, full width of that (`.account-menu__signout-action`;
-a failure floats beneath it in a callout, its badge on the button's corner). The current link gets a straight accent
+hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, between `$panel-min-width` (15rem) and `$panel-max-width` (18rem), or the button's own width if that is greater, through the `floating-panel` mixin that the switcher's list uses too. Rows are a control tall and run edge to edge of the panel, with no padding
+around them, no gap between them and no rounding; no list markers. Sign Out is a row too, with a 1px hairline above it (`.account-menu__signout`) and no padding around it (`.account-menu__signout-action`; a failure floats beneath it in a callout, its badge on the button's corner). The current link gets a straight accent
 rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one. The account button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 
 **The panel no longer clips** (`overflow: hidden` is gone, the owner's call at
 M10.32), so the count's tip can hang past the panel's edge. The top row's hover
 wash takes the panel's rounding itself, inside the 1px edge, so it still does
-not square off the corners; the last row is always Sign Out, which has room
-around it, so no wash meets the bottom corners.
+not square off the corners; the last row is always Sign Out, whose own wash takes the panel's bottom rounding.
 
 **The count** is the site's badge in the `attention` palette
 ([`styling.md`](../styling.md), "Badge palettes"): a 1.5rem circle, a pill from two digits,
