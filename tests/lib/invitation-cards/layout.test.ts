@@ -34,7 +34,6 @@ interface Box {
   bottom: number;
 }
 
-// The trim, 3.5 × 2 in, and the safe area 1/8 in inside it, in artboard pixels.
 const trim: Box = {
   left: ARTBOARD.trimInset,
   top: ARTBOARD.trimInset,
@@ -49,8 +48,7 @@ const safe: Box = {
   bottom: trim.bottom - SAFE_INSET,
 };
 
-// A line's box: from where it starts to where its last glyph stops inking, and the inked height of its glyphs about its
-// baseline, since the font's ascent reaches well above any letter and would hold the text further from the trim than it prints.
+// Inked height about the baseline, since the font's ascent reaches well above any letter and would hold the text further from the trim than it prints.
 function boxOf(item: TextItem): Box {
   const f = fonts[item.font];
   const scale = item.size / f.unitsPerEm;
@@ -70,7 +68,6 @@ const inside = (inner: Box, outer: Box) =>
 const overlaps = (a: Box, b: Box) =>
   a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
-// The longest expiry the date format writes, and a short one, which stands its code further right.
 const VALID = 'Valid until 30 September 2027';
 const SHORT_VALID = 'Valid until 31 March 2027';
 const code = frontCode(fonts, VALID);
@@ -82,7 +79,6 @@ const qr: Box = {
 };
 const pt = (px: number) => (px * 72) / PX_PER_INCH;
 
-// Where a line's last glyph stops inking, which can fall short of or past its advance.
 function inkedRight(item: TextItem): number {
   const f = fonts[item.font];
   const scale = item.size / f.unitsPerEm;
@@ -93,7 +89,6 @@ function inkedRight(item: TextItem): number {
   return item.x + before + glyphs[glyphs.length - 1].bbox.maxX * scale;
 }
 
-// The middle of a line's advance, less the letter spacing after its last letter, which prints nothing.
 function middleOf(item: TextItem): number {
   const style = { font: fonts[item.font], size: item.size, letterSpacing: item.letterSpacing };
   return item.x + (textWidth(style, item.text) - item.letterSpacing) / 2;
@@ -103,7 +98,6 @@ const columnLine = (items: TextItem[], text: string) => {
   if (!found) throw new Error(`no line "${text}"`);
   return found;
 };
-// The least room between the back's words and the sorrel, 1/16 in.
 const PICTURE_GAP = PX_PER_INCH / 16;
 
 // The sorrel as it prints: a pixel's amount is how far it moves the ground towards chalk, its tint times its
@@ -120,7 +114,6 @@ const sorrel = (() => {
     (alpha[i] / 255);
   return { width, height, amount };
 })();
-// The artboard x of the sorrel's leftmost inked pixel in the artboard rows from top to bottom, or Infinity if none.
 function sorrelEdge(top: number, bottom: number): number {
   const { width, height, amount } = sorrel;
   let edge = Infinity;

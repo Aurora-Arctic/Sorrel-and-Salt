@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, inject, it } from 'vitest';
 
-// Every page head is drawn by PageHeader, so its shapes stay the few it offers: a page or a component that wrote its
-// own `<h1>` would be a head the component never drew. Stories and emails are not pages, and are left out.
+// Stories and emails are not pages, and are left out.
 
 const SOURCE = /^src\/.*\.tsx$/;
 const NOT_A_PAGE = /\.stories\.tsx$|^src\/emails\/|^src\/components\/PageHeader\//;

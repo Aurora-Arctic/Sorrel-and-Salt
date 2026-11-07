@@ -38,8 +38,7 @@ import type { InvitationOverrides } from './types';
 
 useRawClient();
 
-// The invitation's named writes and finders by tier (claude-docs/db/invitations.md): a `Membership` writes and revokes in its own workspace, a `SiteAdmin` on the site tier (workspace and role both null);
-// the accept and token read take no proof, since the invitee holds none yet, and match either tier. The insert stores the token's hash and the read and accept match one, so a dumped row's hash redeems nothing.
+// By tier (claude-docs/db/invitations.md): the accept and token read take no proof, since the invitee holds none yet. The insert stores the token's hash, so a dumped row's hash redeems nothing.
 
 const TOKEN = 'fixture-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const OTHER_TOKEN = 'fixture-token-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';

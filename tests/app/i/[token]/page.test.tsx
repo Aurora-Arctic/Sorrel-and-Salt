@@ -1,9 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// A card's landing page welcomes the holder of a live card above the accept panel, and a beta card's holder as a
-// beta tester too; a token that names no live card gets the panel alone.
-
 const liveCardOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ liveCardOf }));
 vi.mock('next/navigation', () => ({
@@ -35,7 +32,6 @@ describe('the card landing page', () => {
       screen.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'You’re Among the First' })).toBeInTheDocument();
-    // The link opens the Support dialog over this page rather than leaving it.
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
       supportHref('/i/betatoken', new URLSearchParams()),

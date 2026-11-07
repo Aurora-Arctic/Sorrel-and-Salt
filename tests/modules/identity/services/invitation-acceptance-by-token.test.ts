@@ -53,7 +53,6 @@ describe('acceptInvitation, on the site tier', () => {
     });
     expect(await invitation()).toMatchObject({ accepted_by: GRANTEE, updated_by: GRANTEE });
     expect((await invitation()).accepted_at).toBeInstanceOf(Date);
-    // Both privileges at one instant, the accepting session the actor.
     const rows = await ledger();
     expect(rows).toEqual([
       expect.objectContaining({
@@ -96,8 +95,6 @@ describe('acceptInvitation, on the site tier', () => {
     ]);
   });
 
-  // A keeper invitation sent to a curator's address makes them an
-  // admin, a revoke of curator and a grant of admin at one instant.
   it('makes a curator a keeper, recorded as a curator revoke and a keeper grant via the invitation', async () => {
     await asManualFix(sql, async (tx) => {
       await tx`update users set role = 'curator', can_create_workspace = true where id = ${GRANTEE}`;
@@ -128,7 +125,6 @@ describe('acceptInvitation, on the site tier', () => {
     expect(await ledger()).toEqual([]);
   });
 
-  // A site invitation grants the role it names.
   describe('to the curator role', () => {
     it('makes the verified holder of the address a curator who may create covens, recorded via the invitation with its note', async () => {
       expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
@@ -198,7 +194,6 @@ describe('acceptInvitation, on the site tier', () => {
 });
 
 describe('who may accept', () => {
-  // The same session, unverified and then verified: the address alone admits.
   it('points the matching account at the email page while its address is unverified', async () => {
     await sql`update users set email_verified = false where id = ${GRANTEE}`;
     await invite();
@@ -452,7 +447,6 @@ describe('a link that cannot be used', () => {
       expect((await invitation()).accepted_at).toBeNull();
       expect(await memberRows(GRANTEE)).toHaveLength(0);
 
-      // The backstop: the repository's own write, past a standing that passed.
       await expect(
         withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(TOKEN)),
       ).resolves.toEqual([]);
@@ -488,7 +482,6 @@ describe('while keeper changes are paused', () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  // The pause holds every site role an invitation grants, the curator's too.
   it.each(['admin'] as const)(
     'refuses another keeper’s invitation to %s, naming nobody, and accepts it once resumed',
     async (siteRole) => {
@@ -509,7 +502,6 @@ describe('while keeper changes are paused', () => {
     },
   );
 
-  // The primary keeper is exempt from the pause, and its invitation with it.
   it('accepts the primary keeper’s invitation', async () => {
     await invite({ createdBy: PRIMARY });
 
@@ -547,7 +539,6 @@ describe('acceptInvitation, on a card', () => {
         created_by: STRANGER,
       }),
     ]);
-    // The permanent record of the arrival: who, when, and which batch.
     expect(await invitation()).toMatchObject({ accepted_by: STRANGER });
     expect((await sql`select batch_id from invitations`)[0]).toMatchObject({
       batch_id: CARD_BATCH,
@@ -616,7 +607,6 @@ describe('acceptInvitation, on a card', () => {
     });
   });
 
-  // One card per account: a second card stays free for someone else, refused in the service and again in the accept statement.
   describe('a second card for an account that has used one', () => {
     const SECOND = 'fixture-token-dddddddddddddddddddddddddddddddd';
     const secondCard = async () =>
@@ -659,7 +649,6 @@ describe('acceptInvitation, on a card', () => {
       await expect(acceptInvitationById(asUser(AS_STRANGER), id)).rejects.toThrow(NotFound);
 
       expect(await secondCard()).toEqual({ accepted_at: null, accepted_by: null });
-      // The card it did accept still tells it so.
       expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
         reason: 'used-by-you',
       });

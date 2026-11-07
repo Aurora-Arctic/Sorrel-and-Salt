@@ -4,9 +4,7 @@ import { defaultExpiryDay, mintedLinks } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
-// Story 88: a keeper mints a batch of cards, and a brand-new account opens a card's link and may then start a coven, once: a
-// second card stays free for someone else. A beta batch's card welcomes its holder as a beta tester, a plain one's only welcomes. The
-// links come from the mint's answer; that a printed code scans to its link is checked by the owner on a printed sheet.
+// That a printed code scans to its link is checked by the owner on a printed sheet.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -63,7 +61,6 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
 
       expect(printed, 'a sheet of ten links').toHaveLength(10);
       for (const link of printed) {
-        // The short form, on this site: the token is the last path segment.
         expect(link).toMatch(
           new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
         );
@@ -144,7 +141,6 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.goto('/keepers/card-sign-ups');
       await expect(page.getByRole('row').filter({ hasText: 'Fixture Person' })).toHaveCount(1);
 
-      // The name opens the account's modal on this page, and Close returns to the list.
       await page.getByRole('link', { name: 'Fixture Person' }).click();
       const account = page.getByRole('dialog', { name: /Fixture Person/ });
       await expect(account).toBeVisible();

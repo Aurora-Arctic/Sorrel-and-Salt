@@ -254,7 +254,6 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
     expect((await page.goto(path))?.status(), path).toBe(403);
   }
 
-  // The standard seed's coven W, which this curator holds no seat in.
   expect((await page.goto(`/coven/${slugify('Whitethorn Coven')}`))?.status()).toBe(404);
 });
 test('an admin filters the zodiac signs by part of a name', async ({ page }) => {
@@ -267,7 +266,6 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await expect(rows).toHaveCount(13);
   await expect(search.getByRole('combobox')).toHaveCount(0);
 
-  // Aries, Sagittarius and Aquarius hold "ar".
   await search.getByRole('searchbox', { name: 'Name' }).fill('AR');
   await searchButton.click();
   await expect(page).toHaveURL(/\/curator\/zodiac-signs\?query=AR$/);

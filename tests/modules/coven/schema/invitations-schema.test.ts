@@ -115,7 +115,6 @@ const COVEN = WORKSPACE_W_ID;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-// 64 hex characters, the shape of a sha-256 of a token; nothing here generates one.
 const HASH_A = 'a'.repeat(64);
 const HASH_B = 'b'.repeat(64);
 
@@ -280,7 +279,6 @@ describe('invitations table', () => {
     });
   });
 
-  // A beta batch is a set of cards minted for beta testers; the flag means nothing on an address row.
   describe('the beta flag', () => {
     it('defaults to false on either kind', async () => {
       await invite('member');

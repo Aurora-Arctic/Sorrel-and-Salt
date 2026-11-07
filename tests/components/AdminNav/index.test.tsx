@@ -28,7 +28,6 @@ const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
 const DOCUMENTS = '/keepers/documents/terms';
-// The business-card sheet: a keeper's alone.
 const BUSINESS_CARDS = '/keepers/business-cards';
 
 const sorted = (list: (string | null)[]) => [...list].sort();

@@ -51,7 +51,6 @@ describe('the card operations', () => {
   it('refuses a curator, a member and an owner each one by direct request, with a card to reach', async () => {
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
     const { batchId } = minted.data!.createInvitationCards;
-    // An arrival the filters reach, so a keeper's request answers a row.
     await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = (select id from invitations where kind = 'card' limit 1)`;
     const reached = await run<{ invitationCardBatches: { edges: unknown[] } }>(
       asUser(E),
