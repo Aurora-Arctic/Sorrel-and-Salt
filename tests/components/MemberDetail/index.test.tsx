@@ -11,8 +11,7 @@ import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { HttpResponse } from 'msw/http';
 
-// The member modal's body: the row's facts, and for an owner the role change, the coven access pause and the
-// removal, each on the rows the members page offered them on (claude-docs/components/member-detail.md).
+// claude-docs/components/member-detail.md
 
 const router = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -54,7 +53,6 @@ const renderDetail = (overrides: Partial<MemberDetailProps> = {}) =>
     </QueryClientProvider>,
   );
 
-/** The fact a term names, as the Membership section lists it. */
 const fact = (term: string) => {
   const dt = within(screen.getByRole('region', { name: 'Membership' })).getByText(term, {
     selector: 'dt',
