@@ -26,19 +26,13 @@ const PromoteFolkNameDocument = graphql(`
   }
 `);
 
-/** What a promotion answers: the ingredient with its new name, and every folk name it now holds. */
 export type PromotedIngredient = PromoteFolkNameMutation['promoteFolkName'];
 
-/** The folk name a question asks about: its saved row's id, and the text on its chip. */
 export interface PromotedName {
   id: string;
   value: string;
 }
 
-/**
- * Sends the promotion of one of an ingredient's folk names. A null
- * `workspaceId` names a compendium entry, as the mutation reads it.
- */
 export function usePromoteFolkName(workspaceId: string | null, ingredientId: string) {
   return useMutation({
     mutationFn: async (folkNameId: string): Promise<PromotedIngredient> =>
@@ -52,41 +46,23 @@ export function usePromoteFolkName(workspaceId: string | null, ingredientId: str
   });
 }
 
-/** The hook's result, handed to the question and read by the chip's control for its busy state. */
 export type Promotion = ReturnType<typeof usePromoteFolkName>;
 
 export interface PromoteFolkNameQuestionProps {
   promotion: Promotion;
-  /** The name asked about; null while nothing asks. */
   folkName: PromotedName | null;
-  /** The ingredient's display name now, which becomes a folk name. */
   displayName: string;
-  /** The compendium's swap is global, and says so; a coven's does not. */
   tier: 'compendium' | 'coven';
-  /** The form holds changes: offer to save or drop them first. */
   dirty: boolean;
-  /**
-   * Saves the form's changes, answering whether they landed. When it answers
-   * false the form has shown why and closed the question itself.
-   */
   saveFirst: () => Promise<boolean>;
-  /** Puts the form back to its saved values. */
   discardFirst: () => void;
-  /** The swap was made: the form takes the answer in. */
   onPromoted: (ingredient: PromotedIngredient) => void;
-  /** Cancel: nothing sent. */
   onKeep: () => void;
-  /** The server refused: its first sentence, for the form's alert; the form closes the question. */
   onRefused: (message: string) => void;
 }
 
 type Step = 'confirm' | 'also' | null;
 
-/**
- * Always asks before a folk name becomes the display name. With changes unsaved it offers Save &
- * Promote (the form's own save first, promoting only if that landed) and Discard & Promote;
- * Cancel sends nothing. Steps aside while the unsaved-changes question asks, as a removal's does.
- */
 export function PromoteFolkNameQuestion({
   promotion,
   folkName,
@@ -118,9 +94,6 @@ export function PromoteFolkNameQuestion({
   return (
     <ConfirmQuestion
       asked={folkName !== null && !discardAsking}
-      // Four tiers, told apart by type as well as space: the question as the card's heading; the
-      // swap on a tinted panel; the compendium's reach as a muted aside; and, ruled off above the
-      // buttons, the question they answer.
       question={
         <span className="promote-question__title">Make this folk name the display name?</span>
       }

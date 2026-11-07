@@ -88,7 +88,6 @@
   text-align: right;
 }
 
-// The badge, whatever element its tip wraps it in.
 .ingredient-summary__stock > :not(.ingredient-summary__amount) {
   margin-inline-start: space(2);
 }
@@ -121,9 +120,6 @@
   max-width: $measure;
   color: $text-muted;
 }
-
-// The details modal's foot bar, with its variant that has a control beside the link, is in
-// _primitives.scss, which every page loads (the Quick Look of a spell draws it too).
 
 // The description and its Show More bar: a clip box cut to six lines by the script
 // (summary-description.tsx), its text fading into the surface over one full-width button; opening moves

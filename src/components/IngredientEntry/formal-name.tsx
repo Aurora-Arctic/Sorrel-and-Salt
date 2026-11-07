@@ -12,7 +12,6 @@ import './formal-name.scss';
 // the details modal's head so they cannot differ. No hook and no client directive, so server and
 // client parts alike build it.
 
-/** Each settled nomenclature's formal name, as its label says it. */
 const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
   botanical: 'Botanical Name',
   fungal: 'Fungal Name',
@@ -21,7 +20,6 @@ const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
   chemical: 'Chemical Name',
 };
 
-/** What the formal name is, said in the tip beside it: which naming system governs it (DESIGN.md §5's nomenclature table). */
 const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
   botanical: 'Its botanical name, under the ICN.',
   fungal: 'Its fungal name, under the ICN.',

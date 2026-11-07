@@ -142,7 +142,6 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
   };
 }
 
-/** The coven's jars, as `stockDialogOf` reads them: amounts as numbers, null kept. */
 export const jarsOf = (looked: Looked): SummaryJar[] =>
   looked.stock.map((jar) => ({
     variantId: jar.variant.id,
@@ -151,7 +150,6 @@ export const jarsOf = (looked: Looked): SummaryJar[] =>
     threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
   }));
 
-/** The names a Quick Look's head shows before the entry arrives; the formal name's two fields come together or not at all. */
 type QuickLookNames = Pick<Duplicate, 'name'> &
   (
     | Pick<Duplicate, 'canonicalName' | 'nomenclature'>
@@ -174,10 +172,6 @@ function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeo
   return { title: entry.name, formalName: loading ? <Skeleton shape="line" /> : undefined };
 }
 
-/**
- * The modal itself: open at once under the row's name, loading by the standard's
- * skeleton, then the entry; a failed read says so, with Try Again.
- */
 export function DuplicateQuickLook({
   id,
   entry,
@@ -187,11 +181,6 @@ export function DuplicateQuickLook({
   returnTo,
 }: {
   id: string;
-  /**
-   * The row's names, for the head while the read is out, as the list's Quick Look opens under, so
-   * nothing jumps when the entry arrives. A caller that does not know the formal name leaves
-   * `canonicalName` and `nomenclature` out, and the head draws a one-line skeleton in its place.
-   */
   entry: QuickLookNames;
   workspaceId: string;
   /** The entry's page, opened in a new tab so the form stays as it is. */
@@ -227,7 +216,6 @@ export function DuplicateQuickLook({
       {...headingOf({
         heading: detailsHeading(shown),
         marks: detailsMarks(detail, true),
-        // The form's own link to the entry, a string as its warning's rows take it.
         pageHref: pageHref as Route,
       })}
       onClose={onClose}

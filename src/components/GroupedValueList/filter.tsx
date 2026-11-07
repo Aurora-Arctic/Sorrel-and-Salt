@@ -24,7 +24,6 @@ const GroupedValueListFilter = ({
     [groups],
   );
 
-  /** The filter shown with the group given, the name typed carried, from the first page. */
   const hrefWith = (chosen: string) =>
     groupedValuesHref(kind, { query: draftQuery.trim(), group: chosen });
 

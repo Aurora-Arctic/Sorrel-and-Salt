@@ -6,7 +6,6 @@ import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
 
-/** A list row's icon link into a dialog, named by its verb and the row's name in hidden text; a press opens the row's modal at once under `heading`, and the link still works as an address. */
 const IconLink = ({
   href,
   name,
@@ -35,7 +34,6 @@ const IconLink = ({
   );
 };
 
-/** A row's Edit: the pencil. `className` replaces the default green look (the coven card's plain one). */
 export const EditLink = ({
   className,
   ...props
@@ -59,7 +57,6 @@ export const AnnotateLink = ({
   <IconLink {...props} className={className} verb="Annotate" icon={<AnnotateIcon />} />
 );
 
-/** An entry's Quick Look in a list: the eye beside its name, opening the details in the modal place `place` names, in its own class as it sits in the name's line. */
 export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
   <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
 );

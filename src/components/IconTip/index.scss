@@ -2,7 +2,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The control and its tip together: the tip's anchor and the box the pointer may cross onto the tip within, middle-aligned.
 .icon-tip {
   @include tip-anchor;
 
@@ -39,7 +38,6 @@
     transform: translateX($icon-tip-travel);
   }
 
-  // Closed: faded back out over `$icon-tip-fade` before the component removes it.
   &--closing {
     opacity: 0;
     transform: translateX($icon-tip-travel);
@@ -107,7 +105,6 @@
   height: $glyph-size-large;
 }
 
-// A list row's lone bin, the pencil's size, in the wax a remove control wears.
 .icon-tip__remove {
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-remove;
@@ -140,7 +137,6 @@
   }
 }
 
-// The small eye (the spell builder's step rows and inventory lines): the mark at `$glyph-size` in a 24px `$icon-size` box, the smallest hit area.
 .icon-tip__look--small {
   width: $icon-size;
   height: $icon-size;
@@ -168,13 +164,11 @@
     }
   }
 
-  // The eye, 11% past the pencil, in the same box.
   .icon-tip__look svg {
     width: $action-look-glyph-size;
     height: $action-look-glyph-size;
   }
 
-  // The jar of Edit Stock, 11% past the others, in the same box.
   svg.stock-icon {
     width: $action-jar-glyph-size;
     height: $action-jar-glyph-size;

@@ -23,23 +23,18 @@ import { FIELD_NOUNS, UNNAMED_FORM, texts } from './values';
 // middle dot. Each summary watches its own fields; a variant's card line uses the same parts
 // (claude-docs/components/ingredient-form.md, "Sections").
 
-/** What a line says of an empty section, or a variant carrying nothing: one wording for both. */
 const NOTHING = 'Nothing yet';
 
-/** A list of one by its entry, of more by its count: "Mercury", "2 colours"; none, nothing. */
 function listPart(entries: readonly string[], { many }: FieldNoun): string | null {
   if (entries.length === 0) return null;
   if (entries.length === 1) return entries[0];
   return `${entries.length} ${many}`;
 }
 
-/** `n` and the noun it counts: "1 celestial body", "2 celestial bodies". */
 const count = (n: number, { one, many }: Pick<FieldNoun, 'one' | 'many'>) =>
   `${n} ${plural(n, one, many)}`;
-/** A text field's words on one line: its line breaks and runs of spaces are one space. */
 const oneLine = (text: string) => text.trim().replace(/\s+/g, ' ');
 
-/** Parts joined by a middle dot, an absent one dropped; none at all is "Nothing yet". */
 function joined(parts: ReactNode[]): ReactNode {
   const shown = parts.filter((part) => part !== null && part !== false && part !== '');
   if (shown.length === 0) return NOTHING;
@@ -61,17 +56,14 @@ function IdentitySummary(): ReactNode {
   return joined([
     name.trim(),
     labelOf(NOMENCLATURE_OPTIONS, nomenclature),
-    // In italics, as a formal name is printed.
     formal && <i key="formal">{formal}</i>,
     listPart(texts(folkNames), FIELD_NOUNS.folkNames),
   ]);
 }
 
-/** Details & Care's line: the description's first words, then the safety notes', then Toxic when flagged. */
 const detailsLine = (description: string, safetyNotes: string, toxic: boolean): ReactNode =>
   joined([oneLine(description), oneLine(safetyNotes), toxic && 'Toxic']);
 
-/** Correspondences' line, a variant's having no deities, which are the ingredient's alone. */
 function correspondencesLine(
   elements: readonly IngredientElement[],
   celestialBodies: readonly ListEntry[],
@@ -93,7 +85,6 @@ function relationsLine(
   substitutes: readonly ListEntry[],
 ): ReactNode {
   if (categoryIds.length === 0 && substitutes.length === 0) return NOTHING;
-  // Both said once either is: the pair is the section.
   return joined([
     categoryIds.length > 0 ? count(categoryIds.length, FIELD_NOUNS.categoryIds) : 'No categories',
     listPart(texts(substitutes), FIELD_NOUNS.substitutes) ?? 'No substitutes',
@@ -108,7 +99,6 @@ const sourcesLine = (references: readonly ReferenceListEntry[]): ReactNode =>
     ),
   ]);
 
-/** What a variant counts on its card line, between its description and its safety note, in its fields' order. */
 const CARD_COUNTED = [
   'elements',
   'celestialBodies',
@@ -118,7 +108,6 @@ const CARD_COUNTED = [
   'substitutes',
 ] as const;
 
-/** A count of `variant`'s entries in `field`, "2 celestial bodies", or null for none. */
 function countedIn(
   variant: VariantFormValues,
   field: (typeof CARD_COUNTED)[number] | 'references',
@@ -127,11 +116,6 @@ function countedIn(
   return length > 0 ? count(length, FIELD_NOUNS[field]) : null;
 }
 
-/**
- * A variant's card line: what it carries, in its sections' order, "1 celestial body ·
- * 2 categories · Safety note", or that it carries nothing. The parts are the
- * section lines' own, joined by the same middle dot.
- */
 export function variantSummary(variant: VariantFormValues): ReactNode {
   const parts = [
     variant.description.trim() !== '' && 'description',
@@ -181,7 +165,6 @@ function VariantsSummary(): ReactNode {
   return `${count(forms.length, FIELD_NOUNS.variants)}: ${forms.join(', ')}`;
 }
 
-/** The closed line of the ingredient's section `section`. */
 export function SectionSummary({ section }: SectionSummaryProps): ReactElement {
   switch (section) {
     case 'identity':
@@ -199,10 +182,6 @@ export function SectionSummary({ section }: SectionSummaryProps): ReactElement {
   }
 }
 
-/**
- * The closed line of a variant's section `section`, read from the variant's values. Its Identity
- * is its Form, "Dried leaf (Plant part)"; the rest read as the ingredient's sections do.
- */
 export function variantSectionSummary(
   section: VariantSectionKey,
   variant: VariantFormValues,

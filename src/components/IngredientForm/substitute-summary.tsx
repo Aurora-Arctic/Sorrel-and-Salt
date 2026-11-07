@@ -50,11 +50,6 @@ const IngredientSummaryDocument = graphql(`
   }
 `);
 
-/**
- * Where a summary links its entry, when the page holding the form has a page
- * for it: none by default, and the dialogs that hold the form pass the real
- * routes (the public compendium page, or the admin's modal).
- */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
 /** The ingredient's values beside a form's, which add to them and never take away. */
@@ -62,7 +57,6 @@ const joined = (own: readonly string[] | null, form: readonly string[] | null | 
   ...new Set([...(own ?? []), ...(form ?? [])]),
 ];
 
-/** The panel's content: loading, failed with a way to try again, or the entry. */
 export function SubstituteSummary({
   link,
   variantId,
@@ -153,10 +147,6 @@ export function SubstituteSummary({
   );
 }
 
-/**
- * The summary a substitute's chip opens: a linked one's, named for its chip,
- * or none for typed text, which has nothing to open.
- */
 export function substituteSummary(
   entry: SubstituteListEntry,
   text: string,

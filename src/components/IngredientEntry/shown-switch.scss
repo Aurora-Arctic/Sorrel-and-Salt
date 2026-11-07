@@ -6,7 +6,6 @@
 // with a 1.188rem thumb, and the lidded eye in the thumb, shut when the entry is hidden.
 // Taller than `.switch` so the eye can be read. Tokens only, before the section's design review.
 .shown-switch {
-  // The cross-fade between the thumb and the ring; `RING_FADE_MS` in shown-toggle.tsx waits for it.
   $fade: 150ms ease-out;
 
   display: inline-flex;
@@ -111,7 +110,6 @@
   }
 
   .shown-switch__spinner {
-    // No delay of its own: `.shown-switch__ring` already waits `$loading-delay` and fades in.
     @include loading-motion(spinner-turn $spin-duration linear infinite);
 
     // Border-box, so the ring's 2px border sits inside the thumb's size.

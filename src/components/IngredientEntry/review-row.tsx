@@ -9,18 +9,12 @@ import './review-mark.scss';
 // only when known: an add has none.
 
 export interface ReviewRowProps {
-  /** Whether a curator has marked the entry, as saved. */
   standing: boolean;
-  /** When, as an ISO moment, if the page knows it. */
   reviewedAt?: string | null;
-  /** The switch's own value, which may be ahead of `standing`. */
   checked: boolean;
   onChange: (next: boolean) => void;
-  /** A change is in flight: the switch is `aria-busy` and a spinner takes the thumb's place. */
   busy?: boolean;
-  /** Drawn at the end of the row, after the Reviewed switch: the form's Shown in Compendium switch. */
   alongside?: ReactNode;
-  /** Drawn under the row, such as a refusal. */
   children?: ReactNode;
 }
 

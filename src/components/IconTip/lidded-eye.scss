@@ -11,7 +11,6 @@
 
   overflow: visible;
 
-  // The lashes go at once as the lid lifts, and come back once it has come down.
   .lidded-eye__lashes {
     opacity: 1;
     transition: opacity 120ms ease-out 140ms;
@@ -23,7 +22,6 @@
   }
 
   // Setting `d` from CSS is not Baseline (Safari cannot), so it sits in @supports: the lid then
-  // moves. Without it the shapes come from the markup's `d` and change at once.
   @supports (d: path('M0 0')) {
     .lidded-eye__lid,
     .lidded-eye__gap {

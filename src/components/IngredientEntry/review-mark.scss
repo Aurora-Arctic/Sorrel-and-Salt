@@ -23,7 +23,6 @@ body .review-mark {
       min-block-size: 0;
     }
 
-    // The eye switch's size (_switch-size.scss), with a plain thumb: the primitive's track and thumb, resized.
     input {
       inline-size: $track-width;
       block-size: $track-height;
@@ -48,7 +47,6 @@ body .review-mark {
       }
     }
 
-    // Pressed, the thumb stretches by the primitive's step, from the end it sits at.
     &:not(:has(input:disabled, input[aria-disabled='true'])) {
       &:has(> .field__label:is(:active, [data-pressed]), input:is(:active, [data-pressed])) input {
         &::before {
@@ -79,7 +77,6 @@ body .review-row__line {
   gap: space(2);
 }
 
-// The switches at the end of the row, side by side.
 body .review-row__switches {
   display: flex;
   align-items: center;
@@ -91,7 +88,6 @@ body .review-row__standing {
   align-items: center;
 }
 
-// The busy ring in place of the thumb, at its size and travel.
 body .review-mark .switch .switch__spinner {
   inline-size: $thumb-size;
   block-size: $thumb-size;

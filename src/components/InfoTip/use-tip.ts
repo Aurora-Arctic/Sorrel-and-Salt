@@ -10,7 +10,6 @@ import type { Tip, TipTiming } from './types';
 // the pointer is over it, closed on Escape, blur or leaving. Used by InfoTip, UserList, IconTip and
 // Combobox's tooltips (claude-docs/components/info-tip.md, "Contracts" and "Placement").
 
-// Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;
 
 // The default `canOpen`, at module level so `show` keeps one identity for a
@@ -18,13 +17,10 @@ const CLOSE_DELAY_MS = 150;
 // function every render.
 const ALWAYS = () => true;
 
-/** Space kept between a bubble and the edge of the screen. */
 const EDGE_PX = 8;
 
-/** Space between a bubble and the control it belongs to. */
 const GAP_PX = 4;
 
-// The sides a stylesheet may ask for with `--tip-placement`.
 const SIDES = new Set<string>([
   'top',
   'top-start',
@@ -62,11 +58,6 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
   return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
 };
 
-/**
- * Whether the tip is open, and its three handlers; `canOpen` is asked as it opens, not watched, as a
- * Combobox entry's fit changes with its width. `placement` is the preferred side; `timing` sets the
- * hover waits, none for IconTip. `anchor`, `bubble` and `bubbleStyle` go to the wrapper and bubble.
- */
 export function useTip(
   canOpen: () => boolean = ALWAYS,
   placement: Placement = 'top',
@@ -86,7 +77,6 @@ export function useTip(
     middleware: [offset(GAP_PX), flip(edges), shift(edges)],
   });
 
-  // Followed only while open: a closed bubble has nothing to follow.
   const { reference, floating } = elements;
   useEffect(() => {
     if (!open || !reference || !floating) return;
@@ -100,8 +90,6 @@ export function useTip(
     setSide(sideFor(refs.reference.current as Element | null, placement));
     setOpen(true);
   }, [canOpen, placement, refs]);
-  // Already open, or already waiting, a hover changes nothing but a pending
-  // close: the pointer is back.
   const showSoon = useCallback(() => {
     clearTimeout(closing.current);
     clearTimeout(opening.current);

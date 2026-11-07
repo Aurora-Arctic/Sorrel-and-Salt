@@ -47,10 +47,6 @@ import { draftOf, sourceTierOf } from './values';
 // one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
 // text is a search and never an entry: the last row, "New Reference", opens the panel.
 
-/**
- * What the form holds of a source: its id and tier, full citation, and the fields its short form is made from. Defined
- * before its first use and called bare, as codegen reads the documents in order and reads the text.
- */
 graphql(`
   fragment ReferenceRow on Reference {
     id
@@ -75,7 +71,6 @@ export const ReferenceSuggestionsDocument = graphql(`
   }
 `);
 
-/** Each source by its citation, whose it is beneath, in the search's ranked order. */
 const referenceOptions = (data: ReferenceSuggestionsQuery): ReferenceOption[] =>
   data.referenceSuggestions.edges.map(({ node: { citation, ...link } }) => ({
     value: citation,
@@ -84,25 +79,18 @@ const referenceOptions = (data: ReferenceSuggestionsQuery): ReferenceOption[] =>
     link,
   }));
 
-/** The sources the search offers for `text`, once it has settled, while `active`. */
 const useReferenceSuggestions = (workspaceId: string | null, text: string, active: boolean) =>
   useLookup(ReferenceSuggestionsDocument, { workspaceId }, text, active, referenceOptions);
 
-/** What a locator is, behind the tip beside each row's Locator. */
 const LOCATOR_HINT =
   'Where in the source this ingredient is written about, so a reader can turn to it: a page, p. 112; pages, pp. 12–19; a chapter, chap. 13; an entry, under "Hecate". Cited in several places? Give them all here: pp. 12–19, 40; chap. 3. Leave it empty to cite the whole work.';
 
-/** What a name basis is, behind the tip beside each compendium row's Name Basis. */
 const NAME_BASIS_HINT =
   'How this source names the ingredient. Stated: it prints this formal name. Resolved: it heads a common name that another source maps to this formal name alone. Unresolved: a common name not yet matched. Unaudited: not yet checked.';
 
 /** Enter with nothing picked adds nothing: a search is not a source. */
 const IGNORE_ENTER = () => {};
 
-/**
- * The ingredient's references, or at `at` a variant's own, citing that form
- * alone.
- */
 export function ReferencesField({
   workspaceId,
   at,
@@ -116,7 +104,6 @@ export function ReferencesField({
   const { fields, append, remove } = useFieldArray({ control, name: list });
   const { field } = useController({ control, name: box });
   const panelOpen = useWatch({ control, name: panel });
-  // Each row's locator as typed, for its one-line summary.
   const rowValues = useWatch({ control, name: list });
   const { errors, isSubmitted } = useFormState({ control, name: [list, box] });
   const queryClient = useQueryClient();
@@ -130,7 +117,6 @@ export function ReferencesField({
   // Held as state, through its callback ref, so the box is told once it exists.
   const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   const [active, setActive] = useState(false);
-  // What the last add or removal did, for a screen reader, as a list's says.
   const [announcement, setAnnouncement] = useState('');
   // The row open to change, by its field-array key: one at a time, the rest
   // a line each. Its Locator takes the focus as it opens.
@@ -161,7 +147,6 @@ export function ReferencesField({
     setOpenRow(fields[opensAt - 1].id);
   }
 
-  // A source already listed is not offered again: listing it twice is refused.
   const found = useReferenceSuggestions(workspaceId, field.value, active);
   // Keyed by the ids as one string, which changes only when the list does.
   const listed = fields.map((row) => row.link.id).join(' ');
@@ -201,7 +186,6 @@ export function ReferencesField({
     .join(' ');
   const describedBy = [hintId, message && errorId].filter(Boolean).join(' ');
 
-  // Once a submit has shown errors, a change revalidates the list and its box.
   const revalidate = () => {
     if (isSubmitted) void trigger([list, box]);
   };
@@ -216,7 +200,6 @@ export function ReferencesField({
     setAnnouncement(`Added ${shortCitationText(link)}`);
   };
   const pick = (_value: string, option: ReferenceOption | null) => {
-    // The list has no typed row, so every pick is a source.
     if (!option) return;
     // Cleared before the append, not after: the field array tells the form's
     // history of its new row in an effect, later, while setValue tells it at
@@ -248,7 +231,6 @@ export function ReferencesField({
   const closePanel = () => {
     setValue(panel, false);
     revalidate();
-    // An edit cancelled goes back to the row it was opened from.
     if (editing) {
       focusAfterPanel.current = editSourceId(editing.row);
       setOpenRow(editing.row);
@@ -260,11 +242,6 @@ export function ReferencesField({
     setSummons((count) => count + 1);
     revalidate();
   };
-  /**
-   * The edited source's new text on every row citing it, the ingredient's
-   * and each variant's. Not marked as a change to the ingredient: the source
-   * is saved already, and the links the form sends are as they were.
-   */
   const rewriteRows = (citation: string, link: ReferenceLink) => {
     const lists: (`variants.${number}.references` | 'references')[] = [
       'references',
@@ -288,12 +265,10 @@ export function ReferencesField({
     // Closed without handing the focus back to the box: the new row takes it.
     setValue(panel, false);
     revalidate();
-    // The new source is one the search can now find.
     void queryClient.invalidateQueries({ queryKey: ['ReferenceSuggestions'] });
   };
 
   return (
-    // Named by the legend's text alone, as a list's fieldset is.
     <fieldset className="fieldset ingredient-form__list" aria-labelledby={legendId}>
       <legend className="fieldset__legend field__label-row">
         <span id={legendId}>References</span>
@@ -318,8 +293,6 @@ export function ReferencesField({
           onBlur={field.onBlur}
           onPick={pick}
           onCommit={IGNORE_ENTER}
-          // No onRemoveLast: Backspace and Delete in the empty box take no
-          // row, unlike the chip lists; only a row's ×, which asks.
           suggestions={suggestions}
           listAnchor={boxRow}
           action={{ label: 'New Reference', onSelect: openPanel }}
@@ -344,11 +317,8 @@ export function ReferencesField({
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
             const locator = rowValues[index]?.locator.trim() ?? '';
-            // Read through the values, which an edited source rewrites in place.
             const entry = rowValues[index] ?? row;
             const name = shortCitationText(entry.link);
-            // A coven's form edits its own sources; the compendium's are
-            // the admins', and a compendium form's are all the compendium's.
             const editable = workspaceId === null || !entry.link.isGlobal;
             return (
               <li
@@ -461,7 +431,6 @@ export function ReferencesField({
                         .join(' ')}
                       aria-invalid={invalid || undefined}
                       {...register(`${list}.${index}.locator`, {
-                        // Tidied as it is left, as the server will store it.
                         onBlur: (event: FocusEvent<HTMLInputElement>) => {
                           const text = event.target.value;
                           const formatted = formatLocator(text);
@@ -507,7 +476,6 @@ export function ReferencesField({
       <FieldError id={errorId} message={message} />
       {panelOpen && (
         <ReferencePanel
-          // A fresh panel for each source edited, and for a new one.
           key={editing?.link.id ?? 'new'}
           workspaceId={workspaceId}
           editing={editing?.link}

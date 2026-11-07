@@ -9,7 +9,6 @@ import type { IngredientFormValues, SubstituteFormsProps, SubstituteListEntry } 
 // ingredient it links, so each linked ingredient that comes in forms gets a box choosing which,
 // Any Form until one is chosen (claude-docs/components/ingredient-form.md, "The variants").
 
-/** The choice that names no form: the ingredient, whichever form is to hand. */
 const ANY_FORM = { value: '', label: 'Any Form' };
 
 export function SubstituteForms({ name }: SubstituteFormsProps): ReactElement | null {
@@ -22,8 +21,6 @@ export function SubstituteForms({ name }: SubstituteFormsProps): ReactElement | 
   return (
     <div className="ingredient-form__substitute-forms">
       {choosing.map(({ entry, link, index }) => (
-        // Keyed by the ingredient, which a list holds once: its place moves
-        // as entries before it are taken out.
         <SelectField<IngredientFormValues>
           key={link.id}
           name={`${name}.${index}.variantId`}

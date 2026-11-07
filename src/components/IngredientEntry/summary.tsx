@@ -18,14 +18,12 @@ import {
 import { ShelfIcon } from './held-mark';
 import type { SummaryJar } from './types';
 import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
-// The page's own stylesheet, for its blocks: a list page draws no entry page to load it.
 import './index.scss';
 import './summary.scss';
 
 // The details modal's body: the entry page's Details section cut to a glance, drawn by the page's
 // own blocks and leaving out what is empty (claude-docs/components/ingredient-entry.md, "The details modal").
 
-/** "The Oil form", "The Oil and Root forms", "The Oil, Root and Tincture forms". */
 function formsCarrying(labels: readonly string[]): string {
   const named =
     labels.length === 1
@@ -42,7 +40,6 @@ export default function IngredientSummary({
   jars,
 }: {
   detail: IngredientDetail;
-  /** The viewer's own covens that hold this entry, per viewer; none for a visitor, and drawn for a compendium entry only. */
   covens?: readonly HoldingCoven[];
   /** The coven's jars of the entry, from the coven's page alone, so each form shows its stock; left out, the forms are named alone. */
   jars?: readonly SummaryJar[];

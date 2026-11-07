@@ -132,9 +132,6 @@ const IngredientCard = ({
           </p>
         )}
         {(jars || hasActions || hasStart || edited) && (
-          // The foot: the jar lines, then the actions, with any start actions at their
-          // left. Pushed to the card's bottom edge (`margin-top: auto`), so cards in one
-          // grid row end on the same line.
           <div className="specimen__foot">
             {jars && <div className="specimen__stock">{children}</div>}
             {/* Who last changed the stock, under the jar lines and above the actions. */}

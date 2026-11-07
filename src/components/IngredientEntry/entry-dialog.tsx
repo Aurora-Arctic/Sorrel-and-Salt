@@ -17,7 +17,6 @@ import type { EditableEntry, IngredientEntryEdit } from './types';
 // form's handlers are functions. Always rendered, so a press's skeleton and the form are one dialog
 // (claude-docs/components/ingredient-entry.md, "The details modal").
 
-/** A compendium entry's public page: also where a near match or a linked substitute is opened. */
 const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;
 
 export default function EntryDialog({
@@ -31,7 +30,6 @@ export default function EntryDialog({
   const { navigate, refresh } = usePendingNavigation();
   const announce = useAnnounce();
   const { opened, closeHref, deletedHref, savedHref, coven, review, sourcing } = edit;
-  // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
   if (loading === ANNOTATE_HEADING.title && !opened) {
     return null;
@@ -67,12 +65,10 @@ export default function EntryDialog({
                   refresh();
                 }}
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
-                // Only a compendium entry has a page by its slug.
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
               />
             ) : (
               <CompendiumEntryForm
-                // A fresh form per entry, inside the one modal.
                 key={opened.id}
                 review={review}
                 sourcing={sourcing}
@@ -87,7 +83,6 @@ export default function EntryDialog({
                   });
                   refresh();
                 }}
-                // An autosave moves the address as Save does, but the dialog stays open.
                 onAutosaved={(saved) => {
                   if (!savedHref) {
                     navigate(`${publicAddress(saved.slug)}?edit` as Route, {
@@ -100,8 +95,6 @@ export default function EntryDialog({
                 // Not `done`, which would go back to this page: it is gone.
                 onDeleted={() => navigate(deletedHref, { replace: true, scroll: false })}
                 duplicateHref={({ slug }) => publicAddress(slug)}
-                // A linked substitute's summary opens its entry in a new tab, every substitute here
-                // being a compendium entry.
                 entryHref={({ slug }) => publicAddress(slug)}
               />
             ),

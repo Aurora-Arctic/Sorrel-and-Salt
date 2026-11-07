@@ -19,9 +19,7 @@ export default function StockSection({
   stock: EntryStock;
   variants: readonly VariantDetail[];
   ingredientId: string;
-  /** The entry as the coven calls it, the formal name after: the dialog's button and title. */
   name: string;
-  /** The entry's formal name, which the shelf's vessels are drawn from; `null` for none, and then its id is used. */
   formalName: string | null;
 }): ReactElement {
   const all = variants.map(({ variant: { id, form } }): ShelfForm => {
