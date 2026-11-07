@@ -36,10 +36,8 @@ export interface SignInMethodsProps {
 export type ProviderRowState = 'linked' | 'addable' | 'unavailable';
 
 /**
- * Whether a linked row offers Remove: `offered` while another method is
- * left and the session is fresh; `last` when it is the only method, which
- * the row says; `withheld` while the session is too old, which the list
- * says once above the rows.
+ * Whether a linked row offers Remove: `offered` while another method is left and the session is fresh; `last` when it
+ * is the only one; `withheld` while the session is too old.
  */
 export type ProviderRemoval = 'offered' | 'last' | 'withheld';
 

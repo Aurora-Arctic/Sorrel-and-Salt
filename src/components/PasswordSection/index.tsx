@@ -17,10 +17,8 @@ import { GENERIC_RESET_REQUEST_ERROR } from '../ForgotPasswordForm';
 import type { PasswordSectionProps } from './types';
 import './index.scss';
 
-// The account page's Password section. An account with a password changes it through Better Auth's
-// client, which asks for the current one; an account with providers alone sets a first one through
-// `setPassword`, as Better Auth's endpoint for that answers only on the server
-// (claude-docs/components/password-section.md).
+// The account page's Password section: change through Better Auth's client, or set a first password through
+// `setPassword`, as its endpoint for that answers only on the server (claude-docs/components/password-section.md).
 
 export const WRONG_CURRENT_PASSWORD = "That isn't your current password.";
 export const GENERIC_CHANGE_ERROR = "We couldn't change your password. Please try again.";

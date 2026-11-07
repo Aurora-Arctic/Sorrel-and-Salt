@@ -98,10 +98,8 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   const signInWith = async (providerId: ProviderId): Promise<string | undefined> => {
     setMessage(undefined);
     setSigningIn(providerId);
-    // errorCallbackURL carries `next` along: a failed attempt would otherwise
-    // lose the destination and land back at plain /sign-in. With no `next`,
-    // the callback lands the account by its role.
-    // A dropped connection throws rather than answering `error`; both say so.
+    // errorCallbackURL carries `next` along, so a failed attempt keeps the destination. A dropped connection throws rather
+    // than answering `error`; both say so.
     const result = await (async () => {
       try {
         return await signIn.social({ provider: providerId, ...socialSignInTarget(next) });

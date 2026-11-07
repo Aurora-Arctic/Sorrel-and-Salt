@@ -46,10 +46,8 @@ export function DiscordIcon(): ReactElement {
   );
 }
 
-// Meta's "Secondary Logo" asset (meta.com/brand/resources/facebook/logo): one path that
-// traces the circle's outer edge and the "f" together, so filling it white over a blue
-// backing circle leaves the "f" as a hole the blue shows through. The chip below supplies
-// that backing circle in Facebook's own blue.
+// Meta's "Secondary Logo" asset (meta.com/brand/resources/facebook/logo): one path tracing the circle and the "f"
+// together, so filled white over the blue chip below the "f" shows the blue through.
 export function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">
@@ -92,10 +90,8 @@ export function MicrosoftIcon(): ReactElement {
   );
 }
 
-// Every provider's mark by id, the one table SignInPanel's buttons and the ProviderMark
-// circle both read, so a provider added to `ProviderId` fails to compile until it has one.
-// Facebook's two forms are a prop rather than two entries, since only the ground it sits on
-// differs.
+// Every provider's mark by id, read by SignInPanel's buttons and the ProviderMark circle, so a provider added to
+// `ProviderId` fails to compile until it has one.
 export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
   google: GoogleIcon,
   discord: DiscordIcon,

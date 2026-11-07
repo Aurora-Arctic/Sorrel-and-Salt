@@ -22,10 +22,8 @@ export interface SentenceParts {
 }
 
 /**
- * `buildSearchSentence` writes "12 ingredients, matching rue, in the ... ": every
- * clause comes after a comma, the search term's too. The closed line reads "12 ingredients
- * matching rue" with no comma, so the sentence is taken apart here and the commas that
- * join the clauses are kept for the tail only.
+ * `buildSearchSentence` puts a comma before every clause, the search term's too; the closed line has none. The
+ * sentence is taken apart here and the joining commas kept for the tail only.
  */
 export function sentenceParts(
   fragments: readonly SearchSentenceFragment[],

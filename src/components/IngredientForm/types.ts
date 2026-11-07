@@ -213,11 +213,9 @@ export interface ReferenceLink extends ShortCitationFields {
 }
 
 /**
- * One reference: the source's citation, which the row is described
- * by and is never sent, the source it links, and the locator typed beside
- * it, "p. 112". On the compendium's form, also how the source names the
- * ingredient (`''` until chosen) and the fields it supports; a coven's
- * form leaves both empty, as a coven's citation carries neither.
+ * One reference: the source's citation (described by, never sent), the source it links, and the locator typed beside
+ * it, "p. 112". On the compendium's form, also how the source names the ingredient (`''` until chosen) and the fields
+ * it supports; a coven's form leaves both empty.
  */
 export interface ReferenceListEntry extends ListEntry {
   link: ReferenceLink;

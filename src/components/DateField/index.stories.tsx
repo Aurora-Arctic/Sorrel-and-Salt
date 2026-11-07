@@ -59,10 +59,8 @@ const Field = ({
   );
 };
 
-// The two open calendars come last, so each floats below its own cell with nothing beneath it.
-// With Max is open on the days that cannot be chosen: those after the 24th are faded and refused,
-// and the next-month step is faded too, stopped at October. With Min opens on its month, the days
-// before it faded and refused.
+// The two open calendars come last, so each floats below its own cell with nothing beneath it. With Max is open on
+// days that cannot be chosen (faded and refused, the next-month step stopped at October); With Min opens on its month.
 export const States: Story = {
   render: () => (
     <StatesGrid

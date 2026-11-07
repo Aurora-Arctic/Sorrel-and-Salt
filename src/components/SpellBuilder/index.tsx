@@ -63,10 +63,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// The spell builder: a spell's title, intent, jar and note in four folding sections, inside the
-// dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and Close saves first
-// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "The builder's sections and
-// autosave")
+// The spell builder: four folding sections inside the dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and
+// Close saves first (./save-on-close.ts) (claude-docs/components/spell-builder.md, "The builder's sections and autosave").
 
 /** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
 const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
@@ -104,9 +102,7 @@ const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
 /**
- * A value as its shut section's line reads it, blank for none: the
- * categories by name, as the picker's chips read (`named`), each once the
- * categories are read, so the line never shows an id; the steps as a count
+ * A value as its shut section's line reads it, blank for none: categories by name, never an id; the steps as a count
  * of the ingredients laid.
  */
 function lineOfField(
@@ -382,10 +378,8 @@ const SpellBuilder = ({
   };
 
   /**
-   * What a save answered is the form's new start: Save goes off until the next
-   * change. The values stay as they are, so what was typed while the save was
-   * in flight is not lost and reads as the next change. A step this save
-   * created takes its new id, or the next save would create it again.
+   * What a save answered is the form's new start: Save goes off until the next change. The values stay, so what was typed
+   * mid-save reads as the next change; a step this save created takes its new id.
    */
   const rebase = (answer: SpellBuilderSpell, sent: SpellBuilderValues) => {
     reset(
@@ -423,10 +417,8 @@ const SpellBuilder = ({
   };
 
   /**
-   * The one save every way in goes through (the autosave's, Save's, Close's,
-   * Mark Complete's and Share's): checked as the schema reads the form, then
-   * sent to the spell this builder holds, or created. A refusal lands beside
-   * its field, or above them all, and is thrown for the autosave to report.
+   * The one save every way in goes through (autosave, Save, Close, Mark Complete, Share): checked as the schema reads the
+   * form, then sent or created. A refusal lands beside its field and is thrown for the autosave to report.
    */
   const persist = async (sent: SpellBuilderValues, context: SaveContext): Promise<SaveResult> => {
     // The checks run on the form as it is now; the values sent are the ones the autosave handed

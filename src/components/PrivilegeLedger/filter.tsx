@@ -8,10 +8,8 @@ import { PRIVILEGE_CHANGES_PATH, privilegeLedgerHref } from './href';
 import { PRIVILEGES, PRIVILEGE_LABELS } from './privileges';
 import type { PrivilegeLedgerFilter, PrivilegeLedgerFilterProps } from './types';
 
-// The ledger's filter, in the shared `FilterForm`: the search text (part of the subject's name or
-// email) is held until the magnifier or Enter sends it. The Privilege dropdown applies as a choice
-// is picked, softly and from the first page, carrying the search along; before hydration the native
-// select submits, "All Privileges" as `privilege=`, read as no privilege.
+// The ledger's filter, in the shared `FilterForm`: the search is held until the magnifier or Enter, the Privilege
+// dropdown applies as picked. Before hydration the native select submits "All Privileges" as `privilege=`, read as none.
 const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactElement => {
   const query = filter.query ?? '';
   const [draftQuery, setDraftQuery] = useState(query);

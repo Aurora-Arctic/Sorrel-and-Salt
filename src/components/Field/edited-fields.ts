@@ -4,10 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { FieldValues, UseFormSubscribe } from 'react-hook-form';
 
 /**
- * The field paths the person has edited since the form (re)started, handed
- * down so a field can ask whether its error may be drawn (`errorShown`). Null
- * outside a form that tracks edits, where a field's error then waits only for
- * the field to be left.
+ * The field paths edited since the form (re)started, so a field can ask whether its error may be drawn (`errorShown`).
+ * Null outside a form that tracks edits, where an error waits only for the field to be left.
  */
 export const EditedFieldsContext = createContext<ReadonlySet<string> | null>(null);
 

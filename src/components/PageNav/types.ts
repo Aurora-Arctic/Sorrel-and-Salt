@@ -9,10 +9,8 @@ export type PageNavEntry = {
    */
   group?: string;
   /**
-   * Set apart from the entries above it: the clear break a group label takes, with a short
-   * rule halfway through it. On a top-level entry it also takes the size of a group's
-   * entries, for a closing entry such as an ingredient's References with no sources. A group
-   * takes it from its first entry, so the rest of the group's entries need not repeat it.
+   * Set apart from the entries above it with a short rule. On a top-level entry it also takes a group's entry size; a
+   * group takes it from its first entry.
    */
   apart?: boolean;
   /**

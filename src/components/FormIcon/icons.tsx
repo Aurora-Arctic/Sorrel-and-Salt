@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The form icons, on the section nav's conventions: a 24-unit square, a 1.6 stroke with round ends, no
-// fill, in `currentColor` (claude-docs/components/form-icon.md, "The icons").
+// The form icons, on the section nav's conventions: 24-unit square, 1.6 round stroke, no fill, `currentColor`
+// (claude-docs/components/form-icon.md, "The icons").
 /**
  * Scales a drawing about (12, 12), the stroke scaled back to 1.6; the sprig and drop are drawn smaller,
  * so each scale matches the others' area.

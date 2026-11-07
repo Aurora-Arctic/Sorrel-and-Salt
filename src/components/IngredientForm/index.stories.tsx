@@ -42,10 +42,8 @@ import type {
 } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
-// Render-only; behaviour is asserted in tests/components/IngredientForm. The fake
-// API (.storybook/mock-api.ts) answers lookups with the invented rows below,
-// filtered by what was typed, and a save after a pause. "What to try" above the
-// form says what to type. The query client comes from .storybook/preview.tsx.
+// Render-only; behaviour is asserted in tests/components/IngredientForm. The fake API (.storybook/mock-api.ts) answers
+// lookups with the invented rows below and a save after a pause. "What to try" above the form says what to type.
 const meta = {
   title: 'Ingredients / Ingredient Form',
   // Every story is answered from the rows below, and the one that shows a wait

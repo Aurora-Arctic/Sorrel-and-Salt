@@ -38,10 +38,8 @@ const INVITE_LABEL = 'Invite';
 const INVITE_TITLE = 'Invite Someone';
 
 /**
- * The form inside the modal, so its guard over unsaved changes reaches the
- * modal's Close button, Escape and backdrop (claude-docs/components/modal.md,
- * "Unsaved changes"). Once the invitation is sent it shows the confirmation in
- * place of the form, so the same invitation cannot be sent twice from here.
+ * The form inside the modal, so its guard over unsaved changes reaches Close, Escape and the backdrop
+ * (claude-docs/components/modal.md, "Unsaved changes"). Once sent it shows the confirmation in place of the form.
  */
 const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement => {
   const { refresh } = usePendingNavigation();

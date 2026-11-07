@@ -10,10 +10,8 @@ import type { PublicFrameProps } from './types';
 import '../AppShell/index.scss';
 import './index.scss';
 
-// The frame round a public page for a signed-out visitor: skip link, site name, a nav of the
-// Compendium and the way in, and the page; a signed-in visitor gets `AppShell` instead. A server
-// component whose nav is the shell's `SiteNav`, so the chrome is in the HTML a crawler receives;
-// the body is the shell's `MainBody`. claude-docs/components/public-frame.md.
+// The frame round a public page for a signed-out visitor; a signed-in visitor gets `AppShell` instead. A server
+// component, so the nav is in the HTML a crawler receives (claude-docs/components/public-frame.md).
 
 // The one link the public bar holds; the shell's `SiteNav` draws it.
 const COMPENDIUM_LINK: readonly SiteLink[] = [

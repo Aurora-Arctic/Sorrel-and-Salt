@@ -48,10 +48,8 @@ import { draftOf, sourceTierOf } from './values';
 // text is a search and never an entry: the last row, "New Reference", opens the panel.
 
 /**
- * What the form holds of a source: its id and tier, its full citation, and the fields its short
- * form is made from. One fragment for the search and the panel's two saves. Defined before its
- * first use, as codegen reads the documents in order. Called bare: codegen reads the text, and the
- * queries spread it by name.
+ * What the form holds of a source: its id and tier, full citation, and the fields its short form is made from. Defined
+ * before its first use and called bare, as codegen reads the documents in order and reads the text.
  */
 graphql(`
   fragment ReferenceRow on Reference {

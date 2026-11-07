@@ -12,10 +12,8 @@ import GrimoireList from '.';
 import { GRIMOIRE_PARAMS } from './params';
 import type { GrimoireFacets, GrimoireListFilter, GrimoireListProps, GrimoireSpell } from './types';
 
-// Render-only; behaviour is asserted in tests/components/GrimoireList. The filter and the pager
-// navigate to /coven/<slug>/grimoire, which the workshop does not serve. Each state is the tab as
-// src/app/(shell)/coven/[slug]/grimoire/(list) draws it: the Grimoire heading with New Spell, the
-// Spells and Drafts tabs, and the list.
+// Render-only; behaviour is asserted in tests/components/GrimoireList. The filter and the pager navigate to a route the
+// workshop does not serve. Each state is the tab as src/app/(shell)/coven/[slug]/grimoire/(list) draws it.
 const meta = {
   title: 'Grimoire / Grimoire List',
 } satisfies Meta;

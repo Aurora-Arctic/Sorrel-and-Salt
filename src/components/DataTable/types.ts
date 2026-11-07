@@ -11,10 +11,8 @@ export interface StackColumn<Row> {
   /** The column heading, title case, and its cells' label at phone width. */
   heading: string;
   /**
-   * An action's column — Edit, Impersonate, Revoke — whose cells carry no
-   * label and span the card. `'corner'` also stands the cell at the card's
-   * top right, beside the first line (`.data-table__card-action`); `'foot'`
-   * leaves it across the card's foot.
+   * An action's column (Edit, Impersonate, Revoke) whose cells carry no label and span the card. `'corner'` also stands
+   * the cell at the card's top right (`.data-table__card-action`); `'foot'` leaves it across the card's foot.
    */
   action?: 'corner' | 'foot';
   /** The heading drawn for a screen reader alone, as a pencil's column is: "Edit". */

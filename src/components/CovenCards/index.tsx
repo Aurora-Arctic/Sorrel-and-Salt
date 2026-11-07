@@ -11,9 +11,8 @@ import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
-// A coven's Ingredients list, the twin of CompendiumCards: the filter row in coven mode, compact cards
-// linking to the entry's page in the coven, and the pager. Render-only. The foot holds Edit or Annotate
-// for a role that may update, and More (`card-more.tsx`) (claude-docs/components/coven-cards.md).
+// A coven's Ingredients list, the twin of CompendiumCards: the filter row in coven mode, compact cards and the pager.
+// Render-only. The foot holds Edit or Annotate and More (`card-more.tsx`) (claude-docs/components/coven-cards.md).
 // The wrapper's `data-density` draws the loading skeleton compact, as the cards are.
 
 const CovenCards = ({

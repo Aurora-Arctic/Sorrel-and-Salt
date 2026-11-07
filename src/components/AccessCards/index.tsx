@@ -4,10 +4,8 @@ import { ChevronIcon } from '../IconTip/icons';
 import type { AccessCardsProps, AccessMark } from './types';
 import './index.scss';
 
-// Who may see each kind of data, as one card per kind: its summary line carries a mark per role,
-// and opening it shows every role's full wording. A row of role labels over the cards shares the
-// cards' columns and pins under the bar while they scroll past, each label tipped with its role's
-// full name. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).
+// Who may see each kind of data: one card per kind, a mark per role on its summary line, and a role row over the
+// cards that pins under the bar. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).
 
 const MARK_WORD: Record<AccessMark, string> = { yes: 'Yes', part: 'In Part', no: 'No' };
 

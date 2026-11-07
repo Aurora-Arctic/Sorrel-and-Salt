@@ -18,21 +18,15 @@ import { ChevronIcon } from '../IconTip/icons';
 import SectionIcon from './icons';
 import type { SectionNavItem, SectionNavProps } from './types';
 
-// The nav itself, the one client part: only `usePathname()` reads the address,
-// and the More button, its dismissal and the on-screen keyboard are state in
-// the browser. The list is the server's, passed in as plain data
-// (claude-docs/components/section-nav.md).
+// The nav itself, the one client part: `usePathname()`, the More button and the on-screen keyboard are browser state.
+// The list is the server's, passed as plain data (claude-docs/components/section-nav.md).
 
-// How many sections stay in view on a phone, and what the server and the first client render
-// show; the stylesheet's `--extra` class hides the rest, so the number lives here once. Wider
-// than the phone a measured count replaces it, and until that is known the stylesheet shows
-// every tab (`index.scss`).
+// How many sections stay in view on a phone, and what the server and first client render show; the stylesheet's
+// `--extra` class hides the rest, so the number lives here once.
 const VISIBLE = 4;
 
-// Wider than the phone (`$shell-phone-width`, 40rem; `_variables.scss`): the
-// number of tabs that fit is measured rather than fixed, since the lead and
-// the labelled tabs outrun the context row at many widths, the desktop's
-// among them. On the phone the bar keeps its fixed four.
+// Wider than the phone (`$shell-phone-width`; `_variables.scss`) the number of tabs that fit is measured, not fixed.
+// On the phone the bar keeps its fixed four.
 const TABLET_BAND = '(min-width: 40.01rem)';
 const subscribeToBand = (notify: () => void): (() => void) => {
   if (typeof window.matchMedia !== 'function') return () => undefined;
@@ -46,10 +40,8 @@ const inTabletBandNever = (): boolean => false;
 
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
-// What is measured of the row with every tab showing: each tab's width with
-// its margin, which tab is the current page's and its width without the
-// margin, the gap between tabs, More's own width, the gap inside its button
-// and its chevron's.
+// What is measured of the row with every tab showing: tab widths, the current tab, the gaps, More's width and its
+// chevron's.
 type Natural = {
   widths: number[];
   // -1 when no tab is the current page's.
@@ -105,10 +97,8 @@ const countThatFit = (
 const isCurrent = (pathname: string, { href, exact, matches = [] }: SectionNavItem): boolean =>
   exact ? pathname === href : [href, ...matches].some((each) => isAtPath(pathname, each));
 
-// A browser without a visual viewport has no keyboard to answer to. The on-screen keyboard is
-// up when it has taken a quarter of the window: the visual viewport shrinks, the layout
-// viewport does not, which is how a fixed bar ends up sitting on top of the keyboard.
-// Subscribed as an external store so the server and the first client render agree (no keyboard).
+// The on-screen keyboard is up when it has taken a quarter of the window: the visual viewport shrinks, the layout
+// viewport does not. Subscribed as an external store so the server and first client render agree (no keyboard).
 const subscribeToKeyboard = (notify: () => void): (() => void) => {
   const viewport = window.visualViewport;
   viewport?.addEventListener('resize', notify);
@@ -184,10 +174,8 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
     };
   }, [tablet, refit]);
 
-  // While measuring, More is drawn whenever there is more than one section, so
-  // its width and chevron are measured even where every tab will fit; that
-  // render is never painted. With one section there is nothing to tuck away,
-  // so at least one tab stays out of More and `extras` stays empty.
+  // While measuring, More is drawn whenever there is more than one section, so its width is measured; that render is
+  // never painted. With one section at least one tab stays out of More.
   const extras = sections.slice(
     measuring ? Math.max(1, Math.min(VISIBLE, sections.length - 1)) : count,
   );

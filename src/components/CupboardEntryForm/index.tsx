@@ -40,10 +40,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// The coven's override form for a compendium entry it holds: seven fields, each with a "Restore
-// Original", on react-hook-form. Null (the compendium's) and an empty list (cleared) are told apart in
-// `changes.ts` (claude-docs/components/cupboard-entry-form.md). It saves as it is edited, the way the
-// ingredient form does (claude-docs/components/autosave.md).
+// The coven's override form for a compendium entry it holds: seven fields, each with a "Restore Original". Null (the
+// compendium's) and an empty list (cleared) are told apart in `changes.ts`; it saves as it is edited
+// (claude-docs/components/cupboard-entry-form.md, claude-docs/autosave.md).
 
 const AnnotateCupboardEntryDocument = graphql(`
   mutation AnnotateCupboardEntry(

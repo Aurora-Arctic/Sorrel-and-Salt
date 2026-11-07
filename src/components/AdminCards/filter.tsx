@@ -11,10 +11,9 @@ import { FacetShell } from '../FacetPanel/shell';
 import { CARDS_PATH, cardsHref } from './href';
 import type { CardsFilter, CardsFilterProps } from './types';
 
-// The Cards tab's filter: the batch search in the row and the Filters (n) drawer holding the
-// status and the minted and expiry ranges on one line, as the grimoire's filter holds its facets. What the drawer holds
-// applies in one navigation when it shuts; a range field has no name, so two hidden inputs carry it
-// for the native submit before hydration (claude-docs/components/admin-cards.md).
+// The Cards tab's filter: a batch search in the row and a Filters (n) drawer applied in one navigation when it shuts.
+// A range field has no name, so two hidden inputs carry it for the native submit before hydration
+// (claude-docs/components/admin-cards.md).
 
 // Title case, as an option is a label; the table's cells keep `STATUS_LABEL`'s sentence case.
 const STATUS_OPTIONS: { value: CardsFilter['status']; label: string }[] = [

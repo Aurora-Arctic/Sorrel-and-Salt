@@ -87,10 +87,8 @@ const failedNode = (
 // Local dev with one registered pair: the rest cannot be added.
 const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />;
 
-// The whole /account page (a server component with no story of its own), composed
-// as page.tsx composes it: heading, jump links (PageNav), then four panels, with
-// Invitations empty. The `page-with-nav` class lays the sections out in two columns
-// on a wide screen. Sign Out is only in the account menu.
+// The whole /account page (a server component with no story of its own), composed as page.tsx composes it, with
+// Invitations empty. Sign Out is only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
@@ -171,10 +169,8 @@ export const PendingAdd: Story = {
   },
 };
 
-// Remove pressed on Microsoft, then the red Remove in the Remove Sign-In Method
-// question, as a person would: the fake API refuses /api/auth, so the question
-// closes and the removal fails into its callout under Remove Microsoft, with the
-// badge on the button (claude-docs/components/click-feedback.md).
+// Remove pressed on Microsoft, then the red Remove in its question: the fake API refuses /api/auth, so the removal
+// fails into its callout (claude-docs/components/click-feedback.md).
 export const FailedRemove: Story = {
   tags: ['expects-failed-request'],
   beforeEach: ({ msw }) => msw.use(refuseAuth()),

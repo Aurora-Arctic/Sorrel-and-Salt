@@ -22,10 +22,8 @@ import './index.scss';
 import { DeleteWorkingQuestion } from '../SpellWorkings/delete-working';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 
-// The form inside the Record a Working dialog, which records a draft working of a complete spell or
-// changes one the caller recorded. Inside the modal so its discard guard reaches the modal's Close,
-// Escape and backdrop. Save closes it and the page behind shows the draft; Complete goes on to the
-// deduction preview (claude-docs/components/record-working.md).
+// The form inside the Record a Working dialog. Inside the modal so its discard guard reaches Close, Escape and the
+// backdrop (claude-docs/components/record-working.md).
 
 const RecordWorkingDocument = graphql(`
   mutation RecordWorking($workspaceId: ID!, $spellId: ID!, $input: WorkingInput!) {

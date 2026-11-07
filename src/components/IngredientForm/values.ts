@@ -458,10 +458,9 @@ export const renamedTo = ({ form, formLink }: RenamedFormHolder): string | undef
   formLink && fold(formLink.name) !== fold(form) ? formLink.name : undefined;
 
 /**
- * Whether the form holds something a save would refuse and that is only unfinished: no name yet,
- * text in a list's box or an open reference panel, a form with no name, a named classification with no formal
- * name, and on the compendium no classification or a typed form not picked. The autosave waits
- * on these quietly, where Save says what is wrong.
+ * Whether the form holds something a save would refuse that is only unfinished: no name yet, text in a list's box or
+ * an open reference panel, a named classification with no formal name, and on the compendium no classification or a
+ * typed form not picked. The autosave waits on these quietly, where Save says what is wrong.
  */
 export function heldBack(values: IngredientFormValues, compendium: boolean): boolean {
   const boxed = (drafts: Partial<Record<string, string>>, panelOpen: boolean): boolean =>

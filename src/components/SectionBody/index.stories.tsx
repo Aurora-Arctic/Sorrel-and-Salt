@@ -46,9 +46,7 @@ const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): 
   );
 };
 
-// Resting is the page itself. The rest are a wait, each in the skeleton of the
-// destination it names: the coven's Ingredients (with and without an Add action),
-// Members, Overview, an ingredient's page, and the admin index. The account page
+// Resting is the page itself. The rest are a wait, each in the skeleton of the destination it names. The account page
 // is aimed at the shell's body, not this one: see Main Body.
 const STATES: Record<string, ReactNode> = {
   Resting,

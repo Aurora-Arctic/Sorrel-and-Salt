@@ -11,10 +11,8 @@ import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
-// A coven's members, one row each, drawn as the admin user list is: the stacking
-// `DataTable`, a card per member at phone width. Render-only, with no row actions: a name opens
-// the member's modal, which holds them, and the page decides what it offers there
-// (claude-docs/components/member-list.md).
+// A coven's members, one row each, drawn as the admin user list is. Render-only, with no row actions: a name opens the
+// member's modal (claude-docs/components/member-list.md).
 
 /**
  * The columns: name, address where asked, role, then joined, invited by, Updated and, where asked, a standing pause.

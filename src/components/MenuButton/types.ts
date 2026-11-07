@@ -27,10 +27,8 @@ export type MenuButtonItem = {
       onSelect: () => void;
       href?: never;
       /**
-       * Shown, and reached by the arrows, but not choosable: `aria-disabled`, as the APG
-       * menu pattern has a disabled item, drawn muted, and a press runs nothing and leaves
-       * the menu open. A coven that already holds the entry. An action only: a link that
-       * leads nowhere is not a link.
+       * Shown and reachable by the arrows but not choosable: `aria-disabled`, a press runs nothing and the menu stays
+       * open. An action only: a link that leads nowhere is not a link.
        */
       disabled?: boolean;
       /**
@@ -43,10 +41,8 @@ export type MenuButtonItem = {
 );
 
 /**
- * A labelled group of a menu's items, drawn under a small muted heading and set apart from the
- * next group by a rule: the compendium's choices and the coven's, in a More menu that offers
- * both. Generic over the item so the bar's Add Ingredient menu, which has its own items, draws
- * its groups the same way (`sections.tsx`).
+ * A labelled group of a menu's items, set apart by a heading and a rule. Generic over the item so the bar's Add
+ * Ingredient menu draws its groups the same way (`sections.tsx`).
  */
 export interface MenuSection<Item = MenuButtonItem> {
   /** Unique within the menu. */
@@ -69,10 +65,8 @@ export type MenuButtonChoices =
     }
   | {
       /**
-       * The same items in labelled groups, in the order to draw them: the caller puts first
-       * the group that belongs to where the viewer is, so the menu itself reads no address.
-       * The green item goes first within its own group. The arrows, Home and End run through
-       * every group's items as one list; the headings are not in it.
+       * The same items in labelled groups, in drawing order: the caller puts first the group that belongs to where the
+       * viewer is. The arrows, Home and End run through every group's items as one list; the headings are not in it.
        */
       sections: readonly MenuSection[];
       items?: never;

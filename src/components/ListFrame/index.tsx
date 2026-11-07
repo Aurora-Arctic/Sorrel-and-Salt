@@ -75,10 +75,8 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
       // A pager end keeps the reader at the list rather than Next's scroll to
       // the page top, which would bring the admin section menu back into view.
       keepPlace.current = way === 'page';
-      // The skeleton is far shorter than a page of cards, and a shorter document makes the
-      // browser pull the scroll position up. So the body keeps the height it had at the press
-      // while the page is on its way; the new page renders without it, so a short last page
-      // is not padded.
+      // The skeleton is far shorter than a page of cards, which would make the browser pull the scroll position up, so the
+      // body keeps the height it had at the press while the page is on its way. The new page renders without it.
       setHeldHeight(
         way === 'page'
           ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height
@@ -103,10 +101,8 @@ export function useListNavigation(): ListNavigation {
 }
 
 /**
- * The list under its filter, the table or its empty state and the pager, or
- * the tabs' skeleton in its place while another page is on its way: rows and
- * a pager, no filter row, since the real one stays. Swapped as a tab's
- * panel is (`Skeleton/swap-panel.tsx`).
+ * The list under its filter, or the tabs' skeleton in its place while another page is on its way (rows and a pager, no
+ * filter row, since the real one stays). Swapped as a tab's panel is (`Skeleton/swap-panel.tsx`).
  */
 export const ListBody = ({ shape, card, children }: ListBodyProps): ReactElement => {
   const { pending, heldHeight } = useListNavigation();

@@ -10,10 +10,8 @@ import MenuButton from '.';
 import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';
 
-// Render-only; keys and closing are asserted in tests/components/MenuButton/index.test.tsx.
-// The entry page's More menu (a link first, the destructive choice last), the
-// button busy, the Annotate dialog's More, opening above from a dialog's foot, and the compendium
-// card's plus, an icon button whose menu has its own name.
+// Render-only; keys and closing are asserted in tests/components/MenuButton/index.test.tsx. The states are the
+// menus the app draws: the entry page's More, busy, the Annotate dialog's More, and the compendium card's plus.
 const meta = {
   title: 'Forms / Menu Button',
 } satisfies Meta;

@@ -15,10 +15,8 @@ import { isoDay } from '../DateField/day';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
-// A day-range field: a button showing the range in short words, opening a calendar of two months
-// with quick picks beside it. The first day picked starts the range and the second ends it; one day
-// picked twice is a single day. The calendar is the day field's, in the same popover
-// (claude-docs/components/date-range-field.md).
+// A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
+// calendar is the day field's, in the same popover (claude-docs/components/date-range-field.md).
 
 // Below this width the calendar shows one month, as two side by side would not fit beside the picks.
 const NARROW = '(max-width: 47.9375rem)';

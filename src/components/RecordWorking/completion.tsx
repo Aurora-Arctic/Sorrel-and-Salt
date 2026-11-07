@@ -18,10 +18,8 @@ import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
 
-// The step before a working is completed: what completing it would take from each jar, read from
-// `workingDeductionPreview`, and a Mark Complete that runs `completeWorking`. The preview and the
-// completion share one plan on the server, so what is shown is what is taken
-// (claude-docs/components/record-working.md).
+// The step before a working is completed: the preview from `workingDeductionPreview`, then `completeWorking`. Both
+// share one plan on the server (claude-docs/components/record-working.md).
 
 export const WorkingDeductionPreviewDocument = graphql(`
   query WorkingDeductionPreview($workspaceId: ID!, $spellId: ID!) {

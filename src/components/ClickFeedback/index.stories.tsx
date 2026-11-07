@@ -88,10 +88,9 @@ const PinnedView = () => {
   );
 };
 
-// Every placement the badge and callout take. Each state but Resting presses its
-// button once drawn, so it opens on the refusal. Bordered: badge on the corner.
-// Borderless: badge beside the button. Near Right Edge: callout's end under the
-// control's end. Pinned: see PinnedView.
+// Every placement the badge and callout take. Each state but Resting presses its button once drawn, so it opens on
+// the refusal. Bordered: badge on the corner. Borderless: beside the button. Near Right Edge: callout's end under
+// the control's end. Pinned: see PinnedView.
 const STATES: Record<string, ReactNode> = {
   Resting: <Row />,
   Bordered: <Pressed name="Remove" />,

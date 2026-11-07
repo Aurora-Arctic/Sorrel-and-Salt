@@ -7,10 +7,8 @@ export const FIRST_FIELD =
   'input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled)';
 
 /**
- * Whether the field is shown: under no `hidden` ancestor, as a closed
- * section of the ingredient form keeps its fields, and laid out where the
- * browser can tell (happy-dom cannot, and lays nothing out). A `data-focus-skip`
- * wrapper marks a field the open never lands on, such as a switch at a form's foot.
+ * Whether the field is shown: under no `hidden` ancestor, and laid out where the browser can tell (happy-dom cannot).
+ * A `data-focus-skip` wrapper marks a field the open never lands on.
  */
 const isShown = (field: HTMLElement): boolean =>
   field.closest('[hidden]') === null &&

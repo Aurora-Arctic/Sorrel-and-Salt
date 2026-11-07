@@ -16,10 +16,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page
-// of the ledger through the identity service and hands it over
-// (claude-docs/components/privilege-ledger.md). The filter is `filter.tsx`, its one client
-// file.
+// `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page of the ledger through
+// the identity service (claude-docs/components/privilege-ledger.md).
 
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 

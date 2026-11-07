@@ -6,10 +6,8 @@ import { renderMarkdown } from './markdown';
 import type { DocumentPageProps } from './types';
 import './index.scss';
 
-// A public document: the privacy policy, the disclaimer, the code of ethics or the terms. The day the
-// text last changed above the title, as an ingredient entry's Last Edit line sits above its names,
-// then the document's own sections beside a jump menu. It reads no session and holds no application
-// data, so a signed-out visitor reads the same page a member does
+// A public document (privacy policy, disclaimer, code of ethics, terms) beside a jump menu. It reads no session and
+// holds no application data, so a signed-out visitor reads the same page a member does
 // (claude-docs/components/document-page.md).
 
 // The menu is read from the markdown's own `##` and `###` headings, so a heading is written once and

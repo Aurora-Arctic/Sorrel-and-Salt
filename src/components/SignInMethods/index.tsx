@@ -23,10 +23,8 @@ import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
-// The account page's list of the ways into this account: each roster provider, linked or addable,
-// removable while another is left, then the password and the passkeys, each linking to its section. Adding is Better Auth's /link-social, removing /unlink-account.
-// A session too old to remove one is offered a fresh sign-in in place of every Remove. The heading
-// and intro are the page's (claude-docs/components/sign-in-methods.md).
+// The account page's list of the ways into this account. A session too old to remove one is offered a fresh sign-in in
+// place of every Remove. The heading and intro are the page's (claude-docs/components/sign-in-methods.md).
 
 const SignInMethods = ({
   passwordHeld,
@@ -40,10 +38,8 @@ const SignInMethods = ({
   // Seeded from the server's list; a removal answers in place rather than
   // reloading the page.
   const [accounts, setAccounts] = useState(linked);
-  // The server-rendered callback error, which no press here raised, so it is
-  // a `Notice` rather than a click's callout; any press here clears it. A
-  // press's own failure goes in a callout under its control, which each row
-  // keeps (claude-docs/components/click-feedback.md).
+  // The server-rendered callback error, which no press here raised, so a `Notice` rather than a click's callout; any
+  // press here clears it (claude-docs/components/click-feedback.md).
   const [alert, setAlert] = useState<SignInMethodError | undefined>(error);
   const [pending, setPending] = useState<string>();
   const announce = useAnnounce();

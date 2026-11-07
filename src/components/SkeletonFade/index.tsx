@@ -10,10 +10,8 @@ import './index.scss';
 // (claude-docs/components/skeleton-fade.md, "The fade out").
 
 /**
- * The skeleton to keep over the page for the length of its fade-out, or null.
- * Pass the skeleton while a wait is on and null when it is not. A wait that
- * showed no skeleton (a refresh) leaves nothing to fade, and a new wait
- * starting mid-fade takes it back at once.
+ * The skeleton to keep over the page for its fade-out, or null. Pass null when no wait is on; a wait that showed no
+ * skeleton leaves nothing to fade, and a new wait mid-fade takes it back at once.
  */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
   const [kept, setKept] = useState<ReactElement | null>(null);
