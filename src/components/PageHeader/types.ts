@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 export interface PageHeaderProps {
   /** The page's `h1`, title case, and what its tab title says too. */
   title: string;
+  /** The heading element, `h1` unless the page already has its `h1` above this head. */
+  level?: 'h1' | 'h2';
   /** The `h1`'s id, for a landmark or an article that takes the heading as its name. */
   id?: string;
   /**

@@ -27,8 +27,8 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     );
     const links: string[] = [];
 
-    const welcome = page.getByRole('heading', { name: 'Welcome to Sorrel & Salt' });
-    const betaTester = page.getByRole('heading', { name: "You're a Beta Tester" });
+    const welcome = page.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' });
+    const betaTester = page.getByRole('heading', { name: 'You’re Among the First' });
 
     await test.step('the admin mints a beta sheet of ten, downloads the PDF and sees one beta batch', async () => {
       await page.goto('/keepers/invitation-cards');
@@ -77,7 +77,11 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.goto(links[2]);
       await expect(welcome).toBeVisible();
       await expect(betaTester).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'Your Invitation' })).toBeVisible();
       await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
+      await page.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Contact Support' })).toBeVisible();
+      await expect(page).toHaveURL(/\/i\/[^/?]+\?support=$/);
     });
 
     await test.step('an unverified account opening the other card is sent to confirm its email', async () => {
@@ -172,9 +176,9 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const visitor = await browser.newPage();
       await visitor.goto(plain!);
       await expect(
-        visitor.getByRole('heading', { name: 'Welcome to Sorrel & Salt' }),
+        visitor.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
       ).toBeVisible();
-      await expect(visitor.getByRole('heading', { name: "You're a Beta Tester" })).toHaveCount(0);
+      await expect(visitor.getByRole('heading', { name: 'You’re Among the First' })).toHaveCount(0);
       await visitor.close();
     });
   });

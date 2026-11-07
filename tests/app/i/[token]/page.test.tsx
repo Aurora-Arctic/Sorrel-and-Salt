@@ -6,10 +6,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const liveCardOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ liveCardOf }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/i/betatoken',
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock('@/app/invite/[token]/invitation-panel', () => ({
   default: () => <p>accept panel</p>,
 }));
 
+const { supportHref } = await import('@/lib/support-path');
 const { default: CardPage } = await import('@/app/i/[token]/page');
 
 const renderFor = async (token: string) =>
@@ -20,15 +25,21 @@ beforeEach(() => {
 });
 
 describe('the card landing page', () => {
-  it('welcomes the holder of a beta card, and says they are a beta tester', async () => {
+  it('welcomes the holder of a beta card, and says they are among the first', async () => {
     liveCardOf.mockResolvedValue({ beta: true });
 
     await renderFor('betatoken');
 
     expect(liveCardOf).toHaveBeenCalledWith('betatoken');
-    expect(screen.getByRole('heading', { name: 'Welcome to Sorrel & Salt' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: "You're a Beta Tester" })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Support page' })).toHaveAttribute('href', '/support');
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'You’re Among the First' })).toBeInTheDocument();
+    // The link opens the Support dialog over this page rather than leaving it.
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
+      'href',
+      supportHref('/i/betatoken', new URLSearchParams()),
+    );
     expect(screen.getByText('accept panel')).toBeInTheDocument();
   });
 
@@ -37,8 +48,10 @@ describe('the card landing page', () => {
 
     await renderFor('plaintoken');
 
-    expect(screen.getByRole('heading', { name: 'Welcome to Sorrel & Salt' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: "You're a Beta Tester" })).toBeNull();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'You’re Among the First' })).toBeNull();
   });
 
   // The service answers null for a revoked, expired, accepted or unknown token (invitation-cards.test.ts).
@@ -47,8 +60,10 @@ describe('the card landing page', () => {
 
     await renderFor('deadtoken');
 
-    expect(screen.queryByRole('heading', { name: 'Welcome to Sorrel & Salt' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: "You're a Beta Tester" })).toBeNull();
+    expect(
+      screen.queryByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
+    ).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'You’re Among the First' })).toBeNull();
     expect(screen.getByText('accept panel')).toBeInTheDocument();
   });
 });

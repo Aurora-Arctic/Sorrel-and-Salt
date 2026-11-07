@@ -161,7 +161,7 @@ test("a beta card's landing page has no violations, and no sideways scroll on a 
   const context = await browser.newContext();
   const visitor = await context.newPage();
   await visitor.goto(link!);
-  await expect(visitor.getByRole('heading', { name: "You're a Beta Tester" })).toBeVisible();
+  await expect(visitor.getByRole('heading', { name: 'You’re Among the First' })).toBeVisible();
   await assertNoAccessibilityViolations(visitor);
   await assertNoSidewaysScroll(visitor);
   await assertNoAccessibilityViolations(visitor);
