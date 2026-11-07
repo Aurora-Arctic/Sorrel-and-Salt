@@ -13,8 +13,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// The create-workspace page's form. MSW answers the mutation in the shape /api/graphql answers, so a refusal is read through the route's own error mapping.
-// That the service refuses a user without the right is tests/modules/coven/services/workspace-creation.test.ts's.
+// MSW answers the mutation in /api/graphql's shape, so a refusal is read through the route's own error mapping.
 
 function renderForm(ui: ReactNode = <CreateWorkspaceForm />) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -24,7 +23,6 @@ const nameField = () => screen.getByRole('textbox', { name: 'Name' });
 const create = () => screen.getByRole('button', { name: /^Creat/ });
 const submit = () => fireEvent.submit(create().closest('form') as HTMLFormElement);
 
-/** Answers `CreateWorkspace` as the service would: a slug from the trimmed name. */
 function acceptCreate(slug = 'fixture-coven') {
   const calls: CreateWorkspaceMutationVariables[] = [];
   mockGraphQLMutation<CreateWorkspaceMutation, CreateWorkspaceMutationVariables>(
@@ -43,7 +41,6 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
-  // Its label says it; a tip restating it went.
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
@@ -128,10 +125,7 @@ describe('CreateWorkspaceForm', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  // Leaving with a name typed: the page sits in the site's
-  // NavigationProvider, as the providers put it.
   describe('guarding a typed name', () => {
-    /** A link elsewhere on the page, as the site menu is. */
     function Go() {
       const navigation = usePendingNavigation();
       return (
@@ -150,7 +144,6 @@ describe('CreateWorkspaceForm', () => {
       );
     }
 
-    /** A tab close or reload as the browser raises it: true when something cancelled it. */
     function unload(): boolean {
       const event = new Event('beforeunload', { cancelable: true });
       window.dispatchEvent(event);
@@ -160,9 +153,7 @@ describe('CreateWorkspaceForm', () => {
     const link = () => screen.getByRole('button', { name: 'Compendium' });
     const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
 
-    // The guard's shape (Keep Editing, Discard Changes, a dialog outside the
-    // form) is proved once at tests/components/Modal/discard.test.tsx; this is
-    // the form's wiring of it.
+    // The guard's shape is proved at tests/components/Modal/discard.test.tsx; this is the form's wiring.
     it('holds a link and a tab close once a name is typed', () => {
       renderOnPage();
       fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });

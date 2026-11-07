@@ -14,11 +14,8 @@ export default function EditWorkingAction({
   canDelete = false,
   ...dialog
 }: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & {
-  /** What the row is called to a reader: the day it was worked. */
   name: string;
-  /** The pencil in the text ink, not the accent green. */
   plain?: boolean;
-  /** The viewer may delete the working: the dialog draws Delete Working. */
   canDelete?: boolean;
 }): ReactElement {
   const [open, setOpen] = useState(false);

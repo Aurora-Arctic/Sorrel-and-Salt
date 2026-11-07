@@ -40,10 +40,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// The coven's override form for a compendium entry it holds: seven fields, each with a "Restore
-// Original", on react-hook-form. Null (the compendium's) and an empty list (cleared) are told apart in
-// `changes.ts` (claude-docs/components/cupboard-entry-form.md). It saves as it is edited, the way the
-// ingredient form does (claude-docs/components/autosave.md).
+// The coven's override form for a compendium entry it holds: seven fields, each with a "Restore Original". Null (the
+// compendium's) and an empty list (cleared) are told apart in `changes.ts`; it saves as it is edited
+// (claude-docs/components/cupboard-entry-form.md, claude-docs/autosave.md).
 
 const AnnotateCupboardEntryDocument = graphql(`
   mutation AnnotateCupboardEntry(
@@ -64,8 +63,8 @@ const AnnotateCupboardEntryDocument = graphql(`
   }
 `);
 
-// A field keeps a tip only for a rule its label does not say (info-tip.md, "When a
-// field gets a tip"): Label's uniqueness, and the lists' "empty says none".
+// A field keeps a tip only for a rule its label does not say (claude-docs/components/info-tip.md,
+// "When a field gets a tip").
 const TEXT: Record<TextField, { label: string; hint?: string; placeholder: string }> = {
   label: {
     label: 'Label',
@@ -82,14 +81,9 @@ const TEXT: Record<TextField, { label: string; hint?: string; placeholder: strin
   },
 };
 
-/**
- * A list's tip, one wording for all four: the list is the coven's own, and an emptied one says the
- * entry has none. Colours adds that a colour is what it corresponds to in a working.
- */
 const listHint = (things: string, how = ''): string =>
   `The ${things} your coven ties it to${how}, in place of the Compendium's. An empty list says it has none.`;
 
-/** Where a server refusal lands: the field's own place, or a list's entry or typing box. */
 const placeOf = (
   path: readonly (string | number)[],
 ): { field: CupboardField; at?: number } | undefined => {
@@ -100,7 +94,6 @@ const placeOf = (
   return { field, at: typeof second === 'number' ? second : undefined };
 };
 
-/** Whether any list's typing box holds text. */
 const hasDrafts = (drafts: Record<string, string>): boolean =>
   Object.values(drafts).some((text) => text.trim() !== '');
 
@@ -120,7 +113,6 @@ const CupboardEntryForm = ({
   const { refresh } = usePendingNavigation();
   const form = useRef<HTMLFormElement>(null);
   const baseline = baselineOf(compendium);
-  // What the cupboard row holds now: the overrides the page read, then each save's own.
   const [overrides, setOverrides] = useState<CupboardOverrides>(opened);
   const overridesRef = useRef(overrides);
   const revisionRef = useRef<number | null>(revision);
@@ -133,8 +125,6 @@ const CupboardEntryForm = ({
   const [alert, setAlert] = useState<string>();
 
   const values = fromForm(useWatch({ control }) as CupboardFormValues);
-  // A field stays handed back only while it still holds the compendium's: a
-  // new answer, or an undo, ends it.
   const handed = new Set([...handedBack].filter((field) => !differs(field, values, baseline)));
   const changes = changesOf(values, baseline, overrides, handed);
   const dirty = Object.keys(changes).length > 0;
@@ -157,7 +147,6 @@ const CupboardEntryForm = ({
       }),
   });
 
-  /** Puts a refusal beside its field, or in the alert when it names none. */
   const placeRefusal = (error: unknown): void => {
     const unplaced: string[] = [];
     let placed = 0;
@@ -178,9 +167,9 @@ const CupboardEntryForm = ({
   };
 
   /**
-   * The one save the autosave, Save and Close go through. It writes against the revision the server
-   * last answered with; only Keep My Version names another. A refusal lands beside its field and is
-   * thrown for the autosave to report.
+   * The one save the autosave, Save and Close go through. It writes against the revision the
+   * server last answered with; only Keep My Version names another. A refusal is thrown for the
+   * autosave to report.
    */
   const persist = async (sent: CupboardChanges, context: SaveContext): Promise<SaveResult> => {
     setAlert(undefined);
@@ -197,7 +186,6 @@ const CupboardEntryForm = ({
       throw error;
     }
     revisionRef.current = answer.annotateCupboardEntry.revision;
-    // A null hands the field back to the compendium, which is what the row now holds.
     overridesRef.current = { ...overridesRef.current, ...sent } as CupboardOverrides;
     setOverrides(overridesRef.current);
     refresh();
@@ -218,8 +206,8 @@ const CupboardEntryForm = ({
   });
 
   /**
-   * Everything typed is on the server, or this throws: the pending autosave first, then any text
-   * left in a list's box, which is an entry the person meant to add.
+   * Resolves only once everything typed is on the server, else throws: the pending autosave, then
+   * any text left in a list's box.
    */
   const saveAll = async (): Promise<void> => {
     await autosave.flush();
@@ -252,7 +240,6 @@ const CupboardEntryForm = ({
   };
   useSaveOnClose(dirty || hasDrafts(getValues().drafts), saveForClose);
 
-  /** Reload after a stale save: the page reads the server's copy again, which replaces the form. */
   const reload = async (): Promise<void> => {
     await autosave.resolveConflict('reload');
     window.location.reload();
@@ -261,7 +248,6 @@ const CupboardEntryForm = ({
   const handBack = (field: CupboardField): void => {
     setValue(field, toForm(baseline)[field] as never, { shouldDirty: true });
     if (field !== 'label' && field !== 'description' && field !== 'safetyNotes') {
-      // A list's typing box is part of the answer it is handing back.
       if (field !== 'elements') setValue(`drafts.${field}`, '');
     }
     setHandedBack((current) => new Set(current).add(field));
@@ -272,12 +258,10 @@ const CupboardEntryForm = ({
     try {
       await saveAll();
       onDone();
-    } catch {
-      // The refusal is beside its field or in the alert; the form stays open.
-    }
+      // Empty on purpose: the refusal is beside its field or in the alert, and the form stays open.
+    } catch {}
   };
 
-  /** "Restore Original", at the end of a field's label row while the coven says its own. */
   const useCompendium = (field: CupboardField, label: string): ReactElement | undefined =>
     isOwn(field, values, baseline, overrides, handed) ? (
       <IconTip tip="Restore Original" placement="below">
@@ -322,7 +306,6 @@ const CupboardEntryForm = ({
     );
   };
 
-  /** A list's legend row carries "Restore Original" beside its info tip. */
   const handBackAction = (field: CupboardField, label: string) => () => useCompendium(field, label);
 
   return (

@@ -7,9 +7,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 
 const { NavigationBar, reportLeaving, usePendingNavigation } = await import('@/lib/navigation');
 
-// The page part of every wait: a bar that shows once a navigation has lasted 100ms, so a fast
-// one never flashes it, and goes when the navigation settles. It only adds a visual cue, so it
-// is hidden from assistive technology, and having no role it is found by that.
+// A fast navigation never flashes the bar (shown after 100ms); it is hidden from assistive technology, so having no role it is found by that.
 
 const DELAY = 100;
 
@@ -35,7 +33,6 @@ function renderBar() {
   );
 }
 
-/** The bar, when it is drawn and not hidden: the one element hidden from assistive technology. */
 function shownBar(): Element | null {
   const bar = document.body.querySelector('[aria-hidden="true"]');
   return bar && !bar.closest('[hidden]') ? bar : null;
@@ -118,7 +115,6 @@ describe('NavigationBar', () => {
 
     expect(shownBar()).not.toBeNull();
 
-    // The page came back from the back-forward cache: nothing is on its way.
     act(() => {
       window.dispatchEvent(pageshow());
     });

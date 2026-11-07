@@ -2,9 +2,7 @@ import type { ReactElement } from 'react';
 import { SPOON } from '../FormIcon';
 import type { SectionIconName } from './types';
 
-// The section navs' icons on a 24-unit square, 1.6 stroke, round ends, no fill, so they take the
-// link's colour. Inline: shapes used nowhere else. Hidden from assistive technology
-// (claude-docs/components/section-nav.md, "Contracts").
+// Inline: shapes used nowhere else. Hidden from assistive technology (claude-docs/components/section-nav.md, "Contracts").
 const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
   overview: (
     <>
@@ -66,7 +64,6 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M14.5 10h3.5M14.5 13.5h3.5" />
     </>
   ),
-  // The Support button's bubble and question mark (IconTip's SupportIcon), drawn in line rather than cut from a solid bubble.
   support: (
     <>
       <path d="M12 3.9c5 0 9.1 3.25 9.1 7.28s-4.1 7.28-9.1 7.28c-1.1 0-2.15-.13-3.12-.39L4.2 20.45l1.04-3.77C3.68 15.25 2.77 13.43 2.77 11.16 2.77 7.13 7 3.9 12 3.9z" />
@@ -74,7 +71,6 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path strokeWidth="2.2" d="M12 15.6h.01" />
     </>
   ),
-  // An envelope closed by a round wax seal where the flap meets, the flap's lines stopping at the seal's edge.
   invitations: (
     <>
       <rect x="3" y="5.5" width="18" height="13" rx="1.5" />
@@ -90,15 +86,13 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M9 12h6M9 15.5h6" />
     </>
   ),
-  // A landscape card with a name, a short rule under it and two lines of contact details.
   businessCards: (
     <>
       <rect x="2.5" y="5.5" width="19" height="13" rx="1.5" />
       <path d="M6 9.5h7M6 11.5h4.5M6 14.5h6M6 16h4" />
     </>
   ),
-  // The More button's mark: three dots, each a zero-length stroke the round
-  // caps swell into a dot.
+  // Three zero-length strokes the round caps swell into dots.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,
 };
 

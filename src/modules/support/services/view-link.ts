@@ -25,14 +25,13 @@ import {
 
 // The link in each mail about a signed-out request. Its token is minted afresh by the step that sends the mail and only its
 // SHA-256 hash is stored, so the newest mailed link alone opens the request. A request a real account holds, or one
-// anonymised, has no address on the row, so no token finds it (claude-docs/design-decisions/m15.48-mailed-link.md).
+// anonymised, has no address on the row, so no token finds it (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
 const DAY_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
 
 /** Replies one signed-out request may take through its link in 24 hours. */
 export const SIGNED_OUT_REPLY_REQUEST_LIMIT = 5;
 
-/** How long a mailed token opens its request, from the mail that minted it. */
 const VIEW_TOKEN_DAYS = 30;
 
 /** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */

@@ -5,7 +5,6 @@ import { beforeAll } from 'vitest';
 // a test it is charged to that test's 5 s budget, which CI overran; paid here it gets a hook's own timeout.
 export const WARM_IMPORT_TIMEOUT = 30_000;
 
-/** Imports `load`'s module once before the file's tests, so none of them pays the cold transform. */
 export function warmImport(load: () => Promise<unknown>): void {
   beforeAll(async () => {
     await load();

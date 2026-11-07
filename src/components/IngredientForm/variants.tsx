@@ -72,14 +72,12 @@ import {
 
 const BOX = 'drafts.variants';
 
-/** No section open: what a variant the form has not yet seen opens with, as an edit's do. */
 const NONE_OPEN: ReadonlySet<VariantSectionKey> = new Set();
 
 /** `folds` with each place up to `length` filled, so a later removal keeps every place in step. */
 const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSectionKey>[] =>
   Array.from({ length: Math.max(folds.length, length) }, (_, at) => folds[at] ?? NONE_OPEN);
 
-/** The same variant on both sides of a restore: by kept id, else by form, folded as the repeat check folds it. */
 const sameVariant = (a: RestoredVariant, b: RestoredVariant): boolean =>
   a.variantId && b.variantId ? a.variantId === b.variantId : folded(a.form) === folded(b.form);
 
@@ -152,8 +150,6 @@ export function useVariantFolds(): VariantFolds {
 }
 
 export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps): ReactElement {
-  // The compendium holds curated forms alone: its box offers those
-  // rows and no typed row, and a pick is the only way in.
   const compendium = workspaceId === null;
   const { control, getValues, setValue, setError, clearErrors, getFieldState, trigger } =
     useFormContext<IngredientFormValues>();
@@ -163,7 +159,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const listed = useWatch({ control, name: 'variants' });
   const [active, setActive] = useState(false);
   const found = curatedOnly(useFormSuggestions(workspaceId, field.value, active), compendium);
-  // A form the ingredient already comes in is not offered again.
   const suggestions = useMemo(
     () => ({
       ...found,
@@ -177,29 +172,22 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const promptId = `${id}-prompt`;
   const errorId = `${id}-error`;
   const boxElement = useRef<HTMLInputElement | null>(null);
-  // The box and its Add together, which the open list spans, as a list's row is.
   const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   // What the last add or removal did, for a screen reader: a fieldset
   // appearing or going is otherwise unannounced.
   const [announcement, setAnnouncement] = useState('');
   const focusBox = () => boxElement.current?.focus();
 
-  // The one variant open, by its place in the list; the rest are a line each.
   const { card: open, setCard: setOpen } = folds;
   const error: string | undefined = get<unknown, FormFieldError | undefined>(errors, BOX)?.message;
-  // Shown while a compendium entry has no form: it saves, but as information
-  // only, which nothing can stock or lay in a spell.
   const prompting = compendium && fields.length === 0;
   const describedBy = [hintId, prompting && promptId, error && errorId].filter(Boolean).join(' ');
 
-  // Refused at the box, as a list refuses a repeat: the text stays, to be
-  // put right, and the error element says why.
   const refuse = (type: 'repeat' | 'unpicked', message: string) => {
     setError(BOX, { type, message });
     setAnnouncement(message);
     focusBox();
   };
-  // Gone once the text it judged is changed.
   const clearRefusal = () => {
     const type = getFieldState(BOX).error?.type;
     if (type === 'repeat' || type === 'unpicked') clearErrors(BOX);
@@ -221,7 +209,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     // just beneath the box, and opens, closing whichever was.
     prepend({ ...EMPTY_VARIANT, form, formLink: link }, { shouldFocus: false });
     setOpen(0);
-    // Every section open, as a new entry opens.
     folds.added();
     clearErrors(BOX);
     setAnnouncement(`Added ${formLabel(form)}`);
@@ -243,9 +230,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const removingAt = fields.findIndex((row) => row.id === removing);
 
   return (
-    // The last of the ingredient's folding sections, its ⓘ beside the
-    // heading. Inside, a group named by that heading alone, as a list's
-    // fieldset is by its legend: the New Form box and the cards.
     <CollapsibleSection
       title="Forms"
       summary={<SectionSummary section="variants" />}
@@ -268,8 +252,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
           <Combobox<FormOption>
             id={`${id}-box`}
             label="New Form"
-            // Its label is hidden, as a list box's is: the placeholder says what
-            // it is for, at the head of the section.
             placeholder="Add a form"
             value={field.value}
             onChange={(typed) => {
@@ -348,11 +330,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   );
 }
 
-/**
- * One variant: a group named by its form, its summary line with Edit and
- * Remove, and beneath it, while open, the fields that form adds, in the
- * order the ingredient's own run, closed again by Done.
- */
 function VariantFieldset({
   workspaceId,
   index,
@@ -369,20 +346,13 @@ function VariantFieldset({
   const edited = useEditedFieldsContext();
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
-  // Its form, as typed; a form emptied in its box still names the group.
   const legend = formLabel(form) || UNNAMED_FORM;
-  // An ingredient in this form is the likeliest stand-in, then one in its
-  // group; each is offered form by form, this variant itself left out.
   const own = variant.variantId;
   const rank = useCallback(
     (options: ListOption[]) => formRows(rankForForm(options, form, group), form, group, own),
     [form, group, own],
   );
-  // What a substitute copy skipped, for the notice beneath the list.
   const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
-  // Its own sections, each a disclosure as the ingredient's are, flagged while one holds an error
-  // a field draws, and opened by a save that finds one. Standing still through a press, as the
-  // fields' errors do.
   const erring = useSettledWhilePressed(
     variantSectionsWithErrors(
       get(errors, at),
@@ -391,7 +361,6 @@ function VariantFieldset({
     ),
   );
   const invalid = erring.size > 0;
-  // Flagged only while closed: open, the fields' own errors say it.
   const { id, summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
     block: 'fieldset ingredient-form__variant',
     open,
@@ -503,7 +472,6 @@ function VariantFieldset({
               placeholder="What sets this form apart"
               action={<CopyFromIngredient at={at} field="description" />}
               multiline
-              // Seven lines, matching the ingredient's Description.
               rows={7}
             />
             <TextField<IngredientFormValues>

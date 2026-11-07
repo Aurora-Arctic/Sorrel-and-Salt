@@ -13,21 +13,15 @@ import { useEditedFieldsContext } from './edited-fields';
 import { useSettledWhilePressed } from './pointer-held';
 import type { FieldDescription } from './types';
 
-/**
- * The part of a react-hook-form field's state that decides whether its error
- * is drawn.
- */
 export type ShownState = {
   isSubmitted: boolean;
   touchedFields: unknown;
-  /** The fields the person has ever edited; null or absent tracks nothing. */
   edited?: ReadonlySet<string> | null;
 };
 
 /**
- * Whether the error on `name` is shown: after a submit, every error; before one, only a field the
- * person has both left and edited. "Edited" is any change event ever made, as `dirtyFields` unsets when
- * the value returns to its default. With no `edited` record the rule is touched alone.
+ * An edit is any change event ever made, as `dirtyFields` unsets when the value returns to its
+ * default.
  */
 export function errorShown(
   { isSubmitted, touchedFields, edited }: ShownState,

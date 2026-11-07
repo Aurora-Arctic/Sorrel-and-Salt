@@ -48,13 +48,11 @@ beforeAll(async () => {
   await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${covenY}`;
 });
 
-/** Each user's row as the table holds it, deleted or not: every case's precondition. */
 async function rowsOf(...ids: string[]) {
   return sql`
     select id, name, deleted_at from users where id in ${sql(ids)} order by name`;
 }
 
-/** The viewer's live seats, by workspace: the scope a name is read under. */
 async function liveSeatsOf(userId: string) {
   const rows = await sql`
     select workspace_id from workspace_members where user_id = ${userId} and deleted_at is null`;

@@ -21,7 +21,6 @@ export async function findStockById(
   return row;
 }
 
-/** The coven's live jars with these ids: `saveStock` resolves a batch of them in one read. */
 export function findStockByIds(
   membership: Membership,
   ids: readonly string[],
@@ -30,7 +29,6 @@ export function findStockByIds(
   return findManyStock(membership, inArray(inventoryItems.id, [...ids]));
 }
 
-/** The coven's live jars of these ingredients, every form of each: the `Ingredient.stock` batch. */
 export function findStockOfIngredients(
   membership: Membership,
   ingredientIds: readonly string[],

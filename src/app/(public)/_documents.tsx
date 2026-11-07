@@ -12,7 +12,6 @@ import type { DocumentKey } from '@/modules/documents';
 // beneath, and one numbered version on its own. No session is read, so a signed-out visitor reads
 // the same page a member does.
 
-/** Versions listed beneath a document; a document with more shows its newest this many. */
 const HISTORY_LENGTH = 50;
 
 /** A missing document or version is a 404; any other failure is the page's to show. */
@@ -50,7 +49,6 @@ export async function currentDocumentPage(
   );
 }
 
-/** A version number is digits with no leading zero; anything else names no version, and nothing is read for it. */
 const VERSION_NUMBER = /^[1-9]\d*$/;
 
 /**

@@ -19,10 +19,7 @@ function mergeInto(base: Plain, overrides: Plain): Plain {
   return base;
 }
 
-/**
- * `defaults` with `overrides` applied, a fresh deep copy every call. `NoInfer` is load-bearing: without it
- * TypeScript infers `T` from the partial overrides and every field becomes optional.
- */
+// `NoInfer` is load-bearing: without it TypeScript infers `T` from the partial overrides and every field becomes optional.
 export function mergeFixture<T extends object>(
   defaults: T,
   overrides: NoInfer<Overrides<T>> = {} as Overrides<T>,
@@ -30,10 +27,7 @@ export function mergeFixture<T extends object>(
   return mergeInto(structuredClone(defaults) as Plain, overrides as Plain) as T;
 }
 
-/**
- * Did the caller name this field? Derivation stops when they did, including
- * with `null` — how a test writes a row the database is meant to refuse.
- */
+// Derivation stops when the caller named the field, including with `null`: how a test writes a row the database refuses.
 export function stated<T extends object>(overrides: T | undefined, key: PropertyKey): boolean {
   return (
     overrides !== undefined &&

@@ -25,10 +25,6 @@ import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
-// One compendium entry at its public address, readable signed out. The read is cached and sessionless,
-// but a curator also reaches a hidden entry, uncached. The page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
-// coven slug answers 404; a moved slug answers 308.
-
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
 // The public read first: cached, with no session. Only when it finds nothing is a session asked for, and
@@ -49,8 +45,6 @@ const entryAt = cache(async (slug: string) => {
   }
 });
 
-// Title (the formal name tells two entries with one label apart), description and
-// canonical link. A missing or moved address gets none, as it renders no page.
 export async function generateMetadata({ params }: CompendiumEntryParams): Promise<Metadata> {
   const found = await entryAt((await params).slug);
   if (found?.kind !== 'entry') return {};
@@ -128,7 +122,6 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // The review switch's read, for a curator or keeper only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
-  // Beside it, the sourcing score: the head shows it, and the edit form's Sources opens with it.
   const sourcing = canEdit ? await sourcingOf(entry.id) : undefined;
 
   return (
@@ -144,7 +137,6 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
         back={{
           href: '/compendium' as Route,
           label: 'Compendium',
-          // The admin list is the same list under its own name.
           also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
         }}
         accessPause={shell?.viewer.accessPause}

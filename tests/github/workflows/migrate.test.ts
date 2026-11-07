@@ -8,9 +8,6 @@ import { parse } from 'yaml';
 
 import { fromRoot } from '../../support/paths';
 
-// Runs a step's own script under bash with stubs first on PATH: a stub `curl` standing in for the
-// Neon API for the production snapshot, and stub `npm` and `sleep` for the migration's retries.
-
 const SHA = 'abc1234def5678';
 const SNAPSHOT = 'snapshot-abc1234';
 
@@ -30,9 +27,7 @@ function stepScript(id: string): string {
   return step.run;
 }
 
-// Answers GET with $STUB_BRANCHES; answers POST with $STUB_POST_BODY, failing with curl's HTTP
-// error exit (22) when $STUB_POST_FAILS is set. Like real curl, a failure prints the body only
-// under --fail-with-body. Every call's arguments are appended to $STUB_CALLS.
+// Like real curl, a failure prints the body only under --fail-with-body.
 const STUB_CURL = `#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$STUB_CALLS"
 if [[ " $* " == *" POST "* ]]; then
@@ -127,7 +122,6 @@ describe('the production snapshot step', () => {
   });
 });
 
-// Fails the first $STUB_FAILURES calls and succeeds after, appending each call's arguments to $STUB_CALLS.
 const STUB_NPM = `#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$STUB_CALLS"
 calls=$(wc -l < "$STUB_CALLS")
@@ -138,7 +132,6 @@ fi
 echo "migrations applied"
 `;
 
-// Records each wait instead of taking it.
 const STUB_SLEEP = `#!/usr/bin/env bash
 printf '%s\\n' "$1" >> "$STUB_SLEEPS"
 `;

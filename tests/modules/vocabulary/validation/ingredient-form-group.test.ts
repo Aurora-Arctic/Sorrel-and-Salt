@@ -2,10 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
 
-// What the schema adds over curatedValueInput, whose name, description and
-// dropped slug are tests/lib/validation.test.ts's: the icon standing for the
-// group, one of the six or none, which is the generic.
-
 const VALID = { name: 'Fixture Matter', description: 'Invented.' };
 
 describe('IngredientFormGroupInput', () => {

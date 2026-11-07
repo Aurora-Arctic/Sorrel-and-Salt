@@ -67,7 +67,6 @@ export const SHAPES: Readonly<Record<JarShapeName, JarShape>> = {
     ],
     body: 'M16 10h16v3q10 2 10 12v5a10 10 0 0 1-10 10H16a10 10 0 0 1-10-10v-5q0-10 10-12z',
   },
-  // A conical flask: narrow neck, straight sides, flat base.
   erlen: {
     full: 19,
     sx: 12,
@@ -77,7 +76,6 @@ export const SHAPES: Readonly<Record<JarShapeName, JarShape>> = {
     body: 'M21 4v9L9.6 33.2A3 3 0 0 0 12.2 38h23.6a3 3 0 0 0 2.6-4.8L27 13V4z',
     open: true,
   },
-  // The two from the In Your Cupboard shelf icon.
   bottle: {
     full: 14,
     sx: 14,
@@ -99,7 +97,6 @@ export const SHAPES: Readonly<Record<JarShapeName, JarShape>> = {
     body: 'M21 4v10A13 13 0 1 0 27 14V4z',
     open: true,
   },
-  // The Add Stock jar: a cloth cap tied over the rim.
   cloth: {
     full: 23,
     sx: 13,
@@ -120,7 +117,6 @@ export const SHAPES: Readonly<Record<JarShapeName, JarShape>> = {
     body: 'M13 21v13a6 6 0 0 0 6 6h10a6 6 0 0 0 6-6V21z',
     open: true,
   },
-  // A corked vial.
   vial: {
     full: 11,
     sx: 19,
@@ -135,7 +131,6 @@ export const SHAPES: Readonly<Record<JarShapeName, JarShape>> = {
   },
 };
 
-/** Where a jar of solids is drawn from. */
 export const JARS: readonly JarShapeName[] = [
   'hex',
   'mason',
@@ -146,7 +141,6 @@ export const JARS: readonly JarShapeName[] = [
   'cloth',
 ];
 
-/** Where a liquid's vessel is drawn from. */
 export const BOTTLES: readonly JarShapeName[] = ['bottle', 'flask', 'erlen', 'vial'];
 
 /** A wave of period `p` and amplitude `a`, drawn one period past each side of the glass, so it could slide and still cover the body. */
@@ -156,7 +150,6 @@ export function wv(p: number, a: number): string {
   return d;
 }
 
-/** The level's Y for a vessel filled to `frac` of full, rounded to a tenth. */
 export function lv(shape: JarShapeName, frac: number): number {
   return +(40 - (40 - SHAPES[shape].full) * frac).toFixed(1);
 }

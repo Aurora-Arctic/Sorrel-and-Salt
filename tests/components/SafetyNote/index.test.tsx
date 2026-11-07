@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
-// The one presentation of an ingredient's caution (claude-docs/components/safety-note.md): a region labelled by its Caution heading, holding the ingredient's notes and then each shown form's under its name, and the Toxic mark beside it. Both are text, never controls.
-// The notes and form names are the test's own data, so finding them proves what rendered, not what the copy says.
+// claude-docs/components/safety-note.md
 
 const INGREDIENT_NOTES = 'Fixture ingredient caution.';
 const LEAF = {
@@ -16,13 +15,10 @@ const LEAF = {
 const OIL = { form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true };
 const ROOT = { form: 'testroot', safetyNotes: '', toxic: false };
 
-// What can take focus without a tabindex, plus anything given one. Real tab
-// order is a browser question; here it is enough that nothing in the note is
-// a stop at all.
+// Real tab order is a browser question; here nothing in the note may be a tab stop at all.
 const FOCUSABLE =
   'a[href], button, input, select, textarea, summary, [contenteditable], [tabindex]';
 
-/** The element and everything in it that could take focus. */
 const stops = (element: Element): Element[] => [
   ...(element.matches(FOCUSABLE) ? [element] : []),
   ...element.querySelectorAll(FOCUSABLE),
@@ -59,7 +55,6 @@ describe('SafetyNote', () => {
     render(<SafetyNote safetyNotes={INGREDIENT_NOTES} variants={[LEAF, ROOT, OIL]} />);
 
     const region = screen.getByRole('region', { name: 'Caution' });
-    // A form with no notes takes no line, so two terms for three forms.
     const terms = within(region).getAllByRole('term');
     const definitions = within(region).getAllByRole('definition');
     expect(terms.map((term) => term.textContent?.trim())).toEqual([
@@ -154,8 +149,6 @@ describe('CautionMark', () => {
   });
 });
 
-// One safety badge wherever a row shows one: Toxic
-// says more than Caution, so it stands alone when both apply.
 describe('SafetyMark', () => {
   const caution = () => screen.queryByText('Caution', { exact: true });
   const toxic = () => screen.queryByText('Toxic', { exact: true });

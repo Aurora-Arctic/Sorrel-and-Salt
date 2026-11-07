@@ -4,7 +4,6 @@ import type { ReactElement } from 'react';
 // use (`Combobox/icons.tsx`), so the two sit level at `$glyph-size`. Hidden
 // from assistive technology: the button around it is named by its own text.
 
-/** A magnifying glass: the search field's submit. */
 export function MagnifierIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

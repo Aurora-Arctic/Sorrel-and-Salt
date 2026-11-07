@@ -1,27 +1,17 @@
-## Ingredient slugs (MB.80; table MB.81, rule MB.82)
+## Ingredient slugs
 
 Every ingredient carries a URL slug, and a compendium entry's is its public
-address, `/compendium/ingredients/[slug]`. MB.81 landed the columns, the
-indexes and the retirements table, and MB.82 the rule on top. The argument is
-[`mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md),
+address, `/compendium/ingredients/[slug]`. The argument is
+[`graphql.md`, "The compendium is public and search-indexable"](../design-decisions/graphql.md#the-compendium-is-public-and-search-indexable),
 superseded in part by
-[`mb.82-slug-takeover.md`](../design-decisions/mb.82-slug-takeover.md); what
+[`data.md`, "A taker ends a retired slug's redirect, once confirmed"](../design-decisions/data.md#a-taker-ends-a-retired-slugs-redirect-once-confirmed); what
 follows is what exists.
 
-- **`slug` is the label and the formal name, always** — no form since
-  MB.220. `ingredientSlug(name, canonicalName)` in `src/lib/slugify.ts`
+- **`slug` is the label and the formal name, always** — never the form: one page shows every form of an entry. `ingredientSlug(name, canonicalName)` in `src/lib/slugify.ts`
   is `slugify` of the two joined by a space, an undeclared formal name left
   out: `Cat's Claw` / _Uncaria tomentosa_ is `cats-claw-uncaria-tomentosa`;
-  graveyard dirt, which declares no formal name, is `graveyard-dirt`. Its middle
-  parameter, the form, which every call site passed as `null` from MB.220,
-  went in MB.223. Both
-  parts go in for every entry rather than only on a clash, so an address
-  never depends on which entry was added first. A row written before MB.220
-  keeps its form in the slug until its next save, which derives the new one
-  and retires the old as any move does (below); the seed does that for its
-  own entries on every run (`reslugIngredients`), retiring each compendium
-  slug it moves, and nothing rewrites a slug in SQL, which would be a second
-  slug rule (0025's precedent, below). The column is
+  graveyard dirt, which declares no formal name, is `graveyard-dirt`. Both parts go in for every entry rather than only on a clash, so an address
+  never depends on which entry was added first. A row slugged under an older rule keeps that slug until its next save, which derives the new one and retires the old as any move does (below); the seed does that for its own entries on every run (`reslugIngredients`), retiring each compendium slug it moves. Nothing rewrites a slug in SQL, which would be a second slug rule. The column is
   `NOT NULL` with **no default** — a default would be a second slug rule,
   written in SQL — so whoever writes a row derives it, the seed and the test
   fixtures included (`ingredientColumns` derives it the same way).
@@ -34,12 +24,7 @@ follows is what exists.
   btree, so compendium rows pass through it unconstrained. Soft-deleting an
   entry releases its slug, as every partial index here releases what it
   reserved.
-- **MB.81's pending claims are gone.** `pending_slug`,
-  `pending_slug_effective_at` and their two partial unique indexes held the
-  claim a relabel made when its slug was reserved. MB.82 dropped the
-  reservation and the schema's declarations, and MB.107's
-  `0028_drop-pending-slugs.sql` dropped the four from the database once that
-  had deployed: a column drop is two PRs (["Expand/contract"](expand-contract.md)).
+
 - **Two entries may share a label; the formal name tells them apart, in the
   slug as in the identity key.** The `standard` seed's two _Cat's Claw_
   barks, _Uncaria tomentosa_ and _U. guianensis_, are
@@ -130,4 +115,4 @@ the step — `column "slug" of relation "ingredients" contains null values` —
 and `npm run db:reset` (`make db-reset` from the host) rebuilds it. The test
 and e2e databases are built from an empty schema every run and never meet it.
 
-**MB.215: the slug drops the form.** One page shows every form of an entry, so the address names the label and the formal name alone: Rosemary becomes `rosemary-salvia-rosmarinus`, and the two Cat's Claw barks `cats-claw-uncaria-tomentosa` and `cats-claw-uncaria-guianensis`, still told apart by their formal names. MB.220 calls `ingredientSlug(name, null, canonicalName)` at every call site and rewrites no slug in SQL, which would be a second slug rule: each entry keeps its form-bearing slug until its next save, when the service derives the new one and retires the old through the path above, so the old address redirects for 180 days. The seed re-slugs its own entries on reseed and retires each compendium slug it moves, and a curated form's rename no longer moves any slug. `standard` also seeds two retirements as live examples of the entry page's two redirects (see "The compendium is awkward on purpose" in [`standard-scenario.md`](standard-scenario.md)). MB.223 removed `ingredientSlug`'s middle parameter ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**A curated form's rename moves no slug**, and the old address of a re-slugged entry redirects for 180 days. `standard` also seeds two retirements as live examples of the entry page's two redirects (see "The compendium is awkward on purpose" in [`standard-scenario.md`](standard-scenario.md); [`ingredients.md`, "An ingredient and its forms"](../design-decisions/ingredients.md#an-ingredient-and-its-forms)).

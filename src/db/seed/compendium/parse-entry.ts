@@ -5,9 +5,10 @@ import { ingredientSlug } from '../../../lib/slugify';
 import type { CompendiumFileSections, SeedCompendiumEntry, SeedCompendiumFile } from '../types';
 
 // One entry file to the entry the seed writes: frontmatter between the `---` lines (a duplicate key is refused), then one `# Name` heading, the description
-// up to the first `####`, and two optional trailing sections (claude-docs/db/compendium-seed/README.md, "An entry, field by field"). A file with an issue yields no entry.
+// up to the first `####`, and two optional trailing sections
+// (claude-docs/compendium/compendium-seed/README.md, "An entry, field by field"). A file with an
+// issue yields no entry.
 
-/** The two trailing sections, in the one order they may appear. */
 export const SECTION_HEADINGS = {
   questions: 'Questions for the Curator',
   editNotes: 'Edit Notes for Claude',

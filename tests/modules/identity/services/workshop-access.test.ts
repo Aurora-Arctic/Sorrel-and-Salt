@@ -3,7 +3,6 @@ import { Forbidden } from '@/lib/errors';
 import { assertWorkshopAccess } from '@/modules/identity';
 
 // The staging workshop is admin-only (claude-docs/workshop.md, "On staging").
-// A viewer role that is not admin is v2; until then the rule is the site role.
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 

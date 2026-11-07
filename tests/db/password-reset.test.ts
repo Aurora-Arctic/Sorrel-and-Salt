@@ -19,7 +19,7 @@ import type { setPassword as SetPasswordService } from '@/modules/identity';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 71 through Better Auth's real endpoints, with the breached-password service stubbed at the network:
+// Password reset (@story-71) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md, "Reset and change".
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -48,7 +48,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 let auth: AuthInstance;
-// Imported after `importAuth` resets the module registry, so the setter and its errors share this `auth`'s modules.
+// Imported after `importAuth` resets the module registry,
+// so the setter and its errors share this `auth`'s modules.
 let passwordSetter: typeof PasswordSetterFactory;
 let ValidationError: typeof ValidationErrorClass;
 let Forbidden: typeof ForbiddenClass;
@@ -74,7 +75,6 @@ beforeEach(async () => {
 const signIn = (password: string, email = OWNER) =>
   post(auth, '/sign-in/email', { email, password });
 
-/** A verified password account, so nothing below is explained by the address being unproved. */
 async function verifiedAccount(password = OLD, email = OWNER) {
   const response = await post(auth, '/sign-up/email', { name: 'Fixture Person', email, password });
   expect(response.status, await response.clone().text()).toBe(200);
@@ -82,7 +82,6 @@ async function verifiedAccount(password = OLD, email = OWNER) {
   send.mockReset();
 }
 
-/** A signed-in session's cookie. */
 async function sessionOf(password = OLD, email = OWNER): Promise<string> {
   const response = await signIn(password, email);
   expect(response.status, await response.clone().text()).toBe(200);
@@ -96,7 +95,6 @@ async function isSignedIn(cookie: string): Promise<boolean> {
 
 const requestReset = (email = OWNER) => post(auth, '/request-password-reset', { email });
 
-/** The reset link in the one mail sent so far, and the token it carries. */
 function mailedResetLink(): { link: string; token: string } {
   expect(send).toHaveBeenCalledTimes(1);
   const link = send.mock.calls[0][0].text.match(/https?:\/\/\S+\/reset-password\/[^\s\]]+/)?.[0];
@@ -435,7 +433,6 @@ describe('Story 71: a provider-only account sets a password', () => {
     await expect(passwordSetter(new Request(`${ORIGIN}/api/graphql`)).set(NEW)).rejects.toThrow();
   });
 
-  /** The service's view of the provider account's session. */
   async function serviceSession() {
     const [{ id }] = await sql`select id from users where email = ${PROVIDER_OWNER}`;
     return { userId: id as string, role: 'user' as const };

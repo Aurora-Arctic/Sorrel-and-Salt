@@ -9,7 +9,6 @@ export default function DetailsLink({
   name,
 }: {
   opens: RouteModalLink;
-  /** The entry's label and formal name, read after "Quick Look". */
   name: string;
 }): ReactElement {
   return (

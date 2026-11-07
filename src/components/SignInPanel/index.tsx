@@ -15,19 +15,18 @@ import type { ProviderId } from '../../lib/types';
 import type { SignInAttempt, SignInPanelProps } from './types';
 import './index.scss';
 
-// A cookie announces no change, and only a callback, a full navigation away,
-// writes this one: there is nothing to subscribe to.
+// A cookie announces no change, and only a callback, a full navigation away, writes this one:
+// there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
 // The cookie read returns `''` for present-but-empty and `null` for none, and React warns when a
 // snapshot differs between its two reads. So the snapshot is the roster id the cookie names, or
-// `null` for anything else (claude-docs/components/sign-in-panel.md, "Last used").
+// `null` for anything else (claude-docs/components/sign-in-panel.md, "Contracts").
 const getLastUsedProvider = (): ProviderId | null => {
   const value = getLastUsedLoginMethod();
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
 };
 
-// The same cookie, for the password form: Better Auth's lastLoginMethod writes `email` for it.
 const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
 // Whether the cookie names a passkey sign-in, which is not a roster provider.
 const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey';
@@ -47,7 +46,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   const [codeStep, setCodeStep] = useState(false);
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
-  // (claude-docs/components/sign-in-panel.md, "Last used").
+  // (claude-docs/components/sign-in-panel.md, "Contracts").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
   const lastUsedPassword = useSyncExternalStore(noSubscription, getLastUsedPassword, () => false);
   const passkeyLastUsed = useSyncExternalStore(noSubscription, getLastUsedPasskey, () => false);
@@ -80,12 +79,10 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     } else if (window.history.state?.[PUSHED_MARK]) {
       window.history.back();
     } else {
-      // Opened straight on the email view: there is no earlier entry of this page to return to.
       window.history.replaceState(null, '', url);
     }
   };
 
-  // The sign-in under way, a provider's or the passkey's: every other control waits for it.
   const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
   useEffect(() => {
     const restored = (event: PageTransitionEvent) => {
@@ -98,10 +95,8 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   const signInWith = async (providerId: ProviderId): Promise<string | undefined> => {
     setMessage(undefined);
     setSigningIn(providerId);
-    // errorCallbackURL carries `next` along: a failed attempt would otherwise
-    // lose the destination and land back at plain /sign-in. With no `next`,
-    // the callback lands the account by its role.
-    // A dropped connection throws rather than answering `error`; both say so.
+    // errorCallbackURL carries `next` along, so a failed attempt keeps the destination. A dropped connection throws rather
+    // than answering `error`; both say so.
     const result = await (async () => {
       try {
         return await signIn.social({ provider: providerId, ...socialSignInTarget(next) });

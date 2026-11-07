@@ -7,15 +7,11 @@ import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } fr
 // reads its cursors off its own query keys, since the members page already
 // spends `?after` and `?before` on its roll.
 
-/** The two query keys a list reads its cursors from. */
 export type PageKeys = { after: string; before: string };
 
 export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
 
-/**
- * One numbered page of a list through `resolveNumberedPage`, or its first page again for a cursor the codec reads but this list's key will not cast (one
- * copied from another list). Any other failure is thrown.
- */
+/** A cursor the codec reads but this list's key will not cast (one copied from another list) gives the first page. Any other failure is thrown. */
 export async function readNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },
   fetch: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
@@ -32,11 +28,7 @@ export async function readNumberedPage<T, Edge extends object = {}>(
   }
 }
 
-/**
- * The cursors an address asks for under `keys` (`?after` and `?before` unless
- * the caller names its own). One cursor at a time: an address carrying both
- * reads as the `after` page, and an unreadable cursor is none.
- */
+/** One cursor at a time: an address carrying both reads as the `after` page, and an unreadable cursor is none. */
 export function readPageCursors(
   params: object,
   keys: PageKeys = DEFAULT_PAGE_KEYS,

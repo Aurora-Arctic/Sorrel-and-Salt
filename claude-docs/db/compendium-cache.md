@@ -29,7 +29,7 @@ give a row's `createdAt` back as a string where the miss gave a `Date`. The
 wrapper stores `superjson.stringify` of the result and parses it on every
 read, hit or miss, so both answer the same types.
 
-### The deployment key part (MB.274)
+### The deployment key part
 
 Every key `cachedCompendiumRead` builds ends in the deployment's own id, so a
 new deployment reads under fresh keys and its first read of each entry goes
@@ -38,10 +38,8 @@ the tag, and Vercel keeps the data cache from one deployment to the next, so
 without the part a seeded change stayed hidden for up to an hour.
 
 The part is `VERCEL_DEPLOYMENT_ID`, or `VERCEL_GIT_COMMIT_SHA` when that is
-empty (the project's "Enable access to System Environment Variables" setting
-is off). Vercel's system environment variables page lists both as available
-at build and at runtime, so nothing is stamped in through `next.config.ts`.
-With neither set (local runs, tests) there is no part, and the keys are the
+empty. Both are available at build and at runtime, so nothing is stamped in through
+`next.config.ts`. With neither set (local runs, tests) there is no part, and the keys are the
 bare `key`. The tag is unchanged, so a keeper's write still expires every
 entry under the current deployment.
 
@@ -104,7 +102,7 @@ reads' hour.
 An entry's share card (M12.34) is the same: its `opengraph-image.tsx` reads
 `readCompendiumEntry`, so the card's cached PNG carries the tag and a keeper
 write draws it afresh. `tests/e2e/compendium-cache.spec.ts` shows it
-([`../share-card.md`](../share-card.md), "Caching").
+([`../seo/share-card.md`](../seo/share-card.md), "Caching").
 
 ### Expiring the tag
 
@@ -132,18 +130,16 @@ reaches only these, since the GraphQL mutations over them are its only path
 **The rule is keyed on those two modules, not on every keeper mutation.**
 Every exported service in `src/modules/ingredients/services/` and
 `src/modules/vocabulary/services/` that calls `assertSiteAdmin` calls
-`expireCompendium`; `tests/modules/ingredients/services/compendium-expiry.test.ts`
-and `tests/e2e/compendium-cache.spec.ts` prove the expiry itself. The identity module's admin writes are outside it by
+`expireCompendium`. The identity module's admin writes are outside it by
 construction: a user's role, a pause, a keeper invitation and a coven-creation
 grant touch nothing the cache holds. A guard over every keeper mutation would
 need a list of those exemptions, which each new identity write would have to
-join from its own task. Keying on the modules that own the compendium tier
-means only a write to that tier is held to the rule.
-`tests/modules/ingredients/services/compendium-expiry.test.ts` shows the
-call itself: once, with `{ expire: 0 }`, after the write; not after a
-refusal; and not after a coven's reference. `tests/e2e/compendium-cache.spec.ts`
-shows Next acting on it: the keeper's added entry, and a rename the cache had
-been hiding, both appear on the next load.
+join from its own task.
+`tests/modules/ingredients/services/compendium-expiry.test.ts` proves the
+call: once, with `{ expire: 0 }`, after the write; not after a refusal; not after
+a coven's reference. `tests/e2e/compendium-cache.spec.ts` proves Next acting on
+it: the keeper's added entry and a rename the cache had been hiding both appear
+on the next load.
 
 ### In tests
 
@@ -161,8 +157,7 @@ included.
 A test that needs the cache to hold mocks `next/cache` with
 `tests/support/next-data-cache.ts`, an in-memory cache keyed and serialised as
 Next's is and emptied by `revalidateTag`, with `clearDataCache()` beside the
-test's truncate. `tests/modules/ingredients/services/compendium-cache.test.ts`
-and `tests/modules/vocabulary/services/vocabulary-cache.test.ts` change a row
+test's truncate. `compendium-cache.test.ts` and `vocabulary-cache.test.ts` change a row
 underneath a read and assert the repeat read does not see it until the tag
 expires.
 
@@ -178,7 +173,4 @@ that cannot be stored or parsed still fails there.
 One more server keeps it: the compendium-cache server on 8101, over
 `sorrel_e2e_cache`, which no spec reseeds, running
 `tests/e2e/compendium-cache.spec.ts` alone in the `chromium-compendium-cache`
-project. The spec renames an entry underneath the admin's compendium list and
-asserts the reload does not show it, and that a filter never read before
-does. Then, as a keeper adding an entry, it asserts the
-next load shows both the entry and the rename.
+project.

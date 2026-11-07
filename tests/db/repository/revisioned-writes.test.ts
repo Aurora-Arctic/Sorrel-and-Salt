@@ -10,7 +10,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 
-// A revisioned write names the revision it read and is refused with `StaleWrite` if the row has moved; `null` writes whatever the revision (claude-docs/components/autosave.md, "The server's half").
+// A revisioned write names the revision it read and is refused with `StaleWrite` if the row has moved; `null` writes whatever the revision (claude-docs/autosave.md, "The server's half").
 // The writes under test go through `withAudit` and only the setup through the raw client.
 
 let sql: postgres.Sql;

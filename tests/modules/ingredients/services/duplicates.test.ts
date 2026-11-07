@@ -35,7 +35,6 @@ async function similarity(a: string, b: string): Promise<number> {
 /** Room for every row a test here writes, so one page is the whole answer. */
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
-/** The rows of the lookup's first page; a null workspace is the compendium form's. */
 const duplicatesOf = async (
   user: typeof A | typeof E,
   name: string,

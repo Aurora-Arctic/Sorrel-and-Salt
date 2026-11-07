@@ -20,10 +20,7 @@ const CHOOSING: readonly string[] = [
   selectTypes.ItemClick,
 ];
 
-/** What the open list says with every choice made: the one place it is worded. */
 const EVERY_CHOICE = 'Every option is already chosen';
-
-/** What a disabled zero-count row says beside its count. */
 
 export function ComboboxMultiSelect({
   id,
@@ -73,7 +70,6 @@ export function ComboboxMultiSelect({
       },
     });
 
-  // A choice keeps the list open for the next; a list with nothing left to offer opens to say so.
   const keepChoosing = (
     state: { highlightedIndex: number },
     { type, changes }: UseSelectStateChangeOptions<ComboboxChoice>,
@@ -81,7 +77,6 @@ export function ComboboxMultiSelect({
     if (CHOOSING.includes(type) && changes.selectedItem) {
       return {
         ...changes,
-        // Shut once only disabled rows are left, as it is with none.
         isOpen: choosable > 1,
         highlightedIndex: Math.min(state.highlightedIndex, choosable - 2),
       };
@@ -111,7 +106,6 @@ export function ComboboxMultiSelect({
   const focusBox = () => document.getElementById(id)?.focus();
   const empty = chosen.length === 0;
 
-  // The control is the box: a press on its padding or its chevron opens the list; an x and the clear are their own.
   const pressControl = (event: MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('button, [role="combobox"]')) return;
     event.preventDefault();

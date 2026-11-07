@@ -6,7 +6,8 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The content hash of a compendium entry: what the seed compares a file against the row it last wrote (claude-docs/db/compendium-seed/README.md, "The hash").
+// The content hash of a compendium entry: what the seed compares a file against the
+// row it last wrote (claude-docs/compendium/compendium-seed/README.md, "The hash").
 // Pure, importing only `node:crypto` and types, so a test and the seed hash one way.
 
 /**

@@ -17,7 +17,6 @@ import { IngredientFormGroupRef } from './ingredient-form-groups';
 
 export const IngredientFormValueRef = curatedVocabularyWrites({
   ref: builder.objectRef<IngredientFormValueRow>('IngredientFormValue'),
-  // The group is what tells two same-named forms apart: "Wax (Substance)".
   parent: {
     field: 'group',
     key: 'groupId',

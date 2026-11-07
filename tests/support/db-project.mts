@@ -3,19 +3,11 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import type { TestConfig } from './types.ts';
 
-// The Postgres-backed harness, spread into the `db` and `db-mocking` projects
-// so the two cannot quietly diverge.
-//
 // `.mts`, imported with its extension, and erasable syntax only: a config's
 // imports run at config-load time, where Vite's native loader hands a `.ts` in
 // a package without `"type": "module"` to Node as CommonJS.
 
-/**
- * The most db workers a run opens, whatever the machine: the connection
- * budget (claude-docs/testing/db-harness.md, "Connections per run") is
- * arithmetic over this number, not over the cores a developer happens to have.
- * Twelve clears every machine the suite runs on today, so nothing slows.
- */
+// Fixed, not the machine's cores: the connection budget (claude-docs/testing/db-harness.md, "Connections per run") is arithmetic over this number.
 export const DB_WORKER_CAP = 12;
 
 // `project.config.maxWorkers` is `undefined` in globalSetup unless pinned here,
@@ -30,10 +22,6 @@ export const dbMaxWorkers = Math.max(
   1,
 );
 
-/**
- * Each worker on its own `sorrel_test_${VITEST_POOL_ID}` clone of the seeded
- * template, re-cloned by the runner before every test file. Slot naming: worker-database.ts.
- */
 export const dbHarness = {
   environment: 'node',
   globals: true,
@@ -45,14 +33,7 @@ export const dbHarness = {
 export const BOUNDED_POSTGRES_PLUGIN = 'sorrel:bounded-postgres';
 const BOUNDED_POSTGRES = fileURLToPath(new URL('./db/bounded-postgres.ts', import.meta.url));
 
-/**
- * `postgres` resolved to tests/support/db/bounded-postgres.ts for every file
- * the project transforms — the app's connection.ts and each test file's own
- * client alike — so one constant caps every pool a run opens. The
- * wrapper's own import is the one left to the real package. A `resolveId`
- * plugin rather than `resolve.alias`'s `customResolver`, which Vite deprecates
- * in favour of exactly this.
- */
+// `postgres` resolves to bounded-postgres.ts in every file the project transforms, so one constant caps every pool; a `resolveId` plugin, as Vite deprecates `resolve.alias`'s `customResolver`.
 export function boundedPostgres(): Plugin {
   return {
     name: BOUNDED_POSTGRES_PLUGIN,

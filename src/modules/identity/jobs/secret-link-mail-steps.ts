@@ -10,24 +10,21 @@ import type { SecretLink } from '../types';
 // The log is how a mail lost after every retry is seen.
 /* oxlint-disable no-console */
 
-/** Builds the mail for `link` from the rows and sends it; true once the transport took it. A transport failure throws, so the SDK retries the step. */
+/** A transport failure throws, so the SDK retries the step. */
 export async function secretLinkStep(link: SecretLink): Promise<boolean> {
   return sendSecretLink(link);
 }
 
-/** Sends the change link for `link`; when it went, the stamp it went under and how long until it lapses. */
 export async function changeLinkStep(
   link: Extract<SecretLink, { kind: 'change' }>,
 ): Promise<{ sentAt: string; lapsesInSeconds: number } | null> {
   return sendChangeLink(link);
 }
 
-/** Clears account `userId`'s pending address if the row is still stamped `sentAt`, the change whose link has now expired. */
 export async function lapseChangeStep(userId: string, sentAt: string): Promise<boolean> {
   return lapseEmailChange(userId, new Date(sentAt));
 }
 
-/** Logs a mail that failed every attempt, by kind and account or invitation id alone. */
 export async function reportSecretLinkUnsent(link: SecretLink): Promise<void> {
   const whom =
     link.kind === 'invitation' ? `for invitation ${link.invitationId}` : `to user ${link.userId}`;

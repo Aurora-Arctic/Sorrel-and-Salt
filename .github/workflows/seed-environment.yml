@@ -13,7 +13,7 @@ name: Seed an environment
 # would do and nothing is written. Force is off by default: it passes `--force` to the compendium seed,
 # which then updates every marked entry that refusals 1 to 4 would refuse, and
 # clears the curator mark on each one it overwrites. It never lifts an
-# identity change or a form a coven holds (claude-docs/db/compendium-seed/README.md,
+# identity change or a form a coven holds (claude-docs/compendium/compendium-seed/README.md,
 # "Refusals").
 on:
   workflow_dispatch:

@@ -13,10 +13,6 @@ const { startJob } = vi.hoisted(() => ({
 vi.mock('@/lib/jobs', () => ({ startJob }));
 vi.mock('@/lib/mail', () => ({ send: async () => {} }));
 
-// The transport's half of `Workspace.memberPauses`: one member's pauses, each with who set and lifted it named through
-// `usersById`, and the refusal reaching the wire as `FORBIDDEN`. Who may read them is the service's, in
-// tests/modules/coven/services/member-pause.test.ts. The message argument of `pauseMemberAccess` is at the end.
-
 const HISTORY = /* GraphQL */ `
   query ($id: ID!, $userId: ID!) {
     workspace(id: $id) {
@@ -123,8 +119,6 @@ const PAUSE = /* GraphQL */ `
 
 type Paused = { pauseMemberAccess: { id: string } | null };
 
-// The message to the member is an optional argument, handed to the service and stored on the pause beside the note. What the
-// mail says is tests/modules/coven/services/member-pause-mail.test.ts.
 describe('Mutation.pauseMemberAccess', () => {
   beforeEach(() => {
     startJob.mockClear();

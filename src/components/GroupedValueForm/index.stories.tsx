@@ -8,18 +8,13 @@ import { setInputValue, submitForm, usePressOnMount, useSteps } from '../../../.
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import GroupedValueForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupedValueForm. The fake
-// API (.storybook/mock-api.ts) refuses the saving states, one beside a field and one
-// above. Shown in the admin modal. One story per kind: category, form, deity, flat.
 const meta = {
   title: 'Admin / Grouped Value Form',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Enough of each to narrow: every group field is typed into.
 const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
-// A form group's choices draw its icon: the first two their own, one none (the generic).
 const FORM_GROUPS = asOptions(GROUP_NAMES.form).map((group, index) => ({
   ...group,
   icon: index === 3 ? null : FORM_GROUP_ICONS[index],
@@ -58,7 +53,6 @@ const addingAFormNode = (
   </InModal>
 );
 
-// A form filed under a group that draws its own icon.
 const editingAFormNode = (
   <InModal eyebrow="Edit Form" title="Testleaf">
     <GroupedValueForm
@@ -75,14 +69,12 @@ const editingAFormNode = (
   </InModal>
 );
 
-// The other flat kind.
 const addingAZodiacSignNode = (
   <InModal title="Add Zodiac Sign">
     <GroupedValueForm kind="zodiacSign" onDone={done} />
   </InModal>
 );
 
-// A rename sent and refused for the name: the server's sentence shows beside it.
 const NAME_TAKEN = [
   answerMutation(UpdateCategoryDocument, () =>
     refusal({
@@ -92,7 +84,6 @@ const NAME_TAKEN = [
     }),
   ),
 ];
-// ...and refused as a whole: the sentence shows above the fields.
 const NOT_ALLOWED = [
   answerMutation(UpdateCategoryDocument, () =>
     refusal({ message: 'You cannot change categories right now.', code: 'FORBIDDEN' }),
@@ -113,16 +104,12 @@ const SaveRefusedView = ({ answers }: { answers: typeof NAME_TAKEN }) => {
 const saveRefusedNode = <SaveRefusedView answers={NAME_TAKEN} />;
 const saveFailedNode = <SaveRefusedView answers={NOT_ALLOWED} />;
 
-// Saved while empty: each missing field says so.
 const SavingEmptyView = () => {
   useSteps([() => submitForm('form')]);
   return addingACategoryNode;
 };
 const savingEmptyNode = <SavingEmptyView />;
 
-// Rename it to see the note by Save that the rename carries onto the
-// compendium, and the head keep the name it was saved under, its tradition
-// after it, as a deity's pills name it.
 const editingADeityNode = (
   <InModal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural">
     <GroupedValueForm
@@ -140,15 +127,12 @@ const editingADeityNode = (
   </InModal>
 );
 
-// A flat kind has no group field.
 const addingACelestialBodyNode = (
   <InModal title="Add Celestial Body">
     <GroupedValueForm kind="celestialBody" onDone={done} />
   </InModal>
 );
 
-// Delete pressed once drawn, as a person would: the question over the form,
-// dimmed and held beneath it until Delete or Cancel answers.
 export const AskingToDelete: Story = {
   render: () => {
     usePressOnMount('Delete Category');

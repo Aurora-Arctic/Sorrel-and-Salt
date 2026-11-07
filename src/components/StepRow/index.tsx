@@ -3,10 +3,8 @@ import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
 
-// One step of a spell: its position, its ingredient with the quantity
-// and unit if it has them, and its text. Presentational: the spell builder
-// hands it editing controls and the recipe page none.
-// See claude-docs/components/step-row.md.
+// One step of a spell. Presentational: the spell builder hands it editing controls and the recipe page none
+// (claude-docs/components/step-row.md).
 
 /**
  * The quantity as the person typed it rather than as the column stores it: "1.000" is "1" and
@@ -34,21 +32,18 @@ export const amountOf = (quantity?: string | null, unit?: string | null): ReactN
 };
 
 /**
- * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the
- * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control,
- * or anywhere in the open fields, are left to themselves; an open card closes only from its header
- * text.
+ * A click on the card's plain face toggles it, as a mouse shortcut for the pencil, which stays the keyboard and
+ * screen-reader control (so the row gets no role or tab stop). Clicks on a control or in the open fields are left alone.
  */
 function toggleFromFace(event: MouseEvent<HTMLLIElement>, open: boolean, toggle: () => void): void {
   const target = event.target as Element;
-  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not the
-  // face.
+  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not
+  // the face.
   if (!event.currentTarget.contains(target)) return;
   // A target a click just removed (a picked list row) is no longer anywhere in the card.
   if (!target.isConnected) return;
   if (target.closest('button, input, textarea, select, a, [role=combobox], .step-row__open'))
     return;
-  // Open, only the header's own text closes it: nothing near the fields ever does.
   if (open && !target.closest('.step-row__name, .step-row__summary, .step-row__position')) return;
   toggle();
 }

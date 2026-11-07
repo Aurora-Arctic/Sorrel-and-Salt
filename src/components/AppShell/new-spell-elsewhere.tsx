@@ -5,10 +5,7 @@ import { Suspense, useEffect } from 'react';
 import { usePendingNavigation } from '../../lib/navigation';
 import { NEW, newSpellElsewhere } from './add-href';
 
-// `?new=spell-<slug>` on a page that is not that coven's grimoire: the address moves to the grimoire
-// with the same value, replaced so Back does not return to the page that only sent the viewer on.
-// Drawn once in the shell; the grimoire page reads its own value (grimoire-tab.tsx, SpellDialog).
-
+// Replaced, so Back does not return to the page that only sent the viewer on.
 function Redirect(): null {
   const pathname = usePathname();
   const value = useSearchParams().get(NEW);

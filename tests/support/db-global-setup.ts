@@ -5,9 +5,7 @@ import { TEST_TEMPLATE, workerDatabaseName } from './worker-database';
 
 declare module 'vitest' {
   interface ProvidedContext {
-    /** Every database this setup cloned, one per pool slot, so a test can assert its own was made. */
     workerDatabases: string[];
-    /** The migrated, `standard`-seeded template every one of those was cloned from. */
     templateDatabase: string;
   }
 }

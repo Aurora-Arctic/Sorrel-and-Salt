@@ -12,9 +12,6 @@ import {
 } from 'pdf-lib';
 import type { CardAssets } from '@/lib/invitation-cards/types';
 
-// A reader for the Letter card sheets the invitation and business cards share (src/lib/card-sheet/): the shipped fonts and
-// pictures, the sheet's page geometry, and just enough of a content-stream reader to see what each page draws.
-
 export const PUBLIC = path.join(process.cwd(), 'public/invitation-cards');
 export const read = (file: string) => new Uint8Array(readFileSync(path.join(PUBLIC, file)));
 export const assets: CardAssets = {
@@ -26,11 +23,8 @@ export const assets: CardAssets = {
   lexend500: read('fonts/lexend-500.ttf'),
 };
 
-// Letter, and the block of ten cards with bleed on the portrait page: 7.25 × 10.25 in, centred, 5/8 in from each side
-// and 3/8 in from the top and the bottom.
 export const LETTER = { width: 612, height: 792 };
 export const BLOCK = { left: 45, right: 567, bottom: 27, top: 765 };
-// A card's trim on the page: the cards stand upright, so its 3.5 in width runs across the page and its 2 in height up it.
 export const CARD = { across: 252, up: 144 };
 // What a print shop's or office printer's unprintable edge may clip: nothing is drawn nearer the paper's edge than this.
 export const PAPER_CLEARANCE = 18;
@@ -43,14 +37,12 @@ export interface Box {
 }
 export type Matrix = [number, number, number, number, number, number];
 
-// Just enough of a content-stream reader to follow the transforms and see what each page draws, in page points.
 export type Vector = [number, number];
 
 export interface Drawn {
   fills: Box[];
   clips: Box[];
   strokes: { from: [number, number]; to: [number, number] }[];
-  /** The CMYK stroke in force at each line in `strokes`, in the same order. */
   strokeInks: number[][];
   // up and right are the directions, on the page, of the image's top and of its right-hand side.
   // textsBefore and pathsBefore count the text runs and filled paths drawn before the image.
@@ -63,12 +55,9 @@ export interface Drawn {
     pathsBefore: number;
   }[];
   textRuns: number;
-  /** Every operator the page uses, so a test can see which colour spaces it paints in. */
   operators: Set<string>;
-  /** The CMYK fill in force at each rectangle in `fills`, at each other filled path, and at each text run. */
   fillInks: number[][];
   pathInks: number[][];
-  /** The box of each filled path in `pathInks`, in the same order. */
   pathBoxes: Box[];
   textInks: number[][];
 }
@@ -227,7 +216,6 @@ export function drawn(doc: PDFDocument, pageIndex: number): Drawn {
 
 export type ImageKind = 'salt' | 'sorrel' | 'shadow';
 
-/** What each of a page's image names draws, told apart by the pixel widths of the baked pictures. */
 export function imageNames(doc: PDFDocument, pageIndex: number): Record<string, ImageKind> {
   const xObjects = doc.getPage(pageIndex).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
   const names: Record<string, ImageKind> = {};
@@ -246,7 +234,6 @@ export function pictures(doc: PDFDocument, pageIndex: number, picture: ImageKind
     .map((image) => image.box);
 }
 
-// The cell of the block a picture's centre falls in, counted across and up the portrait page.
 export function cell({ left, right, bottom, top }: Box): string {
   const x = (left + right) / 2;
   const y = (bottom + top) / 2;

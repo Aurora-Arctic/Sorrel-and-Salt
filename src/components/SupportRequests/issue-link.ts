@@ -1,4 +1,3 @@
-/** An issue's address as `owner/repo#number`, or its path past the host when it is not in that shape. */
 export function issueLabel(issueUrl: string): string {
   let path: string;
   try {

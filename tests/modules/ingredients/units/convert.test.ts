@@ -22,7 +22,6 @@ const SPECIFIED_SIZE: Record<string, number> = {
 
 const CONVERTIBLE = [UNITS_BY_DIMENSION.weight, UNITS_BY_DIMENSION.volume];
 
-// Values with the column's three decimals, small and large.
 const SAMPLE = [0, 0.001, 0.525, 1, 7.25, 333.333, 1000, 123_456.789];
 
 function valueOf(result: ReturnType<typeof unitConvert>): number {

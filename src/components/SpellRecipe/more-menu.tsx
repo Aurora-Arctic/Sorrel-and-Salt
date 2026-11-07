@@ -12,7 +12,7 @@ import type { SpellMoreMenuProps } from './types';
 
 // The three dots on the recipe page and a spell's card: Duplicate, Print (the page's alone) and Delete, bare
 // verbs whose dialog names the noun. Print alone is its own button, not a menu of one, and an empty menu is not
-// drawn (claude-docs/components/spell-recipe.md, "Duplicate", "Print" and "Delete Spell").
+// drawn (claude-docs/components/spell-recipe.md, "The actions row", "Print" and "Delete Spell").
 
 export default function SpellMoreMenu({
   workspaceId,

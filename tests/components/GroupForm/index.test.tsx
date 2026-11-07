@@ -34,8 +34,7 @@ import {
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a group, for every group vocabulary, a deity's traditions included: a name, a description, and for a category group its chip's two colours,
-// each held to 4.5:1 on its own ground before the request as well as by the service. A delete of a group holding rows first asks where they go, then asks to confirm that move (claude-docs/components/group-form.md).
+// claude-docs/components/group-form.md
 
 const GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
@@ -69,8 +68,7 @@ const description = () => screen.getByRole('textbox', { name: 'Description' });
 const dark = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const light = () => screen.getByRole('textbox', { name: 'Light Theme Colour' });
 
-// Every way out asks first while the form has changes: the
-// guard's shape is tests/components/Modal's, and this its wiring.
+// The guard's shape is tests/components/Modal's; this is its wiring.
 describe('GroupForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
     const onClose = renderInModal((done) => (
@@ -81,9 +79,6 @@ describe('GroupForm, its unsaved changes', () => {
   });
 });
 
-// Each step of a delete is a question over the form, as the unsaved
-// changes' is: the form inert behind it, each
-// step's focus on its own safe answer.
 describe('GroupForm, its delete questions in a modal', () => {
   it('holds the form through both steps, the focus on each safe answer, and gives both back on Cancel', () => {
     const onClose = renderInModal((done) => (
@@ -102,7 +97,6 @@ describe('GroupForm, its delete questions in a modal', () => {
 
     press('Back');
     const choosing = expectAskingOver(name(), answer('Cancel'));
-    // Going back keeps the choice made.
     expect(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' })).toHaveTextContent(
       'Fixture Mineral',
     );
@@ -169,7 +163,6 @@ describe('GroupForm, for a category group', () => {
       ]);
     });
 
-    // The schema is the service's, so the floor holds before the request.
     it('refuses a colour under the floor beside its own picker, naming the ratio, before asking the server', async () => {
       const onDone = renderForm();
 
@@ -186,8 +179,6 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The colour chosen first sets its partner, the same hue
-  // fitted to the other ground, until the keeper sets the partner themselves.
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
       const { unmount } = render(
@@ -245,8 +236,6 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // A colour too close to another group's in the same
-  // theme is warned of, beside its picker, and never blocks the save.
   describe('the near-colour warning', () => {
     const COLOURED = [
       { ...GROUPS[0], colorDark: '#5a87ae', colorLight: '#286ba6' },
@@ -455,7 +444,6 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  // The icon a keeper picks, one of the six or None, the generic.
   describe('its icon', () => {
     const icons = () => screen.getByRole('group', { name: 'Icon' });
 
@@ -534,8 +522,6 @@ describe('GroupForm, for a form group', () => {
   });
 });
 
-// A deity's tradition, a form group's shape under its own name, its
-// deities moved and re-slugged on a delete.
 describe('GroupForm, for a deity tradition', () => {
   it('asks for no colours, and creates the tradition from its name and description alone', async () => {
     const calls: CreateDeityTraditionMutationVariables[] = [];
@@ -581,8 +567,7 @@ describe('GroupForm, for a deity tradition', () => {
   });
 });
 
-// Undo and redo: the hook is tested in tests/components/Field; this
-// is its wiring, and where it is switched off.
+// The undo hook is tested in tests/components/Field; this is its wiring.
 describe('GroupForm, its undo and redo', () => {
   const save = () => screen.getByRole('button', { name: 'Save Group' });
 

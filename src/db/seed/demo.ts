@@ -123,7 +123,6 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): NamedIngredient {
  */
 export const DEMO_STOCK: SeedStock[] = [
   ...STANDARD_STOCK,
-  // Own entries.
   {
     id: '00000000-0000-0000-0003-000000000001',
     ingredient: fromWorkspace(HEARTH_ASH),
@@ -703,7 +702,6 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Sit where the moonlight reaches and count breaths back from a hundred.' },
     ],
   },
-  // The drafts.
   {
     id: '00000000-0000-0000-0002-000000000028',
     title: 'Hearthstone Luck Charm',
@@ -1160,10 +1158,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     // Inside the same transaction: every spell points at rows `standard` writes.
     // A deity pick someone deleted stays deleted, as a spell does.
     await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
-    // The curated compendium, after standard so its fixture entries keep their
-    // rows and a curated entry of the same identity is skipped. Demo is for a
-    // person exploring the app; standard stays the test fixture cast
-    // (claude-docs/db/demo-scenario.md).
+    // The curated compendium goes after `standard` so fixture entries keep their rows
+    // (claude-docs/db/demo-scenario.md, "The demo scenario").
     await seedCompendiumContent(tx, CURATED_FILES);
     // Reference data on every environment, so the scenario shows it too; `standard` leaves it out.
     await seedDemoCovenSeats(tx);

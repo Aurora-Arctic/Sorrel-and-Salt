@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { ProviderId } from '@/lib/types';
 import { lockLength, passwordLockedMessage } from '@/emails/password-locked';
 
-// What the mail carries: its recipient, its reset link and how long the lock lasts. Its wording and design are the
-// story's (src/emails/password-locked.stories.tsx).
-
 const LINK = 'http://localhost:8000/api/auth/reset-password/token123?callbackURL=%2Freset-password';
 
 describe('passwordLockedMessage', () => {

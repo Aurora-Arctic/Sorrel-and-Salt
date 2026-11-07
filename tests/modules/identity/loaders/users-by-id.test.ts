@@ -3,8 +3,6 @@ import { buildLoaders } from '@/graphql/loaders';
 import { usersById } from '@/modules/identity';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 
-// The query count, observed at the repository: every read the service could
-// make is wrapped so the test counts calls without changing what they answer.
 const repository = vi.hoisted(() => ({
   findCoMemberNamesIncludingSoftDeleted: vi.fn(),
   findManyByIds: vi.fn(),

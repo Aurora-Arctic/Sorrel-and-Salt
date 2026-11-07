@@ -1,14 +1,8 @@
 import { vi } from 'vitest';
 import type { AuthInstance } from './types';
 
-/**
- * `@/lib/auth` built afresh under `env`, for a file's `beforeAll`: the module reads its secret, providers,
- * origin and flags once, at import. `env` applies for the import alone, so every test in the file sees the
- * same environment (claude-docs/auth/tests.md, "Tests").
- *
- * Its `handler` and `api` calls return once the background tasks they started, its mails among them, have
- * settled: outside a request those tasks are held rather than run after a response (`src/lib/background-tasks.ts`).
- */
+// The module reads its secret, providers, origin and flags once, at import (claude-docs/auth/tests.md, "Tests").
+// `handler` and `api` return once their background tasks, mails among them, settle: outside a request they are held (`src/lib/background-tasks.ts`).
 export async function importAuth(env: Readonly<Record<string, string>>): Promise<AuthInstance> {
   vi.resetModules();
   const previous = Object.fromEntries(Object.keys(env).map((name) => [name, process.env[name]]));

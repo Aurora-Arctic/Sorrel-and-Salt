@@ -4,9 +4,7 @@ import { lapsedPageStep } from './provisional-cleanup-steps';
 import { provisionalCleanupBatch } from './provisional-cleanup-batch';
 
 /**
- * One day's cleanup of lapsed unverified accounts, backing up the per-sign-up expiry run for an account whose run was lost: it
- * reads the lapsed ids a page at a time and starts a batch run for each page, then ends. It never sleeps and starts no successor,
- * as the daily cron starts the next day's run. Returns how many batches it started.
+ * Never sleeps and starts no successor, as the daily cron starts the next day's run.
  */
 export async function provisionalCleanup(): Promise<number> {
   'use workflow';

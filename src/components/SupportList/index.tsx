@@ -16,8 +16,7 @@ import { senderStatusLabel } from '../SupportSenderRequest/status';
 import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
 
-// The sender's own support requests, newest first, two lines each: the subject, then its status, kind, sent day and
-// reply count. A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md). The service has already limited the rows to the sender's.
+// A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
 
 const labelOfAbout = (value: string): string =>
   ABOUT_OPTIONS.find((about) => about.value === value)?.label ?? value;

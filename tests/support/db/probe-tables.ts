@@ -6,7 +6,7 @@ import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users
 
 // The repository's own tests run against scratch tables rather than real ones:
 // the contract is the audit columns and the table shapes, not any one table's
-// other constraints (claude-docs/db/write-path.md, "The write path").
+// other constraints (claude-docs/db/write-path.md, "The write path — `withAudit`").
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
 // `users`: the contract is about the six columns, not any one table.
@@ -75,14 +75,11 @@ export const tiers = namedWrites(
   }),
 );
 
-/** Acting users with no `users` row: the probe tables carry no FK to one. */
 export const session = { userId: '11111111-1111-1111-1111-111111111111' };
 export const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
 
-/** The raw client, for what the repository deliberately cannot do. Set in `beforeAll`. */
 export let sql: ReturnType<typeof postgres>;
 
-/** Opens the raw client for this file, and closes it after. */
 export function useRawClient() {
   beforeAll(() => {
     sql = postgres(process.env.DATABASE_URL as string);
@@ -90,7 +87,6 @@ export function useRawClient() {
   afterAll(() => sql.end());
 }
 
-/** Creates the probe tables for this file, empties them before each test, and drops them after. */
 export function useProbeTables() {
   beforeAll(async () => {
     sql = postgres(process.env.DATABASE_URL as string);

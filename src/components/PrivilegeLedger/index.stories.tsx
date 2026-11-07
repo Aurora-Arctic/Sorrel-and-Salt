@@ -4,8 +4,6 @@ import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/PrivilegeLedger.
-// Invented people, on invented dates.
 const meta = {
   title: 'Admin / Privilege Ledger',
 } satisfies Meta;
@@ -147,8 +145,6 @@ const oneUserAdminOnlyNode = <OneUserAdminOnlyView />;
 
 const emptyNode = <PrivilegeLedger changes={[]} filter={{}} />;
 
-// A search no row in this file matches, so the empty state is true of the
-// other stories' rows as well.
 const noMatchesNode = (
   <PrivilegeLedger
     changes={[]}

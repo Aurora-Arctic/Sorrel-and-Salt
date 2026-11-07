@@ -20,10 +20,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The curated form vocabulary's writes, the site admin's alone, and the reads the admin page lists them by.
-// A compendium entry's forms are its variants, each a pick, so a form a live variant picked is held: its delete is refused and its rename is carried onto every such variant, moving no address. A coven's pick is neither.
-// The seeded vocabulary stays, so every form a test writes is named `Fixture …`.
-
 // Two repository reads wrapped, each passing through to the real one: the page finder, to see what the list hands it, and the rename's clash check,
 // so one test can have a clashing variant appear after the check, as a second keeper's write would.
 const repository = vi.hoisted(() => ({
@@ -44,7 +40,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-/** Seeded groups by name, read once. */
 let groups: Map<string, string>;
 beforeAll(async () => {
   const rows = await sql<{ id: string; name: string }[]>`

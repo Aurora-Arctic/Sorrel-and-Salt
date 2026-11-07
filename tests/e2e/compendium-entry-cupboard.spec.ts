@@ -7,17 +7,12 @@ import { ADD, HELD as EVERY, HELD_MARK, SHELF } from '../support/cupboard-wordin
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The coven's cupboard choices on the public entry page: the card's plus adds the entry, and the three dots then
-// offer what the coven's own copy offers. In Your Cupboard shows the holding coven to its members only.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 const NAME = 'Fixture Shelfwort';
-// The plus and the check are tipped and named by their words and then the entry; a
-// role name matches in part, so ADD and HELD find them. HELD keeps the colon, so it finds only
-// the check, never the shelf, which is named In Your Cupboard alone (SHELF, matched exactly).
+// Role names match in part: HELD keeps the colon so it finds only the check, never the shelf (SHELF, matched exactly).
 const HELD = `${EVERY}:`;
 
 test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
@@ -89,9 +84,7 @@ test('a member adds the entry from its public page, and the three dots then offe
       page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Shelf.' }),
     ).toHaveCount(1);
     await expect(menu()).toBeVisible();
-    // Remove is among the dots, not its own bin, beside three other choices.
     await expect(bin()).toHaveCount(0);
-    // Every coven of the member's holds it now, so the card's check stands where the plus was.
     await expect(add()).toHaveCount(0);
     await expect(check()).toBeVisible();
     await expect(shelf()).toBeVisible();
@@ -124,7 +117,6 @@ test('a member adds the entry from its public page, and the three dots then offe
     await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: /^Edit Stock/ });
     await expect(dialog).toBeVisible();
-    // This coven is the only one on the page, so there is none to choose.
     await expect(dialog.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
@@ -145,7 +137,6 @@ test('a member adds the entry from its public page, and the three dots then offe
     await open();
     await expect(shelf()).toBeVisible();
     await expect(add()).toHaveCount(0);
-    // A viewer may add nowhere, so no check either.
     await expect(check()).toHaveCount(0);
     await signInAgainAs(page, coven.users.B);
     await open();
@@ -165,9 +156,6 @@ test('a member adds the entry from its public page, and the three dots then offe
   });
 });
 
-// With two covens that may add, the plus is a menu of them, adding to the one chosen at once,
-// and a coven that holds the entry is listed there
-// disabled. Add is never in the three dots here: the plus is where it is.
 test('a member of two covens chooses from the plus’s menu, the holding coven then disabled there', async ({
   page,
   browser,
@@ -239,7 +227,6 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
   await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
 
   await test.step('the plus opens a menu of both covens instead of adding', async () => {
-    // A member whose covens hold none of it sees no shelf.
     await expect(shelf()).toHaveCount(0);
     await add().click();
     await expect(addMenu).toBeVisible();
@@ -279,7 +266,6 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await expect(held).toHaveAccessibleName(`${SECOND}, ${HELD_MARK}`);
     await addMenu.getByRole('menuitem', { name: FIRST }).click();
     await expect.poll(async () => (await heldRows(one.id)).length).toBe(1);
-    // Both hold it now: the card's check in the plus's place.
     await expect(add()).toHaveCount(0);
     await expect(page.getByRole('main').getByRole('button', { name: HELD })).toBeVisible();
   });
@@ -293,9 +279,6 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
   });
 });
 
-// The Quick Look window carries the same plus and check beside its pencil: on the public compendium a visitor and a viewer get neither, a member the
-// plus until the coven holds the entry and the check after; the admin list follows the same
-// rule, and the coven's own list opens the window of its card, which has neither.
 test('the Quick Look window has the plus, then the check, on a compendium list for a member only', async ({
   page,
   browser,
@@ -381,7 +364,6 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
 
     await test.step('the coven’s own list opens the window of its card: Annotate, and no plus or check', async () => {
       await opened(`/coven/${coven.slug}/ingredients?query=${encodeURIComponent(NAME_LOOK)}`);
-      // The coven card has neither: the window follows its card.
       await expect(add()).toHaveCount(0);
       await expect(check()).toHaveCount(0);
       await expect(details().getByRole('link', { name: `Annotate ${NAME_LOOK}` })).toBeVisible();

@@ -7,10 +7,8 @@ import { siteUrl } from '@/lib/site';
 // cache's (the `compendium` tag, an hour at most), so a crawl costs no query.
 export const dynamic = 'force-dynamic';
 
-// The home page, the list page, the sign-in page, the public documents and every current entry, never a
-// retired slug (the read lists live entries only). The pages before the entries have no
-// `lastModified`: the list changes whenever any entry does, and a date that is always today tells a
-// crawler nothing.
+// The public pages and every current entry, never a retired slug. The pages before the entries have no `lastModified`:
+// the list changes whenever any entry does, and a date that is always today tells a crawler nothing.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await listCompendiumSlugs();
   return [

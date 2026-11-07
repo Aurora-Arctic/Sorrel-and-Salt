@@ -29,8 +29,6 @@ export function headingOf({
   ingredientId,
   reviewLine,
 }: IngredientDetailsOpened): ModalHeading {
-  // The top line beside Close, as the entry page's top bar has it: New or Updated, then the one
-  // safety badge; present for every entry so Close has it to itself.
   const top = (
     <>
       {marks && <RecencyMark recency={marks.recency} />}
@@ -39,17 +37,11 @@ export function headingOf({
       )}
     </>
   );
-  // The entry's name as the card names it, for Edit and for the plus.
   const name = editAction?.name ?? heading.title;
-  // The coven card's own controls where the page gave them; else the compendium card's Edit,
-  // named as the card names the entry.
   const edit = controls ?? (editAction && <EditAction {...editAction} name={name} />);
-  // The plus, or the check once every coven the viewer may add in holds the entry, left of the
-  // pencil, as on the entry page (PlusMark).
   const add = plus && ingredientId && (
     <PlusMark plus={plus} ingredientId={ingredientId} name={name} />
   );
-  // The compendium card's order: the plus, Edit in Compendium, then the three dots.
   const buttons = (add || edit || more) && (
     <>
       {add}
@@ -63,7 +55,6 @@ export function headingOf({
     ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
     ...(buttons && { formalActions: buttons }),
     ...((marks || reviewLine) && {
-      // The badges, then the review line as the head's last row (it fills a row of its own).
       under: (
         <>
           {marks && (
@@ -82,7 +73,6 @@ export function headingOf({
   };
 }
 
-/** The compendium card's Edit: Edit in Compendium on the public list, plain Edit on the keeper's. */
 const EditAction = ({
   inCompendium,
   ...link
@@ -91,8 +81,6 @@ const EditAction = ({
 
 /** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "The details modal"). */
 function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
-  // Named by where it goes, not by who is looking: the public compendium's page, or the coven's own
-  // page for an entry it holds.
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
     <div className="ingredient-details-foot">

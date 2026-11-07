@@ -1,15 +1,12 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The rules every specimen card in a list shares, IngredientCard's and SpellCard's, written once so
-// the two cards stay alike: the whole card as the title's link, the title block, the badge row under
-// it, and the compact look. Each card passes its own class names; what only one card has stays in its
-// own stylesheet. claude-docs/components/ingredient-card.md, "Styling".
+// The rules every specimen card in a list shares, IngredientCard's and SpellCard's, so the two stay alike; each card
+// passes its own class names (claude-docs/components/ingredient-card.md, "Styling").
 
 // `$card`, `$heading` and `$title` are the card's article, its title block and its heading. `$ring`
 // is `card-link()`'s: false for a card that draws the focus ring itself.
 @mixin specimen-card($card, $heading, $title, $ring: true) {
-  // The pointer promises a press only on a card whose title links somewhere.
   #{$card}:has(#{$title} a) {
     cursor: pointer;
   }
@@ -40,7 +37,6 @@
     align-items: center;
   }
 
-  // The medium badge size, which holds a badge 24px tall.
   #{$card} .badge {
     @include badge-size('medium');
   }
@@ -61,7 +57,6 @@
     gap: space(2);
   }
 
-  // Title: h4's size, one step under the regular card's h3.
   #{$title} {
     font-size: heading-size(4);
     line-height: 1.15;
@@ -72,8 +67,6 @@
     gap: space(2);
   }
 
-  // Badges: the sides tighten and the gaps close. The height stays at 24px, the smallest target a
-  // tipped badge may have.
   #{$card} .specimen__badges {
     gap: space(1);
 
@@ -86,7 +79,6 @@
     margin-block-start: space(1);
   }
 
-  // Chips: tighter inside and between. The chip row has no control in it.
   #{$card} .specimen__chips {
     gap: space(1);
 

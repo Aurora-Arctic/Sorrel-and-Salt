@@ -31,7 +31,6 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
     throw error;
   }
   if (!paused) redirect(`/coven/${encodeURIComponent(slug)}` as Route);
-  // The switcher and the list of the viewer's other covens they can open, so a paused coven is never a dead end.
   const { viewer, workspaces } = await viewerOf();
   const others = workspaces.filter((workspace) => workspace.slug !== slug && !workspace.paused);
 

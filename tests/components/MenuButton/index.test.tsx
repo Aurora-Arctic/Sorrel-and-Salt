@@ -5,8 +5,7 @@ import MenuButton from '@/components/MenuButton';
 import { choicesFor, sectionsFor } from '@/components/MenuButton/sections';
 import type { MenuButtonItem, MenuSection } from '@/components/MenuButton/types';
 
-// The menu button (claude-docs/components/menu-button.md): a labelled button
-// opening a menu of links and actions, with the APG menu-button keys.
+// claude-docs/components/menu-button.md
 
 const toggle = () => screen.getByRole('button', { name: 'Edit' });
 const menu = () => screen.getByRole('menu', { name: 'Edit' });
@@ -195,8 +194,6 @@ describe('MenuButton', () => {
     });
   });
 
-  // An icon in place of the words (the card More): the label still names
-  // the button and its menu, read by a screen reader though not shown.
   it("keeps its label as its name and its menu's with an icon in place of the words", () => {
     render(
       <MenuButton
@@ -207,11 +204,9 @@ describe('MenuButton', () => {
       />,
     );
     fireEvent.click(toggle());
-    // `menu()` finds it by the name Edit.
     expect(within(menu()).getAllByRole('menuitem')).toHaveLength(2);
   });
 
-  // The bar's Add Ingredient chevron is "Choose Where to Add" and its menu "Add Ingredient To".
   it('names its menu by menuLabel where it is given, the button keeping its label', () => {
     render(<MenuButton label="Edit" menuLabel="Edit Entry" className="btn" items={actions()} />);
     fireEvent.click(toggle());
@@ -221,7 +216,6 @@ describe('MenuButton', () => {
   });
 });
 
-// The green item goes first: whatever place a caller gives the item marked `primary`, the menu draws it first and leaves the rest in the caller's order, and the keys follow what is drawn.
 describe('MenuButton green item first', () => {
   const names = (): (string | null)[] =>
     within(menu())
@@ -242,7 +236,6 @@ describe('MenuButton green item first', () => {
     fireEvent.click(toggle());
 
     expect(names()).toEqual(['Second Choice', 'First Choice', 'Third Choice']);
-    // The opening focus is the first item drawn, the green one.
     const [green, , last] = within(menu()).getAllByRole('menuitem');
     expect(green).toHaveFocus();
     fireEvent.keyDown(green!, { key: 'End' });
@@ -276,7 +269,6 @@ describe('MenuButton green item first', () => {
 });
 
 // Sections: a menu that holds both the compendium's choices and the coven's draws them in labelled groups, the caller putting first the group that belongs to the page the viewer is on.
-// This is the APG menu pattern: a group named by its visible label, a separator between groups, and the arrows running through every item as one list.
 describe('MenuButton sections', () => {
   const plain = (key: string, label: string): MenuButtonItem => ({
     key,
@@ -410,8 +402,6 @@ describe('MenuButton sections', () => {
       expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
     });
 
-    // A More menu always draws its labelled section, even for one kind of choice,
-    // and an empty side is left out.
     it('hands a More menu the sections even where only one side has items', () => {
       expect(choicesFor(groups, 'coven').sections).toHaveLength(2);
       const lone = choicesFor({ ...groups, compendium: [] }, 'coven');

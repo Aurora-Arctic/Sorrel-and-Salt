@@ -9,9 +9,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { usePendingNavigation } = await import('@/lib/navigation');
 const { default: MainBody } = await import('@/components/AppShell/main-body');
 
-// While a navigation aimed at the main region is on its way, the page gives
-// way to one status inside a main landmark; any other navigation leaves it.
-
 let arrive = () => {};
 let go: (target?: NavigationTarget) => void = () => {};
 
@@ -41,8 +38,7 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
-// The page under test hides nothing of its own, so anything hidden from
-// assistive technology is the skeleton left over the arrived page.
+// The page hides nothing of its own, so anything hidden from assistive technology is the skeleton.
 const hiddenFrom = (container: HTMLElement): Element | null =>
   container.querySelector('[aria-hidden="true"]');
 
@@ -53,8 +49,7 @@ describe('MainBody', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  // The page is held beneath the skeleton, not removed, so it is
-  // proved out of reach rather than absent: inert, and its landmark hidden.
+  // The page is held beneath the skeleton, not removed: proved inert with its landmark hidden.
   it('puts the page out of reach under one status in a main landmark while a main navigation is pending', async () => {
     renderBody();
     await act(async () => go({ region: 'main', shape: 'page' }));
@@ -84,8 +79,7 @@ describe('MainBody', () => {
     expect(await screen.findByText('The old page')).toBeTruthy();
   });
 
-  // The frame each destination is drawn in is presentation, owned by the
-  // workshop story; what stays is the landmark, its heading and the one status.
+  // The frame each destination is drawn in is the workshop story's.
   it('keeps the landmark, the hidden heading and the one status in a framed wait', async () => {
     renderBody();
     await act(async () => go({ region: 'main', shape: 'page', frame: 'wide' }));
@@ -94,8 +88,6 @@ describe('MainBody', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
-  // The skeleton stays over the arrived page for the fade, out of reach
-  // of assistive technology and the pointer, and leaves with no layout of its own.
   describe('when the page arrives', () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });

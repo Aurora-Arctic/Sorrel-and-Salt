@@ -1,25 +1,20 @@
 import { unitConvert } from '@/modules/ingredients';
 import { dimensionOf, type Unit } from '../ingredients/schema/units';
 
-// What completing a working would take from the coven's jars, decided without touching them. The one
-// function behind both the completion (M13.5) and the preview before it (M13.6, M13.7), so the two
-// cannot disagree: it reads only the steps and jars it is handed and writes nothing. Amounts are
-// held in thousandths, the stock columns' scale, so adding and subtracting stay exact.
+// The one function behind the completion and its preview, so the two cannot disagree. Amounts are held in thousandths,
+// the stock columns' scale, so adding and subtracting stay exact.
 
-/** The part of a spell step the plan reads. */
 export interface PlanStep {
   id: string;
   position: number;
   ingredientId: string | null;
   variantId: string | null;
-  /** The typed name of a custom step. */
   name: string | null;
   /** `numeric` text from the column, or a number. */
   quantity: string | number | null;
   unit: Unit | null;
 }
 
-/** The part of a stock row the plan reads. */
 export interface PlanJar {
   id: string;
   variantId: string;
@@ -29,10 +24,7 @@ export interface PlanJar {
   lowStockThreshold: string | number | null;
 }
 
-/**
- * Why nothing is taken for an ingredient step: a custom (typed-name) step, a form the coven holds no jar of, a step with no
- * amount, a unit the jar cannot be measured in (drift since the spell was saved), or a jar kept without an amount.
- */
+/** `units-differ` is drift since the spell was saved: a unit the jar cannot be measured in. */
 export type NotDeductedReason =
   'custom' | 'unstocked' | 'no-quantity' | 'units-differ' | 'jar-not-measured';
 
@@ -44,19 +36,17 @@ export type StepPlan =
       amount: number;
       unit: Unit;
       shortfall: number;
-      /** What the jar held before this take, in the jar's unit. */
+      /** In the jar's unit, as `lowStockThreshold` is. */
       before: number;
-      /** The jar's Low mark, in the jar's unit. */
       lowStockThreshold: number | null;
     }
   | { kind: 'skip'; stepId: string; reason: NotDeductedReason }
-  /** An instruction-only step: it has nothing to take, so it is not a warning. */
+  // Nothing to take, so not a warning.
   | { kind: 'none'; stepId: string };
 
 const SCALE = 1000;
 const thousandths = (value: string | number) => Math.round(Number(value) * SCALE);
 
-/** One entry per step, in step order. */
 export function planDeductions(steps: readonly PlanStep[], jars: readonly PlanJar[]): StepPlan[] {
   const jarOf = new Map(jars.map((jar) => [jar.variantId, jar]));
   // What each jar still holds as the plan goes: a spell may lay one form in several steps.
@@ -69,7 +59,6 @@ export function planDeductions(steps: readonly PlanStep[], jars: readonly PlanJa
       const skip = (reason: NotDeductedReason): StepPlan => ({ kind: 'skip', stepId, reason });
 
       if (step.ingredientId == null) {
-        // A custom step names its ingredient by typing it; an instruction-only step names none.
         return step.name != null ? skip('custom') : { kind: 'none', stepId };
       }
       const jar = step.variantId == null ? undefined : jarOf.get(step.variantId);

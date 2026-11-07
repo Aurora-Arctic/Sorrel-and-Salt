@@ -31,7 +31,6 @@ const LEAVE_LIMIT_MS = 400;
 /** The tablet width and up, where the panel drops down over the results instead of being a sheet. Repeats `$shell-tablet-width` (`_variables.scss`), as a script cannot read Sass; a test fails if the two part. */
 export const WIDE = '(min-width: 56rem)';
 
-/** The Filters button, the Clear All beside it and the panel they open, around whatever filters a list passes: FacetPanel's for the ingredient lists, its categories for the grimoire. */
 export function FacetShell({
   count,
   clearHref,
@@ -45,7 +44,6 @@ export function FacetShell({
   const titleId = `${id}-title`;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  // Whether this opening is the modal sheet, fixed when it opens.
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
   // The sheet sliding out: it stays open, with `is-closing` on it, until the slide ends.
@@ -86,13 +84,10 @@ export function FacetShell({
     leave();
   };
   const dismiss = () => shut(false);
-  // Apply Filters submits the form around the panel, which applies everything held, so
-  // the panel only has to shut.
   const closeOnSubmit = () => {
     returnFocus();
     leave();
   };
-  // Clear All empties what is held and applies at once; a panel left open shuts with it.
   const clear = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!onClear || opensElsewhere(event)) return;
     event.preventDefault();
@@ -100,7 +95,6 @@ export function FacetShell({
     if (slide.shown) closeOnSubmit();
   };
 
-  // The dialog follows the slide: opened on its way open, closed once the slide has ended.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || !hydrated) return;
@@ -121,9 +115,6 @@ export function FacetShell({
     return () => clearTimeout(limit);
   });
 
-  // A press outside the open panel shuts it, applying what was held, as Escape does. The Filters
-  // button and the bar's Clear All have their own press handlers, so they are left to them. On
-  // the modal sheet the page is inert and the backdrop is the dialog's own box: see onPointerDown.
   useEffect(() => {
     if (!slide.shown) return undefined;
     const outside = (event: PointerEvent) => {

@@ -45,9 +45,7 @@ import {
   variant,
 } from './variants-harness';
 
-// What the whole form adds around its Variants section: the pick and typed form refused on the compendium, the unsaved-changes question, each variant saved by its id, a save opening the variant or section an error is in, Close All and Open All, substitute and copy links, and undo and redo.
-// The section's own behaviour is variants-field.test.tsx's, substitute offers substitutes.test.tsx's and copy buttons copy.test.tsx's, each on ./variants-harness.tsx.
-// A field inside a variant behaves as the same field does on the ingredient (claude-docs/components/ingredient-form.md, "The variants").
+// claude-docs/components/ingredient-form.md, "The variants"
 
 function renderForm(props: { workspaceId: string | null; values?: IngredientFormValues }) {
   offerNothing();
@@ -69,8 +67,6 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
       />
     );
   renderWithClient(form);
-  // An edit opens with every section closed: its variants are what
-  // these tests work in.
   if (props.values) openSections('Forms');
   return onSaved;
 }
@@ -221,7 +217,6 @@ describe('IngredientForm’s variants', () => {
 
       save();
 
-      // Herb is the second variant.
       await waitFor(() => expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'true'));
       const herb = variant('Herb');
       expect(openIn(herb)).toEqual(['Identity']);
@@ -242,7 +237,6 @@ describe('IngredientForm’s variants', () => {
       openSections('Forms');
       expect(openIn(variant('Oil'))).toEqual([]);
 
-      // Variants open, so the control reads Close All: closed first, then opened.
       fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
       fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
       expect(openIn(variant('Oil'))).toEqual(VARIANT_SECTIONS);
@@ -261,7 +255,6 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(await within(list).findByRole('option', { name: /^Oilwort · / }));
       save();
 
-      // One pill, for Oilwort's form rather than Oilwort whole.
       expect(within(oil).getAllByRole('button', { name: /^Remove Oilwort/ })).toHaveLength(1);
       expect(within(oil).queryByRole('button', { name: 'Remove Oilwort' })).toBeNull();
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -304,8 +297,6 @@ describe('IngredientForm’s variants', () => {
     });
   });
 
-  // Each of an open variant's fields but its form
-  // fills from the ingredient's own, adding and never taking away.
   describe('copying from the ingredient', () => {
     it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
       const calls = acceptUpdate();
@@ -330,7 +321,6 @@ describe('IngredientForm’s variants', () => {
         fireEvent.click(button);
         expect(button).toHaveFocus();
       }
-      // Pressed again, it adds nothing more.
       fireEvent.click(copyOf(oil, 'Celestial Bodies'));
       expect(
         within(oil).getByRole('status', { name: 'Celestial Bodies changes' }),
@@ -412,7 +402,6 @@ describe('IngredientForm’s variants', () => {
       openSectionsIn(oil, 'Details & Care');
       type(oil, 'Description', 'Pressed from the fixture.');
       await settle();
-      // Closed, Done and the section both, as a person tidies up after.
       fireEvent.click(sectionOf(oil, 'Details & Care'));
       fireEvent.click(editOf('Oil'));
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
@@ -427,8 +416,6 @@ describe('IngredientForm’s variants', () => {
   });
 });
 
-// Where the focus lands after an undo: the variant a restore
-// returned, or the box of the list inside a variant that changed.
 describe('IngredientForm’s variants, undone', () => {
   const chord = (from: HTMLElement) => {
     act(() => from.focus());

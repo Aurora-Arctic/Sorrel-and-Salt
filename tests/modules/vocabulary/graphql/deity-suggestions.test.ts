@@ -10,9 +10,6 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { DeitySuggestionConnection } from './types';
 
-// The transport half of the deity lookup: the nodes, each curated row carrying its tradition, a page by cursor and the compendium-only mode.
-// Who is refused, what each bucket holds and the scope are services/deity-suggestions.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
@@ -49,7 +46,6 @@ describe('deitySuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.deitySuggestions.edges.map((edge) => edge.node)).toEqual([
       {
-        // What a pick sends.
         id: await curatedDeityId(sql, 'Hermes'),
         value: 'Hermes',
         description: expect.any(String),
@@ -68,8 +64,7 @@ describe('deitySuggestions', () => {
   });
 });
 
-// The admin's compendium form has no coven to name, so a null
-// workspaceId reads the compendium tier alone.
+// The admin's compendium form has no coven to name, so a null workspaceId reads the compendium tier alone.
 describe('deitySuggestions without a coven', () => {
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
     runOperation<{ deitySuggestions: DeitySuggestionConnection }>(

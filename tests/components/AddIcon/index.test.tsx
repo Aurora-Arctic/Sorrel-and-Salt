@@ -13,8 +13,7 @@ import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../suppor
 import { server } from '../../support/msw/server';
 import { ADD, HELD_MARK } from '../../support/cupboard-wording';
 
-// The plus and the held check carry the entry's name in their accessible names, so a screen reader's list of buttons tells one card's plus from the next, as the pencil and the three dots already do.
-// The tip a sighted viewer reads stays short and begins the name, so the words on screen are the words to say (WCAG 2.5.3, Label in Name; claude-docs/components/add-icon.md, "Props").
+// Label in Name, WCAG 2.5.3 (claude-docs/components/add-icon.md, "Contracts").
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -49,7 +48,6 @@ const Plus = ({
   </StatusRegionProvider>
 );
 
-/** The tip opened at the control's focus: in the page, kept from the accessibility tree. */
 function tipOf(control: HTMLElement): string | null {
   fireEvent.focus(control);
   return screen.queryByRole('tooltip', { hidden: true })?.textContent ?? null;
@@ -77,10 +75,7 @@ describe('the held check names its entry', () => {
   });
 });
 
-// The plus and the check say how many of the viewer's covens hold the entry, every
-// membership counted, and name them in the tip; nothing at all where none does.
 describe('the holding covens', () => {
-  /** The badge: the number drawn on the mark, kept from the accessibility tree as its name says it. */
   const badgeOf = (control: HTMLElement) => control.querySelector('.add-icon__count')?.textContent;
 
   it('counts and names them on the lone plus', () => {
@@ -121,27 +116,21 @@ describe('the holding covens', () => {
   });
 });
 
-// The plus of someone who may write in several covens asks which in a menu: its items are every coven, one holding the entry disabled, and choosing one adds there at once. With one coven, the plus adds there with no menu.
-// A success turns the spinner into a check, which fades back to the plus after a hold unless every coven now holds the entry (claude-docs/components/add-icon.md, "After an add").
-// These cases render the plus alone; the cards page's choice between the plus and the held check is proved in CompendiumCards/add-icon.test.tsx.
+// claude-docs/components/add-icon.md, "Contracts".
 
-/** The plus, named by its tip and then its entry. */
 const PLUS = { name: `${ADD}: ${NAME}` };
 const COVENS = [ONE, TWO, THREE];
 
-/** Opens the plus's menu and returns it. */
 function openMenu(): HTMLElement {
   fireEvent.click(screen.getByRole('button', PLUS));
   return screen.getByRole('menu', PLUS);
 }
 
-/** The menu's items, by their labels (a held one's mark left out), in order. */
 const items = (menu: HTMLElement): string[] =>
   within(menu)
     .getAllByRole('menuitem')
     .map((item) => item.firstChild?.textContent ?? '');
 
-/** A held coven's item: its name, then the mark its check stands for. */
 const held = (name: string) => `${name}, ${HELD_MARK}`;
 
 function mockAdd() {
@@ -191,8 +180,7 @@ describe('the add icon among several covens', () => {
     expect(calls).toEqual([{ workspaceId: ONE.id, ingredientId: 'fixture-testwort-id' }]);
   });
 
-  // The plus adds at once only where there is one coven at all,
-  // never because one coven alone is left without the entry.
+  // Adds at once only with one coven at all, never because one is left without the entry.
   it('opens a menu where there are two covens and one holds the entry, the holder disabled', () => {
     const calls = mockAdd();
     // Why it could have added at once: the viewer writes in two covens, and only TWO lacks it.
@@ -291,8 +279,6 @@ describe('the add icon among several covens', () => {
   });
 });
 
-// A click on the plus that adds to a coven animates the spinner into a check mark, then fades back to the plus.
-// The plus says which it shows in its `data-state`, the attribute its stylesheet draws from: `added` for the check, `returning` while it fades back, and none for the plus itself.
 describe('the plus after an add', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -307,7 +293,6 @@ describe('the plus after an add', () => {
   });
 
   const plus = (): HTMLElement => screen.getByRole('button', PLUS);
-  /** What the page's status region says. */
   const said = (): string[] =>
     screen.getAllByRole('status').map((status) => status.textContent?.trim() ?? '');
 

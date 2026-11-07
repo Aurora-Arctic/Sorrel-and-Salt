@@ -32,49 +32,39 @@ const byVariantId = { cacheKeyFn: (ref: VariantKey) => ref.id };
 // `clearIngredientChildren` is built from it: a loader added here is cleared
 // after every ingredient write without either mutation naming it.
 const CHILD_LOADERS = {
-  /** `Ingredient.categories`, batched: the categories of each ingredient loaded in one request. */
   categoriesByIngredient: defineLoader<IngredientKey, CategoryRow[], string>(categoriesOf, byId),
 
-  /** `Ingredient.folkNames`, batched: the folk names of each ingredient loaded in one request. */
   folkNamesByIngredient: defineLoader<IngredientKey, FolkNameRow[], string>(folkNamesOf, byId),
 
-  /** `Ingredient.references`, batched: the references each ingredient loaded in one request cites. */
   referencesByIngredient: defineLoader<IngredientKey, CitedReference[], string>(referencesOf, byId),
 
-  /** `Ingredient.substitutes`, batched: the substitutes of each ingredient loaded in one request. */
   substitutesByIngredient: defineLoader<IngredientKey, SubstituteRow[], string>(
     substitutesOf,
     byId,
   ),
 
-  /** `Ingredient.deities`, batched: the deities of each ingredient loaded in one request. */
   deitiesByIngredient: defineLoader<IngredientKey, IngredientDeityRow[], string>(deitiesOf, byId),
 
-  /** `Ingredient.variants`, batched: the forms of each ingredient loaded in one request. */
   variantsByIngredient: defineLoader<IngredientKey, IngredientVariantRow[], string>(
     variantsOf,
     byId,
   ),
 };
 
-// A variant's child loaders, keyed by the variant row as the ingredient's are
-// by the ingredient row. A record of their own: an ingredient write
-// knows the ingredient, not which of its variants a request has loaded, so
-// `clearIngredientChildren` empties these whole.
+// A variant's child loaders, keyed by the variant row. Separate from the
+// ingredient's, since an ingredient write cannot know which variants a request
+// loaded, so `clearIngredientChildren` empties these whole.
 const VARIANT_CHILD_LOADERS = {
-  /** `IngredientVariant.categories`, batched: the categories each variant adds. */
   categoriesByVariant: defineLoader<VariantKey, CategoryRow[], string>(
     categoriesOfVariants,
     byVariantId,
   ),
 
-  /** `IngredientVariant.substitutes`, batched: what may stand in for each variant. */
   substitutesByVariant: defineLoader<VariantKey, SubstituteRow[], string>(
     substitutesOfVariants,
     byVariantId,
   ),
 
-  /** `IngredientVariant.references`, batched: the references each variant cites. */
   referencesByVariant: defineLoader<VariantKey, CitedReference[], string>(
     referencesOfVariants,
     byVariantId,

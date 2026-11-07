@@ -19,16 +19,13 @@ import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
-// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing a keeper deleted brought back.
 // The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
-/** Every table under test, the probe excluded. */
 let tables: string[];
-/** The tables that carry a tombstone; a hard-deleted join table has none to leave. */
 let tombstoned: Set<string>;
 
 async function allUsers(): Promise<UserRow[]> {
@@ -45,7 +42,6 @@ async function countOf(table: string, where = ''): Promise<number> {
   return Number(count);
 }
 
-/** Every row of every table, as text, so a second run's writes show as a diff. */
 async function snapshot(): Promise<Record<string, string[]>> {
   const rows: Record<string, string[]> = {};
   for (const table of tables) {
@@ -76,7 +72,6 @@ beforeAll(async () => {
   );
 
   // Records, per inserted row, what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
-  // One function, a trigger on every table, so the one probe watches every seed's own rows and not only the bootstrap user's.
   await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
@@ -94,7 +89,6 @@ beforeAll(async () => {
   }
 });
 
-// Only this file's own objects come down.
 afterAll(async () => {
   await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
   await sql`drop table if exists ${sql(PROBE)}`;
@@ -102,7 +96,6 @@ afterAll(async () => {
 });
 
 describe('seed(db, { scenario: "minimal" })', () => {
-  // One run for the reads below; the shape every seed shares is asserted further down.
   beforeAll(async () => {
     await truncateAllTables(sql);
     // Precondition: the truncated clone really starts empty, so the rows read are this seed's.
@@ -110,7 +103,6 @@ describe('seed(db, { scenario: "minimal" })', () => {
     await seed(db, { scenario: 'minimal' });
   });
 
-  // The system user is a creator, not a keeper, so a bare install has none.
   it('produces the system user, the signed-out support sender, the job actor and one user, and no admin', async () => {
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([
@@ -124,9 +116,6 @@ describe('seed(db, { scenario: "minimal" })', () => {
   });
 });
 
-// The CLI and the Docker hook both read `SEED_SCENARIO`. The parse lives
-// beside the union so the two cannot disagree, and so it is testable at all
-// (scripts/ runs its work at import time).
 describe('resolveScenario', () => {
   // A typo must not quietly seed `minimal`.
   it('refuses an unknown name rather than falling back', () => {
@@ -171,8 +160,6 @@ const SEED_ENTRIES: SeedEntry[] = (
       tables: ['references', 'reference_links'],
     },
     {
-      // On the production list, after everything it picks from and the sources it may share a work with.
-      // The fill sweep reads the real files under `compendium/`, so every table it names is proved filled.
       // The other three sweeps read the two-entry fixture, since what they prove does not grow with the files and the real list costs seconds a run.
       name: 'the compendium seed, after the vocabularies and sources',
       prepare: async (db) => {
@@ -225,9 +212,6 @@ describe('the shape every seed shares', () => {
     expect(files.filter((file) => file.status === 'approved').length).toBeGreaterThan(0);
   });
 
-  // One run, read three ways: the bootstrap row it inserted, the stamps on
-  // every row of its own tables, and the acting user the probe saw on every
-  // insert — each with the precondition that the rows are this run's.
   it.each(SEED_ENTRIES)(
     '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
     async ({ prepare, seed: seedOf, fillSeed, tables: own }) => {
@@ -311,9 +295,6 @@ describe('the shape every seed shares', () => {
       }
     },
   );
-  // The hand-started seed workflow runs each seed with --dry-run
-  // first. A dry run does all its reads and writes, then rolls its
-  // transaction back, so every table reads as it did before.
   it.each(SEED_ENTRIES)(
     '$name writes nothing on a dry run, anywhere',
     async ({ prepare, seed: seedOf }) => {

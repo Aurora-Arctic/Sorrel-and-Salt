@@ -22,8 +22,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
-// The new reference panel on its own: `ReferencePanel`, the citation sub-form beneath the References field, saving through MSW as /api/graphql answers.
-// How the field opens it, lists what it saves and is held while it is open is references.test.tsx's; what the schema refuses and how each field is tidied is tests/modules/ingredients/validation/'s (claude-docs/components/ingredient-form.md, "Testing").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
 /** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. Rendered here rather than by `renderWithClient`, because a summons re-renders the panel under the client it opened with. */
 function renderPanel() {
@@ -50,7 +49,6 @@ const notInPanel = (label: string) =>
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
 const saveReference = () => press(within(panel()).getByRole('button', { name: 'Save Reference' }));
 
-/** Every label a panel field may carry, across the five kinds. */
 const ALL_LABELS = [
   'Title',
   'Chapter Title',
@@ -79,7 +77,6 @@ const ALL_LABELS = [
 ];
 const TAIL = ['Read Through', 'Address', 'Last Modified', 'Accessed', 'Note'];
 
-/** Each kind: its choice's label, its fields in order, and the ones it requires. */
 const KINDS = [
   {
     kind: 'book',
@@ -174,8 +171,6 @@ describe('ReferencePanel', () => {
     for (const label of ALL_LABELS) notInPanel(label);
   });
 
-  // Asking again for a panel already open takes you
-  // back to it, rather than doing nothing.
   it('takes you back to Kind when asked again while open, keeping what was typed', () => {
     const { summon } = renderPanel();
     chooseKind('Book');
@@ -209,8 +204,6 @@ describe('ReferencePanel', () => {
     },
   );
 
-  // One tip for how to cite, read once on entering the panel, in place of a
-  // hint beside each field.
   it('describes the panel by one How to Cite tip, and no field by a hint of its own', () => {
     renderPanel();
 
@@ -224,8 +217,6 @@ describe('ReferencePanel', () => {
     for (const label of KINDS[0].fields) expect(inPanel(label)).not.toHaveAccessibleDescription();
   });
 
-  // One rule to a line, a list a screen reader can step through,
-  // rather than one run-on paragraph.
   it('gives How to Cite one list item per rule', () => {
     renderPanel();
 
@@ -238,8 +229,6 @@ describe('ReferencePanel', () => {
     expect(within(list).getAllByRole('listitem', { hidden: true }).length).toBeGreaterThan(1);
   });
 
-  // What the schema refuses is validation/reference.test.ts's; here, that the
-  // panel runs it, and where a refusal and a server's land.
   it('puts a resolver error beside its field, focused and sending nothing, and a server field error through the same element', async () => {
     const calls = acceptReference();
     renderPanel();
@@ -291,7 +280,6 @@ describe('ReferencePanel', () => {
       id: NEW_REFERENCE_ID,
       citation: 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.',
       isGlobal: false,
-      // What its row's short form is made of.
       kind: 'book',
       authors: 'Mock, Cyril',
       title: 'A Fixture Grimoire',
@@ -319,7 +307,6 @@ describe('ReferencePanel', () => {
     typeIn(inPanel('Site'), 'Fixture Wiki');
     chooseKind('Book');
     typeIn(inPanel('Published'), '1999');
-    // What was typed is kept for its own kind.
     expect(inPanel('Title')).toHaveValue('Mockleaf');
     saveReference();
 
@@ -343,8 +330,7 @@ describe('ReferencePanel', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
   });
 
-  // Each field is tidied as it is left, as the server will store it, so what is seen is what is saved.
-  // Each format is FORMAT_OF's (validation/reference-format.test.ts); here, the panel applies its field's.
+  // Each format is FORMAT_OF's (validation/reference-format.test.ts); the panel applies its field's.
   it('tidies each field by its own format as it is left', () => {
     renderPanel();
     chooseKind('Book');
@@ -361,7 +347,6 @@ describe('ReferencePanel', () => {
     }
   });
 
-  // As the ingredient's saves are held: busy, and saying so.
   it('holds Save Reference down while it is in flight, busy and saying so, and Cancel with it', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => {
@@ -416,8 +401,6 @@ describe('ReferencePanel', () => {
     expect(calls).toHaveLength(0);
   });
 
-  // The edit saves through the same handling, so a refusal of the
-  // edited source lands beside its field as a new one's does.
   it('puts a server field error on an edited source beside its field', async () => {
     offerReference({
       id: NEW_REFERENCE_ID,

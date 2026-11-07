@@ -4,17 +4,14 @@ import type { NamedWrites } from '@/db/types';
 import type { Membership } from '@/modules/coven';
 import { workspaceMemberPauses } from '@/modules/coven/schema/workspace-member-pauses';
 
-// Compile assertions, checked by `npm run typecheck` and run by nothing: each `@ts-expect-error` fails the typecheck the moment
-// its constraint is loosened, which a runtime assertion cannot see. `tsconfig.json` includes `tests/`, which is what reads this.
+// Run by `npm run typecheck` only: each `@ts-expect-error` fails it the moment its constraint is loosened.
 
-// The mark itself, as a type: a table that lost it fails this assignment.
 export const marked: NamedWrites = workspaceMemberPauses;
 
 const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
 const where = eq(workspaceMemberPauses.userId, id);
 declare const membership: Membership;
 
-// The table carries the `namedWrites` mark, so every generic workspace write is refused.
 export const writes = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert, so a pause cannot be set already lifted or past the one-live slot's closing.

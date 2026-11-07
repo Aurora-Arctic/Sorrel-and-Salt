@@ -5,9 +5,6 @@ import {
   supportStatusMessage,
 } from '@/lib/support-job-mail';
 
-// The mails a job's step builds. A reply: a signed-in sender is told one is waiting, without its text, and a signed-out sender is
-// sent it whole. The received and resolved mails: linked to the request, or for a signed-out sender to the support page alone.
-
 const ORIGIN = 'http://localhost:8000';
 const REPLY = {
   requestId: 'req-1',

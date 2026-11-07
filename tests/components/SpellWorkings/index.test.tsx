@@ -13,9 +13,6 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The recipe page's Workings section: each working as a row, in the order given, with who
-// worked it, the deductions of a complete one, and Delete Working only for its recorder.
-
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 
 const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingView => ({
@@ -104,7 +101,6 @@ describe('SpellWorkings', () => {
         deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
-    // A visible label over the lines names the list, so the screen and a screen reader say the same.
     const list = within(rows()[0]!).getByRole('list', { name: 'Taken From the Jars' });
     expect(within(rows()[0]!).getByText('Taken From the Jars')).toBeVisible();
     const lines = within(list).getAllByRole('listitem');
@@ -112,7 +108,6 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');
     expect(lines[0]).toHaveTextContent('g');
-    // The lines carry no step number: the spell, not the working, says where a step stands.
     expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
@@ -146,7 +141,6 @@ describe('SpellWorkings', () => {
       [
         working({ id: 'w1', status: 'draft', editable: own }),
         working({ id: 'w2' }),
-        // Another member's draft: only its recorder may complete it.
         working({ id: 'w3', status: 'draft' }),
       ],
       (id) => <button type="button">Complete {id}</button>,

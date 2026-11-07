@@ -12,9 +12,11 @@ paths:
 
 # Task-tracking rules
 
-The long form of `CLAUDE.md`'s GitHub task tracking section. claude-docs/task-tracking.md is the board's shape and the mechanics these rules rest on, and claude-docs/design-decisions/mb.89-plan.md why the board moved from Asana. Nothing is written to Asana again: the workspace stays, archived, only so older PR bodies' permalinks resolve (claude-docs/task-tracking.md, "Migration").
+The long form of `CLAUDE.md`'s GitHub task tracking section. claude-docs/task-tracking.md is the board's shape and the mechanics these rules rest on, and claude-docs/design-decisions/process.md, "Task tracking on GitHub Issues and Projects" why the board moved from Asana. Nothing is written to Asana again: the workspace stays, archived, only so older PR bodies' permalinks resolve.
 
 The issues and `TASKS.md` are expected to agree. A task minted as an issue gets its entry in `claude-docs/tasks/<milestone>.md` in the same pass, or the docs silently fall behind; and **an entry edited afterwards is synced to its issue in the same pass**, `node scripts/task-board.mjs sync <ID> …`, which brings the title, body and `Estimate` to the entry (claude-docs/task-tracking.md, "Sync").
+
+A closed task's entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
 
 ## Everything goes through `gh`
 
@@ -22,23 +24,24 @@ Issues, milestones, sub-issues, issue types, dependencies and Projects are on Gi
 
 ## Board layout
 
-- **One issue per task, titled `<Task ID> — <title>`**, exactly as its entry in `claude-docs/tasks/` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field, not a prefix, so a status change never rewrites a title.
-- **One milestone per wave** (`Wave 07 — GraphQL`) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus one closed `Retired — not done` milestone holding the tasks MB.31 retired, so that no issue is without a milestone. The wave number is two digits because GitHub sorts milestones alphabetically and offers no other order.
-- **A wave's milestone description is its id list, then a link.** The first line holds the wave's task ids in execution order; a blank line follows; then the link to its wave file on `staging`, `https://github.com/Aurora-Arctic/Sorrel-and-Salt/blob/staging/claude-docs/waves/wave-<NN>.md`. The ordering reasoning lives in that file alone, never in the description. A task added to a wave is added to the first line in the same pass, and `reorder` reports a first line that differs from the wave's row.
-- **Issue type `Bug` for a task that fixes a bug, `Task` for everything else.** A bug is a failure that reached a PR, staging or production; new work, a refactor, a doc or a sweep is a `Task` whatever its id. The id prefix decides nothing: an `MB.*` id is new work as often as a fix. The `hotfix` label marks a bug that ships straight to `main`, and the label, not the type, decides the branch skill; `start-task` asks when the issue is ambiguous.
-- **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
+The objects (repo, Project, fields, milestones, issue types, labels, sub-issues) are tabled in claude-docs/task-tracking.md, "The board". The rules for keeping them:
+
+- **One issue per task, titled `<Task ID> — <title>`**, exactly as its entry in `claude-docs/tasks/` heads it. The id is the first thing in the title and nothing precedes it: no marker, no emoji. Status is a field, not a prefix, so a status change never rewrites a title.
+- **A wave's milestone description is its id list, then a link.** The first line holds the wave's task ids in execution order; a blank line follows; then the link to its wave file on `staging`, `https://github.com/Aurora-Arctic/Sorrel-and-Salt/blob/staging/claude-docs/waves/wave-<NN>.md`. The ordering reasoning lives in that file alone. A task added to a wave is added to the first line in the same pass, and `reorder` reports a first line that differs from the wave's row. The wave number is two digits because GitHub sorts milestones alphabetically.
+- **Every issue has a milestone**; a retired task sits in the closed `Retired — not done` one.
+- **A bug is a failure that reached a PR, staging or production; new work, a refactor, a doc or a sweep is a `Task` whatever its id.** The id prefix decides nothing: an `MB.*` id is new work as often as a fix. The `hotfix` label marks a bug that ships straight to `main`, and the label, not the type, decides the branch skill; `start-task` asks when the issue is ambiguous.
+- **Every tracked issue carries the `tracked` label**, the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
 - **The board is kept in execution order**, `TASKS.md`'s wave table read wave by wave: `node scripts/task-board.mjs reorder` prints the moves that restore it and `--apply` makes them (claude-docs/task-tracking.md, "Order").
-- **Sub-issues only for genuine parent/child** (`M7.A.*` under `M7.A`, or a task split mid-flight). Waves are milestones, not parent issues.
 - **A retired task is closed as `not planned`**, its title reading `<ID> — [RETIRED] <title>`; a done task is closed as `completed`.
 
 ## Status
 
-| Status        | Set it when                                                                                                                                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Not Started` | Never set by hand: the Project's **Item added to project** workflow sets it once the auto-add has placed the issue, seconds after `gh issue create --label tracked`. `find` printing `status: null` means the auto-add has not run yet (MB.102). |
-| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned.                                                                                                                                       |
-| `In Review`   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.                                                                                                                                           |
-| `Done`        | The PR is **merged** — by mechanism, never by hand, and a green CI run is not a merge. The issue's closing on merge sets it (claude-docs/task-tracking.md, "Status").                                                                            |
+| Status        | Set it when                                                                                                                                                                                                                             |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Not Started` | Never set by hand: the Project's **Item added to project** workflow sets it once the auto-add has placed the issue, seconds after `gh issue create --label tracked`. `find` printing `status: null` means the auto-add has not run yet. |
+| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned.                                                                                                                              |
+| `In Review`   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.                                                                                                                                  |
+| `Done`        | The PR is **merged** — by mechanism, never by hand, and a green CI run is not a merge. The issue's closing on merge sets it (claude-docs/task-tracking.md, "Status").                                                                   |
 
 `node scripts/task-board.mjs status <ID> "<Status>"` sets it: a status left stale says work is happening that is not. It never skips a state — a task that goes `Not Started` → `Done` hides the review step — and a closed issue outranks its field. A PR closed without merging sends its task back to `In Progress` by hand, since the script refuses a step back — not to `Done`, not to `Not Started`. The Project's own workflows set the first and last states, so never `gh project item-add` a task and never set `Not Started` (claude-docs/task-tracking.md, "Status").
 
@@ -56,8 +59,8 @@ Issues, milestones, sub-issues, issue types, dependencies and Projects are on Gi
 Re-check the next free id right before minting — another session may have taken it — then:
 
 ```sh
-gh issue create --title "MB.90 — <title>" --type Task --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
-node scripts/task-board.mjs estimate MB.90 3
+gh issue create --title "<ID> — <title>" --type Task --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
+node scripts/task-board.mjs estimate <ID> 3
 node scripts/task-board.mjs reorder --apply
 ```
 

@@ -10,18 +10,13 @@ import { joinAnd, plural } from '../../../lib/text';
 import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
 
-// How a write names the compendium entries it would disturb: a vocabulary delete refused while live entries hold the row, and a slug a compendium write
-// would take from another entry's running redirect. The index exports `describeEntry` and `redirectRefusal` for the ingredient services, and nothing else.
+// The index exports `describeEntry` and `redirectRefusal` for the ingredient services, and nothing else.
 
-/** How many entries a refused delete names before it counts the rest. */
 const ENTRIES_NAMED = 3;
 
 /**
- * Refuses a delete while live compendium entries under `filter` hold the row:
- * the first few in the compendium list's order, each told apart from a
- * namesake, then how many more — "A, B, C and 2 more" — read through the
- * compendium's own filter, so "held" means what the compendium's list means
- * by it.
+ * Refuses a delete while live compendium entries under `filter` hold the row.
+ * "Held" means what the compendium's own filter reads as held.
  *
  * @throws {Forbidden} a live entry holds the row, in `wording`'s words.
  */

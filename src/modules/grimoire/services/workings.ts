@@ -37,9 +37,8 @@ import type {
   WorkingWarning,
 } from '../types';
 
-// A working is one making of a complete spell: when, by whom, how it went. Recording writes it as a draft; completing it takes what it
-// used from the coven's jars (claude-docs/db/spell-workings.md). A working is read under its own visibility, capped at its spell's, and
-// changed by its recorder or a member named on it, and deleted by its recorder alone. A hidden working is `NotFound`, never confirmed to exist.
+// Read under its own visibility, capped at its spell's; changed by its recorder or a member named on it, deleted by its recorder alone.
+// A hidden working is `NotFound`, never confirmed to exist (claude-docs/db/grimoire.md, "Workings").
 
 const NO_SUCH_WORKING = 'No such working in this coven';
 
@@ -50,21 +49,21 @@ async function readableWorking(membership: Membership, workingId: string): Promi
   return working;
 }
 
-/** The working's spell, which the working can only be read through, so a missing one is the same `NotFound`. */
+/** The working can only be read through its spell, so a missing one is the same `NotFound`. */
 async function spellOf(membership: Membership, working: WorkingRow): Promise<SpellRow> {
   const spell = await findOneSpell(membership, working.spellId);
   if (!spell) throw new NotFound(NO_SUCH_WORKING);
   return spell;
 }
 
-/** A working is deleted by its recorder alone: a member who can read it, as a participant or in the coven, still cannot. */
+/** A member who can read it, as a participant or in the coven, still cannot delete it. */
 function assertRecorder(membership: Membership, working: WorkingRow): void {
   if (working.createdBy !== membership.userId) {
     throw new Forbidden('Only the person who recorded a working can delete it');
   }
 }
 
-/** A working is changed by its recorder or by a coven member named on it; the role check has already refused an observer. */
+/** The role check has already refused an observer. */
 async function assertMayChange(membership: Membership, working: WorkingRow): Promise<void> {
   if (working.createdBy === membership.userId) return;
   if (await isParticipantOfWorking(membership, working.id)) return;
@@ -78,7 +77,6 @@ function latestToday(): string {
   return new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10);
 }
 
-/** A working may be dated ahead as a draft, but it is complete only once its day has come. */
 function assertDayHasCome(workedOn: string): void {
   if (workedOn > latestToday()) throw new Forbidden("A working can't be completed before its day.");
 }
@@ -92,7 +90,7 @@ function assertSpellComplete(spell: SpellRow, doing: string): void {
   }
 }
 
-/** A working's visibility cannot exceed its spell's: a check constraint cannot read the parent row, so the service does. */
+/** A check constraint cannot read the parent row, so the service does. */
 function assertWithinSpell(spell: SpellRow, visibility: WorkingRow['visibility']): void {
   const { visibility: spellVisibility } = spell;
   if (spellVisibility === 'private' && visibility === 'workspace') {
@@ -102,7 +100,6 @@ function assertWithinSpell(spell: SpellRow, visibility: WorkingRow['visibility']
   }
 }
 
-/** Every member id named must hold a live seat in this coven; a typed name is anyone. */
 async function assertParticipantsAreMembers(
   membership: Membership,
   participants: readonly { userId?: string; name?: string }[],
@@ -123,7 +120,6 @@ async function assertParticipantsAreMembers(
   if (issues.length > 0) throw new ValidationError(issues);
 }
 
-/** The spell's live steps and the coven's jars for them, planned: what completing would take, and what it would not. */
 async function planFor(
   membership: Membership,
   spellId: string,
@@ -135,7 +131,7 @@ async function planFor(
   return { steps, plan: planDeductions(planSteps, jars) };
 }
 
-/** The steps a plan takes nothing for, each with its name and reason. An instruction-only step is not among them. */
+/** An instruction-only step is not among them. */
 function warningsOf(steps: readonly SpellStepView[], plan: readonly StepPlan[]): WorkingWarning[] {
   const stepOf = new Map(steps.map((step) => [step.id, step]));
   return plan.flatMap((entry) => {
@@ -190,9 +186,7 @@ async function reportOf(
 }
 
 /**
- * Records a working of a complete spell as a draft: nothing is taken from the jars until it is completed. The visibility is the
- * spell's unless named, and never wider than it; the participants are the caller alone unless named. The warnings are the steps
- * completing would take nothing for.
+ * Nothing is taken from the jars until it is completed. The visibility is never wider than the spell's.
  *
  * @throws {Forbidden} the caller may not record workings here; the spell is a draft; or the visibility exceeds the spell's.
  * @throws {NotFound} no such spell here, or none this caller may read.
@@ -231,7 +225,6 @@ export async function recordWorking(
   return reportOf(session, membership, working, warningsOf(steps, plan));
 }
 
-/** The caller's reading of a working: with its participants, deductions and the steps completing would take nothing for. */
 async function readReport(
   session: Session,
   membership: Membership,
@@ -249,8 +242,6 @@ async function readReport(
 }
 
 /**
- * One working, under its own visibility.
- *
  * @throws {Forbidden} the caller may not read workings here.
  * @throws {NotFound} no such working here, or none this caller may read.
  */
@@ -264,8 +255,6 @@ export async function getWorking(
 }
 
 /**
- * A spell's workings the caller may read, newest day first, each with its participants and deductions.
- *
  * @throws {Forbidden} the caller may not read workings here.
  */
 export async function listWorkings(
@@ -290,8 +279,7 @@ export async function listWorkings(
 }
 
 /**
- * One page of a spell's workings the caller may read, newest day first, each with its participants and deductions: the
- * participants of the whole page are read in one query, and so are the deductions.
+ * The participants of the whole page are read in one query, and so are the deductions.
  *
  * @throws {Forbidden} the caller may not read workings here.
  */
@@ -320,7 +308,7 @@ export async function listWorkingsPage(
   }));
 }
 
-/** How many complete workings each spell has that the caller may read, for `Spell.workingCount`: one query per coven. */
+/** One query per coven. */
 export function workingCountsOf(
   session: Session,
   refs: readonly SpellKey[],
@@ -337,9 +325,6 @@ export function workingCountsOf(
 }
 
 /**
- * What completing a working of this spell would take from the coven's jars right now, and what it would take nothing for: the
- * plan completion follows, read and not applied.
- *
  * @throws {Forbidden} the caller may not read workings here.
  * @throws {NotFound} no such spell here, or none this caller may read.
  */
@@ -371,9 +356,7 @@ export async function previewWorkingDeductions(
 }
 
 /**
- * Completes a draft working and takes what it used from the coven's jars, in one transaction: a failing deduction leaves it a draft
- * with nothing taken. What a jar lacks is taken to zero and the shortfall recorded. A step with nothing to take comes back as a
- * warning.
+ * A failing deduction leaves it a draft with nothing taken. What a jar lacks is taken to zero and the shortfall recorded.
  *
  * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, it is already complete, its spell is a draft, or its day is yet to come.
  * @throws {NotFound} no such working here, or none this caller may read.
@@ -417,7 +400,7 @@ export async function completeWorking(
 }
 
 /**
- * Changes a working's day, note, participants (when named) and visibility, which only widens once it is complete.
+ * Visibility only widens once it is complete.
  *
  * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, asked to narrow a complete one, or moved a complete one past its day.
  * @throws {NotFound} no such working here, or none this caller may read.
@@ -459,7 +442,7 @@ export async function updateWorking(
 }
 
 /**
- * Deletes a working, as a soft delete by the person who recorded it. Stock is never touched: what a completed working took stays taken.
+ * Stock is never touched: what a completed working took stays taken.
  *
  * @throws {Forbidden} the caller may not delete workings here, or did not record this one.
  * @throws {NotFound} no such working here, or none this caller may read.

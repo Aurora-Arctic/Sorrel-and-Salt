@@ -6,8 +6,7 @@ import { MAX_DEPTH, protections } from '@/graphql/armor';
 import * as documents from '@/gql/graphql';
 import { fromRoot } from '../support/paths';
 
-// DESIGN.md §7's depth limit holds for the browser's own documents too: a document the server refuses is a screen that cannot save. graphql-armor counts a fragment spread as a level of its own (`flattenFragments` is off), which the type checker cannot see.
-// Each operation codegen typed is sent through the server's own protections over the committed SDL, with no resolvers: the depth rule refuses at validation, before anything runs.
+// DESIGN.md §7's depth limit holds for the browser's own documents: each codegen operation is sent through the server's protections over the committed SDL, which refuse at validation.
 
 const yoga = createYoga({
   schema: buildSchema(readFileSync(fromRoot('src/graphql/schema.graphql'), 'utf8')),

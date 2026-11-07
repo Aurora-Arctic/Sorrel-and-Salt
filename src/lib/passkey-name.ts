@@ -21,11 +21,7 @@ const FALLBACK = 'Passkey';
 const firstMatch = (table: readonly (readonly [RegExp, string])[], agent: string) =>
   table.find(([pattern]) => pattern.test(agent))?.[1];
 
-/**
- * A new passkey's name from the user agent it was made with, such as "Chrome on Linux". It names whichever of the two
- * it can read, and "Passkey" when it can read neither. A small table rather than a parser: the name is a label the
- * person renames, so a wrong guess costs nothing.
- */
+/** A small table rather than a parser: the name is a label the person renames, so a wrong guess costs nothing. */
 export function defaultPasskeyName(userAgent: string | null | undefined): string {
   if (!userAgent) return FALLBACK;
   const browser = firstMatch(BROWSERS, userAgent);

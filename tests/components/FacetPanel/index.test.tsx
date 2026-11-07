@@ -7,9 +7,7 @@ import FacetPanel, { WIDE } from '@/components/FacetPanel';
 import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 
-// The Filters button and the panel it opens: a dialog that slides down over the
-// results from the tablet width up and is a modal sheet below it, rendered inline and open
-// before the script runs (claude-docs/components/facet-panel.md).
+// claude-docs/components/facet-panel.md
 
 const GROUP = { id: 'g', name: 'Testing', colorDark: '#336699', colorLight: '#99ccff' };
 
@@ -67,7 +65,6 @@ const props = (
 const dialog = () => document.querySelector('dialog') as HTMLDialogElement;
 const filtersButton = () => screen.getByRole('button', { name: /^Filters/ });
 
-// Stands the viewport in: wide is the tablet width and up. `listeners` collects the width query's change handlers.
 function stubViewport(wide: boolean, reduced = true) {
   const listeners: Array<() => void> = [];
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -113,7 +110,6 @@ describe('FacetPanel', () => {
         })}
       />,
     );
-    // Two forms, two categories and a Toxic setting; the Match mode adds none.
     expect(filtersButton()).toHaveAccessibleName('Filters 5');
   });
 
@@ -296,7 +292,6 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
-  // The Categories facet keeps its list open after a pick, as Forms and Deities do.
   it('keeps the Categories list open after a pick, with the focus in the box, and applies the pick', () => {
     stubViewport(true);
     const onChange = vi.fn();
@@ -328,7 +323,6 @@ describe('FacetPanel', () => {
     expect(chip.closest('fieldset')).toHaveAccessibleDescription();
     expect(within(match()).queryByRole('radio')).toBeNull();
 
-    // A stuck chip is disabled and unfocusable; the fieldset carries its hint, and hovering shows it.
     const stuck = within(match()).getByRole('button', { name: /All/ });
     const bubble = document.getElementById(
       stuck.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
@@ -467,7 +461,6 @@ describe('FacetPanel', () => {
     it('lists the viewer’s covens by name, with no counts, after Forms and Toxic', () => {
       open({ covens: [] }, { covens: COVENS });
       const box = screen.getByRole('combobox', { name: 'In My Covens' });
-      // Forms, then Toxic, then In My Covens, on their line.
       const forms = screen.getByRole('combobox', { name: 'Forms' });
       const toxic = screen.getByRole('group', { name: 'Toxic' });
       expect(forms.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -558,7 +551,6 @@ describe('FacetPanel', () => {
     });
 
     it('switches back to In when the last picked coven is removed under Not In', () => {
-      // The panel held as its caller holds it: each patch merged over the filter shown.
       const reported = vi.fn();
       const Held = () => {
         const [filter, setFilter] = useState<FacetPanelFilter>({
@@ -582,12 +574,10 @@ describe('FacetPanel', () => {
       render(<Held />);
       fireEvent.click(filtersButton());
       const choice = screen.getByRole('group', { name: 'Covens' });
-      // Before: one coven picked, under Not In.
       expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
       fireEvent.click(screen.getByRole('button', { name: 'Remove Coven: Testhollow' }));
       expect(reported).toHaveBeenLastCalledWith({ covens: [], covensNot: false });
       expect(within(choice).getByRole('radio', { name: 'In' })).toBeChecked();
-      // Not In chosen on purpose with nothing picked still holds: in none of my covens.
       fireEvent.click(within(choice).getByRole('radio', { name: 'Not In' }));
       expect(reported).toHaveBeenLastCalledWith({ covensNot: true });
       expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
@@ -606,11 +596,9 @@ describe('FacetPanel', () => {
     });
 
     it('counts Not In on the Filters button only when no coven is picked', () => {
-      // With covens picked, Not In is a mode of them, as Match is of the categories.
       const { unmount } = open({ covens: ['coven-w'], covensNot: true }, { covens: COVENS });
       expect(filtersButton()).toHaveAccessibleName('Filters 1');
       unmount();
-      // With none picked, Not In is a filter of its own: in none of my covens.
       open({ covens: [], covensNot: true }, { covens: COVENS });
       expect(filtersButton()).toHaveAccessibleName('Filters 1');
     });
@@ -738,7 +726,6 @@ describe('FacetPanel', () => {
         { value: 'toxic', label: 'Toxic', count: 0 },
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
       ]);
-      // The chip rests on Any and does not open, so it holds no radios while stuck.
       const chip = within(group()).getByRole('button', { name: /Any/ });
       expect(chip).toBeDisabled();
       expect(chip.closest('fieldset')).toHaveAccessibleDescription();
@@ -909,7 +896,6 @@ describe('FacetPanel', () => {
       fireEvent.click(filtersButton());
       // Not an admin panel, though it was handed the setting and the counts.
       expect(screen.queryByRole('group', { name: /^Reviewed/ })).toBeNull();
-      // An admin panel without the counts, which the service gives a curator alone.
       rerender(<FacetPanel {...props({ reviewed: '' }, { admin: true })} />);
       expect(screen.queryByRole('group', { name: /^Reviewed/ })).toBeNull();
       rerender(
@@ -985,8 +971,6 @@ describe('FacetPanel', () => {
   });
 });
 
-// The phone sheet slides in from the right and out to it, and waits out the slide before it
-// closes; the desktop slide and reduced motion are untouched.
 describe('FacetPanel phone sheet slide', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -1050,7 +1034,6 @@ describe('FacetPanel phone sheet slide', () => {
     expect(dialog()).not.toHaveAttribute('open');
   });
 
-  // The backdrop's fade ends on the dialog too, and sooner than the sheet's slide.
   it('stays open when only the backdrop fade ends', () => {
     stubViewport(false, false);
     render(<FacetPanel {...props()} />);

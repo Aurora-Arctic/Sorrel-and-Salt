@@ -96,7 +96,6 @@ describe('send, per transport', () => {
     expect(error).toHaveBeenCalledWith(
       expect.stringMatching(/refused a recipient under \.invalid/),
     );
-    // Sends nothing about the address itself either.
     expect(error).not.toHaveBeenCalledWith(expect.stringContaining('discord-1'));
   });
 
@@ -230,7 +229,6 @@ describe('when nothing can be sent', () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining('MAIL_TRANSPORT=smtp'));
   });
 
-  // One missing variable per transport, each its own check.
   it.each([
     ['resend', 'RESEND_API_KEY'],
     ['mailtrap-sandbox', 'MAILTRAP_SANDBOX_ID'],

@@ -19,8 +19,7 @@ import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, IngredientFormGroupRow } from '../types';
 
-// The ingredient form groups: public reads, and writes for a curator or a keeper alone. A rename or delete re-slugs the forms
-// under them (claude-docs/db/form-vocabulary-seed.md, "Form group service details").
+// A rename or delete re-slugs the forms (claude-docs/db/form-vocabulary-seed.md, "Form group service details").
 
 /** The form groups, and the forms under them, which a rename or delete re-slugs under the group's name. */
 const GROUPS: CuratedGroup<typeof ingredientFormGroups> = {
@@ -44,14 +43,11 @@ export function listIngredientFormGroups(
   return findPage(ingredientFormGroups, [ingredientFormGroups.name], page);
 }
 
-/** How many live form groups `listIngredientFormGroups` pages, and how many come before `start`: "Page X of Y". */
 export function countIngredientFormGroups(start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(ingredientFormGroups, [ingredientFormGroups.name], start);
 }
 
 /**
- * The live form group at this address, for the admin page to edit.
- *
  * @throws {NotFound} no live group holds the slug.
  */
 export async function getIngredientFormGroupBySlug(slug: string): Promise<IngredientFormGroupRow> {
@@ -61,8 +57,6 @@ export async function getIngredientFormGroupBySlug(slug: string): Promise<Ingred
 }
 
 /**
- * Adds a form group, its slug derived from the name, and with no icon the generic one.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `IngredientFormGroupInput`, or its slug is a live group's.
  */

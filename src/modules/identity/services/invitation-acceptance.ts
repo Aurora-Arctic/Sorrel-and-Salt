@@ -31,8 +31,7 @@ import type {
   WorkspaceInvitationRow,
 } from '../types';
 
-// The one accept service for both tiers of `invitations`: the token names the invitation, the session's verified address admits
-// (claude-docs/db/invitations.md, "Invitation acceptance details"). No message names a workspace, as the reader is not yet a member.
+// The session's verified address admits (claude-docs/db/invitations.md, "Invitation acceptance details"). No message names a workspace, as the reader is not yet a member.
 
 const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
@@ -61,17 +60,15 @@ const CARD_MESSAGES: Partial<Record<InvitationRefusal, string>> = {
   expired: `This card has expired. ${JOIN_BY_INVITATION}`,
 };
 
-/** The words for a refusal, a card's own where it has them. */
 function messageOf(reason: InvitationRefusal, card: boolean | undefined): string {
   return (card && CARD_MESSAGES[reason]) || MESSAGES[reason];
 }
 
-/** A refusal, worded. */
 function refused(reason: InvitationRefusal, card?: boolean): InvitationStanding {
   return { acceptable: false, reason, message: messageOf(reason, card) };
 }
 
-/** Why a link is dead, or `undefined` while live: accepted, declined, revoked, expired in that order, so a link in two states reports one reason. */
+// Checked in the order accepted, declined, revoked, expired, so a link in two states reports one reason.
 function deadLink(invitation: InvitationRow): InvitationRefusal | undefined {
   if (invitation.acceptedAt) return 'accepted';
   if (invitation.declinedAt) return 'declined';
@@ -89,14 +86,12 @@ function isWorkspaceTier(invitation: InvitationRow): invitation is WorkspaceInvi
   return invitation.workspaceId !== null && invitation.role !== null;
 }
 
-/** Whether the admin-change pause holds this invitation: while paused, only one the primary keeper sent is accepted. */
 async function heldByPause(invitation: SiteInvitationRow): Promise<boolean> {
   if (!(await findOpenAdminRoleChangePause(invitation))) return false;
   const inviter = await findOneById(users, invitation.createdBy);
   return inviter === undefined || !isPrimaryAdmin(inviter);
 }
 
-/** What the checks make of a found invitation, or of none: dead-link checks, then the address, then the tier's own. One body for both ways in. */
 async function checkInvitation(
   session: Session,
   invitation: InvitationRow | undefined,
@@ -104,13 +99,11 @@ async function checkInvitation(
   if (!invitation) return { refusal: 'invalid' };
   const card = invitation.kind === 'card';
   const dead = deadLink(invitation);
-  // The account that accepted a card is told so, in place of the stranger's refusal.
   if (dead === 'accepted' && card && invitation.acceptedBy === session.userId)
     return { refusal: 'used-by-you', card };
   if (dead) return { refusal: dead, card };
 
   const user = await findOneById(users, session.userId);
-  // A card is bound to no address, so any verified account admits; every other kind is held by its address.
   if (invitation.kind === 'card') {
     if (!user) return { refusal: 'invalid', card };
     if (!user.emailVerified) return { refusal: 'unverified', card };
@@ -136,7 +129,6 @@ async function checkInvitation(
 
 async function standingOf(session: Session, token: string): Promise<InvitationCheck> {
   const standing = await checkInvitation(session, await findInvitationByToken(token));
-  // A token that names nothing is worded for a card when it has a card code's shape.
   return standing.refusal === 'invalid' && looksLikeCardToken(token)
     ? { refusal: 'invalid', card: true }
     : standing;
@@ -150,7 +142,6 @@ async function standingById(session: Session, id: string): Promise<InvitationChe
   return standing.refusal === 'closed' ? { refusal: 'invalid' } : standing;
 }
 
-/** Whether the signed-in session may accept the invitation `token` names, and if not why: what `/invite/[token]` shows before Accept. */
 export async function invitationStanding(
   session: Session,
   token: string,
@@ -172,8 +163,7 @@ function refusalError(reason: InvitationRefusal, byId = false, card?: boolean): 
 }
 
 /**
- * Accepts the invitation `token` names as the session's user, answering it as stamped (claude-docs/db/invitations.md,
- * "Invitation acceptance details"). An invitation never lowers a role.
+ * Answers the row as stamped (claude-docs/db/invitations.md, "Invitation acceptance details"). An invitation never lowers a role.
  *
  * @throws {NotFound} the token names no invitation.
  * @throws {Forbidden} the invitation is dead, closed, for another address, unverified, or held by the admin pause.
@@ -189,8 +179,6 @@ export async function acceptInvitation(session: Session, token: string): Promise
 }
 
 /**
- * Accepts the coven invitation `id` names, as `acceptInvitationById` for a person who never opened the mailed link; coven invitations only.
- *
  * @throws {NotFound} the id names no coven invitation to this account.
  * @throws {Forbidden} the invitation is already accepted, withdrawn or expired.
  */
@@ -205,8 +193,6 @@ export async function acceptInvitationById(session: Session, id: string): Promis
 }
 
 /**
- * Declines the coven invitation `id` names as the session's user: the link reports declined and nothing is granted or seated.
- *
  * @throws {NotFound} the id names no coven invitation to this account.
  * @throws {Forbidden} the invitation is already accepted, declined, withdrawn or expired.
  */
@@ -225,7 +211,6 @@ export async function declineInvitationById(session: Session, id: string): Promi
   return declined;
 }
 
-/** The acceptance both ways in share: seat or revive, stamp `invited_by`, grant the creation flag, then re-check if the row went. */
 async function acceptChecked(
   session: Session,
   standing: InvitationCheck,
@@ -243,7 +228,7 @@ async function acceptChecked(
   const accepted = await withAudit(
     session,
     async (write) => {
-      // The writer's own match is the last word: a change committed since the checks leaves nothing to stamp.
+      // The writer's own match is the last word.
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
@@ -293,16 +278,11 @@ async function acceptChecked(
 function recordableReason(card: InvitationRow, userId: string): CardAttemptReason | undefined {
   const dead = deadLink(card);
   if (dead === 'revoked' || dead === 'expired') return dead;
-  // The account that accepted the card is the one it worked for, so its return to the link is no refusal.
   if (dead === 'accepted' && card.acceptedBy !== userId) return dead;
   return undefined;
 }
 
-/**
- * Notes that the session's account opened a card link and was refused: a row per card, account and reason, counting.
- * Works out the reason itself and records nothing for an unknown token, an address invitation, a pending card, an
- * unverified account or the account that accepted the card; the caller names the token and nothing else.
- */
+/** Records nothing for an unknown token, an address invitation, a pending card, an unverified account or the account that accepted the card. */
 export async function recordCardAttempt(session: Session, token: string): Promise<void> {
   const card = await findInvitationByToken(token);
   if (!card || card.kind !== 'card') return;

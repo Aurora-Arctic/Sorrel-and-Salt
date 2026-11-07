@@ -4,12 +4,6 @@ import type { ProbeSet } from '../types';
 // database client (CLAUDE.md rule 2) and only the database layer `drizzle-orm` at runtime (rule 4). Written
 // and linted once by unit-global-setup.ts, in throwaway `__lint-probe__` directories: oxlint skips `ignorePatterns` files.
 
-/**
- * Files whose import of the client is exempted by a disable comment: the
- * repository's five that run a query — its transaction, its select, its
- * one users delete, the sign-in failure counter and the guarded passkey
- * removal — and three outside it that need a client, not a writer.
- */
 export const CLIENT_EXEMPT = [
   'src/db/repository/write.ts',
   'src/db/repository/select.ts',
@@ -21,17 +15,12 @@ export const CLIENT_EXEMPT = [
   'tests/db/test-database-isolation.test.ts',
 ];
 
-/** Untracked, gitignored by name, and removed once linted. */
 const SERVICES_PROBES = 'src/modules/coven/services/__lint-probe__';
 const GRAPHQL_PROBES = 'src/graphql/__lint-probe__';
 
-/**
- * The client by the `@/` alias, from a service: the spelling that matters,
- * since the ban is a set of path globs and the alias is not a relative shape.
- */
+// The `@/` alias: the ban is a set of path globs and the alias is not a relative shape.
 export const clientProbe = `${SERVICES_PROBES}/client.ts`;
 
-/** A runtime import of the query builder from the GraphQL layer. */
 export const drizzleProbe = `${GRAPHQL_PROBES}/runtime.ts`;
 
 export const dbClientBoundary: ProbeSet = {

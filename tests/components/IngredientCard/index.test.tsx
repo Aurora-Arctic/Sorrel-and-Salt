@@ -8,10 +8,8 @@ import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { StockBadge } from '@/components/StockBadge';
 
-// (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
-// Marks are found by their exact text and asserted by presence or absence, never by what the words say.
+// claude-docs/components/ingredient-card.md
 
-// The name link navigates through the shared hook, so the App Router is mocked.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
@@ -61,8 +59,7 @@ describe('IngredientCard', () => {
     expect(screen.getByRole('heading', { level: 3 })).toContainElement(screen.getByRole('link'));
   });
 
-  // The icon before each form is aria-hidden, so the role tree cannot see it;
-  // FormIcon's own tests cover which icon draws.
+  // The icon before each form is aria-hidden, so the role tree cannot see it (FormIcon's tests cover which icon draws).
   it('shows the formal name and every form on the secondary line', () => {
     render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, ROOT]} />);
 
@@ -84,7 +81,6 @@ describe('IngredientCard', () => {
     expect(screen.getByText('Fixtura testite').tagName).not.toBe('I');
     mineral.unmount();
 
-    // A nomenclature not passed is not assumed to be a binomial.
     render(<IngredientCard {...BASE} formalName="Fixtura testalis" />);
     expect(screen.getByText('Fixtura testalis').tagName).not.toBe('I');
   });
@@ -151,8 +147,6 @@ describe('IngredientCard', () => {
     expect(screen.queryByText('Testleaf')).toBeNull();
   });
 
-  // The chip row and its +N toggletip are CategoryChips', tested in
-  // tests/components/CategoryChips; the card only has to hand it the categories.
   it('puts the categories past the limit behind a +N button', () => {
     const group = { colorDark: '#112233', colorLight: '#445566' };
     const categories = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
@@ -178,9 +172,6 @@ describe('IngredientCard', () => {
       expect(cautionMark()).not.toBeNull();
     });
 
-    // The safety badge sits beside the name and the rest under the formal name
-    // . It is read last, after the name, the formal
-    // name and the row beneath them: the row the badge joins when it wraps.
     it('reads the name, the formal name, the other marks, then the safety badge', () => {
       render(
         <IngredientCard
@@ -226,8 +217,7 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    // A coven's card says nothing of where a held
-    // entry came from; the entry page and its head still do (EntryMarks' own tests).
+    // A coven's card says nothing of where a held entry came from (EntryMarks' tests cover the entry page).
     it('shows neither Compendium nor Annotated on a compendium entry the cupboard holds', () => {
       render(<IngredientCard {...BASE} kind="cupboard" />);
 
@@ -258,14 +248,11 @@ describe('IngredientCard', () => {
       );
 
       const jars = screen.getByRole('list', { name: 'Jars' });
-      // Low and Out are each a button named for the state, and a healthy jar draws nothing.
       expect(within(jars).getAllByRole('button', { name: /^Low Stock/ })).toHaveLength(1);
     });
   });
 });
 
-// The foot's actions are the caller's own buttons, kept as controls beside
-// the card's one link.
 describe('IngredientCard actions', () => {
   it('draws the given buttons in the card, beside the name link', () => {
     render(<IngredientCard {...BASE} actions={<button type="button">Fixture Use</button>} />);
@@ -295,8 +282,6 @@ describe('IngredientCard actions', () => {
   });
 });
 
-// The name link is the card's one way onward, and the page it leads to draws
-// its own frame while it loads: the card names that page by the address.
 describe('IngredientCard navigation', () => {
   let target: unknown;
   function Probe() {
@@ -358,8 +343,6 @@ describe('IngredientCard recency', () => {
     expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
   });
 
-  // The safety badge is the card's top-right corner and the mark sits just left of it
-  // , so it is read after the name block and before it.
   it('reads the mark after the name and the formal name, and before the safety badge', () => {
     render(
       <IngredientCard

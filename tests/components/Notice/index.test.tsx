@@ -3,9 +3,7 @@ import { describe, expect, it } from 'vitest';
 import Notice from '@/components/Notice';
 import type { NoticeKind } from '@/components/Notice/types';
 
-// The role is what makes a late-arriving notice announced, and the kind is
-// what picks it (claude-docs/components/notice.md): an error, a warning or a
-// caution is an alert, success a status, and a plain remark neither.
+// claude-docs/components/notice.md
 
 // The children are the test's own, not product copy: finding them proves the
 // notice rendered, so a plain notice's missing roles are not an empty render.
@@ -47,10 +45,8 @@ describe('Notice', () => {
   });
 });
 
-// The block form holds what a sentence cannot: a list and buttons beneath it, for the duplicates warning.
 // A `<p>` cannot hold a list or a button, nor an `<output>` a list, so the block form keeps the kinds and their roles on an element that can.
 describe('Notice, the block form', () => {
-  /** A sentence, a list and a button, as the duplicates warning holds. */
   const Block = ({ kind, quiet }: { kind: NoticeKind; quiet?: boolean }) => (
     <Notice kind={kind} quiet={quiet} block>
       <p>{SENTENCE}</p>
@@ -61,7 +57,6 @@ describe('Notice, the block form', () => {
     </Notice>
   );
 
-  /** A list or a button where the HTML content model forbids it. */
   const invalidNesting = (container: HTMLElement) =>
     container.querySelector('p ul, p button, p p, output ul, output p, output div');
 
@@ -117,7 +112,6 @@ describe('Notice, inside a region', () => {
     );
 
     const region = screen.getByRole('status', { name: 'Fixture Region' });
-    // Both notices drew, inside the region, and neither is a region itself.
     expect(within(region).getAllByText(SENTENCE)).toHaveLength(2);
     expect(screen.getAllByRole('status')).toEqual([region]);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

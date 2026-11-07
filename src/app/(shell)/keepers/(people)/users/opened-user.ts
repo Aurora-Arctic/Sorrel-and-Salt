@@ -15,7 +15,6 @@ import { readTimeoutsOf } from '../../support/reads';
 import { userHeading } from './user-heading';
 import type { OpenedUser } from './types';
 
-/** How many of a user's pauses the modal lists, newest first. */
 const PAUSES_SHOWN = 25;
 
 /**
@@ -57,11 +56,9 @@ async function readPausesOf(
 /**
  * The user `?user=` names, with their covens; none when the list does not show them (not live, or
  * the seed's bootstrap user). Read through the services GraphQL ends at (rule 1;
- * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached, so a second render in the request reads once.
+ * claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to"). Cached, so a second render in the request reads once.
  */
 export const readOpenedUser = cache(async (session: Session, raw: string) => {
-  // A hand-edited address is a missing user, not an error: the list beneath
-  // is still the page asked for.
   const parsed = RowId.safeParse(raw);
   if (!parsed.success || !listedOnUserList(parsed.data)) return undefined;
   const id = parsed.data;
@@ -80,7 +77,6 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
   const pauses = await readPausesOf(session, id, isPrimaryAdmin(found));
   return {
     heading: userHeading(found),
-    // Every fact the list's row shows, so the modal holds them all.
     user: {
       id: found.id,
       name: found.name,

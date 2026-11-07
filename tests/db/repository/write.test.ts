@@ -277,11 +277,9 @@ describe('app.current_user_id', () => {
   });
 });
 
-// A finder called inside a `withAudit` callback runs on that callback's transaction, so it sees what the write
-// has put down and the actor it published, and never queues on a second connection behind a lock the write's
-// own transaction holds up. Outside one, it runs on the bare client as before.
+// A finder inside a `withAudit` callback runs on its transaction: it sees the write and its actor,
+// and never queues on a second connection behind the write's own lock.
 describe('a finder inside a withAudit callback', () => {
-  /** A committed row written by the raw client, which every connection sees. */
   async function seedHerb(name: string) {
     const [row] = await sql`
       insert into repository_probe_herbs ${sql({ name, created_by: session.userId, updated_by: session.userId })}
@@ -305,7 +303,6 @@ describe('a finder inside a withAudit callback', () => {
     await seedHerb('Testwort');
 
     const { writerPid, read } = await withAudit(session, async (write) => {
-      // The writer's backend, read by its own insert.
       const [marker] = await write.insert(herbs, {
         name: expression`pg_backend_pid()::text` as unknown as string,
       });
@@ -350,7 +347,6 @@ describe('a finder inside a withAudit callback', () => {
         new Promise((resolve) => setTimeout(() => resolve('waited'), 2_000)),
       ]);
     });
-    // Once the write commits the lock is granted and released, and a read left waiting finishes.
     await locking;
     await reading;
 
@@ -392,8 +388,6 @@ describe('a finder outside any withAudit callback', () => {
   });
 });
 
-// A similarity read sets its pg_trgm thresholds with `set_config(…, true)`; inside a write it does so in a
-// savepoint on the write's transaction rather than a transaction of its own.
 describe('a similarity read inside a withAudit callback', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const author = { userId: A.id };
@@ -403,7 +397,6 @@ describe('a similarity read inside a withAudit callback', () => {
     await sql`truncate ingredients cascade`;
   });
 
-  /** A compendium entry with no formal name or folk names, so its display name is all a match can read. */
   const addEntry = (name: string) =>
     insertIngredient(
       sql,
@@ -411,7 +404,6 @@ describe('a similarity read inside a withAudit callback', () => {
       A.id,
     );
 
-  /** Renames the entry inside `write`, uncommitted, and answers what a similarity read for Testwort then finds. */
   async function renameThenMatch(write: AuditWriter, id: string) {
     await write.updateRevisionedInCompendium(admin, ingredients, id, null, {
       name: 'Testwort',
@@ -455,7 +447,6 @@ describe('a similarity read inside a withAudit callback', () => {
   });
 });
 
-/** Waits until a lock request on `table` is queued and not granted, so a later statement queues behind it. */
 async function queuedLockOn(table: string) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const [{ waiting }] = await sql`
@@ -467,8 +458,6 @@ async function queuedLockOn(table: string) {
   throw new Error(`no lock request queued on ${table}`);
 }
 
-// `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
-// be pointed at anything else.
 describe('hard delete on a table with no delete columns', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';
   const charmId = '33333333-3333-3333-3333-333333333333';
@@ -613,7 +602,6 @@ describe('the compendium tier, under the Curator proof', () => {
   const workspaceId = '55555555-5555-5555-5555-555555555555';
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
 
-  /** A row written by the raw client, stamped by `session` — not by the code under test. */
   async function seed(name: string, columns: Record<string, unknown> = {}) {
     const [row] = await sql`
       insert into repository_probe_tinctures ${sql({
@@ -646,8 +634,6 @@ describe('the compendium tier, under the Curator proof', () => {
     });
   });
 
-  // A curator's proof is what the compendium tier asks for, and an
-  // admin's is one, so the tests above write under either.
   it('inserts into the compendium under a curator’s proof', async () => {
     const curator = assertCurator({ ...session, role: 'curator' });
 
@@ -713,7 +699,6 @@ describe('the compendium tier, under the Curator proof', () => {
     });
   });
 
-  // Neither body runs, as above: `npm run typecheck` is the assertion.
   it('refuses a table without a compendium tier, and a caller without the proof, at compile time', () => {
     const intoAWorkspaceOnlyTable = (write: AuditWriter) =>
       // @ts-expect-error — `jars`' workspace_id is NOT NULL, so it has no compendium tier to write.
@@ -727,7 +712,6 @@ describe('the compendium tier, under the Curator proof', () => {
       // @ts-expect-error — a Curator is assertCurator's alone; an object literal is not one.
       write.softDeleteByIdInCompendium({ userId: session.userId }, tinctures, workspaceId);
 
-    // The people page's writes stay the keeper's: a curator's proof is refused there.
     const curator = assertCurator({ ...session, role: 'curator' });
     const aCuratorLocksAdmins = (write: AuditWriter) =>
       // @ts-expect-error — lockLiveAdmins takes a SiteAdmin, and a Curator is not one.
@@ -741,7 +725,8 @@ describe('the compendium tier, under the Curator proof', () => {
 });
 
 // A table marked `namedWrites` is reached only through its own named writer methods, and the mark is the whole refusal: no column name is read (claude-docs/db/write-path.md, "Table marks").
-// No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment a generic method stops demanding `Generic`, which a runtime assertion cannot see.
+// No body runs: each `@ts-expect-error` fails `npm run typecheck` once a generic method
+// stops demanding `Generic`, which a runtime assertion cannot see.
 describe('a table marked namedWrites, refused by every generic writer method', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const id = session.userId;
@@ -834,8 +819,7 @@ describe('a table marked namedWrites, refused by every generic writer method', (
   });
 });
 
-// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path").
-// The way back to one is a restore, which is v2's.
+// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path — `withAudit`").
 describe('a soft-deleted row, out of reach of every update and soft delete', () => {
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
   const stamps = { created_by: session.userId, updated_by: session.userId };
@@ -843,7 +827,6 @@ describe('a soft-deleted row, out of reach of every update and soft delete', () 
 
   type Call = (write: AuditWriter, id: string) => Promise<unknown[]>;
 
-  /** A live row and a deleted twin, written by the raw client, and a reader for either. */
   async function herbPair() {
     const [live] = await sql`
       insert into repository_probe_herbs ${sql({ name: 'Rue', ...stamps })} returning *`;
@@ -867,7 +850,6 @@ describe('a soft-deleted row, out of reach of every update and soft delete', () 
 
   let inW: Membership;
   beforeAll(async () => {
-    // A owns W in `standard`, the scenario every db worker's clone carries.
     inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['update'] });
   });
 

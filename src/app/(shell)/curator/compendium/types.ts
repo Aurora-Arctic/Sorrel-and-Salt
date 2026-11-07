@@ -10,17 +10,13 @@ import type { ListSearchParams } from '../types';
 import type { SourcingScore } from '@/modules/ingredients';
 
 export interface AdminCompendiumPageProps {
-  // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
-  // 03-file-conventions/page.md) — must be awaited before use.
   searchParams: Promise<CompendiumSearchParams>;
 }
 
-/** The page's address: the list pages' query, cursor and modal, and the compendium's own filters. */
 export interface CompendiumSearchParams extends ListSearchParams {
   forms?: string | string[];
   withoutReferences?: string | string[];
   withoutForms?: string | string[];
-  /** Only the hidden entries, `1`; the public page drops it. */
   hidden?: string | string[];
   elements?: string | string[];
   categories?: string | string[];
@@ -29,17 +25,12 @@ export interface CompendiumSearchParams extends ListSearchParams {
   zodiac?: string | string[];
   celestialBodies?: string | string[];
   toxic?: string | string[];
-  /** Reviewed by a curator, `1`, or not, `0`; the public page drops it. */
   reviewed?: string | string[];
-  /** The column the list sorts on, `name` or `sourcing_score`; the public page drops it. */
   sort?: string | string[];
-  /** `desc` reverses the sort; the public page drops it. */
   order?: string | string[];
-  /** The entry whose details modal is open over the list, by slug. */
   entry?: string | string[];
 }
 
-/** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */
 export interface EditedEntry {
   id: string;
   revision?: number | null;
@@ -47,27 +38,16 @@ export interface EditedEntry {
   values: IngredientFormValues;
 }
 
-/** What the page's address opens: an add, or the entry it edits. */
 export interface OpenedEntry {
-  /** "Add Ingredient", or the edited entry's eyebrow, name and formal name. */
   heading: ModalHeading;
-  /** The entry edited; none for an add. */
   entry?: EditedEntry;
-  /**
-   * The Reviewed switch as a field of the form, on an add and an edit: built from the uncached
-   * review read for a curator or keeper, left out for anyone else.
-   */
   review?: ReviewOffer;
-  /** The edited entry's sourcing score and its facts, a curator's read; none for an add. */
   sourcing?: SourcingScore | null;
 }
 
 export interface CompendiumDialogProps {
-  /** The list the modal opened over, which closing it returns to and a save reopens from. */
   place: CompendiumPlace;
-  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedEntry;
-  /** The list's own address: the admin Compendium's by default, or the public search's. */
   path?: Route;
   /** The modal the address opens, kept beneath a near match's Quick Look; left out where the list has none. */
   lookUnder?: ListDialog;

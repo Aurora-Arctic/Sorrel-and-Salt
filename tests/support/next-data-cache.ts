@@ -7,7 +7,6 @@ import type { CachedDeclaration, CachedEntry } from './types';
 
 const entries = new Map<string, CachedEntry>();
 
-/** Every `unstable_cache` declaration made since the module loaded, in order. */
 export const declared: CachedDeclaration[] = [];
 
 export const unstable_cache = <A extends unknown[], R>(
@@ -31,7 +30,6 @@ export const revalidateTag = vi.fn((tag: string, _profile: string | { expire?: n
   for (const [key, entry] of entries) if (entry.tags.includes(tag)) entries.delete(key);
 });
 
-/** Empties the cache, as a fresh server starts: call it beside a test's truncate. */
 export function clearDataCache(): void {
   entries.clear();
 }

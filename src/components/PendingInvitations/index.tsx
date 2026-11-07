@@ -10,10 +10,7 @@ import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
 import './index.scss';
 
-// The invitations a steward has sent and nobody has accepted, under the members roll: address, role
-// and status, newest first, with its own pager. A pending one shows its expiry and offers Revoke; a
-// declined one shows when, and offers Remove. The page draws it for stewards only; nothing here
-// decides who may see it (claude-docs/components/pending-invitations.md).
+// The page draws it for stewards only; nothing here decides who may see it (claude-docs/components/pending-invitations.md).
 
 const PendingInvitations = ({
   workspaceId,

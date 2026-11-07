@@ -3,9 +3,6 @@ import type { ReactElement } from 'react';
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import FormIcon from '.';
 
-// Render-only; which icon a name draws is asserted in tests/components/FormIcon.
-// The owner's review of the six group icons happens here: all seven marks
-// at the three sizes a list row, a heading and a card head set.
 const meta = {
   title: 'Surfaces / Form Icon',
 } satisfies Meta;
@@ -55,5 +52,4 @@ const Sheet = (): ReactElement => (
   </table>
 );
 
-// The seven marks at 1rem, 1.25rem and 1.5rem. The toolbar's theme control shows each theme.
 export const Default: Story = { render: () => <Sheet /> };

@@ -4,10 +4,8 @@
 // The score bar's height: no token sizes a meter, so this is the one value past them.
 $bar-height: 0.5rem;
 
-// A hairline closes the panel off from the References field beneath, as the form's sections are ruled.
-// The padding above the line equals the section body's gap beneath it, so the line sits midway; the
-// bare `section` rule's bottom margin is cleared so it does not add to that gap. Its stack gap is cleared
-// too, so the key can sit under the bar; each part spaces itself below.
+// A hairline closes the panel off from the References field beneath. The padding above the line equals the section
+// body's gap beneath it, so the line sits midway; the bare `section` bottom margin and the stack gap are cleared.
 .sourcing-score {
   margin-block-end: 0;
   gap: 0;
@@ -42,7 +40,7 @@ $bar-height: 0.5rem;
   }
 }
 
-// Gains in Highlight and losses in CanvasText, as the fills are dropped.
+// Forced colours drop the fills: gains in Highlight, losses in CanvasText.
 .sourcing-score__gain {
   background: $accent;
 
@@ -61,7 +59,6 @@ $bar-height: 0.5rem;
 
 .sourcing-score__key {
   margin: space(1) 0 space(5);
-  // Tight leading, so the line sits under the bar it reads out rather than a paragraph's height away.
   line-height: 1.2;
   font-size: type-size('caption');
   color: $text-muted;

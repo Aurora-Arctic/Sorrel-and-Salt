@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resetPasswordMessage } from '@/emails/reset-password';
 
-// What the mail carries: its recipient and its reset link. Its wording and design are the story's
-// (src/emails/reset-password.stories.tsx).
-
 const LINK = 'http://localhost:8000/api/auth/reset-password/token123?callbackURL=%2Freset-password';
 
 describe('resetPasswordMessage', () => {

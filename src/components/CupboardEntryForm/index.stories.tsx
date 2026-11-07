@@ -5,9 +5,6 @@ import Modal from '../Modal';
 import CupboardEntryForm from '.';
 import type { CompendiumValues, CupboardOverrides } from './types';
 
-// Render-only; behaviour is asserted in tests/components/CupboardEntryForm.
-// The workshop has no API, so a save answers with the form's generic error.
-// Shown in the modal Annotate This Entry opens it in. Every name is invented.
 const meta = {
   title: 'Ingredients / Cupboard Entry Form',
 } satisfies Meta;
@@ -51,12 +48,8 @@ const Shown = ({ overrides }: { overrides: CupboardOverrides }) => (
   </Reopenable>
 );
 
-// Nothing annotated yet: every field shows the Compendium's value, and no
-// Restore Original control.
 const defaultNode = <Shown overrides={NONE} />;
 
-// The coven's own label and description, and its celestial bodies cleared on purpose:
-// each changed field shows the Restore Original icon button at its label's end.
 const annotatedNode = (
   <Shown
     overrides={{

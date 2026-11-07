@@ -6,7 +6,6 @@ import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
 import './index.scss';
 
-/** A badge's place in the row, from its palette's colour: green, the neutral tints, red. */
 type Tone = 'green' | 'neutral' | 'red';
 
 interface Mark {
@@ -98,7 +97,6 @@ const EntryMarks = ({
         node: <output className="badge badge--attention">Needs Review</output>,
       });
     } else {
-      // Reviewed By Curator stands last in the row, with its day in the badge's tip, not beside it.
       reviewed = (
         <TipMark
           label="Reviewed By Curator"
@@ -108,8 +106,6 @@ const EntryMarks = ({
       );
     }
   }
-  // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
-  // card draws its own beside the name (`safety={false}`).
   if (safety) {
     marks.push({
       key: 'safety',

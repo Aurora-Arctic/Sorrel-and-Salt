@@ -1,12 +1,7 @@
 import type { ValidationIssue } from './types';
-// The ways a service ends a call it cannot perform: two refusals and a bad value, thrown rather than answered with an empty list or
-// a null. Separate types, not messages, so a test survives a rewording; none carries a status code, as the route attaches that
-// (claude-docs/auth/service-session.md, "The service-level session, and the three errors").
+// Separate types, not messages, so a test survives a rewording; none carries a status code (claude-docs/auth/service-session.md, "The service-level session, and the three errors").
 
-/**
- * The actor is known and the answer is no. Thrown by services (rule 1), and
- * by the schema's auth scopes so the transport maps one refusal shape.
- */
+/** Also thrown by the schema's auth scopes, so the transport maps one refusal shape. */
 export class Forbidden extends Error {
   constructor(message = 'Forbidden') {
     super(message);
@@ -15,14 +10,7 @@ export class Forbidden extends Error {
   }
 }
 
-/**
- * No such row — or none this reader may know about, which reads the same.
- */
-/**
- * A member whose access to this coven a steward has paused: they hold a seat, so it is not the bare refusal a stranger gets.
- * A `Forbidden` still, so every caller that maps a refusal to a 404 keeps doing so until it reads this one; `until` is when the
- * pause ends, `null` for a pause with no end.
- */
+/** A `Forbidden` still, so every caller that maps a refusal to a 404 keeps doing so until it reads this one; `until` null is a pause with no end. */
 export class AccessPaused extends Forbidden {
   readonly until: Date | null;
 
@@ -33,6 +21,7 @@ export class AccessPaused extends Forbidden {
   }
 }
 
+/** No such row, or none this reader may know about, which reads the same. */
 export class NotFound extends Error {
   constructor(message = 'Not found') {
     super(message);
@@ -40,11 +29,7 @@ export class NotFound extends Error {
   }
 }
 
-/**
- * The input broke a rule, and each issue says which field and why. It carries
- * issues rather than producing them, so this file depends on no schema
- * library; the Zod adapter is src/lib/validation.ts.
- */
+/** Carries issues rather than producing them, so this file depends on no schema library; the Zod adapter is src/lib/validation.ts. */
 export class ValidationError extends Error {
   readonly issues: readonly ValidationIssue[];
 
@@ -59,10 +44,7 @@ export class ValidationError extends Error {
 export const fieldRefusal = (path: string, message: string): ValidationError =>
   new ValidationError([{ path: [path], message }], message);
 
-/**
- * A pagination cursor that names no position in the list: malformed, forged, or from a list sorted on another column. The input is
- * wrong, not the actor refused, and never read as "from the start", which would hand back a page nobody asked for.
- */
+/** Never read as "from the start", which would hand back a page nobody asked for. */
 export class InvalidCursor extends Error {
   constructor(message = 'Invalid cursor') {
     super(message);
@@ -70,10 +52,7 @@ export class InvalidCursor extends Error {
   }
 }
 
-/**
- * A save that named the revision it read, after another save moved the row on: neither refusal, as the actor may write and the input is
- * sound, but it was built on a stale copy. Carries the row's revision now (claude-docs/components/autosave.md, "The server's half").
- */
+/** Neither refusal nor bad input: the actor may write and the input is sound, but it was built on a stale copy. Carries the row's revision now (claude-docs/autosave.md, "The server's half"). */
 export class StaleWrite extends Error {
   readonly currentRevision: number;
 
@@ -87,10 +66,7 @@ export class StaleWrite extends Error {
   }
 }
 
-/**
- * The caller has sent more than a path allows in its window. Carries the seconds to wait, which the transport sends as
- * `Retry-After`. Neither a refusal of the actor nor bad input: the same call passes once the window has moved on.
- */
+/** Carries the seconds to wait, which the transport sends as `Retry-After`. Neither a refusal nor bad input: the same call passes once the window moves on. */
 export class RateLimited extends Error {
   readonly retryAfterSeconds: number;
 

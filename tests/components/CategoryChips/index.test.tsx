@@ -3,8 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import CategoryChips from '@/components/CategoryChips';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 
-// The chip row the ingredient card and the admin compendium list share: the first few chips, the rest behind a +N toggletip (claude-docs/components/category-chips.md).
-// The row measures nothing, so jsdom is enough here; where the panel lands is proved in a browser (tests/e2e/admin-compendium.spec.ts).
+// claude-docs/components/category-chips.md. Where the panel lands is proved in a browser (tests/e2e/admin-compendium.spec.ts).
 
 const GROUP = { colorDark: '#112233', colorLight: '#445566' };
 const many = (n: number) =>
@@ -17,7 +16,6 @@ const panel = () => screen.queryByRole('group', { name: /more categories/i });
 const chips = () =>
   within(screen.getByRole('list', { name: 'Categories' }))
     .getAllByRole('listitem')
-    // The More item holds a button, and the chips it opens sit in its panel.
     .filter((item) => !within(item).queryByRole('button') && !panel()?.contains(item));
 
 describe('CategoryChips', () => {
@@ -141,7 +139,6 @@ describe('a category only a form carries', () => {
 
     const items = within(screen.getByRole('list', { name: 'Categories' })).getAllByRole('listitem');
     expect(items).toHaveLength(2);
-    // The own chip comes first, as plain text; the form's follows, a button carrying its tip.
     expect(within(items[0]).getByText('Testward')).toBeInTheDocument();
     expect(within(items[0]).queryByRole('button')).toBeNull();
     const chip = within(items[1]).getByRole('button', { name: 'Testcharm' });

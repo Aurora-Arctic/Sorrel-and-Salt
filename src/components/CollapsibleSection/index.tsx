@@ -24,7 +24,6 @@ export function useFoldIds({ block, open, invalid, flagged }: FoldIdsOptions): F
   };
 }
 
-/** The flag beneath a fold's heading while it holds an error, which its toggle is described by. */
 export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
   return shown ? (
     <span id={id} className={className}>
@@ -36,7 +35,7 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 /**
  * A form section as a disclosure under an `h3` (`h4` when nested): the heading's text is a button,
  * with a one-line summary of what is entered while closed and a flag on error. Fields stay in the
- * page while closed, hidden (claude-docs/components/collapsible-section.md, "How a section is built").
+ * page while closed, hidden (claude-docs/components/collapsible-section.md, "Behaviour").
  */
 export function CollapsibleSection({
   title,
@@ -47,7 +46,6 @@ export function CollapsibleSection({
   titleId,
   children,
 }: CollapsibleSectionProps): ReactElement {
-  // Flagged open or closed: the heading stays in view either way.
   const { summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
     block: 'collapsible-section',
     open,

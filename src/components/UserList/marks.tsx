@@ -10,17 +10,10 @@ import './index.scss';
 // two cannot drift. Their styles are the list's own, imported here so a
 // caller outside the list draws them styled; Sass bundles the file once.
 
-/** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
   return SOCIAL_PROVIDERS.find((provider) => provider.id === id)?.label ?? id;
 }
 
-/**
- * A linked provider as its logo on its brand's ground,
- * named in a tip bubble on hover and in hidden text for a screen reader. A
- * provider with no logo, one since dropped from the roster, keeps its id as
- * text, so the account still says it is linked.
- */
 export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span>{label}</span>;
@@ -33,10 +26,8 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
 };
 
 /**
- * A yes-or-no as a mark: a green check or a red cross,
- * its word in the page for a screen reader since the mark is drawn alone, and
- * where `hint` asks, in a tip bubble on hover too, since the column's heading
- * does not say it, or `tip` gives it other words. The bubble is the eye's copy, hidden from the reader.
+ * A yes-or-no as a green check or a red cross, its word in the page for a screen reader since the mark is drawn alone.
+ * The tip bubble is the eye's copy, hidden from the reader.
  */
 export const Mark = ({ value, label, hint = false, tip }: MarkProps): ReactElement => {
   const icon = value ? <CheckIcon /> : <CrossIcon />;

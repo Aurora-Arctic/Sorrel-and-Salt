@@ -3,15 +3,9 @@
 import type { ReactElement } from 'react';
 import { SwitchField } from './switch-field';
 
-// The visibility switch a spell and a working both use: on is the coven, off is the author alone.
-// It holds no rule of its own; the caller says when it is shut and why.
-
 export interface VisibilitySwitchProps {
-  /** What is being shared, for the line under the switch. */
   noun: 'spell' | 'working';
-  /** The switch's name; a working's form reads "Share With the Coven". */
   label?: string;
-  /** One short line under the switch, the rest in its tip, to fit a form's footer row. */
   brief?: boolean;
   checked: boolean;
   onChange: (checked: boolean) => void;

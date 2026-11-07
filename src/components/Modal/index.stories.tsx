@@ -15,9 +15,6 @@ import Modal, {
 import { RouteModalContext } from './route-modal-provider';
 import { usePressOnMount } from '../../../.storybook/press';
 
-// Render-only; behaviour is asserted in tests/components/Modal. The owner closes
-// it by unmounting it, so the story keeps an Open button; a story with no state of
-// its own stands on `Reopenable` (.storybook/reopenable.tsx).
 const meta = {
   title: 'Surfaces / Modal',
 } satisfies Meta;
@@ -56,13 +53,6 @@ const DefaultView = () => {
 };
 const defaultNode = <DefaultView />;
 
-// In its own iframe: `showModal()` puts the dialog in the top layer, which in
-// the workshop's own document would cover Storybook's sidebar too.
-/**
- * An edit dialog's head: the eyebrow says the action, the title which entry, and a
- * qualifier follows it (here a binomial in italics). The name wraps rather than
- * pushing the × out, as the phone stories show.
- */
 const EditingView = () => {
   const [open, setOpen] = useState(true);
   return (
@@ -97,8 +87,6 @@ const EditingView = () => {
 
 const editingNode = <EditingView />;
 
-// A modal a button opens: however it closes, Close, Escape, a click
-// outside or Done, the focus ring is back on the button.
 const ButtonModal = () => (
   <ModalButton label="Open" className="btn btn--solid" title="Add Category">
     {(close) => (
@@ -113,16 +101,12 @@ const ButtonModal = () => (
 
 const openedByAButtonNode = <ButtonModal />;
 
-// The same, pressed open as the story mounts, so the dialog itself shows.
 const OpenedByAButtonOpenView = () => {
   usePressOnMount('Open');
   return <ButtonModal />;
 };
 const openedByAButtonOpenNode = <OpenedByAButtonOpenView />;
 
-// The address-driven wrapper the admin pages open. The workshop's router reports
-// where it was sent (.storybook/navigation.ts) and `Reopenable` unmounts it. Close,
-// Escape and Done fade it out and leave Open Again; Done stands for a save.
 const openedByItsAddressNode = (
   <Reopenable>
     {() => (
@@ -143,9 +127,6 @@ const openedByItsAddressNode = (
   </Reopenable>
 );
 
-// A route modal pressed open while its page is on its way: the pressed row's head
-// over the form's skeleton, through a provider whose navigation never arrives.
-// Close still leaves it.
 const LoadingView = () => (
   <Reopenable>
     {() => (
@@ -164,16 +145,10 @@ const LoadingView = () => (
 
 const loadingNode = <LoadingView />;
 
-/**
- * A form with a change, asked on opening whether to discard it, as Cancel, Close,
- * Escape or a click outside would ask. The form is dimmed until answered, and each
- * further try flashes the question. Keep Editing returns; Discard Changes closes.
- */
 function ChangedForm({ close }: { close: () => void }) {
   const [name, setName] = useState('Testwort Renamed');
   const discard = useDiscardGuard(name !== 'Testwort');
   const { request } = discard;
-  // The question shown from the start, once, as a press of Cancel would show it.
   const shown = useRef(false);
   useEffect(() => {
     if (shown.current) return;
@@ -224,7 +199,6 @@ const AskingToDiscardChangesView = () => {
 
 const askingToDiscardChangesNode = <AskingToDiscardChangesView />;
 
-// The head's other parts, one story each beside the plain dialog (Modal/types.ts).
 const HeadView = () => {
   const [open, setOpen] = useState(true);
   return (
@@ -301,17 +275,11 @@ const ListedView = () => {
 
 const listedWithAFootNode = <ListedView />;
 
-// The shared form groups, the first three, by slug as a picker's values are.
 const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
   value: slug,
   label: name,
 }));
 
-/**
- * A form asked to confirm a delete over itself: Delete (destructive) and Cancel,
- * focused. Delete leaves it busy, "Deleting", since this one never lands; Cancel
- * closes the question.
- */
 function DeletingForm() {
   const [asked, setAsked] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -350,8 +318,6 @@ const askingToConfirmNode = (
   </Reopenable>
 );
 
-// A picker and a multi-picker in a modal: Escape on an open list closes the
-// list alone, and a second Escape, the list shut, closes the modal.
 const WithPickersView = () => {
   const [open, setOpen] = useState(true);
   const [group, setGroup] = useState('');

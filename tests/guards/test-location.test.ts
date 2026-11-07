@@ -7,7 +7,6 @@ import config from '../../vitest.config.mts';
 // Otherwise it fails silently: a test beside its code or in no project's globs is a file nothing runs, and one in two projects runs twice. The scan is the unit project's shared listing (the index plus untracked files git would not ignore); the globs are the config's own, matched with picomatch.
 
 const TEST_FILE = /\.test\.tsx?$/;
-/** Playwright's, which no project in the main config runs. */
 const NOT_A_PROJECTS = ['tests/e2e/'];
 
 interface Project {

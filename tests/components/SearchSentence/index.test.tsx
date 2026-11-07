@@ -5,8 +5,7 @@ import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import SearchSentence from '@/components/SearchSentence';
 import type { SearchSentenceProps } from '@/components/SearchSentence/types';
 
-// The sentence above a list that says what it is searching for: a closed one-line disclosure once a search has settled, typed out as the loading animation while one is on its way,
-// with the finished sentence given once to a status region (claude-docs/components/search-sentence.md).
+// claude-docs/components/search-sentence.md
 
 const sentence = (query = 'testwort') =>
   buildSearchSentence({
@@ -15,7 +14,6 @@ const sentence = (query = 'testwort') =>
     total: 3,
   });
 
-// Two categories, so the sentence holds a joining word ("and") between two values.
 const joined = () =>
   buildSearchSentence({
     filter: { categories: ['warding', 'mending'] },
@@ -142,7 +140,6 @@ describe('SearchSentence', () => {
         listen();
       }
 
-      // No hold and no slide: the line is the settled one at once.
       expect(disclosure()).not.toHaveAttribute('open');
       expect(disclosure()).not.toHaveAttribute('aria-hidden');
       expect(disclosure()).toHaveTextContent('testwurz');
@@ -157,7 +154,6 @@ describe('SearchSentence', () => {
 
       rerender(<SearchSentence {...PROPS} pending />);
       pass(3000);
-      // Still searching: typed out, open, hidden, and the status region still quiet.
       expect(disclosure(true)).toHaveAttribute('aria-hidden', 'true');
       expect(disclosure(true)).toHaveAttribute('open');
       expect(disclosure(true)).toHaveTextContent('testwarding');
@@ -165,11 +161,9 @@ describe('SearchSentence', () => {
 
       rerender(<SearchSentence {...PROPS} />);
       pass(500);
-      // The search came back: the sentence is announced while the line is still held open.
       expect(status()).toHaveTextContent('testwarding');
       expect(disclosure(true)).toHaveAttribute('open');
 
-      // The count retyped, the hold, then the slide: the line settles closed and is readable.
       pass(3000);
       expect(disclosure()).not.toHaveAttribute('open');
       expect(disclosure()).not.toHaveAttribute('aria-hidden');
@@ -194,7 +188,6 @@ describe('SearchSentence', () => {
       vi.useFakeTimers();
       const { rerender } = render(<SearchSentence {...PROPS} />);
 
-      // The list names the new term from the moment its search starts, as the filter row does.
       const next: SearchSentenceProps = {
         sentence: sentence('mossbell'),
         query: 'mossbell',
@@ -214,7 +207,6 @@ describe('SearchSentence', () => {
       vi.useFakeTimers();
       const { rerender } = render(<SearchSentence {...PROPS} />);
 
-      // The same term under another filter: only the clauses change.
       const other = buildSearchSentence({
         filter: { query: 'testwort', categories: ['mending'] },
         labels: { categories: { mending: 'Testmending' } },
@@ -241,7 +233,6 @@ describe('SearchSentence', () => {
       rerender(<SearchSentence {...next} pending={false} />);
       pass(100);
 
-      // A term is only ever whole or gone: no tick shows part of one.
       expect(seen.every((term) => ['testwort', '', 'mossbell'].includes(term))).toBe(true);
       expect(seen[seen.length - 1]).toBe('mossbell');
       expect(disclosure()).toHaveTextContent('matching mossbell');

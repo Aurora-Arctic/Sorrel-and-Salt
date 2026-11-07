@@ -39,7 +39,6 @@ test('every provider renders available, not greyed, with no accessibility violat
   await assertNoAccessibilityViolations(page);
 });
 
-// One page load: each button is at rest until the pointer reaches it.
 test('each provider button’s hover state has no accessibility violations', async ({ page }) => {
   await page.goto('/sign-in');
   for (const name of PROVIDER_NAMES) {

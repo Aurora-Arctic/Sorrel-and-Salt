@@ -22,7 +22,6 @@ export function redactPath(path: string | null | undefined): string {
     .join('/');
 }
 
-/** The stored page as a curator reads it: the segment after `/coven/` replaced by a placeholder. */
 export function redactPathForCurator(path: string): string {
   return path
     .split('/')

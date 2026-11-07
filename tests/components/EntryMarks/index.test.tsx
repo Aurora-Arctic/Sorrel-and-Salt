@@ -2,8 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
 
-// The cupboard's three kinds and what each shows (claude-docs/components/entry-marks.md). Each mark is found by its exact text and asserted by presence or absence; the `output` badges also by the count of `status` roles.
-// What the words say is never asserted.
+// claude-docs/components/entry-marks.md
 
 const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });
@@ -28,9 +27,7 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  // Annotated wins: it already says the entry is the
-  // Compendium's, so the two never show together. The test above is the precondition:
-  // held and unannotated, the same entry shows Compendium.
+  // Annotated wins: it already says the entry is the Compendium's. The test above is the precondition.
   it('shows Annotated alone, without Compendium, once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
@@ -80,8 +77,6 @@ describe('EntryMarks', () => {
     },
   );
 
-  // The card's switch: Compendium and Annotated
-  // say where a held entry came from, which the entry page says and a card does not.
   it('leaves Compendium and Annotated off without provenance, keeping Local and Retired', () => {
     const card = render(<EntryMarks kind="cupboard" annotated provenance={false} />);
     expect(held()).toBeNull();
@@ -115,9 +110,7 @@ describe('EntryMarks', () => {
   });
 });
 
-// Green first, red last, on every badge row:
-// EntryMarks draws the whole row, the safety mark included, so the order
-// holds in one place. Asserted by document order, never by class or copy.
+// EntryMarks draws the whole row, the safety mark included, so the order holds in one place; asserted by document order.
 describe('EntryMarks badge order', () => {
   const precedes = (first: Element | null, second: Element | null): boolean =>
     first !== null &&
@@ -153,8 +146,6 @@ describe('EntryMarks badge order', () => {
     expect(caution()).toBeNull();
   });
 
-  // New or Updated comes before every badge, in reading order and on screen,
-  // whichever row it shares with them.
   it('draws New or Updated ahead of every badge', () => {
     render(
       <EntryMarks kind="own" retired recency="updated" safetyNotes="Fixture entry caution." />,
@@ -199,9 +190,6 @@ describe('RecencyMark', () => {
   });
 });
 
-// The curators' review mark, shown to everyone: the
-// date for a reviewed entry, Needs Review for one not; never who reviewed it, which the
-// component is not given. A coven's own entry has none; nobody reviews those.
 describe('the review mark', () => {
   const AT = '2026-10-01T09:30:00.000Z';
   const reviewed = () => screen.queryByText(/Reviewed By Curator/);
@@ -210,7 +198,6 @@ describe('the review mark', () => {
   it('says a reviewed compendium entry is, and on what day', () => {
     render(<EntryMarks kind="compendium" reviewedAt={AT} />);
 
-    // The day is the badge's tip, read as its description; the badge is the row's last.
     expect(screen.getByRole('button', { name: 'Reviewed By Curator' })).toHaveAccessibleDescription(
       'Reviewed 1 Oct 2026',
     );

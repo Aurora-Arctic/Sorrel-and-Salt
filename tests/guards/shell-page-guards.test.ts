@@ -3,9 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// The proxy reads only whether a session cookie is present, so any cookie passes it on every path; what keeps a session off a
-// page it may not reach is the page itself calling a session guard.
-// A page counts as guarded when it, or a file it imports from inside src/app, calls one.
+// The proxy only sees that a session cookie is present, so a page keeps a session off itself by calling a session guard, directly or through a file it imports from src/app.
 
 const SHELL_PAGE = /^src\/app\/\(shell\)\/.*\/page\.tsx$/;
 const GUARD =
@@ -15,7 +13,6 @@ const IMPORT = /(?:import|export)\s+(?!type\b)[^;]*?from\s+['"]([^'"]+)['"]/g;
 /** Slot pages that render nothing and import nothing, so they have no data to guard. */
 const RENDERS_NOTHING = ['src/app/(shell)/keepers/(people)/@action/privilege-changes/page.tsx'];
 
-/** A relative or `@/app/` import resolved to its file, or null for a package or a path outside src/app. */
 function resolveImport(from: string, specifier: string): string | null {
   let base: string;
   if (specifier.startsWith('.')) base = resolve(dirname(from), specifier);

@@ -6,9 +6,7 @@ import { SupportIcon } from '../IconTip/icons';
 import SupportLink from '../SupportLink';
 import './index.scss';
 
-// The row under every page, drawn once by the root layout: the site's name at the left,
-// the footer's links at the right: the public documents as text, then Support as a bare icon
-// button (claude-docs/components/site-footer.md).
+// See claude-docs/components/site-footer.md.
 
 const SiteFooter = (): ReactElement => (
   <footer className="site-footer">

@@ -9,9 +9,6 @@ import {
   verifyErrorMessage,
 } from '@/lib/account-email';
 
-// The page a followed verification link lands on shows a sentence, never the
-// `?error=` code Better Auth or src/lib/auth.ts appended.
-
 describe('verifyErrorMessage', () => {
   it('answers undefined for no code, an empty code, or a repeated one', () => {
     expect(verifyErrorMessage(undefined)).toBeUndefined();
@@ -53,15 +50,12 @@ describe("the email page's paths", () => {
     );
   });
 
-  // The open-redirect guard runs when the link is built, not only when the
-  // page reads it back: a mailed link never names somewhere else. Which paths
-  // leave the site is safeReturnPath's (tests/lib/sign-in.test.ts).
+  // The open-redirect guard runs when the link is built: a mailed link never names somewhere else (which paths leave the site is tests/lib/sign-in.test.ts's).
   it('drops a return path that leaves the site, landing as it always has', () => {
     expect(verifiedLanding('//evil.example')).toBe('/account/email?verified');
   });
 
-  // Continue's landing without one is the role's, so an explicit /coven is carried like any
-  // other: a keeper who asked for it still lands on it.
+  // Continue's landing without one is the role's, so an explicit /coven is carried like any other.
   it('carries an explicit /coven, which is not the same as none', () => {
     expect(verifiedLanding('/coven')).toBe('/account/email?verified&next=%2Fcoven');
   });
@@ -71,9 +65,7 @@ describe("the email page's paths", () => {
     expect(returnPathOf('/coven/hearth?tab=mine')).toBe('/coven/hearth?tab=mine');
   });
 
-  // A resend's callbackURL is the landing the email page asked for, and a
-  // sign-in may itself have been headed for the email page: either way the
-  // page's own `next` is the one to carry, never the page.
+  // A resend's callbackURL is the landing the email page asked for: carry the page's own `next`, never the page.
   it("reads the email page's own next out of a callbackURL on it", () => {
     expect(returnPathOf('/account/email?verified&next=%2Fkeepers')).toBe('/keepers');
     expect(returnPathOf('/account/email?next=%2Fkeepers')).toBe('/keepers');

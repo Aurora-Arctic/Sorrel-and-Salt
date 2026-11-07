@@ -19,7 +19,6 @@ import type { SupportAbout, SupportRequestsFilterProps, SupportStatus } from './
 
 export const ABOUT_OPTIONS: readonly { value: SupportAbout; label: string }[] = SUPPORT_ABOUTS;
 
-/** Every status a request can show. */
 export const STATUS_LABELS: Record<SupportStatus, string> = {
   open: 'Open',
   waiting_on_sender: 'Waiting on Sender',
@@ -27,7 +26,6 @@ export const STATUS_LABELS: Record<SupportStatus, string> = {
   closed: 'Closed',
 };
 
-/** Each sender group's mark, the same one its senders carry in the table. */
 const SENDER_ICONS: Record<SupportSenderGroup, ReactElement> = {
   beta_tester: <SproutIcon />,
 };

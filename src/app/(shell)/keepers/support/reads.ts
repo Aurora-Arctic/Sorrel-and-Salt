@@ -32,9 +32,6 @@ const pick = ({ about, errorCode, senderGroup }: SupportRequestFilter) => ({
   senderGroup,
 });
 
-// What the page reads, through the support services, which are the guard. Each read is cached so a
-// second render in the request reads once.
-
 type Names = Map<string, SupportSender>;
 
 // The System account is never named: it is an anonymised request's sender, which the screens do not show.
@@ -62,7 +59,6 @@ function senderOf(row: SupportRequestRow, names: Names): SupportSender | null {
   return row.createdBy === SIGNED_OUT_SENDER_ID ? { ...found, email: row.senderEmail } : found;
 }
 
-/** The sender wrote last: staff have answered and the sender's activity is later than theirs. */
 const senderRepliedOn = (row: SupportRequestRow): boolean =>
   row.lastStaffActivityAt !== null &&
   row.lastSenderActivityAt !== null &&
@@ -89,11 +85,9 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
   };
 }
 
-/** The accounts a time-out names: who set it and, once lifted, who lifted it. */
 const timeoutPeople = (row: SupportTimeoutRow): string[] =>
   row.liftedAt ? [row.createdBy, row.updatedBy] : [row.createdBy];
 
-/** Time-outs as the panel draws them, their setters and lifters named. */
 function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): SupportTimeoutEntry[] {
   return rows.map((row) => ({
     id: row.id,
@@ -106,7 +100,6 @@ function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): Suppo
   }));
 }
 
-/** One page of requests and its position, the people on them named. */
 export const readRequests = cache(
   async (
     session: Session,
@@ -138,7 +131,6 @@ export const readRequests = cache(
   },
 );
 
-/** How many requests each tab holds, under the About and Error # filter. */
 export const readViewCounts = cache(async (session: Session, filter: SupportRequestsFilter) =>
   countSupportViews(session, pick(serviceFilter(filter))),
 );
@@ -200,7 +192,6 @@ export const readAssignees = cache(async (session: Session): Promise<SupportPers
   return [...keepers, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });
 
-/** The time-outs set on a user, newest first, with who set each; a keeper's read, empty for anyone else. */
 export const readTimeoutsOf = cache(
   async (session: Session, userId: string): Promise<SupportTimeoutEntry[]> => {
     if (session.role !== 'admin') return [];

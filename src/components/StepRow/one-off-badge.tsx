@@ -3,10 +3,8 @@
 import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
 
-// A one-off ingredient's One-Off badge with its tip, "Used in this spell only; not kept in your
-// cupboard.": a button, so the tip is reached by focus as well as hover,
-// named One-Off with the sentence as its description, since IconTip's bubble is drawn only and
-// never read. One component for the recipe and the builder, so the two say the same thing.
+// A one-off ingredient's badge with its tip: a button, so the tip is reached by focus as well as hover, and named
+// One-Off with the sentence as its description, since IconTip's bubble is never read.
 
 export const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
 

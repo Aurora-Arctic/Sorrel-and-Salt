@@ -10,18 +10,13 @@ import { listReturnHref } from './back-href';
 import './back-link.scss';
 
 interface BackLinkProps {
-  /** The bare list, `/compendium`, this coven's `/coven/<slug>/ingredients` or its `/grimoire`. */
   href: Route;
-  /** The words after "Back to": the destination alone. */
   label: string;
-  /** Other paths that are the same list, each with the label it reads under when the page before was it: the grimoire's Drafts tab beside its Spells tab, the admin compendium beside the public one. */
   also?: readonly { path: string; label: string }[];
   className?: string;
-  /** Drawn after the words. */
   children?: ReactNode;
 }
 
-/** The chevron before a back control's words; the sign-in card's Back button draws it too, under the same `.back-link` look. */
 export function BackChevron(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
@@ -37,7 +32,6 @@ export function BackChevron(): ReactElement {
   );
 }
 
-/** The page before this one, when it is one of `listPaths` itself: its path and query. */
 function previousListHref(listPaths: readonly string[]): string | undefined {
   // An enhancement past the floor, behind the `in` check: without it the link stays bare.
   const navigation = 'navigation' in window ? window.navigation : undefined;
@@ -47,7 +41,7 @@ function previousListHref(listPaths: readonly string[]): string | undefined {
   return listReturnHref(previous?.url, window.location.origin, listPaths);
 }
 
-/** Reads the history again whenever the current entry changes, as Next pushes the entry's address only after drawing it. */
+/** Re-reads history when the entry changes: Next pushes its address only after drawing it. */
 function subscribe(onChange: () => void): () => void {
   // An enhancement past the floor, behind the `in` check: without it nothing changes.
   const navigation = 'navigation' in window ? window.navigation : undefined;
@@ -71,7 +65,6 @@ export default function BackLink({
 }: BackLinkProps): ReactElement {
   const router = useRouter();
   const listPaths = [href.split(/[?#]/)[0] ?? href, ...also.map(({ path }) => path)];
-  // The server and the hydrating render draw the bare list; React then reads the history.
   const historyHref = useSyncExternalStore(
     subscribe,
     () => previousListHref(listPaths),

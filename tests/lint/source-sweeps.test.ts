@@ -3,9 +3,7 @@ import { REPO_ROOT } from '../support/paths';
 // @ts-expect-error -- the lint plugin is plain JavaScript, with no declaration file
 import { rules } from '../../lint/source-sweeps.js';
 
-// Each rule of lint/source-sweeps.js, once passing and once failing
-// (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
-// The whole tree is their real test: `npm run lint` fails on any file that breaks one.
+// The tree is the rules' real test: `npm run lint` (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
 
 const at = (file: string) => file;
 const tester = new RuleTester();
@@ -54,7 +52,6 @@ tester.run('spell-visibility-read-in-one-place', rules['spell-visibility-read-in
       code: 'export function readableSpells() { return eq(spells.visibility, "workspace"); }',
     },
     {
-      // The Visibility facet's two helpers, beside the rule.
       filename: at('src/db/repository/spells.ts'),
       cwd: REPO_ROOT,
       code: 'export const visibilityIn = (values) => inArray(spells.visibility, values);',

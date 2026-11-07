@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A step's row: the read-only line the recipe page draws, with the
-// slots a caller fills. A caller that edits asks for the card (`step-row--card`,
-// below), which is the spell builder's.
 .step-row {
   display: flex;
   flex-wrap: wrap;
@@ -14,7 +11,6 @@
 // The dash standing for a missing quantity, faded so the unit reads first.
 .step-row__dash {
   color: $text-muted;
-  // At the text's own weight: the amount's heavier face made the dash read dark.
   font-weight: 400;
 }
 
@@ -46,8 +42,6 @@
   align-items: center;
   gap: 0.25rem 0.5rem;
 
-  // The Caution, Toxic and One-Off badges take the
-  // site's compact size, the one the compact ingredient card uses, so they read as one quiet pair.
   .badge {
     @include badge-size('small');
   }
@@ -62,19 +56,19 @@
   min-width: 0;
 }
 
-// A step's name takes a paragraph's line height (1.65).
+// A step's name takes a paragraph's line height (1.65), which the first-line centring relies
+// on.
 $step-line: type-size('body') * 1.65;
 // Each icon on a step's first line (the handle, the marks, the pencil and Remove) takes the one
 // drop `$step-ink-drop`, so it sits level with the name's lettering.
 
-// A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
 .step-row.step-row--card.step-row--closed:not(.step-row--instruction),
 .step-row.step-row--instruction.step-row--folded {
   cursor: pointer;
 }
 
 // The card: the ingredient form's variant card look. Its grid is the open-and-closed one at the
-// end of this block, or the instruction step's (claude-docs/components/step-row.md, "The card").
+// end of this block, or the instruction step's (claude-docs/components/step-row.md, "Contracts").
 .step-row.step-row--card {
   display: grid;
   gap: 0 space(3);
@@ -85,8 +79,6 @@ $step-line: type-size('body') * 1.65;
   border-radius: radius('surface');
   background-color: $surface-card;
 
-  // The rows beneath the first start at the name's column, each spaced from
-  // the one above; a mark box with no mark takes no room.
   .step-row__marks,
   .step-row__field,
   .step-row__note {
@@ -114,25 +106,18 @@ $step-line: type-size('body') * 1.65;
     font-weight: 500;
     overflow-wrap: break-word;
 
-    // The group's mark, a little clear of the form's name.
     .form-icon {
       margin-inline-end: space(1);
     }
   }
 
-  // Remove is the variant card's ×, an icon button that goes red pointed at.
   .step-row__remove {
     @include icon-button;
     @include icon-button-remove;
   }
 
-  // Open and closed, like the ingredient form's variant card: closed is one line (name, muted
-  // summary, marks, pencil, Remove); open adds Form, Quantity and Unit on one line where they fit
-  // and the Instruction beneath.
   &.step-row--closed,
   &.step-row--open {
-    // The name's line, then the amount and the instruction on one muted line beneath it, in the
-    // name's column (the look of a closed section's summary).
     grid-template-areas:
       'handle position name marks controls'
       '. . summary summary summary';
@@ -140,8 +125,6 @@ $step-line: type-size('body') * 1.65;
     // line.
     grid-template-columns: auto auto minmax(6rem, 1fr) auto auto;
 
-    // Everything on the first line centres on that line (a paragraph's 1.65), not the whole row, so
-    // a wrapped name or a narrow row's summary does not carry the handle, number and buttons down.
     align-items: start;
 
     .step-row__name,
@@ -183,7 +166,6 @@ $step-line: type-size('body') * 1.65;
   .step-row__summary {
     grid-area: summary;
     min-width: 0;
-    // Clear of the name above it.
     margin: space(3) 0 0;
     color: $text-muted;
     font-size: type-size('caption');
@@ -192,7 +174,6 @@ $step-line: type-size('body') * 1.65;
     @include truncate;
   }
 
-  // A closed ingredient row's one line: the amount whole, then the instruction cut by an ellipsis.
   .step-row__line {
     display: flex;
     min-width: 0;
@@ -225,7 +206,6 @@ $step-line: type-size('body') * 1.65;
     flex: none;
   }
 
-  // The eye stands on the first line's centre like the marks and the buttons.
   .step-row__look {
     position: relative;
     inset-block-start: $step-ink-drop;
@@ -238,10 +218,8 @@ $step-line: type-size('body') * 1.65;
     @include icon-button;
     @include icon-button-edit;
 
-    // Open, the pencil is an up chevron that closes the row. It is light, not the
-    // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
-    // ink in light: literal white would fail on the light card), kept pointed at or focused.
-    // Open, Remove is hidden, so it ends the group at the row's right edge.
+    // Open, the pencil is an up chevron that closes the row, in the body ink (literal white would fail on the light card),
+    // kept pointed at or focused. Remove is hidden, so it ends the group at the row's right edge.
     &--close {
       &,
       &:hover,
@@ -255,7 +233,6 @@ $step-line: type-size('body') * 1.65;
     }
   }
 
-  // The opened fields, in the name's column to the card's edge.
   .step-row__open {
     grid-column: name-start / -1;
     grid-row: 2;
@@ -267,12 +244,9 @@ $step-line: type-size('body') * 1.65;
     flex-wrap: wrap;
     // From the top, so an error under one field never drops its neighbours to its foot.
     align-items: flex-start;
-    // A line of fields from the next: `space(4)`, the gap between fields in the ingredient form's
-    // variant sections (`.collapsible-section__fields`). Beside each other they keep `space(2)`.
     gap: space(4) space(2);
   }
 
-  // A field's error, across the whole row of inputs and not wrapped in its narrow column.
   .step-row__inputs-error:empty {
     display: none;
   }
@@ -295,16 +269,13 @@ $step-line: type-size('body') * 1.65;
     flex: 0 0 8rem;
   }
 
-  // The instruction is a line of its own beneath the amount fields, at every width.
   .step-row__instruction {
     flex: 1 1 100%;
     min-width: 0;
   }
 
-  // An instruction starts two lines high (the `rows` the field gives it), not the 6rem a
-  // plain textarea keeps, and grows as lines are typed. Growing is `field-sizing`, which is
-  // not Baseline widely available, so it sits in @supports: without it the box stays two
-  // lines and scrolls inside, and its resize handle still opens it by hand.
+  // An instruction starts two lines high and grows as lines are typed, by `field-sizing`, which is not Baseline widely
+  // available, so it sits in @supports: without it the box stays two lines and scrolls, and its resize handle still opens it.
   .step-row__instruction .textarea,
   .step-row__field .textarea {
     min-height: 0;
@@ -313,7 +284,6 @@ $step-line: type-size('body') * 1.65;
   @supports (field-sizing: content) {
     .step-row__instruction .textarea,
     .step-row__field .textarea {
-      // Two lines of the textarea's 1.5 line height, its padding and border.
       min-height: calc(2 * 1.5em + 2 * #{space(2)} + 2px);
       field-sizing: content;
     }
@@ -324,16 +294,11 @@ $step-line: type-size('body') * 1.65;
   }
 }
 
-// An instruction step: its words, or its open field, fill the row between the number and the
-// buttons.
 .step-row.step-row--instruction {
   grid-template-areas: 'handle position field controls';
   grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: start;
 
-  // The handle, number and buttons line up with the text's first line: the number shares
-  // its baseline (the text's own line is taller than the number's), and the handle and the
-  // buttons are centred in a line the height of the text's, at the top of the row, open or closed.
   .step-row__handle {
     display: flex;
     align-items: center;
@@ -365,8 +330,6 @@ $step-line: type-size('body') * 1.65;
     margin-block-start: calc(($step-line - $icon-size) / 2);
   }
 
-  // Closed, the instruction is its own words, wrapping; open, its textarea stands in
-  // its place. The label above that textarea is kept for the name, out of sight.
   .step-row__text {
     grid-area: field;
     align-self: baseline;
@@ -381,10 +344,6 @@ $step-line: type-size('body') * 1.65;
     color: $text-muted;
   }
 
-  // Closed, the instruction is one line the height of a closed ingredient row (two at the list's
-  // narrow width, below): its text runs on under an ellipsis, and the handle, number and buttons
-  // centre on that line, with no textarea's padding to stand clear of. Open, the textarea shows
-  // all of it.
   &.step-row--folded {
     .step-row__text {
       padding-block: 0;
@@ -400,9 +359,6 @@ $step-line: type-size('body') * 1.65;
   }
 }
 
-// At the narrow width of the builder's list (its `spell-steps` container, declared in SpellBuilder's
-// stylesheet) a card's badges move under its name, the opened fields stack, and a closed
-// instruction shows two lines.
 @container spell-steps (max-width: #{$narrow-column}) {
   // The marks and badge take their own line under the name, so the name, Edit and Remove all fit
   // on the first line; beside the name they leave Remove no room. The opened fields stack:
@@ -440,8 +396,6 @@ $step-line: type-size('body') * 1.65;
     }
   }
 
-  // A closed instruction shows two lines here, not one: one line at this width holds two or three
-  // words. The height cap keeps it to two where line-clamp is not drawn.
   .step-row.step-row--instruction.step-row--folded .step-row__text {
     display: -webkit-box;
     max-block-size: calc(#{$step-line} * 2);

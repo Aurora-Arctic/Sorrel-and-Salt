@@ -19,11 +19,10 @@ import type { CardAttemptEntry, CardAttemptReason } from './types';
 
 // The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The keeper opens it
 // from the Invitation Cards tab, and the page is read when it opens, so the tab itself carries only the count
-// (claude-docs/components/admin-cards.md, "Attempts").
+// (claude-docs/components/admin-cards.md, "Refused Opens (`attempts.tsx`)").
 
 const PAGE_SIZE = 20;
 
-// The Users list unfiltered: an account's name opens that list's own modal for it, headed as the list heads it.
 const NO_FILTER = { query: '', awaitingApproval: false };
 
 const CardAttemptsDocument = graphql(`
@@ -75,7 +74,6 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState<string | null>(null);
 
-  // Reads the first page on open, and the next page each time it is asked for.
   useEffect(() => {
     let current = true;
     graphqlRequest(CardAttemptsDocument, {
@@ -204,7 +202,6 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   );
 };
 
-/** The eye-icon button beside a batch's count: a dialog listing the refused opens of its cards. */
 const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
   <ModalButton
     tip="View Refused Opens"

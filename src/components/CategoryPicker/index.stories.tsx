@@ -4,9 +4,6 @@ import { useState } from 'react';
 import CategoryPicker from '.';
 import type { CategoryPickerProps, PickerCategory } from './types';
 
-// Render-only; behaviour is asserted in tests/components/CategoryPicker. Four
-// seed groups with their colour pairs, copied from src/db/seed/category-groups.ts
-// (a component may not import it, CLAUDE.md rule 1). The categories are invented.
 const meta = {
   title: 'Ingredients / Category Picker',
 } satisfies Meta;
@@ -34,7 +31,6 @@ const CATEGORIES: PickerCategory[] = GROUPS.flatMap((seed, index) => {
 
 const idOf = (name: string) => CATEGORIES.find((category) => category.name === name)!.id;
 
-/** Holds the picks, so entries come and go. */
 function Stateful({
   initial = [],
   ...props
@@ -56,15 +52,12 @@ function Stateful({
   );
 }
 
-// Focus the box to list every category under its group, or type to narrow
-// them; a pick is a chip in its group's colour.
 const defaultNode = <Stateful />;
 
 const somePickedNode = (
   <Stateful initial={[idOf('Testward 1'), idOf('Testcraft 2'), idOf('Fixture Mending 2')]} />
 );
 
-// The entry the error names is edged, and its x reads the error.
 const anInvalidEntryNode = (
   <Stateful
     initial={[idOf('Testward 1'), idOf('Testcraft 4')]}
@@ -82,9 +75,6 @@ const loadingNode = <Stateful categories={[]} pending />;
 
 const failedNode = <Stateful categories={[]} status="The categories could not be loaded." />;
 
-// The filter's reading: each row and chip carries how many entries it
-// would leave, a zero row is left out, and a chip whose count is
-// still on its way holds a placeholder.
 const counted = CATEGORIES.map((category, index) => ({
   ...category,
   count: index % 3 === 0 ? 0 : index * 2,
@@ -98,7 +88,6 @@ const countsLoadingNode = (
   <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
 );
 
-// A legend action (Copy From Ingredient) sits at the legend's right; no hint draws no tip.
 const withActionAndNoHintNode = (
   <Stateful
     hint={undefined}

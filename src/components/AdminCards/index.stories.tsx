@@ -7,7 +7,6 @@ import AdminCards, { MintCards } from '.';
 import AdminArrivals from './arrivals';
 import type { ArrivalEntry, BatchEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/AdminCards.
 const meta = { title: 'Admin / Invitation Cards' } satisfies Meta;
 export default meta;
 type Story = StoryObj;
@@ -128,7 +127,6 @@ const RefusedOpens = (): ReactElement => {
   return <Cards batches={BATCHES} />;
 };
 
-/** The Refused Opens dialog open on a batch: a table where the dialog is wide, stacked on a phone. */
 export const RefusedOpensDialog: Story = {
   render: () => <RefusedOpens />,
   play: async ({ canvasElement }) => {
@@ -165,7 +163,6 @@ const MintedDialog = (): ReactElement => {
   return <Cards batches={BATCHES} minting />;
 };
 
-/** The dialog after minting: where the admin downloads the PDF. */
 export const Minted: Story = {
   render: () => <MintedDialog />,
   play: async ({ canvasElement }) => {

@@ -14,7 +14,7 @@ import type { CardMoreProps } from './types';
 
 // A held compendium entry's More menu on a coven card: Make It Ours, and Remove beside it. Delete and a
 // lone Remove are not on the card, since the Edit Ingredient and Annotate dialogs hold them
-// (claude-docs/components/coven-cards.md, "The More menu on a card").
+// (claude-docs/components/coven-cards.md, "Contracts").
 
 type Asking = 'makeOurs' | 'remove';
 

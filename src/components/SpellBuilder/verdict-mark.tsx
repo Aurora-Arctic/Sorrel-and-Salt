@@ -8,7 +8,6 @@ import type { StepSupply } from './steps/supply';
 // it only carries the tip to focus. Used in the In the Cupboard panel and the Quick Look
 // (claude-docs/components/spell-recipe.md, "The side column").
 
-/** The kinds that draw a mark: One-Off and No Jar are told in words, and nothing has none. */
 export type VerdictKind = 'out' | 'short' | 'units-differ' | 'low';
 
 const OutIcon = ({ className }: { className: string }): ReactElement => (
@@ -48,7 +47,6 @@ const VERDICTS: Record<
   },
 };
 
-/** The kind `supply` draws as a mark, or null where it draws none. */
 export const verdictOf = (supply: StepSupply | null): VerdictKind | null =>
   supply !== null && supply.kind in VERDICTS ? (supply.kind as VerdictKind) : null;
 

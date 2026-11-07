@@ -3,7 +3,6 @@ import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
 
-// The `where` predicates the finders and the writer share: tier scopes, the soft-delete filter and the text matches.
 // Nothing here builds a query; `readableIngredientParent` lives in `ingredient-parent.ts` because `select.ts` imports this file.
 
 /**
@@ -20,7 +19,7 @@ export function scopedTo<TTable extends PgTable & WorkspaceScoped>(
 
 /**
  * The compendium tier, `workspace_id IS NULL`: what any proof, and no proof, may read. A finder reading both tiers ORs it
- * with `scopedTo` (claude-docs/modules.md, "The tier seam").
+ * with `scopedTo` (claude-docs/db/tier-seam.md, "The tier seam").
  */
 export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TTable): SQL {
   return isNull(table.workspaceId);
@@ -41,7 +40,7 @@ export function inTiers<TTable extends PgTable & WorkspaceScoped>(
 /**
  * Live, and in a tier `memberships` may read: a two-tier table's read scope,
  * one spelling for every finder reading the compendium and the proofs' covens
- * together (claude-docs/modules.md, "The tier seam").
+ * together (claude-docs/db/tier-seam.md, "The tier seam").
  */
 export function readableInTiers<TTable extends PgTable & WorkspaceScoped>(
   memberships: readonly Membership[],
@@ -59,7 +58,6 @@ export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | und
   return deletedAt ? isNull(deletedAt) : undefined;
 }
 
-/** An end column that is null or still ahead: a time-out or pause with no end date, or one that has not run out. */
 export function noEndOrAhead(until: AnyPgColumn): SQL {
   return or(isNull(until), gt(until, sql`now()`)) as SQL;
 }
@@ -81,7 +79,6 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
   return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
 }
 
-/** `column` (cast to text) starts with `prefix`, case-insensitive, its `%` and `_` read literally. */
 export function startsWithText(column: AnyPgColumn, prefix: string): SQL {
   return ilike(sql`${column}::text`, `${prefix.replace(/[\\%_]/g, '\\$&')}%`);
 }
@@ -122,7 +119,8 @@ const NOWHERE = 2147483647;
 /**
  * A search for `query` by word similarity: `matches`, `similarity`, `contains` and
  * `position` (the first character of a verbatim hit, or `NOWHERE`), each side folded
- * through `unaccent_immutable` so the expression indexes answer the match. (claude-docs/db/compendium-read.md, "Search ranking")
+ * through `unaccent_immutable` so the expression indexes answer the match.
+ * (claude-docs/db/compendium-read.md, "Search ranking")
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;

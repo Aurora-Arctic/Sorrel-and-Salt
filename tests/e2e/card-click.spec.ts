@@ -19,9 +19,7 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// A click anywhere on an ingredient card opens its entry, and anywhere on a spell card its recipe page, while
-// each control keeps its own action. Each card is one stretched link (ingredient-card.md, "The whole card is the
-// link"; spell-card.md, "The link"); jsdom does no hit-testing, so only a browser shows where a press lands.
+// Each card is one stretched link (ingredient-card.md, "The whole card is the link"; spell-card.md, "The link"); jsdom does no hit-testing, so only a browser shows where a press lands.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -33,10 +31,8 @@ test.use({ reducedMotion: 'reduce' });
 
 const FORMAL = 'Fixtura tactilis';
 
-/** The card's own box: the `article` inside the list item. */
 const faceOf = (card: Locator) => card.locator('article');
 
-/** The name's link, the card's one link to its entry. */
 const nameLink = (card: Locator, name: string) => card.getByRole('link', { name, exact: true });
 
 type Point = { x: number; y: number };
@@ -65,7 +61,6 @@ async function pressCardAt(card: Locator, point: Point): Promise<void> {
   await faceOf(card).click({ position: point });
 }
 
-/** The middle of `target`, relative to the card's face. */
 async function middleOf(card: Locator, target: Locator): Promise<Point> {
   const face = await faceOf(card).boundingBox();
   const box = await target.boundingBox();
@@ -73,10 +68,7 @@ async function middleOf(card: Locator, target: Locator): Promise<Point> {
   return { x: box.x - face.x + box.width / 2, y: box.y - face.y + box.height / 2 };
 }
 
-/**
- * A point in the foot's actions row, in the gap just past `control` (the Quick Look eye at the
- * row's start), level with its middle: the row's own box, between its controls.
- */
+/** A point in the foot's actions row, just past `control`, level with its middle. */
 async function gapAfter(card: Locator, control: Locator): Promise<Point> {
   const face = await faceOf(card).boundingBox();
   const box = await control.boundingBox();
@@ -84,18 +76,15 @@ async function gapAfter(card: Locator, control: Locator): Promise<Point> {
   return { x: box.x - face.x + box.width + 8, y: box.y - face.y + box.height / 2 };
 }
 
-/** A point in the card's own padding, at its right edge halfway down: no text, no control. */
 async function blankPoint(card: Locator): Promise<Point> {
   const face = await faceOf(card).boundingBox();
   if (!face) throw new Error('The card is not on the page');
   return { x: face.width - 6, y: face.height / 2 };
 }
 
-/** The middle of the formal name's line, relative to the card's face. */
 const formalPoint = (card: Locator): Promise<Point> =>
   middleOf(card, card.getByText(FORMAL, { exact: true }));
 
-/** The names of the card's controls in tab order, from its name onwards. */
 async function tabOrder(page: Page, card: Locator, name: string, count: number): Promise<string[]> {
   await nameLink(card, name).focus();
   const names: string[] = [];
@@ -111,11 +100,7 @@ async function tabOrder(page: Page, card: Locator, name: string, count: number):
   return names;
 }
 
-/**
- * Every control on the card but its name is at least 24 by 24 CSS pixels (WCAG 2.5.8, Target
- * Size (Minimum)): the overlay under them must not leave one smaller than that to press. The
- * name is left out, as inline text in a sentence-like line is exempt, and it is the link.
- */
+/** WCAG 2.5.8: the overlay under the controls must not leave one smaller than 24 by 24 CSS pixels. The name is exempt, as inline text. */
 async function expectTargets(card: Locator, name: string, named: Locator[]): Promise<void> {
   for (const control of named) await expect(control).toBeVisible();
   const controls = await faceOf(card).locator('a, button').all();
@@ -151,7 +136,6 @@ test('on the compendium, a press on a card outside its name opens its entry, and
         makeIngredient({
           name: NAME,
           canonicalName: FORMAL,
-          // Three, so the card shows two chips and a +N button.
           categories: ['Protection', 'Warding', 'Banishing'],
         }),
         userId,
@@ -263,7 +247,6 @@ test('on a coven’s Ingredients page, a press on a card outside its name opens 
       canonicalName: FORMAL,
       variants: [makeVariant({ form: 'Root' })],
     });
-    // Under its threshold, so the jar line carries the Low Stock badge.
     await insertStock(sql, coven.id, own, { quantity: 5, unit: 'g', threshold: 10 }, coven.users.A);
     return own;
   });

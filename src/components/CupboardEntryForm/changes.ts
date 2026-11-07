@@ -10,7 +10,7 @@ import type {
 
 // What the form sends: only the fields that changed, each as the new value
 // or null for the compendium's. Apart from the component so the rule is read
-// in one place (claude-docs/components/cupboard-entry-form.md, "What a save sends").
+// in one place (claude-docs/components/cupboard-entry-form.md, "Contracts").
 
 export const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
 export const LIST_FIELDS: readonly ListFieldName[] = [
@@ -44,7 +44,6 @@ export function baselineOf(compendium: CompendiumValues): CupboardValues {
   };
 }
 
-/** What the form opens with: the coven's override where it has one, else the baseline. */
 export function openingValues(
   baseline: CupboardValues,
   overrides: CupboardOverrides,
@@ -60,17 +59,11 @@ export function openingValues(
   };
 }
 
-/** True when `values` for `field` differ from `other`: text trimmed, lists in order. */
 export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
   if (isText(field)) return a[field].trim() !== b[field].trim();
   return !sameList(a[field], b[field]);
 }
 
-/**
- * True when the coven is saying something of `field` right now: it holds an
- * override that has not been handed back, or the person has typed one that
- * is not the compendium's own. "Restore Original" is offered for these.
- */
 export function isOwn(
   field: CupboardField,
   values: CupboardValues,
@@ -87,7 +80,7 @@ export function isOwn(
 /**
  * The fields that changed: null for a field handed back or a text field cleared; a value once it differs from the compendium's (or, if overridden, its own).
  * An emptied list is sent as `[]`: the coven cleared it on purpose.
- * (claude-docs/components/cupboard-entry-form.md, "What a save sends").
+ * (claude-docs/components/cupboard-entry-form.md, "Contracts").
  */
 export function changesOf(
   values: CupboardValues,

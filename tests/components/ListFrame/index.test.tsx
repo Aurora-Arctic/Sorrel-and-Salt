@@ -11,10 +11,8 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// How a pager end's page keeps the reader at the list, where a filter's does not
-// (claude-docs/components/list-frame.md).
+// claude-docs/components/list-frame.md
 
-/** One button per way a list opens a page: the filter's soft one and the pager's. */
 const Ways = () => {
   const { go } = useListNavigation();
   return (
@@ -38,7 +36,6 @@ const frame = (
   </ListFrame>
 );
 
-/** Presses a way and lets the new page arrive, ending the transition. */
 async function pressAndArrive(name: 'Filter' | 'Next') {
   let arrive = () => {};
   const arrives = new Promise<void>((resolve) => {
@@ -71,8 +68,6 @@ describe('ListFrame, paging', () => {
   });
 });
 
-// The loading status stands in for the content while a page is on its way
-// (moved from IngredientCardList's file, which only passes `shape="cards"`).
 describe('ListBody, pending', () => {
   it('shows the loading status, and not the content, while a page is on its way', () => {
     render(

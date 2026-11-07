@@ -27,9 +27,7 @@ vi.mock('@/lib/auth-client', () => ({
 }));
 const assignMock = vi.fn();
 
-// `/keepers/users`' table, filter and pager: render-only, so the page
-// owns the read and this owns what a keeper sees of it
-// (claude-docs/components/user-list.md).
+// claude-docs/components/user-list.md
 
 const ADA = {
   id: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
@@ -65,8 +63,6 @@ const BO = {
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
-// A curator: holds the creation flag, as the CHECK makes every
-// curator do, and an unverified address.
 const CY = {
   ...BO,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
@@ -85,7 +81,6 @@ const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
   ...overrides,
 });
 
-/** The cell in a user's row under the column with this heading. */
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
@@ -94,8 +89,6 @@ function cellUnder(name: string, heading: string): HTMLElement {
 
 describe('UserList, standing support time-outs and access pauses', () => {
   const AT = new Date('2026-11-20T09:30:00Z');
-  // Bo stands timed out and paused until AT, Cy timed out and paused with no end, Ada neither: the page passes only what
-  // stands.
   const rows = () =>
     render(
       <UserList
@@ -178,7 +171,6 @@ describe('UserList', () => {
       expect(row).toHaveTextContent(user.email);
       expect(row).toHaveTextContent(date);
     }
-    // The mark's word is the flag's one rendering: a keeper holds it, Bo does not.
     expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
     expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
   });
@@ -188,7 +180,6 @@ describe('UserList', () => {
   it('draws no role or coven-creation control on any row, a user awaiting approval included', () => {
     render(<UserList {...props({ users: [ADA, BO, CY] })} />);
 
-    // Why one could have shown: Bo holds the user role and may not yet create a coven.
     expect(
       within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('No'),
     ).toBeTruthy();
@@ -197,8 +188,6 @@ describe('UserList', () => {
     ).toEqual([]);
   });
 
-  // Each row opens the privilege ledger narrowed to its user, an
-  // admin's included, from an icon before the name.
   describe('the history link', () => {
     it('leads every name, to the ledger searched for that user’s address', () => {
       render(<UserList {...props()} />);
@@ -226,8 +215,6 @@ describe('UserList', () => {
     });
   });
 
-  // Each name opens its user’s modal over the list, at once under
-  // the page’s opener, and as a link still for a new tab or before the script.
   describe('the name link', () => {
     it('links each name to its user’s modal, in the name cell', () => {
       render(<UserList {...props()} />);
@@ -250,7 +237,6 @@ describe('UserList', () => {
 
       fireEvent.click(screen.getByRole('link', { name: BO.name }));
 
-      // No place named: a row opens the page's one unnamed route modal.
       expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading, undefined);
     });
   });
@@ -332,9 +318,6 @@ describe('UserList impersonation', () => {
   });
 });
 
-// The search applies from its magnifier or Enter, a role or Needs
-// Approval the moment it changes, each softly from the first page, with a
-// bare `awaiting`.
 describe('UserList filter', () => {
   afterEach(() => {
     router.push.mockReset();
@@ -387,8 +370,6 @@ describe('UserList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  // A select-only box once hydrated, as every
-  // closed set in the row is, over the native select the server draws.
   it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
     const { container, hydrate } = drawnOnServer(
       <Navigating push={router.push}>
@@ -473,17 +454,12 @@ describe('UserList filter', () => {
   );
 });
 
-// A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; a keeper's row offers neither.
 // The service is the guard; these put the control where a keeper looks and show what the mutation answers.
-// The primary keeper's switch on keeper changes, its state in words; to
-// any other keeper the control is in view but unusable, saying why.
 describe('UserList keeper changes switch', () => {
   afterEach(() => {
     router.refresh.mockReset();
   });
 
-  // The paused notice is a plain paragraph before the switch, the state's one
-  // rendering; while changes are on, the switch stands alone. Pause asks first.
   const confirming = () => screen.getByRole('dialog', { name: 'Pause Keeper Changes' });
 
   it('lets the primary keeper pause once confirmed, stating that changes are on, and says so', async () => {
@@ -494,7 +470,6 @@ describe('UserList keeper changes switch', () => {
     });
     render(<PauseControl paused={false} canToggle={true} />, { wrapper: StatusRegionProvider });
 
-    // No sentence while changes are on: only the button.
     const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
     expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
@@ -552,13 +527,10 @@ describe('UserList keeper changes switch', () => {
     expect(pause).toHaveAccessibleDescription(/\S/);
   });
 
-  // One sentence on the page: the notice; the switch's
-  // own reason is in its tip.
   it('shows another keeper the paused notice and a locked Resume whose reason is a tip', () => {
     render(<PauseControl paused canToggle={false} />);
 
     const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
-    // The locked control wraps the button with its tip; the notice stands before it.
     expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
     expect(resume).toHaveAttribute('aria-disabled', 'true');
     expect(resume).toHaveAccessibleDescription(/\S/);

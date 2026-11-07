@@ -7,10 +7,6 @@ import { asManualFix } from '../../../support/db/privileges';
 
 useRawClient();
 
-// Creating a workspace: gated on the flag alone, the creator written in
-// as owner in the same transaction as the workspace, and a slug that stays
-// unique however many share a name.
-
 const membersOf = (workspaceId: string) =>
   sql`select user_id, role from workspace_members where workspace_id = ${workspaceId} and deleted_at is null`;
 
@@ -47,7 +43,6 @@ describe('createWorkspace', () => {
       sql,
       (tx) => tx`update users set can_create_workspace = false where id = ${A.id}`,
     );
-    // The session still says admin or user as before; only the row changed.
     await expect(createWorkspace(asUser(A), { name: 'Fixture Revoked Coven' })).rejects.toThrow(
       Forbidden,
     );
@@ -90,8 +85,6 @@ describe('createWorkspace', () => {
   });
 
   it('leaves neither row when the owner write fails', async () => {
-    // A user id the foreign key refuses: the workspace row goes in first, then
-    // the owner row fails, and the transaction takes the workspace with it.
     const ghost = { ...asUser(A), userId: '00000000-0000-4000-8000-00000000dead' };
     await expect(createWorkspace(ghost, { name: 'Fixture Orphan Coven' })).rejects.toThrow();
     expect(await sql`select id from workspaces where name = 'Fixture Orphan Coven'`).toHaveLength(

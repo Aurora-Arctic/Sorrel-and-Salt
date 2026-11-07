@@ -42,14 +42,12 @@ const BOOK = {
   published: '1988',
 };
 
-/** The issues a refused write carried, by path and message. */
 async function refusal(write: Promise<unknown>) {
   const error = await write.catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ValidationError);
   return (error as ValidationError).issues;
 }
 
-/** A reference's row as the table holds it. */
 async function rowOf(id: string) {
   const [row] = await sql`
     select workspace_id, authors, title, place, created_by, updated_by

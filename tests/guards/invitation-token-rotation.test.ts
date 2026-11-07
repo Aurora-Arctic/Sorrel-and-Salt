@@ -3,10 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// `rotateInvitationToken` writes an invitation with no Membership or SiteAdmin proof and returns a live token, so it is
-// reachable only from the invitation mail: the repository file that defines it, the index that re-exports it, the
-// service that builds the invitation mail inside the secret-link job's step, and its own test. Any other file naming it
-// fails here, so a second caller is argued for in the diff (CLAUDE.md rule 5, the named exception).
+// `rotateInvitationToken` writes with no Membership or SiteAdmin proof and returns a live token, so only the invitation mail's callers may name it; a second one is argued for in the diff (CLAUDE.md rule 5).
 
 const DEFINITION = 'src/db/repository/write.ts';
 const ALLOWED = [

@@ -7,9 +7,6 @@ import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { slugify } from '@/lib/slugify';
 
-// The share card a link preview fetches for a compendium entry, signed out: a PNG for a shown entry, and a
-// 404 for every address the public entry read does not answer, so the card shows nothing the page would not.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -27,7 +24,6 @@ async function cardOf(request: import('@playwright/test').APIRequestContext, slu
   return url.pathname + url.search;
 }
 
-/** A user to stamp the rows with, signed in on a page that is closed again at once. */
 async function authorOf(
   browser: import('@playwright/test').Browser,
   baseURL: string | undefined,
@@ -41,7 +37,6 @@ async function authorOf(
   }
 }
 
-/** Seeds one entry with no formal name, so its slug is its name's, and returns that slug. */
 async function seedEntry(
   author: string,
   name: string,

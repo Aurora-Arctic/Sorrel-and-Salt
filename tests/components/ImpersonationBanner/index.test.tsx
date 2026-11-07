@@ -3,11 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
 import { stubLocationAssign } from '../../support/location';
 
-// The way out of an impersonation: every page, `/keepers` included, says whose session this is
-// and carries Stop (claude-docs/components/impersonation-banner.md).
+// claude-docs/components/impersonation-banner.md
 
-// Mocked wholesale: a real call would reach /api/auth, and its success
-// navigates, which happy-dom cannot follow.
+// Mocked wholesale: a real call reaches /api/auth and navigates, which happy-dom cannot follow.
 const stopImpersonatingMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({
   stopImpersonating: (...args: unknown[]) => stopImpersonatingMock(...args),
@@ -16,8 +14,7 @@ const assignMock = vi.fn();
 
 const STOP_FAILED = "Impersonation didn't stop. Please try again, or sign out to end it.";
 
-// Each press awaited inside act: the refusal lands in a promise, and the
-// callout is placed in another (claude-docs/components/click-feedback.md).
+// Each press awaited inside act: the refusal lands in a promise, the callout in another (claude-docs/components/click-feedback.md).
 const press = (element: Element) =>
   act(async () => {
     fireEvent.click(element);
@@ -53,7 +50,6 @@ describe('ImpersonationBanner', () => {
   });
 
   it('is busy while pending, keeping its place in the tab order, and sends once', async () => {
-    // Never answers, so the request stays in flight.
     stopImpersonatingMock.mockReturnValue(new Promise(() => {}));
     render(<ImpersonationBanner {...BO} />);
     const stop = screen.getByRole('button', { name: 'Stop Impersonating' });

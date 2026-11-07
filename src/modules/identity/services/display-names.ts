@@ -4,10 +4,9 @@ import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { inIdOrder } from '../../../lib/in-id-order';
 
-// The display names a member reads: a members list, and a row's last
-// editor. Gated to co-members, not to site keepers, whose ledger reads whole
-// rows through `usersForAdmin` under a rule of its own
-// (claude-docs/auth/display-names.md, "Display names").
+// The display names a member reads: a members list, and a row's last editor.
+// Gated to co-members, not site keepers, whose ledger reads whole rows through
+// `usersForAdmin` (claude-docs/auth/display-names.md, "Display names").
 
 /**
  * The display name of each user named, in order: a DataLoader's batch. Anyone who holds or has held a seat in a coven the caller sits in

@@ -33,8 +33,8 @@ import { insertReference, insertVariantReferenceLink } from '../../support/db/in
 import { makeIngredient, makeVariant } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
+// The finders of claude-docs/db/compendium-read.md, "The compendium read".
 
-// The compendium read's two finders (claude-docs/db/compendium-read.md, "The compendium read"): the public list under its filters, and one row by id in the compendium or a proof's coven.
 // Every expected order comes from SQL, because the database collates `en_US.utf8` and JS does not.
 
 let sql: ReturnType<typeof postgres>;
@@ -66,14 +66,12 @@ async function namesOf(filter: IngredientFilter): Promise<string[]> {
   return page.edges.map((edge) => edge.node.name);
 }
 
-/** The compendium's live ids in the finder's order, from the database's own collation. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select id from ingredients where workspace_id is null and deleted_at is null order by name, id`;
   return rows.map((row) => row.id);
 }
 
-/** The count a connection reads for a page: from its first row, or from none on an empty one. */
 function countFor(
   filter: IngredientFilter,
   page: Page<IngredientRow, CompendiumScore>,
@@ -82,7 +80,6 @@ function countFor(
   return findCompendiumCount(filter, start === null ? undefined : decodeCursor(start));
 }
 
-/** Every page of `filter` at `size`, from the first, each with its count. */
 async function walkForwards(filter: IngredientFilter, size: number): Promise<Walk> {
   const walk: Walk = { ids: [], counts: [] };
   let after: string | null = null;
@@ -96,7 +93,6 @@ async function walkForwards(filter: IngredientFilter, size: number): Promise<Wal
   return walk;
 }
 
-/** Every page of `filter` at `size`, from the last (which asks for the remainder as the pager's Last does) so each page lines up with the forward walk; counts come back in page order. */
 async function walkBackwards(filter: IngredientFilter, size: number): Promise<Walk> {
   const { totalCount } = await findCompendiumCount(filter, undefined);
   const walk: Walk = { ids: [], counts: [] };
@@ -111,7 +107,6 @@ async function walkBackwards(filter: IngredientFilter, size: number): Promise<Wa
   return walk;
 }
 
-/** `(n − 1) × size` for each of `pages` pages. */
 const starts = (pages: number, size: number) =>
   Array.from({ length: pages }, (_, index) => index * size);
 
@@ -138,8 +133,6 @@ describe('findCompendiumPage', () => {
     expect(page.edges).toHaveLength(3);
   });
 
-  // The card declares no sort of its own. Rows sharing a label keep a
-  // stable order because the id breaks the tie, across page boundaries too.
   it('keeps rows sharing a label in id order, a page of one apart', async () => {
     for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
       await add('Fixture Cat Claw', { nomenclature: 'botanical', canonicalName });
@@ -221,8 +214,6 @@ describe('findCompendiumPage', () => {
       expect((await namesOf({ query: 'uña' })).sort()).toEqual(['Fixture Una Root', 'Fixture Uña']);
     });
 
-    // A query with no letters or digits has no trigrams, so it matches nothing
-    // rather than everything.
     it('matches nothing for a query of punctuation alone', async () => {
       await add('Fixture 100% Pure');
 
@@ -242,8 +233,6 @@ describe('findCompendiumPage', () => {
       expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
     });
 
-    // The search reaches an entry's forms: a word in a variant's form
-    // or description finds the entry, still one row however many forms match.
     describe('through a variant', () => {
       let mugwortId: string;
 
@@ -365,12 +354,9 @@ describe('findCompendiumPage', () => {
     }
 
     beforeEach(async () => {
-      // Three rows sharing a label and a perfect score, so only the id orders them.
       for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
         await add('Fixture Mugwort', { nomenclature: 'botanical', canonicalName });
       }
-      // Two longer labels holding the word whole, so the perfect-score tie is
-      // five rows, wider than a page of four.
       await add('Fixture Mugwort Leaf');
       await add('Fixture Mugwort Root');
       await add('Fixture Mugwart');
@@ -400,7 +386,6 @@ describe('findCompendiumPage', () => {
     it('scores a folk-name match by the folk name', async () => {
       const page = await pageOf({ query: QUERY }, { first: 100 });
 
-      // The folk name is the word whole, similarity 1, at the folk name's weight.
       const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
       expect(wormwood?.score).toBe(0.8);
     });
@@ -482,9 +467,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // Each field a search matches carries a weight (claude-docs/db/compendium-read.md,
-  // "The compendium read"), so a word found in a label outranks the same word
-  // found in a folk name, a form or a description.
   describe('weighted ranking', () => {
     const QUERY = 'quandle';
 
@@ -538,9 +520,6 @@ describe('findCompendiumPage', () => {
       ]);
     });
 
-    // `word_similarity` scores the query against whole words, so a fragment
-    // inside a longer word scores by the trigrams it shares, under the same
-    // fragment standing as a word of its own in a lighter field.
     it('scores a field holding the query verbatim, case and accents folded, as a full hit', async () => {
       await add('Fixture Mockleaf', { folkNames: ['Sweet Brim'] });
       // The precondition: by word similarity alone, the label holding `brim`
@@ -584,17 +563,12 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // At equal score, the entry whose field holds the query earliest ranks
-  // first (claude-docs/db/compendium-read.md, "The compendium read"): for
-  // `wood`, Wood Ash before Sandalwood, rather than alphabetically.
   describe('position among equals', () => {
     const QUERY = 'brim';
 
     beforeEach(async () => {
       await add('Brimstone Fixture');
       await add('Zebrim Fixture');
-      // A folk name holding the query at 1, under the label's 9: the entry
-      // ranks by the label, the field that set its score.
       await add('Fixture Brim Tonic', { folkNames: ['Brim'] });
       await add('Fixture Kettlebrim');
     });
@@ -654,8 +628,6 @@ describe('findCompendiumPage', () => {
       expect(await countFor({ query: QUERY }, second)).toEqual({ totalCount: 4, countBefore: 2 });
     });
 
-    // A fuzzy hit holds the query nowhere, so it follows every verbatim hit
-    // at its score.
     it('ranks a fuzzy hit after a verbatim one of equal score', async () => {
       await add('Fixture Brin');
       await add('Fixture Thrum', { variants: [makeVariant({ form: 'Brim' })] });
@@ -734,8 +706,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // Any reads the same pairs as one set: an entry matches a category
-  // filed on it or on a live form, and the mode alone changes the result.
   describe('categoryMode', () => {
     let protection: string;
     let cleansing: string;
@@ -788,15 +758,12 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The text, on any of an entry's live forms, any of the listed
-  // forms: an entry holding two of them is found once.
   describe('forms', () => {
     beforeEach(async () => {
       await add('Fixture Both', {
         variants: [makeVariant({ form: 'Fixture Herb' }), makeVariant({ form: 'Fixture Oil' })],
       });
       await add('Fixture Root', { variants: [makeVariant({ form: 'Fixture Root' })] });
-      // Its oil dropped, its root kept.
       const dropped = await add('Fixture Dropped', {
         variants: [makeVariant({ form: 'Fixture Root' }), makeVariant({ form: 'Fixture Oil' })],
       });
@@ -851,8 +818,6 @@ describe('findCompendiumPage', () => {
       expect(await namesOf({ query: 'both', forms: ['fixture root'] })).toEqual([]);
     });
 
-    // A search matching both of an entry's forms is still one row, so the
-    // count reads what the page holds.
     it('counts what the page holds, alone and with a search', async () => {
       for (const filter of [
         { forms: ['fixture oil'] },
@@ -872,9 +837,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The pick, not the text, on any of an entry's forms: what
-  // a form's delete reads, so only the entries holding a live variant that
-  // picked this row answer, not every entry spelling it.
   describe('formId', () => {
     let herb: string;
     let root: string;
@@ -891,13 +853,11 @@ describe('findCompendiumPage', () => {
       const picked = (form: string, formId?: string) =>
         makeVariant(formId === undefined ? { form } : { form, formId });
       await add('Fixture Picked', { variants: [picked('Herb', herb)] });
-      // Its first form picks the root; its second picked the herb.
       await add('Fixture Second', { variants: [picked('Root', root), picked('Herb', herb)] });
       await add('Fixture Typed', { variants: [picked('Herb')] });
       await add('Fixture Coven', { variants: [picked('Herb', herb)], workspaceId: WORKSPACE_W_ID });
       const gone = await add('Fixture Gone', { variants: [picked('Herb', herb)] });
       await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-      // Its root kept and its herb dropped.
       const dropped = await add('Fixture Dropped', { variants: [picked('Root', root)] });
       const herbOf = await insertVariant(sql, dropped, picked('Herb', herb), A.id);
       await sql`
@@ -919,8 +879,6 @@ describe('findCompendiumPage', () => {
       });
     });
 
-    // Each arm reads any of the entry's live forms: Fixture Second picked the
-    // root on one and spells the herb on another; Fixture Dropped's herb is gone.
     it('combines with the form text', async () => {
       expect(await namesOf({ formId: root, forms: ['herb'] })).toEqual(['Fixture Second']);
       expect(await namesOf({ formId: root, forms: ['root'] })).toEqual([
@@ -930,8 +888,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // A deity is a pick too: what a deity's delete reads, so only entries holding a live link to a listed row answer, not every entry spelling it nor one that picked a namesake.
-  // An entry linking two listed deities is found once.
   describe('deityIds', () => {
     let hecate: string;
     let hermes: string;
@@ -1006,8 +962,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The element filter. An entry's `elements` holds any of the five,
-  // alone or among others; any one listed matches, by array overlap.
   describe('elements', () => {
     beforeEach(async () => {
       await add('Fixture Fiery', { elements: ['fire'] });
@@ -1044,8 +998,6 @@ describe('findCompendiumPage', () => {
       ]);
     });
 
-    // A property true of only some forms lives on those forms, so a live
-    // form holding the element makes the entry hold it (the toxic filter's reading).
     describe('held on a form', () => {
       beforeEach(async () => {
         await add('Fixture Form Fire', {
@@ -1090,9 +1042,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The lists hold spellings, not picks: what a celestial body's or a sign's
-  // delete and rename read, matched entry by entry under the
-  // suggestions' fold, any listed value.
   describe('celestialBodies and zodiacSigns', () => {
     beforeEach(async () => {
       await add('Fixture Held', { celestialBodies: ['Venus', 'Mars'], zodiacSigns: ['Taurus'] });
@@ -1172,8 +1121,6 @@ describe('findCompendiumPage', () => {
       expect(await namesOf({ zodiacSigns: ['', ' '] })).toHaveLength(4);
     });
 
-    // As with elements, a live form holding the value makes the entry hold it,
-    // and a retired form's list counts for nothing.
     describe('held on a form', () => {
       beforeEach(async () => {
         await add('Fixture Form Held', {
@@ -1245,8 +1192,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The two toxic flags, read together: an entry is toxic when its own flag or a live form's is on, and
-  // not toxic when neither is.
   describe('toxic', () => {
     beforeEach(async () => {
       await add('Fixture Own Flag', { toxic: true });
@@ -1260,7 +1205,6 @@ describe('findCompendiumPage', () => {
           makeVariant({ form: 'Fixture Resin', toxic: true }),
         ],
       });
-      // Its only toxic form retired.
       const retired = await add('Fixture Retired Flag', {
         variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', toxic: true })],
       });
@@ -1313,8 +1257,6 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // OR within a kind, AND across kinds: each row below matches one
-  // kind alone, and only one matches both.
   describe('across kinds', () => {
     beforeEach(async () => {
       await add('Fixture Both Kinds', {
@@ -1404,8 +1346,6 @@ describe('findCompendiumCount', () => {
     hermes = byName.get('Hermes') as string;
   });
 
-  // Seven herbs that `mugwrot` finds at 0.5 (alternately filed under Protection, Venus, Aries and Hecate, or Mars, Taurus and Hermes; the first two flagged toxic) and five roots it does not (the first two on a toxic form);
-  // then a soft-deleted row and a coven's that every filter below would otherwise count.
   beforeEach(async () => {
     for (let n = 1; n <= 7; n += 1) {
       const odd = n % 2 === 1;
@@ -1436,7 +1376,6 @@ describe('findCompendiumCount', () => {
     excluded = [gone, coven];
   });
 
-  /** Walks `filter`'s pages and holds every page's count to what the walk collected. */
   async function expectCountsToMatchTheWalk(filter: IngredientFilter, rows: number): Promise<void> {
     const walk = await walkForwards(filter, SIZE);
 
@@ -1530,7 +1469,6 @@ describe('findOneIngredient', () => {
     localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
   });
 
-  // The mechanism, once: the proofs AND a workspace row's coven onto the read and the compendium tier answers beside them.
   // Who may hold which proof, and the soft-delete filter of every reader on this finder, are the services' (tests/modules/ingredients/services/compendium.test.ts).
   it("answers a workspace row under its own coven's proof only, the compendium under any", async () => {
     // Why the refusals below could have passed wrongly: the row is there, and
@@ -1548,9 +1486,6 @@ describe('findOneIngredient', () => {
   });
 });
 
-// An ingredient's forms are its children: read through
-// `findManyOfIngredients` under the parent's tier, never by a bare id, and
-// reached by the search only where the parent is readable.
 describe('a variant read under its ingredient', () => {
   let inW: Membership;
   let inX: Membership;
@@ -1578,7 +1513,6 @@ describe('a variant read under its ingredient', () => {
     await insertVariantReferenceLink(sql, variantId, book, A.id);
   });
 
-  /** What each of a variant's three child reads answers under `proofs`, by direct id. */
   const childrenOf = async (proofs: Membership[], id: string) => ({
     categories: (await findManyOfVariants(proofs, ingredientCategories, [id])).length,
     substitutes: (await findSubstitutesIncludingSoftDeleted(proofs, 'variant', [id])).map(
@@ -1622,8 +1556,6 @@ describe('a variant read under its ingredient', () => {
     expect(await childrenOf([inW], variantId)).toEqual(NONE);
   });
 
-  // The union rule: an ingredient's lists are its own rows, a form's
-  // its additions, and no read answers the one for the other.
   it("keeps an ingredient's own rows and its variant's apart", async () => {
     const ownCategories = await findManyOfIngredients([inW], ingredientCategories, [localId]);
     const ownSubstitutes = await findSubstitutesIncludingSoftDeleted([inW], 'ingredient', [
@@ -1678,8 +1610,6 @@ describe('form ranking of the picker', () => {
   });
 });
 
-// The entry a colliding write names: keyed on the formal name alone,
-// or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {
   let entryId: string;
 
@@ -1723,7 +1653,6 @@ describe('findCompendiumEntryByIdentity', () => {
   });
 });
 
-// The coven's twin of the above, under the proof.
 describe('findWorkspaceIngredientByIdentity', () => {
   it("finds the proof's coven's live ingredient holding the formal name, and never another tier's", async () => {
     const identity = { name: 'Another label', canonicalName: 'Fixtura testalis' };
@@ -1753,8 +1682,6 @@ describe('findWorkspaceIngredientByIdentity', () => {
   });
 });
 
-// A celestial body's or sign's rename carried onto the compendium's lists: each entry folding to the old spelling becomes the new one in place, and nothing else moves,
-// since a celestial body or sign is no part of an entry's identity or slug.
 describe('write.carryAstrologyRename', () => {
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
   const rename = (field: 'celestialBodies' | 'zodiacSigns', from: string, to: string) =>
@@ -1810,7 +1737,6 @@ describe('write.carryAstrologyRename', () => {
     });
   });
 
-  // Each variant carries its own lists, which the compendium save holds to the curated rows as it does the entry's.
   const variantOf = async (id: string) =>
     (await sql`select * from ingredient_variants where id = ${id}`)[0];
   const onlyVariantOf = async (ingredientId: string) =>
@@ -1954,8 +1880,6 @@ describe('write.carryDeityRename', () => {
   });
 });
 
-// A curated form's rename carried onto the compendium's variants picking it
-// : the text, in place, and nothing of the entry's address.
 describe('write.carryFormRename', () => {
   const picked = (form: string, formId?: string) => [
     makeVariant(formId === undefined ? { form } : { form, formId }),
@@ -1998,7 +1922,6 @@ describe('write.carryFormRename', () => {
       updated_by: E.id,
       deleted_at: null,
     });
-    // A rename moves no entry's address, and writes no ingredient row.
     expect(await Promise.all([rowOf(one), rowOf(two)])).toEqual(before);
   });
 

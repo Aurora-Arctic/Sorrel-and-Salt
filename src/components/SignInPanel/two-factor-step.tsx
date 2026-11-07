@@ -12,7 +12,7 @@ import type { TwoFactorStepProps } from './types';
 
 // The second step of a password sign-in with two-factor on: a code from an authenticator app, or a
 // backup code. The right password has already been checked; this step's answer is what signs in
-// (claude-docs/components/sign-in-panel.md, "Two-factor").
+// (claude-docs/components/sign-in-panel.md, "Contracts").
 
 export const WRONG_CODE = "That code isn't right. Please try again.";
 export const CODE_LOCKED =
@@ -34,7 +34,6 @@ interface Refusal {
 }
 
 function refusal(failure: Failure): Refusal | 'restart' {
-  // The attempt itself is over: its cookie expired, or it spent its own allowance of codes.
   if (failure.code === 'INVALID_TWO_FACTOR_COOKIE') return 'restart';
   if (failure.code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE') return 'restart';
   if (failure.code === 'ACCOUNT_TEMPORARILY_LOCKED') return { alert: CODE_LOCKED };
@@ -52,7 +51,6 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
 
-  // An app's code is digits, often shown in two groups; a backup code is taken as typed bar its ends.
   const entered = method === 'app' ? code.replace(/\s/g, '') : code.trim();
   const ready = entered !== '' && !pending;
 

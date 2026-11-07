@@ -44,7 +44,6 @@ beforeEach(async () => {
   `;
 });
 
-/** The ledger's creation rows, oldest first, the enums cast to text. */
 async function changes(): Promise<CreationChangeRow[]> {
   return sql<CreationChangeRow[]>`
     select user_id, change::text, via::text, created_by, updated_by

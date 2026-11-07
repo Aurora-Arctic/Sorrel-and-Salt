@@ -2,9 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InfoTip from '@/components/InfoTip';
 
-// A field's hint, tucked behind an ⓘ beside its label: shown on hover, focus
-// or a tap, and dismissible with Escape (WCAG 1.4.13)
-// (claude-docs/components/info-tip.md).
+// claude-docs/components/info-tip.md
 
 const TEXT = 'What this coven calls it.';
 

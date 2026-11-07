@@ -6,15 +6,10 @@ import { ARRIVE_MS } from '../../lib/navigation/timing';
 import './index.scss';
 
 // The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
-// (claude-docs/components/skeleton-fade.md).
-// (claude-docs/components/skeleton-fade.md, "The fade out").
+// (claude-docs/components/skeleton.md).
+// (claude-docs/components/skeleton.md, "Skeleton fade").
 
-/**
- * The skeleton to keep over the page for the length of its fade-out, or null.
- * Pass the skeleton while a wait is on and null when it is not. A wait that
- * showed no skeleton (a refresh) leaves nothing to fade, and a new wait
- * starting mid-fade takes it back at once.
- */
+/** Pass null when no wait is on; a new wait mid-fade takes the kept skeleton back at once. */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
   const [kept, setKept] = useState<ReactElement | null>(null);
   const [wasShown, setWasShown] = useState(false);
@@ -38,7 +33,6 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
   return leaving;
 }
 
-/** The host's class: the box the overlay is placed against, clipped while it fades. */
 export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
@@ -48,7 +42,7 @@ export const skeletonCoverHost = (waiting: boolean): string =>
 
 /**
  * The props holding the page during a wait: mounted at full height, unseen (`visibility`, not `display: none`) and `inert`, because Back needs the scroll position kept
- * (claude-docs/components/skeleton-fade.md, "Holding the page during a wait").
+ * (claude-docs/components/skeleton.md, "Skeleton fade").
  */
 export const heldPage = (waiting: boolean, className?: string) => ({
   className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,
@@ -75,10 +69,7 @@ export const SkeletonCover = ({
   </div>
 );
 
-/**
- * The skeleton kept over the arrived page, out of layout and out of the
- * accessibility tree (the page carries the one heading and landmark now).
- */
+/** Out of layout and the accessibility tree: the page carries the heading and landmark now. */
 export const SkeletonOverlay = ({ children }: { children: ReactNode }): ReactElement => (
   <div className="skeleton-fade" aria-hidden="true">
     {children}

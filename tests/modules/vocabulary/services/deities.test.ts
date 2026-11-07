@@ -21,12 +21,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The deity writes, the site admin's alone, and the reads the admin page lists them by.
-// A compendium entry's deities are picks, so a deity a live entry links is held: its delete is refused and its rename is carried onto the entry's link in place. A coven's link is neither.
-// The seeded vocabulary stays, so every deity a test writes is named `Fixture …`.
-
-// The page finder wrapped, passing through to the real one, to see what the
-// list hands it.
 const repository = vi.hoisted(() => ({ findDeityPage: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -39,7 +33,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-/** Seeded traditions by name, read once. */
 let traditions: Map<string, string>;
 beforeAll(async () => {
   const rows = await sql<{ id: string; name: string }[]>`
@@ -48,8 +41,6 @@ beforeAll(async () => {
 });
 const tradition = (name: string) => traditions.get(name) as string;
 
-// Every row a test writes goes: the entries and their links, then the deities
-// and traditions named for this file.
 beforeEach(async () => {
   repository.findDeityPage.mockClear();
   await sql`truncate ingredients cascade`;
@@ -59,13 +50,9 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// The site role is the one thing a vocabulary write turns on, so one non-keeper
-// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
-// owner, whose workspace role is the highest and is still no site role.
+// One non-keeper stands for all (claude-docs/testing/acting-as-fixture-users.md): an owner, the highest coven role and still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that a keeper
-// passes assertCurator is proved once in identity's site-admin tests.
+// A curator stands for both curation roles: assertSiteAdmin refuses one, so its success proves the write calls assertCurator.
 const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<DeityInput> = {}): DeityInput {
@@ -77,7 +64,6 @@ function input(overrides: Partial<DeityInput> = {}): DeityInput {
   };
 }
 
-/** Seeds a deity directly under the named tradition, stamped by A — not through the code under test. */
 async function seed(name: string, traditionName = 'Greek'): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into deities (name, slug, description, tradition_id, created_by, updated_by)
@@ -101,11 +87,9 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-/** A fresh compendium entry, or W's own ingredient, by its label alone. */
 const entry = (name: string, overrides: Parameters<typeof makeIngredient>[0] = {}) =>
   insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 
-/** A fresh entry linking the deity at its first place, and the link's id. */
 async function picking(
   name: string,
   deityId: string,
@@ -115,7 +99,6 @@ async function picking(
   return { entry: id, link: await insertDeityLink(sql, id, deityId, 0, A.id) };
 }
 
-/** An issue list, or the test fails because the write went through. */
 async function issuesOf(attempt: Promise<unknown>) {
   const error = await attempt.then(
     () => expect.fail('the write was not refused'),
@@ -129,7 +112,6 @@ async function issuesOf(attempt: Promise<unknown>) {
 // order are the finder's (tests/db/repository/vocabularies.test.ts); the
 // service's rule is that it counts what its own list pages.
 describe('listDeities and countDeities under a filter', () => {
-  /** Every curated deity the filter reaches, by name — the list's own order. */
   const listedUnder = async (filter: DeityFilter): Promise<string[]> => {
     const page = await resolvePage({ first: 100 }, (request) => listDeities(filter, request));
     return page.edges.map((edge) => edge.node.name);
@@ -188,7 +170,6 @@ describe('listDeityTraditions', () => {
   });
 });
 
-// "Page X of Y" on the group page: what the list pages, counted in its order.
 describe('countDeityTraditions', () => {
   it('counts the groups listDeityTraditions pages, and how many come before a page’s first row', async () => {
     const first = await resolvePage({ first: 2 }, listDeityTraditions);
@@ -251,8 +232,7 @@ describe('createDeity', () => {
   it.each(NON_ADMINS)(
     'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
     async (_who, user) => {
-      // Why it could have passed: the guard is all that refuses it. The user
-      // holds no site role, and the same input is written for a curator.
+      // Why it could have passed: the guard is all that refuses it; the same input is written for a curator.
       expect(asUser(user).role).toBe('user');
       expect(asUser(F).role).toBe('curator');
 

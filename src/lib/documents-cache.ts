@@ -26,7 +26,6 @@ export function cachedDocumentRead<A extends unknown[], R>(
   return async (...args: A) => superjson.parse<R>(await cached(...args));
 }
 
-// A publish expires the tag at once, so the next read sees the new version.
 export function expireDocuments(): void {
   revalidateTag(DOCUMENTS_TAG, { expire: 0 });
 }

@@ -27,7 +27,6 @@ function focusFor(a: HTMLAnchorElement): HTMLElement | null {
     : null;
 }
 
-/** A link in the page, outside any dialog, to exactly this address, or the menu button holding it. */
 function linkTo(href: string): HTMLElement | undefined {
   for (const a of document.querySelectorAll<HTMLAnchorElement>('a[href]')) {
     if (a.getAttribute('href') !== href || a.closest('dialog')) continue;
@@ -48,13 +47,12 @@ export default function RouteModal({
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
-  // A press shows in the place it names alone.
   const pressed = opener?.loadingPlace === place ? opener?.loading : undefined;
   const heading = content?.heading ?? pressed;
   if (!heading) return null;
   const close = () => {
-    // A close while it loads forgets the press; the navigation back
-    // supersedes the one on its way, which Next then discards.
+    // A close while it loads forgets the press; the navigation back supersedes the one on its way,
+    // which Next then discards.
     opener?.cancel();
     navigate(closeHref, { replace: true, scroll: false });
     refresh();

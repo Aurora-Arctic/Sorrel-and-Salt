@@ -5,17 +5,10 @@ import type { RecipeStep } from '@/components/SpellRecipe/types';
 import { withParam } from '@/lib/list-href';
 import type { SpellStepView } from '@/modules/grimoire';
 
-// A spell's steps as the recipe page draws them: the service's views, already in recipe order,
-// made into display values. Kept apart from the page so the rules (which step is an instruction, a
-// one-off, or an ingredient since deleted, and when a formal name is shown) are tested on their own.
-
-/** What a linked step reads when the service withheld its ingredient (another coven's, say). */
 export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
-/** `hereHref` with the ingredient's details asked for, `entry=<id>` added so they open over the spell. */
 export const entryHrefOf = (hereHref: Route, id: string): Route => withParam(hereHref, 'entry', id);
 
-/** `views` as the recipe draws them on the page at `hereHref`, whose address the Quick Look eyes add `entry=` to. */
 export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route): RecipeStep[] {
   const steps = views.map((view): RecipeStep => {
     const linked = view.ingredientId !== null;

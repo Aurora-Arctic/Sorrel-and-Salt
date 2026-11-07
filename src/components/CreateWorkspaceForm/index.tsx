@@ -10,9 +10,7 @@ import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
-// The create-workspace page's form: one name, sent to `createWorkspace`, then the new coven's index. A
-// plain controlled input, not react-hook-form, as every refusal is the server's, the creation gate's
-// included (claude-docs/components/create-workspace-form.md).
+// Plain controlled input, not react-hook-form: every refusal is the server's (claude-docs/components/create-workspace-form.md).
 
 const CreateWorkspaceDocument = graphql(`
   mutation CreateWorkspace($name: String!) {
@@ -29,16 +27,15 @@ const CreateWorkspaceForm = (): ReactElement => {
   const [value, setValue] = useState('');
   const [alert, setAlert] = useState<string>();
   const [fieldError, setFieldError] = useState<string>();
-  // Set once the coven exists and the page is on its way: the button stays busy until
-  // the next page replaces this one, so a second press cannot make a second coven.
+  // Stays busy until the next page replaces this one, so a second press cannot make a second coven.
   const [leaving, setLeaving] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      // The new coven's home replaces the whole of this page, not only a coven body; it has its
-      // contents menu.
+      // The new coven's home replaces the whole page, not only a coven body: it has its contents
+      // menu.
       navigate(`/coven/${slug}`, {
         target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
       });
@@ -59,7 +56,6 @@ const CreateWorkspaceForm = (): ReactElement => {
   });
 
   const busy = mutation.isPending || leaving;
-  // A blank name has nothing to create: the service would refuse it.
   const empty = value.trim() === '';
   // A typed name, kept from a link, a tab close or a reload. Not while busy: the
   // navigation to the new coven is this form's own, and the render it reads is the

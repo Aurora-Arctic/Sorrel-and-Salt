@@ -34,7 +34,6 @@ for (const { viewport, hangs } of [
     );
     const owner = second.users.G!;
     const member = first.users.A!;
-    // A writes to both covens, so the bar draws the chevron and its menu.
     await withSql((sql) =>
       sql.begin(async (tx) => {
         await tx`select set_config('app.current_user_id', ${owner}, true)`;

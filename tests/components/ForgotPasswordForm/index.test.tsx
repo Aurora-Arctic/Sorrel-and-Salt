@@ -3,8 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ForgotPasswordForm, { GENERIC_RESET_REQUEST_ERROR } from '@/components/ForgotPasswordForm';
 import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
 
-// Story 71's first page. Better Auth's client is mocked at its one call, so each test sets the server's
-// answer; tests/db/password-reset.test.ts proves an unknown address is answered as a known one.
+// Better Auth's client is mocked at its one call; tests/db/password-reset.test.ts proves an unknown address is answered as a known one.
 const requestPasswordReset = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),

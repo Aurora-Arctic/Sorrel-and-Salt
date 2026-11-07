@@ -172,8 +172,6 @@ describe('listPrivilegeChanges', () => {
     );
   });
 
-  // The user list's match, on the subject: A's name and B's address, each
-  // case-insensitively, and a wildcard read literally.
   it('narrows by part of the subject’s name or email', async () => {
     const [a] = await sql<{ name: string }[]>`select name from users where id = ${A.id}`;
     const [b] = await sql<{ email: string }[]>`select email from users where id = ${B.id}`;

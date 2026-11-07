@@ -10,9 +10,7 @@ import {
 } from '@/lib/autosave';
 import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 
-// An autosaving form: a save 3 s after the last change and at most 30 s into a run of them, one
-// in flight, retries with backoff, a pause when someone else saved first, and a copy in
-// localStorage until the server has the value (claude-docs/components/autosave.md).
+// What an autosaving form does and when: claude-docs/autosave.md.
 
 type Draft = { title: string };
 type Props = Partial<AutosaveOptions<Draft>> & { value: Draft };
@@ -53,7 +51,6 @@ function renderAutosave(save: AutosaveOptions<Draft>['save'], props: Partial<Pro
     { initialProps },
   );
   let latest = initialProps;
-  /** A keystroke: the form's value changes and it is dirty. */
   const type = (title: string, more: Partial<Props> = {}) => {
     latest = { ...latest, value: { title }, dirty: true, ...more };
     view.rerender(latest);
@@ -66,7 +63,6 @@ function renderAutosave(save: AutosaveOptions<Draft>['save'], props: Partial<Pro
 }
 
 const wait = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
-/** Lets a resolved or rejected save's continuation run. */
 const settle = () => act(() => vi.advanceTimersByTimeAsync(0));
 
 const stored = () => window.localStorage.getItem(KEY);
@@ -102,7 +98,6 @@ describe('useAutosave timing', () => {
     const { save } = controlledSave();
     const { type } = renderAutosave(save);
 
-    // A change every second never lets the 3 s delay run out.
     for (let second = 1; second < 30; second += 1) {
       type(`T${second}`);
       await wait(1000);
@@ -151,7 +146,6 @@ describe('useAutosave with a save in flight', () => {
     await wait(3000);
     expect(save).toHaveBeenCalledTimes(1);
 
-    // Two runs of changes, each past its delay, while the first save is out.
     type('Te');
     await wait(3000);
     type('Tes');
@@ -261,7 +255,6 @@ describe('useAutosave when a save fails', () => {
     expect(result.current.status).toBe('failed');
     expect(result.current.error?.message).toBe('Network down');
 
-    // Stopped: neither time nor further typing sends again.
     type('Te');
     await wait(120_000);
     expect(save).toHaveBeenCalledTimes(4);
@@ -327,7 +320,6 @@ describe('useAutosave on a conflict', () => {
     expect(stored()).not.toBeNull();
 
     await act(() => result.current.resolveConflict('reload'));
-    // The caller resets the form from the server, which leaves it clean.
     rerender({ value: { title: 'Theirs' }, dirty: false });
     await wait(60_000);
 
@@ -412,7 +404,6 @@ describe('useAutosave mirror', () => {
     expect(JSON.parse(stored() ?? 'null').value).toEqual({ title: 'Te' });
 
     await wait(3000);
-    // Sent but not yet confirmed.
     expect(stored()).not.toBeNull();
     calls[0].reject(new Error('Network down'));
     await settle();

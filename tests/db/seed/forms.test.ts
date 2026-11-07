@@ -6,14 +6,9 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seedForms } from '@/db/seed/forms';
 import type { FormRow } from './types';
 
-// What a re-run of the form seed leaves of a keeper's edits. The shape every
-// seed shares is index.test.ts's, and the vocabulary's content is the
-// seed doc's to review — claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed".
-
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
 
-/** Each group's icon, by the seed key the group was seeded under. */
 async function glyphs(): Promise<Record<string, string | null>> {
   const rows = await sql`select seed_key, icon from ingredient_form_groups`;
   return Object.fromEntries(rows.map((row) => [row.seed_key, row.icon]));

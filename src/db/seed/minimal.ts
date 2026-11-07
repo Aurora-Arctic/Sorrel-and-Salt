@@ -4,7 +4,7 @@ import type { SeedDatabase, SeedUser } from './types';
 
 // The `minimal` scenario: one system user, one user, empty compendium. Writes go
 // through the handle `seed()` was given, not `withAudit` — an identity
-// bootstrap (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
+// bootstrap (claude-docs/design-decisions/data.md, "The seed writes through the handle it is given, not through `withAudit`").
 
 /** `…0002`, continuing the bootstrap's `…0001`. */
 export const MINIMAL_USER_ID = '00000000-0000-0000-0000-000000000002';

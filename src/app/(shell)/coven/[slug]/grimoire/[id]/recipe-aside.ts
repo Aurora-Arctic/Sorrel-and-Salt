@@ -17,7 +17,6 @@ import { jarRowsOf } from './recipe-supply';
 // form, from the ingredients module's batch reads, never GraphQL (rule 1). Forms are read only for a
 // role that may update stock. Per request, never cached (rule 6).
 
-/** A step the service withheld, or one with nothing to read, holds no categories and no jar. */
 const answered = <T>(answer: T | Error | undefined): T | undefined =>
   answer instanceof Error ? undefined : answer;
 
@@ -25,14 +24,10 @@ export async function readRecipeAsideOf(
   session: Session,
   workspaceId: string,
   views: readonly SpellStepView[],
-  /** The categories the spell is assigned, as the recipe already read them. */
   intended: readonly CardCategory[],
-  /** The page's own address, which the Quick Look eyes add `entry=` to. */
   hereHref: Route,
-  /** Whether the viewer's role may update stock: Edit Stock is offered only then. */
   mayStock: boolean,
 ): Promise<SpellRecipeAsideProps> {
-  // Each ingredient and each form once, however many steps lay it.
   const ingredientRefs = [
     ...new Map(
       views.flatMap((v) => (v.ingredient ? [[v.ingredient.id, v.ingredient]] : [])),
@@ -119,8 +114,6 @@ export async function readRecipeAsideOf(
     };
   });
 
-  // One door per linked step, none for a one-off or an instruction. An ingredient deleted since,
-  // or its form, opens nothing: the step says Deleted and there is no page or jar to reach.
   const doors = views.flatMap((view): InventoryDoor[] => {
     const { ingredient, variant } = view;
     if (!ingredient) return [];

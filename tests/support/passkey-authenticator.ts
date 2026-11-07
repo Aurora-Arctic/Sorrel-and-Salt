@@ -1,15 +1,10 @@
 import { createHash, generateKeyPairSync, randomBytes, sign, type KeyObject } from 'node:crypto';
 import { isoCBOR } from '@simplewebauthn/server/helpers';
 
-// A software authenticator: what a browser and a device's key store answer to
-// the passkey plugin's options, built the way the WebAuthn spec lays the bytes
-// out, so the plugin's own verification is what decides. ES256 (COSE alg -7)
-// with "none" attestation, the plugin's request.
+// A software authenticator the plugin's own verification checks: ES256 (COSE alg -7), "none" attestation.
 
-/** What a ceremony's options carry that the authenticator reads. */
 type Options = { challenge: string; rpId?: string; rp?: { id: string } };
 
-/** One key, as a device holds it. */
 export type SoftKey = {
   readonly credentialId: string;
   readonly privateKey: KeyObject;
@@ -58,7 +53,6 @@ function authenticatorData(rpId: string, key: SoftKey, attested: boolean): Buffe
   return Buffer.concat([head, Buffer.alloc(16), idLength, id, Buffer.from(key.publicCose)]);
 }
 
-/** The body `navigator.credentials.create()` hands `/passkey/verify-registration`. */
 export function attest(key: SoftKey, options: Options, origin: string) {
   const rpId = options.rp?.id ?? options.rpId!;
   const attestationObject = isoCBOR.encode(
@@ -83,7 +77,6 @@ export function attest(key: SoftKey, options: Options, origin: string) {
   };
 }
 
-/** The body `navigator.credentials.get()` hands `/passkey/verify-authentication`, signed by `key` and naming `credentialId`. */
 export function assert(
   key: SoftKey,
   options: Options,

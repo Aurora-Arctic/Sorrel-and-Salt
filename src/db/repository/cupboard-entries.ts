@@ -14,7 +14,6 @@ import type { CupboardEntryRow, IngredientRow } from './types';
 // with its overrides. That the entry is the compendium's is a read filter, not a constraint, so every read joins `ingredients`
 // under `workspace_id IS NULL` (claude-docs/db/workspace-compendium-entries.md, "Reading it").
 
-/** The proof's live cupboard entry for this compendium entry, or `undefined`. */
 export function findCupboardEntry(
   membership: Membership,
   ingredientId: string,

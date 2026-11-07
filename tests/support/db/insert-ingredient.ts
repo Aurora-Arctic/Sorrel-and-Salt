@@ -7,10 +7,6 @@ import type { IngredientFixture, VariantFixture } from '../fixtures/types';
 // than `withAudit`: the author's stamps and the GUC, inside one transaction, as the seed does
 // (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/**
- * Writes `fixture`'s row, a variant row per form, its folk names, substitutes, deities and category links,
- * stamped by `author`, and returns the ingredient's id. A category name with no live row throws.
- */
 export async function insertIngredient(
   sql: postgres.Sql,
   fixture: IngredientFixture,
@@ -43,7 +39,6 @@ export async function insertIngredient(
       await tx`insert into ingredient_substitutes ${tx(substitutes)}`;
     }
 
-    // In the order given, counted from 0, as the list keeps the order entered.
     if (fixture.deities.length > 0) {
       const deities = fixture.deities.map((name, position) => ({
         ingredient_id: id,
@@ -75,10 +70,6 @@ export async function insertIngredient(
   });
 }
 
-/**
- * Writes one more variant of `ingredientId`: a form and what it adds, stamped by `author`, and returns its id.
- * Categories are resolved by name as `insertIngredient` resolves them.
- */
 export async function insertVariant(
   sql: postgres.Sql,
   ingredientId: string,
@@ -91,7 +82,6 @@ export async function insertVariant(
   });
 }
 
-/** One variant and the children it owns, inside the caller's transaction. */
 async function writeVariant(
   tx: postgres.TransactionSql,
   ingredientId: string,
@@ -130,11 +120,7 @@ async function writeVariant(
   return id;
 }
 
-/**
- * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`, and returns the row's id.
- * Raw, so a test can write the row the service's tier rule would refuse. `forms` names the form each side
- * stands in for; absent is none.
- */
+// Raw, so a test can write the row the service's tier rule would refuse.
 export async function insertSubstituteLink(
   sql: postgres.Sql,
   ingredientId: string,
@@ -155,11 +141,7 @@ export async function insertSubstituteLink(
   return row.id as string;
 }
 
-/**
- * Links the curated deity `deityId` to `ingredientId` at `position`, under the
- * name it carries now, stamped by `author`, and returns the row's id. Raw, as
- * `insertSubstituteLink` is: a test can write the row the service would refuse.
- */
+// Raw: a test can write the row the service would refuse.
 export async function insertDeityLink(
   sql: postgres.Sql,
   ingredientId: string,

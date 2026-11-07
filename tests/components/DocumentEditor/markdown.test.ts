@@ -3,14 +3,10 @@ import { editorValueToMarkdown, markdownToEditorValue } from '@/components/Docum
 import { loadDocuments } from '@/db/seed/documents';
 import { fromRoot } from '../../support/paths';
 
-// The document editor holds a document as the editor's own value and stores it as markdown, so opening a document and saving it
-// unedited must store the markdown it opened: otherwise every save would rewrite text nobody changed, and every published version
-// would differ from the last in ways no keeper made. Proved over the four shipped documents, which use every construct the
-// editor is given: headings, lists, links, emphasis and footnotes.
+// Opening and saving a document unedited must store the markdown it opened, or every save rewrites text nobody changed.
 
 const documents = loadDocuments(fromRoot('documents'));
 
-/** Every node of the editor value, depth first. */
 function nodesOf(value: unknown): { type?: unknown; text?: unknown }[] {
   const found: { type?: unknown; text?: unknown }[] = [];
   const walk = (node: unknown): void => {

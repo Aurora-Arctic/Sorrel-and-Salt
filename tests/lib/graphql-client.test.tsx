@@ -48,7 +48,6 @@ function renderWithClient(ui: ReactNode) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 }
 
-/** Answers `Ok` with a GraphQL error, counting how often it was asked. */
 function refuseOk() {
   const calls = { count: 0 };
   server.use(
@@ -87,7 +86,6 @@ describe('a client component', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Boundary caught it');
-    // A GraphQL error is the server's answer, so it is not retried.
     expect(calls.count).toBe(1);
   });
 });
@@ -121,13 +119,10 @@ describe('graphqlRequest', () => {
     const error = await graphqlRequest(OkDocument).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(GraphQLClientError);
-    // Only STALE_WRITE is a StaleWriteError; any other code stays plain.
     expect(error).not.toBeInstanceOf(StaleWriteError);
   });
 
   it('throws StaleWriteError, carrying the revision the row is at now, for STALE_WRITE', async () => {
-    // The body is built by the route's own mapping, so this is the server's
-    // StaleWrite as the browser receives it.
     mockGraphQLError('Ok', { code: 'STALE_WRITE', currentRevision: 7 });
 
     const error = await graphqlRequest(OkDocument).catch((caught: unknown) => caught);
@@ -229,12 +224,10 @@ describe('the error-boundary policy', () => {
     };
 
     expect(throwWhenEmpty(error, query(undefined))).toBe(true);
-    // A failed background refetch leaves the last good answer rendered.
     expect(throwWhenEmpty(error, query({ ok: true }))).toBe(false);
   });
 });
 
-// Mutations are never retried, and their errors a form renders.
 describe("the client's defaults", () => {
   it('retry and throw by the two policies for queries, and neither for mutations', () => {
     const defaults = makeQueryClient().getDefaultOptions();

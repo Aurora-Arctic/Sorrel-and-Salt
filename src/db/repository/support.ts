@@ -40,10 +40,8 @@ import type {
   WriterContext,
 } from './types';
 
-// The support finders. A request is the account's, not a coven's, so no `Membership` scopes it: what a reader may see is
-// spelled here in SQL, so a request outside it never reaches a resolver (claude-docs/design-decisions/m15.1-support-form.md, "The curator view").
+// A request is the account's, not a coven's: its reader scope is SQL here (claude-docs/design-decisions/support.md, "The curator view").
 
-/** How long a resolved request stays resolved before it is closed, in days. */
 export const RESOLVED_CLOSES_AFTER_DAYS = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -55,7 +53,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  */
 const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and coalesce(${supportRequests.resolvedAt} <= now() - make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS}), false))`;
 
-/** The status a reader is shown: a lapsed resolved request as closed, from the day it lapsed. */
 function asOfNow<Row extends typeof supportRequests.$inferSelect>(row: Row): Row {
   if (row.status !== 'resolved' || row.resolvedAt === null) return row;
   const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
@@ -69,7 +66,6 @@ const readAsOfNow = <Entry extends { node: typeof supportRequests.$inferSelect }
   entries: Entry[],
 ): Entry[] => entries.map((entry) => ({ ...entry, node: asOfNow(entry.node) }));
 
-/** A status as `asOfNow` reads it, in SQL. */
 function statusIs(status: (typeof supportRequests.$inferSelect)['status']): SQL {
   if (status === 'resolved')
     return and(eq(supportRequests.status, 'resolved'), not(lapsedResolved)) as SQL;
@@ -77,7 +73,6 @@ function statusIs(status: (typeof supportRequests.$inferSelect)['status']): SQL 
   return eq(supportRequests.status, status);
 }
 
-/** What a curator reads: a request marked for curators, or assigned to them. A keeper reads every request. */
 function readerScope(reader: SupportReader): SQL | undefined {
   if (reader.role === 'admin') return undefined;
   return or(
@@ -86,7 +81,6 @@ function readerScope(reader: SupportReader): SQL | undefined {
   );
 }
 
-/** A request the viewer may read in any capacity: their own, and by role the reader scope on top. */
 function viewerScope(viewer: SupportViewer): SQL | undefined {
   const own = eq(supportRequests.createdBy, viewer.userId);
   if (viewer.role === 'admin') return undefined;
@@ -141,7 +135,6 @@ const orderOf = ({ view }: SupportRequestFilter): readonly SortPart[] => [
   ...(view && QUEUE_VIEWS.includes(view) ? QUEUE_ORDER : REQUEST_ORDER),
 ];
 
-/** What a view holds: the status, and for the queue views who holds the request. */
 function viewArm(reader: SupportReader, view: SupportView): SQL {
   const open = eq(supportRequests.status, 'open');
   switch (view) {
@@ -160,7 +153,8 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
-/** The request's sender is in the group. A beta tester accepted a printed card: derived from the invitation and never stored. */
+/** The sender is in the group. A beta tester accepted a printed card: derived from the
+ * invitation, never stored. */
 function senderArm(group: SupportSenderGroup): SQL {
   switch (group) {
     case 'beta_tester':
@@ -181,7 +175,6 @@ function filterArms(
   ];
 }
 
-/** One page of the requests the reader may see, anonymised ones last, and within each, open ahead of resolved and newest first. */
 export function findSupportRequestPage(
   reader: SupportReader,
   filter: SupportRequestFilter,
@@ -195,7 +188,6 @@ export function findSupportRequestPage(
   ).then(readAsOfNow);
 }
 
-/** How many rows `findSupportRequestPage` pages, and how many come before `start`, a page's first row. */
 export function findSupportRequestCount(
   reader: SupportReader,
   filter: SupportRequestFilter,
@@ -239,7 +231,6 @@ export async function findSupportViewCounts(
   ) as SupportViewCounts;
 }
 
-/** The request the reader may see, or `undefined` for one that is absent or outside their scope. */
 export function findSupportRequestForReader(reader: SupportReader, id: string) {
   return selectOne(
     supportRequests,
@@ -257,7 +248,6 @@ export function findOwnSupportRequestPage(
   );
 }
 
-/** How many rows `findOwnSupportRequestPage` pages, and how many come before `start`. */
 export function findOwnSupportRequestCount(
   userId: string,
   start: Cursor | undefined,
@@ -265,7 +255,6 @@ export function findOwnSupportRequestCount(
   return findPageCount(supportRequests, OWN_ORDER, start, eq(supportRequests.createdBy, userId));
 }
 
-/** How many of the sender's requests are still open (open, waiting on the sender) and how many are done (resolved, closed). */
 export async function findOwnSupportStatusCounts(userId: string): Promise<SupportStatusCounts> {
   const [row] = await selectFrom(
     supportRequests,
@@ -296,7 +285,6 @@ export async function findSupportMenuCounts(userId: string): Promise<SupportMenu
   return { assignedOpen: row?.assignedOpen ?? 0, waitingOnMe: row?.waitingOnMe ?? 0 };
 }
 
-/** The sender's own request, or `undefined` for one that is absent or another sender's. */
 export function findOwnSupportRequest(userId: string, id: string) {
   return selectOne(
     supportRequests,
@@ -325,7 +313,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
   ).then(oneAsOfNow);
 }
 
-/** The public replies on a request, oldest first: what the mailed-link page shows, with no internal note among them. */
+/** The public replies on a request, oldest first: no internal note among them. */
 export function findPublicSupportReplies(requestId: string) {
   return selectFrom(
     supportReplies,
@@ -339,7 +327,6 @@ export function findPublicSupportReplies(requestId: string) {
   );
 }
 
-/** How many replies the sender has written on a request since `since`. */
 export async function countSenderRepliesSince(requestId: string, since: Date): Promise<number> {
   const rows = await selectFrom(
     supportReplies,
@@ -353,7 +340,6 @@ export async function countSenderRepliesSince(requestId: string, since: Date): P
   return rows.length;
 }
 
-/** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
 export function findOwnSupportFollowUp(userId: string, id: string) {
   return selectOne(
     supportRequests,
@@ -365,7 +351,6 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
   ).then(oneAsOfNow);
 }
 
-/** A time-out stands: not lifted, and its `until` none or still ahead. The column read and the user list's filter share it. */
 export const timeoutStands = and(
   isNull(supportTimeouts.liftedAt),
   noEndOrAhead(supportTimeouts.until),
@@ -399,14 +384,13 @@ export async function findStandingSupportTimeoutByAddress(
   return latestEnd(rows);
 }
 
-/** The latest end among standing time-outs: none at all wins over any date. */
+/** The latest end among standing time-outs: none at all (no end date) wins over any date. */
 function latestEnd(rows: readonly { until: Date | null }[]): StandingTimeout | undefined {
   if (rows.length === 0) return undefined;
   if (rows.some((row) => row.until === null)) return { until: null };
   return { until: new Date(Math.max(...rows.map((row) => row.until?.getTime() ?? 0))) };
 }
 
-/** A public staff reply whose mail to the sender has not been sent yet, for its job to send, or `undefined`. */
 export function findReplyAwaitingNotice(id: string) {
   return selectOne(
     supportReplies,
@@ -530,7 +514,6 @@ export function findSupportRequestsDueToAnonymise(
   );
 }
 
-/** A time-out by id, for a keeper to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(
     supportTimeouts,
@@ -584,7 +567,8 @@ function internalNotesScope(viewer: SupportViewer): SQL | undefined {
   );
 }
 
-/** The ids among `userIds` that accepted a printed card: the beta-tester tier, derived from the invitation and never stored. */
+/** The ids among `userIds` that accepted a printed card: derived from the invitation, never
+ * stored. */
 export async function findCardAcceptorIds(userIds: readonly string[]): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
   const rows = await selectFrom(
@@ -598,7 +582,8 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
 
-/** The live time-outs set on these senders, newest first. The service lets a keeper alone ask. */
+/** The live time-outs set on these senders, newest first. The service lets a keeper alone
+ * ask. */
 export function findSupportTimeoutsFor(userIds: readonly string[]) {
   if (userIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -607,7 +592,8 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
   );
 }
 
-/** The live time-outs set on these addresses, by count key, newest first. The service lets a keeper alone ask. */
+/** The live time-outs set on these addresses, newest first. The service lets a keeper alone
+ * ask. */
 export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
   if (addressKeys.length === 0) return Promise.resolve([]);
   return selectFrom(

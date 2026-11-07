@@ -18,9 +18,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven's Grimoire list: a card per spell in the list named Grimoire, the title
-// search and the Categories filter, and a status region when there is no card to show
-// (claude-docs/components/grimoire-list.md).
+// claude-docs/components/grimoire-list.md
 
 const client = makeQueryClient();
 const List = (props: GrimoireListProps): ReactElement => (
@@ -167,8 +165,7 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
   });
 
-  // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
-  // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
+  // The roles named are the state's data: nothing else tells a viewer who to ask.
   it.each([
     ['complete', 'No Spells'],
     ['draft', 'No Drafts'],
@@ -225,7 +222,6 @@ describe('GrimoireList', () => {
     const form = filterForm('Filter the Grimoire');
     expect(form).toHaveAttribute('action', PATH);
     expect(within(form).getByRole('combobox', { name: 'Title' })).toHaveValue('hearth');
-    // Any submits an empty value, which the address reads as no filter, as the compendium's Toxic does.
     expect(sent(form)).toBe('query=hearth&visibility=');
   });
 
@@ -282,7 +278,6 @@ describe('GrimoireList', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
-    // Moon Phases, Days of the Week and Coven Members type to narrow; Visibility is a chip of radios.
     const show = (field: string) => {
       const box = screen.getByRole('combobox', { name: field });
       box.focus();
@@ -471,8 +466,6 @@ describe('GrimoireList', () => {
       expect(screen.getByRole('status', { name: 'No Matches' })).toBeInTheDocument();
     });
   });
-  // A picked title opens the spell's Quick Look over the list as it stands, as the
-  // card's eye does, the page and the filter kept and the text typed and not searched not applied.
   describe('picking a title from the dropdown', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });

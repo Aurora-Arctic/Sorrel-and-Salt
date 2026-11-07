@@ -3,7 +3,6 @@
 import { type ReactElement, useEffect, useState } from 'react';
 import type { PasswordStrength } from './types';
 
-/** Each zxcvbn score's word, weakest first. */
 export const STRENGTH_WORDS = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'] as const;
 
 // zxcvbn's estimate of what is typed, loaded on the first keystroke rather than with the page. It

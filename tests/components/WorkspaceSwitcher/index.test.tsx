@@ -15,10 +15,6 @@ const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitc
 const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
 const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
-// The viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other, and
-// the way to the create page, offered only to a viewer holding the right.
-
 const WORKSPACES = [
   {
     slug: 'fixture-coven',
@@ -259,7 +255,6 @@ describe('WorkspaceSwitcher', () => {
       expect(box()).toHaveAttribute('aria-busy', 'true');
       expect(box()).toHaveTextContent('Testwort Circle');
 
-      // The new coven renders: the address is its, and the wait is over.
       pathname.mockReturnValue('/coven/testwort-circle/ingredients');
       await act(async () => arrive());
 

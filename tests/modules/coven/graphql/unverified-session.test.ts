@@ -8,9 +8,6 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// An account whose address is unverified reaches the email page and the public pages and nothing else, on the API as on the pages.
-// The refusal is made once, in `assertMembership`, which every coven-scoped service passes through.
-
 const quietSender: InvitationSender = {
   invitation: async () => {},
 };

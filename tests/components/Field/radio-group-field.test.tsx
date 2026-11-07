@@ -4,8 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { RadioGroupField } from '@/components/Field';
 import FormIcon from '@/components/FormIcon';
 
-// The strip layout of the radio group: the same native radios, drawn as one bar of icons.
-
 function Harness() {
   const [value, setValue] = useState('');
   return (
@@ -44,7 +42,6 @@ describe('RadioGroupField, strip', () => {
     expect(screen.getByRole('group', { name: 'Icon' })).toHaveAccessibleDescription();
   });
 
-  // Each segment's name shows above it on hover and on its radio's focus, for a sighted person who cannot tell the icons apart.
   // It is decoration, since the radio's own name already says it, so the tip is kept out of the accessibility tree and found with `hidden`.
   it('opens the name tip of the segment pointed at, and no other', async () => {
     render(<Harness />);
@@ -71,9 +68,6 @@ describe('RadioGroupField, strip', () => {
   });
 });
 
-// The text layout: Match and Toxic on the compendium filter. The same
-// native radios, each segment its name in text and, where the caller knows
-// it, how many entries choosing it would leave.
 describe('RadioGroupField, segmented', () => {
   function Segmented({ counts = true }: { counts?: boolean }) {
     const [value, setValue] = useState('any');
@@ -111,8 +105,6 @@ describe('RadioGroupField, segmented', () => {
   });
 });
 
-// The cards layout: the same native radios, each inside a card that is the whole label, with the
-// description visible; nothing is chosen until the caller says so.
 describe('RadioGroupField, cards', () => {
   function Cards({ error }: { error?: string }) {
     const [value, setValue] = useState<string | null>(null);

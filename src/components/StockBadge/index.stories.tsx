@@ -2,16 +2,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { StockBadge } from '.';
 
-// Render-only; which state shows when is asserted in tests/components/StockBadge.
-// The Low badge's tip opens on hover, tap or focus: point at it to see it.
 const meta = {
   title: 'Ingredients / Stock Badge',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// A badge is drawn only when the jar is low or out; the cells that show nothing
-// say so, since an empty cell reads as a broken one.
 const Nothing = ({ why }: { why: string }) => <p style={{ margin: 0 }}>{why}</p>;
 
 export const States: Story = {

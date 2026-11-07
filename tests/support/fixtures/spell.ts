@@ -9,11 +9,8 @@ import type {
   Overrides,
 } from './types';
 
-// A jar: the spell row, the categories it intends, and the steps of its
-// recipe. The categories here are the *assigned* ones; derived categories are
-// computed from the ingredients, so a fixture has none to give.
+// The categories here are the *assigned* ones; derived categories are computed from the ingredients, so a fixture has none to give.
 
-// Invented, like every name a fixture supplies on its own (CLAUDE.md, Testing).
 const DEFAULT_LAYER_NAME = 'Fixture Ash';
 // A layer, custom rather than linked, so `makeSpell()` is insertable with no
 // ingredient inserted first.
@@ -84,15 +81,11 @@ function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixtur
     if (!stated(overrides, 'unit')) step.unit = null;
   }
 
-  // The place is the index; the override type cannot say otherwise.
   step.position = position;
 
   return step;
 }
 
-/**
- * One spell, as in `makeSpell({ steps: [{ body: 'Stir.' }] })`, one instruction.
- */
 export function makeSpell(overrides: SpellOverrides = {}): SpellFixture {
   const { steps, ...rest } = overrides;
   const spell = mergeFixture(DEFAULTS, rest as Overrides<SpellFixture>);
@@ -104,16 +97,11 @@ export function makeSpell(overrides: SpellOverrides = {}): SpellFixture {
   return spell;
 }
 
-/**
- * The fixture as an insert into `spells`; categories and steps are other
- * tables' rows, and the audit stamps are the session's (rule 3).
- */
 export function spellColumns(fixture: SpellFixture): Record<string, unknown> {
   const { categories: _categories, steps: _steps, ...row } = fixture;
   return toColumns(row);
 }
 
-/** One step as an insert into `spell_steps`; the spell id is the caller's to add. */
 export function spellStepColumns(step: SpellStepFixture): Record<string, unknown> {
   return toColumns(step);
 }

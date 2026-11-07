@@ -515,7 +515,7 @@ Each name below is a slur. It was left out of the entry's `folkNames` on purpose
 
 ## The deity and tradition vocabulary (M14.15)
 
-M14.15 widened `src/db/seed/deities.ts` from the M14.15 list in `claude-docs/db/compendium-seed/candidates.md` and from every "Deity gap" note in `compendium/ingredients/`. What it added is argued in `claude-docs/db/deity-vocabulary-seed.md`. This section is what it left out, with the reason. A note for a deity left out stays in its entry file under "Edit Notes for Claude", with the same reason.
+M14.15 widened `src/db/seed/deities.ts` from the M14.15 list in `claude-docs/db/compendium-seed/candidates.md` and from every "Deity gap" note in `compendium/ingredients/`. What it added is argued in `claude-docs/compendium/deity-vocabulary-seed.md`. This section is what it left out, with the reason. A note for a deity left out stays in its entry file under "Edit Notes for Claude", with the same reason.
 
 ### Deities and figures left out of the vocabulary
 

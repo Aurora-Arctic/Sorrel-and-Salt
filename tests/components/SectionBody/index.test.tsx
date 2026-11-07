@@ -15,7 +15,6 @@ const { default: SectionBody } = await import('@/components/SectionBody');
 // A section's page under its context row, the coven's here: while a navigation aimed at the coven region is on its way, the old coven's page is taken away at once
 // and the destination's skeleton, with its one status, stands in its place, so nobody acts on the wrong coven's data. A navigation aimed elsewhere leaves the page as it is; the skeleton's shape is the stylesheet's.
 
-/** A control that starts a navigation with the given target, as the switcher and section nav do. */
 function Go({ name, target }: { name: string; target?: NavigationTarget }) {
   const { navigate } = usePendingNavigation();
   return (
@@ -78,7 +77,6 @@ describe('SectionBody', () => {
 
     await press('Switch');
 
-    // Why the swap is the navigation's: it is on its way.
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(oldPage()).not.toBeInTheDocument();
     // The page's own landmark went with it; the skeleton keeps the page's one
@@ -92,8 +90,6 @@ describe('SectionBody', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  // Leave: the site nav's, whose skeleton fills the whole of the shell's body.
-  // Filter: one within the page, whose own control and list show the wait.
   it.each(['Leave', 'Filter'])(
     'leaves the page in place for a navigation not aimed at it (%s)',
     async (name) => {
@@ -107,8 +103,6 @@ describe('SectionBody', () => {
   );
 });
 
-// The admin area's body, under its own context row: a move between admin pages
-// swaps the page and leaves the row standing.
 describe('SectionBody for the admin area', () => {
   const renderAdmin = () => {
     const arrives = new Promise<void>((resolve) => {
@@ -149,8 +143,6 @@ describe('SectionBody for the admin area', () => {
       vi.useRealTimers();
     });
 
-    // Once the page is back, the one thing hidden from assistive technology is
-    // the skeleton left over it for the fade.
     const overlay = (container: HTMLElement) => container.querySelector('[aria-hidden="true"]');
 
     it('shows the page at once and keeps the skeleton over it, hidden from assistive technology, until the fade is done', async () => {
@@ -163,7 +155,6 @@ describe('SectionBody for the admin area', () => {
       expect(oldPage()).toBeInTheDocument();
       const fading = overlay(container);
       expect(fading).not.toBeNull();
-      // Nothing of it is announced or reachable as a second heading, landmark or status.
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
       expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
       expect(screen.getAllByRole('main')).toHaveLength(1);

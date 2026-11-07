@@ -15,10 +15,6 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The public compendium's In My Covens filter: the panel lists the viewer's covens, a pick narrows the list and
-// is kept in the address, Not In lists the entries none holds, a foreign coven's id narrows nothing, and a
-// signed-out visitor is offered no filter.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -34,7 +30,6 @@ const OWN = 'Fixture Coven Mine';
 const VIEWER_OF = 'Fixture Coven Viewed';
 const ELSEWHERE = 'Fixture Coven Elsewhere';
 
-/** The names of the cards the list shows, sorted. */
 async function shown(page: Page): Promise<string[]> {
   const list = compendiumList(page);
   const names: string[] = [];
@@ -131,7 +126,6 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
     await expect(rowOf(compendiumList(page), HELD)).toHaveCount(0);
     expect(await shown(page)).toEqual([FOREIGN, FREE, VIEWED].sort());
 
-    // With no coven picked: none of the viewer's covens, the one A only views included.
     await page.goto(`/compendium?query=${QUERY}&covensNot=1`);
     await expect(compendiumList(page)).toBeVisible();
     expect(await shown(page)).toEqual([FOREIGN, FREE].sort());

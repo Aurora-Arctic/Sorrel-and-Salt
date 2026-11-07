@@ -33,8 +33,7 @@ const VOCABULARIES = [
 
 describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
   // Both go through one builder loop, so celestial bodies run every test and zodiac
-  // signs run the read and the create, which prove the loop's per-vocabulary
-  // names; the refusals and the other writes need no second copy.
+  // Two signs run the read and the create, which prove the loop's per-vocabulary names; the refusals and other writes need no second copy.
   const full = query === 'celestialBodies';
 
   const FIELDS = 'id name slug description';

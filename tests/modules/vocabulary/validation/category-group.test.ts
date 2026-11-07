@@ -12,7 +12,6 @@ const VALID = {
   colorLight: '#0c5393',
 };
 
-/** The dark page is not the surface checked: the card is harder. */
 const DARK_PAGE = '#14120e';
 
 function issuesOf(input: unknown) {

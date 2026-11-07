@@ -4,14 +4,13 @@ import { type ReactElement, useCallback, useEffect, useRef, useState } from 'rea
 import { useTip } from '../InfoTip/use-tip';
 import type { IconTipProps } from './types';
 
-// The side each placement prefers; `useTip` flips it where there is no room.
 const SIDES = { side: 'left', above: 'top', below: 'bottom-end' } as const;
 import './index.scss';
 
 // A word above an icon control, "Edit" over a pencil, for a sighted user who cannot tell what the mark does; it is `aria-hidden` decoration,
-// opens after a rest or on focus, and shuts while the control's own menu is open (claude-docs/components/icon-tip.md, "Behaviour").
+// opens after a rest or on focus, and shuts while the control's own menu is open (claude-docs/components/icon-tip.md, "Contracts").
 
-// `$icon-tip-fade` (_variables.scss): how long the closed tip stays for its fade.
+// Matches `$icon-tip-fade` (_variables.scss): how long the closed tip stays for its fade.
 const TIP_FADE_MS = 120;
 
 // No wait to close: the bubble takes no pointer, so there is nothing to cross onto.
@@ -23,7 +22,6 @@ const IconTip = ({
   placement = 'side',
   opensOnPress = false,
 }: IconTipProps): ReactElement => {
-  // The wrapper, also the tip's anchor, kept to ask whether a menu is open under it.
   const wrapper = useRef<HTMLSpanElement | null>(null);
   const menuOpen = useCallback(
     () => Boolean(wrapper.current?.querySelector('[aria-haspopup][aria-expanded="true"]')),
@@ -43,7 +41,6 @@ const IconTip = ({
     },
     [anchor],
   );
-  // A menu opening under a tip already shown, by a press or a key, takes it away.
   useEffect(() => {
     const node = wrapper.current;
     if (!node || typeof MutationObserver === 'undefined') return;
@@ -67,7 +64,8 @@ const IconTip = ({
   }, [closing]);
 
   return (
-    // Hover on the wrapper rather than the control, so any control can be the child without its props being taken over; focus bubbles here too.
+    // Hover is on the wrapper, not the control, so any control can be the child; focus bubbles
+    // here too.
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the focus and blur handlers hear events bubbling from the control inside; the span adds no control of its own
     <span
       ref={setWrapper}
@@ -79,7 +77,6 @@ const IconTip = ({
         if (!(event.target as Element).closest('[role="menu"]')) show();
       }}
       onBlur={hide}
-      // A status mark's press, heard as it bubbles from the button (`opensOnPress`).
       onClick={opensOnPress ? show : undefined}
     >
       {children}

@@ -22,8 +22,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The admin Support page, render-only: the page owns the reads, this owns what a viewer sees of a
-// request and sends from it (claude-docs/components/support-requests.md).
+// claude-docs/components/support-requests.md
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({
@@ -77,18 +76,14 @@ const open = (viewer: SupportViewer, detail: Partial<SupportRequestDetailEntry> 
   );
 
 const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) });
-/** Turns the composer from its default, an internal note, to a reply. */
 const chooseReply = () => fireEvent.click(within(dialog()).getByRole('radio', { name: 'Reply' }));
 
-// The Time-Out fold starts closed; its toggle is the one Time-Out button that says whether it is open.
 const openTimeOut = () =>
   fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out', expanded: false }));
 
 const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time Out Sender' });
 
-// The question the button opens, answered.
 const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
-// The question Resolve opens over the dialog, a group named by its text.
 const resolveQuestion = () => screen.findByRole('group', { name: /sender sees it as resolved/ });
 
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
@@ -463,7 +458,6 @@ describe('Time-Out', () => {
     expect(panel.queryByLabelText('For')).toBeNull();
   });
 
-  // A signed-out request’s time-out names its address and no account, and a keeper lifts it from the request as any other.
   it('shows a signed-out sender’s standing address time-out with Lift in place of the form, and lifts it by its id after asking', async () => {
     const lifted: LiftSupportTimeoutMutationVariables[] = [];
     mockGraphQLMutation<LiftSupportTimeoutMutation, LiftSupportTimeoutMutationVariables>(

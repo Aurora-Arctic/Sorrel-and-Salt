@@ -13,7 +13,6 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] =>
   sectionsOf(slug, canReadMembers).map((section) => ({
     ...section,
-    // The coven's body draws the wait, as the page it is going to.
     target: covenTarget(section.href),
   }));
 
@@ -26,10 +25,8 @@ const sectionsOf = (slug: string, canReadMembers: boolean): readonly SectionNavI
         {
           label: 'Members',
           href: route(`/coven/${slug}/members`),
-          // Its Invitations tab belongs to the same section.
           matches: [route(`/coven/${slug}/invitations`)],
           icon: 'members',
-          // Its own group, as People is in the admin nav: the coven's people, not its contents.
           apart: true,
         } as const,
       ]

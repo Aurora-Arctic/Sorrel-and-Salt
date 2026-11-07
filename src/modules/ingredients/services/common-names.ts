@@ -7,17 +7,13 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
 export type { CommonNameSuggestion };
 
 /**
- * What the common-name field offers as `query` is typed: display names and
- * folk names already in use in the compendium or this workspace, each naming
- * the ingredients that answer to it. Picking one links nothing — the string is
- * written into the ingredient's own folk-name row. A blank query offers all.
- * Without a workspace, the names in use in the compendium alone.
+ * Common-name suggestions for `query`: display and folk names in use in the
+ * compendium or this workspace (the compendium alone without one), each naming
+ * the ingredients that answer to it. Picking one links nothing; the string is
+ * written into the ingredient's own folk-name row. Asks only `ingredient: ['read']`
+ * (claude-docs/db/fuzzy-matching.md).
  *
- * Asks only `ingredient: ['read']`: every name it can return is one a reader
- * of this workspace could already list.
- *
- * @throws {Forbidden} a workspace is named and the caller may not read its
- * ingredients.
+ * @throws {Forbidden} a workspace is named and the caller may not read its ingredients.
  */
 export async function suggestCommonNames(
   session: Session,

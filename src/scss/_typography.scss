@@ -1,10 +1,8 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Document prose, as a mixin so it can be scoped: `body` in the app,
-// `.workshop-story-frame` in the workshop, where bare element selectors would
-// otherwise land on Storybook's own chrome. Nothing here names a raw hue; a rule
-// needing one adds a token. No print tier outside the spell recipe view.
+// A mixin so it can be scoped: `body` in the app, `.workshop-story-frame` in the workshop, where bare element selectors
+// would land on Storybook's own chrome. Nothing here names a raw hue.
 @mixin typography-base {
   font-family: $font-body;
   font-weight: 300;
@@ -19,7 +17,6 @@
     text-wrap: balance;
   }
 
-  // The sizes are $heading-sizes; each line height loosens as the size falls.
   h1 {
     font-size: heading-size(1);
     line-height: 1.1;
@@ -30,7 +27,7 @@
     line-height: 1.15;
   }
 
-  // The title of a sign-in card page, an h1 set at the h2 size so a long title fits the narrow card.
+  // An h1 set at the h2 size so a long title fits the narrow card.
   .auth-title {
     font-size: heading-size(2);
     line-height: 1.15;
@@ -147,30 +144,23 @@
     text-shadow: $text-halo;
   }
 
-  // The muted sentence or two under a heading that says what the section is
-  // for. Body size: it is read, not skimmed. A `p` already stops at the
-  // measure; anything else given the class stops there too.
+  // Body size: it is read, not skimmed. Anything but a `p` is held to the measure by the class.
   .lede {
     max-width: $measure;
     color: $text-muted;
   }
 
-  // A metadata line — a formal name and form, a date, a count — tight under
-  // what it describes.
   .meta {
     margin: 0;
     color: $text-muted;
     font-size: type-size('caption');
   }
 
-  // The italic of a botanical, fungal or zoological binomial. Mineral and
-  // chemical names are set upright, so the component that knows the
-  // nomenclature decides whether to add it.
+  // Mineral and chemical names are set upright, so the component that knows the nomenclature decides whether to add it.
   .binomial {
     font-style: italic;
   }
 
-  // For headings that stack directly, as in a type sample.
   .tight-headings {
     h1,
     h2,

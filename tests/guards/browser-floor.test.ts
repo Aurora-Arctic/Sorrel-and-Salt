@@ -4,14 +4,11 @@ import { describe, expect, inject, it } from 'vitest';
 
 import { fromRoot } from '../support/paths';
 
-// The browser floor is Baseline Widely Available (claude-docs/styling.md, "Binding rules"; claude-docs/design-decisions/m10.24-browser-floor.md); stylelint holds the CSS and this holds the JavaScript:
-// a web API not yet in all four engines for 30 months may be used only behind a `typeof` or `in` check on the same line, so an older engine skips it instead of throwing.
-// The list is hand-kept and prunes itself: each entry names a `web-features` id and the test fails with "delete this entry" once that feature is widely available. An empty list is a pass.
+// A web API not yet widely available may be used only behind a `typeof` or `in` check on the same line (claude-docs/styling.md, "Binding rules"; claude-docs/design-decisions/ui.md, "The browser floor").
+// The list prunes itself: an entry fails with "delete this entry" once its `web-features` id is widely available.
 
 interface PastTheFloor {
-  /** What the API looks like in source. */
   pattern: RegExp;
-  /** The `web-features` id whose status says whether it is past the floor. */
   feature: string;
 }
 
@@ -30,7 +27,6 @@ const PAST_THE_FLOOR: PastTheFloor[] = [
 /** Server-only by CLAUDE.md rules 1 and 2: the browser never receives them. */
 const SERVER_ONLY = [/^src\/db\//, /^src\/modules\/[^/]+\/services\//, /^src\/graphql\//];
 const SOURCE = /^src\/.*\.tsx?$/;
-/** A feature check on the line: `typeof Promise.try`, `'try' in Promise`. */
 const FEATURE_CHECK = /\btypeof\b|['"][\w$]+['"]\s+in\s/;
 
 describe('the browser floor in client-reachable source', () => {

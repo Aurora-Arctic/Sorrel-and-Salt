@@ -8,10 +8,6 @@ import AnnotateMore from './annotate-more';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { AnnotateDialogProps } from './types';
 
-// The coven's Annotate dialog, opened from the address's `?annotate` (on the entry page and over
-// the Ingredients list). It shows while the address asks for it (`opened`) or while an Annotate
-// press loads it; `more` adds Make It Ours and Remove at the form's foot.
-
 export default function AnnotateDialog({
   closeHref,
   returnTo,

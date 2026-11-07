@@ -10,7 +10,6 @@
 // hue is never the only sign.
 
 .section-nav {
-  // Stretches to the context row it sits in, which is a flex box.
   align-self: stretch;
   min-width: 0;
 }
@@ -25,8 +24,6 @@
   list-style: none;
 
   > li {
-    // typography-base positions and marks every list item; the tab draws
-    // its own current rule and the row its own separator.
     position: relative;
     display: flex;
     margin: 0;
@@ -37,8 +34,6 @@
   }
 }
 
-// A tab: icon, then label, over the whole of the row's height. The link and
-// the More button share it.
 .section-nav__link {
   @include button-reset;
 
@@ -72,7 +67,6 @@
     font-weight: 500;
   }
 
-  // The heavy rule along the tab's foot, over the row's own hairline.
   &[aria-current='page']::after {
     content: '';
     position: absolute;
@@ -98,8 +92,6 @@
   stroke-width: 1.9;
 }
 
-// The admin nav's two groups, kept apart by a hairline between them as the
-// compendium's pages and People were in the old row.
 .section-nav .section-nav__list > .section-nav__item--apart {
   margin-inline-start: space(3);
 
@@ -136,16 +128,13 @@
   flex: 1 1 0;
 }
 
-// Before the script has fitted the row, whatever outruns it is clipped rather
-// than scrolled for that moment.
+// Before the script has fitted the row, whatever outruns it is clipped rather than scrolled.
 .section-nav:not([data-fit]) .section-nav__list {
   overflow: hidden;
 }
 
-// Before the script has fitted the row (no `data-fit`) the server's phone count of four is the
-// wrong guess, so the row shows every tab and hides More, and the overflow wraps out of sight. The
-// phone never gets `data-fit`, so it is excluded by width, at the script's `TABLET_BAND`; the
-// measuring render (`data-measuring`) draws More so its width is read, and does not wrap.
+// Before the script fits the row (no `data-fit`) the phone count of four is the wrong guess, so every tab shows. The
+// phone never gets `data-fit`, so it is excluded by width at the script's `TABLET_BAND`; `data-measuring` draws More to read its width.
 @media (min-width: #{$shell-phone-width + 0.01rem}) {
   .section-nav:not([data-fit], [data-measuring]) {
     position: relative;
@@ -187,7 +176,6 @@
   @include floating-panel;
 
   position: absolute;
-  // A step of air between the row and the sheet.
   top: calc(100% + #{space(2)});
   inset-inline-end: 0;
   z-index: layer('floating');
@@ -213,7 +201,6 @@
   }
 }
 
-// Shown: visible at once, the opacity easing in.
 .section-nav .section-nav__sheet:not([hidden]) {
   visibility: visible;
   opacity: 1;
@@ -232,7 +219,6 @@
   width: 100%;
 }
 
-// A hairline above the group's first entry, standing in for the row's.
 .section-nav__sheet-item.section-nav__item--apart {
   margin-top: space(1);
   border-top: 1px solid $hairline;
@@ -244,9 +230,7 @@
   content: none;
 }
 
-// Phone: a bar fixed along the window's foot, icon above label, equal widths, the current one
-// marked by weight and an accent rule. The page clears it by `$bottom-bar-height` (AppShell's
-// padding).
+// The page clears the bar by `$bottom-bar-height` (AppShell's padding).
 @media (max-width: #{$shell-phone-width}) {
   .section-nav {
     position: fixed;
@@ -254,8 +238,6 @@
     bottom: 0;
     z-index: layer('shell');
     box-sizing: border-box;
-    // The bar's own height, and beneath it the device's safe area (a phone's
-    // home indicator), which the page clears too.
     height: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0);
     border-top: 1px solid $hairline;
@@ -312,9 +294,6 @@
     }
   }
 
-  // Current: the short accent rule above the icon, at the bar's own top
-  // edge (the list has no padding above the tabs), replaces the tab's foot
-  // rule.
   .section-nav .section-nav__list > li > .section-nav__link[aria-current='page']::after {
     inset-inline: auto;
     top: 0;
@@ -326,10 +305,8 @@
     border-radius: 0 0 $rule-heavy $rule-heavy;
   }
 
-  // Only on a More button standing in for a hidden page: it then wears that page's icon and
-  // label, and the small chevron is what says there is more behind it. Plain More already says
-  // so, and the bar's other tabs have none. Taken out of the flow of the column so the icon
-  // and label keep their place, the hit area and the label's size.
+  // Only on a More button standing in for a hidden page: the small chevron says there is more behind it. Taken out of
+  // the flow of the column so the icon and label keep their place, hit area and size.
   .section-nav__chevron {
     display: none;
   }
@@ -347,7 +324,6 @@
     color: $text-muted;
   }
 
-  // The sheet opens above the bar, at its end.
   .section-nav .section-nav__sheet {
     position: fixed;
     inset-inline: auto space(2);

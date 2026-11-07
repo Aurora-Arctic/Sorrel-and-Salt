@@ -2,10 +2,6 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Metadata } from 'next';
 import { NotFound } from '@/lib/errors';
 
-// The four document pages and their version pages: what each reads, and what it hands DocumentPage. The reads and DocumentPage
-// are mocked; how the markdown renders is tests/components/DocumentPage's, and that the reads are cached is the documents module's.
-// A document page is public, so none asks for a session (claude-docs/design-decisions/m15.59-document-editor-scope.md).
-
 const notFound = vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 });
@@ -70,7 +66,6 @@ const PAGES: Record<
   },
 };
 
-/** The props of the one DocumentPage element in the tree a page returned. */
 function documentPageProps(tree: unknown): Record<string, unknown> {
   const found: Record<string, unknown>[] = [];
   const walk = (node: unknown): void => {
@@ -218,7 +213,6 @@ describe('/privacy hands DocumentPage the access cards', () => {
     accessCards = (await import('@/components/AccessCards')).default;
   });
 
-  /** The props of the AccessCards element the page mapped to `access-cards`. */
   function accessCardsProps(props: Record<string, unknown>): {
     roles: readonly unknown[];
     rows: readonly { cells: readonly unknown[] }[];

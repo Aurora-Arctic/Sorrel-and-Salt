@@ -43,7 +43,6 @@ const run = async () => {
   for (const statement of STATEMENTS) await sql.unsafe(statement);
 };
 
-/** A compendium entry holding `seedKey`, as the seed writes it, with one form. */
 async function compendiumEntry(seedKey: string, name = `Fixture ${seedKey}`): Promise<string> {
   const id = await insertIngredient(
     sql,
@@ -165,7 +164,6 @@ describe('0090', () => {
       return { links: Number(links), subs: Number(subs) };
     };
 
-    /** An extra form on `entry`, with one reference link and one typed substitute. */
     async function formWithChildren(entry: string, form: string): Promise<string> {
       const id = await insertVariant(
         sql,

@@ -25,7 +25,6 @@ export type CovenCardActionsEntry = Pick<
   | 'stock'
 >;
 
-/** Named with the formal name too, as two entries can share a label. */
 export const covenCardName = (entry: Pick<CovenCardEntry, 'label' | 'canonicalName'>): string =>
   cardName(entry.label, entry.canonicalName);
 

@@ -4,16 +4,12 @@ import { fn } from 'storybook/test';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import Notice from '.';
 
-// Render-only; the role each kind takes is asserted in tests/components/Notice.
 const meta = {
   title: 'Feedback / Notice',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ onCreateAnyway: () => void; created: boolean }>;
 
-// The block form: a sentence with a list and a button beneath it, as the duplicates warning holds,
-// in a warning and an error. Create Anyway calls the handler the story was given
-// (logged in the Actions panel) and the line beneath each notice says it was pressed.
 const BlockContent = ({ onCreateAnyway }: { onCreateAnyway: () => void }) => (
   <>
     <p>Did you mean one of these?</p>

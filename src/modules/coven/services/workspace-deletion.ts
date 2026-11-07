@@ -9,11 +9,7 @@ import { assertMembership } from './membership';
 // stops finding a role in it, while their membership rows stay, so a workspace restored by hand comes back with its members.
 
 /**
- * Deletes the workspace. The caller needs `workspace: delete`, which only
- * stewards hold. Every member, other stewards included, is refused from then on.
- *
- * @throws {Forbidden} the caller is not a steward of the workspace, it is the demo coven, or it is
- * already deleted.
+ * @throws {Forbidden} the caller is not a steward of the workspace, it is the demo coven, or it is already deleted.
  */
 export async function deleteWorkspace(session: Session, workspaceId: string): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { workspace: ['delete'] });

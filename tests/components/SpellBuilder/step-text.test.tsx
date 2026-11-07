@@ -17,9 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's step text: an instruction-only step,
-// and the instruction beneath an ingredient step. That the service keeps the
-// order and the texts is tests/modules/grimoire/services's.
+// That the service keeps the order and the texts is tests/modules/grimoire/services's.
 
 const ID = {
   stepLight: '00000000-0000-4000-8000-000000000021',
@@ -41,7 +39,6 @@ const savedStep = (
   ...fields,
 });
 
-/** A saved spell of an instruction, then a one-off with its own instruction. */
 const SPELL: SpellBuilderSpell = {
   id: 's3',
   revision: 4,
@@ -95,7 +92,6 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
-// A saved spell opens with its sections shut: Open All shows its jar.
 function renderSaved() {
   const view = renderBuilder({ spell: SPELL });
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
@@ -106,7 +102,6 @@ const steps = () => screen.getByRole('list', { name: 'Steps' });
 const rows = () => within(steps()).queryAllByRole('listitem');
 const instructions = () =>
   within(steps()).queryAllByRole('textbox', { name: /^Instruction/ }) as HTMLTextAreaElement[];
-/** Opens a step row, by the name its pencil carries, unless it is open already. */
 const openStep = (name: string) => {
   const pencil = screen.getByRole('button', { name: `Edit ${name}` });
   if (pencil.getAttribute('aria-expanded') !== 'true') fireEvent.click(pencil);
@@ -119,7 +114,6 @@ const announced = () =>
     .map((region) => region.textContent)
     .join(' | ');
 const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
-/** Types a name into the Add to Jar box and picks its first row: a one-off ingredient. */
 const addOneOff = async (name: string) => {
   mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
     ingredientSuggestions: { edges: [] },
@@ -143,7 +137,6 @@ describe('the spell builder’s step text', () => {
     expect(instructions()).toHaveLength(1);
     expect(instructions()[0]).toHaveFocus();
     expect(announced()).toContain('at position 1 of 1.');
-    // An instruction-only step has no amount to give.
     expect(within(rows()[0] as HTMLElement).queryByRole('spinbutton')).toBeNull();
   });
 
@@ -154,7 +147,6 @@ describe('the spell builder’s step text', () => {
     addStep();
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Light the candle' } });
     await addOneOff('Testwort');
-    // Only one row is open at a time: the new ingredient step is, the instruction step is closed.
     expect(instructions()).toHaveLength(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Crush it first' } });
     submit();
@@ -186,7 +178,6 @@ describe('the spell builder’s step text', () => {
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
     renderSaved();
     fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
-    // The instruction-only step reads as its text while closed, and as a field once opened.
     expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();

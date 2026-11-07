@@ -5,11 +5,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadDocuments } from '@/db/seed/documents';
 import { fromRoot } from '../../support/paths';
 
-// The site's four documents as the seed reads them, database-free: the markdown files under `documents/` are the seed's only source,
-// so a file that would not seed, or whose sources would not link, fails here before it merges. What running the seed writes is
-// documents.test.ts's (claude-docs/design-decisions/m15.59-document-editor-scope.md, "Moving the four documents into rows").
-
-/** The labels a body cites (`[^3]`), and the labels it defines (`[^3]: …`), each once. */
 function footnotesOf(body: string): { cited: string[]; defined: string[] } {
   const defined = [...body.matchAll(/^\[\^([^\]]+)\]:/gm)].map(([, label]) => label);
   const cited = [...body.matchAll(/\[\^([^\]]+)\](?!:)/g)].map(([, label]) => label);

@@ -15,11 +15,8 @@ export default function LastEditTip({
   short,
   sentence,
 }: {
-  /** The moment, as an ISO 8601 string. */
   moment: string;
-  /** The short absolute date, the line's text before hydration. */
   short: string;
-  /** The full sentence the tip holds: "Last edited by Fixture A on 1 September 2026". */
   sentence: string;
 }): ReactElement {
   const id = useId();

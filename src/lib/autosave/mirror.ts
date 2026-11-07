@@ -3,7 +3,6 @@ import type { MirrorEntry } from './types';
 // A copy of an autosaving form's value in localStorage, written on every change and cleared only once the server confirms a save, so a closed tab
 // keeps what was typed. Storage can be absent, full or refused, so every access is in try/catch and a failure means no mirror.
 
-/** A day: an older copy is too stale to offer back. */
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 /** `autosave:<entity>:<id|new>:<userId>`: per row and per person, so two people on one browser never see each other's copy. */
@@ -22,17 +21,13 @@ export function mirrorKey({
 export function writeMirror(key: string, value: unknown, at: Date = new Date()): void {
   try {
     window.localStorage.setItem(key, JSON.stringify({ value, at: at.toISOString() }));
-  } catch {
-    // No storage: the form goes on without a mirror.
-  }
+  } catch {}
 }
 
 export function clearMirror(key: string): void {
   try {
     window.localStorage.removeItem(key);
-  } catch {
-    // No storage: nothing was mirrored.
-  }
+  } catch {}
 }
 
 /** The mirrored copy for recovery, or `null` when there is none, it is unreadable, or it is over a day old. */

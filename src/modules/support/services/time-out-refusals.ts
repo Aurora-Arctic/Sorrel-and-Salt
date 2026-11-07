@@ -3,10 +3,8 @@ import { Forbidden } from '../../../lib/errors';
 import { utcMinute } from '../../../lib/utc';
 import type { StandingTimeout } from '../types';
 
-/** The window the limit counts over, in seconds: 24 hours. */
 export const SEND_WINDOW_SECONDS = 24 * 60 * 60;
 
-/** Refuses a sender who is timed out, naming when it ends or that it has no end date. */
 export function refuseTimedOut(timedOut: StandingTimeout | undefined): void {
   if (!timedOut) return;
   const when = timedOut.until

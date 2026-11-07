@@ -20,7 +20,6 @@ import type { BusinessCardDetails, RuleItem } from './types';
 const PT = PX_PER_INCH / 72;
 const TRIM_TOP = ARTBOARD.trimInset;
 const TRIM_BOTTOM = ARTBOARD.height - ARTBOARD.trimInset;
-/** Every line starts 14 pt inside the trim's left edge. */
 const LEFT = ARTBOARD.trimInset + 14 * PT;
 
 const NAME = { font: 'cormorant600', size: 15 * PT, baseline: TRIM_TOP + 36 * PT } as const;
@@ -42,7 +41,6 @@ const ADDRESS_LINE = {
 } as const;
 const LEDE = { font: 'lexend300', size: 7 * PT, leading: 11 * PT, width: 176 * PT } as const;
 
-/** The salt in the bleed box's bottom-right corner, as large as the invitation front's first design set it. */
 export const FRONT_PICTURE: PictureItem = {
   picture: 'salt',
   x: ARTBOARD.width - 460,
@@ -51,7 +49,6 @@ export const FRONT_PICTURE: PictureItem = {
   height: 307,
 };
 
-/** The sorrel at 80% of the size the invitation back first gave it, its top right corner where that one's was. */
 export const BACK_PICTURE: PictureItem = {
   picture: 'sorrel',
   x: 287 + 392 - 392 * 0.8,
@@ -60,10 +57,7 @@ export const BACK_PICTURE: PictureItem = {
   height: 288 * 0.8,
 };
 
-/**
- * A line at its design size, or smaller if that would run its ink past the safe area's right edge, 9 pt inside the trim;
- * a line's width grows with its size, so one division finds the size that ends it there.
- */
+// A line's width grows with its size, so one division finds the size that ends its ink on the safe area's right edge.
 function fitted(
   fonts: CardFonts,
   font: FontKey,
@@ -79,7 +73,6 @@ function fitted(
   return { font, size: scaled, letterSpacing: 0, colour, x: LEFT, baseline, text };
 }
 
-/** The front's words, and the green rule under the name, as long as the name is wide. */
 export function frontLayout(
   fonts: CardFonts,
   { name, email, phone }: BusinessCardDetails,
@@ -102,7 +95,6 @@ export function frontLayout(
   return { text, rule };
 }
 
-/** The back's lede, wrapped, its last line 18 pt above the trim's bottom edge. */
 export function backText(fonts: CardFonts): TextItem[] {
   const lines = wrap({ font: fonts[LEDE.font], size: LEDE.size }, BACK_LEDE, LEDE.width);
   const last = TRIM_BOTTOM - 18 * PT;

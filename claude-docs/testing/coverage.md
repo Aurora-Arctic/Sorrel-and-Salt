@@ -1,4 +1,4 @@
-## Coverage — monocart-coverage-reports (M1.13)
+## Coverage — monocart-coverage-reports
 
 **`tests/e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
 `outputDir: './.reports/coverage-e2e'` (separate from Vitest's `.reports/coverage/`,
@@ -12,9 +12,9 @@ table from — same shape Vitest's own `json-summary` reporter emits).
 test bloat and to keep tests on functional requirements; a copy, class or
 memorial test adds no coverage of behaviour and is not written
 ([`layer-ownership.md`](layer-ownership.md), "What a test may assert"). It
-stays at 80% while the suite's own figure falls toward 90% (MB.224).
+stays at 80% while the suite's own figure falls toward 90%.
 
-**JS coverage only — CSS is deliberately never collected** (M1.14). Playwright's
+**JS coverage only — CSS is deliberately never collected**. Playwright's
 `page.coverage.startCSSCoverage()` reports raw bundled-stylesheet byte ranges
 with no sourcemap path back to Sass — unlike JS (see below), Next's CSS
 pipeline doesn't reliably produce a servable, browser-accessible `.css.map`
@@ -65,15 +65,15 @@ report unless `node_modules` is excluded first.
   (the native V8 report) plus a `console-details` table printed at the end
   of the run.
 
-**Only when asked (M11.18).** None of the above runs unless `E2E_COVERAGE=1`
+**Only when asked.** None of the above runs unless `E2E_COVERAGE=1`
 is set: `tests/e2e/coverage.config.ts` exports `coverageRequested`, and the
 fixture, `cleanCache()` and `generate()` each check it. CI sets the variable
 in `playwright.yml`, so its artifact and summary are as before; a local run
 collects nothing and writes no `.reports/coverage-e2e/` unless it is run as
 `E2E_COVERAGE=1 npm run e2e`. What the collection cost every test, and the
-pairs that measured the saving: `e2e.md`, "Where a run's time goes", "After coverage went behind a switch".
+pairs that measured the saving: `e2e.md`, "Where a run's time goes".
 
-**Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
+**Wired into CI.** `playwright.yml`'s "Upload coverage artifact" step
 uploads `.reports/coverage-e2e/` on every run (pass or fail), parallel to
 `vitest.yml`'s `.reports/coverage/` upload. The run's reporters (`list`, `json`,
 `html`) come from `playwright.config.ts` under `CI`, not from the command line —
@@ -89,7 +89,7 @@ monocart's `raw` data (`coverage-e2e/raw/`, the unprocessed V8 data the `raw`
 report keeps), so it travels inside the same artifact. That is what lets the
 two suites be merged without running either again.
 
-**The merged report (M14.28).** `pr-gate.yml`'s `playwright-coverage` job runs
+**The merged report.** `pr-gate.yml`'s `playwright-coverage` job runs
 after both suites, pass or fail. It downloads whichever of the two coverage
 artifacts exist (an artifact that exists but cannot be downloaded fails the job and
 replaces the comment with a coverage-missing notice, so no earlier commit's figure stays), runs `.github/scripts/merge-playwright-coverage.mjs` (monocart's

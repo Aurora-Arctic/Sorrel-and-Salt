@@ -30,13 +30,11 @@ beforeEach(() => {
   logged.length = 0;
 });
 
-/** Every statement the service sent, in order, from one call. */
 async function statementsFor(query: string): Promise<Logged[]> {
   await suggestCommonNames(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
   return [...logged];
 }
 
-/** The one statement reading the folk names, which is the match itself. */
 function match(statements: Logged[]): Logged {
   const reads = statements.filter(({ query }) => /from "ingredient_folk_names"/.test(query));
   expect(reads).toHaveLength(1);

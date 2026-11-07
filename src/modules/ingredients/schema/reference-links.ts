@@ -12,31 +12,23 @@ import { idColumn } from '../../../db/schema-parts';
 
 // Which row a reference supports, one per citation: a nullable key per sourced table under one `num_nonnulls` CHECK. Full `auditColumns`:
 // a link is content, and unlinking leaves a tombstone (DESIGN.md §5, "References"). Adding a sourced table:
-// claude-docs/db/references.md, "Reference links schema details".
+// claude-docs/db/references.md, "References".
 
 export const nameBasis = pgEnum('name_basis', NAME_BASES);
 
-/**
- * The tables a reference can support, each by the property and column that
- * key it. The order is the columns', the CHECK's and the indexes'.
- */
 export const SOURCED = {
   ingredientId: { column: 'ingredient_id', table: ingredients },
   deityId: { column: 'deity_id', table: deities },
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
   celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
-  // One form's own sources, beside its ingredient's.
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
 } as const;
 
-/** A sourced entity's property on `referenceLinks`: `ingredientId`, `deityId`, … */
 export type SourcedKey = keyof typeof SOURCED;
 
-/** The registry's keys, in its order. */
 export const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
 
-/** One nullable foreign key per sourced table, under the registry's own keys. */
 function sourcedColumns() {
   return Object.fromEntries(
     SOURCED_KEYS.map((key) => {
@@ -58,14 +50,14 @@ export const referenceLinks = pgTable(
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
     // How the citation names the ingredient, and the field names it backs; null when nobody recorded them. Written by the seed and a curator,
-    // never on a coven's link (claude-docs/db/references.md, "Citation attributes").
+    // never on a coven's link (claude-docs/db/references.md, "References").
     nameBasis: nameBasis('name_basis'),
     supports: text('supports').array(),
     ...auditColumns,
   },
   (table) => [
     // One live link per reference per row, partial per rule 4. Each leads on its sourced id and none on `reference_id`, which nothing reads back
-    // (claude-docs/db/references.md, "Reference links schema details").
+    // (claude-docs/db/references.md, "References").
     ...SOURCED_KEYS.map((key) =>
       uniqueIndex(`reference_links_${SOURCED[key].column.replace(/_id$/, '')}_unique`)
         .on(table[key], table.referenceId)

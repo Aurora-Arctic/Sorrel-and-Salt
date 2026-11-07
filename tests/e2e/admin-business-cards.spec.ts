@@ -6,9 +6,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The business-card page: a keeper fills in a name, an email address and a phone number, and the browser builds a Letter
-// sheet of ten cards from files it already holds. Who may open it, what Generate waits for, and that building the PDF asks
-// the server for nothing (claude-docs/components/business-cards.md).
+// (claude-docs/components/business-cards.md)
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -62,7 +60,6 @@ test('Generate waits for a name, an email address and a phone number, and builds
   await main.getByRole('textbox', { name: 'Name' }).fill('Testwort Hollin');
   await main.getByRole('textbox', { name: 'Phone' }).fill('555.010.0199');
   await expect(generate).toBeDisabled();
-  // Not an email address: Generate stays off, and leaving the field says why.
   await main.getByRole('textbox', { name: 'Email' }).fill('testwort at example');
   await main.getByRole('textbox', { name: 'Email' }).blur();
   await expect(generate).toBeDisabled();

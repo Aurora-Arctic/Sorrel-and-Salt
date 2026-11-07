@@ -6,10 +6,8 @@ import { inCompendium, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { CompendiumSlugEntry, IngredientRow, SlugRedirect } from './types';
 
-// A compendium entry's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the
-// slug it holds, and the slugs it moved off, each redirecting to it until the
-// retirement's `expires_at`. `at` is the caller's clock rather than the
-// database's, so a window is exact wherever it is read from.
+// A compendium entry's slugs and retired slugs (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"); `at`
+// is the caller's clock, not the database's.
 
 /** What a slug read does with a hidden entry: left out unless the caller curates or is checking the address is free. */
 export interface SlugReach {

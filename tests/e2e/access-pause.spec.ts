@@ -9,9 +9,7 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// A keeper pauses a user's access from the People page's user modal; the user still signs in, by password through the
-// sign-in page, into support and nothing else, told on every page they reach that they are paused, and once the keeper lifts
-// the pause the rest of the site opens (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
+// A keeper pauses a user's access (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -19,7 +17,6 @@ test.beforeAll(async () => {
 
 const PASSWORD = 'lantern moss under the north window';
 
-/** A field in the password form by the start of its label, which ends in the required mark. */
 const field = (page: Page, label: string) =>
   page.getByRole('main').getByLabel(new RegExp(`^${label}`));
 
@@ -37,7 +34,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   page,
   browser,
 }) => {
-  // A verified password account, made through Better Auth's own sign-up so its password is hashed as a real one is.
   const user = await browser.newContext();
   const userPage = await user.newPage();
   const email = `paused-${randomUUID()}@access-pause.test`;
@@ -69,7 +65,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   const access = modal.getByRole('region', { name: 'Site Access' });
   await access.getByRole('button', { name: 'Site Access', expanded: false }).click();
 
-  // An open-ended pause with a note, asked before it is sent.
   await access.getByRole('combobox', { name: 'For' }).selectOption({ label: 'No End Date' });
   await access.getByRole('textbox', { name: 'Note' }).fill('Shared password');
   await access
@@ -86,17 +81,14 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
       select until, note, lifted_at from user_access_pauses where user_id = ${userId}`,
   );
   expect(standing).toEqual({ until: null, note: 'Shared password', lifted_at: null });
-  // Pausing signs the user out everywhere.
   expect(await sessionsOf(userId)).toHaveLength(0);
 
-  // The right password signs in, and the landing sends the user on to the paused page, which names no end.
   await signInByPassword(userPage, email);
   await expect(userPage).toHaveURL('/access-paused');
   await expect(userPage.getByRole('heading', { name: 'Access Paused', level: 1 })).toBeVisible();
   await assertNoAccessibilityViolations(userPage);
   expect(await sessionsOf(userId)).toHaveLength(1);
 
-  // The page's Support link opens the Support dialog over it, as the footer's does, and the request sends signed in.
   await userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
   await expect(userPage).toHaveURL('/access-paused?support=');
   const dialog = userPage.getByRole('dialog');
@@ -110,7 +102,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   );
   expect(sent).toHaveLength(1);
 
-  // The support page opens signed in, under the notice that access is paused.
   await userPage.goto('/support');
   const notice = userPage.getByRole('complementary', { name: 'Site Access' });
   await expect(notice).toContainText('Your site access is paused, with no end date.');
@@ -120,10 +111,8 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   );
   await assertNoAccessibilityViolations(userPage);
 
-  // The compendium reads as signed out beneath the notice; a coven or account page sends the user to the paused page.
   await userPage.goto('/compendium');
   await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toBeVisible();
-  // An entry draws the notice in its own text column, and the shell draws none beside it.
   await userPage.goto(`/compendium/ingredients/${ingredientSlug(entry.name, entry.canonicalName)}`);
   await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toHaveCount(1);
   await expect(
@@ -134,8 +123,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
     await expect(userPage).toHaveURL('/access-paused');
   }
 
-  // Timed out from support as well, the paused page, which has no account menu, still links to the user's own requests
-  // and offers no Support dialog: the request reads there, and the time-out refuses a reply.
   await withSql(
     (sql) => sql`
       insert into support_timeouts (user_id, until, note, created_by, updated_by)
@@ -145,7 +132,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await expect(userPage.getByRole('main')).toContainText(
     'You cannot send a support request: you are timed out with no end date.',
   );
-  // The dialog could send nothing, so the page offers no Support link to open it.
   await expect(
     userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }),
   ).toHaveCount(0);
@@ -157,7 +143,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await expect(thread.getByLabel(/^Your Reply/)).toBeDisabled();
   await assertNoAccessibilityViolations(userPage);
 
-  // Lifted, the pause moves to the earlier list, and the form is offered again.
   await access.getByRole('button', { name: 'Lift Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Lift', exact: true }).click();
   await expect(access.getByRole('button', { name: 'Pause Access', exact: true })).toBeVisible();
@@ -170,11 +155,9 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   );
   expect(lifted).toEqual({ lifted: true });
 
-  // The same session now reaches the account page, without the notice.
   await userPage.goto('/account');
   await expect(userPage).toHaveURL(/\/account/);
   await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toHaveCount(0);
-  // With no pause standing, the paused page sends the session on.
   await userPage.goto('/access-paused');
   await expect(userPage).not.toHaveURL(/\/access-paused/);
 

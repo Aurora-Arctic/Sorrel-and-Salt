@@ -8,7 +8,7 @@ import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
 
-// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every keeper mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
+// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every keeper mutation close at once (claude-docs/design-decisions/auth.md, "Revoking").
 // Through the real session reader; the cookie cache that would keep the old role is pinned off in tests/lib/auth.test.ts.
 
 let sql: ReturnType<typeof postgres>;
@@ -42,7 +42,6 @@ beforeEach(async () => {
   );
 });
 
-/** A session row for `userId` and the cookie header Better Auth would have set for it. */
 async function signedInAs(userId: string): Promise<Headers> {
   const context = await auth.$context;
   const token = randomBytes(24).toString('base64url');

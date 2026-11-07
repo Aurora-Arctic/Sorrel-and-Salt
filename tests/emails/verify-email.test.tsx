@@ -1,16 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { verifyEmailMessage } from '@/emails/verify-email';
 
-// What the mail carries — its recipient, its link and which providers it
-// names — and the two rules a mail client holds it to. Its wording and its
-// design are the story's (src/emails/verify-email.stories.tsx).
-
 const URL_WITH_QUERY =
   'http://localhost:8000/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven';
 
 describe('verifyEmailMessage', () => {
-  // The HTML has a button and the link written out beneath it for a client
-  // that hides buttons; the text has the link once.
   it('addresses the mail and carries the link, once in the text and twice in the HTML', async () => {
     const message = await verifyEmailMessage({
       to: 'someone@verify-email.test',

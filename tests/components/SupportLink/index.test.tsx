@@ -66,7 +66,6 @@ describe('SupportLink', () => {
   });
 
   it('asks a crawler not to follow it before the address is known, too', () => {
-    // The address hooks suspending leaves the fallback, the support page's own address.
     pathname.mockImplementation(() => {
       throw new Promise(() => {});
     });

@@ -1,6 +1,6 @@
 # Promotional email consent
 
-What the law and the mailbox providers require before a site sends promotional email, which mails Sorrel & Salt sends today and how each is classed, and the consent mechanism the owner decided on. The decisions and their alternatives are in [`design-decisions/m17.18-promotional-email-consent.md`](../design-decisions/m17.18-promotional-email-consent.md). The mail the site sends is listed in [`email.md`](../email.md), "What is sent".
+What the law and the mailbox providers require before a site sends promotional email, which mails Sorrel & Salt sends today and how each is classed, and the consent mechanism decided on. The decision is in [`design-decisions/support.md`](../design-decisions/support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click). The mail the site sends is listed in [`email.md`](../email.md), "What is sent".
 
 **The short answer.** Every mail the site sends today is transactional (it confirms something the reader did, carries security information, or reports a change to the reader's own account). No mail sent today needs consent. The site sends no promotional mail, and none is planned. This document scopes the consent the site must hold before the first one.
 
@@ -19,7 +19,7 @@ Nothing here is legal advice, and nothing was taken from memory.
 
 ## The law, by regime
 
-The site is invite-only, but the people invited can live anywhere. The owner has decided billing is for the United States only, but sign-in is open to anyone invited, so the regimes of other countries can still reach a user. The site does not record where a user lives.
+The site is invite-only, but the people invited can live anywhere. Billing is for the United States only, but sign-in is open to anyone invited, so the regimes of other countries can still reach a user. The site does not record where a user lives.
 
 ### United States: CAN-SPAM
 
@@ -148,45 +148,37 @@ CASL's definition of a commercial electronic message, and any transactional exem
 
 ### Every template in `src/emails/`
 
-`src/emails/` holds 17 mail templates. Before this task, [`email.md`](../email.md) "What is sent" described 12 of them: it had no row for `access-paused`, `coven-access-paused`, `support-timed-out`, `document-updated` or `password-locked`, and named `support-email-reply` only inside another row. This task adds a row for each of those six. The task brief counted 16 templates; the extra one is `password-locked`, which the brief did not list.
+`src/emails/` holds 17 mail templates, all listed in [`email.md`](../email.md), "What is sent". FTC categories are numbered 1 to 5 as in the list under "United States: CAN-SPAM"; the assignment to a template is the researcher's reading **(own reading)**.
 
-FTC categories are numbered 1 to 5 as in the list under "United States: CAN-SPAM". Every row below is **transactional**.
-
-| Template                               | What it does                                                                                | Class         | Rule that classes it                                                                                                                                                                                                                      |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `verify-email.ts` (sign-up)            | Sends the link that verifies an address for an account the reader just made                 | Transactional | FTC category 1 (confirms an account the reader asked for) and category 2 (security). Sources: FTC guide and 16 CFR 316.3(c), above.                                                                                                       |
-| `verify-email.ts`, `purpose: 'change'` | Sends the link that verifies a new address the account holder asked to switch to            | Transactional | FTC category 1 and category 2, as above.                                                                                                                                                                                                  |
-| `email-change-notice.ts`               | Tells the old and new holder that an address change was asked for or finished               | Transactional | FTC category 2 (security information). Source as above.                                                                                                                                                                                   |
-| `account-exists.ts`                    | Tells an address's holder that someone tried to sign up with it and nothing was made        | Transactional | FTC category 2 (security information). Source as above.                                                                                                                                                                                   |
-| `reset-password.ts`                    | Sends the single-use link the reader asked for from the forgot-password page                | Transactional | FTC category 1 (completes what the reader asked for) and category 2. Gmail's examples of excluded transactional mail include password resets (https://support.google.com/a/answer/14229414, fetched 2026-11-07).                          |
-| `password-changed.ts`                  | Tells the holder the password was reset, changed or added                                   | Transactional | FTC category 2 (security information).                                                                                                                                                                                                    |
-| `password-locked.ts`                   | Tells the holder that repeated wrong passwords paused password sign-in, with a reset link   | Transactional | FTC category 2 (security information).                                                                                                                                                                                                    |
-| `admin-invitation.ts`                  | Invites a person to hold a site-keeper or curator role, with the single-use invitation link | Transactional | FTC category 1 (it delivers the access the inviter granted; own reading, see below). It advertises nothing.                                                                                                                               |
-| `coven-invitation.ts`                  | Invites a person into a coven, with the single-use invitation link                          | Transactional | FTC category 1, as above.                                                                                                                                                                                                                 |
-| `support-received.ts`                  | Confirms the reader's support request arrived                                               | Transactional | FTC category 1 (confirms a transaction the reader started).                                                                                                                                                                               |
-| `support-reply-notice.ts`              | Tells a signed-in sender that staff replied, with a link to the request                     | Transactional | FTC category 5 (delivers the service the reader asked for) and category 1.                                                                                                                                                                |
-| `support-email-reply.ts`               | Tells a signed-out sender that staff replied, with the mailed link to the request           | Transactional | FTC category 5 and category 1, as above.                                                                                                                                                                                                  |
-| `support-resolved.ts`                  | Tells the sender the request is resolved                                                    | Transactional | FTC category 1 (completes the request).                                                                                                                                                                                                   |
-| `support-closing-soon.ts`              | Tells the sender a resolved request will close soon                                         | Transactional | FTC category 3 (change in standing of the reader's own request) and category 1.                                                                                                                                                           |
-| `access-paused.ts`                     | Tells a user a keeper paused their site access                                              | Transactional | FTC category 3 (a change in standing of an ongoing account).                                                                                                                                                                              |
-| `coven-access-paused.ts`               | Tells a member a coven steward paused their access to that coven                            | Transactional | FTC category 3, as above.                                                                                                                                                                                                                 |
-| `support-timed-out.ts`                 | Tells a user a keeper set a support time-out                                                | Transactional | FTC category 3, as above.                                                                                                                                                                                                                 |
-| `document-updated.ts`                  | Tells every account a site document changed, and that the account will be asked to agree    | Transactional | FTC category 3 (changed terms of an ongoing account). The ICO's information-only service-message test (search summary) also holds, because the mail names each document, summarises the change and links to it, and carries no promotion. |
+| Template                               | What it does                                                                                | Rule that classes it (all transactional)                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `verify-email.ts` (sign-up)            | Sends the link that verifies an address for an account the reader just made                 | FTC category 1 (confirms an account the reader asked for) and category 2 (security). |
+| `verify-email.ts`, `purpose: 'change'` | Sends the link that verifies a new address the account holder asked to switch to            | FTC category 1 and category 2, as above.                                             |
+| `email-change-notice.ts`               | Tells the old and new holder that an address change was asked for or finished               | FTC category 2 (security information).                                               |
+| `account-exists.ts`                    | Tells an address's holder that someone tried to sign up with it and nothing was made        | FTC category 2 (security information).                                               |
+| `reset-password.ts`                    | Sends the single-use link the reader asked for from the forgot-password page                | FTC category 1 (completes what the reader asked for) and category 2.                 |
+| `password-changed.ts`                  | Tells the holder the password was reset, changed or added                                   | FTC category 2 (security information).                                               |
+| `password-locked.ts`                   | Tells the holder that repeated wrong passwords paused password sign-in, with a reset link   | FTC category 2 (security information).                                               |
+| `admin-invitation.ts`                  | Invites a person to hold a site-keeper or curator role, with the single-use invitation link | FTC category 1 (it delivers the access the inviter granted; own reading, see below). |
+| `coven-invitation.ts`                  | Invites a person into a coven, with the single-use invitation link                          | FTC category 1, as above.                                                            |
+| `support-received.ts`                  | Confirms the reader's support request arrived                                               | FTC category 1 (confirms a transaction the reader started).                          |
+| `support-reply-notice.ts`              | Tells a signed-in sender that staff replied, with a link to the request                     | FTC category 5 (delivers the service the reader asked for) and category 1.           |
+| `support-email-reply.ts`               | Tells a signed-out sender that staff replied, with the mailed link to the request           | FTC category 5 and category 1, as above.                                             |
+| `support-resolved.ts`                  | Tells the sender the request is resolved                                                    | FTC category 1 (completes the request).                                              |
+| `support-closing-soon.ts`              | Tells the sender a resolved request will close soon                                         | FTC category 3 (change in standing of the reader's own request) and category 1.      |
+| `access-paused.ts`                     | Tells a user a keeper paused their site access                                              | FTC category 3 (a change in standing of an ongoing account).                         |
+| `coven-access-paused.ts`               | Tells a member a coven steward paused their access to that coven                            | FTC category 3, as above.                                                            |
+| `support-timed-out.ts`                 | Tells a user a keeper set a support time-out                                                | FTC category 3, as above.                                                            |
+| `document-updated.ts`                  | Tells every account a site document changed, and that the account will be asked to agree    | FTC category 3 (changed terms of an ongoing account).                                |
 
 The two least certain rows are the invitations. The FTC's category 1 speaks of a transaction "the recipient agreed to", and an invited person has agreed to nothing yet **(own reading)**. The mail is still not an advertisement: it is a single message from a named person that carries the access they were offered and no promotion. If a regulator read it otherwise, the exposure is the same as for any commercial mail without consent, and the site's invitations are sent one at a time on a person's request, never in bulk.
 
 ### Billing mails that Wave 21 implies
 
-[Wave 21](../waves/wave-21.md) specifies no mail: its task file and the billing record have no mail-sending criterion. Any billing mail is therefore implied, not minted. The classes below are the researcher's inference **(own reading)** from the FTC categories.
+[Wave 21](../waves/wave-21.md) specifies no mail, so any billing mail is implied. Classes are the researcher's inference **(own reading)** from the FTC categories.
 
-| Implied mail                                                  | Owner task (implied)       | Class         | Rule that classes it                                                          |
-| ------------------------------------------------------------- | -------------------------- | ------------- | ----------------------------------------------------------------------------- |
-| Payment failed or past due                                    | M21.5 and M21.6            | Transactional | FTC category 3 (a change in standing of an ongoing account).                  |
-| Trial ending                                                  | M21.5 and M21.10           | Transactional | FTC category 3 (changed terms or features of an ongoing account).             |
-| Seat lapsed                                                   | M21.5 (lapsed-member rule) | Transactional | FTC category 3.                                                               |
-| Exemption ending                                              | M21.9                      | Transactional | FTC category 3.                                                               |
-| Receipt or switch confirmation                                | M21.7 and M21.11           | Transactional | FTC category 1 (confirms a payment the payer made) and category 3.            |
-| A mail that announces or pitches paid plans to existing users | none                       | Promotional   | Its main purpose is to advertise. It needs consent and the promotional frame. |
+- **Transactional:** payment failed or past due, trial ending, seat lapsed and exemption ending (FTC category 3, a change in standing of an ongoing account); a receipt or switch confirmation (category 1, and 3).
+- **Promotional:** a mail that announces or pitches paid plans to existing users. Its main purpose is to advertise, so it needs consent and the promotional frame.
 
 The terms change that brings charging in goes out as the existing `document-updated` mail, with no pitch, and stays transactional. Stripe may send receipts itself; that mail is Stripe's, not the site's.
 
@@ -198,17 +190,7 @@ The site's mail layout (`src/emails/parts/layout.ts`) has no footer, no postal a
 
 ## The mechanism, as decided
 
-The owner decided the following on 2026-11-07. The reasons, sources and alternatives are in the [decision record](../design-decisions/m17.18-promotional-email-consent.md).
-
-- **One global standard** for every user, as above.
-- **Consent counts at once.** Ticking the box and saving is the consent. There is no confirmation mail.
-- **Where the box appears.** A one-time prompt after sign-in, which the user can dismiss, and a setting on `/account`. It is not part of sign-up or the terms.
-- **What is recorded.** A row for each grant, in an audited table written through `withAudit`: who, when, the wording version, and the source (`prompt`, `account`, `link` or `one-click`), plus when, by whom and by which source it was withdrawn.
-- **Withdrawal.** The RFC 8058 one-click route, a link in every promotional mail, and the `/account` setting. The one-click route is a new sessionless route, `/api/unsubscribe`, authorised by a hashed token, which needs an exception to architecture rule 1.
-- **Paused accounts.** An account with a live site-access pause gets no promotional mail. Its consent is kept.
-- **The postal address** is set before the first promotional send, and a promotional send is refused while it is unset.
-- **Support mail switches.** All four support mails (received, resolved, closing soon, and the reply notice) can be turned off from `/account`. Every other mail always sends.
-- **The build work** is its own wave, Wave 22, proposed in the decision record and awaiting the owner's approval to mint.
+The consent mechanism (one global standard, consent counting at once, a one-time prompt and an `/account` setting, an audited record, three ways to withdraw through the sessionless `/api/unsubscribe`, the postal address guard, the support mail switches) and what it rules out are in [`design-decisions/support.md`, "Promotional email needs recorded consent, withdrawn in one click"](../design-decisions/support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click).
 
 ## Gaps
 

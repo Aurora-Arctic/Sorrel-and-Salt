@@ -19,11 +19,9 @@ import { importAuth } from '../../../support/auth-module';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { Message, ProviderId } from '@/lib/types';
 
-// The primary keeper is promoted at a sign-in whose fresh provider profile is Google or Discord and verified (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary keeper").
+// The primary keeper is promoted at a sign-in whose fresh provider profile is Google or Discord and verified (claude-docs/design-decisions/auth.md, "The primary keeper").
 // The sign-in half drives the real `/api/auth/callback/:id` endpoint with MSW standing in for each provider, so what is under test is Better Auth's own flow with our hooks attached.
 
-// Sign-up sends a verification mail; none of these tests is about it, so the
-// sender answers and nothing reaches the network.
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 
@@ -88,7 +86,6 @@ async function insertUser(email: string, role: 'user' | 'admin' = 'user'): Promi
   return id;
 }
 
-/** The ledger's rows for `id`, one per privilege, the enums cast to text. */
 async function ledgerOf(id: string) {
   return sql<{ privilege: string; change: string; via: string; created_by: string }[]>`
     select privilege::text, change::text, via::text, created_by
@@ -97,7 +94,6 @@ async function ledgerOf(id: string) {
   `;
 }
 
-/** What the primary keeper's promotion records: both grants, by `bootstrap`, as the user. */
 function promotedBy(id: string) {
   return [
     { privilege: 'admin', change: 'grant', via: 'bootstrap', created_by: id },
@@ -251,8 +247,6 @@ describe('promotePrimaryAdmin', () => {
   });
 });
 
-// ─── Through Better Auth's own callback ─────────────────────────────────────
-
 describe('Promotion at sign-in', () => {
   const server = setupServer();
 
@@ -343,8 +337,6 @@ describe('Promotion at sign-in', () => {
     expect((await userRow(PRIMARY))?.role).toBe('admin');
   });
 });
-
-// ─── At first-party verification ───────────────────────────────────────────
 
 describe('promotePrimaryAdminAtVerification', () => {
   it('promotes through withAudit, stamped as the verifying user themselves', async () => {

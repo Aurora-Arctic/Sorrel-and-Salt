@@ -1,8 +1,6 @@
 import type { NavigationTarget } from './navigation';
 
-// A workspace is named by the address alone, never by session state, so two
-// tabs can sit in two workspaces without disagreeing. These read and
-// rewrite that address: the segment after `/coven/` is the slug.
+// A workspace is named by the address alone, never by session state, so two tabs can sit in two workspaces without disagreeing.
 const COVEN = 'coven';
 
 /**
@@ -11,37 +9,25 @@ const COVEN = 'coven';
  */
 const NEW = 'new';
 
-/**
- * The landing everyone who leaves a coven is sent to: where someone in no
- * coven lands, and which opens the first coven of someone who has another
- *.
- */
+/** Where someone in no coven lands, and which opens the first coven of someone who has another. */
 export const COVEN_LANDING_PATH = `/${COVEN}`;
 
-/** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
-/** The value of `?new` that opens the current grimoire's New Spell. */
 export const NEW_SPELL = 'spell';
 
-/** The value of `?new` that opens the default coven's Add Ingredient. */
 export const NEW_INGREDIENT = 'ingredient';
 
-/**
- * The value of `?new` that opens the compendium's New Entry on `/curator/compendium`. A bare
- * `?new` there still reads as it, so a link saved before the value existed keeps working.
- */
+/** A bare `?new` on `/curator/compendium` still reads as it, so a link saved before the value existed keeps working. */
 export const NEW_COMPENDIUM_ENTRY = 'ingredient-compendium';
 
-/** `?new=ingredient-coven-<slug>` opens that coven's Add Ingredient, on any page in the shell. */
 export const NEW_COVEN_INGREDIENT_PREFIX = 'ingredient-coven-';
 
-/** `?new=spell-<slug>` opens that coven's New Spell, over its grimoire. */
 export const NEW_SPELL_PREFIX = 'spell-';
 
 /**
  * The `?new` values that are a word alone, reserved as slugs. The others start with a fixed prefix (`spell-`,
- * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+ * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/grimoire.md, "The spell builder is a modal").
  */
 const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
 
@@ -60,10 +46,8 @@ export function covenSlugOf(pathname: string): string | null {
   return first === COVEN && slug && !isReservedCovenSlug(slug) ? slug : null;
 }
 
-/** The sections only a role that can read members may open. */
 const PEOPLE_SECTIONS = new Set(['members', 'invitations']);
 
-/** What the viewer's role in the coven switched to may open, and what the page switched from opens in. */
 export interface PathInCovenOptions {
   /** The role there may read members; without it the members and invitations pages are a 404. */
   canReadMembers?: boolean;
@@ -120,8 +104,7 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
 
 /**
  * What a coven page draws while it is on its way, from the section the address names: the home and one ingredient's page
- * (an id beneath `ingredients`) have a menu beside them, any other section is a plain page. One mapping for the switcher,
- * section nav, the home's Contents and the links into an ingredient.
+ * (an id beneath `ingredients`) have a menu beside them, any other section is a plain page.
  */
 export function covenTarget(pathname: string): NavigationTarget {
   const slug = covenSlugOf(pathname);

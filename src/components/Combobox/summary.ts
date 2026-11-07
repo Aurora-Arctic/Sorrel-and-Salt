@@ -14,7 +14,6 @@ import { useListPosition } from './position';
 // A linked entry's summary panel: opened and shut by a press on the entry's text, placed beneath the chip, shut by Escape, a press elsewhere or the focus leaving
 // (claude-docs/components/combobox.md, "A linked entry's summary").
 
-/** The summary's open state, and the props its button and its panel spread. */
 export function useEntrySummary() {
   const [open, setOpen] = useState(false);
   // State rather than a ref, so the panel's placement is told once the button exists.
@@ -53,7 +52,6 @@ export function useEntrySummary() {
     event.stopPropagation();
     close(true);
   };
-  // Tabbing on past the panel, or back before the button, shuts it; a blur to nowhere does not.
   const onBlur = (event: FocusEvent) => {
     if (open && event.relatedTarget !== null && !holds(event.relatedTarget)) close(false);
   };

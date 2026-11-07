@@ -9,8 +9,8 @@ import { getMe } from './profile';
 import type { AuditSession } from '../../../db/types';
 import type { EmailVerificationSender, UserRow } from '../types';
 
-// The address an account is mailed at changes only at verification: asking
-// for a new one writes it to `pending_email` and mails a link, never a write to `users.email`, so an
+// The address an account is mailed at changes only at verification: a new one
+// goes to `pending_email` with a mailed link, never to `users.email`, so an
 // established account never re-enters the provisional sweep
 // (claude-docs/auth/admin-bootstrap.md, "The email page").
 
@@ -18,7 +18,6 @@ import type { EmailVerificationSender, UserRow } from '../types';
 // placeholder can neither be mailed nor match an invitation.
 const PLACEHOLDER_DOMAIN = 'pending.invalid';
 
-/** The address a provider that shared none is stored under, so the row and its session can exist. */
 export function placeholderEmail(providerId: string, accountId: string): string {
   return `${providerId}-${accountId}@${PLACEHOLDER_DOMAIN}`.toLowerCase();
 }
@@ -29,10 +28,7 @@ export function isPlaceholderEmail(email: string): boolean {
 
 export { normaliseEmail, validateEmailAddress };
 
-/**
- * Whether a live, verified account holds this address. Only a verified holder
- * refuses a request: a provisional one lapses before the link is followed.
- */
+/** Only a verified holder refuses a request: a provisional one lapses before the link is followed. */
 export async function isEmailHeldByVerifiedAccount(email: string): Promise<boolean> {
   const holder = await findUserByEmail(email);
   return holder !== undefined && holder.emailVerified;
@@ -41,10 +37,8 @@ export async function isEmailHeldByVerifiedAccount(email: string): Promise<boole
 /** How recently the session must have been created to ask for a new address; the day Better Auth's `freshAge` gives unlinking a provider. */
 export const EMAIL_CHANGE_WINDOW_SECONDS = 24 * 60 * 60;
 
-/** The least time between two verification mails to one account, whichever path sends them. */
 export const RESEND_COOLDOWN_SECONDS = 60;
 
-/** Seconds until the row may be mailed again, given when it last was; 0 when it may be now. */
 export function verificationWaitSeconds(sentAt: Date | null, now = Date.now()): number {
   if (sentAt === null) return 0;
   return Math.max(0, Math.ceil((sentAt.getTime() + RESEND_COOLDOWN_SECONDS * 1000 - now) / 1000));
@@ -56,20 +50,14 @@ export async function verificationWaitFor(userId: string): Promise<number> {
   return verificationWaitSeconds(row?.verificationSentAt ?? null);
 }
 
-/**
- * Stamps the row as mailed now, before the mail goes out. As an update it restarts a provisional row's window,
- * so it takes the row's own session (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
- */
+/** Written before the mail goes out. As an update it restarts a provisional row's window, so it takes the row's own session (claude-docs/auth/admin-bootstrap.md, "Provisional accounts"). */
 export async function recordVerificationSent(session: AuditSession): Promise<void> {
   await withAudit(session, (write) =>
     write.updateById(users, session.userId, { verificationSentAt: new Date() }),
   );
 }
 
-/**
- * Stamps the row as mailed now and records `address` as the change asked for, in one write that leaves `users.email` alone.
- * A later change replaces the address and the stamp, so only the newest link is honoured.
- */
+/** One write that leaves `users.email` alone; a later change replaces the address and the stamp, so only the newest link is honoured. */
 async function recordEmailChange(session: AuditSession, address: string): Promise<void> {
   await withAudit(session, (write) =>
     write.updateById(users, session.userId, {
@@ -79,7 +67,6 @@ async function recordEmailChange(session: AuditSession, address: string): Promis
   );
 }
 
-/** How a change link for `address` stands against account `userId`'s row: still the change asked for, replaced by a later one, or lapsed. */
 export async function emailChangeStanding(
   userId: string,
   address: string,
@@ -89,10 +76,7 @@ export async function emailChangeStanding(
   return row.pendingEmail === address.toLowerCase() ? 'pending' : 'replaced';
 }
 
-/**
- * Clears account `userId`'s pending address once its link has expired, as the System account, unless a later change restamped
- * the row since `sentAt`. True when it cleared one.
- */
+/** Does nothing if a later change restamped the row since `sentAt`. */
 export async function lapseEmailChange(userId: string, sentAt: Date): Promise<boolean> {
   const cleared = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
     write.lapseEmailChange(userId, sentAt),
@@ -100,10 +84,7 @@ export async function lapseEmailChange(userId: string, sentAt: Date): Promise<bo
   return cleared.length > 0;
 }
 
-/**
- * The address account `userId` is leaving as its address becomes `address`: the one an earlier change left whose notice is
- * still owed, or else the row's own. None when the row already holds `address` or a placeholder, which nobody reads.
- */
+/** The address whose notice is still owed, else the row's own; none when the row already holds `address` or a placeholder, which nobody reads. */
 export async function addressBeingLeft(userId: string, address: string): Promise<string | null> {
   const row = await findOneById(users, userId);
   if (!row || row.email.toLowerCase() === address.toLowerCase()) return null;
@@ -111,10 +92,7 @@ export async function addressBeingLeft(userId: string, address: string): Promise
   return isPlaceholderEmail(row.email) ? null : row.email;
 }
 
-/**
- * Clears account `userId`'s former address once its notice is done with, as the System account, unless the address or the move
- * the notice named has changed since. True when it cleared one.
- */
+/** Does nothing if the address or the move the notice named has changed since. */
 export async function clearFormerEmail(
   userId: string,
   formerEmail: string,
@@ -126,24 +104,15 @@ export async function clearFormerEmail(
   return cleared.length > 0;
 }
 
-/** Whether a live account other than `userId`'s holds this address — what the unique index refuses at verification. */
 export async function isEmailHeldByAnother(email: string, userId: string): Promise<boolean> {
   const holder = await findUserByEmail(email);
   return holder !== undefined && holder.id !== userId;
 }
 
 /**
- * Asks for `input` to become the signed-in account's address. It is written to
- * `pending_email`, never `users.email`: it becomes the row's when the mailed link is
- * followed from this account's session. The row is stamped as mailed, which
- * also restarts a provisional caller's window so the link cannot outlive the
- * row. An address a live verified account holds is answered the same and
- * mailed nothing. Both mails are sent after the answer. The row's own address, still unverified, is mailed again
- * instead; verified, there is nothing to do. Either link lands on the way to `next`,
- * which the sender guards where it builds the link.
+ * An address a live verified account holds is answered the same and mailed nothing; the row's own unverified address is mailed again (claude-docs/auth/admin-bootstrap.md, "The email page").
  *
- * @throws {ValidationError} on `email`: malformed, unmailable, mailed within the last minute, or asked for from a
- * session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
+ * @throws {ValidationError} on `email`: malformed, unmailable, mailed within the last minute, or asked for from a session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
  */
 export async function setEmail(
   session: Session,

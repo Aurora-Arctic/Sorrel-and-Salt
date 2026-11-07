@@ -7,10 +7,10 @@ export type DocumentMailingResult =
   'sent' | 'replaced' | 'paused' | 'tomorrow' | 'queued' | 'duplicate' | 'failed';
 
 /**
- * Emails a published document to every account on one mailing, a batch at a time with a pause between, within the day's allowance.
- * It holds the mailing's hook, so a second run of the same mailing ends at once as a duplicate. When a run ends because the mailing
- * is done or stopped, it starts the longest-waiting mailing, which is queued behind it. The daily cron starts the run that carries
- * a mailing on after `tomorrow` or `failed`.
+ * Emails a published document to every account on one mailing, a batch at a time
+ * within the day's allowance. It holds the mailing's hook, so a second run ends at
+ * once as a duplicate; when a run ends it starts the longest-waiting queued mailing
+ * (claude-docs/components/document-mailing-panel.md, "Contracts").
  */
 export async function documentMailing(
   mailingId: string,

@@ -16,14 +16,10 @@ import { dayWords, isoDay, today } from './day';
 import type { DateFieldProps } from './types';
 import './index.scss';
 
-// A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
-// input, whose look and highlight differ by browser. The calendar is a popover in the top layer, so it
-// floats over the fields below and no scrolling ancestor clips it; where the browser has no popover
-// (an older one) it opens in flow beneath the button instead (claude-docs/components/date-field.md).
+// A day field: a button showing the day in words, opening a calendar in a top-layer popover; where the browser has no
+// popover it opens in flow beneath the button instead (claude-docs/components/date-field.md).
 
-// With no `max` the year list still needs an end: it runs to the end of this many years after the current one.
 const YEARS_AHEAD = 1;
-// The earliest year the calendar lists.
 const FIRST_YEAR = 1900;
 
 // Every month name, every day number and every year from 1900 to 2999 the button can show. The button

@@ -45,7 +45,6 @@ interface Fields {
   accessed?: string;
 }
 
-/** The fields of a reference-work entry, as the seed stores them. */
 const entryFields = ({ title = 'Testwort', accessed }: Fields = {}) => ({
   kind: 'entry' as const,
   title,
@@ -53,12 +52,9 @@ const entryFields = ({ title = 'Testwort', accessed }: Fields = {}) => ({
   ...(accessed ? { url: `https://example.org/${title}`, accessed } : {}),
 });
 
-/** The key the seed builds for these fields today. */
 const newKey = (fields: Fields = {}) => citationText(entryFields(fields));
-/** The same key as the old wording wrote it. */
 const oldKey = (fields: Fields = {}) => newKey(fields).replace(', under "', ', s.v. "');
 
-/** A compendium (or, with `workspace_id`, a coven's) reference-work entry stored under `seedKey`. */
 async function source(
   seedKey: string | null,
   fields: Fields = {},
@@ -97,7 +93,6 @@ const referenceRow = async (id: string) => {
   return row;
 };
 
-/** The live links of `referenceId`, as `owner:locator` strings: `i` for an ingredient, `v` for a form. */
 async function liveLinks(referenceId: string): Promise<string[]> {
   const rows = await sql<{ owner: string; locator: string | null }[]>`
     select coalesce('i' || ingredient_id, 'v' || ingredient_variant_id) as owner, locator

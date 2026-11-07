@@ -4,7 +4,7 @@ import ResetPasswordForm, { GENERIC_RESET_ERROR } from '@/components/ResetPasswo
 import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
 
-// Story 71's second page. Better Auth's client is mocked at its one call, so each test sets the server's
+// The second page of a password reset (@story-71). Better Auth's client is mocked at its one call, so each test sets the server's
 // answer; tests/db/password-reset.test.ts proves the server gives it.
 const resetPassword = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({

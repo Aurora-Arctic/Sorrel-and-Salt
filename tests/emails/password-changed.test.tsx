@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { passwordChangedMessage } from '@/emails/password-changed';
 
-// What the mail carries: its recipient and its link to reset the password. Its wording and design are the
-// story's (src/emails/password-changed.stories.tsx).
-
 const FORGOT = 'http://localhost:8000/forgot-password';
 
 describe('passwordChangedMessage', () => {

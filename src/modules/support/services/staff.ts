@@ -54,7 +54,6 @@ export async function listSupportRequests(
   return entries.map((entry) => ({ ...entry, node: asRead(session, entry.node) }));
 }
 
-/** How many requests `listSupportRequests` pages under `filter`, and how many come before `start`, a page's first row. */
 export async function countSupportRequests(
   session: Session,
   filter: SupportRequestFilter,
@@ -170,8 +169,6 @@ export async function assignSupportRequest(
 }
 
 /**
- * Marks the request visible or hidden to curators.
- *
  * @throws {Forbidden} the session is not a keeper, or the request is anonymised.
  * @throws {NotFound} no request has this id.
  */
