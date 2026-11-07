@@ -7,9 +7,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 
-// The mailed-link page's reader. The token arrives in the URL fragment, leaves the address bar once read, and is kept in
-// this tab's sessionStorage, so a reload in the same tab opens the request again and a new tab does not. A token the
-// server no longer honours is dropped from storage (claude-docs/design-decisions/m15.48-mailed-link.md).
+// claude-docs/design-decisions/m15.48-mailed-link.md
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({
@@ -17,7 +15,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/support/request',
 }));
 
-/** The sessionStorage key the page keeps the token under. */
 const KEY = 'support-view-token';
 const SUBJECT = 'The Testwort jar will not open';
 
@@ -33,7 +30,6 @@ const FOUND: SupportRequestByViewTokenQuery = {
   },
 };
 
-/** Answers the query with the request and records each token it was asked with. */
 function answered(): string[] {
   const asked: string[] = [];
   mockGraphQLQuery<SupportRequestByViewTokenQuery, SupportRequestByViewTokenQueryVariables>(
@@ -46,7 +42,6 @@ function answered(): string[] {
   return asked;
 }
 
-/** Answers each token with a request of its own subject, and records each token asked with. */
 function answeredPerToken(subjects: Record<string, string>): string[] {
   const asked: string[] = [];
   mockGraphQLQuery<SupportRequestByViewTokenQuery, SupportRequestByViewTokenQueryVariables>(
@@ -65,7 +60,6 @@ function answeredPerToken(subjects: Record<string, string>): string[] {
   return asked;
 }
 
-/** A newer mailed link pasted into the address bar of the open tab: the browser changes the hash without reloading. */
 function pasteLink(token: string) {
   act(() => {
     window.location.hash = token;
