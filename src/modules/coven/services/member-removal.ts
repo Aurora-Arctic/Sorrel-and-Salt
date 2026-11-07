@@ -11,13 +11,10 @@ import { assertNotSystemSeat } from './system-seat';
 // A removed member invited back is not inserted again: the row still holds the pair, so accepting revives it.
 
 /**
- * Removes `userId` from the workspace. The caller needs `member: remove`,
- * which only stewards hold, and the person must be a live member already. A
- * steward may remove themselves here as well; the guard stops that when they
- * are the last.
+ * Removes `userId` from the workspace (`member: remove`, stewards only); the person must be a live member. A steward may remove
+ * themselves here; the guard stops that when they are the last.
  *
- * @throws {Forbidden} the caller is not a steward of the workspace, or `userId`
- * is not a live member of it or is the system user.
+ * @throws {Forbidden} not a steward of the workspace, or `userId` is not a live member or is the system user.
  * @throws {LastOwner} the removal would leave the workspace without a steward.
  */
 export async function removeMember(
@@ -38,11 +35,8 @@ export async function removeMember(
 }
 
 /**
- * The caller leaves the workspace. Every role may, an observer included, so no
- * `member` statement is asked for: `workspace: read`, which every role holds,
- * only proves the caller is a live member. A member whose access is paused may
- * leave too (`assertSeatToLeave`). The row left is the session's own and there
- * is no argument to name another's, so leaving cannot reach anyone else.
+ * The caller leaves the workspace. Every role may, so `workspace: read` only proves the caller is a live member; a paused member
+ * may leave too (`assertSeatToLeave`). The row left is the session's own, so leaving cannot reach anyone else.
  *
  * @throws {Forbidden} the caller is not a member of the workspace.
  * @throws {LastOwner} the caller is its only owner.

@@ -41,10 +41,8 @@ export const spells = pgTable(
     note: text('note'),
     // Defaulted on the column so a spell written by any path is a draft.
     status: spellStatus('status').notNull().default('draft'),
-    // Defaulted on the column for the stronger version of the same reason: a
-    // spell that fell back to `private` would be invisible to the coven that
-    // cannot see it is missing, and widening it back is the author's alone.
-    // The author is `created_by` — §5 gives spells no separate author column.
+    // Defaulted on the column, as a spell that fell back to `private` would be invisible to the coven, and widening it back is the
+    // author's alone. The author is `created_by`; spells have no author column.
     visibility: spellVisibility('visibility').notNull().default('workspace'),
     // Raised by one on every UPDATE by the database; a save names it.
     revision: revisionColumn(),

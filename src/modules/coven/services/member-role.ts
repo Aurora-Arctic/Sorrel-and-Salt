@@ -17,16 +17,12 @@ const PAUSED_PROMOTION =
   "This member's access is paused; lift the pause first to make them a steward";
 
 /**
- * Sets `userId`'s role in the workspace. The caller needs `member: update`,
- * which only stewards hold, and the person must be a live member already.
- * Demoting a steward runs the last-owner guard, under a lock, in the
- * transaction that writes. `joinedAt` is untouched: the person joined when
- * they joined.
+ * Sets `userId`'s role in the workspace (`member: update`, stewards only); the person must be a live member. Demoting a
+ * steward runs the last-owner guard under a lock. `joinedAt` is untouched.
  *
- * @throws {Forbidden} the caller is not a steward of the workspace, or `userId`
- * is not a live member of it or is the system user.
+ * @throws {Forbidden} not a steward of the workspace, or `userId` is not a live member or is the system user.
  * @throws {LastOwner} the change would leave the workspace without a steward.
- * @throws {ValidationError} the change makes a steward of a member whose access to the coven is paused.
+ * @throws {ValidationError} the change makes a steward of a member whose access is paused.
  */
 export async function updateMemberRole(
   session: Session,

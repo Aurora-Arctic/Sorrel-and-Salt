@@ -54,8 +54,7 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
  * alone; a second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
  *
  * @throws {Forbidden} the caller is not a steward of the coven (`member: invite`).
- * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the sender's
- * hourly mail limit is reached, which every new invitation and every resend counts toward.
+ * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the hourly mail limit.
  */
 export async function createInvitation(
   session: Session,

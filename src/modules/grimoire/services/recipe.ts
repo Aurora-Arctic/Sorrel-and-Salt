@@ -10,10 +10,8 @@ import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
 import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
-// How a save writes a spell's recipe: the steps a member sends are
-// the whole recipe, in order, so a step's place is its index, a saved step
-// left out is removed, and a step with no id is new. claude-docs/db/grimoire.md,
-// "Saving a recipe", says why each part is the way it is.
+// How a save writes a spell's recipe: the steps sent are the whole recipe, in order, so a step's place is its index, a saved step
+// left out is removed, and a step with no id is new (claude-docs/db/grimoire.md, "Saving a recipe").
 
 type ParsedStep = z.output<typeof SpellStepInput>;
 
@@ -53,13 +51,8 @@ function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
 }
 
 /**
- * Refuses, before anything is written, a step that names a saved step this
- * spell has no live row for, and a link the coven may not lay: a form that is
- * not live, of an ingredient that is not live in the compendium or this
- * coven, or of another ingredient than the step names. A saved step whose
- * link is unchanged is not checked again, so a step laying an ingredient
- * deleted since keeps it (claude-docs/db/spell-visibility.md, "What a spell
- * holds").
+ * Refuses, before anything is written, a step that names a saved step this spell has no live row for, or a link the coven may
+ * not lay. A saved step whose link is unchanged is not checked again (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
  * @throws {ValidationError} at each offending step's `id` or `ingredientId`.
  */

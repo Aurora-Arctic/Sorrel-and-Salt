@@ -38,7 +38,7 @@ import type {
 } from '../types';
 
 // A working is one making of a complete spell: when, by whom, how it went. Recording writes it as a draft; completing it takes what it
-// used from the coven's jars (claude-docs/db/spell-workings.md). A working is read under its own visibility, capped at its spell's, and
+// used from the coven's jars (claude-docs/db/grimoire.md, "Workings"). A working is read under its own visibility, capped at its spell's, and
 // changed by its recorder or a member named on it, and deleted by its recorder alone. A hidden working is `NotFound`, never confirmed to exist.
 
 const NO_SUCH_WORKING = 'No such working in this coven';

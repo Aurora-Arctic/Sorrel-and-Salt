@@ -4,18 +4,13 @@ import { auditColumns } from '../../identity/schema/users';
 import { idColumn } from '../../../db/schema-parts';
 import { spells, spellVisibility } from './spells';
 
-// An enum rather than a text CHECK, for the reason `spell_status` is one: a
-// later value expands with `ALTER TYPE … ADD VALUE`. A separate enum from
-// `spell_status`, because the two lifecycles are not the same thing even
-// while their values match today.
+// An enum, as `spell_status` is, so a later value expands with `ALTER TYPE … ADD VALUE`; separate from it because the two
+// lifecycles are not the same thing.
 export const workingStatus = pgEnum('working_status', ['draft', 'complete']);
 
-// One time a spell was made: when, and with whom. The spell is the recipe
-// and a working is the record of making it once (claude-docs/design-decisions/m13.4-spell-workings.md).
-// Soft-deleted, because a person may delete a working they recorded. It
-// carries no `workspace_id`: the service reaches it through its parent spell,
-// as `spell_steps` is reached, so a working of a deleted spell is unreachable
-// by the spell's own filter, not by a cascade.
+// One time a spell was made, when and with whom (claude-docs/design-decisions/m13.4-spell-workings.md). Soft-deleted. No
+// `workspace_id`: the service reaches it through its parent spell, so a working of a deleted spell is unreachable by the spell's
+// own filter, not by a cascade.
 export const spellWorkings = pgTable(
   'spell_workings',
   {

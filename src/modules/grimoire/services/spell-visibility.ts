@@ -8,20 +8,13 @@ import { assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '../types';
 
 /**
- * DESIGN.md §5's one-way rule, as the caller meets it. Widening is a gift and
- * narrowing is a retraction: once the coven has read a finished spell and built
- * on it, hiding it takes back something they were relying on, so `private` may
- * be widened to `workspace` and a complete spell may never go back. A draft is
- * not yet relied on, and moves either way.
+ * The one-way rule (DESIGN.md §5): a complete spell may be widened from `private` to `workspace` and never narrowed back; a
+ * draft moves either way.
  *
- * **There is no author clause here, and none is missing.** A private spell is
- * readable by its author alone, so `findOneSpell` has already answered
- * `undefined` to anyone else — a member who cannot see the spell cannot widen
- * it either, and the refusal they get says the spell is not there rather than
- * confirming one exists.
+ * **There is no author clause here, and none is missing.** A private spell is readable by its author alone, so `findOneSpell`
+ * has already answered `undefined` to anyone else, and the refusal they get says the spell is not there.
  *
- * @throws {Forbidden} the caller may not write this coven's grimoire, or asked
- * to narrow a spell the coven can already read.
+ * @throws {Forbidden} the caller may not write this coven's grimoire, or asked to narrow a spell the coven can already read.
  * @throws {NotFound} no such spell here, or none this caller may read.
  */
 export async function setSpellVisibility(

@@ -41,15 +41,12 @@ async function memberRoleOf(workspaceId: string, userId: string) {
 }
 
 /**
- * Pauses a member's access to the coven until `until`, or with no end when `until` is `null`. The caller needs `member: pause`,
- * which only stewards hold; a steward cannot be paused, so the coven always keeps someone who can lift it. The member is mailed, with
- * `message` if one is written, once the pause is saved.
+ * Pauses a member's access to the coven until `until`, or with no end when `until` is `null`. The member is mailed, with
+ * `message` if one is written, once the pause is saved. A steward cannot be paused, so the coven keeps someone who can lift it.
  *
- * @throws {Forbidden} the caller is not a steward of the coven; `userId` holds no seat in it; `userId` is a steward; or `userId` is
- * the System account or the signed-out sender account, which are not people.
+ * @throws {Forbidden} not a steward of the coven; `userId` holds no seat, is a steward, or is the System or signed-out sender account.
  * @throws {AccessPaused} the caller's own access to the coven is paused.
- * @throws {ValidationError} `until` is not in the future, the note or the message is over 500 characters, or a pause
- * already stands.
+ * @throws {ValidationError} `until` is not in the future, the note or message is over 500 characters, or a pause already stands.
  */
 export async function pauseMemberAccess(
   session: Session,

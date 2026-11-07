@@ -519,87 +519,22 @@ the outer `flock` holds the lock, the inner one waits for it, and the run
 deadlocks forever. A direct `npx vitest run …` takes no lock and still needs
 the wrapper: `flock /tmp/sorrel-vitest.lock npx vitest run …`.
 
-### Where a run's time goes (M11.18)
+### Where a run's time goes
 
-The gate suite, `npm run e2e`, measured in the devcontainer on 16 October
-2026: 12 cores, 32 GB, the browser on the `playwright-server` service, 62
-tests on 6 workers, from a checkout of `staging` at 2e6be8ba, with no other
-test run on the machine (the lock was held for the whole series). A run's
-wall time is the time its tests need only when every worker stays busy; this
-one takes the time its longest file needs, because that file is serial.
+The gate suite (`npm run e2e`, about 60 tests on 6 workers) takes about 27 s with the servers already up and about 34 s when the run starts them, on a quiet 12-core machine. Its wall time is the time of its longest serial file, plus about 9 s of startup and teardown (the template seed, eight database clones, Playwright's own start and the coverage report). The story suite (`npm run test:stories`) takes about 41 s on 6 workers. Both are measured with the lock held, three runs, the median.
 
-| Measure, median of three runs                              | Cold: the run starts the servers | Warm: the servers are already up |
-| ---------------------------------------------------------- | -------------------------------- | -------------------------------- |
-| Wall time                                                  | 34.4 s (36.3, 34.4, 33.7)        | 27.3 s (29.5, 27.3, 26.4)        |
-| Sum of every test's duration                               | 74 s                             | 73 s                             |
-| That work spread evenly over 6 workers                     | 12.4 s                           | 12.2 s                           |
-| Longest file, `shell.spec.ts` (17 tests, serial, 1 worker) | 18.4 s                           | 18.4 s                           |
-| `next build` with its cache and eight `next start`s        | about 10 s                       | 0 s                              |
+What sets the time, and what each setting does:
 
-"Cold" is the ordinary run: slot 0's `webServer` entry builds, every entry
-starts, and the readiness polls pass. The build and the eight servers came
-to 10.6 s when started by hand over the cached `.next-e2e`; a first run in a
-fresh checkout, with no cache to build from, took 82 s. "Warm" attaches to
-servers left running, which `reuseExistingServer: !CI` allows and `npm run e2e:servers` provides (see "Keeping the servers warm" in the slot list above). The warm run's 27 s is 18 s of
-`shell.spec.ts` on one worker, with the other five idle behind it, and
-about 9 s of startup and teardown: the template seed (1.4 s) and its
-eight clones (0.9 s together), Playwright's own start and the worker
-processes, and the coverage report at teardown.
+- **Cold or warm.** A cold run builds and starts the eight servers (about 10 s over the cached `.next-e2e`; a first run in a fresh checkout takes about 80 s). A warm run attaches to servers left up by `npm run e2e:servers`, which `reuseExistingServer: !CI` allows ("Keeping the servers warm", above). Warm saves about 17 s of 45 on a loaded machine.
+- **Serial files.** A serial file pins one worker for its whole length. Tests in a file are independent, with their setup in `beforeAll`, so the files spread over every worker; `tests/guards` enforces the rule through the `e2e-chained-tests-serial` lint rule. This more than halved the story suite.
+- **Video is off** for every run. It cost 7% to 17% of summed test time, and a failing test still leaves its trace and screenshot under `.reports/test-results/`.
+- **JS coverage is collected only under `E2E_COVERAGE=1`**, which `playwright.yml` sets. It cost about a quarter of summed test time. Turning the hooks off exposed a race they had hidden: the slot database's reclone kills the server's pooled connections, so a warm-up follows each reclone (the slot-databases bullet near the top of this file). `.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`.
+- **Workers.** The default is 6. At 9 the gate suite gained nothing and at 12 it lost about 9 s, because summed test time rises with the worker count: the cores and the browser server that shares them are the limit, not memory. At 12 workers two admin stories timed out at the 30 s limit. The setting changes only the local default; CI sets `E2E_WORKERS` itself.
+- **A soft navigation** leaves the document without a `<title>` for a moment, so an axe scan waits for a title before it runs.
 
-What the rest of the suite costs, warm, per file: `admin-compendium.spec.ts`
-11.4 s over 5 tests, `account.spec.ts` 10.6 s over 5, `workspace-invitation.spec.ts`
-8.1 s over 4, `admin.spec.ts` 7.4 s over 5, and the other eight files 18 s
-together. The longest single test is 3.5 s (`account.spec.ts`'s four-section
-scan), so once no file is pinned to a worker, no run can be shorter than
-startup plus about 4 s, and the even spread above is the floor to aim at.
+CI's side of this is [`ci/runner-budget.md`](../ci/runner-budget.md), "Where a gate run's time goes". The levers, in order, are in [`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md).
 
-**Warm servers, measured (M11.18, lever 5).** The same suite after the
-servers were left up by `npm run e2e:servers` (all eight answering in 1.0 s
-once built), three runs each, median in bold. The machine was not idle this
-time: other sessions' runs shared the cores (load average 9 to 16, and every
-run waited 85 to 123 s for the lock), so these figures run slower than the
-table above and compare with each other, not with it. The warm series also
-included one failure, an axe scan that found a page with no `<title>` on
-`admin.spec.ts`'s zodiac filter test. MB.265 explained it: a soft navigation
-leaves the document without a `<title>` for a moment, and a loaded machine let
-the scan run inside that gap. The scan now waits for a title. The same failure
-once seen in story 60 was not reproduced, so its cause is unproven; the same
-wait covers it.
-
-| Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
-| ---------------------- | ------------------------------- | ----------------------------- |
-| `npm run e2e`          | 51.9, 36.5, **45.3** s          | 28.7, 30.9, 25.8 s (**28.7**) |
-| `npm run test:stories` | not measured                    | 33.5 s (one run)              |
-
-Median saving about 17 s of 45, more than the 10 s the build and boots cost
-on an idle machine, since a loaded one starts eight servers slower.
-
-Three settings were each turned off for one warm run, to see what every
-test pays for them:
-
-| Change, one warm run each                           | Wall time | Sum of test durations |
-| --------------------------------------------------- | --------- | --------------------- |
-| None (the warm median above)                        | 27.3 s    | 73 s                  |
-| `video: 'off'`                                      | 25.2 s    | 67 s                  |
-| No JS coverage (the `coverageAutoFixture` skipped)  | 23.4 s    | 65 s                  |
-| Both                                                | 19.4 s    | 54 s                  |
-| `E2E_WORKERS=12`, servers up, everything else as is | 29.8 s    | 104 s                 |
-
-Recording a video of every test and collecting JS coverage after every test
-cost about a quarter of the summed test time between them, and the video is
-encoded on the browser server, which shares these cores. Twelve workers
-bought nothing while one serial file sets the span: every test ran slower
-under the extra servers' load, and the critical path is unchanged. CI's side of this is
-[`ci/runner-budget.md`](../ci/runner-budget.md), "Where a gate run's time
-goes". The levers that shorten the run, one PR each and in order, are the
-task's plan,
-[`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md).
-
-**Measuring it again.** Take the lock first and time the run inside it, so
-another session's run waits rather than inflating the figure; then read the
-per-file sums off the HTML report's embedded JSON (every number above came
-from it) with `fflate`, already in `node_modules` as a dependency of the Vitest UI. Three runs, the
-median, and say whether the servers were already up.
+**Measuring it again.** Take the lock first and time the run inside it, so another session's run waits rather than inflating the figure; then read the per-file sums off the HTML report's embedded JSON with `fflate`, already in `node_modules` as a dependency of the Vitest UI. Three runs, the median, and say whether the servers were already up.
 
 ```sh
 cd /app  # or the worktree
@@ -617,137 +552,6 @@ console.log("wall ms", rep.duration, "tests", rep.stats.total);
 for (const f of rep.files.map((f) => [f.fileName, f.tests.length, f.tests.reduce((a, t) => a + t.duration, 0)]).sort((a, b) => b[2] - a[2])) console.log(f.join("\t"));'
 ```
 
-The story suite (`npm run test:stories`) is the same shape, further along:
-one cold run the same day took 99 s for 50 stories (15 more are `fixme`),
-233 s of test work whose even spread on 6 workers would be 39 s, with
-`07-admin.spec.ts` 78 s on one worker and `08-email-and-admin.spec.ts` 60 s
-on another. It writes no HTML report locally, so its per-file sums are read
-from the list reporter's `(2.6s)` suffixes instead — run it with
-`PW_REPORTER=list`, because under Claude Code (`CLAUDECODE`) the story config
-prints dots (M12.37); CI's figures for it are
-the runner budget's `stories` row.
+The story suite writes no HTML report locally, so read its per-file sums from the list reporter's `(2.6s)` suffixes instead. Run it with `PW_REPORTER=list`, because under Claude Code (`CLAUDECODE`) the story config prints dots. CI's figures for it are the runner budget's `stories` row.
 
-**After the serial rule was dropped** (the plan's lever 2, this task's second
-PR), the same machine and method, three cold runs each, the servers started
-by each run. The gate suite has 59 tests now: the three that only set up a
-file's users moved into that file's `beforeAll`.
-
-| Measure, median of three cold runs         | Before             | After                       |
-| ------------------------------------------ | ------------------ | --------------------------- |
-| Gate suite, wall time                      | 34.4 s             | 28.7 s (28.6, 28.7, 29.3)   |
-| Gate suite, sum of every test's duration   | 74 s               | 76 s (74.5, 75.9, 79.3)     |
-| `shell.spec.ts`, sum of its tests          | 18.4 s on 1 worker | 22.6 s spread over 6        |
-| Story suite, wall time                     | 99 s (one run)     | 41.1 s (39.6, 41.1, 43.4)   |
-| Story suite, Playwright's own time         | 96 s               | 40.7 s (39.1, 40.7, 43.0)   |
-| Story suite, sum of every story's duration | 233 s              | 153 s (151.3, 153.4, 171.3) |
-| `07-admin.spec.ts`, sum of its tests       | 78 s on 1 worker   | 67.4 s spread over 6        |
-
-The story suite more than halved, because its two long files now spread over
-every worker instead of setting the span one worker at a time. The gate suite
-gained less: its critical path was `shell.spec.ts`, and that file's own time
-went up by about 4 s, since its `beforeAll` (a reclone and a sign-in) now
-runs once on each of the six workers that come to it rather than once. Its
-tests are evenly spread, so the run is now its startup and teardown plus
-the even spread of its tests, 12.7 s, and what is left to shorten is the
-startup, the teardown, the video and the coverage: the plan's levers 3 to 5.
-
-**After the video went** (lever 3, `video: 'off'` for every run, where CI
-already had it off): three pairs of cold gate runs on one tree, video off then
-on, each pair back to back, so that whatever else the machine was doing fell on
-both sides alike. Another session loaded it throughout (load average 2 to 10),
-which is why these absolute figures sit above the table before, and why the
-pairs rather than the medians are the evidence. 62 tests, since staging had
-grown by then.
-
-| Pair | Video off: wall, sum of test durations | Video on: wall, sum of test durations |
-| ---- | -------------------------------------- | ------------------------------------- |
-| 1    | 30.3 s, 80 s                           | 32.5 s, 97 s                          |
-| 2    | 31.1 s, 87 s                           | 35.6 s, 106 s                         |
-| 3    | 34.4 s, 93 s                           | 36.5 s, 100 s                         |
-
-Video off won every pair: a tenth to a sixth of the summed test time (the
-single warm run in the variants table said 8%, these said 7% to 17%), and 2
-to 4 s of wall. A failing test still leaves its trace and screenshot under
-`.reports/test-results/`, checked by failing one on purpose.
-
-**After coverage went behind a switch** (lever 4: JS coverage is collected only
-under `E2E_COVERAGE=1`, which `playwright.yml` sets). Two sets of figures, and
-they compare within themselves, not with each other, nor with the idle table at
-the top of this section.
-
-Set 1, before the reclone fix below: one interleaved pair, coverage off then
-on, on a quiet machine, gate suite, 6 workers. Two further pairs were disturbed
-by other sessions (lock waits of about 30 s, load near 11) and are not
-reported.
-
-| Coverage | Wall time | Sum of test durations |
-| -------- | --------- | --------------------- |
-| Off      | 27.2 s    | 70.9 s                |
-| On       | 32.8 s    | 91.9 s                |
-
-Set 2, after the reclone fix, on a loaded machine, Playwright's own reported
-time:
-
-| Coverage                       | Playwright's time                  |
-| ------------------------------ | ---------------------------------- |
-| Off                            | 39.4, 39.4, 38.1 s (median 39.4 s) |
-| On (`E2E_COVERAGE=1`, one run) | 48.9 s                             |
-
-Turning the hooks off exposed a race they had been hiding: the slot
-database's reclone killed the server's pooled connections, and the next file
-started fast enough to hit a dead one. The slot-databases bullet near the top
-of this file explains the warm-up that now follows each reclone.
-`.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`, which
-`.github/workflows/playwright.yml` sets.
-
-**Each suite's coverage, and the two merged (M14.28).** Both suites write
-`.reports/coverage-e2e/` in CI, including its `raw/` data, and upload it as
-`playwright-coverage` (gate) and `playwright-coverage-stories` (stories). Each
-suite's PR comment carries its own figure. The `playwright-coverage` job in
-`pr-gate.yml` merges whichever of the two ran into a "Playwright Coverage"
-comment and the `playwright-coverage-merged` artifact
-([`coverage.md`](coverage.md), "The merged report").
-
-**After the worker count changed** (lever 6): the gate suite (`npm run e2e`,
-62 tests) and the story suite (`npm run test:stories`, 51 run, 15 `fixme`)
-at `E2E_WORKERS` 6, 9 and 12, three runs each, interleaved (6, 9, 12, 6, 9,
-12, ...), on the lever 3 harness (video off, coverage still always on). Each
-run took the lock first and was timed from holding it; every run is a cold
-start, since the server count changes between runs. Two other sessions ran
-Vitest and Playwright on the same 12 cores throughout, so the load average at
-the start of a run was 11 to 24 and the figures sit well above the earlier
-tables; the spread inside one count is as large as the gap between counts, so
-read the medians with that in mind. Free memory never fell below 14.6 GB. Wall
-times and sums of test durations are from the JSON reporter, which carries
-the same figures as the HTML report's embedded JSON.
-
-| Suite, workers | Wall time, median (runs 1, 2, 3) | Sum of test durations, median (runs) | Load at start, runs 1-3 | Failures               |
-| -------------- | -------------------------------- | ------------------------------------ | ----------------------- | ---------------------- |
-| Gate, 6        | 41.5 s (50.3, 41.5, 38.8)        | 107 s (107, 113, 104)                | 11.1, 15.3, 24.2        | none                   |
-| Gate, 9        | 43.1 s (43.1, 43.5, 40.9)        | 141 s (151, 141, 130)                | 15.6, 17.0, 17.0        | none                   |
-| Gate, 12       | 50.3 s (46.7, 59.3, 50.3)        | 229 s (176, 337, 229)                | 11.3, 19.4, 15.8        | none                   |
-| Stories, 6     | 58.0 s (58.0, 67.1, 47.2)        | 201 s (201, 301, 179)                | 16.0, 13.7, 20.2        | none                   |
-| Stories, 9     | 49.8 s (58.0, 49.8, 46.3)        | 263 s (322, 263, 221)                | 14.3, 14.8, 15.7        | none                   |
-| Stories, 12    | 64.7 s (64.7, 63.9, 86.4)        | 344 s (344, 332, 665)                | 11.5, 23.0, 19.2        | run 3: 2 failed, below |
-
-Lock waits before the runs ranged from 0 to 202 s and are not in the times.
-
-What it shows. Summed test time rises with the worker count (gate 107 s,
-141 s, 229 s), so each test gets slower as slots are added: the cores, or the
-browser server sharing them, are the limit, not the number of servers or free
-memory. The gate suite gained nothing from 9 (43 s against 41.5 s) and lost
-9 s at 12. The story suite was 8 s faster at 9 by median, but its 6 and 9
-ranges overlap (47 to 67 s against 46 to 58 s) under this load, so that is
-not a difference worth a default. At 12 workers, run 3 of the story suite
-timed out two `07-admin.spec.ts` story-18 tests at the 30 s limit (the
-compendium entry and the category flows), with a summed test time of 665 s and
-the host load at 19; nothing else failed in any run. Memory was not the limit
-and nothing swapped; the cores and the browser server were. The default stays
-at 6. Whether 9 would win on a quiet machine this series does not settle. It
-changes only the local default: CI sets `E2E_WORKERS` itself.
-
-Merged staging, default 6: `npm run e2e` on the merged branch took 41.3 s wall
-from holding the lock, with a load average of 6.7 at the start, and passed
-all 64 tests (staging had grown since the 62 above). It ran with coverage off,
-since the merged harness has coverage behind `E2E_COVERAGE=1`, so it is not
-comparable with the 6, 9 and 12 table, which ran with coverage on under load.
+**Each suite's coverage, and the two merged.** Both suites write `.reports/coverage-e2e/` in CI, including its `raw/` data, and upload it as `playwright-coverage` (gate) and `playwright-coverage-stories` (stories). Each suite's PR comment carries its own figure. The `playwright-coverage` job in `pr-gate.yml` merges whichever of the two ran into a "Playwright Coverage" comment and the `playwright-coverage-merged` artifact ([`coverage.md`](coverage.md), "The merged report").

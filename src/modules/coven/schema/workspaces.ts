@@ -14,15 +14,12 @@ import { auditColumns } from '../../identity/schema/users';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
-// own permission statements (../services/access-control.ts), so the order here
-// is documentation. `owner` is not invitable — `invitations` carries the
-// CHECK.
+// own permission statements (../services/access-control.ts), so the order is
+// documentation. `owner` is not invitable; `invitations` carries the CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // No `kind` column: every workspace takes members, and a steward deletes it.
-// The one exception is the demo coven, marked by `demo` rather than a kind,
-// which is seeded on every environment and cannot be deleted. Only the URL
-// segment says coven.
+// The demo coven, marked by `demo`, cannot be deleted. Only the URL segment says coven.
 export const workspaces = pgTable(
   'workspaces',
   {

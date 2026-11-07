@@ -34,10 +34,7 @@ const SpellFields = z.object({
   note: optionalText(),
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
-  // The categories the spell is assigned, what it intends, never the
-  // ones derived from its ingredients. The whole set when given, so an id left
-  // out is unassigned; left out altogether, they are unchanged on update and
-  // none on create.
+  // The assigned categories, never the derived ones. The whole set when given; left out, unchanged on update and none on create.
   categoryIds: z.array(z.string().trim()).optional(),
 });
 
@@ -63,10 +60,8 @@ type StepIdentity = {
   name?: string | null;
 };
 
-// Mirrors the unique index over a jar's live custom names, case aside
-// (spell_steps_spell_id_custom_name_unique), and refuses a step named twice: each would
-// otherwise reach the user as a database error. A linked form may repeat: a spell lays one
-// form in as many steps as it likes.
+// Mirrors the unique index over a jar's live custom names, case aside (spell_steps_spell_id_custom_name_unique), and refuses a
+// step named twice so it does not reach the user as a database error. A linked form may repeat.
 function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementCtx) {
   const seen = { id: new Set<string>(), name: new Set<string>() };
   const flag = (index: number, field: string, message: string) =>

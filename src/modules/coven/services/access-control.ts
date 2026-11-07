@@ -3,10 +3,9 @@ import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
 import type { WorkspaceRole } from '../types';
 
-// What each **workspace** role may do. The site role on the session is a different axis and is not read here: a keeper curates
-// the compendium and reaches no workspace at all. Permission statements rather than a rank comparison, so a role that is not on
-// the observer < practitioner < steward line cannot make an "at least member" check mean something nobody checked
-// (claude-docs/design-decisions/m6.3-permission-statements.md).
+// What each **workspace** role may do; the site role is not read here, as a keeper reaches no workspace. Permission statements
+// rather than a rank comparison, so a role off the observer < practitioner < steward line cannot make an "at least member" check
+// mean something nobody checked (claude-docs/design-decisions/m6.3-permission-statements.md).
 
 /** The resources a workspace role acts on, one per surface DESIGN.md §9 routes to. */
 const statements = {

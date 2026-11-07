@@ -89,10 +89,9 @@ export const invitations = namedWrites(
         'invitations_site_role_tier',
         sql`${table.kind} = 'card' or (${table.workspaceId} is null) = (${table.siteRole} is not null)`,
       ),
-      // The allowed set, as for `role`, so `user` grants nothing. Compared as
-      // text: as the enum, each literal is cast to `user_role`, and Postgres
-      // refuses `curator` in the transaction that adds it (55P04), which
-      // drizzle-kit runs with this migration on a database migrated before both.
+      // Compared as text, not as the enum: Postgres refuses a `curator` literal cast
+      // in the transaction that adds it (55P04), which drizzle-kit hits on a
+      // database migrated before both.
       check(
         'invitations_site_role_invitable',
         sql`${table.siteRole} is null or ${table.siteRole}::text in ('curator', 'admin')`,

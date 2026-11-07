@@ -1,10 +1,9 @@
 import { unitConvert } from '@/modules/ingredients';
 import { dimensionOf, type Unit } from '../ingredients/schema/units';
 
-// What completing a working would take from the coven's jars, decided without touching them. The one
-// function behind both the completion (M13.5) and the preview before it (M13.6, M13.7), so the two
-// cannot disagree: it reads only the steps and jars it is handed and writes nothing. Amounts are
-// held in thousandths, the stock columns' scale, so adding and subtracting stay exact.
+// What completing a working would take from the coven's jars, decided without touching them: the one function behind the
+// completion and its preview, so the two cannot disagree. Amounts are held in thousandths, the stock columns' scale, so
+// adding and subtracting stay exact.
 
 /** The part of a spell step the plan reads. */
 export interface PlanStep {

@@ -31,22 +31,15 @@ export type Membership = {
 };
 
 /**
- * The membership check, for every workspace-scoped operation: `permission` is
- * what the call is about to do, checked against the role's statements
- * (`access-control.ts`).
+ * The membership check for every workspace-scoped operation: `permission` is what the call is about to do, checked against the
+ * role's statements (`access-control.ts`). A site keeper gets no bypass, so `session.role` is not read.
  *
  * ```ts
  * const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
- * await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
  * ```
  *
- * A site keeper gets no bypass: keepers curate the compendium and reach no
- * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
- *
- * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —
- * an id that is not a uuid included — or holds one whose role does not carry
- * `permission`.
- * @throws {AccessPaused} the user holds a seat in `workspaceId` and a steward has paused it; carries when the pause ends.
+ * @throws {Forbidden} the email address is unverified; or no live membership of `workspaceId` (a non-uuid id included) carries `permission`.
+ * @throws {AccessPaused} the user's seat in `workspaceId` is paused; carries when the pause ends.
  */
 export async function assertMembership(
   session: Session,
@@ -58,8 +51,7 @@ export async function assertMembership(
 
 /**
  * The caller's own seat in `workspaceId`, for leaving it and nothing else: `assertMembership` for `workspace: read`, except that
- * a paused seat passes. A paused member may still go (the steward's call, M15.55); every other write stays refused by
- * `assertMembership`. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
+ * a paused seat passes. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
  *
  * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.
  */
@@ -117,12 +109,10 @@ async function admit(
 }
 
 /**
- * The proofs a read spanning the compendium and, optionally, one coven runs under: none without `workspaceId`, so the
- * compendium alone, else that coven's, checked for `permission`. Every "the compendium, or this coven too" read names its scope
- * this way, so none can widen it by forgetting the check.
+ * The proofs a read spanning the compendium and, optionally, one coven runs under: the compendium alone without `workspaceId`,
+ * else that coven's too, checked for `permission`, so no read can widen its scope by forgetting the check.
  *
- * @throws {Forbidden} a coven is named and the caller is signed out, or
- * `assertMembership` refuses them.
+ * @throws {Forbidden} a coven is named and the caller is signed out, or `assertMembership` refuses them.
  */
 export async function readersOf(
   session: Session | null,

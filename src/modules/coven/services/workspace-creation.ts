@@ -11,10 +11,9 @@ import { users } from '../../identity/schema/users';
 import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRow } from '../types';
 
-// A signed-in user with the right makes a workspace and is its owner.
-// The right is `users.can_create_workspace` and nothing else — every keeper
-// holds it, so `role` is never read. DESIGN.md §9 and
-// claude-docs/auth/admin-users.md, "Approving workspace creation".
+// A signed-in user with the right makes a workspace and is its owner. The right is
+// `users.can_create_workspace` alone (every keeper holds it), so `role` is never
+// read (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
 const NAME_LIMIT = 80;
 
@@ -44,11 +43,8 @@ async function freeSlug(name: string): Promise<string> {
 }
 
 /**
- * Creates a workspace and makes the session's user its steward, in one
- * transaction: the workspace row and the steward row stand together or neither
- * does. The flag is read from the row now rather than from the session, since
- * accepting an invitation sets it mid-session (`Session`). Making a workspace
- * does not spend it, so a user may own several.
+ * Creates a workspace and makes the session's user its steward in one transaction. The flag is read from the row, not the
+ * session, since accepting an invitation sets it mid-session. Making one does not spend it.
  *
  * @throws {Forbidden} the user cannot create a workspace, or is gone.
  * @throws {ValidationError} the name is blank or longer than 80 characters.

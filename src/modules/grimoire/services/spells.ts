@@ -74,12 +74,10 @@ function spellColumns(input: {
 }
 
 /**
- * Makes a spell in the coven, with its recipe. It starts a draft, and shared
- * unless the author says `private`. Only a complete spell needs a title.
+ * Makes a spell in the coven, with its recipe. It starts a draft, shared unless the author says `private`.
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire.
- * @throws {ValidationError} the input breaks a rule, a step links an
- * ingredient this coven may not lay, or a category id names no live category.
+ * @throws {ValidationError} the input breaks a rule, a step links an ingredient this coven may not lay, or a category id names no live category.
  */
 export async function createSpell(
   session: Session,
@@ -100,17 +98,13 @@ export async function createSpell(
 }
 
 /**
- * Saves a spell: the fields it names, each left out unchanged, the whole recipe in order when it names its steps, and the whole
- * assigned set when it names its categories. A save against a revision the spell has moved past is refused, and null overwrites.
- * A complete spell's visibility only widens, as `setSpellVisibility` holds it; a draft's moves either way.
- * A complete spell never goes back to a draft: a change to it goes through a copy (`duplicateSpell`).
+ * Saves a spell: the fields it names, the whole recipe when it names its steps, the whole assigned set when it names its
+ * categories. A complete spell's visibility only widens and it never goes back to a draft; a change to it goes through
+ * `duplicateSpell`. A stale revision is refused, and null overwrites.
  *
- * @throws {Forbidden} the caller may not write this coven's grimoire, or the
- * save narrows a shared complete spell or names a complete spell a draft.
+ * @throws {Forbidden} the caller may not write this coven's grimoire, or the save narrows a shared complete spell or names a complete spell a draft.
  * @throws {NotFound} no such spell here, or none this caller may read.
- * @throws {ValidationError} the input breaks a rule, names a step this spell
- * has no live row for, links an ingredient this coven may not lay, or names
- * no live category.
+ * @throws {ValidationError} the input breaks a rule, names a step this spell has no live row for, links an ingredient this coven may not lay, or names no live category.
  * @throws {StaleWrite} `expectedRevision` is not the spell's revision.
  */
 export async function updateSpell(
@@ -197,10 +191,8 @@ export async function updateSpellStep(
 }
 
 /**
- * Deletes a spell: a soft delete of the spell and its steps in one transaction. Stewards and
- * practitioners delete, observers are refused; another member's private spell is refused as if it did not
- * exist. The visibility lock governs widening, not existence, so a shared or complete spell goes
- * too. Stock is never touched.
+ * Deletes a spell: a soft delete of the spell and its steps in one transaction. Another member's private spell is refused as if
+ * it did not exist. The visibility lock governs widening, not existence. Stock is never touched.
  *
  * @throws {Forbidden} the caller may not delete in this coven's grimoire.
  * @throws {NotFound} no such spell here, or none this caller may read.
@@ -229,14 +221,9 @@ export async function deleteSpell(
 const COPY_SUFFIX = ' (Copy)';
 
 /**
- * Copies a spell into a new one in the same coven, for a variation that leaves the original as it
- * is. The copy is a private draft the caller wrote, titled for the original's, holding its fields,
- * the categories it is assigned and its live steps in order. Workings, the revision count and
- * history stay behind. The spell, its categories and its steps are written in one transaction.
- *
- * The recipe is copied as it stands and not checked again: an ingredient deleted since is still
- * what the original lays, as it is on the original (claude-docs/db/spell-visibility.md, "What a
- * spell holds"). A category deleted since is not carried over.
+ * Copies a spell into a new private draft the caller wrote, in the same coven, holding its fields, assigned categories and live
+ * steps in order. Workings, the revision count and history stay behind. The recipe is copied as it stands and not checked again
+ * (claude-docs/db/spell-visibility.md, "What a spell holds"); a category deleted since is not carried over.
  *
  * @throws {Forbidden} the caller may not create in this coven's grimoire.
  * @throws {NotFound} no such spell here, or none this caller may read.

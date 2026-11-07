@@ -5,10 +5,9 @@ import { workingCountsOf } from '../services/workings';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellStepView } from '../types';
 
-// A spell's fields, batched: every spell a grimoire page lists, read together
-// per coven rather than once per spell (CLAUDE.md rule 9). Keyed by the spell
-// and its coven, so the service checks the coven without a read of its own;
-// cached by id, since a spell id names one spell in one coven.
+// A spell's fields, batched per coven rather than once per spell (CLAUDE.md rule 9).
+// Keyed by the spell and its coven, so the service checks the coven without a read
+// of its own; cached by id, since a spell id names one spell in one coven.
 const byId = { cacheKeyFn: (ref: SpellKey) => ref.id };
 
 /** Each spell's live steps in recipe order, for `Spell.steps`. */

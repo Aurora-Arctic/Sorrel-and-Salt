@@ -54,10 +54,8 @@ export const spellSteps = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // One live step per place; leading on `spell_id` makes it the index that
-    // reads a recipe in order. Checked per row, not at end of statement, so a
-    // reorder moves the live rows through a scratch offset rather than
-    // sweeping `position + 1`.
+    // One live step per place; leading on `spell_id` makes it the index that reads a recipe in order. Checked per row, so a
+    // reorder moves the live rows through a scratch offset rather than sweeping `position + 1`.
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
 
     // No unique index on a jar's forms: a spell may lay one form in several steps.

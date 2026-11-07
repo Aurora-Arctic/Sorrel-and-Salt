@@ -8,16 +8,11 @@ import { assertMembership } from './membership';
 import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
- * One page of a coven's live members, in the order they joined, each carrying
- * the coven: `Workspace.members`, and the members page. `query` narrows it
- * to the members whose name holds the text, in any case, for the participant
- * box of Record a Working. One read for
- * the check and one for the page. A coven at a time rather than batched across
- * covens, since no page lists two covens' members at once
+ * One page of a coven's live members, in the order they joined: `Workspace.members` and the members page. `query` narrows to
+ * names holding the text, in any case. One coven at a time, not batched
  * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
  *
- * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
- * without `member: read`, which an observer does not hold.
+ * @throws {Forbidden} the caller holds no live seat, or holds one without `member: read`, which an observer lacks.
  */
 export async function listMembers(
   session: Session,
@@ -31,10 +26,8 @@ export async function listMembers(
 }
 
 /**
- * Every live member of a coven with their role, read to the end through the
- * same check as `listMembers`. For the pages that must count stewards or
- * name who could be made one, which a single page of the list cannot say once
- * a coven outgrows it.
+ * Every live member of a coven with their role, read to the end through the same check as `listMembers`, for pages that must
+ * count or name stewards.
  *
  * @throws {Forbidden} as `listMembers` does.
  */
@@ -47,15 +40,10 @@ export async function memberRoster(
 }
 
 /**
- * The address of each of these users who sits in the coven, read off their
- * own user row so a changed address shows at once:
- * the steward's Email column on the members page. A
- * separate read rather than a wider `CoMember`, which every member reads.
- * Users outside the coven are left out, not refused. One read for the check
- * and one for the addresses.
+ * The address of each of these users who sits in the coven, read off their own user row so a changed address shows at once: the
+ * steward's Email column. Users outside the coven are left out, not refused.
  *
- * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
- * without `member: readEmail`, which only stewards hold.
+ * @throws {Forbidden} the caller holds no live seat, or holds one without `member: readEmail`, which only stewards hold.
  */
 export async function memberEmails(
   session: Session,

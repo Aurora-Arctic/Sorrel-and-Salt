@@ -3,10 +3,9 @@ import { requiredText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../../ingredients/schema/quantities';
 import { UNITS } from '../../ingredients/schema/units';
 
-// One step of a spell's recipe, as the builder and the mutation both read it.
-// It mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts)
-// one for one, so the database refuses nothing a user could have been told
-// about here. The CHECK each rule mirrors is named beside it.
+// One step of a spell's recipe, as the builder and the mutation both read it. It mirrors spell_steps' CHECKs
+// (src/modules/grimoire/schema/spell-steps.ts) one for one, so the database refuses nothing a user could have been told about
+// here; the CHECK each rule mirrors is named beside it.
 
 // Not a CHECK: a negative amount says something, so it is said here, in the
 // words the stock schema uses (claude-docs/db/stock.md).

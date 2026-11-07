@@ -37,10 +37,8 @@ export async function membershipsOf(
 }
 
 /**
- * The order the coven switcher lists in: alphabetical by name, the demo coven
- * last. The service's own order is the database's, which looks random. The
- * demo goes last so a coven of the user's own is always the landing; a row
- * with no `demo` sorts by name alone.
+ * The coven switcher's order: alphabetical by name, the demo coven last, so a coven of the user's own is always the landing.
+ * The service's own order is the database's.
  */
 export function byCovenName(
   a: { name: string; demo?: boolean },
