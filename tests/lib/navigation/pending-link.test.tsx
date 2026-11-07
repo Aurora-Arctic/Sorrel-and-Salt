@@ -4,20 +4,15 @@ import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
-// The App Router as a component test sees it (tests/support/navigating.tsx).
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { PendingLink, useNavigationState } = await import('@/lib/navigation');
 const { default: LinkHint } = await import('@/components/LinkHint');
 
-// The one link the site draws: a plain press navigates through the shared hook, so the bar and
-// the destination's skeleton follow; a press the browser means for a new tab or window is left to it.
-
 const MEMBERS = '/coven/fixture-coven/members' as Route;
-const COVEN_TABLE = { region: 'coven', shape: 'table' } as const;
 
-let state: { busy: boolean; target?: unknown } | undefined;
+let state: { busy: boolean; href?: string } | undefined;
 function Probe() {
   const current = useNavigationState();
   // Read from committed renders only: a transition that suspends re-runs
@@ -93,7 +88,6 @@ describe('PendingLink', () => {
       unhandled = fireEvent.click(link(), { button: 0 });
     });
 
-    // The link took the press: the browser does not also load the address.
     expect(unhandled).toBe(false);
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push.mock.calls[0]?.[0]).toBe('/coven/fixture-coven/members');
@@ -104,14 +98,19 @@ describe('PendingLink', () => {
     expect(state?.busy).toBe(false);
   });
 
-  it('carries the navigation target it is given into the site-wide state', async () => {
-    renderLink({ navigationTarget: COVEN_TABLE });
+  // The skeleton is chosen by where the link goes, so the link's own address
+  // is what reaches the site-wide state; the link has no target prop to pass.
+  it('carries its address into the site-wide state, and no target', async () => {
+    renderLink();
 
     await act(async () => {
       fireEvent.click(link(), { button: 0 });
     });
 
-    expect(state).toEqual({ busy: true, target: COVEN_TABLE });
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(state?.busy).toBe(true);
+    expect(state?.href).toBe(MEMBERS);
+    expect(Object.keys(state ?? {}).sort()).toEqual(['busy', 'href']);
   });
 
   // Which presses are left to the browser is opensElsewhere's (tests/lib/opens-elsewhere.test.ts);

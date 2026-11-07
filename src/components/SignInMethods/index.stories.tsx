@@ -11,9 +11,6 @@ import SignInMethods from '.';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import type { SignInMethodsProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SignInMethods. Adding or
-// removing reaches /api/auth, which the workshop does not serve, so a click fails
-// into a callout under the control pressed.
 const meta = {
   title: 'Sign In / Sign-In Methods',
 } satisfies Meta;
@@ -24,9 +21,6 @@ const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', '
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
 const MICROSOFT: LinkedAccount = { id: 'a-microsoft', providerId: 'microsoft' };
 
-// The account page's Sign-In Methods section as src/app/(shell)/account/page.tsx
-// writes it, on its panel inside the real frame, so the workshop shows what
-// the page shows.
 const Section = ({ id, children }: { id?: string; children: ReactNode }) => (
   <section
     id={id}
@@ -44,7 +38,6 @@ const Section = ({ id, children }: { id?: string; children: ReactNode }) => (
 type StoryProps = Omit<SignInMethodsProps, 'passwordHeld' | 'passkeyCount'> &
   Partial<SignInMethodsProps>;
 
-// The password and passkey counts default to the common case; a story names its own.
 const withDefaults = (props: StoryProps) => ({
   passwordHeld: true,
   passkeyCount: 1,
@@ -59,20 +52,14 @@ const Page = (props: StoryProps) => (
   </main>
 );
 
-// The common first visit: the one provider the account was made with, which
-// cannot be removed while it is the only one, and says so.
 const defaultNode = <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
 
 const twoLinkedNode = <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
 
-// The same two from a session older than Better Auth's `freshAge`: no row
-// offers Remove, and the list offers a fresh sign-in instead.
 const staleSessionNode = (
   <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} fresh={false} />
 );
 
-// A failed link to Microsoft, its sentence in Microsoft's row. `error` reads
-// the real mapping rather than a copied string.
 const failedNode = (
   <Page
     linked={[DISCORD]}
@@ -84,13 +71,8 @@ const failedNode = (
   />
 );
 
-// Local dev with one registered pair: the rest cannot be added.
 const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />;
 
-// The whole /account page (a server component with no story of its own), composed
-// as page.tsx composes it: heading, jump links (PageNav), then four panels, with
-// Invitations empty. The `page-with-nav` class lays the sections out in two columns
-// on a wide screen. Sign Out is only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
@@ -147,8 +129,6 @@ const WholeAccountPage = ({
 
 const wholePageNode = <WholeAccountPage />;
 
-// The whole page with every row state (narrow it with the viewport menu):
-// two linked, one addable, one unavailable, and a failure in a row.
 const EveryRow = () => (
   <WholeAccountPage
     methods={{
@@ -160,9 +140,6 @@ const EveryRow = () => (
 );
 
 const everyRowStateNode = <EveryRow />;
-// Add pressed on Google, as a person would, with the link request left
-// unanswered: the row's button reads "Adding" and waits, as it does while the
-// browser is on its way to the provider.
 export const PendingAdd: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
@@ -171,10 +148,6 @@ export const PendingAdd: Story = {
   },
 };
 
-// Remove pressed on Microsoft, then the red Remove in the Remove Sign-In Method
-// question, as a person would: the fake API refuses /api/auth, so the question
-// closes and the removal fails into its callout under Remove Microsoft, with the
-// badge on the button (claude-docs/components/click-feedback.md).
 export const FailedRemove: Story = {
   tags: ['expects-failed-request'],
   beforeEach: ({ msw }) => msw.use(refuseAuth()),

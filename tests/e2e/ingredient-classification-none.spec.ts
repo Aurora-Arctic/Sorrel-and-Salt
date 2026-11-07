@@ -28,7 +28,6 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The row's classification and formal name as stored. */
 async function storedIdentity(id: string) {
   const [row] = await withSql(
     (sql) => sql<{ nomenclature: string; canonical_name: string | null }[]>`
@@ -37,7 +36,6 @@ async function storedIdentity(id: string) {
   return row;
 }
 
-/** Chooses None as the dialog's classification, the formal name it had emptied and shut. */
 async function chooseNone(page: Page, dialog: Locator) {
   await dialog.getByRole('button', { name: 'Open All' }).click();
   const formal = dialog.getByRole('textbox', { name: 'Formal Name' });
@@ -72,7 +70,6 @@ test('a compendium entry reclassified as None saves, as a site admin', async ({ 
   const dialog = editIngredientDialog(page, fixture.name, fixture.canonicalName!);
   await expect(dialog).toBeVisible();
   const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
-  // The precondition: nothing changed yet, so Save is shut until something is.
   await expect(save).toBeDisabled();
 
   await chooseNone(page, dialog);
@@ -115,11 +112,6 @@ test("a coven's own entry reclassified as None saves, as its owner", async ({ pa
     .toEqual({ nomenclature: 'none', canonical_name: null });
 });
 
-/**
- * A compendium entry shaped as the seeded Beeswax: Unknown with no formal name, hidden, in no category,
- * one form picked from the curated Wax, a source for its classification and description, and one for
- * the form. Returns its id.
- */
 async function unknownWaxEntry(name: string, author: string) {
   return withSql(async (sql) => {
     const formId = await curatedFormId(sql, 'Wax');
@@ -144,7 +136,6 @@ async function unknownWaxEntry(name: string, author: string) {
   });
 }
 
-/** In an open edit dialog of an entry with no formal name: Save shut, then None chosen, then Save pressed. */
 async function saveAsNone(page: Page, dialog: Locator) {
   await expect(dialog).toBeVisible();
   const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });

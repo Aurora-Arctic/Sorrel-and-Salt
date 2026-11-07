@@ -10,9 +10,6 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The two spell saves over the wire: what the transport adds to services/spells.test.ts, which owns who may save what and how a recipe is written.
-// Here: the answer's shape and revision, a save's steps read fresh in the same request, a null the wire allows but the service does not, and one refusal per code a save can answer.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -54,7 +51,6 @@ type SpellNode = {
   }[];
 };
 
-/** A coven ingredient of W with one form, Testform, and that form's id. */
 async function testroot() {
   const ingredientId = await insertIngredient(
     sql,
@@ -104,7 +100,6 @@ describe('createSpell', () => {
     });
 
     expect(result.errors).toBeUndefined();
-    // The columns' own defaults: a draft, shared with the coven, with no steps.
     expect(result.data!.createSpell).toMatchObject({
       title: null,
       status: 'draft',

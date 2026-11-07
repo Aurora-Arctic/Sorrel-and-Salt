@@ -3,22 +3,19 @@ import { type ReactNode, Suspense, use, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
-// The App Router as a component test sees it: each call a mock, which
-// `Navigating` turns into a navigation that stays on its way until the test
-// lets the new page arrive. Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { NavigationProvider, reportLeaving, useNavigationState, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// The one way the site navigates (claude-docs/design-decisions/m12.33-plan.md): each caller's own
-// `pending`, and a site-wide `busy` with the target's region and shape, which the bar and the
-// skeletons read wherever they sit.
+// The one way the site navigates (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"): each caller's own
+// `pending`, and a site-wide `busy` with the address it is headed for, which the bar and the
+// skeletons read wherever they sit (claude-docs/design-decisions/m11.9-plan.md, Part 1).
 
-const COVEN_CARDS = { region: 'coven', shape: 'cards' } as const;
+/** The option links once passed to name their skeleton; it is gone, so passing it does nothing. */
+const OLD_TARGET = { region: 'coven', shape: 'cards' } as const;
 
-/** A caller of the hook: its button is `aria-busy` while its own navigation is on its way. */
 function Go({
   name,
   href,
@@ -43,7 +40,7 @@ function Go({
 }
 
 /** What every part of the page reads: the site-wide state, kept for the test to inspect. */
-let state: { busy: boolean; target?: unknown } | undefined;
+let state: { busy: boolean; href?: string } | undefined;
 function Probe() {
   const current = useNavigationState();
   // Read from committed renders only: a transition that suspends re-runs
@@ -70,7 +67,6 @@ const press = (name: string) =>
     fireEvent.click(screen.getByRole('button', { name }));
   });
 
-/** The event a browser fires on a page restored from the back-forward cache. */
 function pageshow(persisted: boolean): Event {
   const event = new Event('pageshow');
   Object.defineProperty(event, 'persisted', { value: persisted });
@@ -83,7 +79,6 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  // A full load reported by a test ends here, as does a page it left on its way.
   await act(async () => {
     for (const arrive of unarrived.splice(0)) arrive();
     window.dispatchEvent(pageshow(true));
@@ -143,6 +138,8 @@ describe('usePendingNavigation', () => {
     expect(router.refresh).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Refresh' })).toHaveAttribute('aria-busy', 'true');
     expect(state?.busy).toBe(true);
+    // A refresh goes nowhere, so it carries no address for a skeleton to be chosen by.
+    expect(state?.href).toBeUndefined();
 
     await arrive();
 
@@ -152,21 +149,17 @@ describe('usePendingNavigation', () => {
 });
 
 describe('useNavigationState', () => {
-  it('is idle, with no target, while nothing is on its way', () => {
+  it('is idle, with no address, while nothing is on its way', () => {
     render(<Probe />);
 
-    expect(state).toEqual({ busy: false, target: undefined });
+    expect(state).toEqual({ busy: false, href: undefined });
   });
 
-  it("is busy for every caller while one caller's navigation is on its way, and only that caller is pending", async () => {
+  it("is busy for every caller while one caller's navigation is on its way, with its address, and only that caller is pending", async () => {
     const { arrives, arrive } = arrival();
     render(
       <Navigating push={router.push} arrives={arrives}>
-        <Go
-          name="Switch"
-          href="/coven/testwort-circle/ingredients"
-          options={{ target: COVEN_CARDS }}
-        />
+        <Go name="Switch" href="/coven/testwort-circle/ingredients" />
         <Go name="Other" href="/coven/testwort-circle" />
         <Probe />
       </Navigating>,
@@ -174,28 +167,32 @@ describe('useNavigationState', () => {
 
     await press('Switch');
 
-    expect(state).toEqual({ busy: true, target: COVEN_CARDS });
+    expect(state).toEqual({ busy: true, href: '/coven/testwort-circle/ingredients' });
     expect(screen.getByRole('button', { name: 'Switch' })).toHaveAttribute('aria-busy', 'true');
-    // The other caller started nothing: the page is busy, its own control is not.
     expect(screen.getByRole('button', { name: 'Other' })).toHaveAttribute('aria-busy', 'false');
 
     await arrive();
 
-    expect(state).toEqual({ busy: false, target: undefined });
+    expect(state).toEqual({ busy: false, href: undefined });
   });
 
-  it('is busy with no target for a navigation that names none', async () => {
+  // The address is the whole of what a skeleton is chosen by: a caller can no
+  // longer name one, so an old `target` option leaves no trace in the state.
+  it('carries the address alone, whatever else the caller passes', async () => {
     render(
       <Navigating push={router.push} arrives={arrival().arrives}>
-        <Go name="Go" href="/compendium" />
+        <Go name="Go" href="/compendium?q=testwort" options={{ target: OLD_TARGET }} />
         <Probe />
       </Navigating>,
     );
 
     await press('Go');
 
+    // Why the state could have carried it: the option reached the call.
+    expect(router.push).toHaveBeenCalledTimes(1);
     expect(state?.busy).toBe(true);
-    expect(state?.target).toBeUndefined();
+    expect(state?.href).toBe('/compendium?q=testwort');
+    expect(Object.keys(state ?? {}).sort()).toEqual(['busy', 'href']);
   });
 
   it('reads the same state from a part mounted apart from the caller', async () => {
@@ -215,7 +212,6 @@ describe('useNavigationState', () => {
   });
 });
 
-/** A region that takes its children away while a navigation is on its way, as `MainBody` does. */
 function Region({ children }: { children: ReactNode }) {
   const { busy } = useNavigationState();
   return busy ? <output>Loading</output> : children;
@@ -233,7 +229,7 @@ describe('a navigation whose caller is taken off the page', () => {
       <Navigating push={router.push} arrives={arrives}>
         <Probe />
         <Region>
-          <Go name="Go" href="/curator/forms" options={{ target: COVEN_CARDS }} />
+          <Go name="Go" href="/curator/forms" />
         </Region>
       </Navigating>,
     );
@@ -242,9 +238,8 @@ describe('a navigation whose caller is taken off the page', () => {
 
     expect(screen.queryByRole('button', { name: 'Go' })).toBeNull();
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(state).toEqual({ busy: true, target: COVEN_CARDS });
+    expect(state).toEqual({ busy: true, href: '/curator/forms' });
 
-    // Still waiting a while on: nothing the swap did has ended the wait.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
@@ -254,7 +249,7 @@ describe('a navigation whose caller is taken off the page', () => {
 
     expect(screen.queryByRole('status')).toBeNull();
     expect(screen.getByRole('button', { name: 'Go' })).toBeInTheDocument();
-    expect(state).toEqual({ busy: false, target: undefined });
+    expect(state).toEqual({ busy: false, href: undefined });
   });
 });
 
@@ -263,7 +258,6 @@ describe('two navigations that overlap', () => {
     const first = arrival();
     const second = arrival();
     const arrivals = [first.arrives, second.arrives];
-    const TABLE = { region: 'main', shape: 'table' } as const;
     function Router() {
       const [started, setStarted] = useState<number[]>([]);
       router.push.mockImplementation(() => setStarted((current) => [...current, current.length]));
@@ -277,8 +271,8 @@ describe('two navigations that overlap', () => {
     }
     render(
       <NavigationProvider>
-        <Go name="A" href="/a" options={{ target: COVEN_CARDS }} />
-        <Go name="B" href="/b" options={{ target: TABLE }} />
+        <Go name="A" href="/a" />
+        <Go name="B" href="/b" />
         <Probe />
         <Router />
       </NavigationProvider>,
@@ -287,17 +281,16 @@ describe('two navigations that overlap', () => {
     await press('A');
     await press('B');
 
-    expect(state).toEqual({ busy: true, target: TABLE });
+    expect(state).toEqual({ busy: true, href: '/b' });
     expect(screen.getByRole('button', { name: 'B' })).toHaveAttribute('aria-busy', 'true');
-    // A was superseded: the wait is B's, so A's control is no longer the pressed one.
     expect(screen.getByRole('button', { name: 'A' })).toHaveAttribute('aria-busy', 'false');
 
     await first.arrive();
     // A has arrived; B is still on its way, and the wait is still B's.
-    expect(state).toEqual({ busy: true, target: TABLE });
+    expect(state).toEqual({ busy: true, href: '/b' });
 
     await second.arrive();
-    expect(state).toEqual({ busy: false, target: undefined });
+    expect(state).toEqual({ busy: false, href: undefined });
   });
 });
 

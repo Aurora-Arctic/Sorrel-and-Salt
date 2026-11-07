@@ -21,9 +21,6 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// Recording, completing, changing and deleting a working. Who may do each, what completing takes from the jars, and what a failure
-// part-way leaves are asserted by the rows, read raw.
-
 // `withAudit` as it is, with one seam: a test may wrap the writer so a failure between two writes of one transaction can be staged.
 const seam = vi.hoisted(() => ({
   wrap: undefined as ((write: AuditWriter) => AuditWriter) | undefined,
@@ -51,7 +48,6 @@ beforeEach(async () => {
 
 const DAY = '2026-10-01';
 
-/** A compendium ingredient with one form, and the coven W's jar of it. */
 async function stocked(name: string, quantity: string | null, unit: Unit | null) {
   const ingredientId = await insertIngredient(
     sql,
@@ -73,7 +69,6 @@ const quantityOf = async (jarId: string) =>
       .quantity_on_hand,
   );
 
-/** A spell in W by `author`, complete and shared unless said otherwise. */
 function spellBy(author: typeof A, extra: Parameters<typeof makeSpell>[0] = {}): Promise<string> {
   return insertSpell(
     sql,

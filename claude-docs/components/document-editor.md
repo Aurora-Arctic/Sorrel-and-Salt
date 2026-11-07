@@ -2,10 +2,9 @@
 
 `src/components/DocumentEditor/` — the keeper's editor for one site document, at `/keepers/documents/[key]`. The text is drawn as the public page draws it (`DocumentPage`'s `document-page__body` styles), and a keeper edits it in place as rich text. Admin only: the route calls `requireAdminSession()`, and the GraphQL mutations end at the same service, which is the guard.
 
-## What it does
+## Contracts
 
-- **The Save Draft and Publish row sits under the text**, with its messages, at the end of the form.
-- **The draft saves itself.** The shared `useAutosave` hook (`src/lib/autosave/use-autosave.ts`, [autosave](autosave.md)) saves the text 3 seconds after the last change, at its default timing. A stale revision stops it: the explaining failure shows and no more saves are sent.
+- **The draft saves itself.** The shared `useAutosave` hook (`src/lib/autosave/use-autosave.ts`, `claude-docs/autosave.md`) saves the text 3 seconds after the last change, at its default timing. A stale revision stops it: the explaining failure shows and no more saves are sent.
 - **Save Draft** saves at once, and stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft). While a save is in flight, the text is compared with the text that save is writing instead, so an edit that puts back the text saved before it still counts as a change: once the save lands, the autosave sends it, and Save Draft is never enabled with nothing for it to save.
 - **Publish** is yellow (`.btn--caution`), on the button and its confirm. It opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). It is disabled while any save, autosave or Save Draft, is in flight, so it never publishes a draft that is still being written. The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so. Leaving with unsaved text asks first, through the discard question, and a save or publish in flight is not asked about. The page is read again once a publish lands.
 - **Restore Published Version** sits beside Save Draft and Publish: a quiet button labelled Restore (its accessible name is the full Restore Published Version) that opens a confirmation whose own button, named Restore Published Version, is red. It is available only when a draft is open or there is unsaved text. Confirming with a draft open soft-deletes the draft at the revision the editor holds (`discardDocumentDraft`); with none open it sends nothing. Either way the editor shows `publishedBody` again, with nothing unsaved and no autosave pending. Readers see no change.
@@ -19,17 +18,7 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 
 ## The toolbar
 
-`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has eleven quiet icon buttons (`btn btn--quiet btn--icon`, 2.25rem square, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. They sit in five `role="group"` rows, each named, with a hairline between groups, 0.5rem from the buttons on each side, and 0.25rem between the buttons in a group:
-
-| Group    | Buttons                      |
-| -------- | ---------------------------- |
-| Headings | Heading 2, Heading 3         |
-| Text     | Bold, Italic, Link           |
-| Lists    | Bulleted List, Numbered List |
-| Insert   | Table, Footnote              |
-| History  | Undo, Redo                   |
-
-The groups sit centred in the row, in that order. Each button is a Plate transform, not a hand-written edit:
+`toolbar.tsx` is a `role="toolbar"` above the text box, of quiet icon buttons ([`icons.tsx`](icon-tip.md), "The icons") tipped through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. Each button is a Plate transform, not a hand-written edit:
 
 | Button                       | What it calls                                                                                                                                                | Pressed when                                    |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
@@ -42,9 +31,9 @@ The groups sit centred in the row, in that order. Each button is a Plate transfo
 | Undo, Redo                   | `editor.tf.undo`, `editor.tf.redo`, from Plate's built-in history; the keys do the same: Ctrl+Z, and Ctrl+Y or Ctrl+Shift+Z (Cmd+Z and Cmd+Shift+Z on a Mac) | never                                           |
 
 - **A press keeps the selection.** Each button cancels `mousedown`, so the focus stays in the text and the button acts on what was selected.
-- **The row sticks.** `.document-editor__toolbar` is `position: sticky` at `var(--sticky-top)`, just under the site bar, on `$surface-page` so the text scrolls under it. It stays while the text box is on screen, as its parent `.document-editor__text` ends with the box. No ancestor sets `overflow`, which would stop it.
+- **The row sticks** (`position: sticky` at `var(--sticky-top)`) while the text box is on screen. No ancestor may set `overflow`, which would stop it.
 - **Undo and Redo say when they have nothing to do.** With an empty history stack, the button carries `aria-disabled="true"` and a press does nothing. It is not `disabled`, which would drop it from the arrow-key order.
-- **One tab stop.** The toolbar follows the WAI-ARIA toolbar pattern: only the last-focused button is in the tab order, and the arrow keys, Home and End move focus between the buttons.
+- **One tab stop,** per the WAI-ARIA toolbar pattern.
 - **A link needs a full web address.** `upsertLink` refuses an address the link plugin cannot validate, and the dialog says so and stays open.
 
 ## Pasting
@@ -65,10 +54,10 @@ An empty table cell or footnote definition is serialised by the markdown package
 
 `index.tsx` loads `editor.tsx` with `next/dynamic`, so the editor's code is fetched only on this page and never reaches a public page's bundle.
 
-## Props
-
-`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `publishedBody` (the published text, or empty when nothing is published), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take). The [Document Mailing Panel](document-mailing-panel.md) is not part of the editor: it has its own page, `/keepers/documents`.
-
 ## Leaving the text box with the keyboard
 
 The indent plugin takes Shift+Tab on a block with no indent and does nothing with it, which would trap a keyboard user in the text. `TabEscapePlugin` in `elements.tsx` lets that key through, so focus returns to the toolbar. A block that is indented, or inside a quote, still outdents or lifts as before.
+
+## Not here
+
+The [Document Mailing Panel](document-mailing-panel.md) is not part of the editor: it has its own page, `/keepers/documents`.

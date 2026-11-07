@@ -7,10 +7,8 @@ import { documentMailings } from '@/modules/documents/schema/document-mailings';
 import { documentMailingRecipients } from '@/modules/documents/schema/document-mailing-recipients';
 import { documentMailingItems } from '@/modules/documents/schema/document-mailing-items';
 
-// Compile assertions, checked by `npm run typecheck` and run by nothing: each `@ts-expect-error` fails the typecheck the moment
-// its constraint is loosened, which a runtime assertion cannot see. `tsconfig.json` includes `tests/`, which is what reads this.
+// Run by `npm run typecheck` only: each @ts-expect-error fails it the moment its constraint is loosened.
 
-// The mark itself, as a type: a table that lost it fails its assignment.
 export const marked: NamedWrites[] = [
   documents,
   documentVersions,
@@ -22,7 +20,6 @@ export const marked: NamedWrites[] = [
 const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
 const ofMailing = eq(documentMailingRecipients.mailingId, id);
 
-// A published version is never edited, so `document_versions` takes its writes from the draft methods alone.
 export const versionWrites = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert, so a version cannot go in published under a number of its choosing.
@@ -44,7 +41,6 @@ export const versionWrites = [
     write.delete(documentVersions, eq(documentVersions.documentId, id)),
 ];
 
-// A document's key is seeded and its versions hang off it, so only its title and lede change, by `updateDocument`.
 export const documentWrites = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert.
@@ -60,7 +56,6 @@ export const documentWrites = [
     write.delete(documents, eq(documents.id, id)),
 ];
 
-// A mailing's progress is its own methods' to stamp, so a retried batch mails no one twice.
 export const mailingWrites = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert, so a mailing cannot go in already sent.

@@ -11,9 +11,6 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// The attempts operations' transport half: who may call each by direct request, and that the recording takes a token alone.
-// What is recorded and what is not is services/card-attempts.test.ts's.
-
 let sql: postgres.Sql;
 const { invite } = setUpInvitationAcceptance((client) => {
   sql = client;

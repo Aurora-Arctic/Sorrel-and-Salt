@@ -1,3 +1,4 @@
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import CardDensitySwitch from '.';
@@ -7,19 +8,15 @@ import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import PublicFrame from '../PublicFrame';
-import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { NO_COUNTS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 
-// Render-only; the attribute and the stored choice are asserted in tests/components/CardDensitySwitch.
 const meta = {
   title: 'Forms / Card Density Switch',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// The switch as the coven ingredients page draws it in the narrow search row
-// (`CompendiumListFilter`, coven audience): the word beside its switch on the
-// Filters line, wrapping beneath at the line's start when Clear All shows.
 const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
@@ -28,14 +25,14 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
       <main>
         <div className="page-column">
           <IngredientSearch
-            shape="cards"
+            skeleton={<ListBodySkeleton label="Ingredients" />}
             search={
               <CompendiumListFilter
                 audience="coven"
                 covenSlug="fixture-coven"
                 workspaceId="00000000-0000-4000-8000-000000000001"
                 filter={filter}
-                facets={NO_FACETS}
+                counts={NO_COUNTS}
                 categories={[]}
                 vocabulary={{ deities: [], formIcons: {} }}
                 total={NAMES.length}
@@ -65,13 +62,9 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
   </WorkshopPathname.Provider>
 );
 
-// No filter chosen, so no Clear All: the switch shares the Filters line.
 const covenRowNode = <CovenSearchRow filter={NO_FILTER} />;
-// A form chosen, so Clear All is drawn and the switch wraps beneath.
 const covenRowFilteredNode = <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />;
 
-// Switch: on by default. Toggling it sets `data-card-density` on the story frame's <html>
-// and writes localStorage, so it persists across stories until cleared.
 const STATES: Record<string, ReactNode> = {
   Switch: <CardDensitySwitch />,
   'Coven Row': covenRowNode,

@@ -6,12 +6,11 @@ import { signedInLanding } from '../../lib/landing';
 import { getSession, sessionIsVerified } from '../../lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
 import { siteUrl } from '../../lib/site';
-// Server-only, as social-providers-config.ts's own header says. This page is a server component, so
-// the env var names this reads never reach the client bundle; only the resulting `configured` ids are
-// passed as a prop.
+// Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 /**
  * The bare address is the one to index. `?next=` and `?error=` show the same form, so they name it
@@ -31,8 +30,6 @@ export async function generateMetadata({ searchParams }: SignInPageProps): Promi
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const next = safeReturnPath(params.next);
-  // A signed-in visitor has nothing to do here: they go where a sign-in would have taken them, and an
-  // unverified account to the email page first, as requireSession() sends it.
   const session = await getSession();
   if (session) {
     const target = (next as Route | undefined) ?? (await signedInLanding(session));
@@ -42,8 +39,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const configured = configuredProviders();
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <SignInPanel next={next} error={error} configured={configured} />
-    </main>
+    </PageFrame>
   );
 }

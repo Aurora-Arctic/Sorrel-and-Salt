@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A column, in the email page's frame or the account page's Email section:
-// either gives it its width (`.page-frame--narrow`). The head, the field, the
-// notices and the buttons are the primitives' (_layout.scss, _primitives.scss).
 .email-form {
   @include stack(3);
 }

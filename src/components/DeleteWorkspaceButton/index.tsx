@@ -2,15 +2,13 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { DeleteWorkspaceButtonProps } from './types';
 
-// A steward's Delete on the coven index page: it asks first, naming the coven and what becomes
-// unreachable, then deletes and leaves. A refusal shows in a callout, or a notice in the only steward's
-// exit dialog. The page shows it only to a role holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).
+// The page shows it only to a role holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).
 
 const DeleteWorkspaceDocument = graphql(`
   mutation DeleteWorkspace($workspaceId: ID!) {

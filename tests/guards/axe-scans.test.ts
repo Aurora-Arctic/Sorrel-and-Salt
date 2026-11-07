@@ -3,18 +3,19 @@ import { describe, expect, inject, it } from 'vitest';
 import { MODAL_SCANS, ROUTE_SCANS } from '../e2e/axe-scans';
 import { fromRoot } from '../support/paths';
 
-// The accessibility sweep scans what tests/e2e/axe-scans.ts lists, so the list must name every route and every
-// modal: a page added under src/app, a route added to DESIGN.md §9, or a file that starts drawing a modal fails
-// here until the list names it, and an entry left behind by a removed page or modal fails too.
+// The accessibility sweep scans what tests/e2e/axe-scans.ts lists, so a page added under src/app, a route added
+// to §9 (claude-docs/design/routes.md), or a file that starts drawing a modal fails here until the list names it,
+// and an entry left behind by a removed page or modal fails too.
 
 const PAGE_FILE = /^src\/app\/(.*\/)?page\.tsx$/;
 const SOURCE_FILE = /^src\/.*\.tsx$/;
 const STORY_FILE = /\.stories\.tsx$/;
-// The modal itself and the two wrappers that pass a caller's title through: each caller is scanned, not these.
+// The modal itself and the wrappers that pass a caller's title through: each caller is scanned, not these.
 const MODAL_PARTS = new Set([
   'src/components/Modal/modal.tsx',
   'src/components/Modal/route-modal.tsx',
   'src/components/Modal/modal-button.tsx',
+  'src/components/ConfirmDialog/index.tsx',
 ]);
 // A file that draws only the loading frame of a modal whose code loads when first asked for, mapped to the file that
 // draws the modal itself: the modal is scanned, and the frame holds a loading skeleton in its place for a moment.
@@ -23,7 +24,7 @@ const LOADING_FRAMES: Record<string, string> = {
     'src/components/IngredientForm/quick-look.tsx',
 };
 /** An element that draws a dialog: the modal components opened as JSX, a native dialog, or the ARIA role. */
-const DRAWS_DIALOG = /<(?:Modal|RouteModal|ModalButton)\s|<dialog\s|role="dialog"/;
+const DRAWS_DIALOG = /<(?:Modal|RouteModal|ModalButton|ConfirmDialog)\s|<dialog\s|role="dialog"/;
 
 /** A page file's address: route groups `(name)` dropped, the root page `/`. */
 function routeOf(file: string): string {
@@ -35,13 +36,10 @@ function routeOf(file: string): string {
   return `/${segments.join('/')}`;
 }
 
-/** The routes DESIGN.md §9's table names, from its first column. */
+/** The routes §9's table names (claude-docs/design/routes.md), from its first column. */
 function designRoutes(): string[] {
-  const design = readFileSync(fromRoot('claude-docs/DESIGN.md'), 'utf8');
-  const section = design.slice(
-    design.indexOf('## 9. Routes and components'),
-    design.indexOf('### Components'),
-  );
+  const design = readFileSync(fromRoot('claude-docs/design/routes.md'), 'utf8');
+  const section = design.slice(0, design.indexOf('## Components'));
   return [...section.matchAll(/^\| `([^`]+)`/gm)].map(([, route]) => route);
 }
 
@@ -62,7 +60,7 @@ describe('the accessibility scan list', () => {
     expect(built.filter((route) => !routes.includes(route))).toEqual([]);
   });
 
-  it('names every route in DESIGN.md §9', () => {
+  it('names every route in §9', () => {
     const routes = designRoutes();
 
     expect(routes.length).toBeGreaterThan(30);

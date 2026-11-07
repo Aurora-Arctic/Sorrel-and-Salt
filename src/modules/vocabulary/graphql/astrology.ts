@@ -10,10 +10,8 @@ import {
 import type { AstrologyValueRow, CuratedField } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
-// `CelestialBody` and `ZodiacSign`: the two curated astrology vocabularies, one type each so a client never asks which table a value came from.
 // Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal. The writes are the site admin's.
 
-/** How each vocabulary is named on the schema. */
 const VOCABULARIES = [
   {
     field: 'celestialBodies',
@@ -32,7 +30,6 @@ const VOCABULARIES = [
 for (const { field, type, noun, listNoun } of VOCABULARIES) {
   const ref = curatedVocabularyWrites({
     ref: builder.objectRef<AstrologyValueRow>(type),
-    // One service for the two tables, told which by the vocabulary's field.
     services: {
       create: (session, input) => createAstrologyValue(session, field, input),
       update: (session, id, input) => updateAstrologyValue(session, field, id, input),

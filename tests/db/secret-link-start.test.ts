@@ -9,13 +9,9 @@ import type { Message } from '@/lib/types';
 import { placeholderEmail } from '@/modules/identity';
 import type { AuthInstance } from '../support/types';
 
-// Where Better Auth's endpoints hand a secret-link mail or an account notice to its job: the run is started with ids and an
-// origin, and never
-// the address, the token or the link. The secret-link run itself is tests/workflows/secret-link-mail.test.ts.
-
+// The run is started with ids and an origin, never the address, the token or the link.
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
-// What a job's step hands the transport, when a test runs the step as the run would.
 const delivered = vi.hoisted(() => [] as Message[]);
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: Message) => {
@@ -65,7 +61,6 @@ beforeEach(async () => {
 const userId = async () =>
   (await sql`select id from users where email = ${OWNER}`)[0]!.id as string;
 
-/** The secret-link runs started so far: each run's one argument. */
 async function secretLinkRuns(): Promise<Record<string, unknown>[]> {
   const { secretLinkMail } = await import('@/modules/identity/jobs/secret-link-mail');
   return startJob.mock.calls
@@ -73,7 +68,6 @@ async function secretLinkRuns(): Promise<Record<string, unknown>[]> {
     .map(([, args]) => (args as [Record<string, unknown>])[0]);
 }
 
-/** The reset tokens Better Auth holds for the account. */
 const resetTokens = async (id: string) =>
   (
     await sql`select identifier from verifications where value = ${id} and identifier like 'reset-password:%'`
@@ -97,7 +91,6 @@ describe('a secret-link mail starts its job with ids alone', () => {
       { kind: 'verification', userId: await userId(), authBase: expect.any(String), next: '/' },
     ]);
     expect(JSON.stringify(runs)).not.toContain(DOMAIN);
-    // Nothing was tried directly, so the run is the only way the mail goes.
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -157,7 +150,6 @@ describe('a secret-link mail starts its job with ids alone', () => {
   });
 });
 
-/** The account notice runs started so far: each run's one argument. */
 async function accountNoticeRuns(): Promise<Record<string, unknown>[]> {
   const { accountNoticeMail } = await import('@/modules/identity/jobs/account-notice-mail');
   return startJob.mock.calls
@@ -165,7 +157,6 @@ async function accountNoticeRuns(): Promise<Record<string, unknown>[]> {
     .map(([, args]) => (args as [Record<string, unknown>])[0]);
 }
 
-/** The mail a run's step sends, built from the rows as they stand, or null when it sends none. */
 async function noticeFor(run: Record<string, unknown>): Promise<Message | null> {
   const { accountNoticeStep } = await import('@/modules/identity/jobs/account-notice-mail-steps');
   delivered.length = 0;
@@ -257,7 +248,6 @@ describe('the notice to the address a completed change left', () => {
   const formerOf = async (id: string) =>
     (await sql`select email, former_email, updated_by from users where id = ${id}`)[0]!;
 
-  /** A verified password account at `email`, signed in: its id and its session's cookie. */
   async function signedIn(email: string): Promise<{ id: string; cookie: string }> {
     const up = await post(auth, '/sign-up/email', {
       name: 'Fixture Person',
@@ -272,7 +262,6 @@ describe('the notice to the address a completed change left', () => {
     return { id, cookie: cookieHeader(response) };
   }
 
-  /** Asks for `address` as setEmail does, runs the change link's step as the run would, and follows the mailed link. */
   async function completeChange(id: string, cookie: string, address: string): Promise<Response> {
     await asTouch(
       sql,
@@ -302,7 +291,6 @@ describe('the notice to the address a completed change left', () => {
     const runs = await accountNoticeRuns();
     expect(runs).toEqual([{ kind: 'change-completed', userId: id, origin: expect.any(String) }]);
     expect(JSON.stringify(runs)).not.toContain(DOMAIN);
-    // The run is the only way the notice goes.
     expect(send).not.toHaveBeenCalled();
 
     const message = await noticeFor(runs[0]!);

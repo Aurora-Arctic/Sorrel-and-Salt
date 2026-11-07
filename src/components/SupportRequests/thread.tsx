@@ -1,15 +1,10 @@
 import { type ReactElement, useId } from 'react';
 import LocalTime from '../LocalTime';
 
-// A request's thread (times short, `30 Oct, 2:01 pm`): the sender's message, then each reply, each with who wrote it, a tag and when. The
-// caller says what to call each author, so staff see names and the sender sees "You" and "Staff".
-
 export interface SupportThreadEntry {
   id: string;
-  /** Who wrote it; left out where the tag alone says so. */
   name?: string;
   tag: string;
-  /** A staff-only note: its tag reads "Staff · Internal", with Internal in the warning ink. */
   internal?: boolean;
   at: Date;
   body: string;

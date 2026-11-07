@@ -4,16 +4,13 @@ import type { ShellViewer, ShellWorkspace } from '../../lib/types';
 
 export interface AppShellProps {
   viewer: ShellViewer;
-  /** The viewer's covens, in the switcher's order: the brand and Your Coven go into the first. */
   workspaces: readonly ShellWorkspace[];
   children: ReactNode;
 }
 
-/** One link in the bar's site nav. */
 export interface SiteLink {
   label: string;
   href: Route;
-  /** The address the link is "at" when the page is beneath it, which can differ from `href` (Your Coven). */
   base: string;
 }
 
@@ -26,14 +23,11 @@ export interface AddIngredientButtonProps {
   workspaces: readonly ShellWorkspace[];
 }
 
-/** Somewhere a new ingredient can go: the compendium, or a coven the viewer may write to. */
 export type AddDestination =
   | { kind: 'compendium'; key: string; name: string }
   | { kind: 'coven'; key: string; name: string; workspace: ShellWorkspace };
 
 export interface PausedNoticeProps {
-  /** When the viewer's standing site pause ends; null for a pause with no end date. */
   until: Date | null;
-  /** Where the notice stands: the shell's band above the page, or a page that sets it in its own column. */
   className: string;
 }

@@ -17,14 +17,10 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The builder's category picker reads the categories as it opens.
 beforeEach(() => offerCategories([]));
 
-// The spell builder's visibility control: who can see the spell, its author alone or the whole coven, set at creation, widened once with a confirmation, and read-only once shared.
 // That the service refuses a narrowing is tests/modules/grimoire/services/spells.test.ts's; here the builder shows that refusal's words in its notice.
 
-// A saved spell opens with its sections shut, so each is opened with Open All, to reach the
-// fields; the switch is the footer's and is reached either way.
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { openAll = true } = {}) {
   const view = render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -35,12 +31,10 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}, { openAll = true 
   return view;
 }
 
-// A switch: on is the coven, off is private. It is named as the grimoire list names a shared spell.
 const toggle = () => screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
-// The question over the form: a group named by it (ConfirmOverlay).
 const sharing = () => screen.queryByRole('group', { name: /^Share Fixture Working\?/ });
 
 const SPELL: SpellBuilderSpell = {
@@ -57,7 +51,6 @@ const SPELL: SpellBuilderSpell = {
   steps: [],
 };
 
-/** The spell as the server answers a save: every field as sent, at `revision`. */
 function answer(
   id: string,
   revision: number,
@@ -111,7 +104,6 @@ function acceptUpdate() {
   return calls;
 }
 
-// The words the one-way visibility rule refuses a narrowing with (visibility-rule.ts).
 const NARROWING_REFUSED =
   'This spell has been shared with the coven and cannot be made private again. ' +
   'Duplicate it to get a private copy you can change, or delete it if it should not be there.';
@@ -164,12 +156,10 @@ describe('SpellBuilder visibility', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
-    // Still a draft, so the switch stays free.
     expect(toggle()).toBeChecked();
     expect(toggle()).toBeEnabled();
   });
 
-  // A choice of who can see it is something to save.
   it('has something to save once only the choice has changed, and nothing once it is back', () => {
     renderBuilder();
     // Why Save could stay off: no field holds anything.
@@ -194,7 +184,6 @@ describe('SpellBuilder visibility', () => {
       fireEvent.click(toggle());
 
       const question = sharing();
-      // The question names the spell, then says in one sentence what sharing does.
       expect(question).toHaveTextContent(
         'Share Fixture Working? Every member of the coven will see it, it cannot be made private again, and your other changes are saved with it.',
       );

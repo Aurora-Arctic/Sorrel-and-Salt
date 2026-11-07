@@ -1,7 +1,6 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from './site-target';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useRef, useState } from 'react';
@@ -26,8 +25,6 @@ const loadForm = () => import('../IngredientForm');
 // is a navigation (claude-docs/components/modal.md, "Add Ingredient").
 
 const LABEL = 'Add Ingredient';
-// The solid green at the medium size: the bar's one action, taller than a small
-// button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
@@ -80,8 +77,6 @@ function AddIngredientBody({
         close();
       }}
       duplicateHref={(match) => `/coven/${workspace.slug}/ingredients/${match.id}`}
-      // A linked substitute that is a compendium entry opens its public page; a
-      // coven's own has none to open from here.
       entryHref={({ slug, isGlobal }) => (isGlobal ? `/compendium/ingredients/${slug}` : undefined)}
     />
   );
@@ -140,8 +135,7 @@ const AddIngredientButton = ({
   // Set by a save that opens the new entry's page: the dialog then closes on
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
-  // The coven whose dialog an autosave has already created its ingredient in: the dialog stays
-  // open after `?new` is replaced by the ingredient’s own `?edit=` address.
+  // Set once an autosave creates the ingredient: the dialog stays open as ?new becomes ?edit=.
   const [created, setCreated] = useState<ShellWorkspace | null>(null);
 
   const { all, compendium, covens, defaultCoven, initial } = destinationsOf(
@@ -149,8 +143,6 @@ const AddIngredientButton = ({
     workspaces,
     pathname,
   );
-  // The menu's groups, the side the viewer is on first: a coven's page the covens,
-  // any other page the compendium.
   const sections = sectionsFor(
     { compendium, coven: covens },
     covenSlugOf(pathname) ? 'coven' : 'compendium',
@@ -220,14 +212,12 @@ const AddIngredientButton = ({
         <Modal
           // Another coven's address is another form.
           key={adding.id}
-          // The coven over the action, and named "Add Ingredient to
-          // Whitethorn Coven".
           destination={adding.name}
           title={LABEL}
           onClose={close}
           loading={!form}
-          // Back to the bar's main part when what opened it, the menu's
-          // item, is gone with the menu.
+          // Focus returns to the bar's main part: the menu item that opened this goes with the
+          // menu.
           returnTo={() => main.current}
         >
           {(done) => (
@@ -236,7 +226,7 @@ const AddIngredientButton = ({
               workspace={adding}
               close={done}
               onCreated={(ingredient) => {
-                // Reloading reopens the ingredient in its own dialog on the coven’s list.
+                // Reloading reopens the ingredient in its own dialog on the coven's list.
                 window.history.replaceState(
                   null,
                   '',
@@ -250,7 +240,7 @@ const AddIngredientButton = ({
                 // without `?new`, which closes the dialog.
                 leaving.current = true;
                 const href = `/coven/${adding.slug}/ingredients/${ingredient.id}`;
-                navigate(href as Route, { target: ingredientLinkTarget(href, !onAdmin) });
+                navigate(href as Route);
               }}
             />
           )}

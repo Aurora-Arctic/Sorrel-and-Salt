@@ -166,7 +166,6 @@ export function RadioGroupField<T extends string>({
   );
 }
 
-// The cards sit in a column of their own; the list's rows stay direct children of the fieldset.
 function ChoiceWrap({ cards, children }: { cards: boolean; children: ReactNode }): ReactElement {
   return cards ? <div className="radio-cards">{children}</div> : <>{children}</>;
 }

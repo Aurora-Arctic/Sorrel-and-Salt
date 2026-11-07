@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
@@ -20,12 +20,16 @@ import {
 } from '../../lib/invitation-cards/limits';
 import type { MintFieldsProps, MintFormProps } from './types';
 
-// The modal Mint Cards opens at `?mint`: how many sheets of cards, the day they stop working and a note on the batch, sent as `createInvitationCards`.
 // The answer carries each token once, so the modal then shows the codes and stays until closed; closing re-reads the tab.
 
 const CreateInvitationCardsDocument = graphql(`
-  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {
-    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {
+  mutation CreateInvitationCards(
+    $sheets: Int!
+    $expiresAt: DateTime!
+    $beta: Boolean!
+    $note: String
+  ) {
+    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, beta: $beta, note: $note) {
       batchId
       expiresAt
       tokens
@@ -33,31 +37,26 @@ const CreateInvitationCardsDocument = graphql(`
   }
 `);
 
-/** What the Note is for, behind its info tip. */
 const NOTE_HINT =
   'Shown to keepers beside the batch on the Invitation Cards tab, and searchable there.';
 
-/** The modal's head, and the tab's action that opens it. */
 export const MINT_TITLE = 'Mint Cards';
 
 /** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
-/** The first day an expiry may be: the day after today in UTC, as the service refuses an expiry at or before now. */
+/** The day after today in UTC: the service refuses an expiry at or before now. */
 const earliestDay = (): string =>
   new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-/** The day the expiry starts at: today in UTC plus the default span, a calendar day the keeper may change. */
 const defaultDay = (): string =>
   new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-/** The sheets a field holds, or undefined while it is not a whole number the field can send. */
 const sheetsOf = (text: string): number | undefined => {
   const sheets = Number(text);
   return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
 };
 
-/** The sentence for a sheet count the service would refuse (the same one it sends), or undefined while the field is empty or in range. */
 const sheetsRefusal = (text: string): string | undefined => {
   if (text.trim() === '') return undefined;
   const sheets = sheetsOf(text);
@@ -65,7 +64,6 @@ const sheetsRefusal = (text: string): string | undefined => {
   return inRange ? undefined : `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`;
 };
 
-/** What the sheets come to, as typed: "27 cards"; empty while the field holds no whole number. */
 const totalOf = (text: string): string | undefined => {
   const sheets = sheetsOf(text);
   if (sheets === undefined) return undefined;
@@ -81,6 +79,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [day, setDay] = useState(first);
   const [printBacks, setPrintBacks] = useState(true);
   const [note, setNote] = useState('');
+  const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
@@ -107,7 +106,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
   const discard = useDiscardGuard(
-    minted ? !downloaded : sheets !== '' || day !== first || note !== '',
+    minted ? !downloaded : sheets !== '' || day !== first || note !== '' || beta,
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -125,6 +124,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
+        beta,
         note: note.trim() || undefined,
       });
       setMinting(false);
@@ -202,14 +202,6 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...dayAria}
           />
         </FieldShell>
-        <SwitchField
-          label="Print Backs"
-          name="backs"
-          value="1"
-          checked={printBacks}
-          disabled={minting}
-          onChange={setPrintBacks}
-        />
       </div>
       <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
         <textarea
@@ -224,6 +216,24 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setNote(event.target.value)}
         />
       </FieldShell>
+      <div className="admin-cards__switches">
+        <SwitchField
+          label="Print Backs"
+          name="backs"
+          value="1"
+          checked={printBacks}
+          disabled={minting}
+          onChange={setPrintBacks}
+        />
+        <SwitchField
+          label="Beta Testers"
+          name="beta"
+          value="1"
+          checked={beta}
+          disabled={minting}
+          onChange={setBeta}
+        />
+      </div>
       <FormActions
         noun="Cards"
         label="Mint Cards"

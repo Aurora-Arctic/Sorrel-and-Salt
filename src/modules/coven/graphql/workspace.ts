@@ -31,19 +31,14 @@ export const WorkspaceMemberRef = builder
       role: t.expose('role', { type: WorkspaceRoleEnum }),
       joinedAt: t.expose('joinedAt', { type: 'DateTime' }),
       workspace: t.field({ type: WorkspaceRef, resolve: (member) => member.workspace }),
-      // The name through `usersById`, one read for every member a request
-      // lists, whichever covens they sit in.
       user: t.field({ type: CoMemberRef, resolve: (member) => ({ id: member.userId }) }),
-      // Who sent the invitation that seated them; null for a coven's creator.
-      // Named through `usersById` with `user`, so one read covers both.
+      // Null for a coven's creator.
       invitedBy: t.field({
         type: CoMemberRef,
         nullable: true,
         resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
       }),
-      // The owner's alone, on a field of its own rather than on
-      // `user`, a `CoMember` every member reads. Through `memberEmailsByMember`,
-      // one read per page of members; anyone else gets `FORBIDDEN`.
+      // On a field of its own rather than on `user`, which every member reads; anyone else gets `FORBIDDEN`.
       email: t.field({
         type: 'String',
         nullable: true,
@@ -59,9 +54,7 @@ export const WorkspaceMemberRef = builder
     }),
   });
 
-// Here rather than in `WorkspaceRef`'s own fields, which are built before
-// `WorkspaceMemberRef` exists. A coven at a time: the service checks
-// `member: read` and reads one page, narrowed by `query` when given.
+// Here because `WorkspaceRef`'s own fields are built before `WorkspaceMemberRef` exists.
 builder.objectField(WorkspaceRef, 'members', (t) =>
   t.pagedConnection({
     type: WorkspaceMemberRef,
@@ -73,8 +66,7 @@ builder.objectField(WorkspaceRef, 'members', (t) =>
   }),
 );
 
-// A coven by the id a page gave the browser, for the fields it reads afterwards (its members,
-// when a dialog opens). The service asks only for a seat; each field asks for its own permission.
+// The service asks only for a seat; each field asks for its own permission.
 builder.queryField('workspace', (t) =>
   t.field({
     type: WorkspaceRef,
@@ -86,9 +78,7 @@ builder.queryField('workspace', (t) =>
   }),
 );
 
-// On `User` from here rather than in identity, which may import no module.
-// A caller reads their own; a site admin reads anyone's, by name and role only,
-// and the service answers a `Forbidden` for the rest.
+// Here because identity may import no module. A site admin reads anyone's, by name and role only.
 builder.objectField(UserRef, 'memberships', (t) =>
   t.field({
     type: [WorkspaceMemberRef],
@@ -96,8 +86,7 @@ builder.objectField(UserRef, 'memberships', (t) =>
   }),
 );
 
-// The gate is the service's, so this scope only keeps a signed-out caller out
-// (claude-docs/graphql/schema.md, "Auth scopes").
+// The gate is the service's; this scope only keeps a signed-out caller out (claude-docs/graphql/schema.md, "Auth scopes: the second check").
 builder.mutationField('createWorkspace', (t) =>
   t.field({
     type: WorkspaceRef,

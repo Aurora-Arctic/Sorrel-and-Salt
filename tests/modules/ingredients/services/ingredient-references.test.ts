@@ -37,11 +37,9 @@ beforeEach(async () => {
   await sql`truncate ingredients, "references" cascade`;
 });
 
-/** A W-local stub: no formal name, and so `none`. */
 const local = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none', ...overrides });
 
-/** A compendium stub: no formal name, and so `none`. */
 const entry = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: null, nomenclature: 'none', ...overrides });
 
@@ -52,7 +50,6 @@ const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id
 const compendiumBook = (title: string, authors: string | null = null) =>
   insertReference(sql, { title, authors }, E.id);
 
-/** One of a coven's books, seeded raw. */
 const covenBook = (workspaceId: string, title: string) =>
   insertReference(sql, { workspace_id: workspaceId, title }, A.id);
 
@@ -61,21 +58,18 @@ const cite = (referenceId: string, locator?: string): ReferenceLinkFields => ({
   locator,
 });
 
-/** The whole stub as either service takes it, with these references. */
 const input = (name: string, references: ReferenceLinkFields[]) => ({
   name,
   nomenclature: 'none' as const,
   references,
 });
 
-/** What the read answers for one ingredient: each citation, and its locator. */
 async function readBack(session: Session | null, id: string, workspaceId: string | null) {
   const [answer] = await referencesOf(session, [{ id, workspaceId }]);
   if (answer instanceof Error) throw answer;
   return answer.map(({ reference, locator }) => ({ title: reference.title, locator }));
 }
 
-/** Every link row of the ingredient, tombstones included, oldest first. */
 function linkRows(ingredientId: string) {
   return sql`
     select id, reference_id, locator, created_by, deleted_at, xmin::text as xmin
@@ -86,7 +80,6 @@ function linkRows(ingredientId: string) {
 const liveLinks = async (ingredientId: string) =>
   (await linkRows(ingredientId)).filter((row) => row.deleted_at === null);
 
-/** The issues a refused write carried, by path and message. */
 async function refusal(write: Promise<unknown>) {
   const error = await write.catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ValidationError);

@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -11,10 +11,9 @@ import ReviewRow from './review-row';
 import type { ReviewMarkProps } from './types';
 import './review-mark.scss';
 
-// The curator's Reviewed switch on a compendium entry: it saves on flip and stands, with the review day, as
-// the last row of the Quick Look's and the entry page's head. The edit and add modals carry the switch as a form field instead
-// (IngredientForm). The service is the guard; this is only the control (claude-docs/components/ingredient-entry.md, "Structure").
-// A switch, not a button that flips its label, so the state is the control's own to a screen reader.
+// The curator's Reviewed switch on a compendium entry: it saves on flip. A switch, not a button that flips its label,
+// so the state is the control's own to a screen reader. The service is the guard
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 export const SetCompendiumEntryReviewedDocument = graphql(`
   mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {

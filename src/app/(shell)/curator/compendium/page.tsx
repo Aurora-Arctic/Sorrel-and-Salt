@@ -14,7 +14,6 @@ import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
 import { single } from '../../../../lib/search-params';
 import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
-import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumListEntry,
   CompendiumListFilter,
@@ -50,29 +49,21 @@ export const metadata: Metadata = {
   title: 'Compendium',
 };
 
-/** The button that opens the add dialog. */
 const ADD_TITLE = 'Add Ingredient';
-/** The add dialog's head, "Add Ingredient to Compendium": the destination over the action. */
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
-// The global compendium, for a keeper to add to, edit and retire. A modal over the list does the
-// writing, opened by `?new=ingredient-compendium` (or a bare `?new`) or `?edit=<slug>`; any
-// other `?new` is the shell's Add Ingredient. Each filter shows how many entries each choice lists.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
   const place = readListPlace(params, NEW_COMPENDIUM_ENTRY);
   const { after, before, adding } = place;
-  // Every filter, read through the parameter table (CompendiumList/params.ts).
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
 
-  // The address names categories and deities by slug; the compendium filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
   };
-  // The admin list holds hidden entries beside shown ones; the Hidden switch narrows it to them.
   const asked = COMPENDIUM_PARAMS.variables(filter, lookups);
   const variables = JSON.stringify({ ...asked, listing: asked.listing ?? 'all' });
   // The page's rows carry each entry's sourcing score for its column, read in the list's own query; the facets need none.
@@ -82,57 +73,36 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     withSourcingScore: true,
   });
 
-  // The entry whose details are open over the list, `?entry=`.
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
-    // The session, for the Reviewed filter and its counts, a curator's alone.
     readCompendium(pageVariables, after, before, DEFAULT_PAGE_SIZE, session),
     readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
     entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
   ]);
-  const facets = compendiumFacetCounts(counts, {
-    formIcons,
-    deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
-    categories: new Map(categories.map((category) => [category.id, category])),
-  });
-  // The list as it stands, no modal over it: where the details close to, and
-  // what each row's Edit and name open over.
   const list = { ...filter, after, before };
-  // The list with the details open, which an edit modal opens over and closes back to.
   const here = { ...list, entry: shown ? entrySlug : undefined };
-  // An old address opens the entry at its new one, as the public route's redirect does.
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
   if (shown?.kind === 'moved') {
     const dialog = adding ? 'new' : place.editSlug ? { edit: place.editSlug } : undefined;
     redirect(compendiumHref({ ...list, entry: shown.slug }, dialog));
   }
   const detailed = shown?.kind === 'entry' ? shown.entry : undefined;
-  // The open details' sections, read uncached as the entry's page reads them, and only while the
-  // details are open; none for an entry gone since.
   const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
-  // The keeper's or curator's own covens that hold it, and only those.
   const covens = summary ? await covensHolding(detailed.id) : [];
   // The entry's review mark, the admin's own read: the compendium's cached reads leave it out.
   const review = summary
     ? await readOrMissing(() => readCompendiumReview(session, detailed.id))
     : undefined;
-  // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
-  // The review read for the entry the edit modal opens, its switch a field of the form; one row by id.
   const editReview = editing
     ? await readOrMissing(() => readCompendiumReview(session, editing.id))
     : undefined;
-  // Whether the entry the modal edits is shown, for the form's own switch; a hidden entry is a curator's to read.
   const editShown = editing
     ? await readOrMissing(() => getIngredient(session, editing.id))
     : undefined;
-  // The plus beside the pencil, for the covens the keeper or curator is a member of and may add in:
-  // none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
-  // The form open, if one is: a near match's Quick Look opens over it, and the details close back
-  // to it.
   const form: ListDialog | undefined = adding
     ? 'new'
     : editing && place.editSlug
@@ -176,7 +146,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <CompendiumList
         entries={entries}
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories}
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}

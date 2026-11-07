@@ -21,8 +21,7 @@ import type {
   SubstituteRow,
 } from '../types';
 
-// `Ingredient` as DESIGN.md §7 sketches it, over the row the services return: every correspondence field, the tier as `isGlobal`,
-// and the six children through the request's loaders, its forms as `variants`. `identityKey` and `workspaceId` stay off the wire.
+// `identityKey` and `workspaceId` stay off the wire.
 
 export const CompendiumListingEnum = builder.enumType('CompendiumListing', {
   values: COMPENDIUM_LISTINGS,
@@ -40,19 +39,16 @@ export const CompendiumOrderEnum = builder.enumType('CompendiumOrder', {
     'Which way a compendium sort runs: asc, its usual direction, or desc, the exact reverse, name and id ties included. Ignored without a sort.',
 });
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
-// A search's toxic setting, an argument rather than a field.
 export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
   values: TOXIC_FILTERS,
   description:
     'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
 });
-// Where a coven's list reads from, an argument rather than a field.
 export const IngredientSourceEnum = builder.enumType('IngredientSource', {
   values: INGREDIENT_SOURCES,
   description:
     "Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.",
 });
-// How a search combines its categories, an argument rather than a field.
 export const CategoryModeEnum = builder.enumType('CategoryMode', {
   values: CATEGORY_MODES,
   description:
@@ -67,8 +63,7 @@ export const IngredientRef = builder.objectRef<IngredientRow>('Ingredient');
 export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('IngredientVariant');
 
 /**
- * A link or a typed name (DESIGN.md §7). No `audit`, as `folkNames`
- * carries none.
+ * No `audit`, as `folkNames` carries none.
  */
 export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
   description:
@@ -104,8 +99,7 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
 });
 
 /**
- * One of an ingredient's alternative names. Its id is what promoting it
- * names. No `audit`.
+ * Its id is what promoting it names. No `audit`.
  */
 export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
   description: 'An alternative name for an ingredient.',
@@ -116,8 +110,7 @@ export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement(
 });
 
 /**
- * A deity picked or typed (DESIGN.md §7). No `audit`, as `folkNames`
- * carries none.
+ * No `audit`, as `folkNames` carries none.
  */
 export const IngredientDeityRef = builder
   .objectRef<IngredientDeityRow>('IngredientDeity')
@@ -172,12 +165,10 @@ IngredientVariantRef.implement({
       type: [CategoryRef],
       resolve: (row, _args, { loaders }) => loaders.categoriesByVariant.load(row),
     }),
-    // Alphabetical by the name each shows, `[]` when there are none.
     substitutes: t.field({
       type: [SubstituteRef],
       resolve: (row, _args, { loaders }) => loaders.substitutesByVariant.load(row),
     }),
-    // Alphabetical by citation, `[]` when there are none.
     references: t.field({
       type: [ReferenceLinkRef],
       resolve: (row, _args, { loaders }) => loaders.referencesByVariant.load(row),
@@ -186,7 +177,6 @@ IngredientVariantRef.implement({
   }),
 });
 
-/** The description of `expectedRevision` on both update mutations. */
 export const EXPECTED_REVISION =
   'The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.';
 
@@ -219,7 +209,7 @@ IngredientRef.implement({
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     retired: t.boolean({
       description:
-        'A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).',
+        'A compendium entry the curators have retired, read by a coven whose cupboard still names it.',
       resolve: (row) => isRetired(row),
     }),
     reviewedAt: t.field({
@@ -239,23 +229,19 @@ IngredientRef.implement({
       type: [CategoryRef],
       resolve: (row, _args, { loaders }) => loaders.categoriesByIngredient.load(row),
     }),
-    // Alphabetical by the name each shows, `[]` when there are none.
     substitutes: t.field({
       type: [SubstituteRef],
       resolve: (row, _args, { loaders }) => loaders.substitutesByIngredient.load(row),
     }),
-    // In the order entered, `[]` when there are none.
     deities: t.field({
       type: [IngredientDeityRef],
       resolve: (row, _args, { loaders }) => loaders.deitiesByIngredient.load(row),
     }),
-    // By form, case aside, `[]` for an entry that is information only.
     // A bare list, bounded by its parent, as every child list here is.
     variants: t.field({
       type: [IngredientVariantRef],
       resolve: (row, _args, { loaders }) => loaders.variantsByIngredient.load(row),
     }),
-    // Alphabetical by citation, `[]` when there are none.
     references: t.field({
       type: [ReferenceLinkRef],
       resolve: (row, _args, { loaders }) => loaders.referencesByIngredient.load(row),

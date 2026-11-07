@@ -15,10 +15,8 @@ import { isoDay } from '../DateField/day';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
-// A day-range field: a button showing the range in short words, opening a calendar of two months
-// with quick picks beside it. The first day picked starts the range and the second ends it; one day
-// picked twice is a single day. The calendar is the day field's, in the same popover
-// (claude-docs/components/date-range-field.md).
+// A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
+// calendar is the day field's, in the same popover (claude-docs/components/date-field.md).
 
 // Below this width the calendar shows one month, as two side by side would not fit beside the picks.
 const NARROW = '(max-width: 47.9375rem)';
@@ -108,7 +106,6 @@ export default function DateRangeField({
     finish(picked < pending ? { from: picked, to: pending } : { from: pending, to: picked });
   };
 
-  // Looking back, the range's own month is the last one shown; looking ahead, the first.
   const anchor = (past ? (end ?? start) : (start ?? end)) ?? new Date();
   const defaultMonth = past
     ? new Date(anchor.getFullYear(), anchor.getMonth() - (months - 1))
@@ -194,7 +191,8 @@ export default function DateRangeField({
               captionLayout="label"
               components={{ Chevron: CalendarChevron }}
               disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
-              // The library's own range rule extends the range it holds; the field's is first then last.
+              // The library's own range rule extends the range it holds; the field's is first
+              // then last.
               onSelect={(_range, day) => pick(day)}
               classNames={CALENDAR_CLASS_NAMES}
             />

@@ -12,9 +12,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More: Make It Ours and Remove on a compendium entry the cupboard holds, as a menu.
-// Delete and a lone Remove are never on the card, since the entry's edit dialog holds them; a
-// refusal gives More the focus back (claude-docs/components/coven-cards.md).
+// claude-docs/components/coven-cards.md
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
@@ -68,7 +66,6 @@ describe('CardMore', () => {
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
-    // The dots draw their labelled section though every choice is the coven's.
     const menu = screen.getByRole('menu', { name: 'More for House Salt' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
       within(menu).getByRole('menuitem', { name: 'Remove' }),
@@ -99,7 +96,7 @@ describe('CardMore', () => {
     renderOnPage({ ...HELD, leaveHref: LIST });
 
     choose('House Salt', 'Remove');
-    press(within(await screen.findByRole('dialog')).getByRole('button', { name: /^Remove/ }));
+    press(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /^Remove/ }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(LIST));
     expect(router.refresh).not.toHaveBeenCalled();
@@ -110,11 +107,11 @@ describe('CardMore', () => {
     renderOnPage(HELD);
 
     choose('House Salt', 'Remove');
-    const ask = screen.getByRole('dialog');
+    const ask = screen.getByRole('alertdialog');
     press(within(ask).getByRole('button', { name: /^Remove/ }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(more('House Salt')).toHaveFocus();
     expect(router.refresh).not.toHaveBeenCalled();
   });

@@ -14,14 +14,12 @@
   }
 }
 
-// The Revoke column: the shared dangerous-action column (`row-action-column`), red as the Impersonate
-// column is, since a revoke cannot be undone.
+// Red as the Impersonate column is: a revoke cannot be undone.
 .admin-cards__revoke {
   @include row-action-column(1);
 }
 
-// The table above the stacking width: the dates muted at caption size, as the user list's Signed Up
-// is. Scoped here because a card already labels each fact.
+// Scoped here: a card already labels each fact.
 @container data-table (width > #{$table-stack-width}) {
   .admin-cards__fact {
     color: $text-muted;
@@ -29,8 +27,7 @@
   }
 }
 
-// The Refused Opens table above its stacking width: a narrower side inset than the shared tables so its cells wrap
-// less in the dialog, and the card position kept on one line. The stacked cards keep the shared padding.
+// A narrower side inset than the shared tables so cells wrap less in the dialog.
 @container data-table (width > #{$table-stack-width}) {
   .data-table.admin-cards__refused {
     th,
@@ -44,8 +41,6 @@
   }
 }
 
-// A refused open's count and dates under its reason, muted at caption size; each date stays on one line, the
-// reason above may wrap.
 .admin-cards__refusal-when {
   display: block;
   color: $text-muted;
@@ -56,8 +51,7 @@
   }
 }
 
-// The live total, in the Number of Sheets field's `after` slot under its input and any error. One line is always
-// reserved, so it appearing, changing or going never moves the fields beside or below it.
+// One line is always reserved, so the total appearing or changing never moves the fields.
 .admin-cards__total {
   min-height: 1.5em;
   margin: 0;
@@ -66,8 +60,6 @@
   line-height: 1.5;
 }
 
-// Number of Sheets, Expires On and Print Backs on one row, each top-aligned so the three labels share a line and the
-// controls share the next. The sheets field is sized for its label (kept on one line with its info tip) and a number up to 55; the row wraps only when the dialog is narrower than about 453px, a phone-width form.
 // The refusal stays on one line, running on under the next field, which has nothing beneath its control.
 .admin-cards__total--error .field__error {
   font-size: type-size('caption');
@@ -80,7 +72,6 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: space(4);
-  // The sheets field already reserves its total line, so a wrapped second line needs little more space above it.
   row-gap: space(2);
 
   > :first-child {
@@ -92,33 +83,30 @@
     flex: 0 1 auto;
   }
 
-  // The sheets label carries an info tip and so stands taller than the other two; every label row here takes that
-  // height so the three controls start on one line.
-  .field__label-row,
-  > .switch > .field__label {
+  // Both label rows take the taller height so the two controls start on one line.
+  .field__label-row {
     min-block-size: 24px;
   }
 
-  // The sheets label and its info tip stay on one line, so the field can be narrower than its label's full width.
   .field__label-row {
     flex-wrap: nowrap;
     white-space: nowrap;
   }
+}
 
-  > .switch > .field__label {
-    display: flex;
-    align-items: center;
-  }
+.admin-cards__switches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: space(6);
 
-  // The shared switch centres its track under its label; here the track starts at the label's left edge, as the
-  // date field's control does under its label.
+  // The shared switch centres its track under its label; here the track starts at the label's left edge.
   > .switch {
     align-items: flex-start;
   }
 }
 
-// The answer after minting: the batch sentence, then its sheets and expiry close beneath it, so the two read as one
-// statement a form gap away from the notice and the buttons. The focus ring wraps the sentence, not the dialog's width.
+// The focus ring wraps the sentence, not the dialog's width.
 .admin-cards__result {
   display: flex;
   flex-direction: column;
@@ -145,8 +133,6 @@
   position: relative;
 }
 
-// Beside the two range fields on a wide drawer the status keeps the width its longest option
-// needs, and the ranges share the rest; stacked, it is as wide as the drawer.
 .admin-cards__status {
   @media (min-width: $shell-tablet-width) {
     flex: none;
@@ -154,9 +140,7 @@
   }
 }
 
-// A batch's note under its name, muted at caption size and wrapping to two lines at most in a column no wider than a
-// readable measure, so a long note never widens the nowrap table. The height cap holds it to two lines where line-clamp
-// is not drawn.
+// The height cap holds it to two lines where line-clamp is not drawn.
 .admin-cards__note {
   display: -webkit-box;
   overflow: hidden;

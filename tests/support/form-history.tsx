@@ -16,9 +16,6 @@ import {
 } from '@/components/Field';
 import type { FormHistory, UseFormHistoryOptions } from '@/components/Field/types';
 
-// A small react-hook-form form for the undo and redo tests: a text field, a select, a fieldset of rows, and
-// a field in a folded `<details>` that `onRestored` opens. Wired as the admin forms are, with a Save that follows `isDirty`.
-
 export interface ProbeValues {
   title: string;
   kind: string;
@@ -51,13 +48,9 @@ interface ProbeProps {
   ignore?: (target: HTMLElement) => boolean;
   onRestored?: UseFormHistoryOptions['onRestored'];
   skip?: (name: string) => boolean;
-  /** Handed the form and its history on every render. */
   onHandles?: (handles: ProbeHandles) => void;
-  /** Draws a combobox that is open, for a chord inside one. */
   openCombobox?: boolean | 'highlighted';
-  /** Draws the Undo and Redo buttons. */
   buttons?: boolean;
-  /** The rows the list starts with. */
   items?: ProbeValues['items'];
 }
 
@@ -73,7 +66,6 @@ export function HistoryProbe({
 }: ProbeProps): ReactElement {
   const methods = useForm<ProbeValues>({
     defaultValues: items ? { ...START, items } : START,
-    // Title is required, so a restore to blank is invalid.
     resolver: (values): ResolverResult<ProbeValues> =>
       values.title
         ? { values, errors: {} }

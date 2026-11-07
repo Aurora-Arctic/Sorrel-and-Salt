@@ -1,13 +1,13 @@
 # Modules
 
-`src/` is a modular monolith (MB.86). Eight domain modules under `src/modules/`, the eighth of them, `help`, planned (MB.175)
+`src/` is a modular monolith (MB.86). Seven domain modules under `src/modules/` (`identity`, `coven`, `vocabulary`, `ingredients`, `grimoire`, `support` and `documents`), with an eighth, `help`, planned,
 own every table and every service; the database layer, the GraphQL host, `lib`
 and the presentation tree are infrastructure that composes them. A module has a
 public surface, an allowed set of modules it may import, and two lint
 mechanisms — a path glob and a plugin rule — that make a boundary crossing fail in the diff that
 adds it. The record behind the shape, and what a later extraction would
 replace, is
-[`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md).
+[`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary).
 
 ## Layout
 
@@ -32,11 +32,10 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
-`deityTraditionsById` and `ingredientFormsById` loaders (MB.167) and the
-`otherNamesByDeity` loader (M14.23); `ingredients` has
+`deityTraditionsById`, `ingredientFormsById` and `otherNamesByDeity` loaders; `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
-the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
+the workspace ingredient mutations, the compendium's three, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
 `categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient` and
@@ -84,7 +83,7 @@ a service lands in the module that owns the table it writes.
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
 services, because a module of its own would own no table and import
 everything `ingredients` owns
-([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+([`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary),
 "The five modules"; splitting the table is under its "What it rules out").
 The reads that cross the tiers are the seam below.
 
@@ -96,7 +95,7 @@ a module above `ingredients` could not be called from without a cycle. So a
 vocabulary row's references are read from `ingredients`, as `User.memberships`
 is added from `coven`, and the compendium-tier rows belong to the tier seam's
 extraction unit
-([`design-decisions/mb.151-references.md`](design-decisions/mb.151-references.md)).
+([`ingredients.md`, "A reference is one source, kept once, rendered in Chicago form"](design-decisions/ingredients.md#a-reference-is-one-source-kept-once-rendered-in-chicago-form)).
 
 **`invitations` is `coven`'s, both tiers** (MB.201). A row with a null
 workspace and role is a site-tier invitation, which grants admin. The table
@@ -105,7 +104,7 @@ sits with the workspace it mostly names because its foreign key needs
 tier reaches it as admin curation reaches `ingredients`: `identity`'s
 site-tier service calls the repository's named writes and finders under the
 `SiteAdmin` proof, and imports nothing of `coven`'s
-([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
+([`auth.md`, "Workspace and admin invitations are one two-tier table"](design-decisions/auth.md#workspace-and-admin-invitations-are-one-two-tier-table)).
 The two tables it replaced, `workspace_invitations` and `admin_invitations`,
 were undeclared by MB.202 and dropped by MB.203.
 
@@ -121,7 +120,7 @@ A module offers three things to the rest of the tree, and nothing else:
   without loading a `server-only` service: the seed, the repository,
   drizzle-kit and a cross-module foreign key. Above the database layer a
   table object is inert, so a page importing one leaks nothing
-  ([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+  ([`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary),
   "The five modules").
 - **`validation/*.ts`** — the input surface. A Zod schema is run by the
   form before a request is sent and by the service again after, so a client
@@ -139,10 +138,10 @@ of any of them from outside the module is a boundary violation, whatever the imp
 
 A step several services of one module repeat lives once in a service file
 the index does not re-export, and each service calls it between its own
-checks (MB.210, on the owner's call for shared steps over a descriptor
-factory): every exported service keeps its function, its JSDoc, and its own
-`assertSiteAdmin(` and `expireCompendium()`, so a reader sees the
-check and the expiry in the service they guard.
+checks, rather than through a descriptor factory: every exported service keeps
+its function, its JSDoc, and its own authorization check (`assertSiteAdmin(` or
+`assertCurator(`) and `expireCompendium()`, so a reader sees the check and the
+expiry in the service they guard.
 
 - **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
   each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
@@ -150,7 +149,13 @@ check and the expiry in the service they guard.
   `parseUnderLiveParent` for a row filed under a group, and a group's
   `moveTarget`, `updateGroup` and `deleteGroup`, built on
   `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`
-  it moves — their column, their slug rule, and the walk that reads them.
+  it moves — their column, their slug rule, and the walk that reads them. The file is internal to the module and the index exports no part of it. Its rules:
+  - A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
+  - Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
+  - A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
+  - A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
+  - Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
+  - Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
 - **`vocabulary/services/curated-lists.ts`** — `readableFilter` and
   `cachedFilteredList`, the list and count of a vocabulary filtered by a
   group. Each service still spells its own two cache keys, which
@@ -171,8 +176,7 @@ walk over a finder's pages; `plural`, `joinAnd` and `addressTaken` in
 `in-id-order.ts`, a batch answered in its ids' order. `coven` exports
 `readersOf` for every read of the compendium and, optionally, one coven. A
 service writing its own slug-collision refusal, move target, `describeEntry`
-or page walk is a review finding: MB.224 retired the guard that pinned the
-call sites, since it tested where code lives, not what it does.
+or page walk is a review finding; no guard pins the call sites.
 
 ## The boundary
 
@@ -198,6 +202,8 @@ The dependency graph is fixed and acyclic:
 | `vocabulary`  | `identity`, `coven`                              |
 | `ingredients` | `identity`, `coven`, `vocabulary`                |
 | `grimoire`    | `identity`, `coven`, `vocabulary`, `ingredients` |
+| `support`     | `identity`                                       |
+| `documents`   | `identity`                                       |
 
 Every edge is a foreign key or a service call that already crosses in that
 direction. A new edge is a design change: add it to `ALLOWED` in `lint/sorrel-lint.js` in
@@ -210,15 +216,14 @@ modules.
 ### Enforcement
 
 Two lint layers, a path glob for the alias and a plugin rule for the
-relative spellings a glob cannot judge (MB.224, which retired the guard that
-scanned the import graph on every test run):
+relative spellings a glob cannot judge (no guard scans the import graph on every test run):
 
 - **Lint.** `.oxlintrc.json` carries one `no-restricted-imports` pattern group
   banning `@/modules/*/services`, `@/modules/*/services/**`,
   `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders`,
   `@/modules/*/loaders/**` and `@/modules/*/types`. It is restated in every override, because an
   override replaces the top-level rule rather than merging with it
-  ([`db/query-building.md`](db/query-building.md), "Where queries may be
+  ([`db/repository-files.md`](db/repository-files.md), "Where queries may be
   built"). The bare `@/modules/<name>` index import matches none of the
   patterns, so no negation is needed. The lint sees only the alias spelling.
 - **Plugin rule.** `sorrel/module-boundaries` in `lint/sorrel-lint.js`
@@ -228,7 +233,7 @@ scanned the import graph on every test run):
   module-to-module edge its `ALLOWED` map does not name; a module importing
   presentation; and an import into `src/db/repository/` other than its index.
   `import/no-cycle` fails a cycle between files anywhere, the repository
-  included since MB.231.
+  included.
   A type-only import counts exactly like a runtime one: `import type` is
   erased at compile time but couples to the file all the same, and the index
   exports the type too.
@@ -246,105 +251,7 @@ too.
 
 ## The tier seam
 
-The compendium's future extraction unit is the compendium tier of
-`ingredients` plus `vocabulary`. What would make that extraction a rewrite is
-an uncounted set of reads that cross from a workspace's rows into the
-compendium's. So the set is counted, here: **this section names every top-level function in
-`src/db/repository/` whose SQL reads the compendium tier**, exported or not —
-anything calling `inCompendium(…)`, the predicate's one spelling since MB.100,
-or one of the builders that read both tiers through it — `inTiers`,
-`readableInTiers`, `readableIngredientParent` and `findPageInTiers` with its
-count, each the one spelling of its read since MB.206 — or writing
-`workspace_id is null` or `isNull(workspaceId)` out by hand, and anything
-that reads both tiers in one statement. A predicate is named by the
-declaration it is written in, and a private helper under its own name rather
-than credited to whichever export happens to sit above it. Review holds the
-list since MB.224 retired the guard that pinned it.
-
-The list follows, by file. Nothing checks it, so it states no total that
-could go stale: review compares it with the code. "Compendium" in the last column means
-the read touches the compendium tier alone; "both" means it reads the
-compendium and a coven's rows in one statement.
-
-**The predicate and the builders over it.** Every other entry reads the tier
-through one of these.
-
-| Name                       | File                   | Task   | What it is                                                                                   | Reads      |
-| -------------------------- | ---------------------- | ------ | -------------------------------------------------------------------------------------------- | ---------- |
-| `inCompendium`             | `predicates.ts`        | MB.100 | The predicate itself, `workspace_id IS NULL`                                                 | compendium |
-| `inTiers`                  | `predicates.ts`        | MB.206 | The compendium or the proofs' covens                                                         | both       |
-| `readableInTiers`          | `predicates.ts`        | MB.206 | `inTiers`, live rows only                                                                    | both       |
-| `readableIngredientParent` | `ingredient-parent.ts` | MB.206 | A child row's ingredient is readable                                                         | both       |
-| `inUseIngredientParent`    | `ingredient-parent.ts` | M12.24 | `readableIngredientParent`, or a retired compendium entry the reading coven's cupboard names | both       |
-| `inUseVariantParent`       | `ingredient-parent.ts` | M12.24 | The same, through a form                                                                     | both       |
-| `findPageInTiers`          | `finders.ts`           | MB.206 | A cursor page (one that resumes from the last row) over `readableInTiers`                    | both       |
-| `findPageCountInTiers`     | `finders.ts`           | MB.206 | Its count                                                                                    | both       |
-
-**The functions.**
-
-| Name                                          | File                   | Task           | What it reads                                                                                                                                  | Reads      |
-| --------------------------------------------- | ---------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `findSimilarIngredients`                      | `ingredients.ts`       | M4.7           | The fuzzy duplicate match                                                                                                                      | both       |
-| `findManyIngredients`                         | `ingredients.ts`       | MB.9           | A loader's batch of ingredients by id                                                                                                          | both       |
-| `findOneIngredient`                           | `ingredients.ts`       | M8.5           | One row in the compendium or a proof's coven                                                                                                   | both       |
-| `findReadableVariant`                         | `ingredients.ts`       | M9.3           | The form a jar may name; never a retired entry's                                                                                               | both       |
-| `findManyOfIngredients`                       | `ingredients.ts`       | M4.8           | An ingredient's folk names and category links                                                                                                  | both       |
-| `findManyOfVariants`                          | `ingredients.ts`       | MB.218         | The rows one form of an ingredient owns                                                                                                        | both       |
-| `findDeitiesOfIngredients`                    | `ingredients.ts`       | MB.167         | An ingredient's deities                                                                                                                        | both       |
-| `findSubstitutesIncludingSoftDeleted`         | `ingredients.ts`       | MB.140         | An ingredient's or a form's substitutes and the ingredients they link, deleted or not                                                          | both       |
-| `findIngredientSuggestions`                   | `ingredients.ts`       | MB.138         | The substitute picker's search                                                                                                                 | both       |
-| `findCompendiumPage`                          | `ingredients.ts`       | M8.5           | The public list                                                                                                                                | compendium |
-| `findCompendiumCount`                         | `ingredients.ts`       | MB.105         | Its count                                                                                                                                      | compendium |
-| `findCompendiumEntryByIdentity`               | `ingredients.ts`       | M5.2           | The entry a colliding compendium write names                                                                                                   | compendium |
-| `workspaceListScopeIncludingSoftDeleted`      | `ingredients.ts`       | M9.4, M12.32   | Which rows a coven's ingredient list holds, a retired entry its cupboard names included; the coven's page, count and filter counts all read it | both       |
-| `listColumns`                                 | `ingredients.ts`       | M12.18         | The cupboard row joined beside a compendium entry, so a coven's overrides sort and filter                                                      | both       |
-| `findCompendiumFacets`                        | `ingredient-facets.ts` | M12.3          | The public list's filter counts                                                                                                                | compendium |
-| `inCupboard`                                  | `cupboard-entries.ts`  | M12.14         | The private filter under `findCupboardEntry` and `findCupboardEntriesOf`: a cupboard row only while its entry is live                          | both       |
-| `findCupboardEntryIncludingSoftDeleted`       | `cupboard-entries.ts`  | M12.24         | The escape hatch that reads a retired entry for a coven whose live cupboard row names it                                                       | both       |
-| `compendiumNamed`                             | `cupboard-entries.ts`  | M12.14         | The private match on a typed name or formal name under `findCompendiumMatchesByName` and `findCompendiumMatchPage`                             | compendium |
-| `findCompendiumMatchPage`                     | `cupboard-entries.ts`  | M12.20         | Those exact matches as a page, for the Add flow                                                                                                | compendium |
-| `countCovensUsing`                            | `cupboard-entries.ts`  | M12.25         | How many covens' cupboards name an entry, a number and never a name                                                                            | both       |
-| `findCompendiumEntryBySlug`                   | `slugs.ts`             | MB.82          | The entry at an address                                                                                                                        | compendium |
-| `findCompendiumSlugRedirect`                  | `slugs.ts`             | MB.82          | The entry a retired address redirects to                                                                                                       | compendium |
-| `findCompendiumSlugs`                         | `slugs.ts`             | MB.84, M12.2   | Every live entry's address, for the sitemap and `llms.txt`                                                                                     | compendium |
-| `findManyStock`                               | `stock.ts`             | M9.3, M12.24   | The private read under a coven's jar finders: jars of a readable form, or of a retired entry the coven uses                                    | both       |
-| `findIngredientsInSpellsIncludingSoftDeleted` | `spells.ts`            | M5.3           | What a readable spell holds, deleted or not                                                                                                    | both       |
-| `findVocabularySuggestions`                   | `vocabularies.ts`      | MB.94, M4.7a   | The celestial body, zodiac and form autofill                                                                                                   | both       |
-| `findCompendiumFormRenameClashes`             | `vocabularies.ts`      | MB.220         | The entries a curated form's rename would give two forms of one name                                                                           | compendium |
-| `findCommonNameSuggestions`                   | `common-names.ts`      | M4.7a          | The common-name autofill                                                                                                                       | both       |
-| `findReferencesOf`                            | `references.ts`        | MB.153, MB.208 | A sourced row's references, each where its readers may look                                                                                    | both       |
-| `findManyReferences`                          | `references.ts`        | MB.153         | What a row written under the proofs may cite                                                                                                   | both       |
-| `findReferenceSuggestions`                    | `references.ts`        | MB.153         | The reference picker's search                                                                                                                  | both       |
-| `cites`                                       | `references.ts`        | MB.218         | A sourced row citing a live compendium reference                                                                                               | compendium |
-| `writerFor`                                   | `write.ts`             | M5.2           | The private builder of `withAudit`'s writer (below)                                                                                            | compendium |
-
-Three kinds of caller are deliberately left off, because they reach the tier
-only through an entry above. That is the rule for a private helper, applied
-the other way round:
-
-- `findCompendiumMatchesByName` reads it through `compendiumNamed`.
-- `citesNothing` (MB.153, the keeper's to-do filter) and `citesNowhere` in
-  `ingredients.ts` are `cites` negated.
-- `findWorkspaceIngredientPage`, `findWorkspaceIngredientCount` and
-  `findWorkspaceIngredientFacets` read it through
-  `workspaceListScopeIncludingSoftDeleted`, as `findCupboardEntry` and
-  `findCupboardEntriesOf` read it through `inCupboard`.
-
-`writerFor`'s compendium-tier methods update and soft-delete a row only under
-`workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
-curated form's rename onto the compendium variants picking it
-(`carryFormRename`, M5.6a, MB.220).
-
-A later task that adds such a function adds its row to the tables above in
-its own PR. The list is then the scope of the extraction task, read from one
-file.
-
-One entry is not the compendium's: `onSiteTier` (MB.202), `invitations`'
-site tier, `workspace_id IS NULL` spelled for that table alone so that no
-invitation read calls `inCompendium`. It is listed because it spells the
-tier's predicate, and the extraction task leaves it behind.
-
-**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; M12.24's `inUseVariantParent` took every caller of the first, which is gone, and the second is in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+Every function in `src/db/repository/` whose SQL reads the compendium tier, and the rule for adding one, are in [`db/tier-seam.md`](db/tier-seam.md).
 
 ## Where types live
 
@@ -442,9 +349,6 @@ trigger, isolation and pagination tests — and the shared db harness is
   spreads each module's map into `LOADERS`, so `createLoaders(session)` still
   builds one fresh set per request.
 
-Three modules register types today and two register loaders. What is fixed
-is that the host reaches each through the module's index.
-
 ## Adding a module
 
 Five things, in one PR:
@@ -457,7 +361,7 @@ Five things, in one PR:
 4. Add the row to the ownership table above, to
    [`DESIGN.md`](DESIGN.md) §3's tree if the shape changes, and to
    the entry in `claude-docs/tasks/` for the task that adds it.
-5. Say in the PR body why the existing five could not own it.
+5. Say in the PR body why the existing seven could not own it.
 
 ## Adding a table
 
@@ -471,21 +375,10 @@ built from — partial unique indexes, the
 `CREATE OR REPLACE TRIGGER` line for `set_updated_at()` in the table's own
 migration, and a transcribed entry in `tests/support/db/table-metadata.ts`,
 which `tests/db/updated-at-trigger.test.ts` compares against the catalogue
-([`db.md`](db.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
+([`db/README.md`](db/README.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
 new file is picked up by `npm run db:generate` with no registration step. A
 `*.test.ts` file must never sit in `schema/`: the glob would hand it to
 drizzle-kit, which cannot load Vitest.
-
-## Vocabulary shared write steps
-
-`src/modules/vocabulary/services/curated-writes.ts` holds the steps every curated vocabulary's admin write is made of, so how a slug collision, a missing row or a group's move is refused is one edit across the seven services. They are shared steps rather than a descriptor factory: each service keeps its own exported functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`, so the check and the expiry are read together. The file is internal to the module and the index exports no part of it.
-
-- A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
-- Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
-- A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
-- A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
-- Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
-- Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
 
 ## Library helpers
 
@@ -527,10 +420,7 @@ list with no rows at all uses, filtered or not, and a list may add a sentence af
 saying how to begin ("Add one with Add Category."). An empty field says "No … recorded."
 instead ("No folk names recorded."), since a field is filled in rather than added to.
 
-`noun` is the plural, matched by a plural verb. One wording serves all six lists;
-before it the compendium said "No entry matches", the invitations "No invitation
-matches", the users "No users match", the group and value lists "No category
-matches that filter. Try another name." and the ledger "No keeper changes for “x”."
+`noun` is the plural, matched by a plural verb. One wording serves all six lists.
 The plural reads true however many rows the list could have held, and naming each
 filter, not calling it "that filter", shows a keeper which one to change.
 
@@ -559,3 +449,7 @@ reads.
 
 The value is stored as superjson, not left to Next's `JSON.stringify`, which would
 answer a hit's `Date` columns as strings while a miss answered them as dates.
+
+### Page props are promises
+
+Page props are promises in Next 16 (params and searchParams): awaited before use; the Promise<> type already says it

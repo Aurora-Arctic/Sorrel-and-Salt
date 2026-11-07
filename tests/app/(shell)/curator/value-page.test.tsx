@@ -7,14 +7,9 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 
-// The page every curated value shares (src/app/(shell)/curator/value-page.tsx): the guard, one page of the vocabulary under the address's filter and groups, and the modal its address opens (`?new` empty, `?edit=` a value by slug).
-// The shape runs on the categories; other kinds get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5). The guard and services are mocked (tests/lib/request-session.test.ts, the vocabulary service tests).
-// This file holds the page's half: the address read into service calls, the guard, NotFound against any other error, and the props built for the list and modal; how those behave is their own tests' (layer-ownership.md, "The owning layer").
-
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
@@ -88,8 +83,6 @@ async function renderPage(
   params: Record<string, string> = {},
   kind: GroupedValueKind = 'category',
 ) {
-  // The tab's action beside the heading, and the tab's content, as the
-  // route group's layout puts them on one page.
   const [action, page] = await Promise.all([
     ValueAction({ kind, searchParams: Promise.resolve(params) }),
     ValuePage({ kind, searchParams: Promise.resolve(params) }),
@@ -104,7 +97,6 @@ async function renderPage(
 
 const lastRequest = (): PageRequest => listCategories.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree. */
 function lastFilter(): unknown {
   const listed: unknown = listCategories.mock.lastCall?.[0];
   expect(countCategories.mock.lastCall?.[0]).toEqual(listed);
@@ -213,10 +205,7 @@ describe('a curated value page, on the categories', () => {
   });
 });
 
-// `?query=` and `?group=<slug>` narrow the list, as the user list's
-// filter does, and every link the page builds keeps them.
 describe("a curated value page's filter, on the categories", () => {
-  /** A full page and one more, so the pager links both ways. */
   const fullPage = () =>
     Array.from({ length: 26 }, (_, index) =>
       entry({
@@ -234,7 +223,6 @@ describe("a curated value page's filter, on the categories", () => {
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test craft');
   });
 
-  // A native submit sends both fields, blank or not.
   it('reads a blank ?query= and ?group= as no filter', async () => {
     await renderPage({ query: '   ', group: '' });
 
@@ -242,7 +230,6 @@ describe("a curated value page's filter, on the categories", () => {
     expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('');
   });
 
-  // The type-ahead shows the group by its name; the slug is what it submits.
   it('reads ?group= as the id of the group at that slug', async () => {
     await renderPage({ group: 'fixture-protection' });
 
@@ -250,7 +237,6 @@ describe("a curated value page's filter, on the categories", () => {
     expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue(GROUPS[1].name);
   });
 
-  // As a hand-edited cursor gets the first page.
   it('ignores a ?group= no group holds, and drops it from every link', async () => {
     listCategories.mockResolvedValue(fullPage());
 
@@ -393,7 +379,7 @@ describe('a curated value page, for each other kind', () => {
     expect(deityOtherNamesOf.mock.calls).toEqual([[[VALUE.id]], [[VALUE.id]]]);
     const table = screen.getByRole('table');
     expect(
-      within(table).getByRole('cell', { name: 'Testwort Shard Also called Testrina, Tess' }),
+      within(table).getByRole('rowheader', { name: 'Testwort Shard Also called Testrina, Tess' }),
     ).toBeInTheDocument();
     const dialog = screen.getByRole('dialog', {
       name: 'Edit Deity, Testwort Shard, Fixture Protection',

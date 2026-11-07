@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
@@ -15,12 +14,9 @@ import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
 import type { LinkedRequest, LinkState } from './types';
+import { PendingLink } from '../../lib/navigation';
 
-// The page a signed-out sender's mails link to. The mailed link holds its token in the URL fragment, which the browser never
-// sends to the server or in a Referer header, so this reads it in the browser, asks `supportRequestByViewToken` for the
-// request, and drops the fragment from the address bar. The token is kept in this tab's sessionStorage, not the address bar: it
-// lasts for a reload in the tab, is never shared with another tab, and is wiped when the tab closes. A token the server no
-// longer honours is removed from storage.
+// The token is in the URL fragment, which the browser never sends: it is read here, kept in sessionStorage and dropped from the address bar.
 
 const SupportRequestByViewTokenDocument = graphql(`
   query SupportRequestByViewToken($token: String!) {
@@ -115,8 +111,7 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
-  // A newer link pasted into the open tab changes the hash without remounting the page; an empty hash (the one this
-  // page leaves behind) is ignored.
+  // A newer link pasted into the open tab changes the hash without remounting; an empty hash is ignored.
   useEffect(() => {
     let current = true;
     const onHashChange = () => {
@@ -137,10 +132,12 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
+  // The one status announces the wait; the quiet skeleton beside it is for the eye alone.
   if (state.phase === 'loading') {
     return (
       <div className="page-with-nav" aria-busy="true">
-        <Skeleton shape="page" head="eyebrow" />
+        <p role="status">Opening your request.</p>
+        <Skeleton shape="line" count={4} quiet />
       </div>
     );
   }
@@ -152,7 +149,7 @@ const SupportRequestByLink = (): ReactElement => {
         <p>
           This link doesn’t open a request. The request may be closed, or this may not be the newest
           link. Only the link in the latest email we sent works, and a link stops working after 30
-          days. To ask something new, <Link href="/support">send a new request</Link>.
+          days. To ask something new, <PendingLink href="/support">send a new request</PendingLink>.
         </p>
       </div>
     );
@@ -184,7 +181,6 @@ const SupportRequestByLink = (): ReactElement => {
   );
 };
 
-/** The `extensions.code` of a failed request, if it carries one. */
 function readGraphqlFailureCode(error: unknown): string | undefined {
   const errors = (error as { errors?: readonly { extensions?: { code?: string } }[] }).errors;
   return errors?.[0]?.extensions?.code;

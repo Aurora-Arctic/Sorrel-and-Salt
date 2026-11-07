@@ -7,7 +7,6 @@ import type { FieldErrorProps, FieldShellProps } from './types';
 // no form library here, so a plain-state form, or a server component, renders
 // them around its own control (claude-docs/components/field.md).
 
-/** The one element a field's error renders through, whether the resolver found it or the server did. */
 export function FieldError({ id, message }: FieldErrorProps): ReactElement | null {
   if (!message) return null;
   return (
@@ -28,7 +27,6 @@ export const Required = (): ReactElement => (
   </span>
 );
 
-/** The block around one control: its label row, note, the control, and its error. */
 export function FieldShell({
   label,
   labelSuffix,

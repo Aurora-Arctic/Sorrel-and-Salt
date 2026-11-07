@@ -5,11 +5,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 import { run } from '../../../support/graphql/run';
 
-// The document editor's query and four writes over the wire. This is the transport's half (claude-docs/testing/layer-ownership.md):
-// each field's shape, and per field one refusal per error code. Which roles are refused, and why, is
-// services/document-editing.test.ts's; the signed-out caller and the curator are refused at the scope in
-// tests/db/graphql-query-scopes.test.ts.
-
+// Transport half only: field shapes and one refusal per error code. Which roles are refused is
+// services/document-editing.test.ts's; the scope refusals are tests/db/graphql-query-scopes.test.ts's
+// (claude-docs/testing/layer-ownership.md).
 const READ = /* GraphQL */ `
   query DocumentForEditing($key: String!) {
     documentForEditing(key: $key) {

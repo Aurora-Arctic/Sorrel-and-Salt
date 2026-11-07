@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { WorkshopPathname } from '../../../.storybook/navigation';
-import { adminTarget } from '../AdminNav/target';
 import { PendingLink } from '../../lib/navigation';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import AdminNav from '../AdminNav';
@@ -8,7 +7,6 @@ import CovenNav from '../CovenNav';
 import WorkspaceSwitcher from '../WorkspaceSwitcher';
 import ContextRow from '.';
 
-// Render-only; behaviour is asserted in tests/components/ContextRow.
 const meta = {
   title: 'Shell / Context Row',
 } satisfies Meta;
@@ -35,18 +33,11 @@ const WORKSPACES = [
 const SOLE = [WORKSPACES[0]];
 
 const AdminName = () => (
-  <PendingLink
-    href="/keepers"
-    className="context-row__name"
-    navigationTarget={adminTarget('/keepers')}
-  >
+  <PendingLink href="/keepers" className="context-row__name">
     Admin
   </PendingLink>
 );
 
-// Admin row: "Admin" home link, then the nav (a keeper's ends with People). Coven
-// row: the switcher leads, then the coven's nav (a viewer's has no Members). The
-// zero-coven row is the switcher alone, with only Create Coven to choose.
 export const States: Story = {
   render: () => (
     <StatesGrid

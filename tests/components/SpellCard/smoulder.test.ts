@@ -7,7 +7,6 @@ import { fromRoot } from '../../support/paths';
 
 const css = compile(fromRoot('src/components/SpellCard/index.scss'), { style: 'expanded' }).css;
 
-/** Every `animation` value that runs one of the card's own keyframes. */
 const cardAnimations = [...css.matchAll(/animation:\s*([^;]*spell-card-[^;]*);/g)].map(
   ([, value]) => value,
 );

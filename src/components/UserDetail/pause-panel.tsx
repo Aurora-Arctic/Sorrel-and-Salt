@@ -5,20 +5,19 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import Skeleton from '../Skeleton';
 import { LocalDay } from '../SupportRequests/day-range';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { Ledger, PauseFields, Until, endOf, pauseReady } from './access-pause-parts';
 import type { PausePanelProps, PauseSpan, StandingPause } from './types';
 import '../SupportRequests/timeout-panel.scss';
 
 // A pause on someone's access, inside a modal: the one that stands with Lift Pause, or the form that sets one, and the
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its
-// own words and its own writes (claude-docs/components/user-detail.md, "Site Access").
+// own words and its own writes (claude-docs/components/user-detail.md, "Contracts").
 
-/** What a refusal says: the service's own sentence, or the one generic sentence. */
 const refusal = (error: unknown) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE;
 
-/** The pause that stands: a badge, its end, the note, who set it and when, and Lift Pause. */
 const StandingCard = ({
   pause,
   copy,
@@ -64,7 +63,6 @@ const StandingCard = ({
   );
 };
 
-/** The form that sets a pause: how long, the note, and a confirm before it is sent. */
 const PauseForm = ({
   name,
   copy,
@@ -140,12 +138,12 @@ const PauseForm = ({
   );
 };
 
-/** A folded section holding the pause that stands, or the form to set one, and the earlier pauses beneath. */
 const PausePanel = ({
   title,
   name,
   standing,
   earlier,
+  earlierLoading = false,
   copy,
   noteRequired,
   pause,
@@ -185,7 +183,11 @@ const PausePanel = ({
             onChanged={onChanged}
           />
         )}
-        {earlier.length > 0 && <Ledger pauses={earlier} />}
+        {earlierLoading ? (
+          <Skeleton shape="line" count={2} />
+        ) : (
+          earlier.length > 0 && <Ledger pauses={earlier} />
+        )}
       </CollapsibleSection>
     </div>
   );

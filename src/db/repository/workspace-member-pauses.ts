@@ -77,7 +77,6 @@ export function findStandingWorkspaceMemberPauses(
   );
 }
 
-// A coven's pauses, newest first.
 const HISTORY_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${workspaceMemberPauses.createdAt})`, type: 'numeric' },
 ];
@@ -100,7 +99,6 @@ export function findWorkspaceMemberPausePage(
   );
 }
 
-/** The coven pause's two named writes, beside its finders. `writerFor` spreads them into the writer. */
 export function workspaceMemberPauseWrites({
   tx,
   session,

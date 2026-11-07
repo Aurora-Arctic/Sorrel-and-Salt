@@ -1,16 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The Combobox's layout facts, measured in its Storybook stories since happy-dom draws no layout: the list
-// opens above the box when there is no room beneath, follows it as the page scrolls, and an entry's tooltip
-// opens only when its text is cut off (claude-docs/components/combobox.md). Offers and picks are tests/components/Combobox's.
+// Layout facts measured in Storybook stories, since happy-dom draws no layout (claude-docs/components/combobox.md).
 
 const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
 
-/**
- * The story in Storybook's bare preview (`iframe.html`), with `css` in the page before the story
- * mounts, so a list opened on mount is placed in the page as `css` lays it
- * out rather than moved there afterwards.
- */
+/** The story in Storybook's bare preview, with `css` in the page before it mounts, so a list opened on mount is placed as `css` lays it out. */
 async function openStory(page: Page, story: string, css = '') {
   await page.setViewportSize({ width: 1280, height: 800 });
   if (css) {
@@ -98,7 +92,6 @@ test('an open list follows its box as the page scrolls', async ({ page }) => {
 });
 
 test.describe('an entry’s tooltip', () => {
-  /** An entry's own text, ahead of the tooltip that repeats it. */
   const textOf = (page: Page, value: string) =>
     page.getByRole('listitem').filter({ hasText: value }).getByText(value, { exact: true }).first();
   const isCutOff = (text: Locator) => text.evaluate((node) => node.scrollWidth > node.clientWidth);

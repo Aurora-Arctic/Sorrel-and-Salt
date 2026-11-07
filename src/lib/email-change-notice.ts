@@ -3,7 +3,6 @@ import type { Message } from './types';
 
 // The mail to the address an account is leaving. Both stages build it here so the request and the completion say the same thing in the same words.
 
-/** The notice to `current` that a change to `address` was asked for or has finished at `at`, linking to the site at `origin`. */
 export function emailChangeNoticeMessage(
   origin: string,
   current: string,

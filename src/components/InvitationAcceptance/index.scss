@@ -7,7 +7,6 @@
   @include stack(3);
 }
 
-// A refusal's head is the heading alone, PageHeader's row, which the stack's gap spaces as it spaces the column.
 .invitation-acceptance > .page-header {
   margin-bottom: 0;
 }

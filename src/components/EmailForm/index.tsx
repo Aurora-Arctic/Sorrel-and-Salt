@@ -1,10 +1,9 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
@@ -12,6 +11,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The `/account/email` page's form and the account page's Email section (`embedded`): the address, its
 // verification state, and a new one. Every submit sends mail rather than writing the row, so success
@@ -29,7 +29,6 @@ const SetEmailDocument = graphql(`
   }
 `);
 
-/** How long the submit stays down after a send: one mail a minute from a form. */
 export const RESEND_DELAY_SECONDS = 60;
 
 /** As the column stores it, so "unchanged" compares what the server would see. */
@@ -47,7 +46,6 @@ export const CHANGE_STATUS = "Enter a new email address and we'll send it a conf
 
 function statusLine(email: string, verified: boolean): string {
   if (email === '') return NO_EMAIL_STATUS;
-  // A verified account back to change it: the confirmation is the other view.
   if (verified) return CHANGE_STATUS;
   return UNVERIFIED_STATUS;
 }
@@ -92,7 +90,6 @@ const EmailForm = ({
   const coolingDown = secondsLeft > 0;
 
   const mutation = useMutation({
-    // The link it asks for lands back here, and Continue goes on to `next`.
     mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
@@ -133,9 +130,9 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* Cast: `next` is whatever page sent us here, already run through
               safeReturnPath, so it is a same-site path but not a known route. */}
-          <Link className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
+          <PendingLink className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
             Continue
-          </Link>
+          </PendingLink>
           {accountPath && (
             <a className="btn btn--quiet" href={accountPath}>
               Continue to Account
@@ -146,8 +143,6 @@ const EmailForm = ({
     );
   }
 
-  // Only a verified, unchanged address has nothing to send: an unverified one
-  // resends its link, and any edit is a change request.
   const nothingToDo = verified && normalise(value) === email;
   const { aria, ...field } = fieldDescription({ id: fieldId, error: fieldError });
 

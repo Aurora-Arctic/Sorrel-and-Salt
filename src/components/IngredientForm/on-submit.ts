@@ -1,8 +1,5 @@
 import { type RefObject, useLayoutEffect, useState } from 'react';
 
-// What the form, its variants and its reference panel each do once a save is
-// tried and its errors are drawn, written once for all three.
-
 /**
  * Runs `opened` while rendering, once for each new `submitCount`: a save's last update carries its
  * count with every error it found, so a fold opened here is open in the very commit that draws the

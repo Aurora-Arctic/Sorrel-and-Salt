@@ -9,7 +9,6 @@ export const reviewDay = (at: string): string =>
     timeZone: 'UTC',
   });
 
-/** The entry's review mark: an ISO string once reviewed, `null` while it needs review, `undefined` for a coven's own entry; a Date from before the cache is accepted too. */
 export function reviewedAtOf({
   entry,
 }: Pick<IngredientDetail, 'entry'>): string | null | undefined {

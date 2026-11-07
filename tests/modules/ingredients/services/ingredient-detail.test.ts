@@ -104,7 +104,6 @@ beforeAll(async () => {
       tradition_id: tradition.id,
       ...stamps,
     })} returning id`;
-  // Its other names: two live, read alphabetically, and one dropped.
   await sql`
     insert into deity_other_names ${sql([
       { deity_id: deityId, name: 'Fixturion', deleted_at: null, deleted_by: null, ...stamps },
@@ -135,7 +134,6 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-/** Seeds a row through the shared inserter, stamped by A. */
 const seed = (overrides: Overrides<IngredientFixture> = {}) =>
   insertIngredient(sql, makeIngredient(overrides), A.id);
 
@@ -144,12 +142,10 @@ async function rowOf(id: string) {
   return row;
 }
 
-/** The ingredient row as the page reads it, through the public read. */
 async function entryOf(id: string) {
   return getIngredient(null, id);
 }
 
-/** A keeper's write input for an entry holding no form, so no curated pick is needed. */
 function input(
   overrides: Overrides<IngredientFixture> = {},
 ): Parameters<typeof createCompendiumEntry>[1] {

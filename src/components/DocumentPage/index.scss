@@ -1,16 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A document reads as prose: every running line keeps to the measure, a table may run wider in
-// its own scrolling frame, and each section's heading sits a step above its text.
-// The page is `.page-with-nav` with its column widened from the narrow column to the reading
-// measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
-// rule names both classes, as the primitives are emitted under `body` and one class alone loses to
-// them.
-// The menu's column is half as wide again as `.page-with-nav`'s (`$document-menu-column`): in the narrower
-// column most section headings broke into three lines. From a tablet up the menu and the measure
-// still fit side by side inside the frame's gutters.
-
 // The page colour easing out from an edge of the scrolling menu, opaque at the edge so no entry shows
 // cut off there; several stops rather than a straight ramp, so no line shows where it ends.
 $scroll-fade:
@@ -19,10 +9,12 @@ $scroll-fade:
   color-mix(in srgb, $surface-page 50%, transparent) 55%,
   color-mix(in srgb, $surface-page 15%, transparent) 80%,
   transparent;
-// The paused notice's tallest shape from a tablet up: the aside's top padding, the notice's padding
-// and three lines of its small text at the prose line height, then the error notice's bottom margin.
+// The paused notice's tallest shape from a tablet up: the aside's top padding, the notice's
+// padding and three lines of small text at the prose line height, then the error notice's margin.
 $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')} * 1.65 * 3 + 1rem);
 
+// The rule names both classes, as the primitives are emitted under `body`.
+// The menu column is half again as wide, or headings broke into three lines.
 .document-page.page-with-nav {
   @include page-with-nav-grid($document-menu-column, $measure);
 
@@ -79,7 +71,8 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     }
 
     > .page-nav::before {
-      // Above the entries, which are positioned for the current entry's bar and come later in the order.
+      // Above the entries, which are positioned for the current entry's bar and come later in the
+      // order.
       z-index: 1;
       inset-block-start: 0;
       margin-block-end: calc(-1 * #{space(8)});
@@ -113,6 +106,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   font-size: type-size('small');
 }
 
+// The skeleton's bar in that line is as tall as the line, so the head below it keeps its place.
+.document-page__updated .skeleton__shapes .skeleton__line {
+  height: 1lh;
+}
+
 .document-page__body {
   margin-block-start: space(6);
 
@@ -135,7 +133,6 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 1.65;
   }
 
-  // A source list reads as a bibliography: each entry hangs its second line under the first.
   .document-page__sources li {
     padding-inline-start: 1.5rem;
     text-indent: -1.5rem;
@@ -149,13 +146,10 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 0;
   }
 
-  // Each number is its own link to hit, set apart by spacing alone.
   .document-page__marks a {
     padding-inline: space(1);
   }
 
-  // A source number, an entry's link and its return arrow rest in the body ink and fade to
-  // `$accent-hover` when pointed at or focused, as an ingredient entry's note numbers do.
   .document-page__marks a,
   .document-page__sources a {
     color: $text-primary;
@@ -186,7 +180,6 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     white-space: nowrap;
   }
 
-  // The number a jump lands on, and the entry it lands on, stand out and clear the top inset.
   .document-page__marks a:target,
   .document-page__source:target {
     background-color: $fill-quiet;
@@ -205,4 +198,10 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   .data-table td {
     line-height: 1.5;
   }
+}
+
+// The skeleton's lede holds the three lines every document's takes on a phone, so the menu below it
+// stands where it will.
+.document-page__head .lede .skeleton {
+  min-height: 3lh;
 }

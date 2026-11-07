@@ -8,18 +8,18 @@ const EARLIER = new Date('2026-10-01T00:00:00Z');
 // The head card of a batch can have been accepted, so the status reads the counts, not one card.
 describe('batchStatus', () => {
   it('is live while any card is pending', () => {
-    expect(batchStatus({ cards: 9, accepted: 2, pending: 7 }, LATER, NOW)).toBe('live');
+    expect(batchStatus({ cards: 12, accepted: 2, pending: 10 }, LATER, NOW)).toBe('live');
   });
 
   it('is used up when every card was accepted, even past the expiry', () => {
-    expect(batchStatus({ cards: 9, accepted: 9, pending: 0 }, EARLIER, NOW)).toBe('used-up');
+    expect(batchStatus({ cards: 12, accepted: 12, pending: 0 }, EARLIER, NOW)).toBe('used-up');
   });
 
   it('is expired when none is pending and the expiry has passed', () => {
-    expect(batchStatus({ cards: 9, accepted: 3, pending: 0 }, EARLIER, NOW)).toBe('expired');
+    expect(batchStatus({ cards: 12, accepted: 3, pending: 0 }, EARLIER, NOW)).toBe('expired');
   });
 
   it('is revoked when none is pending, not all were accepted, and the expiry is ahead', () => {
-    expect(batchStatus({ cards: 9, accepted: 3, pending: 0 }, LATER, NOW)).toBe('revoked');
+    expect(batchStatus({ cards: 12, accepted: 3, pending: 0 }, LATER, NOW)).toBe('revoked');
   });
 });

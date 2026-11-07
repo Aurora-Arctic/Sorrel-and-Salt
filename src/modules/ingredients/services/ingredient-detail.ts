@@ -33,29 +33,18 @@ import type {
   VariantDetail,
 } from '../types';
 
-// An ingredient as its page shows it: the one assembly both the public compendium page and a coven's own end in. Each child kind is read once
-// for every ref that needs it, through the readers the GraphQL `Ingredient` uses. A coven entry's children answer `Forbidden` outside it; the compendium's answer anyone.
+// A coven entry's children answer `Forbidden` outside it; the compendium's answer anyone.
 
-/** A batch answer for one ref, which a refusal turns into the error it is. */
 function only<T>([answer]: readonly (T | Error)[]): T {
   if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
   return answer;
 }
 
 /**
- * `entry` with everything its page lists beneath it: folk names, categories
- * with their groups, deities with their traditions, substitutes,
- * references, one detail per live form in form order, and the cupboard entry
- * of `workspaceId`, the coven the page is read in, when it holds this
- * compendium entry. No `workspaceId` is the public page, which
- * reads no cupboard. A compendium entry the curators have retired is read
- * only in a coven whose cupboard names it, and marked `retired`; its
- * children are read on that coven's proof.
- *
- * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven,
- * or `session` is not in `workspaceId`.
- * @throws {NotFound} `entry` is retired and `workspaceId`'s cupboard does not
- * name it, or no coven is named.
+ * A retired compendium entry is read only in a coven whose cupboard names it, marked `retired`.
+ * No `workspaceId` is the public page, which reads no cupboard.
+ * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven, or not in `workspaceId`.
+ * @throws {NotFound} `entry` is retired and `workspaceId`'s cupboard does not name it, or no coven is named.
  */
 export async function ingredientDetailOf(
   session: Session | null,
@@ -85,7 +74,6 @@ export async function ingredientDetailOf(
   ]);
   const cupboardEntry = await cupboard;
 
-  // Each form's own children, one batch over the forms.
   const variantRefs = variants.map(({ id, ingredientId, workspaceId }) => ({
     id,
     ingredientId,
@@ -108,8 +96,6 @@ export async function ingredientDetailOf(
       formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
     ]);
 
-  // What the second batch names: the groups of every category and of every
-  // curated form, and the forms of every ingredient a substitute links.
   const filed = [categories, ...variantCategories].flat();
   const live = forms.flatMap((form) => form ?? []);
   const linked = [
@@ -224,7 +210,6 @@ async function retiredEntryHeld(
   return { membership, cupboardEntry: held.cupboardEntry };
 }
 
-/** The name of a group or tradition, or null once it is gone. */
 function nameOf(group: { name: string } | Error | undefined): string | null {
   return group === undefined || group instanceof Error ? null : group.name;
 }

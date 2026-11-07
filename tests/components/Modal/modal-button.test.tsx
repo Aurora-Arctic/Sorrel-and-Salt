@@ -5,7 +5,7 @@ import { ModalButton } from '@/components/Modal';
 
 // A button that opens a modal and takes the focus back when it closes, which
 // Modal does not do itself, since its owner unmounts it rather than closing
-// it in place (claude-docs/components/modal.md, "Focus").
+// it in place (claude-docs/components/modal.md, "Focus and the fade").
 
 const trigger = () => screen.getByRole('button', { name: 'Open Ledger' });
 const dialog = () => screen.getByRole('dialog');

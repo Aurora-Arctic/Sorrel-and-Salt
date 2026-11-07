@@ -9,7 +9,7 @@ import { browserUrl } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make: the rows a Discord sign-in
 // would leave go straight to this worker's slot database, with a session cookie signed by the build's
-// secret (claude-docs/testing/e2e.md, "E2E").
+// secret (claude-docs/testing/e2e.md, "E2E — Playwright").
 
 /**
  * The address every e2e server gets as ADMIN_BOOTSTRAP_EMAIL, on the reserved `.invalid` domain: set by
@@ -35,11 +35,7 @@ async function holdSession(page: Page, value: string): Promise<void> {
   ]);
 }
 
-/**
- * Makes `page` a browser signed in to a new user with one account per provider named and the site role given.
- * The user is verified, and has agreed to the terms in force, unless `emailVerified` or `termsAgreed` says otherwise; rows go to this worker's slot database unless
- * `database` names the server's own. How the cookie arrives is `holdSession`'s.
- */
+/** The user is verified and has agreed to the terms in force unless `emailVerified` or `termsAgreed` says otherwise. */
 export async function signInAs(
   page: Page,
   email: string,
@@ -92,10 +88,6 @@ export async function signInAs(
   return { userId };
 }
 
-/**
- * Makes `page` a browser signed in again to a user `signInAs` already made, on a new session: the email
- * index is unique, so `signInAs` cannot make the same address twice.
- */
 export async function signInAgainAs(
   page: Page,
   userId: string,

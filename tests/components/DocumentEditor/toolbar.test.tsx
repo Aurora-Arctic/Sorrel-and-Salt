@@ -15,10 +15,6 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 // The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
 warmImport(() => import('@/components/DocumentEditor/editor'));
 
-// The editor's toolbar offers only what the public page draws, and each button changes the document as its markdown shows:
-// what is proved is the text a Save Draft sends, since that markdown is what a reader is shown once it is published.
-
-/** The buttons the toolbar holds: everything the renderer draws that a toolbar can add, and nothing it cannot. */
 const BUTTONS = [
   'Heading 2',
   'Heading 3',
@@ -33,7 +29,6 @@ const BUTTONS = [
   'Redo',
 ];
 
-/** Renders the editor on `body`, and records the markdown each Save Draft sends. */
 async function renderEditor(body: string) {
   const saved: string[] = [];
   mockGraphQLMutation<SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables>(
@@ -68,13 +63,11 @@ const settle = () =>
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
 
-/** Clicks a toolbar button, as a pointer does, and lets the editor settle. */
 async function press(name: string): Promise<void> {
   fireEvent.click(button(name));
   await settle();
 }
 
-/** The text node of the editor that holds `words`. */
 function textNodeHolding(text: HTMLElement, words: string): Text {
   const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -83,10 +76,7 @@ function textNodeHolding(text: HTMLElement, words: string): Text {
   throw new Error(`No text node holds ${words}`);
 }
 
-/**
- * Selects `words` in the editor, as a drag over them would; with `caret`, puts the caret inside them instead.
- * The editor reads a selection on `selectionchange`, throttled, so the wait lets it land.
- */
+// The editor reads a selection on `selectionchange`, throttled, so the wait lets it land.
 async function select(text: HTMLElement, words: string, { caret = false } = {}): Promise<void> {
   const node = textNodeHolding(text, words);
   const start = node.textContent!.indexOf(words);
@@ -104,7 +94,6 @@ async function select(text: HTMLElement, words: string, { caret = false } = {}):
   });
 }
 
-/** Clicks Save Draft and returns the markdown it sent. */
 async function saveDraft(saved: string[]): Promise<string> {
   const save = screen.getByRole('button', { name: 'Save Draft' });
   await waitFor(() => expect(save).toBeEnabled());
@@ -123,12 +112,10 @@ describe('the document editor’s toolbar', () => {
     // Undo and Redo stay in the tab order with nothing to undo or redo, so they say so rather than being disabled.
     expect(button('Undo')).toHaveAttribute('aria-disabled', 'true');
     expect(button('Redo')).toHaveAttribute('aria-disabled', 'true');
-    // Nothing else: no image, underline, raw HTML or any other button the page could not draw.
     expect(within(toolbar()).getAllByRole('button')).toHaveLength(BUTTONS.length);
     for (const name of BUTTONS) expect(button(name).querySelector('svg')).not.toBeNull();
   });
 
-  // Each block button turns the paragraph holding the caret into its block.
   it.each([
     ['Heading 2', '## Fixturewort grows here.'],
     ['Heading 3', '### Fixturewort grows here.'],
@@ -143,7 +130,6 @@ describe('the document editor’s toolbar', () => {
     expect(await saveDraft(saved)).toBe(expected);
   });
 
-  // Each mark button marks the selected words and nothing else.
   it.each([
     ['Bold', '**Fixturewort** grows here.'],
     ['Italic', '_Fixturewort_ grows here.'],
@@ -185,7 +171,6 @@ describe('the document editor’s toolbar', () => {
     expect(markdown).toMatch(/^\|.*\|\n\|(\s*:?-+:?\s*\|)+$/m);
   });
 
-  // The next number after those in use, so a new note never takes an existing note's place.
   it('Footnote inserts the next note’s reference at the caret, and its definition', async () => {
     const { saved, text } = await renderEditor(
       'Fixturewort grows here.[^1] Testwort grows there.\n\n[^1]: A cited source.',
@@ -215,7 +200,6 @@ describe('the document editor’s toolbar', () => {
     expect(await saveDraft(saved)).toBe('**Fixturewort** grows here.');
   });
 
-  // Undoing back to the text last loaded or saved leaves nothing to save or publish.
   it('Undo back to the opened text leaves nothing to save or publish', async () => {
     const { text } = await renderEditor('Fixturewort grows here.');
     await select(text, 'Fixturewort');
@@ -240,7 +224,6 @@ describe('the document editor’s toolbar', () => {
     await press('Undo');
 
     expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
-    // The saved draft is still there to publish.
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
   });
 

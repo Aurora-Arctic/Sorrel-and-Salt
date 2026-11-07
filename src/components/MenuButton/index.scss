@@ -15,7 +15,6 @@
   flex-grow: 1;
 }
 
-// The chevron after the label, turned over while the menu is open.
 .menu-button__chevron {
   @include chevron-flip("[aria-expanded='true'] >");
 }
@@ -31,8 +30,6 @@
   border-radius: radius('surface');
   background-color: $surface-card;
   box-shadow: $shadow-floating;
-  // Fades in as it comes and out as it goes, over the short motion; the script unmounts it
-  // when the fade-out ends.
   animation: menu-button-fade-in $motion-short ease-out both;
 
   &.is-closing {
@@ -93,15 +90,12 @@
   white-space: nowrap;
   @include state-fade(background-color);
 
-  // Grey, the quiet fill: green marks a menu's one primary action alone (`--primary`, below),
-  // so every other plain item is pointed at, focused and chosen in the grey.
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
     background-color: $fill-quiet;
   }
 
-  // Held, not faded: the menu's own fade-out is the only motion on the way out.
   .is-closing & {
     transition: none;
   }
@@ -125,8 +119,6 @@
   }
 }
 
-// A menu's one primary action, Edit Ingredient on the ingredient page: the green highlight
-// pointed at, focused and chosen, where every other item takes the grey.
 .menu-button__item--primary {
   &:hover,
   &:focus-visible,
@@ -150,7 +142,6 @@
     background-color: $fill-quiet;
   }
 
-  // The ink alone says it, as the fills are dropped.
   @include forced-colors {
     color: GrayText;
   }
@@ -172,8 +163,6 @@
   }
 }
 
-// The check after a marked item's label (`mark`): HeldMark's green tick, at the glyph size,
-// standing on the label's line however muted the disabled label beside it is.
 .menu-button__mark {
   display: inline-flex;
   margin-inline-start: space(2);
@@ -186,9 +175,6 @@
   }
 }
 
-// The Annotate dialog's More shows its items in the button's own type, padding and height
-// (`buttonType`), with sides one step under `space(5)`. Every other menu keeps the lighter, shorter
-// item.
 .menu-button__menu--button-type .menu-button__item {
   display: flex;
   align-items: center;

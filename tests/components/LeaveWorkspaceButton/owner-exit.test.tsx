@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 
-// The only owner's Leave: the page hands the button the members who could take over, and pressing it asks what happens to the coven, a hand-over or a deletion, never only one.
 // The requests are mocked; what the service decides is its own tests'.
 
 const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
@@ -25,7 +24,6 @@ const handOver = (dialog: HTMLElement) => within(dialog).getByRole('radio', { na
 const deleteIt = (dialog: HTMLElement) =>
   within(dialog).getByRole('radio', { name: /^Delete Coven/ });
 
-/** Types into the New Owner box and picks the named member from its list. */
 function choose(dialog: HTMLElement, name: string) {
   const box = within(dialog).getByRole('combobox', { name: 'New Steward' });
   fireEvent.focus(box);
@@ -70,16 +68,13 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.change(box, { target: { value: 'fixture c' } });
 
     expect(within(dialog).getAllByRole('option')).toHaveLength(1);
-    // The row names the member with their role, so a viewer is known for one.
     expect(within(dialog).getByRole('option', { name: /Fixture C.*Observer/ })).toBeInTheDocument();
-    // The role is no search term: "viewer" finds nobody.
     fireEvent.change(box, { target: { value: 'viewer' } });
     expect(within(dialog).queryAllByRole('option')).toHaveLength(0);
 
     fireEvent.change(box, { target: { value: 'fixture c' } });
     fireEvent.click(within(dialog).getByRole('option', { name: /Fixture C/ }));
     expect(promote).toBeEnabled();
-    // Chosen, the box describes the member by their role.
     expect(box).toHaveAccessibleDescription(/Observer/);
   });
 
@@ -143,7 +138,6 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
     const alert = await within(dialog).findByRole('alert');
-    // At the dialog's top, above the question's choices.
     expect(
       alert.compareDocumentPosition(handOver(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -172,8 +166,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
-  // A refusal asked over the dialog is said beside Delete, a plain notice
-  // inside the dialog, never a callout over it.
+  // A refusal asked over the dialog is said beside Delete, never as a callout over it.
   it('says a refused deletion beside Delete, inside the dialog, which stays open', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
     const dialog = await openDialog();
@@ -185,7 +178,6 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     const alert = await within(dialog).findByRole('alert');
     const button = within(dialog).getByRole('button', { name: 'Delete Coven' });
-    // In Delete's own row, after it, rather than at the dialog's top.
     expect(button.parentElement).toContainElement(alert);
     expect(button.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(

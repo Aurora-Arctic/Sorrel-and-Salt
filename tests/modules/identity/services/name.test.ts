@@ -6,7 +6,6 @@ import { setName } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 import type { NamedUserRow } from './types';
 
-// The name the site shows, changed by its owner alone through the audited write path.
 // `setName` takes no id, so the only row a caller can name is the session's own (claude-docs/auth/admin-bootstrap.md, "The account page").
 
 let sql: ReturnType<typeof postgres>;
@@ -24,7 +23,6 @@ async function userRow(id: string): Promise<NamedUserRow> {
   return row as NamedUserRow;
 }
 
-/** The seed leaves every fixture verified; a test says which state it is about. */
 async function setVerified(id: string, verified: boolean): Promise<void> {
   await sql`update users set email_verified = ${verified} where id = ${id}`;
 }
@@ -38,7 +36,6 @@ beforeEach(async () => {
   }
 });
 
-/** The issues a refused write carried. */
 async function refusal(write: Promise<unknown>) {
   const error = await write.catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ValidationError);
@@ -54,7 +51,6 @@ describe('setName', () => {
   });
 
   it("leaves another user's row untouched", async () => {
-    // B is there to be touched: present, live, and named as seeded.
     expect(await userRow(B.id)).toMatchObject({ id: B.id, name: B.name, updated_by: E.id });
 
     await setName(asUser(A), 'Fixture Renamed');

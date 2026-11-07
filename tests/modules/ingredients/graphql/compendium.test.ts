@@ -113,7 +113,6 @@ async function nodesOf(variables: Record<string, unknown>, session: Session | nu
   return data.compendium.edges.map((edge) => edge.node);
 }
 
-/** The compendium's live ids in the finder's order, from the database's own collation. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select id from ingredients where workspace_id is null and deleted_at is null order by name, id`;
@@ -323,7 +322,6 @@ describe('compendium', () => {
     const page = result.data?.compendium as CompendiumConnection;
     expect(page.edges.some((edge) => edge.node.categories.length > 0)).toBe(true);
     expect(page.edges.some((edge) => edge.node.folkNames.length > 0)).toBe(true);
-    // Folk names and category links, then categories and their groups.
     expect(repository.findManyOfIngredients).toHaveBeenCalledTimes(2);
     expect(repository.findManyByIds).toHaveBeenCalledTimes(2);
     expect(repository.findWorkspaceSeat).not.toHaveBeenCalled();

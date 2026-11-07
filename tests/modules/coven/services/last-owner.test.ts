@@ -8,9 +8,6 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// The last-owner guard: a change that would leave a workspace with no
-// owner is refused, and the refusal says which way out the interface can offer.
-
 async function insertCoven(
   name: string,
   members: [string, 'owner' | 'member' | 'viewer'][],
@@ -26,7 +23,6 @@ async function insertCoven(
   return row.id as string;
 }
 
-/** Runs the guard as `actor` would: under their proof, inside the writing transaction. */
 async function guard(
   actor: typeof A,
   workspaceId: string,

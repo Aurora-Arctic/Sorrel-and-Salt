@@ -3,9 +3,6 @@ import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 
-// `pauseAdminRoleChanges` and `resumeAdminRoleChanges`, the transport's half (claude-docs/testing/layer-ownership.md): the primary keeper's answer and the stamps, and one refusal, read as the browser reads them.
-// Which callers the service refuses is services/admin-role-pause.test.ts's; the scope is tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {

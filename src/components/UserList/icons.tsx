@@ -4,7 +4,6 @@ import type { ReactElement } from 'react';
 // crown, hidden from assistive technology since the link and the crown's button
 // carry their own names. A yes-or-no column's check and cross are the shared set's.
 
-/** A clock with a counter-clockwise arrow round it: a user's privilege history. */
 export function HistoryIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -20,7 +19,6 @@ export function HistoryIcon(): ReactElement {
   );
 }
 
-/** A crown: the primary keeper, set by the site's configuration. */
 export function CrownIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

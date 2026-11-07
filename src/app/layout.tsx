@@ -14,9 +14,6 @@ import Providers from './providers';
 import SupportDialog from '../components/SupportDialog';
 import './globals.scss';
 
-// `metadataBase` resolves any relative address a page's metadata names against the production origin,
-// and the template puts the site's name after every page's own title, so a page sets only what is
-// particular to it.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: { default: SITE_NAME, template: titleTemplate() },

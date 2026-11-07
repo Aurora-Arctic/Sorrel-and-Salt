@@ -1,14 +1,6 @@
 import type { BetterAuthOptions } from 'better-auth';
 
-/**
- * The keys Better Auth signs cookies with and encrypts stored secrets under, newest first, read once at import. Each
- * encrypted value names the version it was written under, so adding a key leaves every older value readable until its
- * version is removed (claude-docs/auth/config.md, "Rotating the secret").
- *
- * `BETTER_AUTH_SECRETS` is Better Auth's own format, `<version>:<secret>` entries separated by commas, the first the
- * current one. Unset, `BETTER_AUTH_SECRET` alone is version 1, so even the first value encrypted names its version;
- * Better Auth's own fallback would write it unversioned, readable only while that one secret stays.
- */
+/** Read once at import; unset, `BETTER_AUTH_SECRET` alone is version 1 (claude-docs/auth/config.md, "Rotating the secret"). */
 export function authSecrets(env: NodeJS.ProcessEnv = process.env): BetterAuthOptions['secrets'] {
   const list = env.BETTER_AUTH_SECRETS?.trim();
   if (list) {
@@ -28,10 +20,7 @@ export function authSecrets(env: NodeJS.ProcessEnv = process.env): BetterAuthOpt
 /** Better Auth's own fallback when no secret is set, outside production only. */
 const BETTER_AUTH_DEFAULT_SECRET = 'better-auth-secret-12345678901234567890';
 
-/**
- * The secret Better Auth signs a verification link's token with, chosen as it chooses `ctx.secret`: the newest of
- * `authSecrets`, else `BETTER_AUTH_SECRET`. A job's step signs with it, as it holds no Better Auth context.
- */
+/** Chosen as Better Auth chooses `ctx.secret`. A job's step signs with it, as it holds no Better Auth context. */
 export function verificationSigningSecret(env: NodeJS.ProcessEnv = process.env): string {
   return (
     authSecrets(env)?.[0]?.value ||

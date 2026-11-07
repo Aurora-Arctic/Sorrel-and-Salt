@@ -18,9 +18,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// An owner invites an address into a coven as a viewer or a member. The token is `crypto.randomBytes` output that only the mail carries, and the row holds its hash.
-// The transport is a test double: the real sender builds the link and hands it to a mocked `send`; the failing transport is the real `send` over a failing `fetch`
-// (claude-docs/db/invitations.md, "Inviting into a coven").
+// The transport is a test double; the failing transport is the real `send` over a failing `fetch` (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 const mail = vi.hoisted(() => ({ real: false }));
@@ -40,10 +38,8 @@ const ORIGIN = 'http://localhost:8000';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-/** The sender the page's mutation uses, bound to the browser's own request. */
 const sender = () => invitationSender(new Request(`${ORIGIN}/api/graphql`, { method: 'POST' }));
 
-/** The token in the link mailed to `to`, and the mail it came in. */
 function mailedTo(to: string): { token: string; message: Message } {
   const message = send.mock.calls.map(([sent]) => sent).find((sent) => sent.to === to);
   const token = message?.text.match(/\/invite\/([A-Za-z0-9_-]+)/)?.[1];
@@ -57,7 +53,6 @@ const invitations = () => sql<CovenInvitationStateRow[]>`
   from invitations order by created_at
 `;
 
-/** A coven with these members, through the raw client. */
 async function insertCoven(
   name: string,
   members: [string, 'owner' | 'member' | 'viewer'][],
@@ -107,7 +102,6 @@ describe('createInvitation', () => {
       accepted_at: null,
       revoked_at: null,
       created_by: A.id,
-      // The mail's step swapped in the mailed token, as the System account.
       updated_by: SYSTEM_ACTOR_ID,
     });
     expect(stored.expires_at.getTime()).toBeGreaterThan(Date.now());
@@ -203,11 +197,9 @@ describe('createInvitation', () => {
       });
     });
 
-    /** Invites `email` into `workspaceId`, as owner A, and answers the row. */
     const invite = (email: string, role: 'viewer' | 'member', workspaceId = WORKSPACE_W_ID) =>
       createInvitation(asUser(A), workspaceId, { email, role }, sender());
 
-    /** The rows of an address that are still pending. */
     const pendingFor = async (email: string) =>
       (await invitations()).filter(
         (row) => row.email === email && row.revoked_at === null && row.accepted_at === null,
@@ -365,7 +357,6 @@ describe('createInvitation', () => {
 describe('createInvitation mail limit', () => {
   const LIMIT = INVITATION_MAIL_LIMIT;
 
-  /** `count` invitations A sent `ageMinutes` ago, through the raw client. */
   async function sentBy(userId: string, count: number, ageMinutes: number) {
     for (let i = 0; i < count; i += 1) {
       await sql`
@@ -390,7 +381,6 @@ describe('createInvitation mail limit', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  // A resend is a repeat invitation to an address that already has one pending.
   it('refuses a resend at the limit too', async () => {
     await invite(A, INVITED);
     await sentBy(A.id, LIMIT - 1, 10);

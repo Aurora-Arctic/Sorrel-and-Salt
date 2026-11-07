@@ -10,13 +10,11 @@ export function runInBackground(task: Promise<unknown>): void {
   try {
     after(() => task);
   } catch {
-    // Outside a request there is no response to wait for, so the task is held until a caller settles it.
     held.add(task);
     void task.finally(() => held.delete(task)).catch(() => {});
   }
 }
 
-/** Waits for every task held outside a request: how a script or test sees the work a call left running. */
 export async function settleHeldTasks(): Promise<void> {
   while (held.size > 0) await Promise.allSettled([...held]);
 }

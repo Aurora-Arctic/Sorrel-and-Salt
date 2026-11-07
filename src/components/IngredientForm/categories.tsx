@@ -9,7 +9,7 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
 import type { PickerCategory } from '../CategoryPicker/types';
@@ -42,10 +42,6 @@ export const CategoriesDocument = graphql(`
   }
 `);
 
-/**
- * The Categories field: the picker, on the form's `categoryIds`, or at
- * `at`, a variant's own, which file that form alone.
- */
 export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   const FIELD = at ? (`${at}.categoryIds` as const) : 'categoryIds';
   const { control } = useFormContext<IngredientFormValues>();
@@ -63,8 +59,6 @@ export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   );
   const picked: string[] = field.value;
 
-  // An issue on one pick is pathed to its index, as the ids were sent; one on
-  // the field is the field's.
   const named = (id: string) => categories.find((category) => category.id === id)?.name ?? id;
   const issue = get<unknown, FormFieldError | undefined>(errors, FIELD);
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)

@@ -18,8 +18,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The override form of a compendium entry in a coven's cupboard (claude-docs/components/cupboard-entry-form.md): a field is sent only when it changed, and null hands it back to the compendium.
-// An emptied list is sent as an empty list, the coven having cleared it on purpose.
+// claude-docs/components/cupboard-entry-form.md
 
 const COMPENDIUM: CompendiumValues = {
   name: 'Testwort',
@@ -76,8 +75,6 @@ const save = () => screen.getByRole('button', { name: 'Save Annotation' });
 const label = () => screen.getByRole('textbox', { name: 'Label' });
 
 describe('CupboardEntryForm', () => {
-  // A tip only where it says a rule: the
-  // label's uniqueness, and that an emptied list says the entry has none.
   it('gives Label and the four lists a tip, and Description and Safety Notes none', () => {
     renderForm();
 
@@ -135,7 +132,6 @@ describe('CupboardEntryForm', () => {
     const calls = captureSaves();
     const onDone = renderForm();
 
-    // Colours start as the Compendium's single entry; taking it out is the coven clearing them.
     press('Remove green');
     press(save());
 

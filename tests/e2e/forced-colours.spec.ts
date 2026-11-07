@@ -11,10 +11,8 @@ import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ADD, HELD_MARK } from '../support/cupboard-wording';
 import { ingredientSlug, slugify } from '@/lib/slugify';
 
-// The compendium section under forced colours (Windows High Contrast and its kin): every surface keeps an
-// edge, and every state a mark, in the system colours the browser forces (claude-docs/styling.md,
-// "Forced colours"). A system colour is compared by what this browser resolves it to, read from a probe
-// in the same page, so no assertion is tied to one palette. Then the :target fill in the normal theme.
+// The compendium section under forced colours: every surface keeps an edge, and every state a mark, in the system colours (claude-docs/styling.md, "Forced colours").
+// A system colour is compared by what this browser resolves it to, read from a probe in the same page, so no assertion is tied to one palette.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -30,10 +28,7 @@ const SYSTEM = [
 ] as const;
 type Palette = Record<(typeof SYSTEM)[number], string>;
 
-/**
- * What this browser draws each system colour as. The pairs a test tells apart must differ, or a
- * comparison between them proves nothing.
- */
+/** The pairs a test tells apart must differ, or a comparison between them proves nothing. */
 async function systemColours(page: Page): Promise<Palette> {
   const palette = await page.evaluate((names) => {
     const found: Record<string, string> = {};
@@ -68,7 +63,6 @@ interface Drawn {
   outline: Line;
 }
 
-/** The computed paint of an element, or of one of its pseudo-elements. Borders run top, right, bottom, left. */
 function drawnOf(locator: Locator, pseudo: string | null = null): Promise<Drawn> {
   return locator.evaluate((el, pseudoElement) => {
     const s = getComputedStyle(el, pseudoElement);
@@ -89,11 +83,9 @@ function drawnOf(locator: Locator, pseudo: string | null = null): Promise<Drawn>
 
 const shows = (line: Line) => line.width >= 1 && line.style !== 'none' && line.style !== 'hidden';
 
-/** Each of the four sides' colour where that side is drawn, else 'none': an edge reads [c, c, c, c]. */
 const edgeOf = async (locator: Locator) =>
   (await drawnOf(locator)).borders.map((side) => (shows(side) ? side.color : 'none'));
 
-/** Every colour drawn round the element, by border or by outline: a mark is any one of them. */
 const marksOf = async (locator: Locator) => {
   const { borders, outline } = await drawnOf(locator);
   return [...borders, outline].filter(shows).map((line) => line.color);
@@ -106,18 +98,15 @@ const fillOf = async (locator: Locator) => {
 
 const inkOf = async (locator: Locator) => (await drawnOf(locator)).color;
 
-// Colour contrast is the forced palette's, which axe cannot read: it measures the author's colours
-// where the browser paints system ones, so it flags text the screen shows legibly.
+// Axe measures the author's colours where the browser paints system ones, so it flags legible text.
 const FORCED_SKIP = ['color-contrast'];
 
-/** A gate a held request waits behind until the test opens it, so a pending state stays on screen. */
 function held() {
   let open!: () => void;
   const gate = new Promise<void>((resolve) => (open = resolve));
   return { gate, open };
 }
 
-/** Answers every GraphQL request naming the operation with a refusal, and lets the rest through. */
 const refuse = (page: Page, operation: string, message: string) =>
   page.route('**/api/graphql', (route) =>
     route.request().postData()?.includes(operation)
@@ -128,7 +117,6 @@ const refuse = (page: Page, operation: string, message: string) =>
 // Every check of an item is soft, so one run shows each item that fails, not only the first.
 const check = expect.configure({ soft: true, timeout: 2_000 });
 
-/** A user to stamp the rows with, signed in on a page that is closed again at once. */
 async function authorOf(browser: Browser, baseURL: string | undefined, email: string) {
   const author = await browser.newPage({ baseURL });
   try {
@@ -138,7 +126,6 @@ async function authorOf(browser: Browser, baseURL: string | undefined, email: st
   }
 }
 
-/** A compendium entry with one form and one source cited from its details, so the page has Note 1. */
 async function seedSourcedEntry(author: string, name: string) {
   return withSql(async (sql) => {
     const id = await insertIngredient(
@@ -198,21 +185,17 @@ test.describe('under forced colours', () => {
     const p = await systemColours(page);
     const card = cards.first().getByRole('article');
 
-    // Item 1: the card's edge.
     await check.poll(() => edgeOf(card)).toEqual(Array(4).fill(p.CanvasText));
-    // Item 2: under the pointer the edge turns Highlight.
     await card.hover();
     await check.poll(() => marksOf(card)).toContain(p.Highlight);
     await page.mouse.move(0, 0);
 
-    // Item 28: the pending dot after a card's name, unseen at rest, is painted LinkText, so it shows
-    // when a slow navigation fades it in.
+    // Item 28: the pending dot, unseen at rest, is painted LinkText.
     const hint = card.locator('.link-hint').first();
     await expect(hint).toHaveCount(1);
     await check.poll(async () => (await drawnOf(hint)).background).toBe(p.LinkText);
 
-    // Item 20: a .btn drawn on a link has a Highlight border under the pointer, not a fill the browser
-    // removes. Not on a <button>: the browser rings a hovered <button> in Highlight itself.
+    // Item 20: a .btn on a link has a Highlight border under the pointer; a <button> is excluded, as the browser rings it itself.
     const signIn = page.getByRole('link', { name: 'Sign In', exact: true }).first();
     await signIn.hover();
     await check.poll(() => marksOf(signIn)).toContain(p.Highlight);
@@ -220,7 +203,7 @@ test.describe('under forced colours', () => {
 
     const filters = page.getByRole('button', { name: /^Filters/ });
 
-    // Item 36, a guard: the keyboard focus ring stays, in a system colour.
+    // Item 36, a guard: the focus ring stays, in a system colour.
     await filters.focus();
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Tab');
@@ -232,15 +215,13 @@ test.describe('under forced colours', () => {
       })
       .toBe(true);
 
-    // Item 21: the first page's disabled Prev reads as off, in GrayText.
     const prev = page
       .getByRole('navigation', { name: 'Pages' })
       .getByRole('link', { name: 'Prev' });
     await expect(prev).toBeDisabled();
     await check.poll(() => inkOf(prev)).toBe(p.GrayText);
 
-    // Item 8: the pinned search row has a CanvasText rule along its foot once stuck. The rule may sit on
-    // the row or on its fill, which stands in the row's place on screen.
+    // Item 8: the pinned search row's CanvasText rule may sit on the row or on its fill.
     const row = page.getByRole('search');
     await page.mouse.move(0, 0);
     await page.evaluate(() => window.scrollTo(0, 1500));
@@ -256,8 +237,7 @@ test.describe('under forced colours', () => {
     await page.evaluate(() => window.scrollTo(0, 0));
 
     // Items 3 and 4: the +N button's hover and open marks, and the panel's edge.
-    // Item 29: the caret typing out the sentence while the search runs is CanvasText. The search's
-    // page is held back, so the caret stays until it is read.
+    // Item 29: the search's page is held back, so the caret stays until it is read.
     const searching = held();
     await page.route(
       (url) => url.pathname === '/compendium' && url.searchParams.get('query') === 'Amethyst',
@@ -291,7 +271,6 @@ test.describe('under forced colours', () => {
     await check.poll(() => edgeOf(panel)).toEqual(Array(4).fill(p.CanvasText));
     await page.keyboard.press('Escape');
 
-    // Item 5: a Quick Look dialog's edge.
     await page
       .getByRole('link', { name: /^Quick Look / })
       .first()
@@ -342,13 +321,11 @@ test.describe('under forced colours', () => {
 
     const add = page.getByRole('main').getByRole('button', { name: ADD });
     const menu = page.getByRole('menu', { name: ADD });
-    // Item 18: the plus's hover, then its open fill.
     await add.hover();
     await check.poll(() => marksOf(add)).toContain(p.Highlight);
     await add.click();
     await expect(menu).toBeVisible();
     await expect(add).toHaveAttribute('aria-expanded', 'true');
-    // The menu's edge, a guard: it is a CanvasText line already.
     await check.poll(() => edgeOf(menu)).toEqual(Array(4).fill(p.CanvasText));
 
     const held = menu.getByRole('menuitem', { name: SECOND });
@@ -356,12 +333,9 @@ test.describe('under forced colours', () => {
     await expect(held).toBeDisabled();
     await expect(held).toHaveAccessibleName(`${SECOND}, ${HELD_MARK}`);
     await expect(open).toBeEnabled();
-    // Item 12: the held coven's item reads as off.
     await check.poll(() => inkOf(held)).toBe(p.GrayText);
-    // Item 11, option A: an item under the pointer has a Highlight outline.
     await open.hover();
     await check.poll(() => marksOf(open)).toContain(p.Highlight);
-    // Item 18: the plus is filled while its menu is open, the pointer elsewhere.
     await page.mouse.move(0, 0);
     await check
       .poll(() => fillOf(add))
@@ -369,9 +343,7 @@ test.describe('under forced colours', () => {
     await page.keyboard.press('Escape');
     await expect(menu).toHaveCount(0);
 
-    // Item 19: an icon button other than the plus, from the shared mixin: the second coven holds the
-    // entry, so its three dots are here. Under the pointer a Highlight outline, while open a Highlight
-    // fill.
+    // Item 19: an icon button other than the plus, from the shared mixin.
     const more = page.getByRole('button', { name: `More for ${NAME}`, exact: true });
     await expect(more).toBeVisible();
     await more.hover();
@@ -383,8 +355,7 @@ test.describe('under forced colours', () => {
       .poll(() => fillOf(more))
       .toEqual({ background: p.Highlight, color: p.HighlightText });
 
-    // Item 17, the select: with no jar held, the stock dialog's Unit box is shut, in GrayText ink and
-    // a GrayText border.
+    // Item 17, the select: with no jar held, the Unit box is shut, in GrayText.
     await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
     const stock = page.getByRole('dialog', { name: /^Edit Stock/ });
     await expect(stock).toBeVisible();
@@ -395,8 +366,7 @@ test.describe('under forced colours', () => {
     await page.keyboard.press('Escape');
     await expect(stock).toHaveCount(0);
 
-    // Items 25 and 26: a refused add is a callout whose triangle is CanvasText; dismissed, it leaves a
-    // badge, a CanvasText disc with the triangle cut out in Canvas.
+    // Items 25 and 26: a refused add's callout triangle is CanvasText; dismissed, it leaves a badge.
     const REFUSED = 'This entry could not be added.';
     await refuse(page, 'AddCupboardEntry', REFUSED);
     await add.click();
@@ -409,7 +379,6 @@ test.describe('under forced colours', () => {
         return content !== 'none' && background === p.CanvasText;
       })
       .toBe(true);
-    // Item 19: the callout's dismiss, an icon button outside the mixin, has the same hover outline.
     const dismiss = callout.getByRole('button', { name: 'Dismiss' });
     await dismiss.hover();
     await check.poll(() => marksOf(dismiss)).toContain(p.Highlight);
@@ -437,7 +406,6 @@ test.describe('under forced colours', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const p = await systemColours(page);
 
-    // Item 30: the current section's bar, a heavy CanvasText line on one inline edge.
     const nav = page.getByRole('navigation', { name: 'On This Page' });
     const current = nav.locator('a[aria-current="location"]');
     await expect(current).toHaveCount(1);
@@ -449,13 +417,11 @@ test.describe('under forced colours', () => {
         );
       })
       .toBe(true);
-    // Item 31: another section's link under the pointer has a Highlight outline.
     const other = nav.locator('a:not([aria-current])').first();
     await other.hover();
     await check.poll(() => marksOf(other)).toContain(p.Highlight);
     await page.mouse.move(0, 0);
 
-    // Item 32: the jumped-to note, and then its source, each ringed in Highlight.
     await page.getByRole('link', { name: 'Note 1', exact: true }).click();
     await expect(page).toHaveURL(/#note-1$/);
     const note = page.locator('li:target');
@@ -478,8 +444,7 @@ test.describe('under forced colours', () => {
       'admin',
     );
     const BOTH = 'Fixture Glintwort Both';
-    // Both comes in Bark, for an outlined chip in the Forms box, and has two folk names, for the
-    // promote action on each.
+    // Both comes in Bark and has two folk names, for the chip and promote actions.
     await withSql(async (sql) => {
       await insertIngredient(
         sql,
@@ -507,7 +472,6 @@ test.describe('under forced colours', () => {
     await expect(edit).toBeVisible();
     const p = await systemColours(page);
 
-    // Item 9: the pinned Edit column's start edge, a CanvasText line drawn by the cell's ::before.
     const editCell = edit.locator('xpath=ancestor::*[self::td or self::th][1]');
     await check
       .poll(async () => {
@@ -515,22 +479,18 @@ test.describe('under forced colours', () => {
         return content !== 'none' && background === p.CanvasText;
       })
       .toBe(true);
-    // Item 10, option A: each body row is ruled off in CanvasText, the banding being gone. The rule may
-    // be the row's or its cells', as the table collapses its borders.
+    // Item 10, option A: the rule may be the row's or its cells', as the table collapses its borders.
     const bodyRow = edit.locator('xpath=ancestor::tr[1]');
     await check
       .poll(async () => [(await edgeOf(bodyRow))[2], (await edgeOf(editCell))[2]])
       .toContain(p.CanvasText);
 
-    // Item 24: the Shown switch's thumb. The entry is shown, so the track is Highlight and the thumb
-    // HighlightText.
     const shown = page.getByRole('switch', { name: 'Shown in Compendium: Fixture Glintwort Both' });
     await expect(shown).toBeChecked();
     const thumb = shown.locator('xpath=following-sibling::span[1]');
     await check.poll(async () => (await drawnOf(shown)).background).toBe(p.Highlight);
     await check.poll(async () => (await drawnOf(thumb)).background).toBe(p.HighlightText);
 
-    // Item 25: a refused switch says so in an error notice, whose triangle is CanvasText.
     await refuse(page, 'SetCompendiumEntryShown', 'This entry could not be hidden.');
     await shown.click();
     const notice = page.getByRole('main').getByRole('alert').first();
@@ -543,17 +503,14 @@ test.describe('under forced colours', () => {
       .toBe(true);
     await page.unrouteAll();
 
-    // The Filters tray.
     await page.getByRole('button', { name: /^Filters/ }).click();
     const tray = page.getByRole('dialog', { name: 'Filters' });
     await expect(tray).toBeVisible();
     const match = tray.getByRole('group', { name: 'Match' });
-    // Item 22, disabled: with one category the Match chip is off, in GrayText.
     const off = match.getByRole('button', { name: /All/ });
     await expect(off).toBeDisabled();
     await check.poll(() => inkOf(off)).toBe(p.GrayText);
 
-    // Item 13, option A: the active option is filled with Highlight.
     const box = tray.getByRole('combobox', { name: 'Category' });
     await box.fill('cleansing');
     const option = page.getByRole('option', { name: /^Cleansing/ });
@@ -566,14 +523,12 @@ test.describe('under forced colours', () => {
       .toEqual({ background: p.Highlight, color: p.HighlightText });
     await option.click();
 
-    // Item 14: a chosen category's chip in the box has a CanvasText edge.
     const chip = tray
       .getByRole('button', { name: 'Remove Category: Cleansing' })
       .locator('xpath=ancestor::li[1]');
     await expect(chip).toBeVisible();
     await check.poll(() => edgeOf(chip)).toEqual(Array(4).fill(p.CanvasText));
 
-    // Item 23: an outlined chip, a form's, has a Highlight border under the pointer.
     const forms = tray.getByRole('combobox', { name: 'Forms' });
     await forms.fill('bark');
     await page.getByRole('option', { name: /^Bark/ }).click();
@@ -585,7 +540,6 @@ test.describe('under forced colours', () => {
     await check.poll(() => marksOf(formChip)).toContain(p.Highlight);
     await page.mouse.move(0, 0);
 
-    // Item 22: the Match chip, now enabled, has a Highlight hover and a Highlight fill while open.
     const summary = match.locator('summary');
     await expect(summary).toBeVisible();
     await summary.hover();
@@ -602,8 +556,6 @@ test.describe('under forced colours', () => {
     await expect(page.getByRole('link', { name: /^Edit / }).first()).toBeVisible();
     await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
 
-    // Item 27: the curator's score bar on the entry page has a CanvasText edge, its gain is Highlight
-    // and its cost CanvasText.
     await page.goto(`/compendium/ingredients/${ingredientSlug(BOTH, null)}`);
     const bar = page.getByRole('img', { name: /^Gained / });
     await expect(bar).toBeVisible();
@@ -612,8 +564,7 @@ test.describe('under forced colours', () => {
     await check.poll(async () => (await drawnOf(gain)).background).toBe(p.Highlight);
     await check.poll(async () => (await drawnOf(cost)).background).toBe(p.CanvasText);
 
-    // Item 6: the confirm card over the edit form has a CanvasText edge. The ingredient form saves on
-    // Close rather than asking, so the card is reached through its Delete question.
+    // Item 6: the ingredient form saves on Close rather than asking, so the card is reached through its Delete question.
     await page.goto(`/curator/compendium?edit=${ingredientSlug(BOTH, null)}`);
     const editing = page.getByRole('dialog', { name: new RegExp(`^Edit Ingredient, ${BOTH}`) });
     await expect(editing).toBeVisible();
@@ -624,8 +575,7 @@ test.describe('under forced colours', () => {
     await card.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(card).toHaveCount(0);
 
-    // Item 17, the chip action: while a folk name's promotion is pending, the other folk name's
-    // promote action is off, in GrayText. The promotion is held back until that is read.
+    // Item 17, the chip action: the promotion is held back until the other folk name's action is read.
     await editing.getByRole('button', { name: 'Open All' }).click();
     const folk = editing.getByRole('group', { name: 'Folk Names', exact: true });
     const promoting = held();
@@ -649,8 +599,6 @@ test.describe('under forced colours', () => {
       'Hedge Glint',
     );
 
-    // Item 15: a required field left empty has a CanvasText line inside its edge, an inset outline,
-    // once the focus has left it.
     await page.goto('/curator/compendium?new=ingredient-compendium');
     const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
     await expect(adding).toBeVisible();

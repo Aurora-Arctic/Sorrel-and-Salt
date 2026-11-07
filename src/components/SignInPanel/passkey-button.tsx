@@ -43,7 +43,6 @@ const PasskeyButton = ({
         className="btn sign-in-panel__button sign-in-panel__button--passkey"
         // Not `disabled` while busy, which would drop the focus a failure's callout is placed against.
         aria-disabled={busy || undefined}
-        // Held while another sign-in is under way, as the providers are.
         disabled={signingIn !== null && !busy}
         onClick={() => void press()}
       >

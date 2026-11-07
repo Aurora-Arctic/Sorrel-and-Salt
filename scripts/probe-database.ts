@@ -11,11 +11,7 @@ import { withoutClientOnlyParams } from '../src/db/connection-url.ts';
 import { parseEnvFile, validateDatabaseUrl } from './assert-pulled-env.ts';
 import type { ProbeResult } from './types.ts';
 
-/**
- * What to do about each failure whose code alone would still mean reading a
- * Postgres error table mid-incident. Keyed by the driver's own code so the log
- * is searchable by the string it prints.
- */
+// Keyed by the driver's own code so the log is searchable by the string it prints.
 export const probeHints: Record<string, string> = {
   '42704':
     'The server does not recognise a parameter it was sent. postgres.js forwards every query ' +
@@ -78,15 +74,12 @@ export function scrub(text: string, url: string | undefined): string {
   return scrubbed;
 }
 
-/** The driver's code and message, scrubbed, plus the hint if there is one. */
 export function describeConnectionError(error: unknown, url: string | undefined): string {
   if (!(error instanceof Error)) {
     return scrub(String(error), url);
   }
-  // `code` is not a property of `Error`, and every layer puts something
-  // different there — Node's socket errors `ECONNREFUSED`/`ENOTFOUND`,
-  // postgres.js the server's five-character SQLSTATE. Read defensively: an
-  // error carrying no code at all still has to be reported.
+  // `code` is not a property of `Error` and each layer puts something different there, so read it
+  // defensively.
   const raw: unknown = (error as unknown as Record<string, unknown>).code;
   const code = typeof raw === 'string' ? raw : undefined;
 

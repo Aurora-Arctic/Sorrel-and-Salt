@@ -3,7 +3,7 @@
 @use '../../scss/jar-motion' as *;
 
 // The jar shelf: jars stand on a thin plank with a concave bracket at either end under each
-// (claude-docs/components/jar-shelf.md, "Shelf geometry").
+// (claude-docs/components/jar-shelf.md, "Contracts").
 
 // The cell's top padding, the drawing's height and the bracket's size, from which the plank and
 // brackets are placed so they cannot drift.
@@ -23,7 +23,7 @@ $-bracket: 7px;
   align-items: start;
 
   // The outer ends carry no fillet: each cell draws its brackets' halves outside itself and the shelf clips sideways (`clip`, not `hidden`)
-  // (claude-docs/components/jar-shelf.md, "Shelf geometry").
+  // (claude-docs/components/jar-shelf.md, "Contracts").
   overflow-x: clip;
 
   @media (max-width: 30rem) {
@@ -48,7 +48,7 @@ $-bracket: 7px;
 
   // The fillets: a square at the plank's top with a quarter circle cut from its outer corner, drawn
   // just outside each cell's edges so the half at a row's end is clipped by `.jar-shelf` with no
-  // row-counting (claude-docs/components/jar-shelf.md, "Shelf geometry").
+  // row-counting (claude-docs/components/jar-shelf.md, "Contracts").
   &::before,
   &::after {
     @include list-marker-cleared;
@@ -86,7 +86,6 @@ $-bracket: 7px;
   }
 }
 
-// A jar's name, centred. The button, where there is one, is the name's own box.
 .jar-shelf__name {
   font-size: type-size('small');
   line-height: 1.3;
@@ -105,8 +104,6 @@ $-bracket: 7px;
   text-align: center;
 }
 
-// A jar the coven can edit: the button is reset to bare text and its `::after` is stretched over
-// the whole cell, with a Low or Out amount raised above it.
 .jar-shelf__press {
   @include button-reset;
 
@@ -129,12 +126,10 @@ $-bracket: 7px;
 }
 
 // The hover and focus on an editable jar, shared with the recipe page's jar lines
-// (claude-docs/components/jar-line.md, "Hover, focus and motion").
+// (claude-docs/components/jar-shelf.md, "Jar line").
 @include jar-press-motion('.jar-shelf__jar', '.jar-shelf__press', '> svg', '.jar-shelf__name');
 @include jar-shake-keyframes;
 
-// The amount of a Low or Out jar as the button that opens its tip: text with no box or tint and the
-// help cursor, raised above the press's stretch.
 .jar-shelf__amount-tip {
   @include button-reset(help);
 
@@ -149,15 +144,12 @@ $-bracket: 7px;
   }
 }
 
-// The badge's Low or Out drawing before the amount, one caption line tall in the amount's ink, so
-// the state is a symbol as well as a colour.
 .jar-shelf__amount-icon {
   inline-size: 1em;
   block-size: 1em;
   flex: none;
 }
 
-// The drawing's paint. Ink is the text colour, the level and wave the accent.
 .jar-shelf__glass,
 .jar-shelf__lid {
   fill: none;
@@ -184,15 +176,14 @@ $-bracket: 7px;
   fill-opacity: 0.12;
 }
 
-// A faceted jar's two bands, a step darker and lighter than the glass, from the text and card
-// colours since no token exists; they swap roles in the dark theme
-// (claude-docs/components/jar-shelf.md, "Paint").
+// A faceted jar's two bands, a step darker and lighter than the glass; they swap roles in dark
+// (claude-docs/styling.md, "The faceted jar's bands").
 .jar-shelf__shade {
-  fill: color-mix(in srgb, $text-primary 8%, transparent);
+  fill: $jar-shade;
 }
 
 .jar-shelf__shine {
-  fill: color-mix(in srgb, $surface-card 55%, transparent);
+  fill: $jar-shine;
 }
 
 .jar-shelf__level {
@@ -213,7 +204,6 @@ $-bracket: 7px;
   stroke-dasharray: 2 2.5;
 }
 
-// The level rises on a change (a save re-reads the page). Not under reduced motion.
 .jar-shelf__rise {
   transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 
@@ -222,8 +212,6 @@ $-bracket: 7px;
   }
 }
 
-// The spell jar's ingredient bands: two tints of the one ink, alternating, with a thin line along
-// each boundary.
 .jar-shelf__band {
   transition: transform 0.4s ease;
 
@@ -254,7 +242,6 @@ $-bracket: 7px;
   opacity: 1;
 }
 
-// Only the top band draws a line, the level line, with none between layers.
 .jar-shelf__band-edge {
   fill: none;
   stroke: $accent;
@@ -262,7 +249,6 @@ $-bracket: 7px;
   opacity: 0.9;
 }
 
-// A form with no jar: the same vessel in dashes, its corks and cloths left off.
 .jar-shelf__jar--empty {
   .jar-shelf__glass,
   .jar-shelf__lid,
@@ -326,7 +312,6 @@ $-bracket: 7px;
     fill: color-mix(in srgb, $stock-out-ink 14%, transparent);
   }
 
-  // The wave is left off: an empty jar has no surface to ripple.
   .jar-shelf__wave,
   .jar-shelf__mark,
   .jar-shelf__cork,

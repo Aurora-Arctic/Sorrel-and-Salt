@@ -7,8 +7,7 @@ const SUBJECT = 'Your Access Was Paused';
 
 const PREVIEW = 'An admin paused your access to Sorrel & Salt.';
 
-// Sent when a keeper pauses a user's site access. It states the end and the message written to the user when there is one, never the keeper's note, and links to the support page, the one
-// page a paused account can still reach after signing in.
+// Never the keeper's note. Links to the support page, the one page a paused account can still reach.
 export function AccessPaused({
   url,
   until,
@@ -34,5 +33,4 @@ export function AccessPaused({
   );
 }
 
-/** The notice of a site access pause for `to`, rendered to the html and plain text `send` takes. */
 export const accessPausedMessage = defineMessage<AccessPausedProps>(SUBJECT, AccessPaused);

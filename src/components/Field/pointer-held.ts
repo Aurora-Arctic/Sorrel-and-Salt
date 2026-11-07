@@ -38,7 +38,6 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-/** True while a pointer press is in progress; false on the server. */
 export function usePointerHeld(): boolean {
   return useSyncExternalStore(
     subscribe,

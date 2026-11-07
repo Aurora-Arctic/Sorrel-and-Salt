@@ -19,9 +19,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The coven's Ingredients page against the built server, for what no story walks: a non-member's 404, the pager,
-// the Compact switch before paint, the type-ahead scoped to this cupboard, Annotate over the list, and axe at
-// both densities and a phone's width.
+// For what no story walks.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -32,14 +30,11 @@ test.beforeAll(async () => {
 
 const listPath = (coven: Coven) => `/coven/${coven.slug}/ingredients`;
 
-/** The Prev / "Page X of Y" / Next row. */
 const pagerOf = (page: Page) => page.getByRole('navigation', { name: 'Pages' });
 
-/** The Compact switch in the filter row (CardDensitySwitch). */
 const compactSwitch = (page: Page) =>
   page.getByRole('search').getByRole('switch', { name: 'Compact' });
 
-/** The labels the open type-ahead offers, once it has answered `text`. */
 async function offered(page: Page, text: string): Promise<string[]> {
   const responded = page.waitForResponse(
     (response) =>
@@ -68,7 +63,6 @@ test('a non-member is told the page does not exist, at the address a member read
     D: 'owner',
   });
 
-  // An entry, so the member's page draws its list (an empty cupboard draws none).
   await withSql((sql) => localIngredient(sql, ours.id, ours.users.A));
 
   // Why the page could have been served: the coven exists, live, and a member reads it.
@@ -171,10 +165,7 @@ test('Compact is the default, and Regular is remembered and in place before the 
   await expect(html).toHaveAttribute('data-card-density', 'regular');
   expect(await stored()).toBe('regular');
 
-  // Records the document's density the moment the parser first inserts the
-  // list, and whether the parser was still running: an attribute present then
-  // was set by the pre-paint script, not by the page's JavaScript, which runs
-  // only once parsing is done.
+  // An attribute present when the parser first inserts the list was set by the pre-paint script, not by the page's JavaScript, which runs once parsing is done.
   await page.addInitScript(() => {
     const seen = window as unknown as {
       densityAtParse?: { density: string | null; state: string };
@@ -216,7 +207,6 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
       canonicalName: 'Fixtura nostra',
       folkNames: ['Cronewort'],
     });
-    // The same label, and the same folk name, in a coven A has no part in.
     await localIngredient(sql, theirs.id, theirs.users.D, {
       name: 'Fixture Mirrorwort',
       canonicalName: 'Fixtura aliena',
@@ -233,9 +223,7 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
     return held;
   });
 
-  // Why the type-ahead could have offered more: coven X's entry is live under
-  // the same name and folk name, and the compendium's Mugwort, which A's coven
-  // has not added, answers "Cronewort" where the compendium is searched.
+  // Why the type-ahead could have offered more: coven X's same-named entry is live, and the compendium's Mugwort answers "Cronewort".
   const [rows] = await withSql(
     (sql) =>
       sql<{ elsewhere: number; mugwort: number; added: number }[]>`
@@ -267,7 +255,6 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
   // Typed again, the answer may come from the client's cache, with no request to wait on.
   await nameSearch(page).fill('Cronewort');
   await page.getByRole('option', { name: 'Fixture Mirrorwort (Fixtura nostra)' }).click();
-  // The pick opens the entry's Quick Look over the list.
   await expect(page.getByRole('dialog', { name: 'Fixture Mirrorwort', exact: true })).toBeVisible();
   await expect(page).toHaveURL(
     new RegExp(`/coven/${ours.slug}/ingredients\\?(.*&)?entry=${own.ingredientId}(&|$)`),
@@ -305,9 +292,6 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-// Annotate on a held compendium entry's card opens the entry page's dialog over the list; a close or save
-// comes back to the list as it was, search kept and focus on the card's Annotate. The dialog's More menu,
-// opening upward inside it, removes the entry from the cupboard behind a confirmation, back to the same search.
 test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
   page,
 }) => {
@@ -335,7 +319,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   };
   const annotateLink = page.getByRole('link', { name: /^Annotate Fixture/ });
 
-  // A viewer reads the card with no Annotate on it.
   await signInAgainAs(page, coven.users.C);
   await page.goto(searched);
   await expect(rowOf(ingredientList(page), 'Fixture Notewort')).toHaveCount(1);
@@ -354,7 +337,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await expect(dialog.getByRole('textbox', { name: 'Label' })).toBeVisible();
   await expect(page).toHaveURL((url) => url.searchParams.has('annotate'));
 
-  // Unchanged, Escape closes it, back onto the search and the card's Annotate.
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await backAtSearch();
@@ -365,15 +347,12 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
   await expect(dialog).toHaveCount(0);
   await backAtSearch();
-  // The save shows as the coven's label; the card wears no Annotated, which is the
-  // entry page's to say.
+  // The card wears no Annotated, which is the entry page's to say.
   const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
   await expect(annotated).toHaveCount(1);
   await expect(annotated.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
 
-  // More, then Remove: asked first, then gone from the cupboard and the list.
-  // The menu opens upward from the dialog's foot and stays inside the dialog,
-  // at a phone's width too.
+  // The menu opens upward from the dialog's foot and stays inside it, at a phone's width too.
   await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
   const moreButton = dialog.getByRole('button', { name: 'More' });
   const menu = dialog.getByRole('menu', { name: 'More' });
@@ -400,9 +379,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await page.keyboard.press('Escape');
   await page.setViewportSize(wide);
 
-  // The question is the form's own card, over the form in this dialog, as
-  // Delete asks: Cancel keeps the
-  // dialog, the focus back on More.
   const question = dialog.getByRole('group', {
     name: /^Remove Fixture Our Notewort from your cupboard\?/,
   });
@@ -430,16 +406,13 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   expect(held).toHaveLength(0);
 });
 
-// A card's More near the window's foot opens above the button, where there is more room, and stays inside the
-// window at a desktop's width and a phone's, where the fixed bottom bar takes the foot.
 test("a card's More opened near the window's foot opens above it, inside the window", async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Gate Menu Foot', 'gate-menu-foot.test', {
     A: 'owner',
   });
-  // A held compendium entry, whose More holds two choices; a coven's own entry draws Edit and
-  // no More and no Delete, which its Edit Ingredient dialog holds.
+  // A held compendium entry's More holds two choices; a coven's own entry draws no More.
   await withSql(async (sql) => {
     const ingredientId = await insertIngredient(
       sql,
@@ -464,8 +437,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
 
   for (const width of [1280, 375]) {
     await page.setViewportSize({ width, height: 800 });
-    // The window cut off just beneath More, with the bottom bar's room when
-    // the bar is drawn, so less room is left below it than the menu needs.
+    // The window is cut off just beneath More, with the bottom bar's room when it is drawn.
     const bar = await page.evaluate(() => {
       const nav = [...document.querySelectorAll('nav')].find(
         (element) => getComputedStyle(element).position === 'fixed',
@@ -492,14 +464,11 @@ test("a card's More opened near the window's foot opens above it, inside the win
   }
 });
 
-// ListFrame: a pager end keeps the reader at the list rather than Next's jump to the page top, then brings
-// the list's start to the line the stuck search row leaves (the root's scroll-padding-top). A filter's page
-// is Next's own scroll, to the top. Measured here because happy-dom draws no layout to scroll.
+// A pager end keeps the reader at the list rather than Next's jump to the page top; measured here because happy-dom draws no layout to scroll.
 test("a pager end lands on the new page's first entries", async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
     A: 'owner',
   });
-  // Two full pages and one more, so the second page is as tall as the first.
   const LOCAL = PAGE_SIZE * 2 + 1;
   await withSql(async (sql) => {
     for (let n = 1; n <= LOCAL; n += 1) {
@@ -520,8 +489,6 @@ test("a pager end lands on the new page's first entries", async ({ page }) => {
 
   await page.goto(`${listPath(coven)}?source=local`);
   await expect(pager.getByText('Page 1 of 3')).toBeVisible();
-  // At the foot of the page, the list's start far above the line: the case
-  // the scroll is for.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const line = await paddingLine();
   expect(await firstCardTop()).toBeLessThan(line);
@@ -529,8 +496,6 @@ test("a pager end lands on the new page's first entries", async ({ page }) => {
   await pager.getByRole('link', { name: 'Next' }).click();
   await expect(pager.getByText('Page 2 of 3')).toBeVisible();
   await expect(cardsIn(list)).toHaveCount(PAGE_SIZE);
-  // The new page's first card is in view, at or below the line, and the
-  // window is still at the list, not the top of the page.
   await expect.poll(firstCardTop).toBeGreaterThanOrEqual(line - 1);
   expect(await firstCardTop()).toBeLessThan(page.viewportSize()!.height);
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);

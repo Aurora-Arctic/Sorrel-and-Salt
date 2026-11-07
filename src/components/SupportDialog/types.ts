@@ -1,4 +1,3 @@
-/** What the dialog offers this visitor. */
 export type SupportDialogState =
   | { kind: 'signed-out' }
   | { kind: 'unverified' }

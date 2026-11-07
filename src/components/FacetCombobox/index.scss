@@ -1,7 +1,5 @@
-// Layout only: the box, its chips and its list are the Combobox's. The native
-// select the server draws before the script loads is a short list rather than
-// the one-line box, so it is kept to a few rows and the filter row does not
-// stretch to every value.
+// Layout only: the box, chips and list are the Combobox's. The server's native select before the script loads is
+// kept to a few rows so the filter row does not stretch to every value.
 .facet-combobox {
   min-width: 0;
 

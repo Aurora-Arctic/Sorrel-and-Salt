@@ -4,9 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { useHydrated } from '@/lib/hydrated';
 
-// The flag a control reads to draw the server's version or the browser's: the
-// server's and hydration's render must agree, or React reports a mismatch,
-// and the one after must be the browser's.
+// The server's and hydration's render must agree or React reports a mismatch; the one after must be the browser's.
 
 function Flag() {
   return <output>{useHydrated() ? 'browser' : 'server'}</output>;

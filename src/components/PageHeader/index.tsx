@@ -1,15 +1,17 @@
 import type { ReactElement } from 'react';
+import Skeleton from '../Skeleton';
 import type { PageHeaderProps } from './types';
+import './index.scss';
 
 const classes = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
 
-// Every page's head: the heading with its one primary action on the same line, the action at the end
-// (claude-docs/styling.md, "Buttons"), and, where the page carries them, an eyebrow above and a lede
-// beneath in a `.header` column. No client directive and no hook, so a server page renders it
-// directly; an action that needs the browser is a client component of its own.
+// No client directive and no hook, so a server page renders it (claude-docs/styling.md, "Buttons").
 const PageHeader = ({
   title,
+  pendingTitle,
+  level = 'h1',
+  greeting,
   id,
   eyebrow,
   lede,
@@ -22,16 +24,34 @@ const PageHeader = ({
   suffix,
 }: PageHeaderProps): ReactElement => {
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
+  const Heading = level;
   const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
-  const heading = tag ? (
-    <h1 id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
+  // A pending title draws a bar the height of the heading in the same box, so the head keeps its
+  // size; the heading is named Loading, so a wait keeps its one level-one heading.
+  const heading = pendingTitle ? (
+    <Heading
+      id={id}
+      className={headingClassName}
+      data-pending-lines={pendingTitle === 2 ? 2 : undefined}
+    >
+      <span className="visually-hidden">Loading</span>
+      <Skeleton shape="line" quiet />
+    </Heading>
+  ) : tag ? (
+    <Heading id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
-    </h1>
+    </Heading>
   ) : (
-    <h1 id={id} className={headingClassName} {...focus}>
-      {title}
+    <Heading id={id} className={headingClassName} {...focus}>
+      {greeting ? (
+        <>
+          <span className="page-title__greeting">{greeting}</span> <span>{title}</span>
+        </>
+      ) : (
+        title
+      )}
       {suffix && <> {suffix}</>}
-    </h1>
+    </Heading>
   );
   const column = Boolean(eyebrow) || Boolean(lede);
   const line =

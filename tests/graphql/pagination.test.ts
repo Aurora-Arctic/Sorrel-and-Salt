@@ -16,16 +16,11 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { Context } from '@/graphql/types';
 import type { Leaf, LeavesData, CountedData } from './types';
 
-// The transport half of CLAUDE.md rule 8, over a throwaway schema: a list of
-// 250 branches, each with a connection of 250 leaves, so no page size is
-// bounded by running out of rows.
-
 const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
   id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
   name: `Leaf ${String(index).padStart(3, '0')}`,
 }));
 
-/** A keyset finder over the array, answering a `PageRequest` as the repository does. */
 function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntry<Leaf>[] {
   requests.push(page);
   const position = (leaf: Leaf) => `${leaf.name}\u0000${leaf.id}`;
@@ -215,7 +210,6 @@ describe('a paged connection', () => {
   });
 });
 
-/** A connection given a `count`: it records each start it is asked from and answers as a counting finder would. */
 function countedSchema(starts: (Cursor | undefined)[] = []): GraphQLSchema {
   const scratch = createBuilder();
   const LeafRef = scratch.objectRef<Leaf>('Leaf');
@@ -267,7 +261,6 @@ describe('a paged connection given a count', () => {
   });
 });
 
-/** Two pages, one inside the other, with the size written `size`. */
 function nested(size: string): string {
   return `{ leaves${size} { edges { node { children${size} { edges { node { name } } } } } } }`;
 }
@@ -291,7 +284,6 @@ describe('the complexity limit prices a connection at the page it will fetch', (
     expect(cost(nested(''))).toBeLessThan(cost(nested('(first: 26)')));
   });
 
-  // The shape is the same either side; only the page size moves the price.
   it('answers two nested default pages, and two nested pages of 10', async () => {
     for (const source of [nested(''), nested('(first: 10)')]) {
       expect(cost(source)).toBeLessThanOrEqual(MAX_COST);

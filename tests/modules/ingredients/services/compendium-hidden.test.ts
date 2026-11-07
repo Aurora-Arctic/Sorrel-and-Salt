@@ -37,7 +37,6 @@ beforeEach(async () => {
 
 const PAGE = { limit: 50, inverted: false } as const;
 
-/** Two compendium entries by invented names; the second is hidden. */
 async function seeded() {
   const shown = await insertIngredient(
     sql,

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
@@ -8,13 +8,15 @@ import type { UserListProps } from '@/components/UserList/types';
 import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
-import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
+import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
-import { stubLocationAssign } from '../../support/location';
+import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { rowCells } from '../../support/table';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -65,8 +67,6 @@ const BO = {
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
-// A curator: holds the creation flag, as the CHECK makes every
-// curator do, and an unverified address.
 const CY = {
   ...BO,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
@@ -85,17 +85,14 @@ const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
   ...overrides,
 });
 
-/** The cell in a user's row under the column with this heading. */
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
-  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+  return rowCells(row)[headings.indexOf(heading)] as HTMLElement;
 }
 
 describe('UserList, standing support time-outs and access pauses', () => {
   const AT = new Date('2026-11-20T09:30:00Z');
-  // Bo stands timed out and paused until AT, Cy timed out and paused with no end, Ada neither: the page passes only what
-  // stands.
   const rows = () =>
     render(
       <UserList
@@ -179,8 +176,8 @@ describe('UserList', () => {
       expect(row).toHaveTextContent(date);
     }
     // The mark's word is the flag's one rendering: a keeper holds it, Bo does not.
-    expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
-    expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
+    expect(within(rowCells(ada)[3]).getByText('Yes')).toBeInTheDocument();
+    expect(within(rowCells(bo)[3]).getByText('No')).toBeInTheDocument();
   });
 
   // Change Role, Approve and Revoke are the user modal's alone, so a row is an index into it
@@ -188,7 +185,6 @@ describe('UserList', () => {
   it('draws no role or coven-creation control on any row, a user awaiting approval included', () => {
     render(<UserList {...props({ users: [ADA, BO, CY] })} />);
 
-    // Why one could have shown: Bo holds the user role and may not yet create a coven.
     expect(
       within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('No'),
     ).toBeTruthy();
@@ -197,8 +193,6 @@ describe('UserList', () => {
     ).toEqual([]);
   });
 
-  // Each row opens the privilege ledger narrowed to its user, an
-  // admin's included, from an icon before the name.
   describe('the history link', () => {
     it('leads every name, to the ledger searched for that user’s address', () => {
       render(<UserList {...props()} />);
@@ -212,7 +206,7 @@ describe('UserList', () => {
           'href',
           `/keepers/privilege-changes?query=${encodeURIComponent(user.email)}`,
         );
-        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+        expect(rowCells(row)[0]).toContainElement(link);
       }
     });
 
@@ -226,8 +220,6 @@ describe('UserList', () => {
     });
   });
 
-  // Each name opens its user’s modal over the list, at once under
-  // the page’s opener, and as a link still for a new tab or before the script.
   describe('the name link', () => {
     it('links each name to its user’s modal, in the name cell', () => {
       render(<UserList {...props()} />);
@@ -236,7 +228,7 @@ describe('UserList', () => {
         const row = screen.getByRole('row', { name: new RegExp(user.name) });
         const link = within(row).getByRole('link', { name: user.name });
         expect(link).toHaveAttribute('href', user.openHref);
-        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+        expect(rowCells(row)[0]).toContainElement(link);
       }
     });
 
@@ -250,7 +242,6 @@ describe('UserList', () => {
 
       fireEvent.click(screen.getByRole('link', { name: BO.name }));
 
-      // No place named: a row opens the page's one unnamed route modal.
       expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading, undefined);
     });
   });
@@ -265,6 +256,18 @@ describe('UserList', () => {
     render(<UserList {...props({ users: [], query: 'nobody' })} />);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  // A filter that matched nothing offers the way back to every user: the page's own address, every filter
+  // dropped.
+  it('offers Clear Filters where a filter matched no user, back to the list with no filter', () => {
+    render(<UserList {...props({ users: [], query: 'nobody', awaitingApproval: true })} />);
+
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      '/keepers/users',
+    );
   });
 });
 
@@ -330,11 +333,22 @@ describe('UserList impersonation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
   });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it opens the site as the row’s user', async () => {
+    const leaving = leavingAtEachLoad(assignMock);
+    impersonateUserMock.mockResolvedValue({ data: {}, error: null });
+    stubLocationAssign(assignMock);
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(leaving).toEqual([true]);
+  });
 });
 
-// The search applies from its magnifier or Enter, a role or Needs
-// Approval the moment it changes, each softly from the first page, with a
-// bare `awaiting`.
 describe('UserList filter', () => {
   afterEach(() => {
     router.push.mockReset();
@@ -387,8 +401,53 @@ describe('UserList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  // A select-only box once hydrated, as every
-  // closed set in the row is, over the native select the server draws.
+  // The filtered list is a server render away: the row stays busy, and the rows give way to their
+  // skeleton, until it arrives, and the wait carries the filtered address, so the skeleton chosen is the list's.
+  it('stays busy until the filtered list arrives, the wait carrying the filtered address', async () => {
+    let state: { busy: boolean; href?: string } | undefined;
+    function Probe() {
+      const current = useNavigationState();
+      // Read from committed renders only, as a suspended transition re-runs bodies with the optimistic value put back.
+      useEffect(() => {
+        state = current;
+      });
+      return null;
+    }
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => (arrive = resolve));
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <UserList {...props()} />
+        <Probe />
+      </Navigating>,
+    );
+    const filter = filterForm('Filter Users');
+    // Precondition: at rest the row is idle, the rows are shown and nothing says it is loading.
+    expect(filter).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('row', { name: /Bo Fixturewort/ })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    const sentTo = new URL(String(router.push.mock.calls[0]?.[0]), 'https://sorrel.test');
+    expect(sentTo.pathname).toBe('/keepers/users');
+    expect(sentTo.searchParams.has('awaiting')).toBe(true);
+    expect(state).toEqual({ busy: true, href: router.push.mock.calls[0]?.[0] });
+    expect(filter).toHaveAttribute('aria-busy', 'true');
+    expect(filter).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('row', { name: /Bo Fixturewort/ })).not.toBeInTheDocument();
+
+    await act(async () => arrive());
+
+    expect(state?.busy).toBe(false);
+    expect(filter).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
     const { container, hydrate } = drawnOnServer(
       <Navigating push={router.push}>
@@ -473,17 +532,12 @@ describe('UserList filter', () => {
   );
 });
 
-// A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; a keeper's row offers neither.
 // The service is the guard; these put the control where a keeper looks and show what the mutation answers.
-// The primary keeper's switch on keeper changes, its state in words; to
-// any other keeper the control is in view but unusable, saying why.
 describe('UserList keeper changes switch', () => {
   afterEach(() => {
     router.refresh.mockReset();
   });
 
-  // The paused notice is a plain paragraph before the switch, the state's one
-  // rendering; while changes are on, the switch stands alone. Pause asks first.
   const confirming = () => screen.getByRole('dialog', { name: 'Pause Keeper Changes' });
 
   it('lets the primary keeper pause once confirmed, stating that changes are on, and says so', async () => {
@@ -494,7 +548,6 @@ describe('UserList keeper changes switch', () => {
     });
     render(<PauseControl paused={false} canToggle={true} />, { wrapper: StatusRegionProvider });
 
-    // No sentence while changes are on: only the button.
     const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
     expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
@@ -543,25 +596,20 @@ describe('UserList keeper changes switch', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('shows another keeper the state and the switch, aria-disabled and described by the reason', () => {
+  // Only the primary keeper may pause, so another keeper is shown no switch at all.
+  it('shows another keeper no switch while changes run', () => {
     render(<PauseControl paused={false} canToggle={false} />);
 
-    const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
-    expect(pause).toBeEnabled();
-    expect(pause).toHaveAttribute('aria-disabled', 'true');
-    expect(pause).toHaveAccessibleDescription(/\S/);
+    expect(screen.queryByRole('button', { name: 'Pause Keeper Changes' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Resume Keeper Changes' })).toBeNull();
+    expect(screen.queryAllByRole('status').filter((region) => region.textContent)).toHaveLength(0);
   });
 
-  // One sentence on the page: the notice; the switch's
-  // own reason is in its tip.
-  it('shows another keeper the paused notice and a locked Resume whose reason is a tip', () => {
+  it('shows another keeper only the paused notice while changes are paused', () => {
     render(<PauseControl paused canToggle={false} />);
 
-    const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
-    // The locked control wraps the button with its tip; the notice stands before it.
-    expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
-    expect(resume).toHaveAttribute('aria-disabled', 'true');
-    expect(resume).toHaveAccessibleDescription(/\S/);
-    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/\S/);
+    expect(screen.queryByRole('button', { name: 'Resume Keeper Changes' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Pause Keeper Changes' })).toBeNull();
   });
 });

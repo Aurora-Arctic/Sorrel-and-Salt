@@ -8,9 +8,7 @@ import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { announced } from '../../support/click-feedback';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The user modal's Change Role and coven-creation controls, the only place a keeper changes either: each asks over the
-// modal's body, naming the user, and the service is the guard, refusing the same
-// (claude-docs/components/user-detail.md).
+// claude-docs/components/user-detail.md
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -42,7 +40,6 @@ const ADA: UserDetailUser = {
   role: 'admin',
   canCreateWorkspace: true,
 };
-// Unverified and awaiting approval.
 const BO: UserDetailUser = {
   ...FACTS,
   id: '7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
@@ -52,7 +49,6 @@ const BO: UserDetailUser = {
   canCreateWorkspace: false,
   emailVerified: false,
 };
-// A curator: holds the creation flag, as the CHECK makes every curator do, and an unverified address.
 const CY: UserDetailUser = {
   ...BO,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
@@ -71,7 +67,6 @@ const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
     </StatusRegionProvider>,
   );
 
-/** The question asked over the modal's body, named by its sentence, which names the user. */
 const asking = (name: string) => screen.getByRole('group', { name: new RegExp(name) });
 
 describe('UserDetail coven creation', () => {
@@ -109,7 +104,6 @@ describe('UserDetail coven creation', () => {
     expect(calls).toEqual([]);
   });
 
-  // An unverified address is said in the question, read with its Approve; a warning, not a refusal.
   it('warns before approving a user whose email is unverified, and still approves', async () => {
     const calls = sent();
     renderDetail();
@@ -229,7 +223,6 @@ describe('UserDetail site role', () => {
     expect(calls).toEqual([{ userId: CY.id, role: 'user' }]);
   });
 
-  // The warning, in Promote's words: a promotion vouches as an approval does; a demotion vouches for no one.
   it('warns before promoting a user whose email is unverified, and not before demoting them', async () => {
     sent();
     renderDetail({ user: CY });
@@ -281,7 +274,6 @@ describe('UserDetail site role', () => {
     expect(changeRole('Ada Fixturewort')).not.toHaveAttribute('aria-disabled');
   });
 
-  // Which of the two reasons won is told by which of the two strings it reads.
   it('keeps the primary keeper’s Change Role on its own reason while paused', () => {
     renderDetail({ user: { ...ADA, primaryAdmin: true }, changesPaused: true });
 

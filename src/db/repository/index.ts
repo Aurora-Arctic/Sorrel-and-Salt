@@ -1,6 +1,5 @@
-// CLAUDE.md rule 2: the only application code that imports the client (claude-docs/db/client-imports.md, "Who may import the client").
-// `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
-// bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
+// CLAUDE.md rules 2 and 4 (claude-docs/db/repository-files.md, "Who may import the client"). `db` is not re-exported, so
+// `withAudit`'s `AuditWriter` is the sole write mechanism. Import this file, never a sibling.
 
 export { rotateInvitationToken, withAudit } from './write';
 export {
@@ -135,6 +134,7 @@ export {
   findCardCount,
   findCardPositions,
   findInvitationByToken,
+  hasAcceptedCard,
   findInvitationInWorkspace,
   findInvitedCoven,
   findReceivedInvitation,

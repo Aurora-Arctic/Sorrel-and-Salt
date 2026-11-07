@@ -6,8 +6,6 @@ import { FieldShell, fieldDescription } from '../Field';
 import DateRangeField from '.';
 import type { DayRange, QuickPick } from './types';
 
-// Render-only; picking, the quick picks and the keys are asserted in tests/components/DateRangeField.
-// Each cell is the field under its label, as the Invitation Cards drawer draws it.
 const meta = {
   title: 'Forms / Date Range Field',
 } satisfies Meta;
@@ -15,10 +13,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const RANGE: DayRange = { from: '2026-10-01', to: '2026-10-30' };
-/** A spy that records each pick. */
 const onChange = fn();
 
-// Fixed ranges, so the story draws the same on any day.
 const PICKS: QuickPick[] = [
   { label: 'Today', range: () => ({ from: '2026-10-30', to: '2026-10-30' }) },
   { label: 'Last 7 Days', range: () => ({ from: '2026-10-24', to: '2026-10-30' }) },
@@ -34,7 +30,6 @@ const Field = ({
 }: {
   id: string;
   initial?: DayRange;
-  /** Pressed open once drawn, as a person would. */
   open?: boolean;
 }): ReactElement => {
   const [range, setRange] = useState(initial);
@@ -62,9 +57,6 @@ const Field = ({
   );
 };
 
-// The open calendar comes last, so it floats below its own cell with nothing beneath it. It shows
-// September and October, the range banded between its ends, and Last 30 Days marked as the pick
-// the range matches.
 export const States: Story = {
   render: () => (
     <StatesGrid

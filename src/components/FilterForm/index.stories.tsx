@@ -8,10 +8,6 @@ import GroupedValueListFilter from '../GroupedValueList/filter';
 import type { GroupedValueListFilter as Shown } from '../GroupedValueList/types';
 import ListFrame from '../ListFrame';
 
-// Render-only; the lists that use it assert their filters. Drawn as a list draws
-// it: the categories filter (`GroupedValueListFilter`) in a ListFrame, which holds
-// the navigation it needs. The router goes nowhere, so a change shows nothing on
-// its way. Clear shows only while filtered.
 const meta = {
   title: 'Admin / Filter Form',
 } satisfies Meta;
@@ -28,10 +24,8 @@ const Framed = ({ shown = NO_FILTER }: { shown?: Shown }) => (
   </ListFrame>
 );
 
-// A page showing a filter: Clear, a link to the page itself, ends the row.
 const FILTER: Shown = { query: 'test', group: GROUPS[0].slug };
 
-// The form drawn on its own, with a filter shown so Clear would be drawn.
 const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
   const [query, setQuery] = useState('test');
   return (
@@ -56,10 +50,6 @@ const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
   );
 };
 
-// One control chooses the state (claude-docs/workshop.md, rule 5).
-// - No Filter: no Clear. Filtered: Clear, a link to the page itself, ends the row.
-// - Without Clear: a row with its own Clear All turns Clear off.
-// - With Sorrel: a sticky row's fill layer, so the corner sorrel shows through.
 const STATES: Record<string, ReactNode> = {
   'No Filter': <Framed />,
   Filtered: <Framed shown={FILTER} />,
@@ -73,8 +63,6 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// On a phone: the row stacks, the search over Clear. It stays a story of its own because the
-// state is the viewport, which a control on a state cannot set.
 export const Narrow: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => <Framed shown={FILTER} />,

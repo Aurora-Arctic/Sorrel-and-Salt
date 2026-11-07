@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../../components/AdminNav';
-import { adminTarget } from '../../../components/AdminNav/target';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
 import SectionBody from '../../../components/SectionBody';
@@ -31,11 +30,7 @@ export default async function KeepersLayout({ children }: AdminLayoutProps) {
       {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
       <ContextRow
         lead={
-          <PendingLink
-            href="/keepers"
-            className="context-row__name"
-            navigationTarget={adminTarget('/keepers')}
-          >
+          <PendingLink href="/keepers" className="context-row__name">
             Keepers
           </PendingLink>
         }

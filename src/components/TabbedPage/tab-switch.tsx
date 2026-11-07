@@ -17,7 +17,6 @@ import type {
 /** Whether a tab is on its way, which, and the way to press one; exported so the workshop's stub router can draw a tab on its way. */
 export const TabSwitchContext = createContext<TabSwitch | null>(null);
 
-/** Holds the switch the row, the action and the panel share; the navigation runs inside this transition, and a provider already above is kept. */
 export const TabSwitchProvider = ({ children }: TabSwitchProviderProps): ReactElement => {
   const outer = useContext(TabSwitchContext);
   const { pending, navigate } = usePendingNavigation();
@@ -39,7 +38,6 @@ export function useTabSwitch(): TabSwitch {
   return value;
 }
 
-/** The open tab's action, greyed out and `inert` while another tab is on its way; empty for a tab with none, which the stylesheet takes out of the line. */
 export const TabAction = ({ children }: TabActionProps): ReactElement => {
   const { pending } = useTabSwitch();
   return (
@@ -49,21 +47,10 @@ export const TabAction = ({ children }: TabActionProps): ReactElement => {
   );
 };
 
-/** The open tab's content, or the pressed tab's skeleton in its place while it is on its way (`SwapPanel`). */
 export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
   const { pending, target } = useTabSwitch();
   return (
-    <SwapPanel
-      pending={pending}
-      className="tabbed-page__panel"
-      filter={target?.filtered}
-      shape={target?.shape}
-      count={target?.sections}
-      columns={target?.columns}
-      fields={target?.fields}
-      density={target?.density}
-      card={target?.card}
-    >
+    <SwapPanel pending={pending} className="tabbed-page__panel" skeleton={target?.skeleton ?? null}>
       {children}
     </SwapPanel>
   );

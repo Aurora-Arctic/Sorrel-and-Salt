@@ -1,9 +1,9 @@
 'use client';
 
 import { type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
 import LocalTime from '../LocalTime';
@@ -17,11 +17,6 @@ import { AnnounceContext, useSupportAction } from './use-support-action';
 import SenderName from './sender-name';
 import SupportFacts from './facts';
 import SupportThread from './thread';
-
-// A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for a keeper or
-// the curator it is assigned to, and for a keeper alone a side column of settings: Assign, Shared With
-// Curators, the issue link and the sender's time-outs. The service is the guard; what a viewer may not do
-// is not drawn.
 
 const AssignDocument = graphql(`
   mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {
@@ -67,7 +62,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           errorCode={request.errorCode}
           errorReference={request.errorReference}
           lead={
-            // An anonymised request has no sender to show.
             !request.anonymised && (
               <div className="support-detail__fact--wide">
                 <dt>From</dt>
@@ -118,7 +112,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         <SupportThread
           entries={[
-            // An anonymised request keeps only what staff wrote: the sender's message and follow-ups are emptied.
             ...(request.anonymised
               ? []
               : [
@@ -146,7 +139,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         />
 
         {request.anonymised ? (
-          // An anonymised request is owned by the System account, and the service refuses any change to it.
           <Notice kind="caution" quiet className="support-detail__anonymised">
             This request is anonymised. It takes no notes or replies, and its settings cannot be
             changed.
@@ -249,7 +241,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   );
 };
 
-/** The sender's standing time-out: not lifted, and with no end or an end still ahead. */
 const standingTimeout = (timeouts: SupportTimeoutEntry[]): SupportTimeoutEntry | undefined =>
   timeouts.find((timeout) => stands(timeout, Date.now()));
 

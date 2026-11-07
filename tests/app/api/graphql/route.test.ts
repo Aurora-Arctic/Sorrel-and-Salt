@@ -5,9 +5,7 @@ warmImport(() => import('@/app/api/graphql/route'));
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
-// Signed out throughout: the context's session is context.test.ts's subject,
-// and the real reader loads Better Auth, which refuses to start at
-// NODE_ENV=production without its secrets.
+// Signed out: the real session reader loads Better Auth, which needs secrets in production.
 vi.mock('@/lib/request-session', () => ({
   sessionStateFromHeaders: async () => ({
     session: null,
@@ -19,8 +17,7 @@ vi.mock('@/lib/request-session', () => ({
 
 type Route = typeof import('@/app/api/graphql/route');
 
-// The route builds its Yoga instance at import, reading NODE_ENV once, so each
-// environment gets a fresh module, loaded once for the cases that share it.
+// The route reads NODE_ENV once at import, so each environment needs a fresh module.
 function routeIn(nodeEnv: string): () => Route {
   let route: Route;
   beforeAll(async () => {
@@ -71,7 +68,6 @@ describe('/api/graphql', () => {
   describe('in local development', () => {
     const route = routeIn('development');
 
-    // curl and scripts send no Accept at all; only a navigation gets the IDE's page.
     it('answers a GET query that names no Accept, even where the IDE is on', async () => {
       const response = await route().GET(
         new Request(`${ENDPOINT}?query=${encodeURIComponent('{ ok }')}`),
@@ -85,7 +81,6 @@ describe('/api/graphql', () => {
   describe('in production', () => {
     const route = routeIn('production');
 
-    // `__type` names one type rather than the whole schema, and is refused too.
     it('refuses a single-type introspection', async () => {
       const response = await route().POST(
         post({ query: '{ __type(name: "AuditInfo") { name } }' }),

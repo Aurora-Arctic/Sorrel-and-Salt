@@ -21,10 +21,7 @@ import type {
 import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
-// The grimoire list's read, with its search and category filter.
-// In a file of its own rather than in `spells.ts`, because
-// `finders.ts` imports `readableSpells` from there and this pages through
-// `finders.ts`: the two in one file would import each other.
+// The grimoire list's read, apart from `spells.ts` so `finders.ts` and this file do not import each other.
 
 /** An instant, newest first: a page's key is ascending, so it is negated. */
 const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt): SortPart => ({
@@ -124,10 +121,8 @@ function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery)
 
 type TextColumn = typeof spells.moonPhase | typeof spells.dayOfWeek;
 
-/** A free-text column as the facets compare it: trimmed, case set aside. */
 const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
 
-/** The spell's text column is any of `values`, compared `folded`; a blank value matches nothing. */
 function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
   if (!values || values.length === 0) return [];
   return [
@@ -217,7 +212,7 @@ export function findGrimoireCategoryCounts(
 /**
  * The counts behind the four grimoire facets, under the list's visibility rule, so
  * another member's private spell is never counted. Each facet leaves its own picks
- * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts (M13.22)")
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

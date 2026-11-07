@@ -2,9 +2,9 @@ import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
+import { categoryRefs } from '../../../components/IngredientCard/category-refs';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
-import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
@@ -55,7 +55,6 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // renders none. Drawn per request over the cached, sessionless reads; the viewer is asked only for
 // each card's foot. What the address does: claude-docs/components/compendium-list.md, "The compendium page".
 
-/** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
   const {
     withoutReferences: _refs,
@@ -72,7 +71,6 @@ const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSea
 const LIST_DESCRIPTION =
   'Browse the Sorrel & Salt compendium of ingredients for spellwork: formal and folk names, categories, deities, forms and sources.';
 
-/** Whether the address narrows the list, once the curators' own filters are dropped. */
 const isFiltered = (params: PublicCompendiumSearchParams) =>
   JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
   JSON.stringify(COMPENDIUM_PARAMS.read({}));
@@ -132,7 +130,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
   const { after, before } = readPageCursors(params);
 
-  // The address names categories and deities by slug; the compendium filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
@@ -140,7 +137,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
   const entryId = single(params.entry);
-  // A coven picked under In My Covens, or Not In, by someone signed in: the reads narrowed to it.
   const session = filter.covens.length > 0 || filter.covensNot ? await getSession() : null;
   const [page, counts, formIcons, viewer, shown] = await Promise.all([
     session
@@ -159,10 +155,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         readCompendiumEntry(slug, editor),
       )
     : { edited: undefined, missing: false };
-  // The search as it stands, no modal over it: where the details close to, and what each
-  // card's Edit and Quick Look open over.
   const list = { ...filter, after, before };
-  // The search with the details open, which an edit dialog opens over and closes back to.
   const here = { ...list, entry: shown ? entryId : undefined };
   const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
   const listWith = (edit: string) => compendiumHref(list, { edit }, PUBLIC_COMPENDIUM_PATH);
@@ -171,7 +164,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // held read, per request and never inside the cached details read (rule 6).
   const holding = detailed ? await covensHolding(detailed.id) : [];
   const detailsPlus = detailed ? await plusCovensOf(holding) : undefined;
-  // An old address opens the entry at its new one, keeping the search.
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
   // The review switch's read, for a curator or keeper only: per viewer, never inside the cached
@@ -190,17 +182,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       throw error;
     }
   };
-  // Nothing is awaited for anyone who cannot curate.
   const [detailsReview, editReview] =
     canEdit && (detailed || editing)
       ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])
       : [undefined, undefined];
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
-  const facets = compendiumFacetCounts(counts, {
-    formIcons,
-    deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
-    categories: new Map(categories.map((category) => [category.id, category])),
-  });
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. An observer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
@@ -208,8 +194,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
-  // What the role in each of those covens permits, for the three dots on the cards and in the
-  // window: one read, per request, for both, and none for a visitor or an observer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
   // there is a plus or a check to count on. Not of a paused one: its read is refused, which
@@ -220,9 +204,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
-  // The stock Edit Stock opens with: the forms and jars of each entry a coven holds where its role
-  // may update stock, for the cards and the open entry together. One read per service, per viewer
-  // (rule 6).
   const stockers = new Set(cardCovens.filter(({ canStock }) => canStock).map((c) => c.workspaceId));
   const stock = await readEntryStock([
     ...page.edges.flatMap(({ node }) =>
@@ -254,7 +235,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       slug: node.slug,
       canonicalName: node.canonicalName,
       nomenclature: node.nomenclature,
-      categories: chips[i],
+      categories: categoryRefs(chips[i]),
       variants: page.variants[i],
       toxic: node.toxic,
       safetyNotes: node.safetyNotes,
@@ -263,14 +244,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         href: compendiumHref({ ...list, entry: node.id }, undefined, PUBLIC_COMPENDIUM_PATH),
         heading: detailsHeading(node),
       },
-      // The check shows only where every coven holds it, as a mark rather than a link.
       ...(defaultCoven && {
         held: heldIn.length === writable.length,
         heldIn,
         holding: mine.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ name }) => name),
       }),
-      // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
-      // remove it. None for a visitor, an observer and a coven without the entry.
       places: cardPlacesOf(
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,
@@ -287,7 +265,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const action = defaultCoven ? 'add' : 'none';
 
   return (
-    // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
     <RouteModalProvider>
       {isListAddress(params) && (
         <script
@@ -307,7 +284,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       <CompendiumCards
         entries={entries}
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories.map(({ description: _description, ...rest }) => rest)}
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
@@ -345,7 +322,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
                 inCompendium: true,
               },
             }),
-            // The card's three dots, from the same component, so the window mirrors the card.
             ...(detailsPlaces.length > 0 && {
               more: (
                 <CompendiumCardMore
@@ -362,7 +338,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         }
       />
       {canEdit && (
-        // Rendered for a curator whatever the address opens, so Edit opens it at once.
         <CompendiumDialog
           place={here}
           path={PUBLIC_COMPENDIUM_PATH}

@@ -10,7 +10,6 @@ import { schema } from '../../../graphql/schema';
 // development is the one place that does not.
 const production = process.env.NODE_ENV === 'production';
 
-// Every browser-initiated read and write comes through here (CLAUDE.md rule 1).
 const yoga = createYoga({
   schema,
   graphqlEndpoint: '/api/graphql',

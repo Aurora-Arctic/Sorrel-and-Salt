@@ -11,14 +11,12 @@ import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
-// A coven's members, one row each, drawn as the admin user list is: the stacking
-// `DataTable`, a card per member at phone width. Render-only, with no row actions: a name opens
-// the member's modal, which holds them, and the page decides what it offers there
-// (claude-docs/components/member-list.md).
+// A coven's members, one row each, drawn as the admin user list is. Render-only, with no row actions: a name opens the
+// member's modal (claude-docs/components/member-list.md).
 
 /**
  * The columns: name, address where asked, role, then joined, invited by, Updated and, where asked, a standing pause.
- * (claude-docs/components/member-list.md, "Columns").
+ * (claude-docs/components/member-list.md, "Contracts").
  */
 const columns = (
   currentUserId: string,
@@ -75,8 +73,6 @@ const columns = (
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   updatedColumn('member-list__fact'),
-  // A green check while the member's access is open, a red cross while a pause stands, its end or that it has none
-  // in the tip and in hidden text, as the admin user list marks a site pause.
   Boolean(showAccess) && {
     heading: 'Access',
     className: 'member-list__mark-column',

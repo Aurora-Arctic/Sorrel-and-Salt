@@ -1,7 +1,6 @@
-// The accessibility sweep's scan list: every route the app serves and every modal it draws, each with the
-// people it is scanned as. tests/e2e/axe.spec.ts scans what this lists, and tests/guards/axe-scans.test.ts
-// fails when a page under src/app, a route in DESIGN.md §9 or a file drawing a modal has no entry here.
-// Plain data, with no Playwright import, so the Vitest guard can read it.
+// The accessibility sweep's scan list: every route and modal, each with the people it is scanned as.
+// tests/e2e/axe.spec.ts scans it; tests/guards/axe-scans.test.ts fails on a page, a §9 route (design/routes.md) or a
+// modal file with no entry. Plain data, with no Playwright import, so the Vitest guard can read it.
 
 /** Who a scan signs in as. Coven roles are the schema's; `user` holds no coven seat. */
 export type Persona =
@@ -19,12 +18,14 @@ export type Persona =
   | 'keeper';
 
 export interface RouteScan {
-  /** The address pattern, as DESIGN.md §9 writes it: route groups and parallel-route slots left out. */
+  /** The address pattern, as §9 (claude-docs/design/routes.md) writes it: route groups and parallel-route slots left out. */
   route: string;
   /** Everyone the page is scanned as; empty only for a route §9 names that has no page yet. */
   as: readonly Persona[];
   /** In §9 but with no `page.tsx`: listed so the guard sees it, and scanned once it is built. */
   unbuilt?: true;
+  /** The status the page answers with when it is not a success: the page for an address nothing else answers is a 404. */
+  status?: 404;
 }
 
 export interface ModalScan {
@@ -38,6 +39,7 @@ export interface ModalScan {
 export const ROUTE_SCANS = [
   // Open to everyone.
   { route: '/', as: ['signedOut'] },
+  { route: '/[...missing]', as: ['signedOut'], status: 404 },
   { route: '/compendium', as: ['signedOut'] },
   { route: '/compendium/ingredients/[slug]', as: ['signedOut'] },
   { route: '/privacy', as: ['signedOut'] },
@@ -101,6 +103,7 @@ export const ROUTE_SCANS = [
   { route: '/keepers/invitations', as: ['keeper'] },
   { route: '/keepers/invitation-cards', as: ['keeper'] },
   { route: '/keepers/card-sign-ups', as: ['keeper'] },
+  { route: '/keepers/business-cards', as: ['keeper'] },
   { route: '/keepers/documents', as: ['keeper'] },
   { route: '/keepers/documents/[key]', as: ['keeper'] },
   { route: '/keepers/help', as: [], unbuilt: true },
@@ -195,7 +198,7 @@ export const MODAL_SCANS = [
   // The keepers' pages.
   { id: 'support-request', source: 'src/components/SupportRequests/index.tsx', as: 'keeper' },
   { id: 'user', source: 'src/app/(shell)/keepers/(people)/users/user-dialog.tsx', as: 'keeper' },
-  { id: 'user-confirm', source: 'src/components/UserList/confirmed-action.tsx', as: 'keeper' },
+  { id: 'user-confirm', source: 'src/components/ConfirmedAction/index.tsx', as: 'keeper' },
   { id: 'keeper-invite', source: 'src/components/AdminInvitations/invite-form.tsx', as: 'keeper' },
   { id: 'mint-cards', source: 'src/components/AdminCards/mint-form.tsx', as: 'keeper' },
   { id: 'card-attempts', source: 'src/components/AdminCards/attempts.tsx', as: 'keeper' },

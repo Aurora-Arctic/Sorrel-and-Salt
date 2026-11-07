@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The calendar a day field and a day-range field open: a card with a hairline edge, round day
-// marks, and a range drawn as a band between its two ends. A popover sits in the top layer, placed
-// from its field, so no scrolling body clips it; a browser with no popover leaves it in flow beneath
-// the field (claude-docs/components/date-field.md, "Styling").
+// The calendar a day field and a day-range field open, in the top layer so no scrolling body clips it; a browser
+// with no popover leaves it in flow beneath the field (claude-docs/components/date-field.md, "Styling").
 
 .calendar-panel {
   margin-block-start: space(2);
@@ -16,7 +14,6 @@
   max-inline-size: 100%;
 }
 
-// A row under the grid, its one button at the end.
 .calendar-panel__footer {
   display: flex;
   justify-content: flex-end;
@@ -36,7 +33,6 @@
   color: inherit;
 }
 
-// The field's end mark, in the muted ink.
 .calendar-icon {
   flex: none;
   inline-size: $glyph-size;
@@ -49,7 +45,6 @@
   font-family: $font-body;
 }
 
-// Two or more months sit side by side, wrapping when the window is too narrow for them.
 .day-picker__months {
   position: relative;
   display: flex;
@@ -66,12 +61,12 @@
 .day-picker__caption {
   display: flex;
   align-items: center;
-  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
   block-size: $day-picker-caption-height;
+  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to
+  // hold both.
   padding-inline-end: $day-picker-nav-room;
 }
 
-// The month and year pickers, side by side.
 .day-picker__dropdowns {
   display: flex;
   gap: space(2);
@@ -149,7 +144,6 @@
   }
 }
 
-// The Combobox's stroked chevron, turned to point where the step or select does.
 .day-picker__chevron {
   display: inline-grid;
   inline-size: $glyph-size;
@@ -215,7 +209,6 @@
   }
 }
 
-// Today is told by its ring and a chosen day by its fill and weight, not colour alone.
 .day-picker__day--today .day-picker__button {
   border-color: $text-primary;
 }
@@ -226,8 +219,6 @@
   font-weight: 600;
 }
 
-// A range: its two ends are chosen days, and the days between sit on a band of the accent, which
-// runs on from each end towards the other. A one-day range has no band.
 .day-picker__day--range-middle {
   background-color: $day-picker-band;
 

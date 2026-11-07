@@ -2,7 +2,6 @@
 // repository: the converter imports only schema/units.ts, so it can load
 // anywhere (claude-docs/db/stock.md, "One module owns the units").
 
-/** Why a conversion was refused: across dimensions, or with a count unit. */
 export type ConversionRefusal = 'dimension' | 'count';
 
 /**
@@ -11,5 +10,4 @@ export type ConversionRefusal = 'dimension' | 'count';
  */
 export type UnitConversion = { ok: true; value: number } | { ok: false; reason: ConversionRefusal };
 
-/** An exact decimal: `digits` ÷ 10^`scale`. */
 export type Decimal = { digits: bigint; scale: number };

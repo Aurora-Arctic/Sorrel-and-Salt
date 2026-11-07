@@ -16,9 +16,8 @@ const format = (args: unknown[]): string =>
   args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(' ');
 
 /**
- * Declares that this test logs once at `level` with a message matching
- * `pattern`. The call is swallowed, and the test fails if it never comes.
- * Declare it again for each further call.
+ * The call is swallowed, and the test fails if it never comes; declare it again for each further
+ * call.
  */
 export function expectConsole(level: Level, pattern: RegExp): void {
   declared.push({ level, pattern, matched: false });

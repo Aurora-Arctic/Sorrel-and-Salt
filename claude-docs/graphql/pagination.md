@@ -29,8 +29,14 @@ an id is still the row's own uuid. Its offset-based helpers
 It runs in three layers, so the transport, the service and the repository
 each keep to their own rules:
 
-- **`src/lib/pagination.ts`** is pure. It holds the two numbers and
-  `resolvePage`, which decodes the cursors and clamps the size with
+- **`src/lib/cursor.ts`** holds the page sizes and the cursor codec, and
+  imports nothing from the server, because the browser loads it too: an
+  address's hand-edited cursor is checked before it is sent. It encodes with
+  `btoa` and `TextEncoder` rather than `Buffer`, which the browser would need
+  a copy of, and writes the same base64url `Buffer` did, so a cursor in an old
+  link still reads.
+- **`src/lib/pagination.ts`** is pure. It re-exports `cursor.ts` for the
+  server and holds `resolvePage`, which decodes the cursors and clamps the size with
   `@pothos/core`'s `parseCursorConnectionArgs`. It then asks for one row more
   than the page, because the extra row says whether another page follows, and
   builds `edges` and `pageInfo` from the answer. The `Cursor`, the
@@ -63,7 +69,7 @@ column's type, or has a different number of parts from the list's sort, is
 turns that into an `Invalid cursor` GraphQL error. It is never treated as "from
 the start", which would return a page the client did not ask for.
 
-**Page numbers: `totalCount` and `countBefore`** (MB.105). A connection
+**Page numbers: `totalCount` and `countBefore`**. A connection
 declared with `count` carries two more fields beside `edges` and `pageInfo`:
 
 ```graphql
@@ -80,7 +86,7 @@ type QueryCompendiumConnection {
   `max(1, ceil(totalCount / size))`. The admin pages, which read services
   rather than the connection, do it once in `resolveNumberedPage`
   (`src/lib/pagination.ts`), which reads a page through `resolvePage` and
-  counts it from its first row (MB.132). "Showing 11–20 of 26" is
+  counts it from its first row. "Showing 11–20 of 26" is
   `countBefore + 1` to `countBefore + edges.length` of `totalCount`.
 - **A count, so it has no base to guess.** The first page's `countBefore` is
   0 because no rows come before it. The name is not `startIndex`: Google's
@@ -98,12 +104,12 @@ type QueryCompendiumConnection {
   one; the pages it walks are unchanged.
 - **No numbered jump links.** Jumping to page 7 needs the cursor that opens
   it, which means ranking every match on every request, and it ties the pager
-  to one page size ([`mb.105-plan.md`](../design-decisions/mb.105-plan.md)).
+  to one page size ([`mb.105-plan.md`](../design-decisions/data.md#the-pager-counts-and-the-typeahead-is-the-first-page-of-a-search)).
 - **One count per connection, and only when asked for.** The `count` option
   is a resolver of its own, `(parent, args, start, context)`, handed the
   page's first cursor decoded, or none on an empty page. The connection
   object carries it memoised, so selecting both fields runs one count and
-  selecting neither runs none. The compendium's typeahead (M8.10) is the first
+  selecting neither runs none. The compendium's typeahead is the first
   page of the same search and selects neither.
 - **Priced as `pageInfo` is**: each field is one under the connection, at the
   page size, whatever the count reads.
@@ -129,3 +135,7 @@ The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
 cursor codec. `tests/graphql/pagination.test.ts` covers the field over the
 transport and its pricing, the count fields included. `tests/db/pagination.test.ts` covers the keyset
 walk.
+
+### line 106, Typeahead (cite the record)
+
+A plain [Ingredient!]! typeahead field was rejected (needs a t.typeahead helper and an exception to rule 8); now recorded in design-decisions/data.md, "The pager counts, and the typeahead is the first page of a search"

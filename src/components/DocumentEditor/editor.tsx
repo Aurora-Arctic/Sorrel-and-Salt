@@ -2,14 +2,14 @@
 
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 import { type ReactElement, useMemo, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { editorPlugins } from './elements';
 import Toolbar from './toolbar';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
@@ -44,7 +44,6 @@ const PublishDraftDocument = graphql(`
   }
 `);
 
-/** What a publish does for readers; the terms, and the disclaimer and code of ethics they include, ask everyone to agree again. */
 function PublishQuestion({
   documentKey,
   title,
@@ -94,15 +93,15 @@ const DocumentEditor = ({
   const [published, setPublished] = useState<number>();
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
-  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
-  // as the editor writes markdown a little differently from how it was read.
+  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from
+  // the editor, not `body`, as the editor writes markdown a little differently from how it was
+  // read.
   const savedRef = useRef<string | null>(null);
   savedRef.current ??= editorValueToMarkdown(editor.children as never);
   // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it
   // still counts, and the autosave sends it once that save lands.
   const sendingRef = useRef<string | null>(null);
 
-  /** Writes `text` as the draft, against the revision the last write answered with. */
   async function writeDraft(text: string): Promise<SaveResult> {
     setFailure(undefined);
     setPublished(undefined);
@@ -116,7 +115,6 @@ const DocumentEditor = ({
       savedRef.current = text;
       revisionRef.current = saveDocumentDraft.revision;
       setRevision(saveDocumentDraft.revision);
-      // Text typed while the save was in flight is not on the server yet.
       setDirty(editorValueToMarkdown(editor.children as never) !== text);
       return {
         revision: saveDocumentDraft.revision,
@@ -163,7 +161,6 @@ const DocumentEditor = ({
     }
   }
 
-  /** Throws the open draft away, when there is one, and puts the published text back in the editor. */
   async function restore(): Promise<void> {
     if (revisionRef.current !== null) {
       await graphqlRequest(DiscardDraftDocument, {

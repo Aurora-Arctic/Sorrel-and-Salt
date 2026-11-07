@@ -27,7 +27,7 @@ const OPTIONAL_NOT_BLANK = [
 
 // One source per row, in Chicago bibliography form, kept once and linked from every row it supports through `reference_links`.
 // One table, two tiers, as `ingredients`: `workspace_id IS NULL` is the compendium. Fields are text as Chicago prints them, and there
-// is no unique index (claude-docs/db/references.md, "Reference links schema details").
+// is no unique index (claude-docs/db/references.md, "References").
 export const references = pgTable(
   'references',
   {
@@ -36,8 +36,6 @@ export const references = pgTable(
     kind: referenceKind('kind').notNull(),
     authors: text('authors'),
     title: text('title').notNull(),
-    // The book of a chapter, the journal of an article, the reference work
-    // of an entry, or the site of a web page.
     container: text('container'),
     contributors: text('contributors'),
     edition: text('edition'),
@@ -48,15 +46,16 @@ export const references = pgTable(
     publisher: text('publisher'),
     published: text('published'),
     pages: text('pages'),
-    // The repository a print work was read through: Perseus, Encyclopedia.com.
     host: text('host'),
     url: text('url'),
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
-    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md, "Citation attributes"): a peer-reviewed journal; a university,
-    // its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Never a
-    // trade press, a wiki, a site republishing others' works or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
+    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md,
+    // "Reference links schema details"): a peer-reviewed journal; a university, its press or its
+    // museum; an academic press; a learned society's edition or series; a reference work edited by
+    // scholars with signed articles. Never a trade press, a wiki, a site republishing others' works
+    // or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
     scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,
@@ -74,7 +73,8 @@ export const references = pgTable(
     ),
 
     // The four that make the renderer total: every row admitted renders
-    // without a branch for a missing required field (claude-docs/design-decisions/mb.151-plan.md, "3. CHECKs").
+    // without a branch for a missing required field
+    // (claude-docs/design-decisions/ingredients.md, "Decided").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

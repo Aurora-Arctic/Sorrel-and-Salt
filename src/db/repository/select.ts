@@ -45,10 +45,8 @@ const SEARCH_WORD_SIMILARITY_THRESHOLD = 0.5;
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Where a read query is built — this, and `existsIn` below for a correlated
-// subquery. Exported for the finders beside it and nowhere else: the index
-// leaves both out and a deep import is banned, so no public handle skips the
-// filter.
+// Where a read query is built, with `existsIn`; exported to the finders beside it only, so no public handle
+// skips the filter.
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -212,10 +210,6 @@ export async function selectFrom(
   }));
 }
 
-/**
- * The first row `selectFrom` reads under `where`, or `undefined`: a finder's
- * one-row read, for a `where` that names one row or an index that allows one.
- */
 export async function selectOne<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -335,7 +329,6 @@ function expressionOf(part: SortPart): SQL | SortColumn {
   return is(part, PgColumn) ? part : sql`cast(${part.expression} as ${sql.raw(part.type)})`;
 }
 
-/** The type a sort part's cursor text is cast back to. */
 function typeOf(part: SortPart): string {
   return is(part, PgColumn) ? part.getSQLType() : part.type;
 }
@@ -354,7 +347,6 @@ export function pageBounds(keyset: Keyset<object>): SQL | undefined {
   );
 }
 
-/** A row's position in the list, `(...sort, id)`, as one row value. */
 function rowKey({ sort, id }: KeyOrder): SQL {
   return sql`(${sql.join([...sort.map(expressionOf), id], sql`, `)})`;
 }

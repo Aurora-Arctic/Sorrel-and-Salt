@@ -44,8 +44,6 @@ export function SpellSuggestField({
         onPick={(value) => field.onChange(value)}
         suggestions={suggestions}
         offerTyped
-        // The value's own mark in the box, there while the text is a listed
-        // name: a value typed outside the list draws none.
         icon={icon?.(text)}
         placeholder={placeholder}
         inputRef={field.ref}

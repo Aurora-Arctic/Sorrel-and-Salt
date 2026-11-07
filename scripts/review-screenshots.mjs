@@ -1,35 +1,14 @@
 #!/usr/bin/env node
-// A design review's screenshots: every page a review names, at two phone
-// widths, in both themes, full page, so the curator can compare a section's
-// states side by side without opening each one by hand. It drives the remote
-// browser the e2e runner uses (`PLAYWRIGHT_WS_ENDPOINT`), since no browser is
-// installed in the devcontainer, which is why the app is reached as
-// http://devcontainer:<port> rather than localhost. Untested: it is a tool
-// for the agents running a review, not a requirement of the app
-// (claude-docs/workshop.md, "Review screenshots").
-//
-// usage: node scripts/review-screenshots.mjs --out .reports/<task>-screenshots
-//          [--base http://devcontainer:8000] [--storage-state <file>]
-//          (--pages <file.json> | --pages '<json>')
-//
-// The pages are a JSON list of `{ "path": "/sign-in", "name": "sign-in" }`,
-// in a file or inline. Each is shot as `<name>-<width>-<theme>.png`.
-// `--storage-state` is a Playwright storage-state file holding a signed-in
-// session's cookies, for the pages behind sign-in.
-//
-// Both widths are touch sign-offs: each context is a touch phone,
-// `hasTouch` and `isMobile`, so the page's `(hover: none)` query holds as it
-// does on a phone. Without it a desktop browser at phone width would draw
-// what no phone shows: the impersonation banner tucked away until a pointer
-// nears the top, where a touch screen keeps it in the page's flow, shown in
-// full.
+// A design review's screenshots: every named page at two phone widths in both themes, through the remote
+// browser the e2e runner uses (claude-docs/workshop.md, "Review screenshots").
+// Usage: node scripts/review-screenshots.mjs --out <dir> [--base <url>] [--storage-state <file>] --pages <file|json>
+// Each context is a touch phone, so the page's `(hover: none)` query holds as on a phone.
 
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 
-// A small phone and a large one, the widths a section signs off at.
 const VIEWPORTS = [
   { width: 375, height: 812 },
   { width: 412, height: 915 },
@@ -56,7 +35,6 @@ if (!endpoint) {
   process.exit(2);
 }
 
-// A path that exists is a file; anything else is the list itself.
 const pages = JSON.parse(
   existsSync(values.pages) ? readFileSync(values.pages, 'utf8') : values.pages,
 );
@@ -83,10 +61,7 @@ try {
         // The app follows `prefers-color-scheme` until a viewer picks a theme.
         await page.emulateMedia({ colorScheme });
         const url = new URL(path, values.base);
-        // A workshop story (`/iframe.html?id=...`) takes its theme from
-        // Storybook's `theme` global, not the media query: without one the
-        // preview sets its configured default (dark) on the document, which the
-        // app's stylesheet then obeys.
+        // A workshop story takes its theme from Storybook's `theme` global, not the media query.
         if (
           url.pathname.endsWith('/iframe.html') &&
           url.searchParams.has('id') &&

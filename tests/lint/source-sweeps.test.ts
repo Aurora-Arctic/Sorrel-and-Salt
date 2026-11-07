@@ -3,9 +3,7 @@ import { REPO_ROOT } from '../support/paths';
 // @ts-expect-error -- the lint plugin is plain JavaScript, with no declaration file
 import { rules } from '../../lint/source-sweeps.js';
 
-// Each rule of lint/source-sweeps.js, once passing and once failing
-// (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
-// The whole tree is their real test: `npm run lint` fails on any file that breaks one.
+// The tree is the rules' real test: `npm run lint` (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
 
 const at = (file: string) => file;
 const tester = new RuleTester();
@@ -54,7 +52,6 @@ tester.run('spell-visibility-read-in-one-place', rules['spell-visibility-read-in
       code: 'export function readableSpells() { return eq(spells.visibility, "workspace"); }',
     },
     {
-      // The Visibility facet's two helpers, beside the rule.
       filename: at('src/db/repository/spells.ts'),
       cwd: REPO_ROOT,
       code: 'export const visibilityIn = (values) => inArray(spells.visibility, values);',
@@ -156,6 +153,120 @@ test('b', async () => { use(held); });`,
       code: `let held = '';
 test('a', async () => { held = 'x'; });
 test('b', async () => { use(held); });`,
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('in-app-link-through-pending-link', rules['in-app-link-through-pending-link'], {
+  valid: [
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import { PendingLink } from '@/lib/navigation';
+export const Nav = () => <PendingLink href="/spells">Spells</PendingLink>;`,
+    },
+    {
+      // The link status hook draws nothing and navigates nowhere.
+      filename: at('src/components/LinkHint/use-link-pending.ts'),
+      cwd: REPO_ROOT,
+      code: `import { useLinkStatus } from 'next/link';
+export const useLinkPending = () => useLinkStatus().pending;`,
+    },
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import type { LinkProps } from 'next/link';
+export type NavProps = LinkProps;`,
+    },
+    {
+      // PendingLink is the one wrapper every in-app link goes through.
+      filename: at('src/lib/navigation/pending-link.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const PendingLink = (props) => <Link {...props} />;`,
+    },
+    {
+      filename: at('src/components/Nav/index.stories.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const Story = () => <Link href="/spells">Spells</Link>;`,
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const Nav = () => <Link href="/spells">Spells</Link>;`,
+      errors: 1,
+    },
+    {
+      filename: at('src/app/(shell)/somewhere/page.tsx'),
+      cwd: REPO_ROOT,
+      code: `import NextLink, { useLinkStatus } from 'next/link';
+export default function Page() { return <NextLink href="/spells">Spells</NextLink>; }`,
+      errors: 1,
+    },
+    {
+      // A listed file that no longer imports next/link is reported, so the list cannot outgrow its reasons.
+      filename: at('src/lib/navigation/pending-link.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const PendingLink = () => null;',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('full-page-load-reports-leaving', rules['full-page-load-reports-leaving'], {
+  valid: [
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { reportLeaving(); window.location.assign('/'); };`,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `function again() { reportLeaving(); location.reload(); }`,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const away = () => { reportLeaving(); window.location.replace('/elsewhere'); };`,
+    },
+    {
+      // Neither is a page load: a soft navigation and an object merge.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const go = () => { navigate('/x'); Object.assign(target, source); };`,
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => window.location.assign('/');`,
+      errors: 1,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `function again() { location.reload(); }`,
+      errors: 1,
+    },
+    {
+      // Too late: the bar has already missed the load.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { window.location.assign('/'); reportLeaving(); };`,
+      errors: 1,
+    },
+    {
+      // Reported in the outer function, but the load runs later, in a callback of its own.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { reportLeaving(); mutate({ onSuccess: () => window.location.assign('/') }); };`,
       errors: 1,
     },
   ],

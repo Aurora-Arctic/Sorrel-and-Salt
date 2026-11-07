@@ -24,7 +24,6 @@ import './choice-chip.scss';
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
 // choice; hydrated, the menu fades and stays mounted until the fade ends (see useSlide).
 
-/** How long a leaving menu waits for its fade to end before it closes anyway. */
 const FADE_LIMIT_MS = 400;
 
 /** Motion turned down, or no way to ask, so a change is not held for a fade. */
@@ -32,7 +31,6 @@ export const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** The right edge of the nearest ancestor that clips its children (the panel's slide clip), or the viewport's. */
 const clipRight = (from: HTMLElement): number => {
   for (let el = from.parentElement; el; el = el.parentElement) {
     if (getComputedStyle(el).overflowX !== 'visible') return el.getBoundingClientRect().right;
@@ -45,25 +43,19 @@ type Phase = 'closed' | 'opening' | 'open' | 'closing';
 export interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
-  /** What the menu and the chip draw in place of `label`, which still names the option: the same words, one of them styled. */
   display?: ReactNode;
-  /** Shown after the name once known; left out for a choice that has none, such as All. */
   count?: number;
-  /** A decorative icon before the label, in the menu and on the chip once chosen. */
   icon?: ReactNode;
 }
 
 export interface ChoiceChipProps<T extends string> {
-  /** The group's name, and the chip's first word. */
   legend: string;
-  /** The parameter the chosen radio submits under. */
   name: string;
   options: ReadonlyArray<ChoiceChipOption<T>>;
   value: T;
   onChange: (value: T) => void;
   /** Rests on its value and cannot be changed; the chip does not open and takes no focus. */
   disabled?: boolean;
-  /** What the choice means, behind an InfoTip beside the chip. */
   hint?: string;
   /** What the choice means, in a tip bubble on pointer or (while enabled) focus, with no icon; hidden while the menu is open. */
   chipHint?: string;
@@ -115,7 +107,6 @@ export function ChoiceChip<T extends string>({
     return () => window.clearTimeout(limit);
   }, [phase]);
 
-  // A press outside the chip shuts the menu.
   useEffect(() => {
     if (phase === 'closed') return undefined;
     const outside = (event: PointerEvent) => {

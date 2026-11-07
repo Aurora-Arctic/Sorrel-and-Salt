@@ -30,7 +30,6 @@ useTestDatabase((client) => (sql = client));
 
 const admin = () => assertSiteAdmin(asUser(E));
 
-/** A fresh document under an invented key, its id. */
 async function aDocument(key = `testdoc-${crypto.randomUUID().slice(0, 8)}`): Promise<string> {
   const [row] = await sql`
     insert into documents (key, title, lede, created_by, updated_by)
@@ -40,7 +39,6 @@ async function aDocument(key = `testdoc-${crypto.randomUUID().slice(0, 8)}`): Pr
   return row.id;
 }
 
-/** A version, published `daysAgo` days back unless it is a draft; its id. */
 async function aVersion(
   documentId: string,
   number: number,
@@ -60,7 +58,6 @@ async function aVersion(
   return row.id;
 }
 
-/** A mailing of the versions, each item summarised as the version's own id, so a test can tell the items apart. */
 async function aMailing(
   versionIds: string | readonly string[],
   status: 'sending' | 'sent' | 'replaced' | 'paused' = 'sending',

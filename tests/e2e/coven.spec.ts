@@ -7,9 +7,7 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 
-// The coven page and its section nav against the built server: a viewer opens the page with Leave and without
-// Delete, the keyboard reaches the nav, and the only owner's exit keeps its refusal inside the dialog. A
-// stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
+// The coven page and its section nav against the built server. A stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
 const COVEN_NAME = 'Fixture Coven';
 const COVEN_SLUG = slugify(COVEN_NAME);
@@ -33,7 +31,6 @@ test.beforeAll(async ({ browser, slot }) => {
   }
 });
 
-/** The coven holds its owner and its viewer and no one else. */
 async function seedFixtureCoven(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = { id: (await signInAs(page, `${key}@coven-page.test`)).userId };
@@ -118,7 +115,6 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
   const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
 
-  // The service's refusal, answered in its place, so nothing is deleted.
   const refusal = 'This coven could not be deleted.';
   await page.route('**/api/graphql', (route) =>
     route.request().postData()?.includes('DeleteWorkspace')

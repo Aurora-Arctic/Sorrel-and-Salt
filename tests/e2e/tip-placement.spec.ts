@@ -8,9 +8,6 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// Every tip stays on screen at the narrowest phone: the Add Ingredient dialog's tips at 320px, and the formal
-// name's on both entry pages at 390px.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -19,10 +16,7 @@ test.use({ viewport: { width: 320, height: 640 } });
 
 type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
 
-/**
- * The tip's box once its fade and first placement have settled: two polled reads in a row that agree,
- * rather than a fixed sleep.
- */
+/** The tip's box once two polled reads in a row agree, rather than a fixed sleep. */
 async function settledBox(tip: Locator): Promise<Box | null> {
   const read: { last: string; box: Box | null } = { last: '', box: null };
   await expect
@@ -41,8 +35,7 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
   await seedCoven(page, 'Fixture Coven Tips', 'tip-placement.test', { A: 'owner' });
   await page.goto('/account');
   const dialog = await openAddIngredient(page);
-  // A New Reference panel, for its How to Cite tip at the head's end edge:
-  // the tip measured against the right of the viewport.
+  // A New Reference panel, for its How to Cite tip at the head's end edge.
   await dialog.getByRole('combobox', { name: 'Reference' }).click();
   await page.getByRole('option', { name: 'New Reference' }).click();
   await expect(dialog.getByRole('group', { name: 'New Reference' })).toBeVisible();
@@ -74,16 +67,13 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
     expect(box.y).toBeGreaterThanOrEqual(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('tooltip')).toHaveCount(0);
-    // Escape closes the tip, not the dialog.
     await expect(dialog).toBeVisible();
   }
-  // Both a left-hand and a right-hand tip were measured.
   expect(Math.min(...edges)).toBeLessThan(160);
   expect(Math.max(...edges)).toBeGreaterThan(160);
 });
 
-// The formal name's ⓘ heads a coven's entry page and the public one, and opens below on a phone, where the
-// shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "Contracts").
+// The formal name's ⓘ opens below on a phone, where the shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "Contracts").
 test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s page and the public page', async ({
   page,
   browser,
@@ -136,8 +126,7 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     expect(box.y + box.height).toBeLessThanOrEqual(844);
   }
 
-  // The same ⓘ in the Quick Look window, which scrolls under a clipped dialog: the tip must
-  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen.
+  // The Quick Look window scrolls under a clipped dialog, so its tip needs the same check.
   for (const [width, height] of [
     [390, 844],
     [1280, 800],
@@ -158,7 +147,6 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     expect(box.x + box.width).toBeLessThanOrEqual(width);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(height);
-    // Escape closes the tip, not the window.
     await page.keyboard.press('Escape');
     await expect(dialog).toBeVisible();
   }

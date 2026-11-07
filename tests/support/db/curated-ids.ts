@@ -1,13 +1,6 @@
 import type postgres from 'postgres';
 
-// A curated form's or deity's id, by the name and the group or tradition the
-// seed files it under: how a test picks one, as a member's autofill would. A
-// lookup rather than a constant, since the seed generates every id.
-
-/**
- * The live form `name`, under `group` when two share the name. Throws on none,
- * and on two without a group, so a test never picks one at random.
- */
+// Throws on none, and on two without a group, so a test never picks one at random.
 export async function curatedFormId(
   sql: postgres.Sql,
   name: string,
@@ -22,7 +15,6 @@ export async function curatedFormId(
   return only(rows, `form "${name}"${group ? ` under ${group}` : ''}`);
 }
 
-/** The live deity `name`, under `tradition` when two share the name, as `curatedFormId`. */
 export async function curatedDeityId(
   sql: postgres.Sql,
   name: string,

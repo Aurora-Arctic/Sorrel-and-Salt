@@ -20,9 +20,6 @@ import { insertIngredient, insertVariant } from '../../../support/db/insert-ingr
 import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// The grimoire's reads for the API: the paged list, one spell, and the batches the spell's fields load through (its steps, assigned categories and its ingredients' categories).
-// Every row a result could come from is one this file wrote, through the raw client.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -33,10 +30,8 @@ beforeEach(async () => {
 });
 
 const PAGE = { limit: 26, inverted: false };
-// Newest first: each fixture spell is written after the last.
 const NEWEST = { order: 'CREATED_DESC' } as const;
 
-/** A spell in `workspaceId`, written by `author`, as setup rather than through the service. */
 function seed(
   author: typeof A,
   visibility: SpellVisibility = 'workspace',
@@ -46,7 +41,6 @@ function seed(
   return insertSpell(sql, makeSpell({ workspaceId, visibility, ...extra }), author.id);
 }
 
-/** A coven ingredient of W, with no formal name, filed under `categories`. */
 function ingredient(
   name: string,
   categories: string[] = [],
@@ -234,8 +228,7 @@ describe('stepsOfSpells', () => {
         { body: 'Gone.' },
       ],
     });
-    // The fixture places each step at its index; reverse the first three, and
-    // retire the last, so the order read is the column's and not the insert's.
+    // Reverse the first three and retire the last, so the order read is the column's and not the insert's.
     await sql`
       update spell_steps set position = 10 - position
       where spell_id = ${spell}`;
@@ -321,8 +314,7 @@ describe('stepsOfSpells', () => {
     const second = await seed(A, 'workspace', { steps: [{ body: 'Second.' }] });
     const hidden = await seed(B, 'private', { steps: [{ body: 'Hidden.' }] });
     const foreign = await seed(D, 'workspace', { steps: [{ body: 'Foreign.' }] }, WORKSPACE_X_ID);
-    // Why each refusal could have succeeded: B reads its own private spell's
-    // steps, and D reads X's.
+    // Why each refusal could have succeeded: B reads its own private spell's steps, and D reads X's.
     expect(await stepsOfSpells(asUser(B), [key(hidden)])).toMatchObject([[{ body: 'Hidden.' }]]);
     expect(await stepsOfSpells(asUser(D), [key(foreign, WORKSPACE_X_ID)])).toMatchObject([
       [{ body: 'Foreign.' }],
@@ -352,7 +344,6 @@ describe('derivedCategoriesOf', () => {
       steps: [{ ingredientId: root }, { name: 'River Water' }, { body: 'Stir.' }],
       categories: ['Release'],
     });
-    // A second form of the same ingredient, which the step does not lay.
     await insertVariant(
       sql,
       root,

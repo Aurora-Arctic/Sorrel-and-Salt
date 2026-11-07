@@ -15,12 +15,6 @@ import type {
   FormValueNode,
 } from './types';
 
-// `ingredientFormValues` over the wire: the curated form vocabulary as `IngredientFormValue` (named apart from the `IngredientForm` component), each with its group, readable signed out, and the three admin writes.
-// This is the transport's half (claude-docs/testing/layer-ownership.md): a page, its groups in one read, its count, the filters, the loaders cleared by a write, and one refusal per error code per write.
-// Roles, filter matching and collisions are services/ingredient-form-values.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
-
-// The reads a page makes, counted at the repository: one for the groups of a
-// whole page, and never a role lookup.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceSeat: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -50,7 +44,6 @@ const run = (session: Session | null, variables: Record<string, unknown> = {}) =
     variables,
   );
 
-/** The curated forms in the finder's order, from the database's own collation. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select f.id from ingredient_forms f
@@ -85,8 +78,6 @@ describe('ingredientFormValues', () => {
   });
 });
 
-// The writes and the counted list, over the wire. Every form written here is
-// named `Fixture …`, and goes before the next test.
 describe('the admin writes', () => {
   const send = runOperation;
 
@@ -99,8 +90,7 @@ describe('the admin writes', () => {
     updateIngredientFormValue(id: $id, input: $input) { ${FIELDS} }
   }`;
   const DELETE = 'mutation ($id: ID!) { deleteIngredientFormValue(id: $id) }';
-  // An entry's pick read back in the same request as the write, so a loader
-  // holding the form from before it would answer the old name.
+  // Read back in the same request as the write, so a loader holding the form from before it would answer the old name.
   const PICKED = `query ($id: ID!) { ingredient(id: $id) { variants { formChoice { id name } } } }`;
 
   let substance: string;
@@ -249,9 +239,9 @@ describe('the admin writes', () => {
         E.id,
       );
       const session = asUser(E);
-      // One set of loaders across the three, so the read before fills the cache.
+      // One set of loaders across the three, so the read before fills the cache the write must
+      // clear.
       const context = { loaders: createLoaders(session) };
-      // The pick read first, so the request's loader holds the form as it was.
       const before = await send(session, PICKED, { id: picked }, context);
       expect(before.data).toEqual({
         ingredient: { variants: [{ formChoice: { id, name: 'Fixture Old' } }] },

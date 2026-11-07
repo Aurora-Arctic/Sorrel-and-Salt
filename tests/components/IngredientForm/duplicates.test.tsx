@@ -25,8 +25,7 @@ import type { DuplicateNode } from './types';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The duplicate warning on its own: `useDuplicateWarning` and the `NameField` that draws it, in a form whose save asks the warning's `check` before it sends, as the form's does.
-// What only the whole form does with it (the focus on Create Anyway, Save busy while it checks, an error elsewhere first) is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
 const TOMENTOSA: DuplicateNode = {
   id: 'claw-1',
@@ -47,10 +46,6 @@ const MOCKLEAF: DuplicateNode = {
   slug: 'mockleaf',
 };
 
-/**
- * The name field and its warning; a save the warning does not hold calls `sent` with the name. `opened` is an edited entry's name.
- * `cupboard: false` is the admin's form; `look` gives each match a Quick Look; `inModal` stands the form in a dialog, as the Add Ingredient modal holds it.
- */
 function renderName(
   opened?: string,
   {
@@ -102,7 +97,6 @@ function renderName(
   };
   renderWithClient(
     routed ? (
-      // The admin page's: the details' own place beneath the form's modal.
       <Navigating push={router.push}>
         <RouteModalProvider>
           <RouteModal
@@ -119,30 +113,24 @@ function renderName(
   return Object.assign(sent, { used });
 }
 
-/** The Add Ingredient dialog's own close, which a Quick Look's Escape must never ask. */
 const closedForm = vi.fn();
 
-/** A match's Quick Look, as the admin form's caller builds it: its details over the list. */
 const quickLookOf = (match: { slug: string; name: string }) => ({
   href: `/curator/compendium?entry=${match.slug}&new` as Route,
   heading: { title: match.name },
 });
 
-/** A compendium match's +, named as the card's plus is. */
 const ADD = /^Add to My Ingredients: /;
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
-/** Types into the Name box, the one field here. */
 const type = (value: string) => typeIn(name(), value);
 const save = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
-/** The region once its last rows have faded: they leave on the slide's net, and the notice with them. */
 const emptied = async () => {
   await act(() => vi.advanceTimersByTimeAsync(600));
   expect(warning()).toHaveTextContent('');
 };
-/** Lets a save that may have started reach its end. */
 const settleSave = () => act(() => vi.advanceTimersByTimeAsync(0));
 
 beforeEach(() => {
@@ -218,7 +206,6 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Ca', first: 3 });
   });
 
-  // An edit that leaves the name alone asks nothing.
   it('asks nothing about the name an edit opened with, and lets its save through', async () => {
     // Answered before the form renders: an edit that asked on opening would ask at once.
     const calls = offerDuplicates([TOMENTOSA]);
@@ -277,7 +264,6 @@ describe('NameField, with useDuplicateWarning', () => {
       'href',
       '/fixture/ingredients/mock-1',
     );
-    // Read with the field, as its hint is, and not an error until a save meets it.
     expect(name().getAttribute('aria-describedby')).toContain(warning().id);
     expect(name()).not.toBeInvalid();
   });
@@ -307,20 +293,16 @@ describe('NameField, with useDuplicateWarning', () => {
 
     await waitFor(() => expect(name()).toBeInvalid());
     expect(name().getAttribute('aria-describedby')).toContain(warning().id);
-    // The warning is read with the button, so the focus the form moves there says why.
     expect(createAnyway()).toHaveAccessibleDescription(
       expect.stringContaining("Cat's Claw (Uncaria tomentosa)"),
     );
     expect(sent).not.toHaveBeenCalled();
 
-    // Again, and it holds again.
     save();
     await settleSave();
     expect(sent).not.toHaveBeenCalled();
   });
 
-  // The notice turns from ochre to red when a save is held, which colour alone
-  // does not tell: the words say it too.
   it('says in words that the save is on hold once it is, where a near match only asked a question', async () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
@@ -336,13 +318,10 @@ describe('NameField, with useDuplicateWarning', () => {
 
     expect(within(warning()).queryByText('Did you mean one of these?')).not.toBeInTheDocument();
     expect(within(warning()).getByText(/save is on hold/)).toBeInTheDocument();
-    // The same words are what the name and Create Anyway are described by.
     expect(createAnyway()).toHaveAccessibleDescription(expect.stringMatching(/save is on hold/));
   });
 
-  // The region is in the page before the warning, as a live region must be to
-  // be heard, and announces it; the notice inside takes no role of its own,
-  // so it is not announced twice, held or not.
+  // The live region is in the page before the warning, as a live region must be to be heard; the notice takes no role, so it is not announced twice.
   it('announces the warning once, through a region in the page before it arrives', async () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
@@ -427,14 +406,12 @@ describe('NameField, with useDuplicateWarning', () => {
     await within(warning()).findByRole('link');
     fireEvent.click(createAnyway() as HTMLElement);
 
-    // A longer name finding the same entry: already answered.
     const again = offerDuplicates([TOMENTOSA]);
     type("Cat's Claws");
     settle();
     await waitFor(() => expect(again).toHaveLength(1));
     await emptied();
 
-    // One it has not been asked about.
     offerDuplicates([TOMENTOSA, FELIS]);
     type("Cat's Clawe");
     settle();
@@ -457,7 +434,6 @@ describe('NameField, with useDuplicateWarning', () => {
     await emptied();
   });
 
-  // An exact compendium name is a question, a near one a list, the + on both.
   describe('a compendium entry of the very name typed', () => {
     const CLAW = { ...TOMENTOSA, isGlobal: true };
 
@@ -471,7 +447,6 @@ describe('NameField, with useDuplicateWarning', () => {
 
       const row = await within(warning()).findByRole('listitem');
       expect(within(row).getByRole('link')).toHaveAttribute('href', duplicateHref(CLAW));
-      // The +, named as the card's plus is, and the row's only button.
       expect(within(row).getByRole('button')).toHaveAccessibleName(
         "Add to My Ingredients: Cat's Claw, Uncaria tomentosa",
       );
@@ -492,7 +467,6 @@ describe('NameField, with useDuplicateWarning', () => {
 
       expect(sent.used).toHaveBeenCalledWith(expect.objectContaining({ id: CLAW.id }));
       expect(sent).not.toHaveBeenCalled();
-      // The form answered no add, so the + is back, with no check.
       await waitFor(() => expect(plus).not.toHaveAttribute('aria-busy'));
       expect(plus).not.toHaveAttribute('data-state');
     });
@@ -554,8 +528,6 @@ describe('NameField, with useDuplicateWarning', () => {
     });
   });
 
-  // Which matches the coven already holds, its own and the
-  // compendium entries it has used, and which are in the compendium alone.
   describe('grouped by where each match is', () => {
     const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
     const USED = { ...FELIS, isGlobal: true, inCupboard: true };
@@ -577,12 +549,10 @@ describe('NameField, with useDuplicateWarning', () => {
       const compendium = group('In the Compendium');
       expect(coven).not.toBeNull();
       expect(compendium).not.toBeNull();
-      // Its own entry and the compendium entry it has used, in the answer's order.
       expect(titlesIn(coven!)).toEqual(['Mockleaf', "Cat's Claw (Felis catus)"]);
       expect(titlesIn(compendium!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
       expect(within(compendium!).getByRole('button', { name: ADD })).toBeInTheDocument();
       expect(within(coven!).getAllByRole('button', { name: /^Quick Look / })).toHaveLength(2);
-      // The coven's first, each named by a heading beneath the form's section headings.
       expect(
         coven!.compareDocumentPosition(compendium!) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
@@ -618,8 +588,6 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(titlesIn(group('In the Compendium')!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
     });
 
-    // The admin's form has no coven: every match is the compendium's, and a
-    // heading saying so would say nothing.
     it('draws one list with no heading where there is no cupboard', async () => {
       renderName(undefined, { cupboard: false });
       offerDuplicates([UNUSED, USED]);
@@ -632,8 +600,6 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(within(warning()).queryByRole('heading')).not.toBeInTheDocument();
     });
 
-    // In the admin's form every match, being the
-    // compendium's, has its Quick Look, the details the admin's list opens.
     it('gives every match its Quick Look where the form has one, beside its linked name, and nothing to add it with', async () => {
       renderName(undefined, { cupboard: false, look: true });
       offerDuplicates([UNUSED, USED]);
@@ -649,7 +615,6 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(
         within(rows[1]!).getByRole('link', { name: "Quick Look Cat's Claw, Felis catus" }),
       ).toHaveAttribute('href', quickLookOf(USED).href);
-      // The name still links to the entry.
       expect(within(rows[0]!).getByRole('link', { name: /new tab/ })).toHaveAttribute(
         'href',
         duplicateHref(UNUSED),
@@ -662,9 +627,6 @@ describe('NameField, with useDuplicateWarning', () => {
       ).toEqual(['Create Anyway']);
     });
 
-    // The form's eye opened its details without the loading state the
-    // list's eye shows. A press opens them at once, over the form, under the entry's name and
-    // loading, as the list's does, while the navigation is on its way.
     it("opens the details at once over the form, loading, as the list's Quick Look does", async () => {
       router.push.mockReset();
       renderName(undefined, { cupboard: false, look: true, inModal: true, routed: true });
@@ -683,16 +645,12 @@ describe('NameField, with useDuplicateWarning', () => {
       const details = screen.getByRole('dialog', { name: "Cat's Claw" });
       expect(details).toHaveAttribute('open');
       expect(details.querySelector('[aria-busy="true"]')).not.toBeNull();
-      // The form stays open beneath.
       expect(screen.getByRole('dialog', { name: 'Add Ingredient', hidden: true })).toHaveAttribute(
         'open',
       );
     });
   });
 
-  // The eye on every row the coven holds opens the entry's details over the form, read in the page, so nothing the form holds is lost to a navigation.
-  // A compendium match's + once its add has worked shows AddIcon's check, held ADDED_HOLD_MS, then the eye on the same button, then the row moves under In This Coven.
-  // What the form sends, its status-region words and a refusal are index.test.tsx's.
   describe('after the + has added', () => {
     const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
     const QUICK_LOOK = /^Quick Look Cat's Claw, Uncaria tomentosa/;
@@ -701,7 +659,6 @@ describe('NameField, with useDuplicateWarning', () => {
         name: /^Cat's Claw \(Uncaria tomentosa\)/,
       });
 
-    /** Finds Cat's Claw and presses its +, the add working and the server holding it from then on. */
     const addClaw = async () => {
       renderName().used.mockResolvedValue(true);
       offerDuplicates([UNUSED]);
@@ -710,7 +667,6 @@ describe('NameField, with useDuplicateWarning', () => {
       const plus = await screen.findByRole('button', { name: ADD });
       offerDuplicates([{ ...UNUSED, inCupboard: true }]);
       act(() => plus.focus());
-      // The add answers at once: its updates land inside the act.
       await act(async () => {
         fireEvent.click(plus);
       });
@@ -722,14 +678,12 @@ describe('NameField, with useDuplicateWarning', () => {
       const plus = await addClaw();
 
       await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-      // Still the +, named as it was, and pressing it now does nothing.
       expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);
       expect(plus).toHaveAttribute('aria-disabled', 'true');
       act(() => vi.advanceTimersByTime(ADDED_HOLD_MS - 100));
       expect(plus).toHaveAttribute('data-state', 'added');
 
       act(() => vi.advanceTimersByTime(100));
-      // The same button, so the focus stays on it: the eye, with no fade from the check.
       expect(plus).toHaveAccessibleName(QUICK_LOOK);
       expect(plus).not.toHaveAttribute('data-state');
       expect(plus).not.toHaveAttribute('aria-disabled');
@@ -754,7 +708,6 @@ describe('NameField, with useDuplicateWarning', () => {
         act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
         expect(plus).toHaveAccessibleName(QUICK_LOOK);
         expect(plus).toHaveAttribute('data-state', 'returning');
-        // The fade's end, or its net when no end is reported.
         act(() => vi.advanceTimersByTime(500));
         expect(plus).not.toHaveAttribute('data-state');
       });
@@ -764,7 +717,6 @@ describe('NameField, with useDuplicateWarning', () => {
       const plus = await addClaw();
 
       await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-      // Not asked again while the check shows: the row stays under In the Compendium.
       await act(async () => {});
       expect(screen.queryByRole('list', { name: 'In This Coven' })).not.toBeInTheDocument();
       expect(warning()).not.toHaveAttribute('aria-busy');
@@ -810,7 +762,6 @@ describe('NameField, with useDuplicateWarning', () => {
       zodiacSigns: [],
       colors: [],
       audit: { createdAt: '2020-01-01T00:00:00.000Z', updatedAt: '2020-01-01T00:00:00.000Z' },
-      // The coven's own say, laid over the compendium's as its page lays it.
       cupboardEntry: {
         label: null,
         description: "The coven's own note on it.",
@@ -842,7 +793,6 @@ describe('NameField, with useDuplicateWarning', () => {
         },
       ],
     };
-    /** Answers the Quick Look's read with `LOOKED`, recording each ask. */
     const offerLook = () => {
       const calls: DuplicateQuickLookQueryVariables[] = [];
       mockGraphQLQuery<DuplicateQuickLookQuery, DuplicateQuickLookQueryVariables>(
@@ -856,7 +806,6 @@ describe('NameField, with useDuplicateWarning', () => {
     };
     const eye = () => screen.getByRole('button', { name: "Quick Look Cat's Claw, Felis catus" });
     const look = () => screen.getByRole('dialog', { name: "Cat's Claw" });
-    /** Types a near name and waits for its rows. */
     const warned = async () => {
       offerDuplicates([UNUSED, MOCKLEAF, USED]);
       type('Cats Claw');
@@ -876,7 +825,6 @@ describe('NameField, with useDuplicateWarning', () => {
       ]);
       expect(within(compendium).queryByRole('button', { name: /^Quick Look/ })).toBeNull();
       expect(within(warning()).queryByRole('link', { name: /^Open It/ })).toBeNull();
-      // The name still links to the entry.
       expect(within(coven).getByRole('link', { name: /Felis catus/ })).toHaveAttribute(
         'href',
         duplicateHref(USED),
@@ -890,19 +838,15 @@ describe('NameField, with useDuplicateWarning', () => {
 
       press(eye());
 
-      // Open on the press, under the row's name, while the read is out.
       expect(look()).toHaveAttribute('open');
       expect(within(look()).queryByText("The coven's own note on it.")).toBeNull();
       expect(look().querySelector('[aria-busy="true"]')).not.toBeNull();
-      // Under the head the details will have, its formal name over the name, as the
-      // list's own Quick Look opens, so nothing jumps when they arrive.
       expect(within(look()).getByText(/^Felis catus/)).toBeInTheDocument();
 
       expect(await screen.findByText("The coven's own note on it.")).toBeInTheDocument();
       expect(calls).toEqual([{ id: USED.id, workspaceId: WORKSPACE_ID }]);
       expect(look().querySelector('[aria-busy="true"]')).toBeNull();
       expect(within(look()).getByText('Whiskerroot')).toBeInTheDocument();
-      // The page's link, in a new tab, so the form stays as it is.
       const page = within(look()).getByRole('link', { name: /^See in Your Cupboard/ });
       expect(page).toHaveAttribute('href', duplicateHref(USED));
       expect(page).toHaveAttribute('target', '_blank');
@@ -910,7 +854,6 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(warning()).not.toContainElement(look());
     });
 
-    // The curators' review mark shows to everyone.
     it('says in its head whether a curator has reviewed the entry, and when', async () => {
       mockGraphQLQuery<DuplicateQuickLookQuery, DuplicateQuickLookQueryVariables>(
         'DuplicateQuickLook',

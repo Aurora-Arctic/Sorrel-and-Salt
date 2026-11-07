@@ -3,22 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-// A push moves the address as the router's would, so a save's navigation
-// to the new entry's page closes the dialog here as it does in the app.
+// A push moves the address as the router's would, so a save's navigation closes the dialog.
 const push = vi.fn((href: string) => {
   window.history.pushState(null, '', href);
   pathname.mockReturnValue(new URL(href, window.location.origin).pathname);
 });
-// The address is the window's: the dialog is opened and closed by `?new`
-// through the history API, which Next's router follows in the app and the
-// test follows by drawing again (`sync`).
+// `?new` moves through the history API, which Next's router follows and the test follows by drawing again (`sync`).
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ push }),
 }));
-// The form is Lane B's and tested on its own: a stub that shows which coven it
-// writes to and saves on request, in either way.
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
     workspaceId,
@@ -83,9 +78,6 @@ vi.mock('@/components/IngredientForm', () => ({
 const { default: AddIngredientButton } =
   await import('@/components/AppShell/add-ingredient-button');
 
-// The shell's one global action: where it leads follows the
-// area the viewer is in.
-
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,
@@ -120,7 +112,6 @@ const press = (element: HTMLElement) => {
   sync();
 };
 const open = () => press(screen.getByRole('button', { name: 'Add Ingredient' }));
-/** The dialog gone, once its close has moved the address on. */
 const closed = () =>
   waitFor(() => {
     sync();
@@ -183,8 +174,7 @@ describe('AddIngredientButton', () => {
       const items = within(menuOf()).getAllByRole('menuitem');
       expect(items.map((item) => item.textContent)).toEqual(['to Compendium', 'to Fixture Coven']);
 
-      // The coven's value names it, so the admin page's own `?new` cannot take it,
-      // and the page stays where it is.
+      // The coven's value names it, so the admin page's own `?new` cannot take it.
       press(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
       expect(window.location.search).toBe('?new=ingredient-coven-fixture-coven');
@@ -245,8 +235,6 @@ describe('AddIngredientButton', () => {
       ).toEqual(['to Fixture Coven', 'to Testwort Circle']);
     });
 
-    // Where the viewer may add to the compendium and to a coven the places are two named groups,
-    // the side they are on first.
     const groups = () =>
       within(menuOf())
         .getAllByRole('group')
@@ -327,8 +315,7 @@ describe('AddIngredientButton', () => {
       expect(await target()).toBe('id-fixture-coven');
       view.unmount();
 
-      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value
-      // existed still opens the default coven's dialog.
+      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value existed still opens the dialog.
       window.history.replaceState(null, '', '/coven/fixture-coven?new');
       view = draw(MEMBER, [FIXTURE, TESTWORT]);
       expect(await target()).toBe('id-fixture-coven');
@@ -343,7 +330,6 @@ describe('AddIngredientButton', () => {
       expect(await target()).toBe('id-testwort-circle');
       view.unmount();
 
-      // On an admin page too, where a bare `?new` is the page's own.
       pathname.mockReturnValue('/keepers/users');
       window.history.replaceState(null, '', '/keepers/users?new=ingredient-coven-fixture-coven');
       view = draw(ADMIN, [FIXTURE, TESTWORT]);
@@ -378,8 +364,7 @@ describe('AddIngredientButton', () => {
     });
 
     it('opens nothing for a spell’s ?new, the grimoire’s New Spell, on any page', () => {
-      // The same writer and coven that open the dialog under ?new=ingredient, so only the
-      // value keeps it shut.
+      // The same writer and coven that open the dialog under ?new=ingredient, so only the value keeps it shut.
       pathname.mockReturnValue('/coven/fixture-coven/ingredients');
       for (const value of ['spell', 'spell-fixture-coven']) {
         window.history.replaceState(null, '', `/coven/fixture-coven/ingredients?new=${value}`);
@@ -395,7 +380,6 @@ describe('AddIngredientButton', () => {
       draw(MEMBER, [FIXTURE]);
       open();
 
-      // Escape, as the dialog element reports it.
       fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
       await closed();
 

@@ -1,29 +1,16 @@
 /**
- * Assert, and report on, the environment `vercel pull` wrote — run by
- * deploy.yml and migrate.yml before anything consumes that file
- * (claude-docs/ci/deploy.md, "Deploy").
- *
- * A required key that is missing, empty, a placeholder or not a connection
- * string fails the job with its own named cause; every key the pull returned
- * is reported with a classification and never a value, even when the run is
- * about to fail. The input is a FILE PATH, never argv or an environment
- * variable carrying the value: argv is visible to `ps` and echoed by `set -x`.
+ * Asserts and reports on the environment `vercel pull` wrote, before deploy.yml and migrate.yml consume it
+ * (claude-docs/ci/deploy.md, "Deploy"). The input is a file path, never argv or an environment variable: argv
+ * shows in `ps` and `set -x`.
  */
 
 import { readFileSync } from 'node:fs';
 import type { Classification, Verdict, Failure, AssertionResult } from './types.ts';
 
-/**
- * What `vercel pull` writes in place of a value it cannot read back. Listed
- * rather than pattern-matched so the set is reviewable — the CLI has used
- * more than one spelling across versions.
- */
+// Listed rather than pattern-matched so the set is reviewable: the CLI has used more than one spelling.
 export const PLACEHOLDERS = ['[SENSITIVE]', '[REDACTED]', '<REDACTED>'] as const;
 
-/**
- * The dotenv shape `vercel pull` writes: `KEY="value"`, one per line. Split on
- * the *first* `=` only — a password may legally contain one.
- */
+// Split on the *first* `=` only: a password may legally contain one.
 export function parseEnvFile(text: string): Map<string, string> {
   const entries = new Map<string, string>();
 
@@ -65,7 +52,6 @@ const PLACEHOLDER_EXPLANATION =
   'This is not transient: a retry will return the same placeholder. ' +
   'Fix it at the source — see claude-docs/secrets.md.';
 
-/** Wrapped in matching quotes, or carrying leading/trailing whitespace. */
 function isUntrimmed(raw: string): boolean {
   if (raw !== raw.trim()) return true;
   const wrapped =
@@ -74,7 +60,6 @@ function isUntrimmed(raw: string): boolean {
 }
 
 const SCHEME = /^postgres(?:ql)?:\/\//;
-/** scheme, then `user[:password]@host[:port]/database`. */
 const CONNECTION = /^postgres(?:ql)?:\/\/[^\s/@]+(?::[^\s/@]*)?@[^\s/:]+(?::\d+)?\/[^\s?]+/;
 
 /**
@@ -136,7 +121,7 @@ export function validateDatabaseUrl(raw: string | undefined): Verdict {
   return { ok: true };
 }
 
-/** One line per key: its name, its classification, its length. Never its value. */
+/** One line per key: its name, classification and length, never its value. */
 export function reportLines(env: Map<string, string>): string[] {
   const keys = [...env.keys()].sort();
   const width = keys.reduce((longest, key) => Math.max(longest, key.length), 0);
@@ -147,11 +132,7 @@ export function reportLines(env: Map<string, string>): string[] {
   });
 }
 
-/**
- * `DATABASE_URL` is held to the connection-string rules; every other required
- * key only has to be present. Every failure is collected rather than thrown
- * at the first, so one run names them all.
- */
+// Every failure is collected rather than thrown at the first, so one run names them all.
 export function assertPulledEnv(text: string, required: string[]): AssertionResult {
   const env = parseEnvFile(text);
   const report = reportLines(env);

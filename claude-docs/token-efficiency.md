@@ -45,7 +45,7 @@ the cause without the rest. `.reports/` is gitignored (`.gitignore` ignores
 `.reports`), so a log there is never committed. In `zsh`, read a pipeline's
 statuses from `pipestatus`, not `PIPESTATUS`.
 
-Do not build into `.next/`, which the owner's dev server uses; give another
+Do not build into `.next/`, which the dev server uses; give another
 `NEXT_DIST_DIR`.
 
 ## Quiet reporters
@@ -54,8 +54,7 @@ Under Claude Code, Vitest prints dots, a coverage summary and only a failing
 test's console output. `claude-docs/testing/where-tests-live.md`, "Quiet under
 Claude Code (MB.142)", has the behaviour and `env -u CLAUDECODE`, which turns
 it off when a test's console output is the thing being read. Playwright's
-equivalent arrives with M12.37, in a separate PR; until it merges, redirect a
-Playwright run to a log as above.
+configs read `CLAUDECODE` the same way and print dots; `PW_REPORTER` overrides the reporter.
 
 ## When a full suite is worth running
 

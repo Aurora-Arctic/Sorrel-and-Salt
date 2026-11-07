@@ -1,12 +1,11 @@
 import type { ProviderId, SocialProvider } from './types';
-// The roster src/lib/auth.ts registers providers from and /sign-in greys buttons from, one source so no button is live for an unregistered provider. Id and label only:
-// SignInPanel ('use client') imports it, and a client bundle should not carry the names of the variables behind a secret, which live in social-providers-config.ts.
-// Adding a provider is an id in `ProviderId` and its two entries there; Apple was dropped (claude-docs/auth/social-providers.md, "Social providers").
+// One source so no button is live for an unregistered provider. Id and label only: SignInPanel ('use client') imports it, and a client bundle should not carry the variable names behind a secret (social-providers-config.ts; claude-docs/auth/config.md, "Social providers").
 
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },
   { id: 'google', label: 'Google' },
-  // Hidden from the sign-in screens for now; claude-docs/auth/social-providers.md says why and how it returns.
+  // Hidden from the sign-in screens for now; claude-docs/auth/config.md says
+  // why and how it returns.
   { id: 'facebook', label: 'Facebook', hidden: true },
   { id: 'microsoft', label: 'Microsoft' },
 ];
@@ -15,10 +14,7 @@ export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
 // sign-in methods alike: this environment has no credentials for it.
 export const UNAVAILABLE_NOTE = "This sign-in method isn't available right now.";
 
-/**
- * Whether a Better Auth account's `providerId` is one of ours. Its tables
- * type the column as any string, so this is the check rather than a cast.
- */
+/** Its tables type the column as any string, so this is the check rather than a cast. */
 export function isRosterProvider(providerId: string): providerId is ProviderId {
   return SOCIAL_PROVIDERS.some((provider) => provider.id === providerId);
 }

@@ -1,5 +1,7 @@
 ## MW — Wave close-out
 
+Closed tasks keep their heading only; the full text of each is in `claude-docs/archive/tasks-closed-waves.tar.gz`.
+
 _2 done, 12 retired, 1 live: MW.15 at 3 hours_
 
 One per wave, each compressing the live docs and archiving that wave's transcripts and decision records — as MW.1 and MW.2 did. **MW.3 through MW.14 are retired without being done (MB.31)** — ids kept, per the MB.19 precedent. Why is [`TASKS.md`](../TASKS.md)'s "Wave close-out and the MW namespace".
@@ -7,8 +9,6 @@ One per wave, each compressing the live docs and archiving that wave's transcrip
 **MW.1 — Compress and archive the working docs for Wave 1** · 1h
 
 **MW.2 — Compress and archive the working docs for Wave 2** · 1h
-
-Both ran, at the size every pass was sized at before MB.31 retired the rest.
 
 **MW.15 — Compress and archive the working docs for Wave 15 and v1** · 3h
 

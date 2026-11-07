@@ -2,10 +2,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
-// Add Ingredient opens its dialog frame, named and holding a loading status, before the form inside
-// it arrives, so a press answers at once on a slow device; the form's code loads on first open
-// (claude-docs/components/modal.md, "Add Ingredient"). Focus and Escape behave as they did when the
-// form came with the frame.
+// Add Ingredient opens its frame, named and holding a loading status, before the form's code arrives, so a
+// press answers at once on a slow device; focus and Escape behave as they did when the form came with the
+// frame (claude-docs/components/modal.md, "Add Ingredient").
 
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({

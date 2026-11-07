@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
@@ -19,12 +18,11 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 type Problems = Partial<Record<'about' | 'subject' | 'message' | 'path', string>>;
 
-// The support request form, in the Support dialog and on `/support`: an about, a subject and a message,
-// sent as `sendSupportRequest`. The limits are the service's, said here so they are met before sending
-// (claude-docs/components/support-form.md).
+// The limits are the service's, said here so they are met before sending (claude-docs/components/support-form.md).
 
 const SendSupportRequestDocument = graphql(`
   mutation SendSupportRequest($input: SupportRequestInput!) {
@@ -38,17 +36,14 @@ const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
 const PATH_LIMIT = 500;
 
-/** Said under the choices when Send is pressed with none chosen. */
 const ABOUT_REQUIRED = 'Choose what this is about.';
 
-/** What a missing or over-long subject, message or page is told, as the service words it. */
 const SUBJECT_REQUIRED = 'Write a subject';
 const MESSAGE_REQUIRED = 'Write a message';
 const SUBJECT_TOO_LONG = `Keep the subject to ${SUBJECT_LIMIT} characters`;
 const MESSAGE_TOO_LONG = `Keep the message to ${MESSAGE_LIMIT} characters`;
 const PATH_TOO_LONG = 'That page address is too long';
 
-/** What the about field is called. */
 const ABOUT_LABEL = 'What Is This About?';
 
 const SupportForm = ({
@@ -81,7 +76,6 @@ const SupportForm = ({
   const messageCountId = `${messageId}-count`;
   const pageCountId = `${pageId}-count`;
 
-  // Where the request came from, when it came from an error page, in place of the limit.
   const pageNote: ReactNode =
     errorCode === undefined ? (
       `Up to ${PATH_LIMIT} characters.`
@@ -117,8 +111,7 @@ const SupportForm = ({
     error: shown.path,
   });
 
-  // Puts the focus on the first field with a problem, in the order the fields sit, so a send that
-  // refuses is never silent. The topic group's first radio stands for the group.
+  // The topic group's first radio stands for the group.
   function focusFirst(wrong: Problems) {
     const target = wrong.about
       ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
@@ -134,7 +127,7 @@ const SupportForm = ({
 
   const discard = useDiscardGuard(!sent && (subject !== '' || message !== '' || page !== path));
 
-  // What is wrong with the form as it stands, by the service's own rules: the server stays the authority.
+  // By the service's own rules: the server stays the authority.
   function problemsOf(): Problems {
     const found: Problems = {};
     if (about === null) found.about = ABOUT_REQUIRED;
@@ -190,10 +183,10 @@ const SupportForm = ({
     return (
       <div className="form">
         <Notice kind="success">
-          Your request, <Link href={SUPPORT_LIST_PATH}>{sentSubject}</Link>, was received. We aim to
-          reply within 5 working days; we are a small team. Replies appear on{' '}
-          <Link href={SUPPORT_LIST_PATH}>Your Support Requests</Link>, and we mail you when one
-          arrives.
+          Your request, <PendingLink href={SUPPORT_LIST_PATH}>{sentSubject}</PendingLink>, was
+          received. We aim to reply within 5 working days; we are a small team. Replies appear on{' '}
+          <PendingLink href={SUPPORT_LIST_PATH}>Your Support Requests</PendingLink>, and we mail you
+          when one arrives.
         </Notice>
         {onDone && (
           <div className="modal__actions">

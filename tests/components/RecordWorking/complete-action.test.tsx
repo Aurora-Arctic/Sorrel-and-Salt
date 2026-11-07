@@ -18,8 +18,7 @@ import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Complete on a working's row: the preview first, then Mark Complete
-// (claude-docs/components/record-working.md).
+// claude-docs/components/record-working.md
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
@@ -251,7 +250,6 @@ describe('Complete on a working', () => {
     await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE, id: WORKING }]));
     expect(await screen.findByRole('button', { name: 'Done' })).toBeVisible();
     expect(router.refresh).toHaveBeenCalled();
-    // The list reads the same after as before, a step that took nothing included.
     const rows = within(screen.getByRole('list', { name: 'Deductions' })).getAllByRole('listitem');
     expect(rows).toHaveLength(4);
     expect(rows[1]).toHaveTextContent('units differ · takes nothing');

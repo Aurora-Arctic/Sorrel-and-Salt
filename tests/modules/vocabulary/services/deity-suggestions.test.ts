@@ -11,9 +11,6 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// DESIGN.md §5 and claude-docs/db/deity-vocabulary.md, "The deity vocabulary": the deities autofill offers the curated vocabulary first, each row with its tradition, then uncurated values in use in the compendium and the caller's workspace.
-// The vocabulary is the seed, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value is one this file wrote.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
@@ -29,14 +26,12 @@ beforeEach(async () => {
   await sql`update deity_traditions set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/** A row of this file's: no formal name, so `none`; what matters is its deities. */
 function addIngredient(
   entry: Overrides<IngredientFixture> & Pick<IngredientFixture, 'deities'>,
 ): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature: 'none', ...entry }), A.id);
 }
 
-/** A second live deity sharing a seeded one's display name, under another tradition. */
 async function addDeity(name: string, tradition: string): Promise<void> {
   await sql`
     insert into deities (name, slug, description, tradition_id, created_by, updated_by)
@@ -46,7 +41,6 @@ async function addDeity(name: string, tradition: string): Promise<void> {
   `;
 }
 
-/** A live tradition of this file's, with a deity under it for each name given. */
 async function addTradition(tradition: string, names: string[]): Promise<void> {
   await sql`
     insert into deity_traditions (name, slug, description, created_by, updated_by)
@@ -55,7 +49,6 @@ async function addTradition(tradition: string, names: string[]): Promise<void> {
   for (const name of names) await addDeity(name, tradition);
 }
 
-/** An other name for the deity of this name, live unless `dropped`. */
 async function addOtherName(deity: string, name: string, dropped = false): Promise<void> {
   await sql`
     insert into deity_other_names (deity_id, name, created_by, updated_by, deleted_at, deleted_by)
@@ -92,7 +85,6 @@ function pageOf(
   return resolvePage(args, (request) => suggestDeities(session, workspaceId, query, request));
 }
 
-/** Every suggestion, walked a page at a time: a blank query lists every curated deity. */
 async function all(
   session: Session,
   query: string,
@@ -141,7 +133,6 @@ describe('suggestDeities', () => {
       });
     });
 
-    // What a pick sends — Greek Hecate's own row, never a spelling.
     it('carries each curated row’s id, and none on a value only in use', async () => {
       await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
       const [hermes] = await sql`select id from deities where name = 'Hermes'`;
@@ -209,7 +200,6 @@ describe('suggestDeities', () => {
         (s) => s.value.trim().toLowerCase() === 'hecate',
       );
 
-      // The spelling most entries use stands for the group.
       expect(hecates).toEqual([
         {
           id: null,

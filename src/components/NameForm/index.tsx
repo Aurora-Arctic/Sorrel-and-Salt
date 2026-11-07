@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
@@ -10,9 +10,7 @@ import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
 
-// The account page's Name section: the name the site shows, changed through `setName`. A
-// plain controlled input rather than react-hook-form, as EmailForm is: one field, and every
-// refusal is the server's. See claude-docs/components/name-form.md.
+// Plain controlled input, not react-hook-form: one field, and every refusal is the server's (claude-docs/components/name-form.md).
 
 const SetNameDocument = graphql(`
   mutation SetName($name: String!) {
@@ -24,7 +22,6 @@ const SetNameDocument = graphql(`
 `);
 
 const NameForm = ({ name }: NameFormProps): ReactElement => {
-  // What the row holds: the props' name until a save answers with another.
   const [saved, setSaved] = useState(name);
   const [value, setValue] = useState(name);
   const [savedMessage, setSavedMessage] = useState(false);

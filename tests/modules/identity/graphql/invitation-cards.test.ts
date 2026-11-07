@@ -6,16 +6,13 @@ import { useTestDatabase } from '../../../support/db/database';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '@/lib/invitation-cards/limits';
 import { run } from '../../../support/graphql/run';
 
-// The card operations' transport half: who may call each by direct request, the answer's shape, and that nothing but the
-// mint answers a token. What a mint writes and refuses is services/invitation-cards.test.ts's.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-const MINT = `mutation($sheets: Int!, $expiresAt: DateTime!, $note: String) {
-  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) { batchId expiresAt tokens }
+const MINT = `mutation($sheets: Int!, $expiresAt: DateTime!, $note: String, $beta: Boolean! = false) {
+  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note, beta: $beta) { batchId expiresAt tokens }
 }`;
 const REVOKE_BATCH = `mutation($batchId: ID!) { revokeInvitationCardBatch(batchId: $batchId) { id state } }`;
 const BATCHES = `query {
@@ -54,7 +51,6 @@ describe('the card operations', () => {
   it('refuses a curator, a member and an owner each one by direct request, with a card to reach', async () => {
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
     const { batchId } = minted.data!.createInvitationCards;
-    // An arrival the filters reach, so a keeper's request answers a row.
     await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = (select id from invitations where kind = 'card' limit 1)`;
     const reached = await run<{ invitationCardBatches: { edges: unknown[] } }>(
       asUser(E),
@@ -85,7 +81,7 @@ describe('the card operations', () => {
     expect(rows.every((row) => row.revoked_at === null)).toBe(true);
   });
 
-  it('mints nine pending cards a sheet sharing one batch and the chosen expiry', async () => {
+  it('mints ten pending cards a sheet sharing one batch and the chosen expiry', async () => {
     const expiresAt = nextWeek();
 
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 2, expiresAt });
@@ -121,6 +117,42 @@ describe('the card operations', () => {
     expect(found.data!.invitationCardBatches.edges.map((edge) => edge.node.note)).toEqual([
       'Autumn fair stall',
     ]);
+  });
+
+  it('answers the beta flag on a batch and on an arrival by one of its cards', async () => {
+    const beta = await run<Minted>(asUser(E), MINT, {
+      sheets: 1,
+      expiresAt: nextWeek(),
+      beta: true,
+    });
+    const plain = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
+    const betaBatch = beta.data!.createInvitationCards.batchId;
+    const plainBatch = plain.data!.createInvitationCards.batchId;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = (select id from invitations where batch_id = ${betaBatch} limit 1)`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = (select id from invitations where batch_id = ${plainBatch} limit 1)`;
+
+    const listed = await run<{
+      invitationCardBatches: { edges: { node: { batchId: string; beta: boolean } }[] };
+      cardArrivals: { edges: { node: { batchId: string; beta: boolean } }[] };
+    }>(
+      asUser(E),
+      `query {
+        invitationCardBatches(first: 50) { edges { node { batchId beta } } }
+        cardArrivals(first: 50) { edges { node { batchId beta } } }
+      }`,
+    );
+
+    expect(JSON.stringify(listed.errors)).toBeUndefined();
+    const flagOf = (edges: { node: { batchId: string; beta: boolean } }[]) =>
+      Object.fromEntries(edges.map(({ node }) => [node.batchId, node.beta]));
+    expect(flagOf(listed.data!.invitationCardBatches.edges)).toEqual({
+      [betaBatch]: true,
+      [plainBatch]: false,
+    });
+    expect(flagOf(listed.data!.cardArrivals.edges)).toEqual({
+      [betaBatch]: true,
+      [plainBatch]: false,
+    });
   });
 
   it('answers a batch over the cap with a validation error naming the sheets', async () => {
@@ -245,7 +277,7 @@ describe('the card operations', () => {
     const csv = await run<{ cardArrivalsCsv: string }>(asUser(E), CSV);
 
     const lines = csv.data!.cardArrivalsCsv.trimEnd().split('\r\n');
-    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Covens Owned');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Beta,Covens Owned');
     expect(lines[1]).toContain(coven!.name);
   });
 });

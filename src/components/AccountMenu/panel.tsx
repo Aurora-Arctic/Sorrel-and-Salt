@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { PendingLink } from '../../lib/navigation';
-import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import SupportLink from '../SupportLink';
@@ -13,15 +12,10 @@ import SignOutButton from './sign-out-button';
 import { countText, supportTip } from './counts';
 import type { AccountMenuProps } from './types';
 
-// The rows of the account menu's panel. The menu loads this file the first time it opens, so a page
-// does not carry it until the button is pressed (claude-docs/components/account-menu.md).
-
-// The account page: its sections beside the jump menu.
-const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
+// The rows of the account menu's panel (claude-docs/components/account-menu.md).
 
 const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
 
-// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
 function MenuCount({
   count,
   what,
@@ -29,7 +23,6 @@ function MenuCount({
 }: {
   count: number;
   what: string;
-  /** The tip's words after the count, in title case: "Assigned to You". */
   tipWhat: string;
 }): ReactElement {
   const { shown, tip } = supportTip(count, tipWhat);
@@ -51,7 +44,6 @@ export interface AccountMenuPanelProps extends Pick<AccountMenuProps, 'verified'
   pendingInvitations: number;
   assignedSupport: number;
   waitingSupport: number;
-  /** Closes the panel: a link press leaves the page, and the panel should not outlive it. */
   close: () => void;
 }
 
@@ -74,7 +66,6 @@ export default function AccountMenuPanel({
         <li className="account-menu__account">
           <PendingLink
             href={ACCOUNT_PATH}
-            navigationTarget={ACCOUNT_TARGET}
             className={
               pending ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
             }
@@ -89,7 +80,6 @@ export default function AccountMenuPanel({
               <IconTip tip={`You Have ${invitations}`} placement="below">
                 <PendingLink
                   href={ACCOUNT_INVITATIONS_PATH}
-                  navigationTarget={ACCOUNT_TARGET}
                   className="account-menu__count-mark"
                   onClick={close}
                 >
@@ -114,7 +104,6 @@ export default function AccountMenuPanel({
             >
               <PendingLink
                 href={href}
-                navigationTarget={siteLinkTarget(base, href)}
                 className={
                   counted ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
                 }
@@ -130,7 +119,6 @@ export default function AccountMenuPanel({
                   <IconTip tip={tip} placement="below">
                     <PendingLink
                       href={ADMIN_ASSIGNED_PATH as typeof href}
-                      navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
                       className="account-menu__count-mark"
                       onClick={close}
                     >
@@ -155,12 +143,7 @@ export default function AccountMenuPanel({
         >
           {senderCount > 0 ? (
             // Waiting requests: the row leads to the list that shows which, not to a blank form.
-            <PendingLink
-              href={SUPPORT_LIST_PATH}
-              navigationTarget={ACCOUNT_TARGET}
-              className="account-menu__item"
-              onClick={close}
-            >
+            <PendingLink href={SUPPORT_LIST_PATH} className="account-menu__item" onClick={close}>
               Support
               <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
             </PendingLink>

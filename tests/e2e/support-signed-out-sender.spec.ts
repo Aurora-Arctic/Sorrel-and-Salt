@@ -5,7 +5,7 @@ import { latestMessageTo } from './mailpit';
 
 // Against the built server: browsing the public pages sets no cookie, and a signed-out send sets none either. The visitor
 // gets back to the request through the link the receipt mails, never through a session
-// (claude-docs/design-decisions/m15.48-mailed-link.md).
+// (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
 const VIEW_LINK = /\/support\/request#([A-Za-z0-9_-]{32,})/;
 

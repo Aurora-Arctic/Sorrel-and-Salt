@@ -11,9 +11,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
-// DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and `workspace` may never be narrowed back, because the coven may already be building on the spell.
-// The service refuses and says so, rather than answering `Forbidden` for a permission the caller holds. B, a plain member, authors throughout; A, the owner, is the one refused.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -71,8 +68,7 @@ describe('setSpellVisibility', () => {
       const spellId = await cast(B, 'private');
       const owner = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
 
-      // Why the read below could have succeeded all along: it did not. The
-      // owner is refused the same spell by the same finder a line earlier.
+      // Why the read below could have succeeded all along: it did not. The owner is refused the same spell by the same finder a line earlier.
       await expect(findOneSpell(owner, spellId)).resolves.toBeUndefined();
 
       await setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'workspace');
@@ -96,9 +92,7 @@ describe('setSpellVisibility', () => {
       const spellId = await cast(B, 'workspace');
       expect(await statusOf(spellId)).toBe('complete');
 
-      // Why this could have succeeded: B authored this spell and may widen the
-      // private one in the same coven, so the refusal is the rule rather than a
-      // permission B lacks.
+      // Why this could have succeeded: B authored this spell and may widen the private one in the same coven, so the refusal is the rule, not a missing permission.
       const other = await cast(B, 'private');
       await expect(
         setSpellVisibility(asUser(B), WORKSPACE_W_ID, other, 'workspace'),
@@ -112,8 +106,7 @@ describe('setSpellVisibility', () => {
       );
 
       expect(error).toBeInstanceOf(Forbidden);
-      // Not the bare default: the caller holds the permission and is being
-      // told about the rule, which a `Forbidden` on its own does not say.
+      // Not the bare default: the caller holds the permission and is told about the rule, which a `Forbidden` does not say.
       expect(error.message).not.toBe(new Forbidden().message);
       expect(error.message).toMatch(/Duplicate it to get a private copy/);
     });
@@ -156,8 +149,7 @@ describe('setSpellVisibility', () => {
   });
 
   describe('restating the visibility a spell already has', () => {
-    // Only workspace → workspace: it sits beside the refused narrowing. A
-    // private → private restate takes the same write as widening.
+    // Only workspace → workspace: it sits beside the refused narrowing. A private → private restate takes the same write as widening.
     it('leaves a workspace spell workspace', async () => {
       const spellId = await cast(B, 'workspace');
 
@@ -173,8 +165,7 @@ describe('setSpellVisibility', () => {
     it('refuses a viewer, who writes nothing', async () => {
       const spellId = await cast(B, 'workspace');
 
-      // Why this could have succeeded: C is a live member of W and may read
-      // this very spell, so the refusal is the viewer rule and not a missing row.
+      // Why this could have succeeded: C is a live member of W and may read this very spell, so the refusal is the viewer rule, not a missing row.
       const viewer = await assertMembership(asUser(C), WORKSPACE_W_ID, { spell: ['read'] });
       await expect(findOneSpell(viewer, spellId)).resolves.toBeDefined();
 
@@ -186,8 +177,7 @@ describe('setSpellVisibility', () => {
     it('refuses a member of another coven by direct id', async () => {
       const spellId = await cast(B, 'private');
 
-      // Why this could have succeeded: D holds a live membership — of X — and
-      // widening a private spell of X's succeeds for D in the same breath.
+      // Why this could have succeeded: D holds a live membership of X, and widening a private spell of X's succeeds for D in the same breath.
       const ownSpell = await cast(D, 'private', WORKSPACE_X_ID);
       await expect(
         setSpellVisibility(asUser(D), WORKSPACE_X_ID, ownSpell, 'workspace'),
@@ -198,8 +188,7 @@ describe('setSpellVisibility', () => {
       ).rejects.toBeInstanceOf(Forbidden);
     });
 
-    // The author rule needs no clause of its own: a private spell is not
-    // readable by anyone else, so the finder has already refused the row.
+    // The author rule needs no clause of its own: a private spell is not readable by anyone else, so the finder has already refused the row.
     it('tells another member the private spell is not there', async () => {
       const spellId = await cast(B, 'private');
 

@@ -2,15 +2,14 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
-import { graphql } from '../../gql';
-import { covenTarget } from '../../lib/coven-path';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
 // with the copy open in the builder. The recipe page's button and the builder's Duplicate both
-// use it (claude-docs/components/spell-recipe.md, "Duplicate").
+// use it (claude-docs/components/spell-recipe.md, "The actions row").
 
 export const DuplicateSpellDocument = graphql(`
   mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {
@@ -38,7 +37,7 @@ export function useDuplicateSpell(
     },
     onSuccess: (copyId) => {
       const href = hrefOf(copyId);
-      navigate(href, { target: covenTarget(href.split('?')[0]!) });
+      navigate(href);
     },
     onError: (error) => onError(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
   });

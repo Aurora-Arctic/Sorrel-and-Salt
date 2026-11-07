@@ -17,7 +17,6 @@ import type { SpellBuilderValues } from './types';
 // their group's colour; never those its ingredients bring (claude-docs/components/spell-builder.md,
 // "The fields"). The same picker as ../IngredientForm/categories.tsx.
 
-/** Whether two lists of category ids hold the same categories, in any order, a repeat once. */
 export function sameCategories(
   one: readonly string[] | undefined,
   other: readonly (string | undefined)[] | undefined,
@@ -27,7 +26,6 @@ export function sameCategories(
   return a.size === b.size && [...a].every((id) => b.has(id));
 }
 
-/** The Categories field, on the builder's `categoryIds`. */
 export function SpellCategoriesField(): ReactElement {
   const { control } = useFormContext<SpellBuilderValues>();
   const { field } = useController({ control, name: 'categoryIds' });
@@ -37,8 +35,6 @@ export function SpellCategoriesField(): ReactElement {
   const named = (id: string) => names.get(id) ?? id;
   const picked: string[] = field.value;
 
-  // An issue on one pick is pathed to its index, as the ids were sent, and
-  // names the pick; one on the field is the field's.
   const issue = get<unknown, FormFieldError | undefined>(errors, 'categoryIds');
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)
     ? issue.flatMap((entry, index) =>

@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import {
   acceptInvitation,
+  acceptInvitationById,
   invitationStanding,
   mintInvitationCards,
   pauseAdminRoleChanges,
@@ -26,10 +27,6 @@ import {
   sha256,
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
-
-// The one accept service, `acceptInvitation(session, token)`, with the site tier's branch and the workspace's. Holding the token names the invitation, and the session's verified address is what admits: a matching unverified account is sent to the email page, a different address refused.
-// The three dead-link checks run first, for both tiers, one reason per link.
-// Accepting a site-tier invitation is a keeper grant declared `via: 'invitation'` with the invitation's note, so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
 let sql: postgres.Sql;
 const { invite, invitation, roleOf, ledger } = setUpInvitationAcceptance((client) => {
@@ -56,7 +53,6 @@ describe('acceptInvitation, on the site tier', () => {
     });
     expect(await invitation()).toMatchObject({ accepted_by: GRANTEE, updated_by: GRANTEE });
     expect((await invitation()).accepted_at).toBeInstanceOf(Date);
-    // Both privileges at one instant, the accepting session the actor.
     const rows = await ledger();
     expect(rows).toEqual([
       expect.objectContaining({
@@ -99,8 +95,6 @@ describe('acceptInvitation, on the site tier', () => {
     ]);
   });
 
-  // A keeper invitation sent to a curator's address makes them an
-  // admin, a revoke of curator and a grant of admin at one instant.
   it('makes a curator a keeper, recorded as a curator revoke and a keeper grant via the invitation', async () => {
     await asManualFix(sql, async (tx) => {
       await tx`update users set role = 'curator', can_create_workspace = true where id = ${GRANTEE}`;
@@ -131,7 +125,6 @@ describe('acceptInvitation, on the site tier', () => {
     expect(await ledger()).toEqual([]);
   });
 
-  // A site invitation grants the role it names.
   describe('to the curator role', () => {
     it('makes the verified holder of the address a curator who may create covens, recorded via the invitation with its note', async () => {
       expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
@@ -201,7 +194,6 @@ describe('acceptInvitation, on the site tier', () => {
 });
 
 describe('who may accept', () => {
-  // The same session, unverified and then verified: the address alone admits.
   it('points the matching account at the email page while its address is unverified', async () => {
     await sql`update users set email_verified = false where id = ${GRANTEE}`;
     await invite();
@@ -455,7 +447,6 @@ describe('a link that cannot be used', () => {
       expect((await invitation()).accepted_at).toBeNull();
       expect(await memberRows(GRANTEE)).toHaveLength(0);
 
-      // The backstop: the repository's own write, past a standing that passed.
       await expect(
         withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(TOKEN)),
       ).resolves.toEqual([]);
@@ -491,7 +482,6 @@ describe('while keeper changes are paused', () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  // The pause holds every site role an invitation grants, the curator's too.
   it.each(['admin'] as const)(
     'refuses another keeper’s invitation to %s, naming nobody, and accepts it once resumed',
     async (siteRole) => {
@@ -512,7 +502,6 @@ describe('while keeper changes are paused', () => {
     },
   );
 
-  // The primary keeper is exempt from the pause, and its invitation with it.
   it('accepts the primary keeper’s invitation', async () => {
     await invite({ createdBy: PRIMARY });
 
@@ -550,7 +539,6 @@ describe('acceptInvitation, on a card', () => {
         created_by: STRANGER,
       }),
     ]);
-    // The permanent record of the arrival: who, when, and which batch.
     expect(await invitation()).toMatchObject({ accepted_by: STRANGER });
     expect((await sql`select batch_id from invitations`)[0]).toMatchObject({
       batch_id: CARD_BATCH,
@@ -616,6 +604,69 @@ describe('acceptInvitation, on a card', () => {
     expect((await invitation()).accepted_by).toBe(STRANGER);
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
       reason: 'accepted',
+    });
+  });
+
+  describe('a second card for an account that has used one', () => {
+    const SECOND = 'fixture-token-dddddddddddddddddddddddddddddddd';
+    const secondCard = async () =>
+      (
+        await sql`select accepted_at, accepted_by from invitations where token_hash = ${sha256(SECOND)}`
+      )[0];
+
+    beforeEach(async () => {
+      await invite({ card: true });
+      await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+    });
+
+    // Why the refusals could have succeeded: the second card is live, the account verified, and another verified account may take it.
+    async function expectSecondCardLive(id: string) {
+      expect((await sql`select email_verified from users where id = ${STRANGER}`)[0]).toMatchObject(
+        {
+          email_verified: true,
+        },
+      );
+      expect(
+        (
+          await sql`select revoked_at, expires_at > now() as live from invitations where id = ${id}`
+        )[0],
+      ).toMatchObject({ revoked_at: null, live: true });
+      expect(await invitationStanding(asUser(AS_GRANTEE), SECOND)).toEqual({
+        acceptable: true,
+        tier: 'card',
+      });
+    }
+
+    it('refuses it by token and by id, and leaves it pending', async () => {
+      const id = await invite({ card: true, token: SECOND });
+      await expectSecondCardLive(id);
+
+      expect(await invitationStanding(asUser(AS_STRANGER), SECOND)).toMatchObject({
+        acceptable: false,
+        reason: 'used-another-card',
+      });
+      await expect(acceptInvitation(asUser(AS_STRANGER), SECOND)).rejects.toThrow(Forbidden);
+      await expect(acceptInvitationById(asUser(AS_STRANGER), id)).rejects.toThrow(NotFound);
+
+      expect(await secondCard()).toEqual({ accepted_at: null, accepted_by: null });
+      expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+        reason: 'used-by-you',
+      });
+    });
+
+    it('is refused by the accept statement itself, which still stamps it for another account', async () => {
+      const id = await invite({ card: true, token: SECOND });
+      await expectSecondCardLive(id);
+
+      const stamped = await withAudit(asUser(AS_STRANGER), (write) =>
+        write.acceptInvitation(SECOND),
+      );
+      expect(stamped).toEqual([]);
+      expect(await secondCard()).toEqual({ accepted_at: null, accepted_by: null });
+
+      const taken = await withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(SECOND));
+      expect(taken).toHaveLength(1);
+      expect(await secondCard()).toMatchObject({ accepted_by: GRANTEE });
     });
   });
 

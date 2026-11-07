@@ -5,12 +5,12 @@ A service ends a call it cannot perform by throwing one of three types from
 errors"). None of them carries a GraphQL code, because a seed or a script has
 no use for one. The code is attached on the way out, by `src/graphql/errors.ts`'s
 `maskError`, which the route passes to Yoga as `maskedErrors` (MB.43;
-DESIGN.md §7, "Errors"). A fourth, `StaleWrite` (M13.16), is no refusal: a
+DESIGN.md §7, "Errors"). A fourth, `StaleWrite`, is no refusal: a
 revisioned write named a revision the row has since moved past
-(`components/autosave.md`, "The server's half"). `AccessPaused` (M15.55) is a
+(`../autosave.md`, "The server's half"). `AccessPaused` is a
 `Forbidden` with its own code: the member holds a seat in the coven, but an
 owner has paused their access to it, until `pausedUntil` or with no end when it
-is `null`. It also answers a session whose site access is paused (M15.52), on any call
+is `null`. It also answers a session whose site access is paused, on any call
 outside the signed-in support form. A client tells it from a stranger's bare `FORBIDDEN` by the code:
 
 | Thrown            | `extensions.code` | Also carries                                         |
@@ -53,7 +53,7 @@ client. On the client, the client wrapper rejects with a `GraphQLClientError` wh
 read them back through react-hook-form's `setError` (DESIGN.md §7). A
 `STALE_WRITE` rejects with `StaleWriteError`, a `GraphQLClientError` subclass
 carrying `currentRevision`, so the autosave hook can tell a lost race from a
-failure without reading codes (M13.16).
+failure without reading codes.
 
 The tests: `tests/graphql/errors.test.ts` covers each type and the masking
 through a Yoga instance built on a throwaway schema.

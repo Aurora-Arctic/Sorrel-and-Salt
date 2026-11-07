@@ -3,8 +3,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import StockFields, { EMPTY_STOCK, type StockFormValues, stockFormValues } from '.';
 
-// Render-only; behaviour is asserted in tests/components/StockFields. The
-// fields only mean something inside a form, so each story gives them one.
 const meta = {
   title: 'Ingredients / Stock Fields',
 } satisfies Meta;
@@ -22,13 +20,10 @@ const Form = ({ start }: { start: StockFormValues }): ReactElement => {
   );
 };
 
-/** A jar with an amount, a unit and a threshold, as the edit dialog opens on it. */
 const defaultNode = <Form start={stockFormValues({ quantity: 250, unit: 'g', threshold: 30 })} />;
 
-/** A jar held but never weighed: quantity, unit and threshold empty. */
 const unmeasuredNode = <Form start={EMPTY_STOCK} />;
 
-/** Out of stock: a quantity of zero is an amount, not an empty box. */
 const outOfStockNode = <Form start={stockFormValues({ quantity: 0, unit: 'ml', threshold: 15 })} />;
 
 interface Jars {
@@ -54,7 +49,6 @@ const RowsForm = (): ReactElement => {
   );
 };
 
-/** Two jars in one form, each field named for its form. */
 export const Rows: Story = { render: () => <RowsForm /> };
 
 const STATES_STATES: Record<string, ReactNode> = {

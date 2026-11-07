@@ -5,9 +5,7 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalCleanup } from '@/modules/identity/jobs/provisional-cleanup';
 import { provisionalCleanupBatch } from '@/modules/identity/jobs/provisional-cleanup-batch';
 
-// The daily provisional cleanup, run end to end by the SDK's local world: the coordinator that reads the lapsed ids a page at a
-// time and starts a batch run per page, and the batch runs that delete. No run sleeps, so none is woken. Other files share the
-// database and may leave lapsed rows of their own, so a coordinator's batch count is asserted only as a floor.
+// No run sleeps, so none is woken. Other files share the database and may leave lapsed rows of their own, so a coordinator's batch count is asserted only as a floor.
 
 const DOMAIN = '@provisional-cleanup-run.test';
 
@@ -25,7 +23,6 @@ afterAll(async () => {
   await sql.end();
 });
 
-/** A user holding a provider sign-in, as a sign-up through one leaves it, last touched `age` ago. */
 async function signUp(label: string, verified: boolean, age: string): Promise<string> {
   const [{ id }] = await sql`
     insert into users (name, email, email_verified, created_by, updated_by)
@@ -53,7 +50,6 @@ async function signUp(label: string, verified: boolean, age: string): Promise<st
 const exists = async (userId: string) =>
   (await sql`select 1 from users where id = ${userId}`).length === 1;
 
-/** One day's run of the coordinator; how many batches it started. */
 async function runDay(): Promise<number> {
   const run = await start(provisionalCleanup, []);
   return run.returnValue;
@@ -111,7 +107,6 @@ describe('a cleanup batch', () => {
   });
 
   it('logs an account the database refuses to delete, counts it as not removed, and leaves it for the next day', async () => {
-    // A lapsed account whose removal the database refuses: the batch logs it and carries on, rather than failing whole.
     const doomed = await signUp('doomed', false, '2 days');
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     await sql`
@@ -137,7 +132,6 @@ describe('a cleanup batch', () => {
       await sql`drop function refuse_cleanup_delete()`;
     }
 
-    // Removal works again, so a later batch takes the account the failed one left.
     const retry = await start(provisionalCleanupBatch, [[doomed]]);
     expect(await retry.returnValue).toBe(1);
     expect(await exists(doomed)).toBe(false);
@@ -174,7 +168,6 @@ describe('a cleanup batch', () => {
       logged.mockRestore();
     }
 
-    // With the fault gone, the next batch takes the account the failed one left.
     const retry = await start(provisionalCleanupBatch, [[doomed]]);
     expect(await retry.returnValue).toBe(1);
     expect(await exists(doomed)).toBe(false);

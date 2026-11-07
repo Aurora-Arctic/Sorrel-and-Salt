@@ -24,9 +24,7 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
   await expect(main.getByRole('textbox', { name: 'Email Address' })).toHaveValue(
     'one-method@account-page.test',
   );
-  // No way across to the email page; the nav's Email link stays on this one.
   await expect(main.locator('a[href^="/account/email"]')).toHaveCount(0);
-  // The sign-in sections live on the Sign-In tab.
   await page.goto('/account/sign-in');
   // The only method's Remove is greyed, not gone, with its reason as its description.
   await expect(main.getByRole('button', { name: /^Remove/ })).toHaveAttribute(
@@ -39,7 +37,6 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
     'true',
   );
 
-  // The on-page nav jumps to a section.
   const nav = main.getByRole('navigation', { name: 'On This Page' });
   await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
   await expect(page).toHaveURL(/#sign-in-methods$/);

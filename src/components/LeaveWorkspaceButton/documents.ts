@@ -1,4 +1,4 @@
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 
 // Shared by the plain Leave and the steward's guided exit: one operation each, so codegen
 // finds the leave once.

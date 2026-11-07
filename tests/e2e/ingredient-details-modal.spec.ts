@@ -16,9 +16,7 @@ import {
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
 
-// An entry's details in a modal over its list, opened by the Quick Look eye (claude-docs/components/ingredient-entry.md,
-// "The details modal"), for what no story walks: every close returns focus, Edit opens over the details and
-// closes back, a coven's save shows in both, and the open details pass axe at a phone's width.
+// For what no story walks (claude-docs/components/ingredient-entry.md, "The details modal").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -28,17 +26,12 @@ const NAME = 'Fixture Lookwort';
 const FORMAL = 'Fixtura spectata';
 const ENTRY = `${NAME}, ${FORMAL}`;
 
-/** The Quick Look eye, named by its verb and the entry. */
 const quickLook = (scope: Locator | Page, entry = ENTRY) =>
   scope.getByRole('link', { name: `Quick Look ${entry}`, exact: true });
 
-/** The details modal, named by the entry's name alone. */
 const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { name, exact: true });
 
-/**
- * The details' Edit: the card's pencil, a link named as the card names it, "Edit Name, Formal"
- * (the window's icons follow the card's).
- */
+/** The card's pencil, a link named as the card names it; the window's icons follow the card's. */
 const editIn = (dialog: Locator, name = NAME) =>
   dialog.getByRole('link', { name: `Edit ${name}, ${FORMAL}`, exact: true });
 
@@ -78,7 +71,6 @@ test.describe('on the admin Compendium list', () => {
     await eye.click();
     await expect(details).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`[?&]entry=${slug}`));
-    // The entry's sections, read with the curator's session.
     await expect(
       details.getByRole('region', { name: 'Caution' }).getByText('Fixture admin caution.'),
     ).toBeVisible();
@@ -109,7 +101,6 @@ test.describe('on the admin Compendium list', () => {
     await expect(detailsDialog(page)).toHaveCount(0);
   });
 
-  /** Seeds a compendium entry with a long description, and opens its details over the admin list. */
   const openLongEntry = async (page: Page): Promise<Locator> => {
     const longName = 'Fixture Longwort';
     const sentence =
@@ -146,12 +137,10 @@ test.describe('on the admin Compendium list', () => {
     const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
     const whole = await paragraph.evaluate((p) => p.scrollHeight);
     expect(whole).toBeGreaterThan(closed);
-    // The bar is the full width of the text, so the whole of it is the target.
     const barBox = await bar.boundingBox();
     const textBox = await paragraph.boundingBox();
     expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
 
-    // Six lines are showing, not five: the clip is six line heights tall.
     const lineHeight = await paragraph.evaluate((p) => parseFloat(getComputedStyle(p).lineHeight));
     expect(Math.round(closed / lineHeight)).toBe(6);
     const gapClosed =
@@ -160,7 +149,6 @@ test.describe('on the admin Compendium list', () => {
         .locator('.ingredient-summary__description-clip')
         .evaluate((c) => c.getBoundingClientRect().bottom));
 
-    // Pointed at, the label is not underlined and the chevron grows in the label's own colour.
     await bar.hover();
     const chevron = bar.locator('svg');
     await expect.poll(() => chevron.evaluate((c) => getComputedStyle(c).scale)).toBe('1.25');
@@ -173,12 +161,10 @@ test.describe('on the admin Compendium list', () => {
     const less = details.getByRole('button', { name: 'Show Less' });
     await expect(less).toHaveAttribute('aria-expanded', 'true');
     await expect(less).toBeFocused();
-    // Open, the whole text is in view: the clip has grown to hold it.
     await expect
       .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
       .toBeGreaterThanOrEqual(whole);
 
-    // Open, the bar stands further from the text than it did under the fade.
     await expect
       .poll(
         async () =>
@@ -216,7 +202,6 @@ test.describe('on the admin Compendium list', () => {
     await expect.poll(overflow).toEqual({ y: 0, x: 0 });
     // The scrollbar is the browser's to draw, and only for text that overflows: never forced.
     expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
-    // The foot is the modal's own, under the body and out of what scrolls.
     await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
   });
 
@@ -291,12 +276,10 @@ test.describe('on the admin Compendium list', () => {
     await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
     await expect(open).toBeInViewport();
 
-    // Scrolled to the end, the foot is still in view and the last text is readable above it.
     await body.evaluate((b) => b.scrollTo(0, b.scrollHeight));
     await expect(open).toBeInViewport();
     await expect(details.locator('.ingredient-summary > *:last-child')).toBeInViewport();
 
-    // It still goes to the entry's page.
     await open.click();
     await expect(page).toHaveURL(/\/compendium\/ingredients\/fixture-longwort/);
   });
@@ -339,7 +322,6 @@ test.describe("on a coven's Ingredients", () => {
     const listPath = `/coven/${coven.slug}/ingredients`;
     const details = detailsDialog(page);
 
-    // seedCoven leaves the owner signed in.
     await page.goto(listPath);
     await quickLook(page).click();
     await expect(editIn(details)).toBeVisible();
@@ -361,7 +343,6 @@ test.describe("on a coven's Ingredients", () => {
     });
   });
 
-  // A pick from the search opens its Quick Look, not its page.
   test('a pick from the search opens the details over the list, the filter kept, and a close gives the search box its focus back', async ({
     page,
   }) => {

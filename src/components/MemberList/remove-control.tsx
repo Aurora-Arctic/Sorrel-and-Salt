@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { RemoveControlProps } from './types';
 
 // The members page's Remove: it asks first, naming the member, then sends `removeMember`. Stewards
@@ -26,7 +26,6 @@ const RemoveControl = ({
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove ${name}`}
-    // Plain on a row and in the member modal alike: the red is the confirm's.
     openClass={inModal ? 'btn btn--quiet' : 'btn btn--quiet btn--small'}
     title="Remove Member"
     question={

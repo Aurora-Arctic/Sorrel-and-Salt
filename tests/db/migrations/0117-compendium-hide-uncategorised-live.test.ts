@@ -24,8 +24,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// Invented categories in two invented groups. A test soft-deletes one category, or the second group, after filing an entry under it,
-// since the shared inserter files only under a live category.
 beforeAll(async () => {
   const stamps = { created_by: A.id, updated_by: A.id };
   const group = (name: string) => ({

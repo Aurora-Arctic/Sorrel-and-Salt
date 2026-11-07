@@ -10,7 +10,7 @@ import {
 import { supportTitle } from './parts/support-title';
 import type { SupportResolvedProps } from './types';
 
-// Sent to a request's sender when staff resolve it. It names the request and says how to reopen it; it carries none of the thread.
+// Names the request and carries none of the thread.
 
 const titleOf = (requestSubject: string): string =>
   supportTitle('Your support request is resolved', requestSubject);
@@ -59,7 +59,6 @@ export function SupportResolved({
   );
 }
 
-/** The resolved notice for `to`, rendered to the html and plain text `send` takes. */
 export const supportResolvedMessage = defineMessage<SupportResolvedProps>(
   ({ requestSubject }) => titleOf(requestSubject),
   SupportResolved,

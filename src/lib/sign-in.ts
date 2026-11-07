@@ -1,36 +1,25 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
-import type { PageTab } from '../components/TabbedPage/types';
-import { SUPPORT_LIST_PATH } from './support-path';
 
-// Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
-// protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
-// return paths are safe, applied on the way out and on the way back — and the
-// sentences for the account page's own OAuth round trip, the link.
+// Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route protection (src/proxy.ts,
+// src/lib/request-session.ts): one rule for which return paths are safe, plus the account page's OAuth round-trip sentences.
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone but a curator or an admin: the post-sign-in
- * landing, not the public front door `/` (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+ * landing, not the public front door `/` (claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives").
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
-/** A keeper's landing instead: the keepers' area. */
 export const ADMIN_LANDING = '/keepers' satisfies Route;
 
-/** A curator's landing: the curation area. */
 export const CURATOR_LANDING = '/curator' satisfies Route;
 
-/** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
 export function postSignInLanding(role: UserRole): Route {
   if (role === 'admin') return ADMIN_LANDING;
   return role === 'curator' ? CURATOR_LANDING : POST_SIGN_IN_LANDING;
 }
 
-/**
- * The open-redirect guard for `?next=`: a same-site absolute path is kept verbatim; anything else (an absolute URL, `//host`,
- * `/\host`, a relative path, a missing value or an array) is no return path, and the landing is the role's
- * (`postSignInLanding`). Without it `?next=https://evil.example` would redirect anywhere after sign-in.
- */
+/** The open-redirect guard for `?next=`: without it `?next=https://evil.example` would redirect anywhere after sign-in. */
 export function safeReturnPath(raw: string | string[] | undefined): string | undefined {
   if (typeof raw !== 'string' || raw.length === 0) return undefined;
   // A single leading slash, not a second slash or backslash right after it —
@@ -42,17 +31,10 @@ export function safeReturnPath(raw: string | string[] | undefined): string | und
   return raw;
 }
 
-/**
- * What a sign-in with no return path tells the callback, in Better Auth's `additionalData`, so it lands the account by role.
- * A flag, not a landing path: `/coven` asked for by name must still win for a keeper.
- */
+/** A flag, not a landing path: `/coven` asked for by name must still win for a keeper. */
 export const NO_RETURN_PATH = { noReturnPath: true } as const;
 
-/**
- * `signIn.social`'s destinations for a sign-in headed for `next`, or for none.
- * With none, `callbackURL` is only what Better Auth requires, since the
- * callback replaces it, and a failed attempt keeps asking for none.
- */
+/** With none, `callbackURL` is only what Better Auth requires, since the callback replaces it, and a failed attempt keeps asking for none. */
 export function socialSignInTarget(next: string | undefined) {
   if (next === undefined) {
     return {
@@ -70,28 +52,18 @@ export function socialSignInTarget(next: string | undefined) {
  */
 export const RETURN_PATH_HEADER = 'x-sorrel-return-path';
 
-/** Where a verification link opened from no session goes: sign in, then back to the email page. */
 export const SIGN_IN_TO_VERIFY_PATH = '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify';
 
-/**
- * The readable cookie Better Auth's `lastLoginMethod` writes on each callback
- * that sets a session, naming the provider. Passed to the server plugin and
- * the client one alike, which must agree on it.
- */
+/** Passed to the server plugin and the client one alike, which must agree on it. */
 export const LAST_USED_PROVIDER_COOKIE = 'better-auth.last_used_login_method';
 
-/** `/sign-in`, carrying `returnPath` as `?next=` once it has passed `safeReturnPath`. */
 export function signInPath(returnPath: string | undefined): '/sign-in' | `/sign-in?next=${string}` {
   const path = safeReturnPath(returnPath);
   if (path === undefined) return '/sign-in';
   return `/sign-in?next=${encodeURIComponent(path)}`;
 }
 
-/**
- * A lookup from a callback's `?error=` code to one readable sentence:
- * `undefined` for no code, and `generic` for a code the map does not name.
- * Next hands a repeated key over as an array, which is no code.
- */
+/** Next hands a repeated key over as an array, which is no code. */
 export function messageLookup(
   messages: Readonly<Record<string, string>>,
   generic: string,
@@ -146,27 +118,15 @@ const ERROR_MESSAGES: Record<string, string> = {
     'That confirmation link needs you to be signed in. Sign in to the account that asked for this email address, then open the link again.',
 };
 
-/** One readable sentence for a callback `?error=` code; `undefined` for none. */
 export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_ERROR);
 
-/** The account page: name, address and waiting coven invitations. */
 export const ACCOUNT_PATH = '/account';
 
-/** The Sign-In tab, where a provider link starts and lands again, with `?error=` when it failed. */
 export const ACCOUNT_SIGN_IN_PATH = '/account/sign-in';
 
-/** The Sign-In tab's sections, by their ids: the sign-in methods' rows and the two-factor note link to them. */
 export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}#password` as Route;
 export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
 
-/** The account page's tabs, in their order along the row. */
-export const ACCOUNT_TABS: readonly PageTab[] = [
-  { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
-  { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
-  { href: SUPPORT_LIST_PATH as Route, label: 'Support Requests', shape: 'requests' },
-];
-
-/** The account page's Invitations section, by its id; the landing and the account menu link to it. */
 export const ACCOUNT_INVITATIONS_ID = 'account-invitations';
 export const ACCOUNT_INVITATIONS_PATH = `${ACCOUNT_PATH}#${ACCOUNT_INVITATIONS_ID}` as const;
 
@@ -188,10 +148,8 @@ const LINK_ERROR_MESSAGES: Record<string, string> = {
 /** Also what SignInMethods shows when `/link-social` itself fails, before any redirect. */
 export const GENERIC_LINK_ERROR = "That sign-in method couldn't be added. Please try again.";
 
-/** One readable sentence for a link callback's `?error=` code on /account/sign-in; `undefined` for none. */
 export const linkErrorMessage = messageLookup(LINK_ERROR_MESSAGES, GENERIC_LINK_ERROR);
 
-// Better Auth's /unlink-account refusals, by the `code` in its JSON body.
 const UNLINK_ERROR_MESSAGES: Record<string, string> = {
   // The page offers no Remove with one method left; two tabs can still race.
   FAILED_TO_UNLINK_LAST_ACCOUNT: "Your only sign-in method can't be removed. Add another first.",
@@ -204,10 +162,7 @@ export const GENERIC_UNLINK_ERROR = "That sign-in method couldn't be removed. Pl
 
 const unlinkLookup = messageLookup(UNLINK_ERROR_MESSAGES, GENERIC_UNLINK_ERROR);
 
-/**
- * One readable sentence for a refused `/unlink-account`. Unlike a callback's lookup a missing code still has a sentence,
- * since the call was refused either way: it falls back to the generic one.
- */
+/** Unlike a callback's lookup a missing code still has a sentence, since the call was refused either way. */
 export function unlinkErrorMessage(code: string | undefined): string {
   return unlinkLookup(code) ?? GENERIC_UNLINK_ERROR;
 }

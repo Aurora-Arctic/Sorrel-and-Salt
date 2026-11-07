@@ -5,10 +5,9 @@ import { signInAgainAs } from './session';
 import { slotUrl } from './slots';
 import { seedCoven, type Coven } from './stories/coven-ingredients';
 
-// Quick Look, Add Ingredient and the Account menu load their code the first time they open, not with
-// the page, so the page that carries them is lighter to download and to start. Each is opened once
-// on a page that has settled: the browser fetches a script it had not, and the dialog or menu then
-// works (claude-docs/components/modal.md; claude-docs/components/account-menu.md).
+// Quick Look and Add Ingredient load their code on first open, not with the page. Each is opened once on a
+// settled page: the browser fetches a script it had not, and the dialog then works
+// (claude-docs/components/modal.md).
 
 const COVEN = 'Fixture Coven First Open';
 let coven: Coven;
@@ -79,22 +78,4 @@ test('Add Ingredient loads its code on first open, its form ready for a name', a
 
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
-});
-
-test('the Account menu loads its code on first open, and leads to the account page', async ({
-  page,
-}) => {
-  const asked = await settled(page, `/coven/${coven.slug}/ingredients`);
-  const account = page.getByRole('banner').getByRole('button', { name: 'Fixture A' });
-  await expect(account).toHaveAttribute('aria-expanded', 'false');
-
-  await account.click();
-
-  await expect(account).toHaveAttribute('aria-expanded', 'true');
-  const yours = page.getByRole('banner').getByRole('link', { name: 'Your Account', exact: true });
-  await expect(yours).toBeVisible();
-  expect(asked.length).toBeGreaterThan(0);
-
-  await yours.click();
-  await expect(page).toHaveURL(/\/account$/);
 });

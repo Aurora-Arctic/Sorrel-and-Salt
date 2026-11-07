@@ -26,7 +26,6 @@ import type {
 // The icons beside a compendium entry's title: a main icon and More, after the plus
 // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
 
-/** The public page's plus, from its covens: those that may add, and which hold the entry. */
 const plusOfPlaces = (
   places: readonly CupboardPlace[],
   defaultWorkspaceId: string,
@@ -43,7 +42,6 @@ const plusOfPlaces = (
 
 type Asking = 'remove' | 'own' | 'annotate' | 'stock';
 
-/** The covens a choice may act in: Add in those that lack the entry, the rest in those that hold it. */
 const placesFor = {
   add: (places: readonly CupboardPlace[]) => places.filter(({ canAdd }) => canAdd),
   annotate: (places: readonly CupboardPlace[]) =>
@@ -54,7 +52,6 @@ const placesFor = {
     places.filter(({ held, canRemove }) => held && canRemove),
 };
 
-/** The two shapes' props as one: the coven page's single place, or the public page's covens. */
 function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
   if ('covens' in props) {
     const { opened } = props.annotate;
@@ -63,7 +60,6 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
       defaultWorkspaceId: props.defaultWorkspaceId,
       closeHref: props.annotate.closeHref,
       opened,
-      // No coven's label: the public page is the compendium's.
       name: props.compendium.name,
       removedHref: undefined,
       plus: plusOfPlaces(props.covens, props.defaultWorkspaceId),
@@ -88,14 +84,12 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
     defaultWorkspaceId: workspaceId,
     closeHref: props.annotate.closeHref,
     opened: props.annotate.opened ? { workspaceId, overrides: props.overrides } : undefined,
-    // The entry as the coven calls it, for the two confirmations.
     name: props.overrides.label ?? props.compendium.name,
     removedHref: props.removedHref,
     plus: props.plus,
   };
 }
 
-/** The coven a confirmation starts on: the default where it may, else the first that may. */
 const startOn = (places: readonly CupboardPlace[], defaultWorkspaceId: string): string =>
   (places.find(({ workspaceId }) => workspaceId === defaultWorkspaceId) ?? places[0]).workspaceId;
 
@@ -105,12 +99,8 @@ export default function CupboardActions(
   const { ingredientId, compendium, edit } = props;
   const { places, defaultWorkspaceId, closeHref, opened, name, removedHref, plus } =
     normalise(props);
-  // Where the viewer is: puts a section first in More and decides the main icon, read from the
-  // page's shape and not an address.
   const viewing = 'covens' in props ? 'compendium' : 'coven';
-  // Which question is open, one at a time; the Annotate dialog is the address's (`opened`).
   const [asking, setAsking] = useState<Asking>();
-  // The coven Make It Ours or Remove acts in: the one coven, or the confirmation's choice.
   const [target, setTarget] = useState(defaultWorkspaceId);
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
   const anyHeld = places.some(({ held }) => held);
@@ -118,7 +108,6 @@ export default function CupboardActions(
   // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
   const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const moreControl = useRef<HTMLButtonElement | null>(null);
-  // A refusal is a callout under the three dots, where every write is chosen.
   const moreFeedback = useClickFeedback({ name: `More for ${name}` });
   const moreAnchor = moreFeedback.anchorRef;
   const moreRef = useCallback(
@@ -156,12 +145,10 @@ export default function CupboardActions(
   const annotators = placesFor.annotate(places);
   const owners = placesFor.own(places);
   const removers = placesFor.remove(places);
-  // One coven that may annotate: a link to its `?annotate`, as the coven page has it.
   const annotateHref = annotators.length === 1 ? annotators[0].annotateHref : ('' as Route);
   const openAnnotate = useOpenModalClick(annotateHref, ANNOTATE_HEADING);
 
   const settle = (): void => setAsking(undefined);
-  // Make It Ours and Remove, shared with the Annotate dialog's More menu, in the target coven.
   const writes = useCupboardWrites({
     workspaceId: targetPlace.workspaceId,
     covenSlug: targetPlace.covenSlug,
@@ -177,7 +164,6 @@ export default function CupboardActions(
     setTarget(startOn(among, defaultWorkspaceId));
     setAsking(what);
   };
-  /** Which coven, asked above a confirmation's question where two or more may. */
   const choiceOf = (among: readonly CupboardPlace[]) =>
     among.length > 1
       ? {
@@ -234,14 +220,11 @@ export default function CupboardActions(
   const covenItems = [stockItem, annotateItem, ownItem, removeItem].filter(
     (item): item is MenuButtonItem => item !== undefined,
   );
-  // Always labelled sections, the Coven one alone for a member (`choicesFor`).
   const moreChoices = choicesFor(
     { compendium: editItem ? [editItem] : [], coven: covenItems },
     viewing,
   );
   const more = moreChoices.sections.length > 0;
-  // The plus while some coven that may add lacks the entry, and the check once all hold it
-  // (PlusMark), where Add is not one of the choices.
   const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} name={name} /> : null;
   const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0);
   if (icons === 0) return null;

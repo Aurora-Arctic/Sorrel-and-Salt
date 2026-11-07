@@ -10,7 +10,6 @@ import CovenChoice from './coven-choice';
 // one coven that may update stock and after asking which for two or more
 // (claude-docs/components/ingredient-entry.md, "Structure").
 
-/** One coven that may update stock, with what its dialog shows. */
 export interface StockPlace {
   workspaceId: string;
   name: string;
@@ -26,13 +25,10 @@ export default function EditStock({
   onClose,
   returnTo,
 }: {
-  /** The holding covens that permit updating stock; at least one. */
   places: readonly StockPlace[];
   ingredientId: string;
-  /** The entry as the compendium calls it: the dialog's title. */
   ingredientName: string;
   defaultWorkspaceId: string;
-  /** Whether the dialog names the coven it writes to; true off a coven's own pages, where nothing else says which coven the jars are. */
   namesCoven?: boolean;
   onClose: () => void;
   returnTo: () => HTMLElement | null | undefined;
@@ -40,7 +36,6 @@ export default function EditStock({
   const start = (places.find(({ workspaceId }) => workspaceId === defaultWorkspaceId) ?? places[0])
     .workspaceId;
   const [chosen, setChosen] = useState(start);
-  // Two or more: the question first. One: straight to the dialog.
   const [asked, setAsked] = useState(places.length === 1);
   const place = places.find(({ workspaceId }) => workspaceId === chosen) ?? places[0];
 

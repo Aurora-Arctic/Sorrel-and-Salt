@@ -3,14 +3,10 @@ import { HALVES, LIT_PARTS, MARIA } from './icons';
 import type { MoonLayer, MoonPhaseIconProps } from './types';
 import './index.scss';
 
-// The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not
-// `currentColor`; the outline is the text's ink. Waxing and Waning stack their half's lit parts at
-// rising strength (icons.tsx, HALVES). Hidden from assistive technology
-// (claude-docs/components/spell-builder.md, "The fields").
+// The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not `currentColor`. Hidden
+// from assistive technology (claude-docs/components/spell-builder.md, "The fields").
 
 const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
-  // An id per icon, so two on one page clip each to its own lit part; a
-  // half's layers add their index to it.
   const clipId = useId();
   // Own-property checks rather than an index: the field is free text, and a
   // phase with no drawing draws nothing.
@@ -34,8 +30,6 @@ const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement |
       {layers.map(([shape, opacity], i) => {
         const lit = LIT_PARTS[shape];
         const id = `${clipId}-${i}`;
-        // A full-strength layer leaves fill-opacity unset, as a single phase
-        // draws it.
         const fillOpacity = opacity === 1 ? undefined : opacity;
         return (
           <g key={shape}>

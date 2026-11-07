@@ -8,12 +8,9 @@ import type { CreateInvitationResult } from './types';
 
 useRawClient();
 
-// The transport's half of `createInvitation`: the answer is the invitation, with its coven and role and never the link or the token, the session is the actor, and a refusal reaches the wire as its code.
-// Who may invite, which roles and which addresses are tests/modules/coven/services/invitations.test.ts's.
-
 const INVITED = 'invited@coven-invitations-graphql.test';
 
-/** A sender that records the invitations it was asked to mail, by id: the token is minted by the mail's step, never here. */
+/** Records the invitations asked to mail, by id: the token is minted by the mail's step, never here. */
 function recordingSender() {
   const sent: string[] = [];
   const sender: InvitationSender = {
@@ -121,7 +118,6 @@ const REVOKE = /* GraphQL */ `
   }
 `;
 
-/** A pending (or accepted) invitation into W, through the raw client. */
 async function insertInvitation(accepted = false): Promise<string> {
   const [row] = await sql`
     insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at,

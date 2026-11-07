@@ -7,12 +7,11 @@ import { HistoryIcon } from './icons';
 import type { HistoryLinkProps } from './types';
 
 // A row's link to the privilege ledger searched for its user (address lower-cased); its tip behaves as InfoTip's, through `useTip`
-// (claude-docs/components/user-list.md, "Marks, logos and links with tips").
+// (claude-docs/components/user-list.md, "Contracts").
 const HistoryLink = ({ email, name }: HistoryLinkProps): ReactElement => {
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
-    // Hover on the wrapper, which holds the tip as well as the link.
     <span
       ref={anchor}
       className="user-list__history"

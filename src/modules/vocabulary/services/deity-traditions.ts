@@ -19,8 +19,7 @@ import { DeityTraditionInput } from '../validation/deity-tradition';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, DeityTraditionRow, GroupFilter } from '../types';
 
-// The deity traditions: public reads, and writes for a curator or a keeper alone. A rename or delete re-slugs the deities under
-// them (claude-docs/db/deity-vocabulary.md, "Deity tradition service details").
+// A rename or delete re-slugs the deities (claude-docs/db/deity-vocabulary.md, "Deity tradition service details").
 
 /** The traditions, and the deities under them, which a rename or delete re-slugs under the tradition's name. */
 const TRADITIONS: CuratedGroup<typeof deityTraditions> = {
@@ -45,7 +44,6 @@ export function listDeityTraditions(
   return findGroupPage(deityTraditions, filter, page);
 }
 
-/** How many live traditions `listDeityTraditions` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countDeityTraditions(
   start: Cursor | undefined,
   filter: GroupFilter = {},
@@ -54,8 +52,6 @@ export function countDeityTraditions(
 }
 
 /**
- * The live tradition at this address, for the admin page to edit.
- *
  * @throws {NotFound} no live tradition holds the slug.
  */
 export async function getDeityTraditionBySlug(slug: string): Promise<DeityTraditionRow> {
@@ -65,8 +61,6 @@ export async function getDeityTraditionBySlug(slug: string): Promise<DeityTradit
 }
 
 /**
- * Adds a tradition, its slug derived from the name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `DeityTraditionInput`, or its slug is a live tradition's.
  */

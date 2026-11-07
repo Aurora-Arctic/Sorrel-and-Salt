@@ -4,13 +4,11 @@ import { Forbidden } from '@/lib/errors';
 import { workspaceById } from '@/modules/coven';
 import { A, C, D, asUser } from '../../../support/as-user';
 
-// The browser names a coven by id, so a stranger and an id no coven holds
-// must earn the same bare refusal: whether a coven exists is private.
+// A stranger and an id no coven holds must earn the same bare refusal: whether a coven exists is private.
 
 const NO_SUCH_COVEN = '00000000-0000-4000-8000-00000000dead';
 
 describe('workspaceById', () => {
-  // The least privileged seat: every role may read its coven.
   it('gives a viewer the coven they sit in', async () => {
     const workspace = await workspaceById(asUser(C), WORKSPACE_W_ID);
 

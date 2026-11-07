@@ -8,23 +8,18 @@ import CategoryTipChip from './category-tip-chip';
 import { chipTip } from './chip-tip';
 import type { CardCategory, CategoryChipsProps } from './types';
 
-/** The least width the panel takes when the chip row is narrower. */
 const PANEL_MIN_PX = 192;
-/** Space kept between the panel and the window's edge. */
 const EDGE_PX = 8;
 
 // The card's +N button and the panel behind it: a toggletip floating over the chip row, so the card's
 // height never changes (WCAG 1.4.13). A client child so `IngredientCard` stays server-compatible
-// (claude-docs/components/category-chips.md, "The +N toggletip").
+// (claude-docs/components/category-chips.md, "Contracts").
 
 const GRACE_MS = 120;
 
 interface CategoryMoreProps {
-  /** The categories past the card's limit. */
   categories: readonly CardCategory[];
-  /** The ingredient's label, for the accessible names. */
   label: string;
-  /** A chip's tip words, when the caller gives each chip a tip. */
   tipOf?: CategoryChipsProps['tipOf'];
 }
 
@@ -37,7 +32,6 @@ const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactEle
   // Set while Escape puts focus back on the button, which must not reopen the panel.
   const returning = useRef(false);
   const panelId = useId();
-  // The chip row the panel hangs from, found from the button once it is mounted.
   const [row, setRow] = useState<HTMLElement | null>(null);
 
   const { refs, elements, floatingStyles, update } = useFloating({

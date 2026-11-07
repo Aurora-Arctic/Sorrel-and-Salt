@@ -7,8 +7,7 @@ import {
   mailingDays,
 } from '@/modules/documents/mailing-pace';
 
-// The pace a mailing to every account keeps, named once: a batch of 25 sent one after another, a minute between batches, and 60
-// a UTC day, which leaves 40 of the 100 a day Resend's free plan allows for sign-in and other mail.
+// 60 a UTC day leaves 40 of the 100 a day Resend's free plan allows for sign-in and other mail.
 
 describe('the mailing pace', () => {
   it('sends batches of 25, a minute apart, and 60 a UTC day', () => {

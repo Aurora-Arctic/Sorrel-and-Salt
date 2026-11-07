@@ -13,11 +13,9 @@ import {
 import type { JournalEntry } from '../../scripts/types';
 
 // Drizzle's migrator applies only journal entries whose `when` is later than the newest it has recorded, so an entry merged older than one already applied is skipped on staging and production and no test database notices (claude-docs/db/migrations-and-scripts.md, "Migration order").
-// Each refusal below is paired with the journal it would have let through: one where 0046 was regenerated after 0047 and 0048 had been generated.
 
 const entry = (idx: number, tag: string, when: number): JournalEntry => ({ idx, tag, when });
 
-/** A staging journal that holds 0045. */
 const BASE = [
   entry(44, '0044_admin-role-change-pauses', 1791324406382),
   entry(45, '0045_seed-keys', 1791326893502),

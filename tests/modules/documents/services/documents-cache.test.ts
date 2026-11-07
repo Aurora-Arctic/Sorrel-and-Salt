@@ -17,8 +17,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// The documents' public reads held in the data cache under the `documents` tag (DESIGN.md §7). The data cache holds as Next's does
-// (tests/support/next-data-cache.ts), so a version published underneath a read shows whether the repeat read reached Postgres.
+// The data cache holds as Next's does (tests/support/next-data-cache.ts), so a version published underneath a read shows whether the repeat read reached Postgres.
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;
@@ -37,7 +36,6 @@ beforeEach(async () => {
 
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
-/** Publishes version 2 straight into Postgres, underneath whatever the cache holds. */
 const publishUnderneath = () =>
   insertDocumentVersion(
     sql,
@@ -86,8 +84,6 @@ describe('the documents reads are cached under the documents tag', () => {
   });
 });
 
-// The keeper's writes empty the cache themselves, so a reader sees a publish, or a new title, on the next read rather than whenever
-// the cache would have lapsed. A saved draft leaves it, since no reader is shown a draft.
 describe('the editing services expire the documents tag', () => {
   it('shows a reader the published draft, and the earlier version in the list, after a publish', async () => {
     expect((await readDocument('privacy')).number).toBe(1);

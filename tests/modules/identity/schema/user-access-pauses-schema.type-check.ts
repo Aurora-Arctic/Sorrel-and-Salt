@@ -6,13 +6,11 @@ import { userAccessPauses } from '@/modules/identity/schema/user-access-pauses';
 // Compile assertions, checked by `npm run typecheck` and run by nothing: each `@ts-expect-error` fails the typecheck the moment
 // its constraint is loosened, which a runtime assertion cannot see. `tsconfig.json` includes `tests/`, which is what reads this.
 
-// The mark itself, as a type: a table that lost it fails this assignment.
 export const marked: NamedWrites = userAccessPauses;
 
 const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
 const where = eq(userAccessPauses.userId, id);
 
-// The table carries the `namedWrites` mark, so every generic write is refused.
 export const writes = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert, so a pause cannot be set already lifted or past the one-live slot's closing.

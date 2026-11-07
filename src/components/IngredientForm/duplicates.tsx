@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
@@ -77,7 +77,6 @@ const CompendiumMatchesDocument = graphql(`
 /** Exact matches a question names: more than a handful of one name is not a choice a person makes. */
 const EXACT_ROWS = 5;
 
-/** Matches a warning lists: the closest few, best first. */
 const DUPLICATE_ROWS = 3;
 
 /** The shortest name the field asks about: one letter resembles half the compendium. */
@@ -89,7 +88,7 @@ const lookup = (workspaceId: string | null, name: string) =>
 /**
  * The warning for the name as typed: its matches, whether a save is held on them, and a save's
  * `check` and `dismiss`. A null coven asks the compendium alone; `omit` is the entry being edited
- * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
@@ -110,11 +109,9 @@ export function useDuplicateWarning(
     setEdited(true);
   }
   const untouched = !edited && typed === opened.trim();
-  // The untouched name asks nothing, as a blank or single-letter one does.
   const name = useDebouncedValue(untouched || typed.length < MIN_ASKED ? '' : typed);
   const { data, isFetching } = useQuery({
     ...lookup(workspaceId, name),
-    // A blank name has nothing to resemble, and the server answers it empty.
     enabled: name !== '',
     placeholderData: keepPreviousData,
     // A lookup that fails warns of nothing; it never takes the form down.
@@ -126,7 +123,6 @@ export function useDuplicateWarning(
   // The name a save was held on. Another name lifts the hold, so a match
   // arriving as it is typed never takes the focus; its save asks again.
   const [heldFor, setHeldFor] = useState<string | null>(null);
-  // The compendium entries named exactly as the held save's name.
   const [exact, setExact] = useState<Duplicate[]>([]);
   const matches =
     name === ''
@@ -140,16 +136,11 @@ export function useDuplicateWarning(
     if (sending === '' || (!edited && sending === opened.trim())) return false;
     let found: Duplicate[];
     try {
-      // The cached answer when the typing had settled; asked now when not, and
-      // the field shows it once the debounce catches up, from the cache.
       const answer = await client.fetchQuery(lookup(workspaceId, sending));
       found = answer.possibleDuplicates.edges.flatMap(({ node }) => (node.id === omit ? [] : node));
     } catch {
-      // As the field's own lookup: a failure warns of nothing, and holds nothing.
       return false;
     }
-    // A coven's save asks which compendium entries bear the name exactly; the
-    // compendium's own has no cupboard to put one in. A failure asks no question.
     let same: Duplicate[] = [];
     if (workspaceId !== null) {
       try {
@@ -185,7 +176,7 @@ export function useDuplicateWarning(
 
   /**
    * After a match's + has added it: every lookup of both kinds is asked again, since the cached
-   * answers still say the coven lacks it (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+   * answers still say the coven lacks it (claude-docs/components/ingredient-form.md, "The duplicate warning").
    */
   const added = async (id: string): Promise<void> => {
     setExact((now) =>
@@ -222,7 +213,6 @@ type RowPhase = 'entering' | 'present' | 'leaving';
 interface Row {
   match: Duplicate;
   phase: RowPhase;
-  /** The entry this place showed before, fading out over the one it shows now. */
   gone?: Duplicate;
 }
 
@@ -232,7 +222,7 @@ interface Held {
   key: string;
 }
 
-/** The slide's length, the CSS's $skeleton-fade (index.scss). */
+/** The slide's length; keep equal to `$skeleton-fade` in index.scss. */
 const SLIDE_MS = 300;
 
 /** The shapes' delay and fade, the CSS's $skeleton-delay and $skeleton-fade (index.scss), with room to spare: the net for a fade in whose end never came. */
@@ -274,7 +264,7 @@ const settledHeightOf = (list: HTMLUListElement): number => {
   const last = staying[staying.length - 1];
   if (!last) return 0;
   // From the edges as drawn, with the row's own end margin, which the list's resting height holds
-  // (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+  // (claude-docs/components/ingredient-form.md, "The duplicate warning").
   return (
     last.getBoundingClientRect().bottom -
     list.getBoundingClientRect().top +
@@ -285,7 +275,7 @@ const settledHeightOf = (list: HTMLUListElement): number => {
 /**
  * The list's rows as slots by place, and its slide between answers: a dropped row fades out as
  * the bottom slides up over it, a new row fades in as it slides down. Reduced motion settles at
- * once (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * once (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 function useSlidingRows(
   matches: readonly Duplicate[],
@@ -298,11 +288,9 @@ function useSlidingRows(
   onTransitionEnd: (event: TransitionEvent<HTMLUListElement>) => void;
 } {
   const [rows, setRows] = useState<Row[]>([]);
-  // The answer the rows were last built for, by id: the array itself is new
-  // every render. Set during render, as the hook above sets its own state.
   const [builtFor, setBuiltFor] = useState('');
   // Where the shapes are, by their own transition events: `fading` in, `in`, or off. An answer
-  // back mid-fade waits, so the change is never seen (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+  // back mid-fade waits, so the change is never seen (claude-docs/components/ingredient-form.md, "The duplicate warning").
   const [shapes, setShapes] = useState<'off' | 'fading' | 'in'>('off');
   const [held, setHeld] = useState<Held | null>(null);
   const key = matches.map((match) => match.id).join(' ');
@@ -320,7 +308,6 @@ function useSlidingRows(
   }
   const covered = pending || holding !== null;
 
-  /** Shows a held answer under the shapes. */
   const release = useCallback((answer: Held) => {
     setBuiltFor(answer.key);
     setRows((now) => rowsFor(now, answer.matches, true));
@@ -347,8 +334,8 @@ function useSlidingRows(
   // starts from where the rows last stood; and the answer last slid for.
   const restHeight = useRef<number | null>(null);
   const slidFor = useRef('');
-  // The list's height is let go only once the rows it slid for are settled, else the list jumps
-  // a frame at its auto height at the very end.
+  // The height is let go only once the rows it slid for are settled, else the list jumps a frame
+  // at its auto height at the very end.
   const sliding = useRef(false);
 
   const letGo = (list: HTMLUListElement) => {
@@ -385,8 +372,7 @@ function useSlidingRows(
     // row is already in the flow.
     const from = midSlide ? now : (restHeight.current ?? now);
     const to = settledHeightOf(list);
-    // Every row leaving: the region closes round the whole notice instead
-    // (index.scss), and the rows are only settled by the net.
+    // Every row leaving: the region closes round the whole notice instead (index.scss).
     if (to === 0) return;
     if (reducedMotion() || Math.abs(from - to) < 0.5) {
       // Nothing to slide: the rows fade on their own, or, reduced, swap at
@@ -447,7 +433,6 @@ function useSlidingRows(
   };
 }
 
-/** "Cat's Claw (Uncaria tomentosa)": the label alone names five plants. */
 const titleOf = ({ name, canonicalName }: Duplicate) =>
   canonicalName ? `${name} (${canonicalName})` : name;
 
@@ -465,14 +450,8 @@ function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): st
     : 'Did you mean one of these?';
 }
 
-/** A match the cupboard already holds: the coven's own, or a compendium entry it has used. */
 const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboard === true;
 
-/**
- * What a row offers at its right: the control, the same drawn as text alone
- * for a row fading out over its successor, and the skeleton shape it stands
- * as while another answer is on its way.
- */
 interface Choice {
   control: ReactElement;
   ghost: ReactElement;
@@ -482,7 +461,7 @@ interface Choice {
 /**
  * One list of the warning's matches, sliding between answers on its own (`useSlidingRows`), drawn
  * while it has a row, the leaving ones too. A `heading` names the list, an `h4` beneath the form's
- * Identity `h3` (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * Identity `h3` (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 function MatchList({
   slide,
@@ -576,10 +555,6 @@ function MatchList({
   );
 }
 
-/**
- * Where a +'s add has got to: sending, the check held after it worked, and the eye it turns into
- *.
- */
 type PlusPhase = 'busy' | 'added' | 'eye';
 
 /**
@@ -603,7 +578,6 @@ function PlusChoice({
   buttonRef: (node: HTMLButtonElement | null) => void;
 }): ReactElement {
   const name = cardName(match.name, match.canonicalName);
-  // Named as the card's plus is, "Add to My Ingredients: Name, Formal".
   const label = `Add to My Ingredients: ${name}`;
   const fade = useFade(phase === 'added');
   const eye = phase === 'eye';
@@ -653,7 +627,6 @@ function PlusChoice({
   );
 }
 
-/** The name field, with the duplicate warning beneath it. */
 export function NameField({
   warning,
   hrefOf,
@@ -665,10 +638,8 @@ export function NameField({
   ref,
 }: NameFieldProps): ReactElement {
   const announce = useAnnounce();
-  // The held match whose Quick Look is open over the form.
   const [looking, setLooking] = useState<Duplicate | null>(null);
   const region = useRef<HTMLDivElement>(null);
-  /** The Name box, through the form, as Create Anyway reaches it. */
   const nameInput = (): HTMLElement | null => {
     const field = region.current?.closest('form')?.elements.namedItem('name');
     return field instanceof HTMLInputElement ? field : null;
@@ -691,8 +662,6 @@ export function NameField({
     compendiumList,
   );
   const rows = [...coven.rows, ...compendium.rows];
-  // The notice stays while any row is drawn, the leaving ones too, and the
-  // region closes round them as they fade: open while a row stays.
   const drawn = rows.length > 0;
   const open = rows.some((row) => row.phase !== 'leaving');
 
@@ -717,8 +686,6 @@ export function NameField({
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, []);
   const sliding = rows.some((row) => row.phase !== 'present' || row.gone !== undefined);
-  // The move is over once the lookups are back and the rows have stopped sliding: seen during
-  // the render that sees it, as useSlidingRows sees a new answer.
   if (moving !== null && !refreshing && !pending && !sliding) {
     setMoving(null);
     setPhase(moving, undefined);
@@ -727,7 +694,6 @@ export function NameField({
   const add = async (match: Duplicate): Promise<void> => {
     if (!onUse) return;
     setPhase(match.id, 'busy');
-    // A caller may answer nothing: that is not an add.
     const added = (await onUse(match)) === true;
     if (!added) {
       setPhase(match.id, undefined);
@@ -771,10 +737,6 @@ export function NameField({
     } else if (moving === null) following.current = null;
   });
 
-  /**
-   * What a match offers: its Quick Look where the page has details to open; else the eye for a
-   * match the coven holds, or the + for a compendium match it does not. Nothing where neither applies.
-   */
   const choiceFor = (match: Duplicate): Choice | null => {
     const look = quickLookOf?.(match);
     if (look)
@@ -839,7 +801,6 @@ export function NameField({
     return null;
   };
 
-  /** A match's title, linked to its entry in a new tab. */
   const linkTo = (match: Duplicate): ReactElement => (
     <a
       className="ingredient-form__title"
@@ -892,7 +853,7 @@ export function NameField({
                   {/* The id sits on the whole block, so the button it describes is read with the
                   names. Plain anchors, since the caller hands back a plain string, in a new tab so
                   the form's unsaved changes stay. Both stay mounted for the skeleton's fade
-                  (claude-docs/components/ingredient-form.md, "How the duplicate list behaves"). */}
+                  (claude-docs/components/ingredient-form.md, "The duplicate warning"). */}
                   <div id={warningId} className="ingredient-form__matches">
                     <p>{sentenceFor(blocking, asking, exact.length)}</p>
                     <MatchList

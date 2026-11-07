@@ -26,10 +26,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
-// A compendium citation's two attributes, how its source names the ingredient and which fields it
-// supports, beside each reference row's locator, and a source's Scholarly mark in the reference
-// panel: offered on the compendium's form, and absent from a coven's, whose citations carry none
-// (claude-docs/components/ingredient-form.md, "The references").
+// claude-docs/components/ingredient-form.md, "The references"
 
 const SOURCE_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 
@@ -44,7 +41,6 @@ const HERBAL: ReferenceNode = {
   container: null,
 };
 const HERBAL_SHORT = 'Fixture, Testwort Herbal';
-/** The curated form the variant names: a compendium form is picked, never typed. */
 const OIL = {
   id: '5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a',
   name: 'Oil',
@@ -53,7 +49,6 @@ const OIL = {
   description: null,
 };
 
-/** HERBAL whole, as `reference` answers it, marked scholarly as `scholarly` says. */
 const herbalWhole = (scholarly: boolean) =>
   ({
     id: SOURCE_ID,
@@ -78,7 +73,6 @@ const herbalWhole = (scholarly: boolean) =>
     scholarly,
   }) as const;
 
-/** The ingredient's references and its one variant's, each citing `sources`, in a form of its own on `workspaceId`'s tier, under that tier's resolver. */
 function renderListed(workspaceId: string | null, sources: ReferenceNode[] = [HERBAL]) {
   const onSubmit = vi.fn();
   const entryOf = ({ citation, ...link }: ReferenceNode) => ({
@@ -93,7 +87,6 @@ function renderListed(workspaceId: string | null, sources: ReferenceNode[] = [HE
       defaultValues: {
         ...EMPTY_VALUES,
         name: 'Testwort',
-        // The compendium's form asks for a classification; a coven's does not.
         nomenclature: 'unknown',
         references: sources.map(entryOf),
         variants: [
@@ -119,7 +112,6 @@ function renderListed(workspaceId: string | null, sources: ReferenceNode[] = [HE
 const [ingredient, variant] = [0, 1].map(
   (at) => () => screen.getAllByRole('group', { name: 'References' })[at],
 );
-/** Opens the row for HERBAL in `list` by its pencil, and gives back the row. */
 function openRow(list: HTMLElement): HTMLElement {
   const pencil = within(list).getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
   if (pencil.getAttribute('aria-expanded') !== 'true') press(pencil);
@@ -128,13 +120,12 @@ function openRow(list: HTMLElement): HTMLElement {
 const nameBasisIn = (row: HTMLElement) =>
   within(row).queryByRole('combobox', { name: 'Name Basis' });
 const supportsIn = (row: HTMLElement) => within(row).queryByRole('combobox', { name: 'Supports' });
-/** The open list of `control`, named `list`: each row's box has a list of the same name, so it is the one the box says it controls. */
+/** Each row's box has a list of the same name, so this is the one the box says it controls. */
 function listOf(control: HTMLElement, list: string): HTMLElement {
   const lists = screen.getAllByRole('listbox', { name: `${list} choices` });
   const owned = control.getAttribute('aria-controls');
   return lists.find((element) => owned !== null && element.closest(`#${owned}`)) ?? lists[0];
 }
-/** The labels a list box offers, its box opened and shut again. */
 function offered(control: HTMLElement, list: string): string[] {
   fireEvent.click(control);
   const labels = within(listOf(control, list))
@@ -143,7 +134,6 @@ function offered(control: HTMLElement, list: string): string[] {
   fireEvent.keyDown(control, { key: 'Escape' });
   return labels;
 }
-/** Opens a box and picks each choice in turn, then shuts it. */
 function chooseIn(control: HTMLElement, list: string, ...labels: string[]) {
   fireEvent.click(control);
   const listbox = listOf(control, list);
@@ -217,7 +207,6 @@ describe('a citation’s compendium attributes', () => {
       const onSubmit = renderListed(WORKSPACE_ID);
 
       const row = openRow(ingredient());
-      // The row is open: its locator is there to type in.
       expect(within(row).getByRole('textbox', { name: 'Locator' })).toBeInTheDocument();
       expect(nameBasisIn(row)).toBeNull();
       expect(supportsIn(row)).toBeNull();
@@ -233,7 +222,6 @@ describe('a citation’s compendium attributes', () => {
 });
 
 describe('a source’s Scholarly mark', () => {
-  /** Opens the ingredient's references' New Reference. */
   function newReference() {
     const box = within(ingredient()).getByRole('combobox', { name: 'Reference' });
     fireEvent.keyDown(box, { key: 'ArrowDown' });

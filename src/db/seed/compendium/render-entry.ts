@@ -16,7 +16,6 @@ export type RenderableEntryFile = Omit<SeedCompendiumFile, 'hash' | 'path'>;
 /** `colors` to `colours`, in a key or a `supports` list: the file's spelling. */
 const toFileField = (field: string) => (field === 'colors' ? 'colours' : field);
 
-/** A record with its `undefined` values left out, so the YAML holds no `key: null`. */
 function compact(record: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
 }

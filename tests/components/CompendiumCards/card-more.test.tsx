@@ -15,8 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The three dots on a compendium card: what a signed-in member may do about an entry in the covens that hold it.
-// They are drawn only when they hold a choice, so a viewer whose role permits nothing, or a page that found no holding coven, sees none (claude-docs/components/compendium-cards.md).
+// claude-docs/components/compendium-cards.md
 
 const ID = '00000000-0000-4000-8000-000000000002';
 const LIST = '/compendium' as Route;
@@ -24,7 +23,6 @@ const LIST = '/compendium' as Route;
 const FLOWER = '00000000-0000-4000-8000-0000000000f1';
 const OIL = '00000000-0000-4000-8000-0000000000f2';
 
-/** The covens' stock the dialog reads: every form, and the jars this coven holds. */
 const stock = (jars: StockJar[] = []): StockData => ({
   forms: [
     { variantId: FLOWER, label: 'Flower' },
@@ -95,8 +93,6 @@ describe('CompendiumCardMore', () => {
   it('holds Annotate, Make It Ours and Remove for a member of the coven that holds the entry', () => {
     renderMore(props([place()]));
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
-    // Every choice is the coven's, and the dots still draw the labelled section,
-    // with no empty Compendium one.
     const menu = screen.getByRole('menu', { name: 'More for House Salt' });
     expect(within(menu).getAllByRole('group')).toHaveLength(1);
     expect(
@@ -144,7 +140,7 @@ describe('CompendiumCardMore', () => {
     renderMore(props([place()]));
 
     choose('Remove');
-    press(within(await screen.findByRole('dialog')).getByRole('button', { name: /^Remove/ }));
+    press(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /^Remove/ }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(LIST));
     expect(calls).toHaveLength(1);
@@ -156,10 +152,10 @@ describe('CompendiumCardMore', () => {
     renderMore(props([place()]));
 
     choose('Remove');
-    press(within(await screen.findByRole('dialog')).getByRole('button', { name: /^Remove/ }));
+    press(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /^Remove/ }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(more()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
   });

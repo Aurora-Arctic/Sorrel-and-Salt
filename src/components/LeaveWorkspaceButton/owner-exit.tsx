@@ -2,7 +2,7 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -71,7 +71,6 @@ const ExitDialog = ({
   );
 };
 
-/** Nobody else is in the coven, so deleting it is the whole answer. */
 const SoleMember = ({
   workspaceId,
   name,
@@ -106,8 +105,6 @@ const Options = ({
   const { navigate, refresh } = usePendingNavigation();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
-  // One other member is offered by name, with nothing to search; more than one are searched
-  // by name.
   const only = successors.length === 1 ? successors[0] : undefined;
   const [way, setWay] = useState<WayOut>('hand');
   const [picked, setPicked] = useState(only?.userId ?? '');
@@ -180,8 +177,6 @@ const Options = ({
             value={picked}
             onChange={(userId) => !sending && setPicked(userId)}
             placeholder="Search members"
-            // Each with their role now, as a form's row shows its group:
-            // "Fixture B (Practitioner)", and what that role may do in the tooltip.
             choices={successors.map(({ userId, name: member, role }) => ({
               value: userId,
               label: member,
@@ -202,8 +197,6 @@ const Options = ({
             Promote and Leave
           </BusyButton>
         ) : (
-          // The confirm for this choice: it asks the delete-coven question over the
-          // dialog, and nothing is deleted from the dialog itself.
           <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
         )}
         <button className="btn btn--quiet" type="button" disabled={sending} onClick={onCancel}>

@@ -15,7 +15,7 @@ import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 
-// Story 73 through Better Auth's real endpoints: a key enrolled on an account
+// Passkey sign-in (@story-73) through Better Auth's real endpoints: a key enrolled on an account
 // signs that account in, and nothing else (claude-docs/auth/plugins.md, "Plugins").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());

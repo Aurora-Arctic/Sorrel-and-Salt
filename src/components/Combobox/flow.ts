@@ -6,7 +6,6 @@ import type { FlowShape, FlowSlot } from './types';
 // Sub-pixel widths sum a hair past the row a browser still fits them on.
 const ROUNDING_PX = 0.5;
 
-/** The row's left edge and its first row's top: the leftmost and topmost chip. */
 export function originOf(rects: { left: number; top: number }[]): { left: number; top: number } {
   return {
     left: Math.min(...rects.map((rect) => rect.left)),
@@ -58,10 +57,6 @@ export function flow(
   });
 }
 
-/**
- * The place a key moves the chip at `at` to, among `slots` laid out with it there: Left and Right a place along the list, Up and Down the row above or below,
- * Home and End to either end; past either end it stays.
- */
 export function placeFor(key: string, at: number, slots: FlowSlot[]): number {
   const last = slots.length - 1;
   switch (key) {

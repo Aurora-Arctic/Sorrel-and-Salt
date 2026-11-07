@@ -110,12 +110,10 @@ function auditShapedTypes(target: GraphQLSchema): string[] {
 export function typeAssertions() {
   type Row = typeof ingredients.$inferSelect;
 
-  // The positive control: a hand-declared type over the service's row compiles.
   builder.objectRef<Row>('Typed').implement({
     fields: (t) => ({ name: t.exposeString('name') }),
   });
 
-  // The same declaration once the column under `name` is no longer text.
   type Retyped = Omit<Row, 'name'> & { name: number };
   builder.objectRef<Retyped>('Retyped').implement({
     fields: (t) => ({

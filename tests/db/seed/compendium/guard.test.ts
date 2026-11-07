@@ -3,10 +3,6 @@ import { CURATED, checkCompendium } from '@/db/seed/compendium/guard';
 import { FIXTURE_SHARD, wordsOf } from '../compendium-fixture';
 import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
 
-// The compendium seed's guard, database-free: each rule is broken once on the invented fixture, which passes whole, so the issue a case finds is the one its edit made.
-// The rules are claude-docs/db/compendium-seed/README.md's; the files' own rules are guard-files.test.ts's and the real corpus is checked in ../compendium-files.test.ts.
-
-/** The fixture with `edit` applied to a deep copy. */
 function edited(edit: (shard: SeedCompendiumShard) => void): SeedCompendiumShard[] {
   const shard = structuredClone(FIXTURE_SHARD);
   edit(shard);
@@ -16,7 +12,6 @@ function edited(edit: (shard: SeedCompendiumShard) => void): SeedCompendiumShard
 const testwort = (shard: SeedCompendiumShard) => shard.entries[0];
 const samplewort = (shard: SeedCompendiumShard) => shard.entries[1];
 
-/** A `none` entry under `name`, sourced, with one form. */
 function nameless(name: string): SeedCompendiumEntry {
   return {
     name,

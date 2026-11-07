@@ -1,7 +1,7 @@
-## Acceptance — `npm run test:stories` (M9.1)
+## Acceptance — `npm run test:stories`
 
 A user story is proved by a browser flow a user could walk, never by a service
-call or a GraphQL response (M9.1; `design-decisions/m9.1-stories-are-browser-flows.md`).
+call or a GraphQL response (M9.1; `design-decisions/ci.md`, "Stories are browser flows").
 The story suite lives in `tests/e2e/stories/`, and `npm run test:stories`
 (`make test-stories`) runs it with `playwright.stories.config.ts` and prints a
 checklist of the v1 user stories, one line each:
@@ -28,7 +28,7 @@ decisions make it hold:
   `tests/support/stories.ts` parses the numbered list between
   "## 10. User stories" and the next section (74 today, 1–34, 47–64 and 70–91), so a
   story added to §10 joins the checklist without a harness edit. The harness
-  has no tests of its own (MB.224): a broken checklist is seen by whoever runs
+  has no tests of its own: a broken checklist is seen by whoever runs
   it.
 - **Each story has a section: the part of the site it walks.**
   `tests/support/story-sections.ts` maps a story number to a name such as
@@ -58,10 +58,14 @@ decisions make it hold:
   and the annotation goes. The scaffold lands red-free on purpose, because a
   skip is not a failure.
 - **Setup follows the gate specs.** `signInAs` for users, the raw `postgres`
-  client for covens and rows (MB.101), the Mailpit inbox for mail. The UI is
+  client for covens and rows, the Mailpit inbox for mail. The UI is
   used for the step the story is about. A refusal is proved by the control
   being absent and by the direct URL or action being refused, since "no rows"
   alone proves nothing.
+
+## Story numbering
+
+Story numbers 35–46 are **not reused**; v1 is 74 stories, numbered 1–34, 47–64 and 70–91. Every one of the 74 numbers is tagged by at least one spec under `tests/e2e/stories/`.
 
 ## The reporter
 
@@ -79,7 +83,7 @@ same per-worker database and production server as a gate spec, on ports 8001
 and up. It takes the same lock, `/tmp/sorrel-e2e.lock`, so the two suites
 never run at once on one machine. Under Claude Code (`CLAUDECODE` set, `CI` not) the
 config prints `dot` where it otherwise prints `list`, so only the checklist and any
-failure show; `PW_REPORTER=list` restores the per-test lines (M12.37). `npm run e2e` ignores `tests/e2e/stories/`.
+failure show; `PW_REPORTER=list` restores the per-test lines. `npm run e2e` ignores `tests/e2e/stories/`.
 
 ## In CI
 
@@ -91,7 +95,7 @@ after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
 thread (marker `stories`). Its comment carries the story suite's own coverage
-figure in its summary line (M14.28); the per-file table is the merged
+figure in its summary line; the per-file table is the merged
 comment's alone, and the coverage artifact is named
 `playwright-coverage-stories`. The `playwright-coverage` job then merges
 this suite's coverage with the gate suite's and posts the merged figure in a

@@ -8,7 +8,6 @@ import { useSyncExternalStore } from 'react';
 // render, and the hydration that follows it, and every render after.
 const noSubscription = () => () => {};
 
-/** False on the server and in the render that hydrates it; true in every render after. */
 export function useHydrated(): boolean {
   return useSyncExternalStore(
     noSubscription,

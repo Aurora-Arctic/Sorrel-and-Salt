@@ -1,0 +1,16 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The confirmation's warning and Reason field, drawn in the modal or over one. The warning is Approve's
+// unverified-address warning, a step more room than a notice's zero margin, compounded with `.notice`
+// whose primitive is `body .notice` in the app (a lone class loses there). Not nested under a list, as the
+// modal need not render inside one.
+.notice.confirmed-action__warning {
+  margin-block: space(5);
+}
+
+// The Reason field: the warning's step of room above and 2rem below. A wrapper round the field's shell,
+// which takes no class; the invite form's reason takes the same class.
+.confirmed-action__note {
+  margin-block: space(5) space(6);
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import EmptyState from '../EmptyState';
 import type { ReactElement, ReactNode } from 'react';
 import JarLine from '../JarLine';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -14,13 +15,11 @@ import { isInstruction, stepNameOf } from './steps/values';
 // In the Cupboard: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
 // (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
 
-/** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
 export interface LineDoors {
   look?: ReactNode;
   edit?: StockDialogProps;
 }
 
-/** The line's words after the name, as the parts to join: need, have, the verdict ("have", not "hold"). */
 export function holdWords(
   step: SpellStepValue,
   steps: readonly SpellStepValue[] = [step],
@@ -60,14 +59,12 @@ function HoldLine({
   const oneOff = step.ingredientId === null;
   const jar = step.jar;
   const edit = doors?.edit;
-  // The form only picks the vessel's shape here; it is not shown.
   const { form: formKey } = step;
   return (
     <JarLine
       seed={seed}
       kind={formKey ?? ''}
       held={jar}
-      // A form with no jar is drawn as the shelf draws one, dashed.
       tone={jar ? stockState(jar.quantity, jar.threshold) : 'empty'}
       oneOff={oneOff}
       name={stepNameOf(step)}
@@ -97,13 +94,10 @@ export function InCovenInventory({
   id,
 }: {
   steps: readonly SpellStepValue[];
-  /** The section's id, for a jump link; the recipe page gives one. */
   id?: string;
-  /** A line's doors, where the page offers them. */
   doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
 }): ReactElement {
   const ingredients = steps.filter((step) => !isInstruction(step));
-  // A form laid in several steps is one line, at its first step's place (One Line Per Form).
   const lines = ingredients.filter(
     (step, index) =>
       step.ingredientId === null ||
@@ -114,7 +108,7 @@ export function InCovenInventory({
     <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
       <h2 id="spell-inventory-heading">In the Cupboard</h2>
       {lines.length === 0 ? (
-        <p className="spell-aside__empty">Nothing in the jar yet.</p>
+        <EmptyState size="compact">Nothing in the jar yet.</EmptyState>
       ) : (
         <ul className="spell-inventory__list">
           {lines.map((step, index) => (

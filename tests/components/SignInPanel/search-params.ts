@@ -26,10 +26,6 @@ export function useSearchParams(): URLSearchParams {
   return useMemo(() => new URLSearchParams(current), [current]);
 }
 
-/**
- * Stands in for the address bar: `pushState`, `replaceState` and `back` move a small stack of
- * entries and publish the current query. Returns the spies.
- */
 export function installHistory() {
   const entries: { state: unknown; query: string }[] = [{ state: null, query }];
   let index = 0;

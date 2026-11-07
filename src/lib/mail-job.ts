@@ -6,10 +6,7 @@ import { startJob, type Job } from './jobs';
 // The log is how a mail whose job did not start is seen.
 /* oxlint-disable no-console */
 
-/**
- * Starts `job` with `args`, which hold ids and never the mail itself, or runs `tryOnce` when there is no job to start. `label`
- * names the mail in the log and nothing more. Never throws: a send that fails is logged by `tryOnce`.
- */
+/** `label` names the mail in the log and nothing more. Never throws: a send that fails is logged by `tryOnce`. */
 export async function startMailJob<Args extends unknown[]>(
   job: Job<Args, unknown>,
   args: Args,

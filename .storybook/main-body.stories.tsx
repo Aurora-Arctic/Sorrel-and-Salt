@@ -21,87 +21,31 @@ const Page = (): ReactElement => (
     <h1>Your Account</h1>
     <ul>
       <li>
-        <PendingLink href="/compendium" navigationTarget={{ region: 'main', shape: 'page' }}>
-          Compendium
-        </PendingLink>
+        <PendingLink href="/compendium">Compendium</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href="/compendium"
-          navigationTarget={{
-            region: 'main',
-            shape: 'cards',
-            frame: 'wide',
-            title: true,
-            filter: true,
-          }}
-        >
-          Wide
-        </PendingLink>
+        <PendingLink href="/compendium">Wide</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href="/coven"
-          navigationTarget={{ region: 'main', shape: 'page', frame: 'narrow' }}
-        >
-          Narrow
-        </PendingLink>
+        <PendingLink href="/coven">Narrow</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href="/account"
-          navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav' }}
-        >
-          With Menu
-        </PendingLink>
+        <PendingLink href="/account">With Menu</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href="/coven/new"
-          navigationTarget={{ region: 'main', shape: 'form', frame: 'narrow' }}
-        >
-          Form
-        </PendingLink>
+        <PendingLink href="/coven/new">Form</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href={route('/compendium/ingredients/testwort')}
-          navigationTarget={{ region: 'main', shape: 'page', frame: 'entry' }}
-        >
-          Entry
-        </PendingLink>
+        <PendingLink href={route('/compendium/ingredients/testwort')}>Entry</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href={'/keepers/users'}
-          navigationTarget={{
-            region: 'main',
-            shape: 'table',
-            frame: 'wide',
-            title: true,
-            tabs: true,
-            action: true,
-            filter: true,
-          }}
-        >
-          Tabs And Action
-        </PendingLink>
+        <PendingLink href={'/keepers/users'}>Tabs And Action</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href="/account/email"
-          navigationTarget={{ region: 'main', shape: 'page', head: 'eyebrow' }}
-        >
-          Eyebrow Head
-        </PendingLink>
+        <PendingLink href="/account/email">Eyebrow Head</PendingLink>
       </li>
       <li>
-        <PendingLink
-          href={'/account'}
-          navigationTarget={{ region: 'main', shape: 'page', head: 'title' }}
-        >
-          Title Head
-        </PendingLink>
+        <PendingLink href={'/account'}>Title Head</PendingLink>
       </li>
     </ul>
   </main>

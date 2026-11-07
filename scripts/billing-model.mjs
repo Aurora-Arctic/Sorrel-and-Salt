@@ -1,10 +1,8 @@
 // The running-cost and break-even model. Run: node scripts/billing-model.mjs
-// Nearly every value below is a row of the Inputs table in claude-docs/billing/running-costs.md.
-// The sizes count PAYING SEATS (activated accounts in paying covens). Every other account is
-// overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts.
+// Its inputs are the Inputs table in claude-docs/billing/running-costs.md; the sizes count paying seats, and
+// every other account is derived overhead.
 const SIZES = [100, 1000, 10000, 100000];
 const I = {
-  // ratios (assumption unless noted)
   membersPerCoven: 5.5, // sourced S45 (tabletop mean)
   membershipsPerAccount: 1.2, // assumption, range 1.0-2.0
   activeFraction: 0.25, // assumption, range 0.15-0.30
@@ -18,12 +16,10 @@ const I = {
   memoryGb: 2, // sourced default function memory
   mailsPerAccountMonth: 0.5, // assumption, range 0.25-1
   mailingsPerYear: 2, // assumption
-  // bytes (measured / derived)
   fixedBytes: 15515648,
   accountBytes: 3766,
   covenBytes: Math.round((32682 + 203327) / 2),
   ledgerBytesPerRecipient: 225,
-  // prices
   vercelBase: 20,
   vercelCredit: 20,
   invPerM: 0.6,
@@ -52,7 +48,6 @@ const I = {
     gateMin: 5398,
     perMin: 0.006,
   },
-  // ops
   ops: {
     errors: [0, 15, 15, 50],
     uptime: [12, 12, 12, 12], // Solo: Free has no heartbeat monitors
@@ -62,7 +57,6 @@ const I = {
   },
   // tracing (A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
   tracing: { spansPerReq: 20, sample: 0.1, perM: 0.5 },
-  // labour
   // hours a month = fixed + variable x (paying seats / 1,000)
   fixedHours: { low: 24.8, median: 44.4, high: 70.4 },
   // variable hours per 1,000 paying seats: support, payment disputes, privacy requests, abuse reports
@@ -78,11 +72,8 @@ const I = {
   // are customer-service work; fixed hours (maintenance, incidents, filing) are engineering work. 122.5 is the
   // contractor figure, kept as the engineering sensitivity.
   rates: {
-    // support work is priced at a living wage, the average of three MIT Living Wage Calculator rows: Washington
-    // 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43, King County 1 adult no children 30.60. The BLS
-    // Washington customer-service median is the market-rate sensitivity.
-    // wage = living-wage average minus the MIT Medical budget line (9,588 / 9,477 / 3,032 a year over 2,080 h), since the
-    // benefits load below pays for health cover
+    // Support is priced at a living wage less the MIT medical line, since the benefits load pays for health
+    // cover (claude-docs/billing/running-costs.md, "Labour").
     support: {
       livingFull: (48.0 + 56.43 + 30.6) / 3,
       medical: (9588 + 9477 + 3032) / 3 / 2080,
@@ -115,14 +106,12 @@ const I = {
   // benefits (health, retirement), the same in every structure: method A (low) and method B (high)
   benefitsYear: { low: 20848, high: 57251 },
   onCallMonth: 2340,
-  // payments and tax
   stripePct: 0.029 + 0.007 + 0.005,
   stripeFix: 0.3,
   mpExtra: 0.035,
   bo: 0.00471,
   boCredit: 55,
   churn: 0.061,
-  // overhead on top of paying seats (no free tier)
   demoOnlyShare: 0.625, // derived 100% - 37.5% activation, Userpilot [G1]; range 0.574-0.70 [G1][G2]
   demoOnlyRange: [0.574, 0.625, 0.7],
   growthMonthly: [0.0284, 0.0284, 0.0284, 0.0153], // derived (1+40%)^(1/12)-1 under $1M ARR; (1+20%)^(1/12)-1 at 100k [G4]
@@ -298,9 +287,7 @@ const varHours = Object.fromEntries(
     ),
   ]),
 );
-// hours a month at P paying seats
 const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
-// paying seats at which one person's 160 hours a month run out
 const ceilingSeats = Object.fromEntries(
   CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
 );
@@ -317,12 +304,8 @@ const withRow = (k, fn) => {
     ROW = old;
   }
 };
-// Employees, not contractors: every wage is loaded with employer payroll taxes and benefits, by the same rules the
-// $250,000 salary uses, on a 2,080-hour year. Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% (low) or
-// 6.0% (high) on 78,200; WA EAF 0.02% / 0.03% on 78,200; PFML employer share 0 (low) or 1.13% x 28.57% (high);
-// L&I 5302 (low) or 4904 (high) per worker-hour; benefits method A (health 7,344 a year + retirement 5.40% of
-// wages) low, method B (ECEC insurance + retirement + supplemental, 22.90% of wages) high. The base rate is the
-// midpoint of the low and high loaded hourly figures.
+// Every wage is loaded as an employee's, on a 2,080-hour year, at the midpoint of the low and high loaded
+// rates (claude-docs/billing/running-costs.md, "Labour").
 const HOURS_YEAR = 2080;
 function loadRate(w) {
   const wage = w * HOURS_YEAR;
@@ -384,12 +367,8 @@ const fte = (structYear('A') + I.benefitsYear.low) / 12,
 const fteC = (structYear('C') + I.benefitsYear.low) / 12,
   fteCHigh = (structYear('C') + I.benefitsYear.high) / 12;
 
-// models: paying unit base and revenue per paying unit. A paying seat is one activated account
-// in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
-// R5: only a member who is the paying steward of another coven gets the discount.
-// Stewards are one per coven, so the share of accounts that are stewards = covens per account
-// = memberships per account / members per coven. A seat is a second-or-later membership with
-// probability (m - 1) / m, and that holder is a steward with the steward share (independence assumed).
+// Paying covens = paying seats x memberships per account / members per coven; the steward share assumes
+// independence (claude-docs/billing/subscription-models.md, "The Models").
 const stewardShare = I.membershipsPerAccount / I.membersPerCoven;
 const extraSeatShare = (I.membershipsPerAccount - 1) / I.membershipsPerAccount;
 const discountedSeatShare = extraSeatShare * stewardShare;
@@ -403,10 +382,8 @@ const covenPriceAt = (x) =>
     I.price.c_obs * observersPerCoven) *
     memberSeatFactor;
 const cPerCoven = covenPriceAt(1);
-// (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
-// paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
-// Observers may add a solo coven by paying the difference to the solo price,
-// on their own subscription. addOns = observers who take it up, per paying seat.
+// Model (g) layers a free solo coven on (c); observers may buy one at the difference to the solo price
+// (claude-docs/billing/subscription-models.md, "The Models").
 const observerAddOns = () =>
   (1 - I.price.gSoloAloneShare) * I.price.observerShare * I.price.observerTakeUp;
 const makeG = (solo, cpc = cPerCoven) => ({
@@ -465,14 +442,8 @@ const makeH = (id, p, label) => ({
       2 ** 30) *
     I.neonGbMonth,
 });
-// (i) one price list: a coven that pays charges i_base for 3 practitioners, i_seat for each extra and
-// i_obs for each observer; a coven whose members each pay charges i_emp a practitioner seat and i_obs an
-// observer. A practitioner seat includes a solo coven, an observer upgrades by paying a set add-on
-// (i_upCp or i_upMp, above the observer seat), and a solo coven alone costs i_personal. The discount (R5)
-// is i_disc off a practitioner seat a person pays for themselves beyond their first, and the whole
-// observer seat off a self-paid observer seat beyond the first. It never lands on another payer's
-// invoice, so only each-member-pays seats earn it.
-// x scales every price except the observer seat and the discount, for the clearing-price search.
+// Model (i) is one price list, and the discount lands only on each-member-pays seats; `x` scales every price
+// except the observer seat and the discount (claude-docs/billing/subscription-models.md, "The Models").
 const iDiscountedSeatShare = extraSeatShare * I.price.i_payerShare;
 const iObsMix = (up) => observersPerCoven * (I.price.i_obs + I.price.observerTakeUp * up);
 const iCovenPays = (x = 1) =>

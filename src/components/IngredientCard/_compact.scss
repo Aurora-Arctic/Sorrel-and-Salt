@@ -3,10 +3,9 @@
 @use '../../scss/mixins' as *;
 @use 'specimen-card' as *;
 
-// The compact look of the card, a mixin so a page can switch to it from its own selector. No density
-// prop: it must switch before React runs (a pre-paint script sets `data-card-density="regular"` on
-// <html>), and a prop would mismatch on hydration. Every rule is one class deeper than what it overrides.
-// The padding, title, badges and chips are the shared part (_specimen-card.scss); the rest is this card's.
+// The compact look, a mixin so a page can switch to it from its own selector. No density prop: it must switch before
+// React runs (a pre-paint script sets `data-card-density` on <html>), and a prop would mismatch on hydration.
+// Every rule is one class deeper than what it overrides.
 @mixin ingredient-card-compact {
   @include specimen-card-compact(
     '.ingredient-card',
@@ -14,14 +13,10 @@
     '.ingredient-card__name'
   );
 
-  // Formal name: caption down to overline, the smallest size the site sets text in
-  // bar the bottom bar's tab labels.
   .ingredient-card__formal {
     font-size: type-size('overline');
   }
 
-  // The corner's badges, as the badge row's, centred on the smaller name's first line as in the
-  // regular card (index.scss).
   .ingredient-card__corner {
     gap: space(1);
     min-block-size: map.get($badge-sizes, 'small', 'min-block-size');
@@ -34,20 +29,16 @@
     }
   }
 
-  // Forms line: 8px above and (through the foot) below, a shorter dot gap.
   .ingredient-card__forms {
     --forms-gap: #{space(4)};
 
-    // Body down to small; the icons are in em, so they follow.
     font-size: type-size('small');
 
     margin-block-start: space(2);
     row-gap: 0;
   }
 
-  // Jar lines: tighter rows, the rule nearer.
   .specimen__stock {
-    // Small down to caption, and the stock badges beside the text to overline.
     font-size: type-size('caption');
     padding-block: space(2) space(1);
 

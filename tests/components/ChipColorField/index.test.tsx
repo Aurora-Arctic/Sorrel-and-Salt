@@ -5,9 +5,6 @@ import ChipColorField from '@/components/ChipColorField';
 import type { ChipColorFieldProps } from '@/components/ChipColorField/types';
 import { pairedColor } from '@/lib/group-colors';
 
-// One of a category group's two chip colours: Ark's picker and the hex it writes, kept in step; the channels of a format the keeper chooses;
-// a veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a sample chip with its ratio; and a warning when another group's colour in the theme stands too close.
-
 function Controlled({
   initial = '#5d8ab1',
   onChange,
@@ -37,7 +34,6 @@ const hex = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const channel = (name: string) =>
   screen.getByRole('spinbutton', { name: `Dark Theme Colour ${name}` });
 const formatButton = () => screen.getByRole('button', { name: /^Dark Theme Colour Format:/ });
-/** Presses the format toggle until it shows `name`, as Chrome's cycles. */
 const showFormat = (name: 'HSB' | 'HSL' | 'RGB') => {
   for (let press = 0; press < 3; press += 1) {
     if (formatButton().getAttribute('aria-label')?.includes(`Format: ${name}.`)) return;
@@ -85,7 +81,6 @@ describe('ChipColorField', () => {
       expect(await screen.findByRole('tooltip')).toBeVisible();
     });
 
-    // Chrome's toggle: each press shows the next format, round again after the last.
     it('starts in HSB and cycles HSL, RGB and back, each with its own channels', () => {
       render(<Controlled />);
 
@@ -136,7 +131,6 @@ describe('ChipColorField', () => {
     await waitFor(() => expect(channel('red')).toHaveValue(0x35));
   });
 
-  // The pair's rule on demand, from the other colour.
   describe('Match', () => {
     it('sets the colour from its partner, fitted to this ground', () => {
       const onChange = vi.fn();
@@ -201,7 +195,6 @@ describe('ChipColorField', () => {
     });
   });
 
-  // A refusal in the error notice, as the warning is in its own.
   it('shows a refusal passed in, describing the box by it ahead of the ratio', () => {
     render(
       <Controlled

@@ -1,35 +1,33 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { SITE_NAME, SITE_TAGLINE } from '../../lib/site';
 import IconTip from '../IconTip/icon-tip';
 import { SupportIcon } from '../IconTip/icons';
 import SupportLink from '../SupportLink';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
-// The row under every page, drawn once by the root layout: the site's name at the left,
-// the footer's links at the right: the public documents as text, then Support as a bare icon
-// button (claude-docs/components/site-footer.md).
+// See claude-docs/components/site-footer.md.
 
 const SiteFooter = (): ReactElement => (
   <footer className="site-footer">
     <div className="site-footer__inner">
       <div className="site-footer__row">
-        <Link href="/" className="site-footer__brand">
+        <PendingLink href="/" className="site-footer__brand">
           {SITE_NAME}
-        </Link>
+        </PendingLink>
         <nav aria-label="Footer" className="site-footer__nav">
-          <Link href="/terms" className="site-footer__link">
+          <PendingLink href="/terms" className="site-footer__link">
             Terms
-          </Link>
-          <Link href="/disclaimer" className="site-footer__link">
+          </PendingLink>
+          <PendingLink href="/disclaimer" className="site-footer__link">
             Disclaimer
-          </Link>
-          <Link href="/code-of-ethics" className="site-footer__link">
+          </PendingLink>
+          <PendingLink href="/code-of-ethics" className="site-footer__link">
             Code of Ethics
-          </Link>
-          <Link href="/privacy" className="site-footer__link">
+          </PendingLink>
+          <PendingLink href="/privacy" className="site-footer__link">
             Privacy
-          </Link>
+          </PendingLink>
           <IconTip tip="Support">
             <SupportLink className="site-footer__support">
               <SupportIcon />

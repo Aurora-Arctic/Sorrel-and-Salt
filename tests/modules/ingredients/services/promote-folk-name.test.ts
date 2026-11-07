@@ -224,7 +224,6 @@ describe('promoteFolkName — who may', () => {
   it('does not find a coven’s ingredient by id through another coven the caller belongs to', async () => {
     const { id, folkNameId } = await setup();
 
-    // D owns a seat in X; the id belongs to W.
     await expect(promoteFolkName(asUser(D), WORKSPACE_X_ID, id, folkNameId)).rejects.toBeInstanceOf(
       NotFound,
     );

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
+import { ReceivedInvitationsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { emptyList } from '../../lib/text';
@@ -22,7 +23,7 @@ const ReceivedInvitations = ({
 }: ReceivedInvitationsProps): ReactElement => (
   <div className="received-invitations">
     <ListFrame>
-      <ListBody>
+      <ListBody skeleton={<ReceivedInvitationsBodySkeleton />}>
         <StackTable
           aria-label="Your Invitations"
           columns={[
@@ -51,7 +52,6 @@ const ReceivedInvitations = ({
             },
             {
               heading: 'Answer',
-              // At a card's top right, beside the coven.
               action: 'corner',
               cell: (invitation) => (
                 <div className="received-invitations__answer">

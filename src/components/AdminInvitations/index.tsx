@@ -1,15 +1,16 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
+import { AdminInvitationsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
@@ -28,7 +29,6 @@ import './index.scss';
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
 // keeper changes are paused both are locked for any keeper but the primary (claude-docs/components/admin-invitations.md).
 
-/** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
 
 /**
@@ -40,7 +40,7 @@ function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
     (filter): filter is string => Boolean(filter),
   );
-  return noMatchText('invitations', filters, emptyList('admin invitations'));
+  return noMatchText('invitations', filters, emptyList('keeper invitations'));
 }
 
 const RevokeAdminInvitationDocument = graphql(`
@@ -118,7 +118,6 @@ const AdminInvitations = ({
   inviting = false,
 }: AdminInvitationsProps): ReactElement => {
   const [sent, setSent] = useState<string>();
-  // A form opened again clears the last notice, as a fresh form starts empty.
   const [wasInviting, setWasInviting] = useState(inviting);
   if (inviting !== wasInviting) {
     setWasInviting(inviting);
@@ -134,7 +133,7 @@ const AdminInvitations = ({
       <ListFrame>
         {/* Keyed by the filter shown, so another one starts the form again from it. */}
         <AdminInvitationsFilter key={`${filter.email}\n${filter.expiringSoon}`} filter={filter} />
-        <ListBody>
+        <ListBody skeleton={<AdminInvitationsBodySkeleton />}>
           {/* Each cell on one line, the table scrolling in its frame. */}
           <StackTable
             columns={[

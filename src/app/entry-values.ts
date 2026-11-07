@@ -35,15 +35,12 @@ function only<T>([answer]: readonly (T | Error)[]): T {
   return answer;
 }
 
-/** The name of a group or tradition, or null once it is gone. */
-/** The icon of a form group, or null once it is gone or carries none. */
 const iconOf = (group: { icon: FormGroupIcon | null } | Error | undefined): FormGroupIcon | null =>
   group === undefined || group instanceof Error ? null : group.icon;
 
 const nameOf = (group: { name: string } | Error | undefined): string | null =>
   group === undefined || group instanceof Error ? null : group.name;
 
-/** A substitute as a list entry: its label, the ingredient and form a link names, and the forms it offers. */
 const substituteEntry =
   (formsOf: ReadonlyMap<string, SubstituteForm[]>) =>
   ({ name, ingredient, variantId }: SubstituteRow): SubstituteListEntry =>
@@ -62,7 +59,6 @@ const substituteEntry =
         }
       : { value: name };
 
-/** A reference as its row: the citation, the source it links with the fields its short form is made of, its locator, and how the source names the ingredient and what it supports. */
 const referenceEntry = ({
   reference,
   locator,
@@ -98,7 +94,6 @@ export async function entryValues(
     referencesOf(session, refs).then(only),
     variantsOf(session, refs).then(only),
   ]);
-  // Each form's own children, a batch over the forms.
   const variantRefs = variants.map(({ id, ingredientId }) => ({
     id,
     ingredientId,
@@ -114,7 +109,6 @@ export async function entryValues(
       referencesOfVariants(session, variantRefs),
     ]);
   const live = forms.flatMap((form) => form ?? []);
-  // The forms of every ingredient a substitute links, the entry's and its forms'.
   const linked = [
     ...substitutes,
     ...variantSubstitutes.flatMap((answer) => only([answer])),

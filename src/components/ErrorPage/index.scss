@@ -1,8 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The same column as `.not-authorized`: a head and the way on, inside the
-// page's own `.page-frame`.
 .error-page {
   @include stack(5);
 }
@@ -10,6 +8,12 @@
 .error-page__reference,
 .error-page__way-on {
   margin: 0;
+}
+
+// A reference to quote, small and muted so it stays out of the reading line.
+.error-page__reference {
+  color: $text-muted;
+  font-size: type-size('caption');
 }
 
 .error-page__way-on {

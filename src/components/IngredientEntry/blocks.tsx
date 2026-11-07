@@ -2,20 +2,13 @@ import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
-// Holds `.ingredient-entry__empty`, which these blocks say "No elements recorded." in.
 import './index.scss';
 
-// The entry page's blocks, drawn by its Details, its form sections and the details modal's summary:
-// a headed list, the correspondences, the category chips, and the ids tying each heading to its
-// content. Server-renderable, with no hook.
-
-/** Blank counts as nothing said, as `SafetyNote` counts it. */
 export const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
 
 export const listed = (values: readonly string[] | null | undefined): string[] =>
   (values ?? []).filter(said);
 
-/** One correspondence row: its label and what it lists, possibly nothing. */
 export interface Row {
   label: string;
   values: string[];
@@ -51,11 +44,8 @@ function deityMention({ name, tradition, otherNames }: DeityDetail): string {
   return parts.length > 0 ? `${name} (${parts.join('; ')})` : name;
 }
 
-/** The ids one block of a section takes: its heading's, and what names its content. */
 export interface Block {
-  /** The block's own heading id. */
   id: string;
-  /** What names the list: the heading alone, or the form's name before it. */
   labelledBy: string;
 }
 
@@ -64,7 +54,6 @@ export function blockOf(prefix: string, key: string, nameId?: string): Block {
   return { id, labelledBy: nameId ? `${nameId} ${id}` : id };
 }
 
-/** A block's heading level: below Details' h2, or below a form's h3. */
 export type BlockLevel = 3 | 4;
 
 export function ListBlock({

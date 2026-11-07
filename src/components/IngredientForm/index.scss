@@ -1,17 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The duplicate list's skeleton: how long an answer may take before the
-// shapes fade in, and how long the fade is either way.
 $skeleton-delay: 200ms;
 $skeleton-fade: 300ms;
 
-// What the ingredient form draws beyond the form primitives (_primitives.scss) and the Combobox: its
-// column, folding sections, the duplicate warning, the references, the Variants section, the
-// substitutes' second pickers and a linked substitute's summary.
-
-// A column narrower than the measure, as the other forms keep: wide enough for a formal name and a line
-// of description, and the width the form reads at in the modal the compendium opens it in.
 .ingredient-form {
   width: 100%;
   max-width: $dialog-column;
@@ -27,9 +19,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// A switch here (Toxic, on the ingredient and each variant) stands at the start of its column with its
-// label and hint above it, not the primitive's centring, which lines a filter bar's switch up under its
-// label; here it sits alone on its row.
 .ingredient-form .switch {
   align-items: flex-start;
 
@@ -38,7 +27,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// A list's box and its Add button, one line; the box grows with its entries.
 .ingredient-form__row {
   display: flex;
   align-items: flex-start;
@@ -101,21 +89,15 @@ $skeleton-fade: 300ms;
     margin-bottom: 0;
   }
 
-  // The list and the button out of the triangle's gutter, flush with the
-  // triangle itself: the notice indents everything past
-  // its icon, and only the sentence stays there.
   .ingredient-form__matches + .btn {
     will-change: transform;
     margin-inline-start: calc(-1 * (#{$notice-mark-size} + #{space(2)}));
   }
 
-  // The button a step further from the list than the notice's gap.
   .ingredient-form__matches + .btn {
     margin-top: space(2);
   }
 
-  // The warning's text tight to the notice's top, and its triangle set to that
-  // first line, which runs at the body's taller line height.
   .notice--warn p {
     margin-top: 0;
   }
@@ -124,8 +106,6 @@ $skeleton-fade: 300ms;
     inset-block-start: space(3);
   }
 
-  // One match a row, its title at the left and its +, Open It or Quick Look at the right, rather
-  // than buttons run into a sentence.
   .ingredient-form__matches {
     display: grid;
     gap: space(2);
@@ -135,9 +115,6 @@ $skeleton-fade: 300ms;
       margin: 0;
     }
 
-    // Clear of the sentence above and the button below.
-    // The ✦ on the list's own edge and the title a step in, as typography-base
-    // lays a list out.
     ul {
       display: grid;
       // The start margin is the gutter pull above, stated here because this
@@ -145,7 +122,7 @@ $skeleton-fade: 300ms;
       margin: space(2) 0 space(2) calc(-1 * (#{$notice-mark-size} + #{space(2)}));
       padding: 0 0 0 1.25rem;
       list-style: none;
-      // The rows' offsets are measured against the list for its slide.
+      // Positioned: the rows' offsets are measured against the list for its slide.
       position: relative;
     }
 
@@ -205,7 +182,7 @@ $skeleton-fade: 300ms;
 
     // Another name's answer on its way: each row it replaces cross-fades to the skeleton's shapes
     // (`skeleton-shape`) after $skeleton-delay, on its own layer, so a quick answer shows none
-    // (claude-docs/components/ingredient-form.md, "Duplicate list styling").
+    // (claude-docs/components/ingredient-form.md, "Styling").
     .ingredient-form__match {
       position: relative;
       will-change: transform;
@@ -336,7 +313,6 @@ $skeleton-fade: 300ms;
       inline-size: min(14rem, 60%);
     }
 
-    // The Quick Look eye's place: its box, square, as the eye is.
     .ingredient-form__shape--icon {
       inline-size: $icon-size-large;
       block-size: $icon-size-large;
@@ -352,8 +328,6 @@ $skeleton-fade: 300ms;
       top: calc(50% + #{space(1)} / 2);
     }
 
-    // The title link in the body ink with the faded underline the entry page's links wear
-    // (`faded-underline`), by its class, so neither Open It's `.btn` nor the Quick Look eye takes it.
     .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
@@ -403,19 +377,16 @@ $skeleton-fade: 300ms;
     content: none;
   }
 
-  // The row an error names takes the field's error edge, as a chip does.
   &.is-invalid {
     border-left-color: $secondary;
   }
 
-  // Open, the citation's first line sits level with the icons.
   &.is-open {
     align-items: start;
     padding-block: space(2);
   }
 }
 
-// The citation and its locator on one line, the citation giving way.
 .ingredient-form__source {
   display: flex;
   align-items: baseline;
@@ -428,8 +399,6 @@ $skeleton-fade: 300ms;
 
   @include truncate;
 
-  // Whole, wrapping anywhere: a citation carries an address, which has no
-  // break of its own.
   .is-open > .ingredient-form__source > & {
     white-space: normal;
     overflow-wrap: anywhere;
@@ -452,8 +421,6 @@ $skeleton-fade: 300ms;
     color: $text-primary;
   }
 
-  // A variant's pencil, a reference row's and its Edit Source, in the
-  // accent green every Edit control wears.
   &.ingredient-form__edit {
     @include icon-button-edit;
   }
@@ -464,7 +431,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// What the edit opens beneath the line: the tier, and the Locator box.
 .ingredient-form__reference-detail {
   grid-column: 1 / -1;
   @include stack(2);
@@ -480,8 +446,6 @@ $skeleton-fade: 300ms;
   font-size: type-size('caption');
 }
 
-// The tier, and Edit Source beside it where the form may change the source:
-// on one line while they fit, the button wrapping beneath at a phone's width.
 .ingredient-form__tier-row {
   display: flex;
   flex-wrap: wrap;
@@ -489,17 +453,15 @@ $skeleton-fade: 300ms;
   gap: space(1) space(3);
 }
 
-// "Locator" and its box on one line, a page reference's width. Nested, to
-// outweigh the `.field__label-row` primitive it also carries, whose tighter
-// gap is a label's beside its ⓘ, not a label's beside its box.
-// The shell's label row and the box on one line, where a field stacks them.
+// "Locator" and its box on one line. Nested, to outweigh the `.field__label-row` primitive it also carries, whose
+// tighter gap is a label's beside its ⓘ.
 .ingredient-form .ingredient-form__locator {
   flex-direction: row;
   align-items: center;
   gap: space(2);
 
   > .input {
-    // Off the scale: a locator's own width, "pp. 112–118" and room to spare.
+    // Off the scale: a locator's own width, room for "pp. 112–118".
     width: 10rem;
     max-width: 100%;
   }
@@ -516,8 +478,7 @@ $panel-head-gap: space(3);
   padding: space(4);
   border: 1px solid $text-muted;
   border-radius: radius('surface');
-  // Scrolled to when asked for again, with its legend, which sits across
-  // the top edge, still in view.
+  // Scrolled to when asked for again, with its legend, which sits across the top edge, in view.
   scroll-margin-top: space(5);
 
   // An icon button's height, and no gap under it but the panel's padding, so the head's buttons below sit
@@ -528,9 +489,6 @@ $panel-head-gap: space(3);
     line-height: $icon-size;
   }
 
-  // The head: the note if any, and the panel's Undo, Redo, How to Cite tip and ×, each a full
-  // `$icon-size` target. Narrow, the group drops under a note squeezed below 14rem; wide enough, it
-  // goes up onto the top border. A container query, as the panel's width decides, not the window's.
   position: relative;
   container-type: inline-size;
 
@@ -564,8 +522,8 @@ $panel-head-gap: space(3);
     }
   }
 
-  // The content width at which "New Reference", the longer legend, and the
-  // group still have a step of border between them.
+  // The content width at which the longer legend and the group still have a step of border
+  // between.
   @container (min-width: 18rem) {
     // Absolutely placed against the fieldset, so the head is no box of its
     // own: without a note it would otherwise still take a gap above Kind.
@@ -597,16 +555,12 @@ $panel-head-gap: space(3);
     }
   }
 
-  // Its buttons a little further from its fields than they are from each
-  // other, and as far again from its edge, as a form's are.
   > .form__actions {
     margin-block: space(2);
   }
 }
 
-// How to Cite's rules, one to a line, a
-// small step apart. Spans given the list roles, so they are made blocks
-// here; the bubble's own `max-content` width keeps it to the longest rule.
+// The rules are spans given list roles, made blocks here, one to a line.
 .ingredient-form__cite-rules {
   @include stack(1);
 }
@@ -615,8 +569,6 @@ $panel-head-gap: space(3);
   display: block;
 }
 
-// The Variants section: each form a card, one summary line with its
-// Edit and Remove while closed, its fields beneath while open.
 .ingredient-form .ingredient-form__variants {
   gap: space(3);
 }
@@ -628,7 +580,6 @@ $panel-head-gap: space(3);
   border-radius: radius('surface');
   background-color: $surface-card;
 
-  // The card an error is in takes the field's error edge, as a field does.
   &.is-invalid {
     border-color: $secondary;
   }
@@ -653,7 +604,6 @@ $panel-head-gap: space(3);
 .ingredient-form__variant-form {
   font-weight: 500;
 
-  // The group's mark, a little clear of the form's name.
   .form-icon {
     margin-inline-end: space(1);
   }
@@ -685,8 +635,6 @@ $panel-head-gap: space(3);
   gap: space(1);
 }
 
-// Open, its sections flush beneath the line, between hairlines, as the
-// ingredient's are, and Done at the end.
 .ingredient-form__variant-fields {
   @include stack(3);
   margin-top: space(3);
@@ -698,9 +646,6 @@ $panel-head-gap: space(3);
   }
 }
 
-// A variant's sections: the ingredient's folds,
-// under `h4`s a step smaller, and each spacing a step closer, for the
-// narrower card.
 .ingredient-form .ingredient-form__variant-fields {
   .collapsible-section__head {
     padding-block: space(2);
@@ -716,8 +661,6 @@ $panel-head-gap: space(3);
   }
 }
 
-// A variant field's Copy From Ingredient, at the right end of its label row or legend, which span the card
-// for it: a `.field__label-action` (_primitives.scss), staying on the label's line at every width.
 .ingredient-form .ingredient-form__variant-fields {
   .field__label-row,
   .fieldset__legend {
@@ -760,8 +703,6 @@ $panel-head-gap: space(3);
   justify-content: flex-end;
 }
 
-// The second pickers beneath a substitute list, one per linked ingredient in
-// forms, at a field's spacing.
 .ingredient-form__substitute-forms {
   @include stack(3);
 }
@@ -774,9 +715,7 @@ $panel-head-gap: space(3);
   max-width: 100%;
 }
 
-// A linked substitute's summary, inside the Combobox's panel: the name, the formal name muted beneath
-// it, the description cut to three lines, then terms and values, and a link to the entry. Muted text
-// on the card, the panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
+// Muted text on the card, the panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
 .entry-summary__name {
   display: flex;
   flex-direction: column;
@@ -787,16 +726,13 @@ $panel-head-gap: space(3);
   color: $text-muted;
 }
 
-// The description, three lines at most and then an ellipsis: a glance, the
-// whole of it being the entry's own page.
 .entry-summary__description {
   display: -webkit-box;
   overflow: hidden;
   margin: 0 0 space(2);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
-  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 3;
 }
 
@@ -828,7 +764,6 @@ $panel-head-gap: space(3);
   margin-top: space(2);
 }
 
-// Loading and a failed read: the sentence, and Try Again beneath it.
 .entry-summary__status {
   margin: 0;
 
@@ -837,9 +772,7 @@ $panel-head-gap: space(3);
   }
 }
 
-// The promote question, in four tiers told apart by type, not space: the question larger, the swap on
-// a tinted panel, the compendium's reach as a muted caption, the unsaved-changes question ruled off
-// above its buttons. Not nested in the form: it is drawn in the modal's layer.
+// Not nested in the form: it is drawn in the modal's layer.
 .promote-question__title {
   display: block;
   font-size: type-size('lead');
@@ -890,7 +823,6 @@ $panel-head-gap: space(3);
   border-top: 1px solid $hairline;
 }
 
-// A renamed form's Use and Keep, beneath its Form box.
 .ingredient-form__renamed {
   display: flex;
   flex-wrap: wrap;

@@ -30,7 +30,7 @@ const { default: CompendiumDialog } =
   await import('../../../../../src/app/(shell)/curator/compendium/compendium-dialog');
 
 // The admin compendium's edit dialog after the form has saved itself: the heading and the address follow
-// the name the autosave filed, without waiting for Save (claude-docs/components/autosave.md).
+// the name the autosave filed, without waiting for Save (claude-docs/autosave.md).
 
 const NAMED = (name: string) => ({
   ...EMPTY_VALUES,

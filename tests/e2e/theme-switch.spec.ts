@@ -1,9 +1,8 @@
 import { test, expect } from './fixtures';
 
-// A theme change is one cross-fade of the whole page, so no element runs a colour transition of its
-// own when the theme changes: not the old per-element fades, and nothing put in their place. The
-// browser lists every running transition, which is what this reads, so a hover's colour fade that
-// would also run on the swap is caught as well (claude-docs/components/theme-toggle.md).
+// A theme change is one cross-fade of the whole page, so no element runs a colour transition of its own on
+// the swap. It reads the browser's list of running transitions, so a hover fade that would also run on the
+// swap is caught too (claude-docs/components/theme-toggle.md).
 
 /** A transition of a colour: a colour property, a shadow, an SVG paint, or `all`. */
 const COLOUR = /color|shadow|^fill$|^stroke$|^all$/;

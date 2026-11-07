@@ -55,6 +55,7 @@ const readArrivals = cache(
         accountEmail: !account || account instanceof Error ? '' : account.email,
         acceptedAt: node.acceptedAt,
         batchId: node.batchId,
+        beta: node.beta,
         account:
           !account || account instanceof Error
             ? null
@@ -71,13 +72,11 @@ const readArrivals = cache(
   },
 );
 
-// Every account that arrived by a card, with the covens it owns. Services are the guard.
 export default async function ArrivalsPage({ searchParams }: ArrivalsPageProps) {
   const session = await requireAdminSession();
   const params = await searchParams;
   const { after, before } = readListPlace(params);
   const filter = readArrivalsFilter(params);
-  // Blank is no modal, as a blank `?edit=` is.
   const userParam = single(params.user) || undefined;
   const [{ arrivals, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readArrivals(session, filter, after, before),

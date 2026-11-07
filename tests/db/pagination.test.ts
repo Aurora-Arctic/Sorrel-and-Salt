@@ -17,11 +17,6 @@ import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
-// repository's keyset finders exactly as a connection resolver will.
-
-// Scratch tables, as in tests/db/repository/: the contract is about the shape,
-// not any one domain table.
 const leaves = pgTable('pagination_probe_leaves', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
@@ -88,7 +83,6 @@ beforeEach(async () => {
   await sql`truncate pagination_probe_jars`;
 });
 
-/** Sixty live leaves with thirty names held twice, so half the page boundaries fall between rows sharing a sort key and only the id decides; plus one soft-deleted leaf. */
 async function seedLeaves() {
   await sql`
     insert into pagination_probe_leaves (name, created_by, updated_by)
@@ -99,7 +93,6 @@ async function seedLeaves() {
     values ('Leaf 15', ${session.userId}, ${session.userId}, now(), ${session.userId})`;
 }
 
-/** The ids of every live leaf in the order `ORDER BY name, id` gives — the answer key. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select id from pagination_probe_leaves where deleted_at is null order by name, id`;
@@ -112,7 +105,6 @@ function leafPage(args: ConnectionArgs): Promise<Page<Leaf>> {
   return resolvePage(args, (request) => findPage(leaves, [leaves.name], request));
 }
 
-/** Follows `endCursor` until the last page, collecting ids and page sizes. */
 async function walkForward(first?: number, between?: (seen: string[]) => Promise<void>) {
   const ids: string[] = [];
   const sizes: number[] = [];
@@ -174,8 +166,6 @@ describe('Keyset pagination through the repository', () => {
 
     const { ids } = await walkForward(10, async (seen) => {
       if (seen.length !== 10) return;
-      // One row lands behind the reader and one ahead; one unseen row goes,
-      // and so does the very row the cursor names.
       [{ id: insertedBehind }] = await withAudit(session, (write) =>
         write.insert(leaves, { name: 'Leaf 00' }),
       );
@@ -188,11 +178,9 @@ describe('Keyset pagination through the repository', () => {
       await withAudit(session, (write) => write.softDelete(leaves, eq(leaves.id, deletedAtCursor)));
     });
 
-    // Every row that lived throughout is seen exactly once, in order.
     const survivors = original.filter((id) => id !== deletedAhead);
     expect(ids.filter((id) => survivors.includes(id))).toEqual(survivors);
     expect(new Set(ids).size).toBe(ids.length);
-    // Ahead of the cursor, a change shows; behind it, none replays.
     expect(ids).toContain(insertedAhead);
     expect(ids).not.toContain(insertedBehind);
     expect(ids).not.toContain(deletedAhead);
@@ -292,9 +280,6 @@ const COMPUTED: SortPart[] = [
   leaves.name,
 ];
 
-// "Page X of Y" for a list read through `findPage`: the count of its own rows,
-// soft-deleted ones left out, and how many come before a page's first row in
-// its own order, ties split by id as the page splits them.
 describe('findPageCount', () => {
   it('counts the live rows findPage pages, and how many come before a page’s first row', async () => {
     await seedLeaves();
@@ -318,7 +303,6 @@ describe('findPageCount', () => {
 });
 
 describe('Keyset pagination on a compound, computed key', () => {
-  /** Forty leaves over five lengths and fifteen names, so rows tie on the computed part, on both, and only the id separates them. */
   async function seedTies() {
     await sql`
       insert into pagination_probe_leaves (name, created_by, updated_by)

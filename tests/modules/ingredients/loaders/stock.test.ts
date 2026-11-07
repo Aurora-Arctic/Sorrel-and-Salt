@@ -30,7 +30,6 @@ beforeEach(async () => {
   repository.findStockOfIngredients.mockClear();
 });
 
-/** A coven entry of W's with one jar of its form. */
 async function heldEntry(name: string): Promise<{ ingredientId: string; jar: string }> {
   const ingredientId = await insertIngredient(
     sql,

@@ -1,9 +1,7 @@
 @use '../../scss/frame-bar' as *;
 
-// A bar with the same measurements as the application shell's, so a visitor who signs in
-// meets the same bar; tokens only. claude-docs/components/public-frame.md.
+// Same measurements as the shell's bar, so a signed-in visitor meets the same bar (claude-docs/components/public-frame.md).
 
-// The bar and its inner row, brand, nav and end group, shared with AppShell (_frame-bar.scss).
 @include frame-bar(public-frame);
 
 // The nav is the shell's (`SiteNav`, `.app-shell__nav`), whose tablet-width rule the public frame

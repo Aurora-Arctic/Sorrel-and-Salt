@@ -27,11 +27,7 @@ function onPageShow(event: PageTransitionEvent): void {
   publish();
 }
 
-/**
- * The browser is leaving for a full page load, an OAuth redirect say. Busy
- * stays on until the page is restored from the back-forward cache: nothing
- * on this page can tell when the other one has loaded.
- */
+/** Busy stays on until the page is restored from the back-forward cache: nothing on this page can tell when the other one has loaded. */
 export function reportLeaving(): void {
   if (typeof window === 'undefined') return;
   leaving = true;

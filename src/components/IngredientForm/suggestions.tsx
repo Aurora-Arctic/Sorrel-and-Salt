@@ -2,11 +2,11 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -183,7 +183,6 @@ const CompendiumSubstitutesDocument = graphql(`
 /** Rows a lookup asks for: enough to choose from, few enough to read. */
 export const SUGGESTION_ROWS = 10;
 
-/** "Used by Testwort (Fixtura testalis), Mockleaf": each claimant by its label and formal name. */
 function usedBy(claimants: Claimant[]): string | undefined {
   if (claimants.length === 0) return undefined;
   const names = claimants.map(({ name, canonicalName }) =>
@@ -192,17 +191,13 @@ function usedBy(claimants: Claimant[]): string | undefined {
   return `Used by ${names.join(', ')}`;
 }
 
-/** "Hecate (Greek)": a value beside what tells it from a same-named one, when anything does. */
 const qualified = (value: string, by: string | null | undefined): string =>
   by ? `${value} (${by})` : value;
 
-/**
- * The rows `document` answers for `text`, once settled, while `active`: the last answer stays on
- * screen while the next is fetched, and a failed lookup offers nothing. `scope` is what it asks
- * besides the text (the coven, or null for the compendium's alone), and nothing for its own search.
- */
+/** The rows for `text` once settled, while `active`: the last answer stays on screen while the
+ * next is fetched, and a failed lookup offers nothing. */
 export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
-  document: TypedDocumentNode<TResult, TScope & LookupText>,
+  document: DocumentTypeDecoration<TResult, TScope & LookupText>,
   scope: TScope,
   text: string,
   active: boolean,
@@ -227,14 +222,12 @@ export function useLookup<TResult, TScope extends object, O extends ComboboxOpti
 const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
   data.formSuggestions.edges.map(({ node }) => ({
     value: node.value,
-    // The group is what tells two same-named forms apart.
     label: qualified(formLabel(node.value), node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
-    // Null for a form only in use, which `FormIcon` draws as the generic.
     icon: <FormIcon name={node.icon ?? null} />,
-    // A curated row is what a pick links; a form only in use has no
-    // row, and a pick of it is typed text.
+    // A curated row is what a pick links; a form only in use has no row, and a pick of it is
+    // typed text.
     link: node.id
       ? {
           id: node.id,
@@ -252,7 +245,6 @@ const commonNameOptions = (data: CommonNameSuggestionsQuery): ListOption[] =>
     note: usedBy(node.claimants),
   }));
 
-/** A celestial body's or sign's row: the value, its description, and its bucket. */
 const correspondenceOption = (node: CorrespondenceNode): ListOption => ({
   value: node.value,
   note: node.description ?? undefined,
@@ -268,22 +260,17 @@ const zodiacOptions = (data: ZodiacSuggestionsQuery): ListOption[] =>
 const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
   data.deitySuggestions.edges.map(({ node }) => ({
     ...correspondenceOption(node),
-    // The tradition tells two same-named deities apart, as a form's group does.
     label: qualified(node.value, node.tradition),
-    // The other name the server found it by, which its own name does
-    // not show: "Astarte (Canaanite)" found by "ashtoreth" says why.
     note:
       [node.matchedName && `Also called ${node.matchedName}`, node.description]
         .filter(Boolean)
         .join(' · ') || undefined,
-    // A curated deity is what a pick links, and its pill reads with its
-    // tradition; one only in use has no row, and adds as text.
+    // A curated deity is what a pick links; one only in use has no row, and adds as text.
     link: node.id
       ? { id: node.id, tradition: node.tradition, description: node.description }
       : undefined,
   }));
 
-/** An ingredient's forms as a substitute's link carries them, each with its group. */
 const formsOf = (
   variants: IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node']['variants'],
 ): SubstituteForm[] =>
@@ -295,7 +282,6 @@ const formsOf = (
 
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
   data.ingredientSuggestions.edges.map(({ node, group }) => {
-    // A held compendium entry reads under the label the coven gave it.
     const name = node.cupboardEntry?.label ?? node.name;
     const canonicalName = node.canonicalName ?? null;
     const link = {
@@ -307,12 +293,11 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
       variants: formsOf(node.variants),
     };
     return {
-      // The label is what a linked entry reads as; the link is what is saved,
-      // and what its pill's tooltip tells.
+      // The label is what a linked entry reads as; the link is what is saved.
       value: name,
       label: qualified(name, canonicalName),
-      // The server lists the cupboard first, then the compendium, so
-      // the headings are the two groups; the tier stays a note.
+      // The server lists the cupboard first, then the compendium, so the headings are the two
+      // groups.
       heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
       note: tierOf(link),
       key: node.id,
@@ -341,31 +326,21 @@ const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
     };
   });
 
-/** The form suggestions for `text`, once it has settled, while `active`. */
 export const useFormSuggestions: UseSuggestions<FormOption> = (workspaceId, text, active) =>
   useLookup(FormSuggestionsDocument, { workspaceId }, text, active, formOptions);
 
-/** The common names in use. */
 export const useCommonNameSuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(CommonNameSuggestionsDocument, { workspaceId }, text, active, commonNameOptions);
 
-/** The celestial bodies, curated and in use. */
 export const useCelestialBodySuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(CelestialBodySuggestionsDocument, { workspaceId }, text, active, celestialBodyOptions);
 
-/** The zodiac signs, curated and in use. */
 export const useZodiacSuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(ZodiacSuggestionsDocument, { workspaceId }, text, active, zodiacOptions);
 
-/** The deities, curated under their traditions, and in use. */
 export const useDeitySuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(DeitySuggestionsDocument, { workspaceId }, text, active, deityOptions);
 
-/**
- * The ingredients a coven's substitute may link: the compendium's and its
- * own. Asked only by a coven's form; the compendium's asks
- * `useCompendiumSubstitutes`.
- */
 export const useSubstituteSuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(
     IngredientSuggestionsDocument,
@@ -386,7 +361,7 @@ export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, act
 /**
  * A variant's Form field, suggesting from the curated vocabulary and the forms in use. A pick links
  * a curated form and an edit away drops the link; on the compendium it must be a pick
- * (claude-docs/components/ingredient-form.md, "Suggestion lists and fields").
+ * (claude-docs/components/ingredient-form.md, "Suggestion lists").
  */
 export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactElement {
   const { control, getValues, setValue, clearErrors } = useFormContext<IngredientFormValues>();

@@ -1,25 +1,8 @@
 #!/usr/bin/env node
-// Flags destructive DDL in the migrations this branch adds or changes unless an
-// acknowledgement sidecar (`<migration>.ack.md`, carrying a line matching
-// ACK_LINE_RE) sits beside the migration. The policy, the five forms and the
-// sidecar are in claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL
-// check"; keep ACK_LINE_RE and that doc in sync. It reads nothing from GitHub.
-//
-// The file list, in precedence order: DESTRUCTIVE_DDL_FILES (CI's changed-file
-// list, JSON or newline-separated; set-but-empty means "nothing changed" and
-// checks nothing), then positional filenames, then a diff against the
-// branch's Gitflow base. Whatever the source, only `*.sql` is scanned.
-//
-// Limitations: every `ALTER COLUMN ... TYPE` is flagged whether or not it
-// narrows, since telling the two apart needs a real SQL parser; `ALTER INDEX
-// ... RENAME` is flagged though it cannot break a rollback.
-//
-// Usage:
-//   npm run check:destructive-ddl                        # what this branch adds
-//   npm run check:destructive-ddl -- --base origin/main  # against another base
-//   npm run check:destructive-ddl -- --all               # every committed migration
-//   npm run check:destructive-ddl -- <file> [file...]    # scan only these files
-//   npm run check:destructive-ddl -- --self-test         # the fixtures under scripts/__fixtures__/destructive-ddl/
+// Flags destructive DDL in the migrations this branch adds or changes unless an `.ack.md` sidecar sits beside
+// them (claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL check").
+// Usage: npm run check:destructive-ddl [-- --base <ref> | --all | --self-test | <file>...]
+// (claude-docs/commands.md, "Destructive DDL check")
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -30,7 +13,6 @@ const REPO_ROOT = join(import.meta.dirname, '..');
 const MIGRATIONS_DIR = join(REPO_ROOT, 'src', 'db', 'migrations');
 const FIXTURES_DIR = join(import.meta.dirname, '__fixtures__', 'destructive-ddl');
 
-/** The pathspec every git query below is scoped by — `.sql` only, never `meta/`. */
 const MIGRATIONS_PATHSPEC = 'src/db/migrations/*.sql';
 
 export const ACK_LINE_RE = /^destructive ddl acknowledged:\s*\S.*$/im;
@@ -156,10 +138,7 @@ export function scanFile(path: string): Finding[] {
   return scanSql(readFileSync(path, 'utf8'), relative(REPO_ROOT, path));
 }
 
-/**
- * The base a local run diffs against, from the branch prefix — gitflow.yml's
- * rules. Unrecognised gets `staging`.
- */
+// gitflow.yml's base rules; an unrecognised prefix gets `staging`.
 export function resolveDefaultBase(branch: string): string {
   if (/^(hotfix\/|release\/)/.test(branch)) return 'origin/main';
   return 'origin/staging';
@@ -176,10 +155,7 @@ function lines(output: string): string[] {
     .filter((line) => line.length > 0);
 }
 
-/**
- * Every migration this branch adds or edits against `base`: working tree
- * against the merge base, plus untracked, so a just-generated migration counts.
- */
+// Plus untracked files, so a just-generated migration counts.
 export function changedMigrations(base: string, cwd: string = REPO_ROOT): string[] {
   let mergeBase: string;
   try {
@@ -215,7 +191,6 @@ function allCommittedMigrations(): string[] {
     .map((name) => join(MIGRATIONS_DIR, name));
 }
 
-/** The file list from whichever source applies, `*.sql` only. */
 export function resolveFilesToScan(
   argv: string[],
   // Deliberately not NodeJS.ProcessEnv: Next augments that type with a
@@ -257,15 +232,10 @@ export function resolveFilesToScan(
   return files;
 }
 
-/** `0002_x.sql` → `0002_x.ack.md`. */
 export function sidecarPath(sqlPath: string): string {
   return sqlPath.replace(/\.sql$/, '.ack.md');
 }
 
-/**
- * The sidecar's text, or undefined. Accepts the relative path a `Finding`
- * carries as readily as an absolute one.
- */
 export function readAcknowledgement(sqlPath: string): string | undefined {
   const sidecar = sidecarPath(sqlPath.startsWith('/') ? sqlPath : join(REPO_ROOT, sqlPath));
   try {
@@ -275,11 +245,7 @@ export function readAcknowledgement(sqlPath: string): string | undefined {
   }
 }
 
-/**
- * Grouped by file, so an acknowledgement covers exactly the migration it sits
- * beside. `readSidecar` is injected so the correlation can be tested without
- * writing files.
- */
+// `readSidecar` is injected so the correlation can be tested without writing files.
 export function report(
   findings: Finding[],
   readSidecar: (file: string) => string | undefined = readAcknowledgement,
@@ -331,8 +297,7 @@ export function report(
   return 1;
 }
 
-// Exercises the checked-in fixtures end to end; needs no test runner, which is
-// what `make act-*` and a bare clone have.
+// Needs no test runner, which a bare clone lacks.
 function selfTest(): number {
   let failed = false;
 

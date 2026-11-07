@@ -12,7 +12,7 @@ import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Keeper Invitations',
+  title: 'Invitations',
 };
 
 // One page of the pending invitations and its count, newest first. A cursor naming no row gives the
@@ -52,8 +52,6 @@ export default async function AdminInvitationsPage({ searchParams }: AdminInvita
   const params = await searchParams;
   const { filter, cursor } = readInvitationsPlace(params);
   const [locked, { invitations, pageInfo, position }] = await Promise.all([
-    // Whether keeper changes are paused, which locks Invite and Revoke for every keeper but the
-    // primary one.
     invitationsLock(session),
     readInvitations(session, filter.email, filter.expiringSoon, cursor.after, cursor.before),
   ]);
@@ -66,7 +64,6 @@ export default async function AdminInvitationsPage({ searchParams }: AdminInvita
       position={position}
       {...pagerHrefs(pageInfo, (turn) => invitationsHref(filter, turn))}
       locked={locked}
-      // By presence: `?invite` is written bare. Never while locked.
       inviting={!locked && params.invite !== undefined}
     />
   );

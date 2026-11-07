@@ -10,9 +10,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// `/invite/[token]`'s one panel: the page reads where the visitor
-// stands, and this shows it, and sends the accept
-// (claude-docs/components/invitation-acceptance.md).
+// claude-docs/components/invitation-acceptance.md
 
 const router = { push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -76,6 +74,27 @@ describe('InvitationAcceptance, for the account that already used a card', () =>
 
     expect(screen.queryByRole('link', { name: 'Start a Coven' })).toBeNull();
   });
+
+  // A refusal is the end of the page, so it leaves a way back to the site, with or without a coven to start.
+  it('leaves a refused account a way back to the home page', () => {
+    const { rerender } = render(
+      <InvitationAcceptance status="refused" message="Already accepted." />,
+    );
+    const toHome = () =>
+      screen.queryAllByRole('link').filter((link) => link.getAttribute('href') === '/');
+
+    expect(toHome()).toHaveLength(1);
+
+    rerender(
+      <InvitationAcceptance
+        status="refused"
+        message="You've already used this card."
+        startCovenHref={'/coven/new' as Route}
+      />,
+    );
+
+    expect(toHome()).toHaveLength(1);
+  });
 });
 
 describe('InvitationAcceptance', () => {
@@ -99,7 +118,8 @@ describe('InvitationAcceptance', () => {
 
     expect(screen.getByText('This invitation has already been accepted.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
-    expect(screen.queryByRole('link')).toBeNull();
+    // Only the way back to the home page: no sign-in, accept or start link.
+    expect(screen.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/']);
 
     rerender(
       <InvitationAcceptance
@@ -146,7 +166,6 @@ describe('InvitationAcceptance', () => {
     expect(calls).toHaveLength(1);
   });
 
-  // The role is the invitation's data, as a coven's name is.
   it('names what the invitation grants: the site role of a site one, the coven of a coven’s', () => {
     render(
       <InvitationAcceptance
@@ -174,9 +193,7 @@ describe('InvitationAcceptance', () => {
     expect(screen.getByText(/Fixture Coven/)).toBeVisible();
   });
 
-  // Design F (claude-docs/components/click-feedback.md): a refused accept
-  // says the service's sentence in a callout from Accept, which keeps the
-  // focus, and leaves a badge that brings it back.
+  // Design F (claude-docs/components/click-feedback.md).
   it('says the service’s refusal from Accept, which keeps the focus', async () => {
     const REFUSED = 'This invitation was withdrawn. Ask whoever sent it for a new one.';
     mockGraphQLError('AcceptInvitation', { code: 'FORBIDDEN', message: REFUSED });
@@ -192,7 +209,6 @@ describe('InvitationAcceptance', () => {
     const button = accept();
     expect(screen.queryByRole('alert')).toBeNull();
 
-    // Pressed as a pointer or a key leaves it: focused, then clicked.
     await act(async () => {
       button.focus();
       fireEvent.click(button);
@@ -236,7 +252,6 @@ describe('InvitationAcceptance', () => {
     });
 
     expect(screen.queryByRole('alert')).toBeNull();
-    // The badge fades out, so it goes a moment later.
     await waitFor(() =>
       expect(
         screen.queryByRole('button', { name: 'Show the error for Accept Invitation' }),

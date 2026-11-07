@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The account button and its panel: a control-tall button (`$control-height`)
-// with the avatar disc, the name and a chevron; at a phone's width the name and
-// chevron leave and it is a square of the avatar alone.
 $account-menu-avatar: 2rem;
 
 .account-menu {
@@ -28,8 +25,6 @@ $account-menu-avatar: 2rem;
   color: $text-primary;
   font: inherit;
 
-  // No wash behind the button: the disc is the control, and it answers the
-  // pointer as the theme switch's does, darkening to the accent's hover.
   &:hover .account-menu__avatar,
   &[aria-expanded='true'] .account-menu__avatar {
     background-color: $accent-hover;
@@ -85,7 +80,6 @@ $account-menu-avatar: 2rem;
   position: absolute;
   top: -0.0625rem;
   right: -0.0625rem;
-  // Two thirds of 0.625rem.
   width: 0.4167rem;
   height: 0.4167rem;
   border-radius: 50%;
@@ -117,11 +111,9 @@ $account-menu-avatar: 2rem;
   top: calc(100% + #{space(2)});
   right: 0;
   z-index: layer('floating');
-  min-width: 13rem;
-  border: 1px solid $text-muted;
-  border-radius: radius('surface');
-  background-color: $surface-card;
-  box-shadow: $shadow-floating;
+  min-width: max(#{$panel-min-width}, 100%);
+  max-width: max(#{$panel-max-width}, 100%);
+  @include floating-panel;
   @include list-reset;
   // The fade, as the section nav's More sheet does it: `hidden` is display none,
   // which cannot animate, so the panel stays displayed and `hidden` takes it out
@@ -154,7 +146,7 @@ $account-menu-avatar: 2rem;
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: $control-height;
+  min-height: $panel-row-height;
   padding: 0 space(3);
   border: 0;
   background-color: transparent;
@@ -184,16 +176,11 @@ $account-menu-avatar: 2rem;
   }
 }
 
-// The count of pending invitations at the right end of Your Account's row: the
-// site's badge in attention's red, a circle, a pill from two digits. Its tip
-// hangs below it.
 .account-menu__account,
 .account-menu__link--counted {
   position: relative;
 }
 
-// Over the row's right end, so Your Account's wash still runs edge to edge
-// beneath it; the row keeps its text clear of it.
 .account-menu__count {
   position: absolute;
   top: 50%;
@@ -209,7 +196,6 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-// The red circle: a link of its own on the Your Account and Admin rows, inside the Support row's link.
 .account-menu__count-mark,
 .account-menu__badge {
   @include badge('attention');
@@ -222,7 +208,6 @@ $account-menu-avatar: 2rem;
   border-radius: radius('pill');
 }
 
-// Pushed to the row's right end, where the invitations circle sits.
 .account-menu__badge-tip {
   display: flex;
   margin-inline-start: auto;
@@ -247,16 +232,14 @@ $account-menu-avatar: 2rem;
 
 // The panel clips nothing, so the count's tip can hang past its edge; the top
 // row's wash takes the panel's rounding itself, inside its 1px edge. The last
-// row is always Sign Out, which has room around it, so no wash meets the bottom corners.
+// row is Sign Out, rounded below.
 .account-menu__panel > li:first-child > .account-menu__item {
   border-radius: calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px) 0 0;
 }
 
-// Sign Out's button keeps the shared `.btn` edge, height, radius and colours
-// (and so its contrast); only the width is set, to the panel row's. A failure
-// floats beneath it in a callout, and its badge sits on its corner.
-.account-menu__signout-action .btn {
-  width: 100%;
+// Sign Out is a row like the others; a failure floats beneath it in a callout.
+.account-menu__signout-action {
+  position: relative;
 }
 
 .account-menu__link {
@@ -268,15 +251,16 @@ $account-menu-avatar: 2rem;
   display: block;
 }
 
-// Sign Out is the one row with room around it, so the button never touches the
-// panel's edge.
+// Sign Out is the last row, set off from the rest by a hairline above it.
 .account-menu__signout {
-  padding: space(2);
+  border-top: 1px solid $hairline;
 }
 
-// Under the tablet width the bar has no room for the name and the site links (an
-// admin's bar ran past the window at 642px): the button is the avatar alone and
-// the links move into the panel. The theme disc stays in the bar at every width.
+// The last row's wash takes the panel's bottom rounding, inside its 1px edge.
+.account-menu__panel > li:last-child > .account-menu__signout-action > .account-menu__item {
+  border-radius: 0 0 calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px);
+}
+
 @media (max-width: $shell-tablet-width) {
   .account-menu__button {
     justify-content: center;
@@ -284,7 +268,6 @@ $account-menu-avatar: 2rem;
     padding: 0;
   }
 
-  // Out of sight, still in the button's name.
   .account-menu__name {
     @include visually-hidden;
   }

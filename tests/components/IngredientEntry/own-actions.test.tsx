@@ -15,8 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Edit and Delete icons on a coven's own entry's page, Delete asked
-// in a dialog shared with the list card's More (claude-docs/components/ingredient-entry.md).
+// claude-docs/components/ingredient-entry.md
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
@@ -50,7 +49,6 @@ function renderOnPage(edit?: IngredientEntryEdit) {
 }
 
 const dots = () => screen.getByRole('button', { name: 'More for Testwort' });
-/** Opens the three dots and chooses Delete Ingredient. */
 function askDelete() {
   fireEvent.click(dots());
   fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
@@ -74,8 +72,6 @@ describe('OwnEntryActions', () => {
     router.push.mockClear();
   });
 
-  // The pencil, a link to the page's own edit address, and the three dots, which hold
-  // Delete Ingredient even with no stock to edit: the page never draws a lone bin.
   it('is an Edit link at its address and the three dots holding Delete Ingredient, each named for the entry, and no bin', () => {
     renderOnPage();
 
@@ -92,11 +88,11 @@ describe('OwnEntryActions', () => {
     renderOnPage();
 
     askDelete();
-    const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
+    const ask = screen.getByRole('alertdialog', { name: 'Delete Ingredient' });
     expect(within(ask).getByText('Testwort')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(calls).toEqual([]);
   });
@@ -106,14 +102,13 @@ describe('OwnEntryActions', () => {
     const view = renderOnPage();
 
     askDelete();
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(EDIT.deletedHref));
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
     expect(router.push).not.toHaveBeenCalled();
-    // Busy until the list arrives, so the focus is not handed to Edit first.
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: /Delet/ }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: /Delet/ }),
     ).toBeDisabled();
 
     view.rerender(
@@ -133,15 +128,14 @@ describe('OwnEntryActions', () => {
     renderOnPage();
 
     askDelete();
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  // Edit Stock: with the stock handed over, it comes first in the three dots.
   describe('with the stock to edit', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';
     const withStock: IngredientEntryEdit = {
@@ -187,7 +181,9 @@ describe('OwnEntryActions', () => {
       renderOnPage(withStock);
       askDelete();
 
-      expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('alertdialog', { name: 'Delete Ingredient' }),
+      ).toBeInTheDocument();
     });
   });
 });

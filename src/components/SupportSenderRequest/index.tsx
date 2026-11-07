@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SITE_NAME } from '../../lib/site';
@@ -9,12 +8,9 @@ import SupportSenderReplyBox from './reply-box';
 import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
 import '../SupportRequests/index.scss';
+import { PendingLink } from '../../lib/navigation';
 
-// The body of the sender's dialog over `/account/support` (claude-docs/components/support-sender-request.md): the facts
-// and the thread of the staff dialog, with the sender's own messages named and tagged "You" and every staff reply named
-// for the site and tagged "Staff", never the staff member's name. Beneath it sits the reply box, or on a closed request
-// the link to its follow-up. The page behind a mailed link passes its own `reply` form, which needs no session, and has no
-// Resolve button.
+// Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).
 
 const SupportSenderRequest = ({
   request,
@@ -57,9 +53,9 @@ const SupportSenderRequest = ({
         <p className="support-sender-request__closed">
           This request is closed.{' '}
           {request.followUpId ? (
-            <Link href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
+            <PendingLink href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
               Open Your Follow-Up
-            </Link>
+            </PendingLink>
           ) : (
             'Write a new request from Support to follow it up.'
           )}

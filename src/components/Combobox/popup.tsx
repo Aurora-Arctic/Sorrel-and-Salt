@@ -33,10 +33,8 @@ export function Popup({
   );
 }
 
-/** What a typed box with nothing to show says by default: the text, quoted. */
 export const noMatch = (typed: string): string => `No match for “${typed.trim()}”`;
 
-/** The one message row, outside every listbox: it is no option. */
 export function EmptyMessage({ children }: { children: ReactNode }): ReactElement {
   return <div className="combobox__empty">{children}</div>;
 }

@@ -18,7 +18,6 @@ export default function AddAction({
 }: AddActionProps): ReactElement {
   const navigated = useOpenModalClick(href, heading);
   const pushed = (event: MouseEvent<HTMLAnchorElement>) => {
-    // A press with a modifier, or another button, is the browser's: a new tab or window.
     const plain =
       event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
     if (!plain || event.defaultPrevented) return;

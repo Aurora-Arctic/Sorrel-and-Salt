@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { accountExistsMessage } from '@/emails/account-exists';
 
-// What the mail carries: its recipient, its sign-in link and how the account signs in. Its wording and design are
-// the story's (src/emails/account-exists.stories.tsx).
-
 const SIGN_IN = 'http://localhost:8000/sign-in';
 
 describe('accountExistsMessage', () => {

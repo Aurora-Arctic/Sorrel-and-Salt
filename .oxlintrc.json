@@ -26,7 +26,7 @@
           },
           {
             "group": ["@/db/repository/*", "**/db/repository/*"],
-            "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+            "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
           },
           {
             "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -40,7 +40,7 @@
               "./social-providers-config",
               "./social-providers-config.ts"
             ],
-            "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+            "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
           },
           {
             "group": ["dataloader"],
@@ -98,6 +98,8 @@
     "sorrel/compendium-review-mark-switch-only": "error",
     "sorrel/modal-focus-return-through-modal": "error",
     "sorrel/long-form-guards-leaving": "error",
+    "sorrel/in-app-link-through-pending-link": "error",
+    "sorrel/full-page-load-reports-leaving": "error",
     "no-unused-vars": "error",
     "no-unsafe-optional-chaining": "error",
     "react-hooks/exhaustive-deps": "error",
@@ -183,11 +185,11 @@
             "paths": [
               {
                 "name": "next/headers",
-                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
+                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth/README.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
               },
               {
                 "name": "better-auth/cookies",
-                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
+                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth/README.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
               },
               {
                 "name": "slugify",
@@ -206,7 +208,7 @@
                   "**/lib/auth",
                   "**/lib/auth.ts"
                 ],
-                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
+                "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth/README.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
               },
               {
                 "group": [
@@ -221,7 +223,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -235,7 +237,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],
@@ -304,7 +306,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],
@@ -319,7 +321,7 @@
               {
                 "group": ["**/db", "**/db/*", "**/db/**"],
                 "allowTypeImports": true,
-                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
+                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql/README.md, \"The access boundary\")."
               },
               {
                 "group": [
@@ -382,7 +384,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],
@@ -397,7 +399,7 @@
               {
                 "group": ["**/db", "**/db/*", "**/db/**"],
                 "allowTypeImports": true,
-                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
+                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql/README.md, \"The access boundary\")."
               },
               {
                 "group": [
@@ -463,7 +465,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["dataloader"],
@@ -522,7 +524,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["dataloader"],
@@ -576,7 +578,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -590,7 +592,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],
@@ -671,7 +673,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -685,7 +687,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],
@@ -744,7 +746,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db/README.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -758,7 +760,7 @@
                   "./social-providers-config",
                   "./social-providers-config.ts"
                 ],
-                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth/README.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["dataloader"],

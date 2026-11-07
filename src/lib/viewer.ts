@@ -8,14 +8,9 @@ import type { Session } from './session';
 import { curates } from './site-roles';
 import type { ShellContext } from './types';
 
-// What the shell draws and the coven layout's switcher lists: the viewer, their covens and how many invitations wait. Cached per request so both layouts share
-// one set of lookups. Reads the user row, not the session, as accepting an invitation sets `canCreateWorkspace` mid-session. It asks only that someone is signed in,
-// as the shell also draws an unverified account's email page.
+// Reads the user row, not the session, as accepting an invitation sets `canCreateWorkspace` mid-session. It asks only that someone is signed in, as the shell also draws an unverified account's email page.
 
-/**
- * The viewer's own memberships, read once per request whoever asks: the shell, and the public
- * entry page's roles below. Keyed by the session, which `getSession` hands out once per request.
- */
+/** Keyed by the session, which `getSession` hands out once per request. */
 const ownMemberships = cache(async (session: Session) => {
   const [memberships] = await membershipsOf(session, [session.userId]);
   // A viewer asking for their own id is never refused, so a Forbidden here
@@ -91,20 +86,13 @@ export const viewerOf = cache(async (): Promise<ShellContext> => {
   return viewerFor(session, (await getShellSession())?.accessPause);
 });
 
-/**
- * `viewerOf()` for a page a signed-out visitor may open: `null` instead of
- * the redirect to sign in. For the public frame and nothing else.
- */
+/** For the public frame and nothing else. */
 export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => {
   const shell = await getShellSession();
   return shell ? viewerFor(shell.session, shell.accessPause) : null;
 });
 
-/**
- * The signed-in viewer's role in each of their covens, by coven id, or `null` signed out: for
- * the public entry page's cupboard choices, each of which a different statement permits.
- * The shell carries a coven's permissions as flags rather than its role, and this shares its read.
- */
+/** For the public entry page's cupboard choices, each of which a different statement permits. The shell carries a coven's permissions as flags rather than its role, and this shares its read. */
 export const covenRolesIfSignedIn = cache(
   async (): Promise<ReadonlyMap<string, WorkspaceRole> | null> => {
     const session = await getSession();

@@ -55,7 +55,6 @@ beforeEach(async () => {
   await softDelete('ingredients', entryId, E.id);
 });
 
-/** Marks one row deleted, as its own delete would, by `actor`. */
 async function softDelete(
   table: 'ingredients' | 'workspace_compendium_entries',
   id: string,
@@ -81,7 +80,6 @@ async function expectPreconditions(rowLive = true) {
   expect(rows[0].deleted_at === null).toBe(rowLive);
 }
 
-/** The retired compendium row as it stands, to show a write left it be. */
 const entryRow = async () => (await sql`select * from ingredients where id = ${entryId}`)[0];
 
 const annotate = (session = asUser(B), workspaceId = WORKSPACE_W_ID) =>
@@ -94,7 +92,6 @@ const annotate = (session = asUser(B), workspaceId = WORKSPACE_W_ID) =>
 const remove = (session = asUser(B), workspaceId = WORKSPACE_W_ID) =>
   removeCupboardEntry(session, workspaceId, entryId);
 
-/** What W's Ingredients list, its pager total and its form facet say of the entry. */
 async function onW() {
   const page = await resolvePage({ first: 100 }, (request) =>
     listWorkspaceIngredients(asUser(B), WORKSPACE_W_ID, {}, request),
@@ -240,14 +237,12 @@ describe('Make It Ours on a retired entry', () => {
 });
 
 describe("a jar of a retired entry's form", () => {
-  /** The retired compendium row and its forms as they stand, to show a jar write left them be. */
   const compendiumRows = async () => ({
     entry: await entryRow(),
     forms:
       await sql`select * from ingredient_variants where ingredient_id = ${entryId} order by id`,
   });
 
-  /** W's live jars of the entry, as the entry page reads them. */
   const wJars = async () => {
     const [jars] = await stockOf(asUser(B), [
       { ingredientId: entryId, workspaceId: WORKSPACE_W_ID },

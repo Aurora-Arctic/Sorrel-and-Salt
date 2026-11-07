@@ -43,7 +43,6 @@ beforeEach(async () => {
   );
 });
 
-/** A coven as the read names it, from its row. */
 async function coven(id: string) {
   const [row] = await sql<{ id: string; slug: string; name: string }[]>`
     select id, slug, name from workspaces where id = ${id}`;

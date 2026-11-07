@@ -24,8 +24,7 @@ import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-wr
 import { refuseWhileHeld } from './held-entries';
 import type { CuratedVocabulary, DeityFilter, DeityRow } from '../types';
 
-// The curated deity vocabulary: public reads, and writes for a curator or a keeper alone. A deity a live compendium entry links
-// holds, and a rename reaches the link (claude-docs/db/deity-vocabulary.md, "Deity service details").
+// A live link holds a deity, and a rename reaches the link (claude-docs/db/deity-vocabulary.md, "Deity service details").
 
 // The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('deity-page', findDeityPage);
@@ -40,7 +39,6 @@ const DEITIES: CuratedVocabulary<typeof deities> = {
   addressHint: ' or tradition',
 };
 
-/** One page of the curated deities under `filter`, each under its tradition: a public read, so no session. A blank query is no query. */
 export function listDeities(
   filter: DeityFilter,
   page: PageRequest,
@@ -48,14 +46,11 @@ export function listDeities(
   return list.list(filter, page);
 }
 
-/** How many deities `listDeities` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countDeities(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
   return list.count(filter, start);
 }
 
 /**
- * The live deity at this address — how the admin page opens one to edit.
- *
  * @throws {NotFound} no live deity holds the slug.
  */
 export async function getDeityBySlug(slug: string): Promise<DeityRow> {
@@ -65,8 +60,6 @@ export async function getDeityBySlug(slug: string): Promise<DeityRow> {
 }
 
 /**
- * Adds a deity, its slug derived from the name and the tradition's name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `DeityInput`, names no live tradition, or its slug is a live deity's.
  */

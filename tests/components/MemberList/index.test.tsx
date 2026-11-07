@@ -6,10 +6,9 @@ import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
+import { rowCells } from '../../support/table';
 
-// A coven's member list (claude-docs/components/member-list.md): one row per
-// member with their role and joining date, a name opening the member's modal, and
-// the signed-in member's own row marked.
+// claude-docs/components/member-list.md
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 
@@ -61,7 +60,6 @@ describe('MemberList', () => {
       const row = rowOf(member.name);
       expect(within(row).getByRole('cell', { name: new RegExp(`^${role}`) })).toBeTruthy();
       expect(within(row).getByText('2026-03-04')).toBeTruthy();
-      // Who last changed the membership, and when.
       expect(within(row).getByText('Testwort Editor')).toBeTruthy();
       expect(within(row).getByText('2026-05-06')).toBeTruthy();
     }
@@ -176,7 +174,7 @@ describe('MemberList', () => {
       [OWNER, 'owner@testwort.test'],
       [MEMBER, 'member@testwort.test'],
     ] as const) {
-      expect(within(rowOf(member.name)).getAllByRole('cell')[1]).toHaveTextContent(address);
+      expect(rowCells(rowOf(member.name))[1]).toHaveTextContent(address);
     }
   });
 

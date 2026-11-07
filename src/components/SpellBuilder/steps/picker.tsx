@@ -28,7 +28,6 @@ import { jarOf, jarUnitOf, newStep } from './values';
 
 export interface StepPickerProps {
   workspaceId: string;
-  /** The one-off names already in the jar, case and spaces aside. */
   oneOffs: ReadonlySet<string>;
   onAdd: (step: SpellStepValue) => void;
 }
@@ -36,10 +35,8 @@ export interface StepPickerProps {
 const PICKER_HINT = 'Type to search your ingredients and the compendium.';
 const ONE_OFF_TAKEN = 'This ingredient is already in the jar.';
 
-/** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
-/** How many of a row's categories are drawn before the rest fold into a "+N" chip. */
 export const ROW_CATEGORY_CAP = 1;
 
 /**
@@ -57,17 +54,11 @@ const assignedFirst = <T extends { id: string }>(
   ...categories.filter(({ id }) => !assigned.has(id)),
 ];
 
-/**
- * The chip colours of a category whose group has not loaded (or has none): the theme's muted text
- * token, which is already the right grey in each theme.
- */
 const NEUTRAL: GroupColors = { colorDark: 'var(--text-muted)', colorLight: 'var(--text-muted)' };
 
 /**
- * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
- * so the "+N" is the same CategoryMore button and floating panel the cards and the admin table
- * have. The first `ROW_CATEGORY_CAP` show; the rest fold behind it. The click and press are
- * kept from the option, so using the chips never picks the row or closes the list.
+ * The categories as small print on a row, drawn by CategoryChips so the "+N" is the same button and panel the cards
+ * have. The click and press are kept from the option, so the chips never pick the row or close the list.
  */
 const categoryNames = (
   name: string,
@@ -98,7 +89,6 @@ const categoryNames = (
   );
 };
 
-/** A row's second line: the formal name in italics, then the chips, a dot between those two only. */
 const noteOf = (formal: string | null | undefined, chips: ReactNode): ReactNode => {
   if (!formal) return chips;
   return (
@@ -110,7 +100,6 @@ const noteOf = (formal: string | null | undefined, chips: ReactNode): ReactNode 
   );
 };
 
-/** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
   data: SpellIngredientSuggestionsQuery,
   colors: ReadonlyMap<string, GroupColors>,
@@ -133,8 +122,6 @@ function pickRows(
             badge: inJar.has(variant.id) ? (
               <span className="badge badge--muted spell-steps__in-jar">In Jar</span>
             ) : undefined,
-            // The form's categories, else the ingredient's, as small print on that line.
-            // The formal name in italics, then the chips, with a dot between the two only.
             meta: noteOf(
               node.canonicalName,
               categoryNames(
@@ -145,7 +132,6 @@ function pickRows(
                 missing,
               ),
             ),
-            // A pressed filter is named in the heading, where the results are read.
             heading: [
               group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
               ...(narrowedNames.length > 0 ? [`In ${narrowedNames.join(', ')}`] : []),
@@ -182,7 +168,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const { control } = useFormContext<SpellBuilderValues>();
   const assignedIds = useWatch({ control, name: 'categoryIds' });
   const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
-  // Category Match's Missing: assigned, and carried by no step in the jar yet.
   const jarSteps = useWatch({ control, name: 'steps' });
   const missing = useMemo(
     () => new Set(compareJar([...assigned], jarSteps ?? []).intendedNotPresent),
@@ -196,7 +181,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
     () => narrowedBy.flatMap((categoryId) => names.get(categoryId) ?? []),
     [narrowedBy, names],
   );
-  // The forms already laid as a step, marked on their rows.
   const inJar = useMemo(
     () => new Set((jarSteps ?? []).flatMap(({ variantId }) => (variantId ? [variantId] : []))),
     [jarSteps],
@@ -215,7 +199,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   );
 
   const typed = text.trim();
-  // The first row is offered for text no row already reads as, as a typed row is.
   const offerOneOff = useMemo(
     () =>
       typed !== '' &&

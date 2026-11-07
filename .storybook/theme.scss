@@ -23,11 +23,4 @@ body {
   margin: 0;
   background-color: $surface-page;
   color: $text-primary;
-  @include theme-transition(background-color, color);
-}
-
-@include reduced-motion {
-  body {
-    transition: none;
-  }
 }

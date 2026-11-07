@@ -2,7 +2,7 @@
 
 **The row is** `M21.1 → M21.20`.
 
-**This wave exists on the owner's call of 2026-11-06**, made while M17.1 was re-scoped: subscription billing is twenty tasks, so it gets a wave and not a place on Wave 17 (Fast follow), which holds scoping and audits. The tasks are in [`tasks/m21.md`](../tasks/m21.md) and the reasoning is the decision record, [`m17.1-subscription-billing-scope.md`](../design-decisions/m17.1-subscription-billing-scope.md), with the research in [`billing/`](../billing/README.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to charge.
+**This wave exists on the owner's call of 2026-11-06**, made while M17.1 was re-scoped: subscription billing is twenty tasks, so it gets a wave and not a place on Wave 17 (Fast follow), which holds scoping and audits. The tasks are in [`tasks/m21.md`](../tasks/m21.md) and the reasoning is the decision record, [`ingredients.md`, "Subscription Billing Scope"](../design-decisions/ingredients.md#subscription-billing-scope), with the research in [`billing/`](../billing/README.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to charge.
 
 **The order is the dependency order.**
 

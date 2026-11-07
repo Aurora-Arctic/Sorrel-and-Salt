@@ -5,17 +5,13 @@ import { addressCountKey } from '@/lib/send-count-key';
 // The one raw way a test seeds a keeper's support time-out on a sender, without the time-out service, so setup writes no
 // audit and starts no mail (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/** A time-out as a keeper left it. */
 export interface SupportTimeoutFixture {
-  /** A Postgres interval from now, `'2 days'`, or a negative one for a time-out that has run out; null for no end date. */
+  /** A Postgres interval from now, such as `'2 days'`; negative for a time-out that has run out. */
   endsIn?: string | null;
-  /** Lifted by the keeper, so it no longer stands. */
   lifted?: boolean;
-  /** The sender's address, stored as its HMAC key, so the time-out also binds the address; none when absent. */
   address?: string;
 }
 
-/** Writes the time-out on `userId`, or on the address alone when `userId` is null, stamped by keeper E, and returns its id. */
 export async function insertSupportTimeout(
   sql: postgres.Sql,
   userId: string | null,

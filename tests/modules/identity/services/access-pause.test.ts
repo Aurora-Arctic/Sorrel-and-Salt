@@ -84,7 +84,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** The error a call rejects with, so a test can read its class and message together. */
 async function refusalOf(call: Promise<unknown>): Promise<Error> {
   const error = await call.then(
     () => undefined,

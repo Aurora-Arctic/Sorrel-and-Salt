@@ -4,7 +4,6 @@ import { WorkshopNavigation } from '../../../.storybook/navigation';
 import SupportRequests from '.';
 import type { SupportRequestDetailEntry, SupportRequestEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SupportRequests.
 const meta = {
   title: 'Admin / Support Requests',
 } satisfies Meta;

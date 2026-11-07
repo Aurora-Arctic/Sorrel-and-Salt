@@ -5,13 +5,10 @@ import type { Route } from 'next';
 import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
-import type { ListBodyProps } from '../ListFrame/types';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import StackTable, { GroupChip } from '.';
 import type { ColumnSort, SortDirection, StackColumn } from './types';
 
-// Render-only; the lists that hold it assert its behaviour, each in its own
-// test. A table sits in its list's ListFrame, as every admin list holds it;
-// narrow the window under 40rem to see the rows turn into cards.
 const meta = {
   title: 'Layout / Data Table',
 } satisfies Meta;
@@ -23,7 +20,6 @@ const PAIRS = [
   { colorDark: '#c79bd8', colorLight: '#6d3d82' },
 ];
 
-// Two groups in chips and two plain, as a form group or a tradition is drawn.
 const ROWS = asOptions(GROUP_NAMES.category).map(({ id, name }, index) => ({
   id,
   name,
@@ -44,9 +40,9 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   },
 ];
 
-const Frame = ({ children }: ListBodyProps) => (
+const Frame = ({ children }: { children: ReactNode }) => (
   <ListFrame>
-    <ListBody>{children}</ListBody>
+    <ListBody skeleton={null}>{children}</ListBody>
   </ListFrame>
 );
 
@@ -79,8 +75,35 @@ const emptyNode = (
   </Frame>
 );
 
-// A foot action spans the card's bottom instead of standing in its corner, the table is named
-// for a page that holds several, and a group chip draws its icon.
+const noMatchesNode = (
+  <Frame>
+    <StackTable
+      columns={COLUMNS}
+      rows={[]}
+      rowKey={(row) => row.id}
+      empty="No groups match your filters."
+      emptyLabel="No Matches"
+      emptyAction={
+        <a className="btn btn--quiet" href="?">
+          Clear Filters
+        </a>
+      }
+    />
+  </Frame>
+);
+
+// The placeholder rows a table draws under its own headings while its rows are on their way.
+const loadingNode = (
+  <Frame>
+    <ListBodySkeleton
+      label="Groups"
+      headings={['Name', 'Description', 'Edit']}
+      actions={['Edit']}
+      count={4}
+    />
+  </Frame>
+);
+
 const FOOT_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {
     heading: 'Name',
@@ -113,7 +136,6 @@ const footActionNode = (
   </Frame>
 );
 
-/** A column's sort in the workshop: each direction's address a query the story never follows. */
 const sortOf = (
   key: string,
   labels: ColumnSort['labels'],
@@ -124,7 +146,6 @@ const sortOf = (
   labels,
 });
 
-// Name sorts and is sorted, A to Z, its arrow beside it; Description sorts too and is not; Edit does not sort.
 const SORTED_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {
     ...COLUMNS[0],
@@ -143,7 +164,6 @@ const sortedNode = (
   </Frame>
 );
 
-// The same table in a phone's width: the headings hidden, the Sort By select above the cards, with an order no heading gives.
 const sortedPhoneNode = (
   <div style={{ inlineSize: '24rem' }}>
     <Frame>
@@ -162,6 +182,8 @@ const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Roomy: roomyNode,
   Empty: emptyNode,
+  'No Matches': noMatchesNode,
+  Loading: loadingNode,
   'Foot Action And Icon Chip': footActionNode,
   Sorted: sortedNode,
   'Sorted At Phone Width': sortedPhoneNode,

@@ -12,7 +12,6 @@ import { stockOf } from '@/modules/ingredients';
 
 type StockRows = Awaited<ReturnType<typeof stockOf>>[number];
 
-/** The coven's jars as `jarOf` reads them: a jar's amounts are numeric strings in the row. */
 export const jarRowsOf = (stock: StockRows | undefined) =>
   (stock instanceof Error || !stock ? [] : stock).map((jar) => ({
     unit: jar.unit,
@@ -21,7 +20,6 @@ export const jarRowsOf = (stock: StockRows | undefined) =>
     variant: { id: jar.variantId },
   }));
 
-/** Each step's verdict by its id, for the steps that have one; a step with none is absent. */
 export async function readStepSuppliesOf(
   session: Session,
   workspaceId: string,

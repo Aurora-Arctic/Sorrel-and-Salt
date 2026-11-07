@@ -19,7 +19,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
 import IconTip from '../IconTip';
@@ -61,7 +61,13 @@ import { placeServerIssues } from '../../lib/graphql-failure';
 export const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
     createReference(workspaceId: $workspaceId, input: $input) {
-      ...ReferenceRow
+      id
+      citation
+      isGlobal
+      kind
+      authors
+      title
+      container
     }
   }
 `);
@@ -69,12 +75,17 @@ export const CreateReferenceDocument = graphql(`
 export const UpdateReferenceDocument = graphql(`
   mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
     updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
-      ...ReferenceRow
+      id
+      citation
+      isGlobal
+      kind
+      authors
+      title
+      container
     }
   }
 `);
 
-/** A source whole, which the edit opens on: a row carries only its short form's fields. */
 export const ReferenceDocument = graphql(`
   query Reference($workspaceId: ID, $id: ID!) {
     reference(workspaceId: $workspaceId, id: $id) {
@@ -135,9 +146,9 @@ const KIND_LABELS: Record<ReferenceKind, string> = {
 
 const KIND_OPTIONS = REFERENCE_KINDS.map((kind) => ({ value: kind, label: KIND_LABELS[kind] }));
 
-// The fields. No field carries a hint: how to cite is one How to Cite tip
-// at the panel's head, and a field whose format matters shows an example
-// as its placeholder (info-tip.md).
+// No field carries a hint: how to cite is one How to Cite tip at the panel's head, and a
+// field whose format matters shows an example as its placeholder
+// (claude-docs/components/info-tip.md).
 const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,
@@ -221,7 +232,6 @@ const NOTE: ReferenceFieldSpec = {
   placeholder: 'Add a note',
 };
 
-/** Where a printed work was read online, after its publication. */
 const ONLINE = [HOST, url(), MODIFIED, accessed(), NOTE];
 
 /**
@@ -294,7 +304,6 @@ const FIELD_NAMES = Object.keys(EMPTY_REFERENCE).filter(
   (name): name is ReferenceFieldName => name !== 'kind' && name !== 'scholarly',
 );
 
-/** The fields the chosen kind shows; the title alone before one is chosen. */
 const shownFor = (kind: ReferenceKind | ''): ReadonlySet<ReferenceFieldName> =>
   new Set(kind === '' ? ['title'] : FIELDS_OF[kind].map(({ name }) => name));
 
@@ -317,7 +326,6 @@ export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInpu
   };
 }
 
-/** A source as the panel edits it: each field as stored, an empty one blank. */
 export function referenceValuesOf(source: ReferenceQuery['reference']): ReferenceFormValues {
   const values: ReferenceFormValues = {
     ...EMPTY_REFERENCE,
@@ -330,7 +338,6 @@ export function referenceValuesOf(source: ReferenceQuery['reference']): Referenc
 
 const validate = zodResolver(ReferenceInput, undefined, { raw: true });
 
-/** The shared schema as the panel's resolver, over the values as `toReferenceInput` sends them. */
 const referenceResolver: Resolver<ReferenceFormValues, unknown, ReferenceSendInput> = (
   values,
   context,
@@ -351,7 +358,7 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 
 /**
  * The panel's head, one line: its title, then at the end edge its Undo and Redo, any tip, and a ×
- * that closes it as Cancel does (claude-docs/components/ingredient-form.md, "The reference panel").
+ * that closes it as Cancel does (claude-docs/components/ingredient-form.md, "The new reference panel").
  */
 function PanelHead({
   legend,
@@ -392,7 +399,7 @@ function PanelHead({
 
 /**
  * How to cite, said once for the whole panel and named by its `aria-describedby`, one rule to a
- * line (claude-docs/components/ingredient-form.md, "The reference panel").
+ * line (claude-docs/components/ingredient-form.md, "The new reference panel").
  */
 const CITE_RULES = [
   'Names as printed, the first author inverted (Shelley, Mary).',
@@ -419,10 +426,6 @@ function HowToCite({ id }: { id: string }): ReactElement {
   );
 }
 
-/**
- * The edit's read, then the panel prefilled with it, kept only while the panel is open. The tier
- * is the source's own, as `updateReference` will write it.
- */
 function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElement {
   const legendId = useId();
   const { data, isError } = useQuery({
@@ -457,7 +460,6 @@ function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElem
   );
 }
 
-/** Whether the source is an academic work: a compendium source's mark, which a coven's carries none of. */
 function ScholarlyField(): ReactElement {
   const { control } = useFormContext<ReferenceFormValues>();
   const { field } = useController({ control, name: 'scholarly' });
@@ -484,8 +486,6 @@ function PanelForm({
   const methods = useForm<ReferenceFormValues, unknown, ReferenceSendInput>({
     defaultValues: defaults,
     resolver: referenceResolver,
-    // As the ingredient form's: the first field marked invalid is focused
-    // once every error is drawn, below.
     shouldFocusError: false,
   });
   const {
@@ -494,7 +494,6 @@ function PanelForm({
     setError,
     formState: { errors, isSubmitting, isDirty, submitCount },
   } = methods;
-  // Told to the ingredient form, so closing its modal over them asks first.
   useReportPanelChanges(isDirty);
   const panel = useRef<HTMLFieldSetElement>(null);
   // The panel saves itself, so it keeps a history of its own; the ingredient
@@ -534,8 +533,6 @@ function PanelForm({
     try {
       onSaved(await mutation.mutateAsync(input));
     } catch (error) {
-      // A field error beside the field it names, if this kind shows it;
-      // anything else above the fields.
       const visible = shownFor(kind);
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
         if (rest.length > 0) return undefined;

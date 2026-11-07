@@ -8,9 +8,7 @@ import type { AccessPauseMail } from '../types';
 // Where the site access pause mail starts, apart from the step's service so the job and the service import no cycle.
 
 /**
- * Mails the user of a pause through a job whose run carries the pause's id, the kind and the origin; its step reads the address
- * and the message when it sends. Tried once here instead while MAIL_TRANSPORT is unset, or when the run cannot be started. The
- * pause is already saved, so a lost mail loses nothing, and this never throws.
+ * Tried once here while MAIL_TRANSPORT is unset, or when the run cannot be started. Never throws: the pause is already saved, so a lost mail loses nothing.
  */
 export async function mailPausedUser(pauseId: string, origin: string): Promise<void> {
   const mail: AccessPauseMail = { kind: 'access-pause', pauseId, origin };

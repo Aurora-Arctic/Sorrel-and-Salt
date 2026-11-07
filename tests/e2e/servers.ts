@@ -33,9 +33,7 @@ const PROVIDER_ENV_VARS = [
 // clientCredentials() treats '' as unset, so a developer's real credentials cannot turn this server into
 // the configured one.
 const UNCONFIGURED_PROVIDERS = Object.fromEntries(PROVIDER_ENV_VARS.map((name) => [name, '']));
-// Enough for a provider to count as configured, and useless to any real
-// authorization endpoint — which is why no test may click a provider button
-// against this server.
+// Enough for a provider to count as configured, and useless to a real authorization endpoint, so no test may click a provider button against this server.
 const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
@@ -75,13 +73,9 @@ const serverEnv = (
   ...providers,
 });
 
-// The first slot's server builds; Playwright starts the entries in order, so
-// every later one serves the build the first has finished.
+// One server per worker slot. The first slot's environment is the build's.
 export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
-  command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
   url: serverUrl(slotPort(slot)),
-  reuseExistingServer: !process.env.CI,
-  timeout: slot === 0 ? 180_000 : 60_000,
   env: serverEnv(slotPort(slot), slotDatabase(slot), UNCONFIGURED_PROVIDERS),
 }));
 
@@ -89,24 +83,37 @@ export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
 // credentials per request) and a database of its own, so no slot reseeds it.
 // claude-docs/components/sign-in-panel.md, "Testing".
 const configuredProvidersServer = {
-  command: 'npm run start',
   url: serverUrl(CONFIGURED_PROVIDERS_PORT),
-  reuseExistingServer: !process.env.CI,
-  timeout: 60_000,
   env: serverEnv(CONFIGURED_PROVIDERS_PORT, CONFIGURED_PROVIDERS_DATABASE, PLACEHOLDER_PROVIDERS),
 };
 
 // One more, whose data cache holds: the one place a spec sees a read answered from the cache rather
 // than Postgres. Its database is its own and never reseeded, since a reseed would leave the cache behind it.
 const compendiumCacheServer = {
-  command: 'npm run start',
   url: serverUrl(COMPENDIUM_CACHE_PORT),
-  reuseExistingServer: !process.env.CI,
-  timeout: 60_000,
   env: serverEnv(COMPENDIUM_CACHE_PORT, COMPENDIUM_CACHE_DATABASE, UNCONFIGURED_PROVIDERS, {
     dataCache: true,
   }),
 };
 
-/** Every server a full run needs, in the order Playwright starts them. */
+/** Every server a run needs, in the order they are started: the slot servers, then the two special ones. */
 export const allServers = [...slotServers, configuredProvidersServer, compendiumCacheServer];
+
+/** The env flag that tells scripts/e2e-servers.ts to leave the two special servers out (the story suite has none). */
+export const SLOTS_ONLY = 'E2E_SLOT_SERVERS_ONLY';
+
+/** What scripts/e2e-servers.ts prints when every server answers: the `webServer` entry waits for it. */
+export const SERVERS_READY = 'e2e servers ready';
+
+/**
+ * The one `webServer` entry a Playwright run needs: a script that builds once, starts every server together and prints
+ * SERVERS_READY when all answer (separate entries start one after another, which cost more than the boot). `SIGTERM` lets it stop
+ * its servers, which run in process groups of their own.
+ */
+export const startupServer = (slotsOnly = false) => ({
+  env: (slotsOnly ? { [SLOTS_ONLY]: '1' } : {}) as Record<string, string>,
+  command: 'npx tsx scripts/e2e-servers.ts --playwright',
+  wait: { stdout: new RegExp(SERVERS_READY) },
+  timeout: 240_000,
+  gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 15_000 },
+});

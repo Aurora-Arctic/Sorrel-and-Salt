@@ -1,9 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// "Declined" in a declined row's Status: the site's square badge in attention's red, the
-// account menu's count's, since a declined invitation is something waiting on the steward, who
-// removes it; made plain at a glance among the pending rows' expiry dates.
+// Attention's red, as the account menu's count: a declined invitation waits on the steward, who removes it.
 .pending-invitations__declined {
   @include badge('attention');
 

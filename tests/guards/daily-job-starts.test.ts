@@ -3,9 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// A daily job starts from its Vercel Cron route alone (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md):
-// no page visit, sign-up or send starts one, so the job never depends on traffic and never runs twice for it. The set of
-// callers is pinned, so a further one is argued for in the diff. Untracked files count.
+// A daily job starts from its Vercel Cron route alone, so it never depends on traffic; a further caller is argued for in the diff (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting").
 
 const sources = () =>
   inject('repoFiles').filter(

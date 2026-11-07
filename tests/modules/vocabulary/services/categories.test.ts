@@ -21,12 +21,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The category writes, which only the site keeper makes, and the reads the admin page lists them by (claude-docs/db/categories.md, "Category writes").
-// The seeded vocabulary stays, so every row a test writes carries a name of its own.
-
-// The page and count finders wrapped, passing through to the real ones, to see
-// whether a list reads at all. The filter that categories, forms and deities
-// share is proved here, once.
 const repository = vi.hoisted(() => ({ findCategoryPage: vi.fn(), findCategoryCount: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -48,8 +42,6 @@ beforeAll(async () => {
   [groupId, otherGroupId] = rows.map((row) => row.id);
 });
 
-// Every row a test writes goes, so a name one test uses is free for the next:
-// the entries and their links, then the categories and groups named for it.
 beforeEach(async () => {
   repository.findCategoryPage.mockClear();
   repository.findCategoryCount.mockClear();
@@ -60,20 +52,15 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// The site role is the one thing a vocabulary write turns on, so one non-keeper
-// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
-// owner, whose workspace role is the highest and is still no site role.
+// One non-keeper stands for all (claude-docs/testing/acting-as-fixture-users.md): an owner, the highest coven role and still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that a keeper
-// passes assertCurator is proved once in identity's site-admin tests.
+// A curator stands for both curation roles: assertSiteAdmin refuses one, so its success proves the write calls assertCurator.
 const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<CategoryInput> = {}): CategoryInput {
   return { name: 'Testcraft', description: 'A category this test made', groupId, ...overrides };
 }
 
-/** Seeds a category directly, stamped by A — not through the code under test. */
 async function seed(name: string, group = groupId): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into categories (name, slug, description, group_id, created_by, updated_by)
@@ -92,7 +79,6 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-/** Files a fresh compendium entry, or W's own ingredient, under the category named, by its label alone. */
 const fileUnder = (category: string, name: string, workspaceId: string | null = null) =>
   insertIngredient(
     sql,
@@ -113,7 +99,6 @@ describe('listCategories', () => {
     // Why either could have been listed: both rows are there, the orphan live.
     expect((await rowOf(orphan)).deleted_at).toBeNull();
 
-    // The picker's order: the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c
       join category_groups g on g.id = c.group_id
@@ -169,7 +154,6 @@ describe('countCategories', () => {
 });
 
 describe('listCategories and countCategories under a filter', () => {
-  /** Every live category under a live group the filter reaches, by name — the list's own order. */
   const listedUnder = async (filter: CategoryFilter): Promise<string[]> => {
     const page = await resolvePage({ first: 100 }, (request) => listCategories(filter, request));
     return page.edges.map((edge) => edge.node.name);
@@ -304,8 +288,7 @@ describe('createCategory', () => {
   it.each(NON_ADMINS)(
     'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
     async (_who, user) => {
-      // Why it could have passed: the guard is all that refuses it. The user
-      // holds no site role, and the same input is written for a curator.
+      // Why it could have passed: the guard is all that refuses it; the same input is written for a curator.
       expect(asUser(user).role).toBe('user');
       expect(asUser(F).role).toBe('curator');
 
@@ -531,8 +514,7 @@ describe('deleteCategory', () => {
       await expect(attempt).rejects.not.toThrow('Testd');
     });
 
-    // Two formal names under one label, since one formal name is one entry
-    // per tier; the formal names tell them apart.
+    // Two formal names under one label, since one formal name is one entry per tier.
     it('tells two entries sharing a label apart by their formal names', async () => {
       const id = await seed('Testcraft Namesakes');
       for (const canonicalName of ['Fixtura testalis', 'Fixtura alteralis']) {

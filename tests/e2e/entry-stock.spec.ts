@@ -13,10 +13,6 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The entry page's Stock section, which no story walks: a shelf of jars, one per form, each with its amount (a
-// low or empty one's a tip button), Edit Stock in the heading and on a jar by keyboard, and nothing of another
-// coven's jars.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -73,7 +69,6 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
     await expect(outAmount(lineOf(page, 'Herb'))).toHaveCount(0);
     await expect(lineOf(page, 'Oil')).toContainText('0 ml');
     await expect(outAmount(lineOf(page, 'Oil'))).toBeVisible();
-    // The other coven's jar of the same entry is its own.
     await expect(stockOf(page)).not.toContainText('999');
   });
 

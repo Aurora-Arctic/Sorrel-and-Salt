@@ -7,10 +7,8 @@ import WorkingCompletion from './completion';
 import { completeReason } from './day';
 import type { CompleteWorkingActionProps } from './types';
 
-// Complete on a draft working's row: the flask-and-tick icon button opening the deduction preview in a dialog, and its
-// Mark Complete. The Record a Working dialog draws the same panel in place instead
-// (claude-docs/components/record-working.md). A draft dated ahead has the button `aria-disabled`, so it keeps
-// the focus and shows the day in its tip, which a press opens too, as Save's reason in `FormActions` does.
+// Complete on a draft working's row: opens the deduction preview in a dialog (claude-docs/components/record-working.md).
+// A draft dated ahead has the button `aria-disabled`, so it keeps focus and shows the day in its tip.
 export default function CompleteWorkingAction({
   label = 'Complete',
   workedOn,

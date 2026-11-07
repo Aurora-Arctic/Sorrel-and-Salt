@@ -13,9 +13,6 @@ import { citationText } from '@/lib/citation';
 import type { SeedWork } from '@/db/seed/types';
 import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './types';
 
-// The sources seed writes compendium references keyed by citation, a tradition's source reaching every deity under it, against the real tables emptied first: one run serves every read, and a re-run over a keeper's edit empties them again.
-// The shape every seed shares is index.test.ts's; which sources the docs record is the docs' to review (claude-docs/db/references.md, "How the seed reads the docs").
-
 const byLink = (a: DocLink, b: DocLink) =>
   `${a.kind}|${a.name}|${a.locator}`.localeCompare(`${b.kind}|${b.name}|${b.locator}`);
 
@@ -31,15 +28,14 @@ afterAll(async () => {
   await sql.end();
 });
 
-/** The vocabularies the sources link, then the sources. */
 async function seedAll(): Promise<void> {
   await seedDeities(db);
   await seedAstrology(db);
   await seedSources(db);
 }
 
-// The two days as text, as Drizzle reads them: postgres.js would hand back a
-// `Date`, which the renderer does not print.
+// The two days as text, as Drizzle reads them: postgres.js would hand back a `Date`,
+// which the renderer does not print.
 const REFERENCE =
   'select *, accessed::text as accessed_day, modified::text as modified_day from "references"';
 
@@ -59,14 +55,12 @@ async function allLinks(): Promise<ReferenceLinkRow[]> {
   return sql<ReferenceLinkRow[]>`select * from reference_links`;
 }
 
-/** The one seeded reference whose citation is `citation`. */
 async function referenceCited(citation: string): Promise<ReferenceRow> {
   const found = (await allReferences()).filter((row) => citationText(row) === citation);
   expect(found, citation).toHaveLength(1);
   return found[0];
 }
 
-/** What a reference links, by the row's name. */
 async function namesLinkedFrom(referenceId: string): Promise<DocLink[]> {
   const rows = await sql<{ kind: DocLinkKind; name: string; locator: string | null }[]>`
     select case

@@ -5,7 +5,6 @@ import { requireCuratorSession } from '../../../lib/request-session';
 export default async function CuratorPage() {
   await requireCuratorSession();
 
-  // A head with a lede, then a table of contents in the nav's own sections.
   return (
     <main className="admin-index">
       <PageHeader

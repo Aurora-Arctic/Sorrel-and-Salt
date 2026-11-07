@@ -1,9 +1,7 @@
 import type { EmailTheme } from './types';
 
-// The site's two themes as plain hexes. A mail client reads neither Sass nor
-// CSS custom properties, so these are copied from the theme mixins in
-// src/scss/_mixins.scss, and a palette change edits both in one PR: no test
-// compares them, a mail's colours being presentation (claude-docs/email.md).
+// The site's two themes as plain hexes: a mail client reads neither Sass nor custom properties, so these are copied
+// from src/scss/_mixins.scss and a palette change edits both (claude-docs/email.md).
 
 export const EMAIL_THEMES = {
   dark: {

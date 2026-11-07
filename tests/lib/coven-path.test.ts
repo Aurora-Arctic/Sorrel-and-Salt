@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  NEW_COVEN_PATH,
-  covenSlugOf,
-  covenTarget,
-  isReservedCovenSlug,
-  pathInCoven,
-} from '@/lib/coven-path';
+import { NEW_COVEN_PATH, covenSlugOf, isReservedCovenSlug, pathInCoven } from '@/lib/coven-path';
 
 describe('covenSlugOf', () => {
   it.each([
@@ -14,7 +8,6 @@ describe('covenSlugOf', () => {
     ['/account', null],
     ['/coven', null],
     ['/compendium/coven/x', null],
-    // The create page's segment is no workspace's.
     [NEW_COVEN_PATH, null],
   ])('reads %s as %s', (path, expected) => {
     expect(covenSlugOf(path)).toBe(expected);
@@ -35,7 +28,6 @@ describe('pathInCoven', () => {
 describe('isReservedCovenSlug', () => {
   it('reserves the create page’s segment and the values of `?new` that open a dialog, and nothing else', () => {
     expect(isReservedCovenSlug('new')).toBe(true);
-    // The values of `?new` that open a dialog rather than name a coven.
     expect(isReservedCovenSlug('spell')).toBe(true);
     expect(isReservedCovenSlug('ingredient')).toBe(true);
     // A value naming a coven is a prefix and then the whole slug, so a slug may start
@@ -85,49 +77,5 @@ describe('pathInCoven from a page the coven registered', () => {
 
   it('ignores the registration outside a coven', () => {
     expect(pathInCoven('/account', 'b', { opens: ['b'] })).toBe('/coven/b');
-  });
-});
-
-// While a coven page is on its way its region draws the page that arrives: the
-// heading and filter of the cupboard, the heading and tabs of the people, the
-// home's own contents menu.
-describe('covenTarget', () => {
-  it('draws an ingredient\x27s own page as a page with its jump menu, not the cards of the list above it', () => {
-    expect(covenTarget('/coven/a/ingredients/some-id')).toEqual({
-      region: 'coven',
-      shape: 'page',
-      frame: 'entry',
-      head: 'eyebrow',
-    });
-  });
-
-  it('draws the Ingredients list as compact cards under the heading and a filter, as the cards arrive', () => {
-    expect(covenTarget('/coven/a/ingredients')).toEqual({
-      region: 'coven',
-      shape: 'cards',
-      title: true,
-      filter: true,
-      density: 'compact',
-    });
-  });
-
-  it('draws a section it does not name as a plain page', () => {
-    expect(covenTarget('/coven/a/settings')).toEqual({ region: 'coven', shape: 'page' });
-  });
-
-  it('draws both grimoire tabs as compact spell cards under the heading, the tab row and a filter, and the page of one spell as a recipe', () => {
-    const list = {
-      region: 'coven',
-      shape: 'cards',
-      title: true,
-      filter: true,
-      tabs: true,
-      action: true,
-      density: 'compact',
-      card: 'spell',
-    };
-    expect(covenTarget('/coven/a/grimoire')).toEqual(list);
-    expect(covenTarget('/coven/a/grimoire/drafts')).toEqual(list);
-    expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'recipe' });
   });
 });

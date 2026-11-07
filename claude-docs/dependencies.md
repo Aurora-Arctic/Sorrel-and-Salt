@@ -1,5 +1,7 @@
 # Dependencies
 
+This is the one doc that names versions, because the versions are its subject.
+
 What is behind, what is blocked and what has no fix, as of the audit of 2026-10-12 (M10.30), with the items below rechecked on 2026-10-30. It covers all 69 direct dependencies, 34 runtime and 35 dev. Each open item below ends with when to look at it again.
 
 ## How the audit is run
@@ -22,7 +24,7 @@ From a clean checkout, in this order:
 - `graphql-request@7.4.0` (peer `14 - 16`) is the old name of Graffle, kept on a branch with occasional releases, so a 17 range is unlikely. This repo uses only its `request()` and `ClientError`, so M10.31 replaced it with a small `fetch` wrapper (`src/lib/graphql-client.ts`).
 - `@escape.tech/graphql-armor@3.2.0` depends on `graphql@^16.10.0` as a hard `dependencies` entry in each sub-package (checked on `graphql-armor` and `graphql-armor-max-depth`), not a peer range, so installing `graphql` 17 would put a second copy of 16 under armor, the "another module or realm" failure. It has an open request for 17, issue #885 (September 2026), and its `latest` is still 3.2.0, published 2025-12-29 (checked 2026-10-30).
 
-**Revisit when** an armor release accepts `graphql` 17, or #885 closes; armor is the only blocker left. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
+**Revisit when** an armor release accepts `graphql` 17, or #885 closes; armor is the only blocker left. The pin's reasoning is [`graphql/endpoint.md`](graphql/endpoint.md).
 
 ## `postgres` 4 is held
 
@@ -30,7 +32,7 @@ From a clean checkout, in this order:
 
 ## Only prereleases ahead
 
-- `drizzle-orm` and `drizzle-kit` `1.0.0-rc.4` (June 2026); `latest` is still 0.45 and 0.31. [`db/orm-version.md`](db/orm-version.md) holds the decision and its three triggers; none has fired. **Revisit when** `1.0` reaches the `latest` dist-tag.
+- `drizzle-orm` and `drizzle-kit` `1.0.0-rc.4` (June 2026); `latest` is still 0.45 and 0.31. [`db/repository-files.md`](db/repository-files.md) holds the decision and its three triggers; none has fired. **Revisit when** `1.0` reaches the `latest` dist-tag.
 - `react-hook-form` `8.0.0-beta.4` (September 2026), `yaml` `3.0.0-2`, and `prettier` `4.0.0-alpha.13` (no release since November 2025). **Revisit when** `latest` moves on any of them.
 
 ## Advisories and deprecations with no fix
@@ -38,7 +40,7 @@ From a clean checkout, in this order:
 `npm audit` reported 0 findings on 2026-10-29. The advisories below are no longer reported (the lockfile resolves past or away from them); each stays listed with its revisit condition in case it returns. They were all in devDependencies, and none had a real fix:
 
 - **braces up to 3.0.3, GHSA-vfj7-8cjw-p6xm** (CVSS 8.7, September 2026): a deeply nested brace pattern from an attacker exhausts the stack. No patched version exists. It is reached through `micromatch`, `fast-glob` and `globby` under `stylelint` and `@graphql-codegen/cli`, each at its latest release, and none takes glob patterns from users. **Revisit when** a patched `braces` is published.
-- **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
+- **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/repository-files.md`](db/repository-files.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
 - `tsconfck`, under `vite-tsconfig-paths`, is deprecated as "unmaintained" (seen 2026-10-30). It is upstream's to fix; **revisit when** `vite-tsconfig-paths` moves to another resolver.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.
 
@@ -49,7 +51,3 @@ The invitation card print sheets (M15.19, [`invitation-cards/print.md`](invitati
 - `qrcode` supplies the QR module matrix (`QRCode.create`); the card draws the SVG itself, because the package draws square modules only. It runs in the browser, where the admin page renders each card and builds the batch PDF, and takes no part in any server path. `@types/qrcode` (dev) types it.
 - `pdf-lib` builds the print PDF in the browser. Its `latest` is 1.17.1, published in November 2021, and it has no open advisory; it is small, has no native code, and the format it writes has not changed. **Revisit when** an advisory names it, or a browser change breaks a sheet.
 - `@pdf-lib/fontkit` lets `pdf-lib` embed and subset the cards' TrueType fonts.
-
-## `jsqr` reads a code back in story 88
-
-`jsqr` (dev) decodes a QR code from pixels. Story 88 draws a minted card's code onto a canvas and decodes it, to prove the code holds the card's link. It runs in the test runner only and ships in no bundle.

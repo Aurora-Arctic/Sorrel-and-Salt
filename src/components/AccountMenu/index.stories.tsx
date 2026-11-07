@@ -5,9 +5,6 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 import { press } from '../../../.storybook/press';
 import { route } from '../../../.storybook/route';
 
-// Render-only; behaviour is asserted in tests/components/AccountMenu. The panel
-// hangs from the button's right edge, so each story sits at the right, with a
-// tall `flex-start` wrapper so the clipping frame holds the open panel.
 const meta = {
   title: 'Shell / Account Menu',
 } satisfies Meta;
@@ -32,8 +29,6 @@ const LINKS = [
   { label: 'Keepers', href: '/keepers' as const, base: '/keepers' },
 ];
 
-// Opened once on mount, as a press on it would; `failSignOut` then presses Sign
-// Out, which the workshop does not serve, so it fails as a lost request does.
 const Opened = ({
   name = 'Fixture Member',
   verified = true,
@@ -66,9 +61,6 @@ const Opened = ({
   );
 };
 
-// One control chooses the state, each a whole menu. Closed With Invitations
-// shows the dot on the disc for two waiting invitations. Open With One
-// Invitation reads "1 Coven Invitation". Open Unverified is Sign Out alone.
 const STATES: Record<string, ReactNode> = {
   Closed: (
     <Right>

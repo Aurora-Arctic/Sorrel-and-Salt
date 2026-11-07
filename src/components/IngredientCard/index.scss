@@ -4,14 +4,10 @@
 @use 'compact' as *;
 @use 'specimen-card' as *;
 
-// The Foundations specimen (`.specimen` in _primitives.scss) carries the layout; this adds the surface,
-// which `.modal` gives the specimen there but a list item should not have, and the forms line's spacing.
 .ingredient-card {
   @include modal-surface($shadow-floating);
 
-  // 16px: one step under the 24px it was, with the type a step smaller.
   padding: space(4);
-  // The containing block for the name link's stretched `::after` below.
   position: relative;
   // Its own stacking context at rest, so the raised actions and tips inside it
   // (z-index 1 above) stay inside the card instead of painting over the next card.
@@ -60,9 +56,7 @@
     inset-block-start: calc(1px - #{$drawer-travel});
     block-size: calc(#{$drawer-travel} + #{$drawer-inset});
     transition: inset-block-start $motion-medium ease;
-    // Top of the stack first. Straight bands, not blurred shadows, as a blur piles up in the corners and
-    // reads as a curve: the face's cast shadow, a wash shading in from each wall (theme tokens: lighter
-    // in light), the side walls, then the back wall's seam easing into the floor.
+    // Straight bands, not blurred shadows: a blur piles up in the corners and reads as a curve.
     background:
       linear-gradient(
         0deg,
@@ -109,7 +103,6 @@
 @mixin ingredient-card-lifted {
   .ingredient-card {
     background-color: $surface-card-hover;
-    // The second shadow is cast upward, onto the drawer's rim above the face.
     box-shadow: $shadow-lifted, $drawer-rim-shadow;
     inset-block-start: $drawer-travel;
     // The colour and shadow fade in only on the way into the lift, so a theme change, which also
@@ -147,7 +140,6 @@
   }
 }
 
-// The colour and shadow change stay; the movement and the fade go.
 @include reduced-motion {
   .ingredient-card {
     transition: none;
@@ -223,9 +215,7 @@
 .ingredient-card__forms {
   @include dotted-row('.ingredient-card__item');
 
-  // Body down to small; the icons are in em, so they follow.
   font-size: type-size('small');
-  // Wrapped lines sit close: they are one list of forms, not separate rows.
   row-gap: space(1);
   // Air above, the chips to the forms the same as the forms to the rule below
   // (the stock section's `margin-top` is this token too, each beside the
@@ -266,3 +256,21 @@
 }
 
 // The card's More takes its ink from IconTip's `.icon-tip__more`, as every More does.
+
+// The skeleton: the card's frame at the height its list's cards stand (`$card-skeleton-heights`), the
+// block filling it.
+.ingredient-card--skeleton {
+  @include card-skeleton-fill;
+  box-sizing: border-box;
+}
+
+@each $kind in ('cupboard', 'compendium') {
+  .ingredient-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'regular');
+  }
+
+  [data-density='compact']:not(:root[data-card-density='regular'] *)
+    .ingredient-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'compact');
+  }
+}

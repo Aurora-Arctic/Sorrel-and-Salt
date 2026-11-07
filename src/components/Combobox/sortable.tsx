@@ -24,7 +24,6 @@ import type { ComboboxSortableEntriesProps, ComboboxSortableEntry, FlowShape } f
 // A list whose order means something: its chips in the control, each moved by its handle, on dnd-kit's sortable preset; pointer and keyboard moves and the live region
 // (claude-docs/components/combobox.md, "A sortable list").
 
-/** One chip, given its place in the sortable list. */
 function SortableEntry({ id, ...entry }: ComboboxSortableEntry): ReactElement {
   return <ComboboxEntry {...entry} sortable={useSortable({ id })} />;
 }
@@ -40,15 +39,12 @@ export function ComboboxSortableEntries({
   const valueOf = (key: UniqueIdentifier) => entries[indexOf(key)]?.value;
   const at = (key: UniqueIdentifier) => `position ${indexOf(key) + 1} of ${entries.length}`;
   const list = useRef<HTMLUListElement | null>(null);
-  // The row's shape, measured as a move starts, while it is in progress.
   const shape = useRef<FlowShape | null>(null);
-  // The place a key last moved the lifted chip to, which is what it is over.
   const { target, collisionDetection } = useKeyboardTarget();
 
   const widthsOf = (rects: { width: number }[], order: number[]) =>
     order.map((index) => rects[index]?.width ?? 0);
 
-  /** The chips making way, each at the place the row lays it out, not onto another chip's box (see flow.ts). */
   const strategy: SortingStrategy = ({ rects, activeIndex, overIndex, index }) => {
     const rect = rects[index];
     if (!shape.current || !rect || rects.length === 0) return null;

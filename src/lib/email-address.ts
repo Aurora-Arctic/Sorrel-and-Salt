@@ -1,11 +1,8 @@
 import type { ValidationIssue } from './types';
 
-// The one rule for what an email address looks like, in a file with no
-// server-only import so the invite dialog checks an address before it sends
-// and the services check it again: the same words either way. Lives here so the client can use it; the
-// identity module's email service re-exports it.
+// The one rule for what an email address looks like, with no server-only import so the client and the
+// services share it; the identity module's email service re-exports it.
 
-/** Trimmed and lower-cased, as the column stores it. */
 export function normaliseEmail(input: string): string {
   return input.trim().toLowerCase();
 }
@@ -16,7 +13,6 @@ export function normaliseEmail(input: string): string {
 const SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_LENGTH = 254;
 
-/** The one rule a normalised address broke, pathed to the field, or `null`. */
 export function validateEmailAddress(email: string): ValidationIssue | null {
   const path = ['email'];
   if (email.length === 0) return { path, message: 'Enter an email address' };

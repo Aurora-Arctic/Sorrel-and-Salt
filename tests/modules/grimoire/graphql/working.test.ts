@@ -11,8 +11,6 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// Workings over the wire: a spell's pages of them, the count beside it, the preview, and the four writes. Who may do what is
-// services/workings.test.ts's; here are the shape, the reads a page costs, the preview matching completion, and the error codes.
 const repository = vi.hoisted(() => ({
   findWorkingsPage: vi.fn(),
   findParticipantsOfWorkings: vi.fn(),

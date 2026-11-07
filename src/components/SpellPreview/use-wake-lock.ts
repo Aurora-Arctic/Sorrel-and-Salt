@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// 'idle': not asked for; 'held': the browser is keeping the screen on; 'dropped': the browser took the lock
-// back (the tab was hidden) and it is asked for again on return; 'off': turned off by the person; 'asking':
-// turned on again and not yet answered, so the sign stays and its eye can open; 'failed':
-// the browser refused, so there is nothing to show.
+// 'idle': not asked for; 'held': the screen is kept on; 'dropped': the browser took it back (tab hidden) and it is
+// asked for again on return; 'off': turned off by the person; 'asking': turned on again, unanswered; 'failed':
+// refused, nothing to show.
 type WakeLockStatus = 'idle' | 'held' | 'dropped' | 'off' | 'asking' | 'failed';
 
 export type WakeLock = {
-  // False where there is nothing to show: no API, a refused request, or the pane closed.
   shown: boolean;
   held: boolean;
   toggle: () => void;
@@ -19,7 +17,6 @@ export type WakeLock = {
 export function useWakeLock(active: boolean): WakeLock {
   const [status, setStatus] = useState<WakeLockStatus>('idle');
   const [wanted, setWanted] = useState(true);
-  // A closed pane starts over: the next opening asks again, even after the sign was turned off.
   const [wasActive, setWasActive] = useState(active);
   if (wasActive !== active) {
     setWasActive(active);

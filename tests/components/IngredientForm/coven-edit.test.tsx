@@ -19,12 +19,8 @@ import {
   offerNothing,
 } from '../../support/msw/ingredient-lookups';
 
-// The form editing a coven's own entry: what an edit changes on the coven tier, written once here.
-// What an edit does in either tier (one save, off until something changes, a rename's near match holding nothing) is compendium.test.tsx's, and every field of the form is index.test.tsx's.
-
 const FOLK_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c03';
 
-/** Testwort as a coven holds it: a formal name, a saved folk name. */
 const TESTWORT: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -124,8 +120,6 @@ describe("IngredientForm editing a coven's own entry", () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
   });
 
-  // Delete sits at the dialog's foot as the compendium's does,
-  // and deletes from this coven alone.
   it('draws Delete Ingredient as the bin icon with no visible text, and it still opens the question', () => {
     renderEdit();
 
@@ -133,7 +127,6 @@ describe("IngredientForm editing a coven's own entry", () => {
     expect(bin.querySelector('svg')).not.toBeNull();
     expect(bin.className).toContain('icon-tip__remove');
     expect(bin.className).not.toContain('btn');
-    // Its words are for assistive technology alone.
     expect(bin.querySelector('.visually-hidden')).not.toBeNull();
     press('Delete Ingredient');
     expect(button('Cancel')).toBeInTheDocument();

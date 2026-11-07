@@ -32,11 +32,9 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** A W-local stub: no formal name, and so `none`. */
 const local = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none', ...overrides });
 
-/** A compendium stub: no formal name, and so `none`. */
 const entry = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: null, nomenclature: 'none', ...overrides });
 
@@ -46,14 +44,12 @@ const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id
 const link = (ingredientId: string): SubstituteFields => ({ ingredientId });
 const typed = (name: string): SubstituteFields => ({ name });
 
-/** The whole stub as either service takes it, with these substitutes. */
 const input = (name: string, substitutes: SubstituteFields[]) => ({
   name,
   nomenclature: 'none' as const,
   substitutes,
 });
 
-/** What the read answers for one ingredient, as name and linked id. */
 async function readBack(session: Session | null, id: string, workspaceId: string | null) {
   const [answer] = await substitutesOf(session, [{ id, workspaceId }]);
   if (answer instanceof Error) throw answer;
@@ -64,7 +60,6 @@ async function readBack(session: Session | null, id: string, workspaceId: string
   }));
 }
 
-/** Every substitute row of the ingredient, tombstones included, oldest first. */
 function substituteRows(ingredientId: string) {
   return sql`
     select id, substitute_id, name, created_by, deleted_at, deleted_by, xmin::text as xmin
@@ -75,7 +70,6 @@ function substituteRows(ingredientId: string) {
 const liveRows = async (ingredientId: string) =>
   (await substituteRows(ingredientId)).filter((row) => row.deleted_at === null);
 
-/** The issues a refused write carried, by path and message. */
 async function refusal(write: Promise<unknown>) {
   const error = await write.catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ValidationError);

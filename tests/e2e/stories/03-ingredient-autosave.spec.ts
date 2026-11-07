@@ -5,7 +5,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { localIngredient, seedCoven, withSql } from './coven-ingredients';
 
-// Story 81, the ingredient half: typing in a coven's ingredient form is saved without a press.
+// The ingredient half of @story-81: typing in a coven's ingredient form is saved without a press.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

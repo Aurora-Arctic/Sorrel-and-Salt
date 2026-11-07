@@ -8,11 +8,6 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
-// Over the wire: the public `categories` list and the keeper's three writes (the transport's half, claude-docs/testing/layer-ownership.md).
-// That is a page, its groups in one read, its count, the filters reaching the read, and per write one refusal per error code.
-// Roles, filter matching and collisions are services/categories.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
-
-// The group reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();

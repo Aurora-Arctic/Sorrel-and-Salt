@@ -40,13 +40,11 @@ async function proofsOf(session: Session, covenIds: readonly string[]): Promise<
   return proofs.filter((proof): proof is Membership => proof !== null);
 }
 
-/** The address's picked covens, proved, up to `MAX_PICKED_COVENS` of them. */
 const pickedProofs = (session: Session, covenIds: readonly string[]) =>
   proofsOf(session, [...new Set(covenIds)].slice(0, MAX_PICKED_COVENS));
 
 /**
- * Every coven the viewer is in, proved, observers included: Not In's "none of my
- * covens". Not capped, as the list is the viewer's own and not the address's.
+ * Not capped, as the list is the viewer's own and not the address's.
  */
 async function everyCovenProof(session: Session): Promise<Membership[]> {
   const [memberships] = await membershipsOf(session, [session.userId]);
@@ -76,9 +74,9 @@ async function covenScope(
 }
 
 /**
- * One page of the compendium under `filter`, kept to the entries a live
- * cupboard row of any picked coven names, or, under Not In, to the entries
- * none names. With no coven filter in effect, the cached `listCompendium`.
+ * One page of the compendium under `filter`, kept to the entries a live cupboard
+ * row of any picked coven names (under Not In, the entries none names). With no
+ * coven filter in effect, the cached `listCompendium`.
  *
  * @throws {Forbidden} Reviewed is set and `session` does not curate.
  * @throws {ValidationError} as `listCompendium` does.
@@ -95,9 +93,6 @@ export async function listCompendiumHeldIn(
 }
 
 /**
- * How many entries `listCompendiumHeldIn` lists under the same arguments, and
- * how many come before `start`.
- *
  * @throws {ValidationError} as `countCompendium` does.
  */
 export async function countCompendiumHeldIn(
@@ -112,9 +107,7 @@ export async function countCompendiumHeldIn(
 }
 
 /**
- * The facet counts beside `listCompendiumHeldIn`: each counts only the entries
- * the list holds. With no coven filter in effect, the cached `compendiumFacets`.
- *
+ * Each counts only the entries the list holds; with no coven filter, the cached `compendiumFacets`.
  * @throws {ValidationError} as `compendiumFacets` does.
  */
 export async function compendiumFacetsHeldIn(

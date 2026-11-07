@@ -16,18 +16,14 @@ import type {
 const OR = new Intl.ListFormat('en-US', { type: 'disjunction' });
 const AND = new Intl.ListFormat('en-US', { type: 'conjunction' });
 
-// "The" goes before the two luminaries and no other celestial body.
 const WITH_THE = new Set(['sun', 'moon']);
 
 type Part = SearchSentenceFragment;
 
 const text = (t: string): Part => ({ kind: 'text', text: t });
 
-// Values show in lower case, bar deities, zodiac signs and celestial bodies, which are proper
-// names; display only, as the fragment's `value` keeps its own spelling.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
-/** A list format's literal chunk: a bare word ("or") is a join, and the comma and spaces around it stay text. */
 function literal(chunk: string): Part[] {
   const match = /^(\P{L}*)(\p{L}+)(\P{L}*)$/u.exec(chunk);
   if (!match) return [text(chunk)];
@@ -39,7 +35,6 @@ function literal(chunk: string): Part[] {
   ];
 }
 
-/** Writes a list of value fragments joined by the list format, in the list's own order. */
 function valueList(
   facet: SearchSentenceFacet,
   values: readonly string[],
@@ -48,7 +43,6 @@ function valueList(
 ): Part[] {
   const parts: Part[] = [];
   const marker = '\u0000';
-  // `formatToParts` hands back the joining words, so none are hardcoded here.
   const chunks = format.formatToParts(values.map((_, i) => `${marker}${i}`));
   for (const chunk of chunks) {
     if (chunk.type === 'literal') {
@@ -123,8 +117,6 @@ export function buildSearchSentence({
   const categories = picked(filter.categories);
   if (categories.length > 0) {
     const any = filter.categoryMode === 'any';
-    // Any-mode reads "in the A or B category" (one of them is enough); all-mode "in the A and B
-    // categories".
     clause(
       text('in the '),
       ...valueList('categories', categories, any ? OR : AND, (v) => lower(label('categories', v))),
@@ -132,7 +124,6 @@ export function buildSearchSentence({
     );
   }
 
-  // The grimoire's four facets, after the categories.
   const moonPhases = picked(filter.moonPhases);
   if (moonPhases.length > 0) {
     clause(text('in the moon phase '), ...valueList('moonPhases', moonPhases, OR, (v) => v));

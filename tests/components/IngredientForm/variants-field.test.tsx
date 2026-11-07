@@ -27,9 +27,7 @@ import {
   variant,
 } from './variants-harness';
 
-// The Variants section on its own: a form added from the New Form box, refused there, removed by its own button, folded to a line and opened one at a time, each variant's sections folding under its own headings, and a form a keeper has renamed settled by the member.
-// It is rendered by ./variants-harness.tsx, the field on the form's resolver. What the whole form adds around it (a save opening the variant an error is in, Close All, undo, the unsaved-changes question, the save mutation) is variants.test.tsx's;
-// a variant's copy buttons and substitutes are copy.test.tsx's and substitutes.test.tsx's (claude-docs/components/ingredient-form.md, "The variants").
+// claude-docs/components/ingredient-form.md, "The variants"
 
 const save = () => press('Save Ingredient');
 
@@ -53,7 +51,6 @@ describe('VariantsField', () => {
     save();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    // The form's own flag, the ingredient's left off beside it.
     expect(sent(onSubmit)?.toxic).toBe(false);
     expect(sent(onSubmit)?.variants).toEqual([
       {
@@ -83,8 +80,6 @@ describe('VariantsField', () => {
     noVariant('Oyl');
   });
 
-  // Its × asks first, and only removes: an open card stays open until the
-  // answer, and Cancel leaves it so.
   it('removes a variant by its own button once confirmed, and sends the rest', async () => {
     const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -133,8 +128,6 @@ describe('VariantsField', () => {
     expect(newForm()).toHaveValue('  oIL ');
   });
 
-  // Each variant one summary line, opened by its
-  // Edit, one at a time, its fields hidden while closed but kept.
   describe('folded to a line', () => {
     it('opens an entry with every variant closed, its fields out of reach until Edit opens it', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
@@ -150,8 +143,6 @@ describe('VariantsField', () => {
       expect(edit).toHaveAttribute('aria-expanded', 'true');
       const region = document.getElementById(edit.getAttribute('aria-controls') ?? '');
       expect(region).toBeVisible();
-      // The focus goes into the opened fields, to the first: Identity's
-      // heading, its section closed as an edit's are.
       expect(sectionOf(variant('Oil'), 'Identity')).toHaveFocus();
       openSectionsIn(variant('Oil'), 'Details & Care');
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
@@ -173,8 +164,6 @@ describe('VariantsField', () => {
       );
     });
 
-    // An open variant's fields in the ingredient's
-    // sections, a heading level beneath Variants.
     it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Forms', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
 
@@ -210,11 +199,9 @@ describe('VariantsField', () => {
 
       expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'true');
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
-      // The New Form box keeps the focus, ready for the next.
       expect(newForm()).toHaveFocus();
     });
 
-    // The box heads the section, the newest variant beneath it.
     it('lists a variant added beneath the New Form box, ahead of those before it', () => {
       renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -229,8 +216,6 @@ describe('VariantsField', () => {
     });
   });
 
-  // An open variant's sections fold as the
-  // ingredient's do, under its own headings.
   describe('a variant’s sections', () => {
     it('opens an existing variant with every section closed, each summarising what it holds', () => {
       renderVariants({
@@ -269,7 +254,6 @@ describe('VariantsField', () => {
 
       expect(openIn(oil)).toEqual(['Correspondences']);
       expect(control(oil, 'Celestial Body')).toBeVisible();
-      // The section around it, a level up, stays as it was.
       expect(screen.getByRole('button', { name: 'Forms' })).toHaveAttribute(
         'aria-expanded',
         'true',
@@ -370,8 +354,7 @@ describe('VariantsField', () => {
   });
 });
 
-// `reconcile` re-keys the folds to a restored list. The form has no control
-// that reorders variants, so the hook is driven directly here.
+// The form has no control that reorders variants, so the hook is driven directly.
 describe('useVariantFolds reconcile', () => {
   const [FIRST] = VARIANT_SECTION_KEYS;
   const [, SECOND] = VARIANT_SECTION_KEYS;

@@ -18,10 +18,9 @@ import './index.scss';
 // current-page marking are client code (claude-docs/components/app-shell.md).
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
-  // The Compendium is public, so its link is everyone's, an unverified account's
-  // included: it leads to a page that never sends them to the email page. Your Coven is a
-  // verified account's who belongs to a coven, or who curates (a curator or keeper in none
-  // is sent to /coven). Curator and Keepers are a verified curator's or admin's alone.
+  // The Compendium is public, so its link is everyone's, an unverified account's included. Your Coven is a
+  // verified account's who belongs to a coven or curates (a curator or keeper in none is sent to /coven).
+  // Curator and Keepers are a verified curator's or admin's alone.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const curates = viewer.verified && viewer.canCurate;
   const links: SiteLink[] = [compendium];
@@ -47,11 +46,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
         <div className="app-shell__bar-inner">
           {/* The brand leads to `/`, which is public, so every viewer gets the link,
               an unverified one included. */}
-          <PendingLink
-            href="/"
-            className="app-shell__brand"
-            navigationTarget={{ region: 'main', shape: 'page' }}
-          >
+          <PendingLink href="/" className="app-shell__brand">
             {brand}
           </PendingLink>
           <SiteNav links={links} />

@@ -1,36 +1,8 @@
 #!/usr/bin/env node
-// Lighthouse's SEO category on the three public page kinds: the home
-// page, the compendium list and one current entry, signed out (or the entries
-// named with `--path`). Exits non-zero
-// unless every SEO audit that applies passes. Run by hand; it is no part of CI,
-// `test:coverage`, `test:stories` or `e2e`.
-//
-// ONLY MEANS ANYTHING AGAINST A PRODUCTION-ENV SERVER (`VERCEL_ENV=production`
-// at run time). Off production the app answers `X-Robots-Tag: noindex` and
-// robots.txt disallows all, so the "Page isn't blocked from indexing" and
-// "robots.txt is valid" audits correctly fail, and so does every Vercel
-// preview. A failure against staging or a preview is the site working.
-//
-// usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>] [--path <path>]...
-//   <base-url>  where the production-env server answers, e.g. http://localhost:8001
-//               (from the devcontainer's own side, a server it runs is
-//               http://devcontainer:<port> to the browser)
-//   --port      use a Chrome already listening for DevTools on this port; without
-//               it a local Chrome is launched headless with `chrome-launcher`,
-//               which needs Chrome installed on the machine running this. The
-//               devcontainer has none, and the Playwright servers open no
-//               DevTools port (they launch Chromium over a pipe), so it uses the
-//               `lighthouse-chrome` container instead (`make lighthouse-up` on
-//               the host). .devcontainer/docker-compose.yml sets
-//               LIGHTHOUSE_CDP_HOST and LIGHTHOUSE_CDP_PORT, which are the
-//               defaults here, so there `--host` and `--port` are not needed.
-//   --host      the machine that Chrome's port is on (default localhost).
-//   --path      a page to audit besides `/` and `/compendium`, starting with `/`;
-//               repeat it for more. Given any, they stand in for the entry the
-//               script would pick itself, because the first entry on the list
-//               is one page and says little about the rest; a caller sampling
-//               entries picks them (say, at random from /sitemap.xml) and
-//               passes them here, so the script holds no list of its own.
+// Lighthouse's SEO category on the public page kinds, signed out; exits non-zero unless every applicable
+// audit passes. Run by hand, only meaningful against a `VERCEL_ENV=production` server.
+// Usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <port>] [--path <path>]...
+// (claude-docs/commands.md, "Lighthouse SEO")
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
 import { lookup } from 'node:dns/promises';
@@ -41,12 +13,10 @@ const USAGE =
   'the noindex header and the disallow-all robots.txt make the crawlability audits fail.';
 
 const args = process.argv.slice(2);
-/** Removes `flag value` from `args` and returns the value. */
 function takeOption(flag) {
   const at = args.indexOf(flag);
   return at === -1 ? undefined : args.splice(at, 2)[1];
 }
-/** Removes every `--path value` from `args` and returns the values. */
 function takePaths() {
   const found = [];
   for (let at = args.indexOf('--path'); at !== -1; at = args.indexOf('--path')) {
@@ -70,7 +40,6 @@ if (
 }
 const origin = new URL(base).origin;
 
-/** The first entry the list links to: any current slug will do. */
 async function firstEntryPath() {
   const html = await (await fetch(`${origin}/compendium`)).text();
   const match = /href="(\/compendium\/ingredients\/[^"]+)"/.exec(html);
@@ -80,10 +49,8 @@ async function firstEntryPath() {
 
 const paths = ['/', '/compendium', ...(extraPaths.length ? extraPaths : [await firstEntryPath()])];
 
-// An IP, not the name: Chrome answers DevTools requests only when the Host
-// header is an IP or `localhost`, and it builds the WebSocket address it
-// hands back from that same header. Lighthouse sends the `hostname` flag as
-// the Host header, so a name like `lighthouse-chrome` would be refused.
+// An IP, not the name: Chrome answers DevTools requests only when the Host header is an IP or `localhost`
+// (claude-docs/commands.md, "Lighthouse SEO").
 const hostname = port && hostName ? (await lookup(hostName, { family: 4 })).address : undefined;
 
 const chrome = port

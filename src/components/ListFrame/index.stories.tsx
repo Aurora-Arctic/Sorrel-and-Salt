@@ -1,11 +1,10 @@
+import { ListBodySkeleton, ListSkeleton } from './skeleton';
+import EmptyState from '../EmptyState';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Pager from '../Pager';
 import ListFrame, { ListBody, ListNavigationContext } from '.';
 
-// Render-only; behaviour is asserted in the tests of CompendiumList, UserList and
-// Pager. A list's frame around a small table and pager; `Pending` holds a page on
-// its way. A whole list on its way is GroupedValueList's `CategoriesPending`.
 const meta = {
   title: 'Layout / List Frame',
 } satisfies Meta;
@@ -16,7 +15,7 @@ const ROWS = ['Testwort', 'Fixture Salt', 'Mockroot'];
 
 const List = () => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <div className="data-table-frame">
         <table className="data-table" aria-label="Fixtures">
           <thead>
@@ -46,22 +45,61 @@ const pendingNode = (
   </ListNavigationContext.Provider>
 );
 
-// A list of cards on its way: `shape="cards"` swaps the table's skeleton for a grid of
-// card shapes, the same grid the real list draws.
 const pendingCardsNode = (
   <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <ListFrame className="card-list">
-      <ListBody shape="cards">
+      <ListBody skeleton={<ListBodySkeleton label="Cards" />}>
         <p>Cards</p>
       </ListBody>
     </ListFrame>
   </ListNavigationContext.Provider>
 );
 
+// A whole list on its way: the filter row disabled over the placeholder rows, and over cards.
+const loadingTableNode = (
+  <ListSkeleton
+    filter="Filter Groups"
+    label="Groups"
+    headings={['Name', 'Description']}
+    count={4}
+  />
+);
+const loadingCardsNode = (
+  <ListSkeleton filter="Filter Spells" label="Spells" card="spell" density="compact" count={4} />
+);
+
+const emptyNode = (
+  <ListFrame>
+    <EmptyState label="No Groups" detail="A keeper can add one.">
+      There are no groups yet.
+    </EmptyState>
+  </ListFrame>
+);
+
+const noMatchesNode = (
+  <ListFrame>
+    <EmptyState
+      label="No Matches"
+      detail="Widen the filters to see more."
+      action={
+        <a className="btn btn--quiet" href="?">
+          Clear Filters
+        </a>
+      }
+    >
+      No groups match your filters.
+    </EmptyState>
+  </ListFrame>
+);
+
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Pending: pendingNode,
   'Pending Cards': pendingCardsNode,
+  'Loading Table': loadingTableNode,
+  'Loading Cards': loadingCardsNode,
+  Empty: emptyNode,
+  'No Matches': noMatchesNode,
 };
 
 export const States: Story = {

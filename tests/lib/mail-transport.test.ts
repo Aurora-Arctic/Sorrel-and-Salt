@@ -3,8 +3,7 @@ import { http, HttpResponse } from 'msw/http';
 import { server } from '../support/msw/server';
 import { deliver, MailNotSent } from '@/lib/mail-transport';
 
-// What `deliver` throws when Resend refuses a message: the HTTP status and Resend's error name, so a caller can tell a daily
-// quota (try again tomorrow) from a monthly one (stop until a keeper resumes) without reading the log.
+// A caller tells a daily quota (try again tomorrow) from a monthly one (stop until a keeper resumes) by the status and error name, without the log.
 
 const MESSAGE = {
   to: 'recipient@example.test',
@@ -33,7 +32,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** Resend answers every send with `status` and this JSON error body. */
 function resendAnswers(status: number, name: string) {
   server.use(
     http.post('https://api.resend.com/emails', () =>

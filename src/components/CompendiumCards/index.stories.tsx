@@ -7,10 +7,8 @@ import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
-import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { NO_COUNTS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
-// Render-only; what shows and when is asserted in tests/components/CompendiumCards. The
-// filter navigates to /compendium, which the workshop does not serve.
 const meta = {
   title: 'Ingredients / Compendium Cards',
 } satisfies Meta;
@@ -33,7 +31,6 @@ const entry = (
   toxic: false,
   safetyNotes: null,
   recency: null,
-  // The Quick Look eye every card carries on the site.
   details: {
     href: compendiumHref({ entry: slug }),
     heading: detailsHeading({
@@ -44,14 +41,12 @@ const entry = (
   },
 });
 
-// An entry as a curator sees it: Edit opens the compendium's edit dialog.
 const withEdit = (entry: CompendiumCardEntry): CompendiumCardEntry => ({
   ...entry,
   editHref: `/compendium?edit=${entry.slug}` as Route,
   editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
 });
 
-// Two entries share a label; the formal-name line tells them apart. The last has no form.
 const ENTRIES = [
   entry('Testwort', 'testwort-fixtura-testalis', 'Fixtura testalis', ['Dried Leaf', 'Oil']),
   entry('Testwort', 'testwort-fixtura-alteralis', 'Fixtura alteralis', ['Dried Leaf']),
@@ -68,19 +63,15 @@ const COVENS = [
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: NO_FACETS,
+  counts: NO_COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
   action: 'none',
 };
 
-// Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
-// directly, with no quantity asked. The workshop serves no /api/graphql,
-// so a press shows its refusal.
 const canAddNode = <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />;
 
-// The coven already holds the first two: a check link in the plus's place, the last still a plus.
 const heldNode = (
   <CompendiumCards
     {...BASE}
@@ -90,9 +81,6 @@ const heldNode = (
   />
 );
 
-// Someone who may write in two covens: the plus is a menu of both. The first card is in the
-// first coven already, so its menu shows that coven disabled; the last is in both, and shows
-// the check.
 const inSeveralCovensNode = (
   <CompendiumCards
     {...BASE}
@@ -108,9 +96,6 @@ const inSeveralCovensNode = (
   />
 );
 
-// A curator who is also a member of a coven that holds the entries: the foot's three icons, the
-// plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
-// Annotate, Make It Ours and Remove.
 const canAddEditAndMoreNode = (
   <CompendiumCards
     {...BASE}
@@ -139,14 +124,10 @@ const canAddEditAndMoreNode = (
   />
 );
 
-/** A curator's cards, each with Edit. */
 const curatorCanEditNode = <CompendiumCards {...BASE} entries={ENTRIES.map(withEdit)} />;
 
-// An account that only views, or a visitor with no account (who signs in through the header):
-// nothing beneath the card.
 const defaultNode = <CompendiumCards {...BASE} />;
 
-// A page with a neighbour on each side.
 const middlePageNode = (
   <CompendiumCards
     {...BASE}
@@ -158,7 +139,6 @@ const middlePageNode = (
   />
 );
 
-// Two entries the marker reaches: one new this month, one changed this month.
 const withMarkersNode = (
   <CompendiumCards
     {...BASE}
@@ -166,7 +146,6 @@ const withMarkersNode = (
   />
 );
 
-// The last page: Previous is live, Next is not.
 const lastPageNode = (
   <CompendiumCards {...BASE} position={{ page: 3, pages: 3 }} previousHref="/compendium?before=x" />
 );
@@ -191,9 +170,6 @@ const VISITOR_NODES: ReactNode[] = [defaultNode, withMarkersNode, lastPageNode, 
 export const States: Story = {
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  // The page around the list, as src/app/(public)/compendium/page.tsx draws it: the frame, then the
-  // eyebrow, heading and lede. A state with no plus, Edit or coven foot is what a visitor with no
-  // session sees, so it has the signed-out header; the rest need an account, so they have the shell.
   render: ({ state }) => (
     <ShellFrame
       area="none"

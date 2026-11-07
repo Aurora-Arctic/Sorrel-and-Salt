@@ -15,7 +15,6 @@ import { recipeStepsOf } from './[id]/recipe-steps';
 
 export interface RecipeRead {
   steps: RecipeStep[];
-  /** The service's step views the steps were made from, which the page's side column reads further. */
   views: SpellStepView[];
   categories: CardCategory[];
   lastEdit: { by: string | null; at: string };
@@ -24,7 +23,6 @@ export interface RecipeRead {
 export async function readRecipeOf(
   session: Session,
   spell: Awaited<ReturnType<typeof readSpell>>,
-  /** Where the recipe is drawn, which its steps' Quick Look eyes add `entry=` to. */
   hereHref: Route,
 ): Promise<RecipeRead> {
   const ref = [{ id: spell.id, workspaceId: spell.workspaceId }];

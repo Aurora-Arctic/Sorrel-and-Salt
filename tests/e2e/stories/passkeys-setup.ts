@@ -2,7 +2,6 @@ import { generateKeyPairSync, randomBytes, randomUUID } from 'node:crypto';
 import { isoCBOR } from '@simplewebauthn/server/helpers';
 import type { CDPSession, Page } from '@playwright/test';
 import { test as base } from '../fixtures';
-import { assertNoAccessibilityViolations, settleTransitions } from '../axe';
 import { serverUrl, slotPort } from '../slots';
 import { withSql } from './accounts-setup';
 import { agreedInForceSql } from '../../support/db/agreement-in-force';
@@ -21,7 +20,6 @@ export const test = base.extend({
   },
 });
 
-/** A P-256 key as the authenticator holds it (PKCS#8) and as the server stores it (COSE), with its credential id. */
 function passkeyPair() {
   const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
   const jwk = publicKey.export({ format: 'jwk' });
@@ -44,7 +42,6 @@ function passkeyPair() {
   };
 }
 
-/** A verified account in no coven holding one passkey row for `key`, written as the plugin writes a registration. */
 async function accountWithPasskey(email: string, key: ReturnType<typeof passkeyPair>) {
   const id = randomUUID();
   await withSql(async (sql) => {
@@ -62,7 +59,6 @@ async function accountWithPasskey(email: string, key: ReturnType<typeof passkeyP
   return id;
 }
 
-/** A virtual platform authenticator on `page`, answering every prompt as a verified user would. */
 async function virtualAuthenticator(page: Page): Promise<{ cdp: CDPSession; id: string }> {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('WebAuthn.enable');
@@ -79,18 +75,6 @@ async function virtualAuthenticator(page: Page): Promise<{ cdp: CDPSession; id: 
   return { cdp, id: authenticatorId };
 }
 
-export async function scanBothThemes(page: Page): Promise<void> {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
-  }
-}
-
-/**
- * A fresh account holding one passkey, named Laptop, which `page`'s virtual authenticator holds too, and `page` on
- * the sign-in page, ready to use it.
- */
 export async function signInWithPasskey(page: Page, email: string) {
   const key = passkeyPair();
   const userId = await accountWithPasskey(email, key);

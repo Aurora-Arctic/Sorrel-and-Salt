@@ -18,12 +18,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// What a saved spell says, below its head: its intent, categories, a strip of
-// its four facts, its steps in order and its note. The recipe page, the grimoire's Quick Look
-// modal and the Preview pane all draw it, so they cannot drift: the page its two boxes apart, with
-// its jump menu between, and the others both at once. claude-docs/components/spell-recipe.md.
+// What a saved spell says below its head. The recipe page, the grimoire's Quick Look and the Preview pane all draw it,
+// so they cannot drift (claude-docs/components/spell-recipe.md).
 
-/** The ingredient's label as a step says it: "Testwort (Dried Leaf)". */
 export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
   form ? `${name} (${formLabel(form)})` : name;
 
@@ -50,10 +47,6 @@ const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
   </>
 );
 
-/**
- * The step's marks, at the row's end: Toxic or Caution from the ingredient, the coven's stock
- * verdict where the recipe carries one (the Quick Look), and the builder's One-Off.
- */
 const Marks = ({ step }: { step: IngredientRecipeStep }): ReactElement | null =>
   step.safety || step.supply || step.oneOff ? (
     <span className="spell-recipe__marks">
@@ -83,7 +76,6 @@ export const SpellRecipeLead = ({
   ) : null;
 };
 
-/** The facts strip, the steps and the note: the box the page's side column stands beside. */
 export const SpellRecipeRest = ({
   note,
   steps,
@@ -153,8 +145,6 @@ export const SpellRecipeRest = ({
                   marks={<Marks step={step} />}
                   quantity={step.quantity}
                   unit={step.unit}
-                  // An ingredient step's line is its body, drawn muted under the name. An
-                  // instruction step is its text.
                   note={step.body && <p className="meta">{step.body}</p>}
                 />
               ),

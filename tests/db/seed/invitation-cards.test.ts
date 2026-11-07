@@ -9,8 +9,6 @@ import { seedInvitationCards } from '@/db/seed/invitation-cards';
 import { batchName } from '@/components/AdminCards/batches';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
-// The fake invitation cards the `demo` scenario seeds for the admin Invitation Cards and Card Sign-Ups tabs, run against the `standard` cast.
-
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
@@ -44,11 +42,11 @@ describe('the invitation card seed', () => {
       `;
       expect(batches.map((b) => b.state).sort()).toEqual(['expired', 'live', 'revoked']);
       for (const batch of batches) {
-        expect(batch.cards % 9).toBe(0);
+        expect(batch.cards % 10).toBe(0);
         expect([batch.low, batch.high, batch.distinct]).toEqual([1, batch.cards, batch.cards]);
       }
       const live = batches.find((b) => b.state === 'live');
-      expect(live?.cards).toBe(18);
+      expect(live?.cards).toBe(20);
     });
 
     it('gives the three batches distinct batchNames, as the admin screen names them', async () => {

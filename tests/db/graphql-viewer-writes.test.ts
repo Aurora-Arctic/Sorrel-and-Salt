@@ -14,13 +14,11 @@ import {
 // succeeds, so the refusal is the role's and not a malformed request's. The census cannot go stale: a new mutation with no probe
 // fails the first test.
 
-/** Mutation fields taking a `workspaceId` that a viewer may call, each with the reason. */
 const VIEWER_MAY = [
   // Every role may leave a coven; the row it removes is the caller's own, and it names no one else.
   'leaveWorkspace',
 ];
 
-/** Probes whose admitted request writes no new value (a role already held, a reference already so, an empty batch), so it moves no row. */
 const ADMITTED_CHANGES_NOTHING = ['updateMemberRole', 'updateReference', 'saveStock'];
 
 const mutations = Object.keys(schema.getMutationType()?.getFields() ?? {});
@@ -33,7 +31,6 @@ useProbeRows();
 const sql = postgres(process.env.DATABASE_URL as string);
 afterAll(() => sql.end());
 
-/** A digest of every row of every table, so any write anywhere changes it. */
 async function snapshot(): Promise<Record<string, string>> {
   const tables = await sql<{ table_name: string }[]>`
     select table_name from information_schema.tables

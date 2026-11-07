@@ -7,8 +7,6 @@ import { A } from '../../../support/as-user';
 import { documents } from '@/modules/documents/schema/documents';
 import { documentVersions } from '@/modules/documents/schema/document-versions';
 
-// A site document, and each of its versions: one draft at most, a published row dated, a number used once per document.
-
 const KEY_UNIQUE = 'documents_key_unique';
 const SEED_KEY_UNIQUE = 'documents_seed_key_unique';
 const NUMBER_UNIQUE = 'document_versions_number_unique';
@@ -89,7 +87,6 @@ describe('document_versions schema', () => {
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A fresh document under an invented key, its id. */
 async function aDocument(key = `testdoc-${crypto.randomUUID().slice(0, 8)}`): Promise<string> {
   const [row] = await sql`
     insert into documents (key, title, lede, created_by, updated_by)
@@ -125,7 +122,6 @@ describe('documents table', () => {
 
     const second = await failureOf(aDocument('testdoc-charter'));
 
-    // 23505 is unique_violation.
     expect(second.code).toBe('23505');
     expect(second.constraint_name).toBe(KEY_UNIQUE);
     await softDelete('documents', first);
@@ -144,7 +140,6 @@ describe('document_versions table', () => {
   it('refuses a version of no document', async () => {
     const error = await failureOf(aVersion(crypto.randomUUID(), 1, 'draft'));
 
-    // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 
@@ -161,7 +156,6 @@ describe('document_versions table', () => {
     const undated = await failureOf(aVersion(documentId, 1, 'published', null));
     const datedDraft = await failureOf(aVersion(documentId, 2, 'draft', new Date()));
 
-    // 23514 is check_violation.
     expect([undated.code, datedDraft.code]).toEqual(['23514', '23514']);
     expect([undated.constraint_name, datedDraft.constraint_name]).toEqual([
       PUBLISHED_DATED,
@@ -178,7 +172,6 @@ describe('document_versions table', () => {
       values (${documentId}, 1, 'Testwort', 'archived', ${AUTHOR}, ${AUTHOR})
     `);
 
-    // 22P02 is invalid_text_representation: the enum refuses the value.
     expect(error.code).toBe('22P02');
   });
 

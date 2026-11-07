@@ -14,9 +14,6 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AppShell } = await import('@/components/AppShell');
 
-// The shell around every signed-in page: who sees which links, where
-// the brand goes, and what an unverified account is left with.
-
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,

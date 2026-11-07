@@ -23,11 +23,7 @@ import type { Message } from '../../lib/types';
 import type { BaseEmailProps, MessageInput } from '../types';
 import type { EmailLayoutProps, InkProps, Part } from './types';
 
-// Every mail's frame: the site's palette, type and corner photographs (claude-docs/email.md,
-// "Design"). Dark is inline, light the one media query's override; Zoho Mail's Night mode needs
-// dark written as a gradient and an anchor around text (measurements in email.md). Written as
-// `createElement` calls, not JSX: a durable job's step renders these, and the step bundler leaves JSX
-// uncompiled.
+// Written as `createElement` calls, not JSX: a durable job's step renders these, and the step bundler leaves JSX uncompiled.
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -37,8 +33,7 @@ export const LIGHT_MEDIA = '@media (prefers-color-scheme: light)';
 const BODY_FONT = 'Lexend, Arial, Helvetica, sans-serif';
 const HEADING_FONT = "'Cormorant Unicase', Georgia, 'Times New Roman', serif";
 
-// Our own copy first; Google's only if ours fails to load, so an opened mail
-// normally asks nothing of Google. Both are the latin subset Google serves.
+// Our own copy first; Google's only if ours fails to load.
 const FONT_FACES = [
   {
     family: 'Cormorant Unicase',
@@ -49,7 +44,6 @@ const FONT_FACES = [
   },
   {
     family: 'Lexend',
-    // One variable file covers every weight.
     weight: '300 700',
     file: 'lexend-latin.woff2',
     google: 'https://fonts.gstatic.com/s/lexend/v26/wlpwgwvFAVdoq2_v-6QU82RHaA.woff2',
@@ -68,11 +62,8 @@ function stylesheet(origin: string): string {
     // the next font in the stack instead of Times New Roman.
     `@media screen{${faces}}` +
     `${LIGHT_MEDIA}{` +
-    // Every light rule hangs off the one page cell, so a client applies all of
-    // them or none. A bare class per element let a client keep the text rules
-    // and drop the page rule, which rendered dark text on the dark page.
-    // `background`, not `background-color`: the shorthand also clears the
-    // gradient the inline dark is painted with.
+    // Every light rule hangs off the one page cell, so a client applies all of them or none. `background`, not
+    // `background-color`: the shorthand also clears the gradient the inline dark is painted with.
     `.ss-page{background:${light.page}!important;color:${light.text}!important;}` +
     `.ss-page .ss-text{color:${light.text}!important;}` +
     `.ss-page .ss-muted{color:${light.muted}!important;}` +
@@ -81,7 +72,6 @@ function stylesheet(origin: string): string {
     `.ss-page .ss-button{background:${light.accent}!important;color:${light.onAccent}!important;}` +
     `.ss-page .ss-sorrel{background-image:url(${origin}${ornamentPath('sorrel', 'light')})!important;}` +
     `.ss-page .ss-salt{background-image:url(${origin}${ornamentPath('salt', 'light')})!important;}` +
-    // The surround outside the page cell; readable whichever way it goes.
     `.ss-body{background:${light.page}!important;}` +
     '}'
   );
@@ -100,15 +90,12 @@ const EXACT_LINES = { msoLineHeightRule: 'exactly' } as CSSProperties;
 // 2.14:1 and the link at 1.66:1, and no opacity fixes the link.
 const PARAGRAPH_GAP = 16;
 
-// The wordmark's row, top right, beside the sorrel.
 const WORDMARK_TOP = 24;
 const WORDMARK_LINE = 24;
 
 /**
- * A background Zoho Mail's Night mode keeps: it inverts a `background-color`
- * and leaves a gradient alone, so the colour is painted twice, as itself and
- * as a one-colour gradient over it. The shorthand, because Gmail for Android
- * mangles a gradient written as `background-image` (email-bugs#135).
+ * A background Zoho Mail's Night mode keeps: it inverts a `background-color` and leaves a gradient alone, so the colour
+ * is painted twice. The shorthand, because Gmail for Android mangles `background-image` gradients.
  */
 function paint(color: string): string {
   return `${color} linear-gradient(${color},${color})`;
@@ -120,10 +107,8 @@ function paint(color: string): string {
 const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
 
 /**
- * A run of text in the one element Zoho Mail's Night mode does not recolour:
- * an anchor over a (transparent) gradient. No `href`, so it is text, not a
- * link; the text must sit directly inside it, since Zoho still rewrites any
- * element nested within.
+ * A run of text in the one element Zoho Mail's Night mode does not recolour: an anchor over a transparent gradient. No
+ * `href`, so it is text; the text sits directly inside it, since Zoho rewrites nested elements.
  */
 function Ink({ className, color, font, children }: InkProps) {
   return h(
@@ -136,7 +121,6 @@ function Ink({ className, color, font, children }: InkProps) {
   );
 }
 
-/** One corner photograph as the background of a section; the light one is the media query's. */
 function ornament(corner: Corner, origin: string, position: string): CSSProperties {
   const { width, height } = ORNAMENTS[corner];
   return {
@@ -147,10 +131,8 @@ function ornament(corner: Corner, origin: string, position: string): CSSProperti
   };
 }
 
-// Outlook for Windows ignores `max-width`, so the container sits in a fixed-width
-// table only it reads. React cannot write a comment, so the layout renders
-// these two placeholders and `renderParts` swaps each for its conditional
-// comment in the HTML part.
+// Outlook for Windows ignores `max-width`, so the container sits in a fixed-width table only it reads. React cannot
+// write a comment, so `renderParts` swaps these two placeholders for conditional comments in the HTML part.
 const MSO_OPEN = '<span data-mso="open"></span>';
 const MSO_CLOSE = '<span data-mso="close"></span>';
 const MSO_OPEN_COMMENT =
@@ -194,7 +176,6 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
   );
   const content = h(
     PaddedCell,
-    // The heading starts OVERLAP above the sorrel's lower edge.
     {
       padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - PARAGRAPH_GAP}px`,
     },
@@ -318,7 +299,6 @@ export function Paragraph({ children, muted = false }: { children?: ReactNode; m
   );
 }
 
-/** The one thing to do: a button in the HTML (with the link written out for clients that hide buttons), the link once in the text. */
 export function Action({ href, label, part }: { href: string; label: string; part: Part }) {
   if (part === 'text') return h(Paragraph, null, href);
   return h(
@@ -394,25 +374,18 @@ export function Action({ href, label, part }: { href: string; label: string; par
   );
 }
 
-/**
- * What a sentence tells the reader to do with the `Action`: the HTML has a
- * button, and the text part a link with nothing to click.
- */
 export function actionVerb(part: Part): string {
   return part === 'html' ? 'click the button below' : 'open the link below';
 }
 
 /**
- * The closing line every mail ends on: whoever did not ask for it can ignore
- * it. `when` is the template's own way of saying who that is. One string,
- * not text around an expression, which React renders with a `<!-- -->`
- * between the two in the HTML.
+ * The closing line every mail ends on, as one string: text around an expression renders with a `<!-- -->` between in
+ * the HTML.
  */
 export function IgnoreNote({ when }: { when: string }) {
   return h(Paragraph, { muted: true }, `${when}, you can ignore this email.`);
 }
 
-/** The closing line of a mail to a signed-out sender, whose link is the only way to answer. */
 export function LinkOnlyNote() {
   return h(
     Paragraph,
@@ -444,11 +417,7 @@ export async function renderParts(
   };
 }
 
-/**
- * A template's message function: `subject` and `to`, and the template rendered to both parts
- * `send` takes. The template is handed `to` and ignores it, since dropping it first would leave
- * an `Omit` TypeScript cannot prove is the props again. `subject` may be a function of the message.
- */
+/** The template is handed `to` and ignores it: dropping it first would leave an `Omit` TypeScript cannot prove is the props again. */
 export function defineMessage<Props extends BaseEmailProps>(
   subject: string | ((input: MessageInput<Props>) => string),
   Template: (props: Omit<Props, 'part'> & { part: Part }) => ReactElement,

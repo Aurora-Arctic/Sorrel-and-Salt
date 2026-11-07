@@ -21,7 +21,6 @@ $stuck-pad: space(4);
 $page-gutter: space(4);
 
 .ingredient-search {
-  // The sentinel's anchor.
   position: relative;
 }
 
@@ -88,7 +87,6 @@ $page-gutter: space(4);
     @include sorrel-blend(multiply, $ornament-multiply);
   }
 
-  // As the sorrel goes, the row stays opaque.
   @media (prefers-contrast: more) {
     &::before,
     &::after {
@@ -105,14 +103,10 @@ $page-gutter: space(4);
   }
 }
 
-// The search sentence under the row: the row's margin below is already part of the air, so
-// the sentence takes back the same amount from the stack's gap, and sits a gap from the
-// input as the cards sit a gap from it.
 .ingredient-search > search + .search-sentence {
   margin-block-start: calc(-1 * #{space(2)});
 }
 
-// One pixel at the row's resting place, which StuckMark watches.
 .ingredient-search__mark {
   position: absolute;
   inset-block-start: calc(-1 * #{$stuck-pad});

@@ -5,7 +5,6 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 
-/** Where the detail says what a write did, in its status line; none outside the detail. */
 export const AnnounceContext = createContext<(message: string) => void>(() => undefined);
 
 /**

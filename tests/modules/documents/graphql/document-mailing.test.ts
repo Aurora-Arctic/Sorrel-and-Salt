@@ -10,11 +10,6 @@ import {
 } from '../../../support/db/insert-document';
 import { run } from '../../../support/graphql/run';
 
-// Emailing every account about the documents changed since the last email, over the wire. This is the transport's half
-// (claude-docs/testing/layer-ownership.md): each field's shape, that a write hands the context's origin to the run it starts, and
-// per field one refusal per error code. Which roles are refused, and why, is services/document-mailing.test.ts's; the signed-out
-// caller and the curator are refused at the scope in tests/db/graphql-query-scopes.test.ts.
-
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));

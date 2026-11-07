@@ -23,7 +23,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // The form-group writes, the site admin's alone. A form's slug is its name and its group, so a rename moves the slug of every form under the group.
-// A delete moves its live forms to the group the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// A delete moves its live forms to the group the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/ingredients.md, "The admin group pages: where a deleted group's rows go").
 // The seeded groups stay, so every group and form a test writes is `Fixture …`.
 
 let sql: postgres.Sql;

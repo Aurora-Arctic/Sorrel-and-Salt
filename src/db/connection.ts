@@ -27,5 +27,5 @@ function client(url: string): postgres.Sql {
 }
 
 // `DEBUG_SQL=1` prints every statement, `withAudit`'s `set_config` included
-// (claude-docs/db/debugging-a-query.md, "Debugging a query").
+// (claude-docs/db/repository-files.md, "Debugging a query").
 export const db = drizzle(client(databaseUrl()), { logger: process.env.DEBUG_SQL === '1' });

@@ -2,9 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import Welcome from '@/components/Welcome';
 
-// The front door at `/`. What it says is the same for everyone; the one
-// thing that changes with the session is the way in — a signed-in visitor
-// is offered the landing, never sign-in again (claude-docs/components/welcome.md).
+// claude-docs/components/welcome.md
 
 describe('Welcome', () => {
   it('offers a signed-out visitor the sign-in page', () => {

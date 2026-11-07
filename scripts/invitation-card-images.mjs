@@ -1,9 +1,6 @@
-// Bakes the invitation card pictures from the email illustrations (claude-docs/invitation-cards/print.md, "Pictures"):
-//
-//   node scripts/invitation-card-images.mjs
-//
-// Each picture's edges fade into the card through its alpha channel, because a PDF has no CSS mask: alpha rises 0 → 1 over the top 20% and over
-// the outer 14% of each side, the two ramps multiplied, as the canvas's intersected linear gradients do.
+// Bakes the invitation card pictures with alpha-faded edges, because a PDF has no CSS mask
+// (claude-docs/invitation-cards/print.md, "Pictures").
+// Usage: node scripts/invitation-card-images.mjs
 import sharp from 'sharp';
 
 const PICTURES = [

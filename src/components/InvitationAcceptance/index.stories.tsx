@@ -7,16 +7,12 @@ import { usePressOnMount } from '../../../.storybook/press';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/InvitationAcceptance.
-// Accept talks to the network only on a click; the one story that presses it
-// has the fake API refuse, into the callout under Accept (ClickFeedback).
 const meta = {
   title: 'Pages / Invitation Acceptance',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Inside the page's own frame, so the workshop shows what the page shows.
 const Page = (props: InvitationAcceptanceProps) => (
   <main className="page-frame page-frame--narrow">
     <InvitationAcceptance {...props} />
@@ -27,8 +23,8 @@ const SIGN_IN = '/sign-in?next=%2Finvite%2Fworkshop';
 const EMAIL_PAGE = '/account/email?next=%2Finvite%2Fworkshop';
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
-// The service's own sentences (MESSAGES in modules/identity/services/invitation-acceptance.ts),
-// copied because a story cannot import a server-only module.
+// The service's own sentences, copied because a story cannot import a server-only module.
+// Keep in step with MESSAGES in modules/identity/services/invitation-acceptance.ts.
 const INVALID =
   "This invitation link isn't valid. Check that you opened the whole link from the email.";
 const ACCEPTED = 'This invitation has already been accepted.';
@@ -58,8 +54,6 @@ const acceptableCuratorNode = (
   <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/curator" />
 );
 
-// Accept pressed and refused: the fake API answers with the service's own
-// sentence, in the callout with the badge on Accept's corner.
 const AcceptRefusedView = () => {
   usePressOnMount('Accept Invitation');
   return <AcceptableView />;
@@ -101,7 +95,6 @@ const expiredNode = <Page status="refused" message={EXPIRED} />;
 
 const declinedNode = <Page status="refused" message={DECLINED} />;
 
-// A link into a deleted coven: its own reason, `closed`.
 const DeletedCovenView = () => <Page status="refused" message={CLOSED} />;
 
 const deletedCovenNode = <DeletedCovenView />;

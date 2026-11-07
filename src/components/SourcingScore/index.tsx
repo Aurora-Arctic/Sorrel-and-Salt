@@ -3,14 +3,10 @@ import InfoTip from '../InfoTip';
 import type { SourcingScoreProps } from './types';
 import './index.scss';
 
-// A compendium entry's sourcing score for a curator: the total as the heading, a bar of what was
-// gained and what it cost out of the maximum, then each fact that made it with its points, so the
-// sum can be checked by eye. (claude-docs/components/sourcing-score.md).
+// See claude-docs/components/sourcing-score.md.
 
-/** The most an entry can score, which the bar is drawn out of (`sourcing-weights.ts`). */
 const MAXIMUM = 100;
 
-/** Points with their sign: a gain `+10`, a loss `−3` with a true minus sign, none `0`. */
 const signed = (points: number): string =>
   points > 0 ? `+${points}` : points < 0 ? `−${-points}` : '0';
 
@@ -18,10 +14,8 @@ type Kind = 'gain' | 'cost' | 'none';
 
 const kindOf = (points: number): Kind => (points > 0 ? 'gain' : points < 0 ? 'cost' : 'none');
 
-// Gains first, then costs, then the facts that earned nothing; each group keeps the order it came in.
 const KIND_ORDER: readonly Kind[] = ['gain', 'cost', 'none'];
 
-// A 1rem stroke circle: ticked for a gain, dashed for a cost, empty for nothing yet.
 const Glyph = ({ kind }: { kind: Kind }): ReactElement => (
   <svg
     className="sourcing-score__glyph"
@@ -38,7 +32,6 @@ const Glyph = ({ kind }: { kind: Kind }): ReactElement => (
   </svg>
 );
 
-/** The facts as rows: gains, then costs, then the zeros. */
 function Facts({
   sourcing,
   className,

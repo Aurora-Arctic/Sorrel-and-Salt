@@ -5,7 +5,6 @@ import { join, resolve } from 'node:path';
 // mocked browser `location`, not `file://`; `dirname` is a real path in every project.
 export const REPO_ROOT = resolve(import.meta.dirname, '../..');
 
-/** A path inside the repo, named from the root rather than from the caller. */
 export function fromRoot(...segments: string[]): string {
   return join(REPO_ROOT, ...segments);
 }

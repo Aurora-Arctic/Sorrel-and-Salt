@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
@@ -11,10 +11,8 @@ import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
-// Reply on a request: the sender is mailed that a reply is waiting and reads it on /account/support. A mode beside the box
-// turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Internal Note, so a
-// reply is always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
-// A reply to a timed-out sender asks first, since they cannot answer it until the time-out ends.
+// Reply on a request, or an internal note nobody is mailed; it opens on Internal Note so a reply is always chosen. A
+// reply to a timed-out sender asks first, since they cannot answer until the time-out ends.
 
 type Mode = 'reply' | 'note';
 
@@ -66,7 +64,6 @@ const ReplyForm = ({
   /** The sender's standing time-out; the form says they cannot answer until it ends, or that it has no end date. */
   senderTimedOut?: { until: Date | null };
   resolve?: ReactNode;
-  /** The viewer may add an internal note but not reply: no mode choice, and the form is a note form. */
   noteOnly?: boolean;
 }): ReactElement => {
   const [body, setBody] = useState('');

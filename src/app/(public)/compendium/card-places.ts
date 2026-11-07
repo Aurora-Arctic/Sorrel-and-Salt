@@ -9,7 +9,6 @@ import { MAKE_IT_OURS_PERMISSION } from '@/modules/ingredients';
 // What the cards' three dots and Quick Look offer a signed-in member: each coven they may write in and
 // their role's permissions there. Per viewer, so never in the cached reads (rule 6).
 
-/** One of the viewer's writable covens, and what the role there permits about a held entry. */
 export interface CardCoven {
   workspaceId: string;
   covenSlug: string;
@@ -17,18 +16,15 @@ export interface CardCoven {
   canAnnotate: boolean;
   canMakeOurs: boolean;
   canRemove: boolean;
-  /** The role may update stock: Edit Stock is offered where the coven holds the entry. */
   canStock: boolean;
 }
 
-/** A coven the viewer may write in: what the shell already read of it. */
 export interface WritableCoven {
   id: string;
   slug: string;
   name: string;
 }
 
-/** The given writable covens with what each role permits, in their order; none where no role is found. */
 export async function readCardCovens(
   writable: readonly WritableCoven[],
 ): Promise<readonly CardCoven[]> {

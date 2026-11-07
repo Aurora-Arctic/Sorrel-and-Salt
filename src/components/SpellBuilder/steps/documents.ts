@@ -1,4 +1,4 @@
-import { graphql } from '../../../gql';
+import { graphql } from '@/lib/graphql-document';
 
 // The steps' GraphQL, with the saved step's selection written out in full, not a fragment, to stay within DESIGN.md §7's depth of 7
 // (claude-docs/components/spell-builder.md, "Step values, documents and totals").

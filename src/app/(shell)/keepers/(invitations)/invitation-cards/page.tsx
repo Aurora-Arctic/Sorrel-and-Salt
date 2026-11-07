@@ -17,8 +17,7 @@ export const metadata: Metadata = {
   title: 'Invitation Cards',
 };
 
-// One page of the batches and its count, newest first, numbered as every admin list is (rule 8), with each
-// batch's cards counted in SQL. Cached so a second render in the request reads once.
+// Cached so a second render in the request reads once.
 const readBatches = cache(
   async (
     session: Session,
@@ -61,6 +60,7 @@ const readBatches = cache(
         mintedAt: node.createdAt,
         expiresAt: node.expiresAt,
         note: node.note,
+        beta: node.beta,
         ...counts,
         attempts: total?.attempts ?? 0,
         status: batchStatus(counts, node.expiresAt, now),

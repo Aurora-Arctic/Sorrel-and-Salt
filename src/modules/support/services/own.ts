@@ -23,8 +23,6 @@ function withoutStaffFields(row: SupportRequestRow): SupportRequestRow {
 }
 
 /**
- * One page of the signed-in sender's own requests, newest first.
- *
  * @throws {Forbidden} the address is unverified.
  */
 export async function listMySupportRequests(
@@ -37,8 +35,6 @@ export async function listMySupportRequests(
 }
 
 /**
- * How many requests `listMySupportRequests` pages, and how many come before `start`, a page's first row.
- *
  * @throws {Forbidden} the address is unverified.
  */
 export async function countMySupportRequests(

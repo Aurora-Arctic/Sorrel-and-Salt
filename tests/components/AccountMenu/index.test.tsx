@@ -13,12 +13,9 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 const { default: AccountMenu } = await import('@/components/AccountMenu');
 const { initialsOf } = await import('@/components/AccountMenu/initials');
 
-// The account button and its disclosure panel. A disclosure, so the
-// button states whether the panel is open and which element it controls.
-
 const button = () => screen.getByRole('button', { name: 'Fixture Owner' });
 
-/** Presses the account button and waits for the panel's rows, which load on the first press. */
+/** Presses the account button and waits for the panel to show its Sign Out row. */
 const openPanel = async (toggle: HTMLElement): Promise<void> => {
   fireEvent.click(toggle);
   await screen.findByRole('button', { name: 'Sign Out' });
@@ -37,6 +34,17 @@ afterEach(() => {
 });
 
 describe('AccountMenu', () => {
+  it('shows its rows in the same render as the press, with no loading state', () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
+
+    fireEvent.click(button());
+
+    expect(button()).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Your Account' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('opens and closes its panel from the button, saying which it controls', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     expect(button()).toHaveAttribute('aria-expanded', 'false');
@@ -128,9 +136,6 @@ describe('AccountMenu', () => {
   });
 });
 
-// Coven invitations waiting for the viewer's address: the count is a
-// link of its own to the account page's Invitations section, beside Your
-// Account, which still opens the page itself; the button says how many.
 describe('AccountMenu with pending invitations', () => {
   it('links the count to the Invitations section and leaves Your Account on the page', async () => {
     render(<AccountMenu name="Fixture Owner" verified pendingInvitations={2} />);

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
+import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
 import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
+import { SoleStewardNotice } from '../sole-steward-notice';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
@@ -30,10 +32,8 @@ export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do; a name opens the member's modal, which holds what the viewer may do
-// to them. An observer gets the stranger's 404. The read is
-// `listMembers`, which GraphQL ends at too (rule 1). An address is a steward's alone, asked only when
-// the role holds `member: readEmail` and checked again by `memberEmails`.
+// Who is in the coven; a name opens the member's modal. An observer gets the stranger's 404. An address is a steward's
+// alone, asked only when the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
   params,
   searchParams,
@@ -41,7 +41,6 @@ export default async function MembersPage({
   const { slug } = await params;
   const query = await searchParams;
   const { after, before } = readPageCursors(query);
-  // Blank is no modal.
   const memberParam = single(query.member) || undefined;
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
@@ -71,7 +70,6 @@ export default async function MembersPage({
     ),
   ];
   const names = await displayNamesOf(session, ids);
-  // A name the service withholds (it answers co-members only) reads as Unknown.
   const nameOf = (id: string) => names[ids.indexOf(id)] ?? 'Unknown';
   // The editor's name withheld, the stamp is left empty: a date with no one to
   // ask about it says little.
@@ -88,7 +86,6 @@ export default async function MembersPage({
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
   const canRemove = rolePermits(membership.role, { member: ['remove'] });
   const canPause = rolePermits(membership.role, { member: ['pause'] });
-  // The pauses standing on this page's members, in one read, and only for a role that may set them.
   const pauses = canPause
     ? await standingMemberPauses(
         session,
@@ -96,7 +93,6 @@ export default async function MembersPage({
         page.edges.map(({ node }) => node.userId),
       )
     : [];
-  // The pause standing on a member, with its end; null for none, and undefined for a role that reads none.
   const pauseOf = (id: string) => {
     if (!canPause) return undefined;
     const standing = pauses.find(({ userId }) => userId === id);
@@ -117,7 +113,6 @@ export default async function MembersPage({
       email: emailOf(node.userId),
       paused: pauseOf(node.userId),
     };
-    // Its modal over this page, the cursor kept, under the head the loaded modal carries.
     return {
       ...row,
       openHref: listHref(path, { ...cursor, member: node.userId }),
@@ -140,13 +135,8 @@ export default async function MembersPage({
         {/* Raised before it is urgent: a quiet status, since it is on the page
             from the start and asks nothing of the reader yet. Inside the
             frame, so the tabbed panel's own gap spaces it from the list. */}
-        {soleOwner && (
-          <Notice kind="warn" quiet>
-            This coven has one steward. If that person loses access, nobody can manage its members.
-            Make another member a steward to be safe.
-          </Notice>
-        )}
-        <ListBody>
+        {soleOwner && <SoleStewardNotice />}
+        <ListBody skeleton={<MemberListBodySkeleton showEmail={showEmail} showAccess={canPause} />}>
           <MemberList
             members={members}
             currentUserId={session.userId}

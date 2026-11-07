@@ -13,7 +13,7 @@ import type { SpellRecipeAsideProps } from './types';
 import '../SpellBuilder/panels.scss';
 
 // The recipe page's side column of Category Match and In the Cupboard, read-only here, beside the text past tablet width and beneath it on a phone; a client part
-// (claude-docs/components/spell-recipe.md, "The aside component").
+// (claude-docs/components/spell-recipe.md, "The side column").
 
 export default function SpellRecipeAside({
   steps,
@@ -23,8 +23,6 @@ export default function SpellRecipeAside({
 }: SpellRecipeAsideProps): ReactElement {
   const colours = useMemo(() => new Map(groups), [groups]);
   const doorsByStep = useMemo(() => new Map(doors.map((door) => [door.stepId, door])), [doors]);
-  // A line's doors: the Quick Look eye, as the recipe's steps carry it,
-  // opening the ingredient's details over the page, and Edit Stock behind the jar and the name.
   const doorsOf = (step: SpellStepValue): LineDoors | undefined => {
     const door = step.stepId === null ? undefined : doorsByStep.get(step.stepId);
     if (!door) return undefined;

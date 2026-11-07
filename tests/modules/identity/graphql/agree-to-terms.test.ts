@@ -5,9 +5,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 import { run } from '../../../support/graphql/run';
 
-// `agreeToTerms` over the real schema: the caller names the three versions their page showed, and gets their own row back with it
-// recorded. Which numbers the service takes, and what it writes, is services/terms.test.ts's.
-
 const AGREE = /* GraphQL */ `
   mutation AgreeToTerms($version: AgreementVersionInput!) {
     agreeToTerms(version: $version) {

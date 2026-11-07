@@ -7,7 +7,6 @@ import type { AccountPasskey } from '@/lib/types';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
-// The plugin's client actions, mocked: each answers `{ data }` or `{ error }`, as Better Auth's client does.
 const addMock = vi.fn();
 const listMock = vi.fn();
 const updateMock = vi.fn();
@@ -40,7 +39,6 @@ const press = (element: Element) =>
 const renderOnPage = (ui: ReactElement) =>
   render(<StatusRegionProvider>{ui}</StatusRegionProvider>);
 
-/** The names the list shows, in order. */
 const listed = () =>
   within(screen.getByRole('list', { name: 'Passkeys' }))
     .getAllByRole('listitem')

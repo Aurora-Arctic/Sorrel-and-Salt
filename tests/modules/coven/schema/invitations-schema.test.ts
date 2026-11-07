@@ -10,10 +10,8 @@ import type { Membership } from '@/modules/coven';
 import { invitations } from '@/modules/coven/schema/invitations';
 import type { SiteAdmin } from '@/modules/identity';
 
-// One invitations table in two tiers, the shape `ingredients` has: a row naming a workspace and a role invites into that coven, and a row with neither is a site-tier invitation, which grants admin, as a null workspace is a compendium entry.
-// The named writes are the only ones to reach it (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
+// The named writes are the only ones to reach it (claude-docs/design-decisions/auth.md, "Workspace and admin invitations are one two-tier table").
 
-// DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -30,6 +28,7 @@ const OWN_COLUMNS = [
   'kind',
   'batch_id',
   'position',
+  'beta',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
@@ -41,21 +40,18 @@ const SITE_TIER_CHECK = 'invitations_site_role_tier';
 const SITE_ROLE_CHECK = 'invitations_site_role_invitable';
 const KIND_CHECK = 'invitations_kind_known';
 const CARD_SHAPE_CHECK = 'invitations_kind_shape';
+const BETA_CHECK = 'invitations_beta_card_only';
 
 describe('invitations schema', () => {
   const { byName } = tableFacts(invitations);
 
-  // The full six: an invitation is a record of someone's act, so withdrawing
-  // one leaves a tombstone and the hash index below is partial.
+  // The full six: an invitation is a record of someone's act, so withdrawing one leaves a tombstone.
   it('has DESIGN.md §5 columns and the full audit spread, and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment the mark is lost or a generic method stops demanding `Generic`.
-  // The row is what authorises a membership or a grant, so only the named writes may make or stamp one. The unscoped methods refuse the table for its `workspace_id` too;
-  // the scoped and compendium-tier ones would take a nullable `workspace_id`, so there the mark alone refuses.
+  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment the mark is lost. The scoped and compendium-tier methods take a nullable `workspace_id`, so there the mark alone refuses.
   it('carries the namedWrites mark, so every generic write refuses it at compile time', () => {
-    // The mark itself, as a type: a table that lost it fails this assignment.
     const marked: NamedWrites = invitations;
     const id = FIXTURE_USERS.A.id;
     const where = eq(invitations.id, id);
@@ -112,7 +108,6 @@ describe('invitations schema', () => {
   });
 });
 
-// A owns W; E is the site keeper.
 const OWNER = FIXTURE_USERS.A.id;
 const ADMIN = FIXTURE_USERS.E.id;
 const COVEN = WORKSPACE_W_ID;
@@ -120,12 +115,9 @@ const COVEN = WORKSPACE_W_ID;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-// 64 hex characters, the shape of a sha-256 of a `crypto.randomBytes` token;
-// nothing here generates one.
 const HASH_A = 'a'.repeat(64);
 const HASH_B = 'b'.repeat(64);
 
-/** A workspace-tier invitation into W, by A. */
 async function invite(
   role: string,
   { tokenHash = HASH_A, email = 'rowan@example.com' } = {},
@@ -138,7 +130,6 @@ async function invite(
   return inserted.id as string;
 }
 
-/** A site-tier invitation, by E: no workspace and no coven role, and the site role it grants. */
 async function inviteToSite({ tokenHash = HASH_A, siteRole = 'admin' } = {}) {
   const [inserted] = await sql`
     insert into invitations (email, token_hash, site_role, created_by, updated_by)
@@ -160,7 +151,6 @@ describe('invitations table', () => {
         values (${COVEN}, 'rowan@example.com', ${HASH_A}, ${OWNER}, ${OWNER})
       `);
 
-      // 23514 is check_violation, named: this constraint refused, not something earlier.
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe(TIER_CHECK);
     });
@@ -175,15 +165,12 @@ describe('invitations table', () => {
       expect(error.constraint_name).toBe(TIER_CHECK);
     });
 
-    // Why the two refusals above could have succeeded: each column alone is
-    // nullable, and a row with both, or with neither, is well-formed.
+    // Why the two refusals above could have succeeded: each column alone is nullable, and a row with both or neither is well-formed.
     it('accepts a null pair, the site tier', async () => {
       await expect(inviteToSite()).resolves.toBeDefined();
     });
   });
 
-  // A site invitation names the site role it grants, curator or
-  // admin, and a coven invitation names none.
   describe('the site role', () => {
     it('refuses a site-tier invitation that names no site role', async () => {
       const error = await failureOf(sql`
@@ -212,8 +199,7 @@ describe('invitations table', () => {
       expect(error.constraint_name).toBe(SITE_ROLE_CHECK);
     });
 
-    // Why the refusals above could have succeeded: the column is nullable and
-    // the enum admits `user`, and a coven invitation without one is well-formed.
+    // Why the refusals above could have succeeded: the column is nullable and the enum admits `user`.
     it('accepts curator and keeper on the site tier, and none on a coven invitation', async () => {
       await inviteToSite({ siteRole: 'curator' });
       await inviteToSite({ siteRole: 'admin', tokenHash: HASH_B });
@@ -224,7 +210,6 @@ describe('invitations table', () => {
     });
   });
 
-  // A printed card is a third shape of the same table: bound to no address, coven or site role, so one token still resolves to one row.
   describe('the kind', () => {
     const BATCH = '3f0c6a52-9b1e-4a57-8d0e-5f6a7b8c9d01';
 
@@ -294,6 +279,48 @@ describe('invitations table', () => {
     });
   });
 
+  describe('the beta flag', () => {
+    it('defaults to false on either kind', async () => {
+      await invite('member');
+      await sql`
+        insert into invitations (kind, token_hash, created_by, updated_by)
+        values ('card', ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `;
+
+      const rows = await sql`select kind, beta from invitations order by kind`;
+      expect(rows.map((row) => [row.kind, row.beta])).toEqual([
+        ['address', false],
+        ['card', false],
+      ]);
+    });
+
+    it('refuses a beta address invitation, on either tier', async () => {
+      const coven = await failureOf(sql`
+        insert into invitations (workspace_id, email, role, beta, token_hash, created_by, updated_by)
+        values (${COVEN}, 'rowan@example.com', 'member', true, ${HASH_A}, ${OWNER}, ${OWNER})
+      `);
+      const site = await failureOf(sql`
+        insert into invitations (email, site_role, beta, token_hash, created_by, updated_by)
+        values ('rowan@example.com', 'admin', true, ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `);
+
+      expect(coven.code).toBe('23514');
+      expect(coven.constraint_name).toBe(BETA_CHECK);
+      expect(site.constraint_name).toBe(BETA_CHECK);
+    });
+
+    // Why the refusal above could have succeeded: the column takes true at all.
+    it('accepts a beta card', async () => {
+      await sql`
+        insert into invitations (kind, beta, token_hash, created_by, updated_by)
+        values ('card', true, ${HASH_A}, ${ADMIN}, ${ADMIN})
+      `;
+
+      const [row] = await sql`select beta from invitations`;
+      expect(row?.beta).toBe(true);
+    });
+  });
+
   describe('owner is not invitable', () => {
     it('rejects an invitation with role owner', async () => {
       const error = await failureOf(invite('owner'));
@@ -302,9 +329,7 @@ describe('invitations table', () => {
       expect(error.constraint_name).toBe(ROLE_CHECK);
     });
 
-    // Why the rejection above could have succeeded: the row is well-formed and
-    // the enum admits `owner`. Drop the CHECK and these stay green while the
-    // one above reddens.
+    // Why the rejection above could have succeeded: the row is well-formed and the enum admits `owner`; without the CHECK these stay green.
     it('accepts viewer and member', async () => {
       await invite('viewer');
       await invite('member', { tokenHash: HASH_B });
@@ -314,9 +339,7 @@ describe('invitations table', () => {
     });
   });
 
-  // A decline is the invitee's answer to a coven invitation. A keeper
-  // invitation is accepted by its link alone and never listed to its invitee,
-  // and one invitation is answered once.
+  // A keeper invitation is accepted by its link alone and never listed to its invitee; one invitation is answered once.
   describe('the answer', () => {
     it('refuses a declined site-tier invitation, and accepts a declined coven one', async () => {
       const site = await inviteToSite();
@@ -371,7 +394,6 @@ describe('invitations table', () => {
   });
 
   describe('lookup by token hash', () => {
-    // Across the tiers too: a token names one invitation, whichever tier.
     it('refuses two live invitations sharing one hash, on either tier', async () => {
       await invite('member');
 

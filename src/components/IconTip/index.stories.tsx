@@ -33,12 +33,9 @@ import {
   UndoIcon,
 } from '.';
 // From its own file, not the index: the design sync's library carries StockBadge's StockIcon
-// under this name, so an index import would reach the wrong one in the sync's previews.
+// under this name.
 import { StockIcon } from './icons';
 
-// Render-only; behaviour is asserted in tests/components/IconTip. Hover or focus
-// a pencil to open its tip; Escape closes it. The rows are a list's banded table,
-// so the pencil shows on both grounds, the page and the card.
 const meta = {
   title: 'Forms / Icon Tip',
 } satisfies Meta;
@@ -50,8 +47,6 @@ const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
   description: 'An invented entry, for the workshop.',
 }));
 
-// An admin list's columns: the name with its Quick Look eye, the labels, then an
-// unlabelled pencil at the row's end (a card's top right at phone width).
 const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {
     heading: 'Name',
@@ -75,7 +70,7 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
 
 const Rows = (): ReactElement => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <StackTable
         columns={COLUMNS}
         rows={ROWS}
@@ -112,9 +107,6 @@ const GLYPHS = {
 const NOOP = (): void => undefined;
 const HEADING = { title: 'Testwort' };
 
-// Every glyph the wrapper's icons file draws at the icon button's glyph size,
-// then every control that wears one with its tip: the links, the buttons, and
-// the three dots' menu in its Compendium and Coven sections.
 export const States: Story = {
   render: () => (
     <StatesGrid

@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, type ReactElement, type ReactNode, useEffect, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { cardPlace } from '../../lib/invitation-cards/limits';
@@ -11,19 +11,19 @@ import { MysticEyeIcon } from '../IconTip/icons';
 import { ModalButton } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
-import Skeleton from '../Skeleton';
+import { CardAttemptsBodySkeleton } from './skeleton';
 import { userListHref } from '../UserList/href';
+import LoadingStatus from '../Skeleton/loading-status';
 import UserLink from '../UserList/user-link';
 import { batchName } from './batches';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
 // The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The keeper opens it
 // from the Invitation Cards tab, and the page is read when it opens, so the tab itself carries only the count
-// (claude-docs/components/admin-cards.md, "Attempts").
+// (claude-docs/components/admin-cards.md, "Refused Opens (`attempts.tsx`)").
 
 const PAGE_SIZE = 20;
 
-// The Users list unfiltered: an account's name opens that list's own modal for it, headed as the list heads it.
 const NO_FILTER = { query: '', awaitingApproval: false };
 
 const CardAttemptsDocument = graphql(`
@@ -75,7 +75,6 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   const [failed, setFailed] = useState(false);
   const [asked, setAsked] = useState<string | null>(null);
 
-  // Reads the first page on open, and the next page each time it is asked for.
   useEffect(() => {
     let current = true;
     graphqlRequest(CardAttemptsDocument, {
@@ -116,8 +115,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   }, [batchId, asked]);
 
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
-  // The first read has no rows to keep on screen, so the table's own skeleton stands in; a later page keeps its rows and
-  // busies the Show More button instead (claude-docs/loading.md).
+  // The first read has no rows to keep on screen, so the table's own skeleton stands in, with the
+  // one "Loading" status the skeleton leaves to its host; a later page keeps its rows and busies
+  // the Show More button instead (claude-docs/loading.md).
   const reading = loading && attempts.length === 0;
   return (
     <>
@@ -125,7 +125,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         Every card listed here already admits nobody. Further tries are refused and counted here.
       </p>
       {reading ? (
-        <Skeleton shape="table" count={3} />
+        <LoadingStatus>
+          <CardAttemptsBodySkeleton />
+        </LoadingStatus>
       ) : (
         <StackTable
           columns={[
@@ -204,7 +206,6 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   );
 };
 
-/** The eye-icon button beside a batch's count: a dialog listing the refused opens of its cards. */
 const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
   <ModalButton
     tip="View Refused Opens"

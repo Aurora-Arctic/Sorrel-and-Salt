@@ -30,6 +30,12 @@ const CATS = {
   banishing: cat('Banishing', 'protect'),
 };
 
+/** The list's vocabulary, which names the categories the cards carry by id. */
+export const CATEGORY_VOCABULARY = Object.values(CATS).map(({ category, group }) => ({
+  ...category,
+  group,
+}));
+
 const leaf = { group: { icon: 'botanical' as const } };
 const fluid = { group: { icon: 'fluid' as const } };
 const form = (
@@ -54,16 +60,11 @@ export interface FixtureEntry {
   variants: SafetyVariant[];
   toxic?: boolean;
   safetyNotes?: string;
-  /** How the entry shows on the coven's Ingredients page. */
   kind: EntryKind;
   retired?: boolean;
-  /** The jars the coven holds: each names a form the card lists. */
   jars: Jar[];
 }
 
-// Nine entries. Lengths on purpose: a long name (Testwort Longer Nameicanicusmus),
-// no formal name (Testseed, Testsalt), one form (Testite), five forms (Testflower), four
-// categories (Testroot).
 export const ENTRIES: FixtureEntry[] = [
   {
     slug: 'testwort',
@@ -184,8 +185,6 @@ export const ENTRIES: FixtureEntry[] = [
   },
 ];
 
-// The fixture's jars as the component takes them; the group icon is looked up from the entry's
-// variants, as the page will read it from the form's group.
 export const jarLinesOf = (entry: FixtureEntry): ReactNode => (
   <JarLines
     jars={entry.jars.map(({ form, ...rest }) => ({

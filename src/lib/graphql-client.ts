@@ -1,6 +1,6 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
-import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
 import { ACCESS_PAUSED_CODE, covenPausedPath, covenSlugOf } from './access-paused';
 import { apiPath } from './api-path';
@@ -8,26 +8,19 @@ import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import { reportLeaving } from './navigation/store';
 import type { VariablesArg } from './types';
 
-// The browser's half of the API: a small fetch wrapper sends a codegen document and
-// TanStack Query caches the answer, with no second, normalized cache beside it
-// (DESIGN.md §7). Server components never come through here — they read
-// through services (CLAUDE.md rule 1). claude-docs/graphql/client.md, "The client".
+// The browser's half of the API: a fetch wrapper and TanStack Query, with no second cache. Server components
+// read through services (claude-docs/graphql/client.md, "The client").
 
 const ENDPOINT = '/api/graphql';
 
 /** Long enough that a remount or a second reader reuses the answer. */
 const STALE_TIME_MS = 30_000;
 
-/** Two retries, so three attempts in all. */
 const MAX_RETRIES = 2;
 
-/** What Yoga sends back, as far as the client reads it. */
 type GraphQLBody<TResult> = { data?: TResult | null; errors?: readonly GraphQLFormattedError[] };
 
-/**
- * Leaves a coven page for its paused page when an answer says the viewer's access to that coven is paused, as the
- * coven's layout would on the next load. A full navigation, since the paused page sits outside the coven's layout.
- */
+/** A full navigation, since the paused page sits outside the coven's layout. */
 function leaveIfCovenPaused(errors: readonly GraphQLFormattedError[] | undefined): void {
   if (!errors?.some(({ extensions }) => extensions?.code === ACCESS_PAUSED_CODE)) return;
   const slug = covenSlugOf(new URL(window.location.href).pathname);
@@ -36,8 +29,18 @@ function leaveIfCovenPaused(errors: readonly GraphQLFormattedError[] | undefined
   window.location.assign(covenPausedPath(slug));
 }
 
+// Read off the query text, since the parser stays out of the browser's bundle. Codegen writes
+// each document from a parsed operation, so the keyword and name are the first thing in it.
+const OPERATION_NAME = /^\s*(?:query|mutation|subscription)\s+([_A-Za-z][_0-9A-Za-z]*)/;
+
+export function operationNameOf(
+  document: DocumentTypeDecoration<unknown, never>,
+): string | undefined {
+  return OPERATION_NAME.exec(String(document))?.[1];
+}
+
 async function send<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   variables: TVariables | undefined,
   signal?: AbortSignal,
 ): Promise<TResult> {
@@ -48,27 +51,23 @@ async function send<TResult, TVariables extends object>(
   }
   // `fetch` is looked up here, on every request, never captured at import, so
   // a story or test can stand in for `window.fetch` after the module loads.
-  const response = await fetch(
-    // `new URL` resolves the relative path against the page's origin.
-    new URL(apiPath(ENDPOINT), window.location.origin).href,
-    {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        [CLIENT_HEADER]: CLIENT_HEADER_VALUE,
-        // Asks for the GraphQL-over-HTTP media type first, which is what keeps
-        // Yoga's status codes as they were under graphql-request.
-        accept: 'application/graphql-response+json, application/json',
-      },
-      body: JSON.stringify({
-        query: print(document),
-        // graphql-request sent the name, and the workshop's stories answer by it.
-        operationName: getOperationAST(document)?.name?.value,
-        variables,
-      }),
-      signal,
+  const response = await fetch(new URL(apiPath(ENDPOINT), window.location.origin).href, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      [CLIENT_HEADER]: CLIENT_HEADER_VALUE,
+      // Asks for the GraphQL-over-HTTP media type first, which is what keeps
+      // Yoga's status codes as they were under graphql-request.
+      accept: 'application/graphql-response+json, application/json',
     },
-  );
+    body: JSON.stringify({
+      query: String(document),
+      // graphql-request sent the name, and the workshop's stories answer by it.
+      operationName: operationNameOf(document),
+      variables,
+    }),
+    signal,
+  });
   // A gateway's HTML page or an empty body is not JSON; the status still says what happened.
   const body = (await response.json().catch(() => undefined)) as GraphQLBody<TResult> | undefined;
   // Typed by the result alone: `VariablesArg` has already held the variables
@@ -85,26 +84,17 @@ async function send<TResult, TVariables extends object>(
   return body.data;
 }
 
-/**
- * Runs one typed document against /api/graphql. Rejects with
- * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole,
- * and with its `StaleWriteError` subclass when the answer is STALE_WRITE.
- */
+/** Rejects with `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole. */
 export function graphqlRequest<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   ...[variables]: VariablesArg<TVariables>
 ): Promise<TResult> {
   return send(document, variables as TVariables | undefined);
 }
 
-/**
- * A save that creates a row, or with its `id` updates that one, through the
- * two documents given: the admin vocabulary forms' `if (id) update else
- * create`, written once for every kind they declare.
- */
 export function saveRequest<Input extends object>(
-  create: TypedDocumentNode<unknown, { input: Input }>,
-  update: TypedDocumentNode<unknown, { id: string; input: Input }>,
+  create: DocumentTypeDecoration<unknown, { input: Input }>,
+  update: DocumentTypeDecoration<unknown, { id: string; input: Input }>,
 ): (input: Input, id: string | undefined) => Promise<void> {
   return async (input, id) => {
     if (id) {
@@ -113,20 +103,17 @@ export function saveRequest<Input extends object>(
     }
     // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
     // `Input` is generic; the parameter has already held the document to it.
-    const widened = create as TypedDocumentNode<unknown, { input: object }>;
+    const widened = create as DocumentTypeDecoration<unknown, { input: object }>;
     await graphqlRequest<unknown, { input: object }>(widened, { input });
   };
 }
 
-/**
- * Query options for `useQuery`, keyed `[operationName, variables]` — codegen
- * refuses two operations sharing a name, so the name is a unique key.
- */
+/** Codegen refuses two operations sharing a name, so the name is a unique key. */
 export function graphqlQuery<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   ...[variables]: VariablesArg<TVariables>
 ) {
-  const name = getOperationAST(document)?.name?.value;
+  const name = operationNameOf(document);
   if (name === undefined) {
     throw new Error('A GraphQL query needs an operation name to key its cache entry.');
   }
@@ -148,10 +135,7 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
   return error instanceof TypeError;
 }
 
-/**
- * Sends a query's error to the nearest error boundary only while there is
- * nothing to show; a failed background refetch keeps the last answer on screen.
- */
+/** A failed background refetch keeps the last answer on screen. */
 export function throwWhenEmpty(_error: unknown, query: Pick<Query, 'state'>): boolean {
   return query.state.data === undefined;
 }

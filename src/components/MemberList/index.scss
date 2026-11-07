@@ -5,7 +5,6 @@
 // Joined date. The table, its frame and its card layout are the `.data-table` primitives
 // (claude-docs/styling.md).
 
-// The name, then "You" beside it on the member's own row.
 .member-list__name {
   display: inline-flex;
   align-items: center;
@@ -17,8 +16,6 @@
   font-size: type-size('caption');
 }
 
-// The joined date is a fact no control changes, so muted at the caption size
-// above the stacking width; a card already leads it with its muted label.
 @container data-table (width > #{$table-stack-width}) {
   .member-list .member-list__fact {
     color: $text-muted;
@@ -26,7 +23,6 @@
   }
 }
 
-// The role and its tip on one line, as the user list's role cell holds its own.
 .member-list__role {
   @include value-and-control;
 }
@@ -40,16 +36,14 @@
   }
 }
 
-// The Access column's heading and mark centred over each other, above the stacking width only, as a card
-// leads the mark with its label.
 @container data-table (width > #{$table-stack-width}) {
   .member-list .member-list__mark-column {
     text-align: center;
   }
 }
 
-// The address under the name in the member modal's head. Lives here, not in Modal's sheet: the heading is built by the
-// page for this list's modal and shown at once on a press, before the body's stylesheet matters.
+// Lives here, not in Modal's sheet: the page builds this heading and shows it at once on a press,
+// before the body's stylesheet loads.
 .member-list__modal-email {
   display: block;
 }

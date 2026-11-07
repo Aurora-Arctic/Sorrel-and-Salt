@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
 import { MODAL_SCANS, ROUTE_SCANS, type Persona } from './axe-scans';
 import {
   MODAL_OPENERS,
@@ -77,15 +77,6 @@ test('a title that goes absent after the wait does not fail the scan', async ({ 
 // Filters, a card hovered and focused, the builder with a step open, Record a Working's two steps, and the
 // recipe page with its workings and an ingredient's Quick Look. Each test seeds its own coven.
 
-/** Scans the page in the dark theme and the light, the site's default first. */
-async function scanBothThemes(page: Page) {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await assertNoAccessibilityViolations(page);
-  }
-}
-
-/** A coven owned by A, signed in, with one complete shared spell laying 2 g of a 20 g jar of Rosemary. */
 async function covenWithSpell(page: Page, name: string, domain: string) {
   const coven = await seedCoven(page, name, domain, { A: 'owner' });
   const spellId = await withSql(async (sql) => {
@@ -234,11 +225,9 @@ test.describe('the grimoire', () => {
   });
 });
 
-// The sweep: every route and modal tests/e2e/axe-scans.ts lists, scanned in both themes as each person it names,
-// one test per person for the pages and one for the modals. Each test seeds its own coven, so another test
-// recreating the slot's database cannot take its rows away. A finding or an unreached scan is collected rather
-// than thrown, so one run reports every page, and the test fails at the end with the list; the full result is
-// written to .reports/axe-sweep/ for whoever fixes it.
+// The sweep over tests/e2e/axe-scans.ts in both themes, one test per person for pages and one for modals, each
+// seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
+// collected, not thrown, so one run lists every page; the full result goes to .reports/axe-sweep/.
 test.describe('the accessibility sweep', () => {
   const personas = [...new Set(ROUTE_SCANS.flatMap(({ as }) => as as readonly Persona[]))];
   for (const persona of personas) {
@@ -250,12 +239,13 @@ test.describe('the accessibility sweep', () => {
       const world = await seedWorld(page);
       await signIn(page, world, persona);
       const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const { route } of routes) {
+      for (const scan of routes) {
+        const { route } = scan;
         const path = ROUTE_VISITS[route](world);
         if (path === null) continue;
         await test.step(route, async () => {
           try {
-            await visit(page, path);
+            await visit(page, path, 'status' in scan ? scan.status : undefined);
             await collectBothThemes(page, route, result);
           } catch (error) {
             await recordUnreached(page, route, error, result);

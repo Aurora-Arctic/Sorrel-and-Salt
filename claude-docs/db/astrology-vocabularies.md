@@ -5,16 +5,10 @@
 `planet` and `zodiac` before them), in
 `src/modules/vocabulary/schema/astrology.ts`, migration
 `0023_correspondence-vocabularies.sql`, seeded by `src/db/seed/astrology.ts`
-(["The astrology vocabulary seed"](astrology-vocabulary-seed.md)), and read
-by a member's autofill (["The member's autofill"](member-autofill.md)). They
-replace a TypeScript constant of the same lists, deleted with the seed: a list
-a keeper cannot extend without a deploy is the shape `form` had before MB.35,
-and wrong for the same reason. Files, scripts and functions say _astrology_
-rather than _correspondence_, which in §5 names every property an ingredient
-carries — element and deities too — not these two; the migration keeps the
-name it shipped under, since its tag is in the journal.
+(["The astrology vocabulary seed"](../compendium/astrology-vocabulary-seed.md)), and read
+by a member's autofill (["The member's autofill"](member-autofill.md)). Files, scripts and functions say _astrology_ rather than _correspondence_, which in §5 names every property an ingredient carries — element and deities too — not these two; the migration keeps the name it shipped under, since its tag is in the journal.
 
-**People read this vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table is `celestial_bodies` (MB.252), and the code, GraphQL and the lists the code reads and writes say celestial bodies (MB.253). MB.254 dropped the old `planets` lists on `ingredients` and `ingredient_variants`, `reference_links.planet_id` and the `planets` view, so no old name remains (["Renaming a table"](expand-contract.md); `design-decisions/mb.251-celestial-bodies.md`).
+**People read this vocabulary as Celestial Bodies**, since most of its nineteen values are not planets; the table, the code, GraphQL and the lists all say celestial bodies, and no `planet` name remains (["Renaming a table"](expand-contract.md); `design-decisions/ingredients.md`, "The planets are Celestial Bodies wherever a person reads them").
 
 - **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
@@ -32,10 +26,10 @@ vocabulary rather than a foreign key: a value off the list stays writable on
 a coven's ingredient, and soft-deleting a row rewrites none of a coven's, its
 value moving into the in-use bucket instead. A compendium entry holds curated
 values alone, so a row one holds is not deleted and a rename carries onto it
-([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+([MB.162](../design-decisions/ingredients.md#the-compendium-holds-curated-values-alone)).
 `nomenclature` and `element` stay enums — closed
 sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
-`none` and `unknown` and could not read a table (DESIGN.md §14).
+`none` and `unknown` and could not read a table.
 
 **Two tables, not one with a `kind` column**, for the reason the group tables
 are two: a suggestion query that forgot the `kind` predicate would offer a
@@ -59,15 +53,9 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 - **One tier.** Nothing groups a body or a sign, so the seed needs a flat
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
-- **The DESIGN.md table sits outside the forms table's run.** §5's celestial body and
-  zodiac table is placed after the forms paragraphs and before
-  `categories`, where a test once parsing the forms' lines would not read it
-  as one; no test parses §5 since MB.225.
+
 - **`standard` seeds no uncurated celestial body.** Its compendium's celestial body values are
-  all curated names in title case, which match case-insensitively. MB.94
-  decided against one: its tests write their own against an emptied
-  `ingredients`, and one in the shared template would reach every
-  workspace's suggestions. Since MB.162 no compendium entry may hold one.
+  all curated names in title case, which match case-insensitively. Tests write their own against an emptied `ingredients`, since one in the shared template would reach every workspace's suggestions, and no compendium entry may hold one (MB.162).
 - **Curating a value is not one click.** `description` is required, so the
   admin writes one with the name (MB.95, and M5.6a for forms).
 
@@ -77,7 +65,7 @@ current workspace only, and since MB.162 every one of those is the
 workspace's. The keeper's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
 (MB.162) — since a keeper reaches no workspace's ingredients (M6.6); its finder
-reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
+reads across the tier seam ([`tier-seam.md`](tier-seam.md), "The tier seam"),
 as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
@@ -87,7 +75,7 @@ live row's `lower(name)`.
 
 `src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
 ([`categories.md`](categories.md), "Form writes") without the group, for
-`/curator/celestial-bodies` (it was `/admin/planets` until MB.251) and `/curator/zodiac-signs`. One code path for both, keyed by
+`/curator/celestial-bodies` and `/curator/zodiac-signs`. One code path for both, keyed by
 the ingredient list each curates (`CuratedField`, `'celestialBodies' | 'zodiacSigns'`).
 A compendium entry's celestial bodies and signs are curated spellings (MB.162), and
 these writes keep them so after the write.
@@ -117,10 +105,7 @@ these writes keep them so after the write.
   (M6.6). The writer is the twenty-second, named below the module boundary
   for `carryFormRename`'s reason: the vocabulary module may not name
   `ingredients`.
-- **"While the row is the last live spelling of its value"** is always true.
-  MB.95's entry conditions both rules on it, and a value folds as its slug
-  does — trimmed and lower-cased — so two live rows of one fold would share a
-  slug, which the partial unique index refuses.
+- **Every live row is the last live spelling of its value**: a value folds as its slug does, trimmed and lower-cased, so two live rows of one fold would share a slug, which the partial unique index refuses.
 - **The entries are read before the transaction**, as the form delete's are:
   an entry saved with the value in the instant between keeps a retired
   spelling.
@@ -132,8 +117,6 @@ Each write expires the `compendium` tag once it has committed (M8.7;
 
 `src/modules/vocabulary/services/astrology.ts` is one code path for both curated astrology vocabularies (celestial bodies and zodiac signs), keyed by the ingredient list each curates. Reads are public; writes are for a curator or a keeper alone.
 
-- A compendium entry's celestial bodies and signs are spellings the vocabulary curates, so a value a live entry's list, or a live variant's, holds is held: its delete is refused (the message names the entries) and its rename, a change of case included, is carried onto the lists in the same write. No slug moves, since a value is no part of an entry's identity or slug. A soft-deleted entry keeps the old spelling. A rewrite leaves `seedKey` as it was.
-- A coven's ingredient never holds a value and is never rewritten: its spelling moves into the coven's in-use values, and a keeper writes nothing of a coven's.
-- A value folds as a slug does, trimmed and lower-cased, so every live row is the last live spelling of its value: two live rows of one fold would share a slug, which the partial unique index refuses.
-- The entries are read before the delete's transaction, so an entry saved with the value in the instant between is left holding a retired spelling.
+- The delete and rename rules are those under "The admin writes (MB.95)". A rewrite leaves `seedKey` as it was.
+
 - The list and its count are cached under the `compendium` tag, keyed by the field's name rather than handed its table, since the arguments are the cache key.
