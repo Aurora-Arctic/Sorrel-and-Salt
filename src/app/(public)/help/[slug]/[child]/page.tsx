@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath } from '@/lib/help-paths';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { linkTo, orNotFound } from '@/lib/help-pages';
+import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
 import { siteUrl } from '@/lib/site';
 import { readHelpArticle } from '@/modules/help';
 
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { slug, child } = await params;
   const found = await subPage(slug, child);
-  // The parent is read for its title alone; the sub page answered, so the parent is a public article.
+  // The parent is read for its title and its sub pages; the sub page answered, so the parent is a public article.
   const parent = await orNotFound(() => readHelpArticle(slug));
   return (
     <HelpArticleView
@@ -40,6 +40,7 @@ export default async function Page({ params }: Props) {
       body={found.body}
       subpages={found.children.map(linkTo)}
       parent={linkTo(parent)}
+      steps={guideSteps(linkTo(parent), parent.children.map(linkTo), helpPath(found))}
     />
   );
 }

@@ -88,3 +88,34 @@
     color: $text-muted;
   }
 }
+
+// The previous and next pages of the guide, at the foot: the back link's look and motion, each label above its
+// page's title, Next held to the end of the row even alone; on a narrow phone Next drops beneath Previous.
+.help-article__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  max-width: $measure;
+  margin-block-start: space(7);
+  padding-block-start: space(4);
+  border-block-start: 1px solid $hairline;
+}
+
+.help-article__step {
+  max-width: 100%;
+
+  > span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &--next {
+    margin-inline-start: auto;
+    text-align: end;
+  }
+}
+
+.help-article__step-title {
+  font-size: $nav-link-size;
+  color: $text-primary;
+}

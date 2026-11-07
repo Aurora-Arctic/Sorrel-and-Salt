@@ -23,6 +23,7 @@ const HelpArticleView = ({
   parent,
   heading = 'Help',
   terms = [],
+  steps = {},
 }: HelpArticleViewProps): ReactElement => {
   const { content, entries } = renderMarkdown(
     body,
@@ -69,6 +70,34 @@ const HelpArticleView = ({
               </li>
             ))}
           </ol>
+        </nav>
+      )}
+      {(steps.previous || steps.next) && (
+        <nav className="help-article__steps" aria-label="Guide Pages">
+          {steps.previous && (
+            <PendingLink
+              className="back-link help-article__step"
+              href={steps.previous.href as Route}
+            >
+              <BackChevron />
+              <span>
+                <span className="help-article__step-label">Previous</span>
+                <span className="help-article__step-title">{steps.previous.title}</span>
+              </span>
+            </PendingLink>
+          )}
+          {steps.next && (
+            <PendingLink
+              className="back-link back-link--forward help-article__step help-article__step--next"
+              href={steps.next.href as Route}
+            >
+              <span>
+                <span className="help-article__step-label">Next</span>
+                <span className="help-article__step-title">{steps.next.title}</span>
+              </span>
+              <BackChevron direction="forward" />
+            </PendingLink>
+          )}
         </nav>
       )}
     </article>

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { linkTo, orNotFound } from '@/lib/help-pages';
+import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
+import { helpPath } from '@/lib/help-paths';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
@@ -19,7 +20,8 @@ export default async function Page({
   if (found.kind !== 'article' || found.audience === 'public' || found.parentSlug !== slug) {
     notFound();
   }
-  // The parent is read for its title alone, by the same reach, so a parent the reader may not open is a 404.
+  // The parent is read for its title and its sub pages, by the same reach, so a parent the reader may not open is a 404
+  // and a sub page the reader may not open is not among the steps.
   const parent = await orNotFound(() => readStaffHelpArticle(session, slug));
   return (
     <HelpArticleView
@@ -29,6 +31,7 @@ export default async function Page({
       body={found.body}
       subpages={found.children.map(linkTo)}
       parent={linkTo(parent)}
+      steps={guideSteps(linkTo(parent), parent.children.map(linkTo), helpPath(found))}
     />
   );
 }

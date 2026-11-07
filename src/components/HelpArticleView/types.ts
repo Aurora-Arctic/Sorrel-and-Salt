@@ -6,6 +6,8 @@ export interface HelpSubpageLink {
   href: string;
 }
 
+export type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
+
 export interface HelpArticleViewProps {
   /** The page's title, drawn as a level-two heading beneath the search box. */
   title: string;
@@ -17,5 +19,7 @@ export interface HelpArticleViewProps {
   /** The glossary, which the body's `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */
   terms?: HelpTermSource[];
   /** On a sub page, the guide above it, linked between the search box and the title. */
-  parent?: Pick<HelpSubpageLink, 'title' | 'href'>;
+  parent?: HelpGuideStep;
+  /** The pages either side of this one in its guide (`guideSteps`), linked at the page's foot. */
+  steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };
 }

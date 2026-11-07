@@ -28,3 +28,22 @@ export function linkTo(row: HelpAddressed & { title: string; summary: string | n
     href: helpPath(row),
   };
 }
+
+type GuideLink = { title: string; href: string };
+
+/** The pages either side of `href` in its guide, which runs from the guide itself through its sub pages in the order given; a guide with no sub pages has neither. */
+export function guideSteps(
+  guide: GuideLink,
+  pages: readonly GuideLink[],
+  href: string,
+): { previous?: GuideLink; next?: GuideLink } {
+  const sequence = pages.length > 0 ? [guide, ...pages] : [];
+  const at = sequence.findIndex((page) => page.href === href);
+  if (at < 0) return {};
+  const steps: { previous?: GuideLink; next?: GuideLink } = {};
+  const previous = sequence[at - 1];
+  const next = sequence[at + 1];
+  if (previous) steps.previous = { title: previous.title, href: previous.href };
+  if (next) steps.next = { title: next.title, href: next.href };
+  return steps;
+}

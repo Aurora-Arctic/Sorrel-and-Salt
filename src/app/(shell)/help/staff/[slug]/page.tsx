@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath } from '@/lib/help-paths';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { linkTo, orNotFound } from '@/lib/help-pages';
+import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
@@ -23,6 +23,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       title={found.title}
       body={found.body}
       subpages={found.children.map(linkTo)}
+      steps={guideSteps(linkTo(found), found.children.map(linkTo), helpPath(found))}
     />
   );
 }
