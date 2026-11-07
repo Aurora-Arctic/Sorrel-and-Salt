@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import EmptyState from '../EmptyState';
 import Skeleton from '../Skeleton';
 import { SortSelect } from './sort-select';
 import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './types';
@@ -86,13 +87,21 @@ function StackTable<Row>({
   rows,
   rowKey,
   empty,
+  emptyLabel,
+  emptyAction,
+  emptyQuiet,
   'aria-label': label,
   className,
   otherOrders,
   pendingRows,
 }: StackTableProps<Row>): ReactElement {
   const pending = pendingRows !== undefined;
-  if (!pending && !rows.length) return <p>{empty}</p>;
+  if (!pending && !rows.length)
+    return (
+      <EmptyState size="compact" label={emptyLabel} action={emptyAction} quiet={emptyQuiet}>
+        {empty}
+      </EmptyState>
+    );
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
   const sorting =
     !pending && shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
@@ -144,17 +153,28 @@ function StackTable<Row>({
               ))
             : rows.map((row) => (
                 <tr key={rowKey(row)} {...tableRole('row')}>
-                  {shown.map((column) => (
+                  {shown.map((column, at) => {
                     // An action's cell has no label: it spans the card, or stands at
                     // its top right beside the first line.
-                    <td
-                      key={column.heading}
-                      className={cellClass(column)}
-                      {...stackCell(column.action ? '' : column.heading)}
-                    >
-                      {column.cell(row)}
-                    </td>
-                  ))}
+                    const cell = stackCell(column.action ? '' : column.heading);
+                    // The first column names the row, so a screen reader moving down a column
+                    // hears which row it is in.
+                    return at === 0 ? (
+                      <th
+                        key={column.heading}
+                        scope="row"
+                        className={cellClass(column)}
+                        {...cell}
+                        {...tableRole('rowheader')}
+                      >
+                        {column.cell(row)}
+                      </th>
+                    ) : (
+                      <td key={column.heading} className={cellClass(column)} {...cell}>
+                        {column.cell(row)}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
         </tbody>

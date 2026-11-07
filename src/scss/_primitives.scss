@@ -940,6 +940,11 @@
       border-bottom: 1px solid $text-muted;
     }
 
+    // A row header names its row but is not a heading in weight: it reads as the cell it replaces.
+    tbody th {
+      font-weight: inherit;
+    }
+
     tbody tr:nth-child(even) {
       background-color: $surface-card;
     }
