@@ -16,7 +16,7 @@ export const DocumentSkeleton = ({ title }: { title: string }) => (
     </div>
     <PageNav label="On This Page" entries={[]} collapsible pending />
     <div className="document-page__body">
-      <Skeleton shape="line" count={10} quiet />
+      <Skeleton shape="line" count={3} quiet />
     </div>
   </PageWithNav>
 );
