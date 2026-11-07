@@ -49,9 +49,6 @@ export type AuditColumnName = keyof typeof auditColumns;
 export type SoftDeletable = { deletedAt: AnyPgColumn };
 export type HardDeletable = { deletedAt?: never };
 
-// The same shape for rule 5's proof: a table carrying `workspace_id` scopes
-// itself and may only be reached with a `Membership`, and `{ workspaceId?:
-// never }` is the complement — every other table.
 export type WorkspaceScoped = { workspaceId: AnyPgColumn };
 export type Unscoped = { workspaceId?: never };
 
@@ -97,10 +94,7 @@ export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>,
  */
 export type SortColumn = AnyPgColumn<{ notNull: true }>;
 
-/**
- * One part of a page's sort, ascending unless the whole key is `descending`: a column, or an expression and the type its cursor text casts back to.
- * An expression that can be NULL is the caller's bug (see `SortColumn`); one descending part among ascending ones is written negated.
- */
+/** An expression that can be NULL is the caller's bug (see `SortColumn`); one descending part among ascending ones is written negated. */
 export type SortPart = SortColumn | { expression: SQL; type: string };
 
 export interface KeyOrder {
@@ -108,12 +102,7 @@ export interface KeyOrder {
   id: AnyPgColumn;
   /** The whole key, `(...sort, id)`, read in reverse: the exact reverse of the ascending list, ties included. */
   descending?: boolean;
-  /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
-  /**
-   * A table left-joined after `join`, null where `on` matched none, which a sort part or the `where` may read.
-   * A page carries the joined row onto each entry as `joined`; `on` holds the joined table's own filters.
-   */
   leftJoined?: LeftJoin<PgTable>;
   /**
    * The `where` holds a `<%` search, so the read runs in a transaction
@@ -131,25 +120,14 @@ export interface KeyOrder {
 
 export interface Keyset<Carried extends object = {}> extends KeyOrder {
   request: PageRequest;
-  /**
-   * Values selected beside the row and carried onto its entry, and so onto its
-   * edge. Each is read as the driver returns it: a `mapWith` on one is dropped.
-   */
+  /** Each is read as the driver returns it: a `mapWith` on one is dropped. */
   carry?: { [K in keyof Carried]: SQL<Carried[K]> };
 }
 
-/**
- * A list's key as a page finder takes it, which keys on the table's own `id`:
- * the sort, with what reading it joins, carries and is read under.
- */
 export type ListOrder<Carried extends object = {}> = Omit<Keyset<Carried>, 'id' | 'request'>;
 
 export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListOrder<Carried>;
 
-/**
- * How `selectFrom` counts a keyset list rather than paging it: every row the `where` holds (a page's without its bounds),
- * and how many come before `start` in `count`'s order. The read takes the key's join and threshold, no order and no limit.
- */
 export interface KeysetCount {
   count: KeyOrder;
   /** A page's first row. None on an empty page, whose `countBefore` is null. */
@@ -161,7 +139,6 @@ export interface SearchField {
   text: AnyPgColumn;
   weight: number;
   from: SQLWrapper;
-  /** What else a row must be to count: live, or in the reader's coven. */
   live?: SQL;
 }
 
@@ -184,8 +161,7 @@ export interface WordMatch {
 }
 
 /**
- * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean `SIMILARITY_THRESHOLD` and `WORD_SIMILARITY_THRESHOLD`,
- * and the first `limit` rows come back in `orderBy`'s order. Never `similarity(a, b) > n` in the `where`: no trigram index answers
+ * Never `similarity(a, b) > n` in the `where`: no trigram index answers
  * a function call (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
  */
 export interface Similarity {
@@ -193,38 +169,24 @@ export interface Similarity {
   limit: number;
 }
 
-/**
- * How `selectFrom` tallies rows rather than reading them: the `aggregate` values, one row per `groupBy` group (one row overall without),
- * under `over`'s search join and threshold, so it tallies the rows that list's pages hold.
- * Each value is read as the driver returns it, so a count is cast in SQL rather than mapped.
- */
+/** Each value is read as the driver returns it, so a count is cast in SQL rather than mapped. */
 export interface Aggregate<TRow extends Record<string, unknown>> {
   aggregate: { [K in keyof TRow]: SQL<TRow[K]> };
   over: Pick<KeyOrder, 'join' | 'leftJoined' | 'wordMatch'>;
-  /**
-   * Tables joined after the search join, in order, each ANDing its own
-   * `deleted_at IS NULL` into `on`. A right join keeps every row of its table
-   * whatever `on` says, so the `where` is where that table's own filter goes.
-   */
+  /** A right join keeps every row of its table whatever `on` says, so that table's own filter goes in the `where`. */
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
-  /** The most rows read, after `orderBy`; every row without. */
   limit?: number;
 }
 
-/** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table
- * too. */
 export interface AggregateJoin {
   type: 'inner' | 'left' | 'right';
   table: PgTable;
   on: SQL | undefined;
 }
 
-/**
- * How `selectFrom` reads a table beside a second one left-joined to it: each row with the joined row, or null where `on` matched none.
- * The joined row takes no filter of its own, only the caller's `on` and `where`; alias it when a correlated `where` reads the table too.
- */
+/** The joined row takes no filter of its own; alias it when a correlated `where` reads the table too. */
 export interface LeftJoin<TJoined extends PgTable> {
   leftJoin: TJoined;
   on: SQL;
@@ -245,31 +207,18 @@ export interface JoinedRow<TRow, TJoined> {
   joined: TJoined | null;
 }
 
-/**
- * A statement's rows read as a table: `source` is the parenthesised statement and its alias, `fields` the columns read off it.
- * For a read no one table holds, such as a union across two, still built by `selectFrom` under the threshold.
- */
 export interface Derived<TRow extends Record<string, unknown>> {
   source: SQL;
   fields: { [K in keyof TRow]: SQL<TRow[K]> };
 }
 
-/**
- * `withAudit`'s transaction, spelled from Drizzle's types rather than as
- * `typeof db`: the client is importable only where its exemption is pinned,
- * and a file holding named writes needs the transaction, not the client.
- */
+/** Spelled from Drizzle's types, not `typeof db`: the client is importable only where its exemption is pinned. */
 export type WriterTransaction = PgTransaction<
   PostgresJsQueryResultHKT,
   Record<string, never>,
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-/**
- * What a marked table's named writes are built from: the transaction, the session, and the writer's own stamped insert, update and soft delete,
- * which skip a soft-deleted row as every write does and return what the named write's signature says.
- * `writerFor` hands it to the file holding a table's finders and spreads the writes that file returns into the writer.
- */
 export interface WriterContext {
   tx: WriterTransaction;
   session: AuditSession;
@@ -295,19 +244,13 @@ export interface AuditWriter {
     table: TTable,
     values: WritableInWorkspace<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Update matching rows, stamping updated_* only — created_* is never touched.
-   * A soft-deleted row never matches, here or in any update below.
-   */
+  /** A soft-deleted row never matches, here or in any update below. */
   update<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * The same, naming the one row by its own id, for a table no proof scopes: a service cannot build the `where` above,
-   * as it may not import `drizzle-orm` at runtime.
-   */
+  /** Names the row by id: a service may not import `drizzle-orm` at runtime to build the `where`. */
   updateById<TTable extends PgTable & Unscoped & Generic & Identified>(
     table: TTable,
     id: string,
@@ -319,10 +262,6 @@ export interface AuditWriter {
     values: Partial<WritableInWorkspace<TTable>>,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * The same, naming the one row by its own id: a service may not import `drizzle-orm` at runtime,
-   * so the writer builds the predicate every entity update needs.
-   */
   updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic & Identified>(
     membership: Membership,
     table: TTable,
@@ -341,11 +280,7 @@ export interface AuditWriter {
     expectedRevision: number | null,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Soft-delete matching rows: stamps deleted_*, leaving the row in place
-   * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
-   * it keeps the stamps of whoever deleted it.
-   */
+  /** A row already deleted never matches, here or below, so it keeps the stamps of whoever deleted it. */
   softDelete<TTable extends PgTable & SoftDeletable & Unscoped & Generic>(
     table: TTable,
     where: SQL,
@@ -362,30 +297,16 @@ export interface AuditWriter {
     table: TTable,
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * `softDelete`, naming the rows by their own ids — the soft-delete twin of
-   * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
-   * nothing without a statement.
-   */
   softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Generic & Identified>(
     table: TTable,
     ids: readonly string[],
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Insert one row into the compendium tier of a two-tier table, filling
-   * `workspace_id` with null — the site role's counterpart of
-   * `insertInWorkspace`, under its proof.
-   */
   insertInCompendium<TTable extends PgTable & TwoTier & Generic>(
     curator: Curator,
     table: TTable,
     values: WritableInWorkspace<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Update the one live compendium row with this id, stamping updated_* only.
-   * A workspace's row, or a soft-deleted one, is not reached: nothing is
-   * written and nothing returned.
-   */
+  /** A workspace's row, or a soft-deleted one, is not reached: nothing is written and nothing returned. */
   updateByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
     curator: Curator,
     table: TTable,
@@ -410,10 +331,7 @@ export interface AuditWriter {
    * already has (the original date and reviewer stand); without it, clears the mark. The only writer of those two columns.
    */
   setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
-  /**
-   * Sets whether the one live compendium entry is shown on the public compendium. A real change to the row, so its audit stamps move.
-   * The only writer of the column.
-   */
+  /** The only writer of the column; a real change to the row, so its audit stamps move. */
   setShownInCompendium(curator: Curator, id: string, shown: boolean): Promise<IngredientRow[]>;
   /**
    * Moves the one live compendium row's `updated_at` with no column changed, for a parent whose child rows just changed.
@@ -872,10 +790,7 @@ export interface AuditWriter {
   ): Promise<TTable['$inferSelect'][]>;
 }
 
-/**
- * What `delete` names its rows by: a value per column, a list the column is in, or `null` for a nullable column that must be null.
- * Values rather than an `SQL` predicate, since a service may not build one. The stamps are not columns to match on.
- */
+/** Values rather than an `SQL` predicate, since a service may not build one; the stamps are not columns to match on. */
 export type ColumnMatch<TTable extends PgTable> = {
   [K in keyof Writable<TTable>]?:
     | NonNullable<Writable<TTable>[K]>
@@ -890,7 +805,6 @@ export interface SimilarityScore {
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
   query?: string;
-  /** Categories an entry carries, on itself or on a live form; `categoryMode` says how many of them. */
   categoryIds?: readonly string[];
   /** `all` (the default) needs every id in `categoryIds`; `any` needs at least one. */
   categoryMode?: CategoryMode;
@@ -984,10 +898,7 @@ export interface FacetCount<TValue extends string = string> {
   count: number;
 }
 
-/**
- * How many entries each value of each filter kind would list, under the rest of the filter. Forms are spelled as shown, deities and categories
- * are row ids, and the astrology kinds are the curated rows' names.
- */
+/** Forms are spelled as shown, deities and categories are row ids, and the astrology kinds are the curated rows' names. */
 export interface IngredientFacets {
   forms: FacetCount[];
   deities: FacetCount[];
@@ -998,10 +909,7 @@ export interface IngredientFacets {
   toxic: FacetCount<'toxic' | 'not_toxic'>[];
 }
 
-/**
- * A coven's facets: the seven kinds, and the two settings only a coven's list has. `source` lists both values, zeros kept, in the enum's order;
- * `inStock` and `lowStockOnly` count the entries the list would hold with the switch on. Each is counted with its own setting left out.
- */
+/** `source` lists both values, zeros kept, in the enum's order; `inStock` and `lowStockOnly` count the entries the list would hold with the switch on, each with its own setting left out. */
 export interface WorkspaceIngredientFacets extends IngredientFacets {
   source: FacetCount<'local' | 'compendium'>[];
   inStock: number;
@@ -1032,7 +940,6 @@ export interface CompendiumScore {
   score: number | null;
 }
 
-/** A compendium page entry's carried values, with its sourcing score when the filter asks for it (`withSourcingScore`). */
 export interface CompendiumListEdge extends CompendiumScore {
   sourcingScore?: number;
 }
@@ -1043,31 +950,21 @@ export interface SuggestionGroupTag {
   group: SuggestionGroup;
 }
 
-/**
- * What an entry of a coven's ingredient list carries beside its rank: the coven's live cupboard row for it, read by the list's own join so
- * `Ingredient.cupboardEntry` needs no second read. Null for the coven's own entries.
- */
+/** The coven's live cupboard row, read by the list's own join so `Ingredient.cupboardEntry` needs no second read. */
 export interface WorkspaceListEdge extends CompendiumScore {
   cupboardEntry: CupboardEntryRow | null;
 }
 
-/**
- * The columns a list filters, sorts and counts that a coven's cupboard row may restate: each the row's value where it holds one, else the entry's.
- * On the compendium's own list they are the entry's columns, and there is no join.
- */
+/** Each is the cupboard row's value where it holds one, else the entry's; the compendium's own list has no join. */
 export interface ListColumns {
   name: SortPart;
   elements: SQLWrapper;
   celestialBodies: SQLWrapper;
   zodiacSigns: SQLWrapper;
-  /** The cupboard row's join, which every read of the columns needs. */
   leftJoined?: LeftJoin<PgTable>;
 }
 
-/**
- * An ingredient's identity as a write gives it: the two parts its `identity_key` is built from, the formal name and the label it falls back to.
- * Never the form, which is a variant's.
- */
+/** Never the form, which is a variant's. */
 export interface IngredientIdentity {
   name: string;
   canonicalName?: string | null;
@@ -1077,10 +974,6 @@ export type ListedVocabulary = FlatTable | ItemTable;
 
 export type SuggestingVocabulary = FlatTable | PickedTable;
 
-/**
- * Where a vocabulary's in-use values are written: a `list` of `ingredients` whose entries are each one, or a `child` table's live rows,
- * each holding one in its `value` column (a deity link's `name`, a variant's `form`).
- */
 export type InUseSource =
   | { list: AnyPgColumn }
   | { child: typeof ingredientDeities; value: typeof ingredientDeities.name }
@@ -1093,52 +986,34 @@ export interface VocabularySuggestion {
   curated: boolean;
 }
 
-/** A form suggestion, which alone carries a group and who already claims it. */
 export interface FormSuggestion extends VocabularySuggestion {
-  /** The curated row's, which a pick sends; a value in use outside the vocabulary has none. */
   id: string | null;
-  /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
-  /** The curated row's group's icon name; none for a group without one and for a value in use. */
   icon: FormGroupIcon | null;
   claimants: Claimant[];
 }
 
-/**
- * A deity suggestion, which carries its tradition as a form's carries its
- * group, and no claimants: a deity is no part of an ingredient's identity.
- */
 export interface DeitySuggestion extends VocabularySuggestion {
-  /** The curated row's, which a pick sends; a value in use outside the vocabulary has none. */
   id: string | null;
-  /** The curated row's tradition, which tells two same-named deities apart; none in use. */
   tradition: string | null;
-  /**
-   * The other name the query matched, which the deity's own name does not show; none when its name matched, or it was found another way.
-   */
   matchedName: string | null;
 }
 
 export interface Claimant {
   name: string;
-  /** Its formal name; an entry whose nomenclature is `none` or `unknown` has none. */
   canonicalName: string | null;
 }
 
 export interface SuggestionRow {
   /** 0 a curated name match, 1 a curated description match, 2 in use outside the vocabulary. */
   tier: number;
-  /** The curated row's id; none in tier 2. */
   id: string | null;
   value: string;
   description: string | null;
   group: string | null;
-  /** The form group's icon; none for a deity, a tradition or a value in use. */
   icon: FormGroupIcon | null;
-  /** A deity's other name the query matched; none for anything else. */
   matchedName: string | null;
   fold: string;
-  /** The curated row's id; an in-use value's fold, which its tier holds once. */
   tiebreak: string;
   claimants: Claimant[];
 }
@@ -1157,18 +1032,13 @@ export interface CitingLink {
   reference: ReferenceRow;
 }
 
-/** The column `unread-columns.ts` leaves out of an `ingredients` row read. */
 export type UnreadIngredientColumn = 'curatorReviewedBy';
 
-/**
- * An `ingredients` row, compendium entry or coven's, as a finder returns it: without the name of the curator who reviewed it, which no finder
- * reads with the row (`unread-columns.ts`). The review date is on the row.
- */
+/** Without the curator who reviewed it, which no finder reads with the row (`unread-columns.ts`). */
 export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
 
 export type DocumentRow = typeof documents.$inferSelect;
 
-/** What a document's title and lede are written with. */
 export interface DocumentTextInput {
   title: string;
   lede: string;
@@ -1178,13 +1048,11 @@ export type DocumentVersionRow = typeof documentVersions.$inferSelect;
 
 export type DocumentMailingRow = typeof documentMailings.$inferSelect;
 
-/** What a mailing starts with: each version it covers with what changed in it, and how many accounts it will reach. */
 export interface DocumentMailingInput {
   items: readonly { versionId: string; summary: string }[];
   recipientCount: number;
 }
 
-/** A document's newest published version that no sent mailing covers, with its document. */
 export interface PendingDocumentVersion {
   documentId: string;
   versionId: string;
@@ -1193,7 +1061,6 @@ export interface PendingDocumentVersion {
   versionNumber: number;
 }
 
-/** One live item of a mailing, with the version's number and its document. */
 export interface DocumentMailingItem {
   mailingId: string;
   versionId: string;
@@ -1227,7 +1094,6 @@ export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow
   : TTable['$inferSelect'];
 
-/** When a curator last marked a compendium entry reviewed, as the curator's own read returns it. */
 export interface CompendiumReviewRow {
   /** `null` once the mark is cleared: the entry needs review. */
   reviewedAt: Date | null;
@@ -1253,7 +1119,6 @@ export interface WorkingParticipantValue {
   name?: string;
 }
 
-/** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {
   entry: IngredientRow;
   expiresAt: Date;
@@ -1277,7 +1142,6 @@ export interface ReceivedInvitationCoven {
   slug: string;
 }
 
-/** The sender of an invitation, as its invitee may read them: an id and a name. */
 export interface ReceivedInvitationInviter {
   id: string;
   name: string;
@@ -1295,7 +1159,6 @@ export type SiteInvitationRow = AddressInvitationRow & {
   siteRole: InvitableSiteRole;
 };
 
-/** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
 export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
 
 /** What an invitation on either tier starts with; the expiry defaults to seven days out. */
@@ -1304,33 +1167,27 @@ type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expires
   token: string;
 };
 
-/** What a site-tier invitation starts with: the same, and the site role it grants. */
 export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
 
-/** What a batch of cards starts with: a token each, never stored, and the batch and expiry they share. */
 export interface CardInvitationValues {
   tokens: string[];
   batchId: string;
   expiresAt: Date;
   note: string | null;
-  /** Whether the batch is for beta testers, written on every card of it. */
   beta: boolean;
 }
 
 /** A card's place in its batch, from 1; null for an older card. */
 export type CardPosition = { id: string; position: number | null };
 
-/** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
 export type CardBatchTotal = {
   batchId: string;
   cards: number;
   accepted: number;
   pending: number;
-  /** Refused opens of the batch's cards, all accounts and reasons added. */
   attempts: number;
 };
 
-/** Where a batch of cards stands, as the admin Invitation Cards table words it. */
 export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
 
 export interface CardBatchFilter {
@@ -1344,18 +1201,14 @@ export interface CardBatchFilter {
   expiresTo?: string;
 }
 
-/** What the admin card sign-up list and its CSV are narrowed by. */
 export interface CardArrivalFilter {
-  /** Part of the account's name or address, or the start of the batch number; case-insensitive. */
   query?: string;
 }
 
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
 
-/** Why a card's link was refused to a signed-in account: the reasons a refused open is recorded under. */
 export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
 
-/** One account's refused opens of one card for one reason. */
 export type CardAttemptRow = {
   id: string;
   invitationId: string;
@@ -1366,7 +1219,6 @@ export type CardAttemptRow = {
   createdAt: Date;
 };
 
-/** A card some account accepted: who, when, and the batch it came from. */
 export type CardArrivalRow = InvitationRow & {
   kind: 'card';
   acceptedAt: Date;
@@ -1374,7 +1226,6 @@ export type CardArrivalRow = InvitationRow & {
   batchId: string;
 };
 
-/** What a workspace invitation starts with: the same, and the coven role it grants. */
 export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };
 
 export interface SiteInvitationFilter {
@@ -1392,9 +1243,7 @@ export interface GrimoireQuery {
    * It narrows the list and ranks it best match first, the asked-for order breaking a tie.
    */
   query?: string;
-  /** Only the spells assigned these categories, by id; absent or empty means no filter. */
   categoryIds?: readonly string[];
-  /** Whether a spell needs every chosen category ('all', the default) or any of them. */
   categoryMode?: CategoryMode;
   /**
    * Only the spells whose moon phase is any of these, trimmed and ignoring case; absent or empty means no filter.
@@ -1422,9 +1271,7 @@ export interface GrimoireFacetCounts {
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
   query?: string;
-  /** Only the users who may not yet create a workspace: the keeper's to-do list. */
   awaitingApproval?: boolean;
-  /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
   /** Only the users a support time-out stands on: not lifted, and with no end date or one still ahead. */
   timedOut?: boolean;
@@ -1458,32 +1305,20 @@ export interface AstrologyValueFilter {
 export interface IngredientFormValueFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
-  /** Only the forms filed under this group. */
   groupId?: string;
 }
 
-/**
- * What the admin deity list is narrowed by, as `IngredientFormValueFilter` narrows the forms.
- * Each part is optional, and absent means no filter.
- */
 export interface DeityFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
-  /** Only the deities filed under this tradition. */
   traditionId?: string;
 }
 
-/**
- * What an admin group list is narrowed by: the deity traditions
- * today, and the category and form groups if their pages take the search too.
- * Absent means no filter.
- */
 export interface GroupFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
 }
 
-/** A user's display name only, never the rest of the row: what a co-member may read. */
 export interface UserName {
   id: string;
   name: string;
@@ -1499,20 +1334,13 @@ export interface CompendiumSlugEntry {
   slug: string;
   name: string;
   canonicalName: string | null;
-  /** The entry's own description, for `llms.txt` notes; the sitemap ignores it. */
   description: string | null;
-  /** When the entry last really changed: its `updated_at`. */
   lastModified: Date;
 }
 
-/**
- * Who reads the support list, as the finder narrows it: a keeper reads every request, a curator only those marked for curators or
- * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
- */
 export type SupportReader =
   { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
 
-/** Whoever is reading a request's replies: a sender reads their own requests', a curator or keeper those they may see. */
 export interface SupportViewer {
   userId: string;
   role: 'user' | 'curator' | 'admin';
@@ -1520,7 +1348,6 @@ export interface SupportViewer {
 
 export type SupportRequestStatus = 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
 
-/** What a status move writes with the new status: the activity stamps and the resolved and closed marks. */
 export interface SupportRequestMove {
   status: SupportRequestStatus;
   resolvedAt?: Date | null;
@@ -1535,20 +1362,16 @@ export interface SupportRequestFilter {
   about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
-  /** One of the admin page’s views; it narrows by status and assignment, and orders the queue views by oldest sender activity. */
   view?: SupportView;
-  /** Only requests whose sender is in this group; left out, every sender. */
   senderGroup?: SupportSenderGroup;
 }
 
 export type SupportViewCounts = Record<SupportView, number>;
 
-/** The end of the time-out standing on a sender: `until` null when it has no end date. */
 export interface StandingTimeout {
   until: Date | null;
 }
 
-/** What the account menu counts for one viewer. */
 export interface SupportMenuCounts {
   assignedOpen: number;
   waitingOnMe: number;

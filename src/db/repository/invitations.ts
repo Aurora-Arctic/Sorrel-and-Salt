@@ -48,11 +48,7 @@ function cardKind(): SQL {
   return eq(invitations.kind, 'card');
 }
 
-/**
- * The site tier, an address invitation with `workspace_id IS NULL`, spelled for this table alone: a card has no workspace
- * either, and is not this tier's. Not `inCompendium`: a site-tier invitation is no compendium row, and the tier
- * seam counts the compendium's reads (claude-docs/db/tier-seam.md, "The tier seam").
- */
+/** Not `inCompendium`: a site-tier invitation is no compendium row, and the tier seam counts the compendium's reads (claude-docs/db/tier-seam.md, "The tier seam"). A card has no workspace either, and is not this tier's. */
 function onSiteTier(): SQL {
   return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
 }
@@ -65,8 +61,7 @@ function inTierOf(proof: Membership | SiteAdmin): SQL {
   return 'workspaceId' in proof ? scopedTo(proof, invitations) : onSiteTier();
 }
 
-// A pending invitation: not accepted, declined, revoked or expired. Not the live filter, which the writer and
-// each finder AND on themselves.
+// Not the live filter, which the writer and each finder AND on themselves.
 function pendingInvitation(...which: (SQL | undefined)[]) {
   return and(
     ...which,
@@ -88,19 +83,15 @@ function openInvitation(...which: (SQL | undefined)[]) {
   );
 }
 
-// A workspace invitation names a workspace that is still live; a
-// site-tier one has none to check.
 function inLiveWorkspaceOrSite() {
   return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
 }
 
-// The invitation's workspace is live: the check an accept makes, without
-// the site-tier arm, since the received invitations never reach that tier.
+// Without the site-tier arm, since the received invitations never reach that tier.
 function inLiveWorkspace() {
   return existsIn(workspaces, eq(workspaces.id, invitations.workspaceId));
 }
 
-// The session's user holds the invited address, verified, on a live row.
 // Both sides lowered, though `users` holds its addresses lower-cased.
 function heldVerifiedBySession(session: AuditSession) {
   return existsIn(
@@ -124,17 +115,12 @@ function noCardAcceptedBySession(session: AuditSession) {
   return sql`not exists (select 1 from ${invitations} as ${sql.identifier('used_card')} where ${used.kind} = 'card' and ${used.acceptedBy} = ${session.userId} and ${used.deletedAt} is null)`;
 }
 
-// What the finders by id and the accept by id share: a coven invitation, never
-// the site tier's, addressed to the session's verified address. The two pagers
-// spell the same two terms as scope and filter, since a scope is not optional.
+// The two pagers spell the same two terms as scope and filter, since a scope is not optional.
 function receivedBy(session: AuditSession) {
   return and(onWorkspaceTier(), heldVerifiedBySession(session));
 }
 
-/**
- * The live invitation a link's token names, on either tier, for the accept service. No proof: holding the
- * token admits, and its hash is taken here. Expired, revoked and accepted rows come back alike for the service to tell apart.
- */
+/** No proof: holding the token admits. Expired, revoked and accepted rows come back alike for the service to tell apart. */
 export function findInvitationByToken(token: string): Promise<InvitationRow | undefined> {
   return selectOne(
     invitations,
@@ -142,7 +128,7 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
   );
 }
 
-/** Whether the account has accepted a card, any card in any batch. No proof: the accept service asks it of the session's own account. */
+/** No proof: the accept service asks it of the session's own account. */
 export async function hasAcceptedCard(userId: string): Promise<boolean> {
   const row = await selectOne(
     invitations,
@@ -151,11 +137,7 @@ export async function hasAcceptedCard(userId: string): Promise<boolean> {
   return row !== undefined;
 }
 
-/**
- * The name and slug of the live workspace an invitation names, `undefined` once it is deleted. No proof, and
- * two fields never the row: the caller has checked the session's verified address is the invited one, the only
- * account that may be told the name.
- */
+/** No proof, and two fields never the row: the caller has checked the session's verified address is the invited one, the only account that may be told the name. */
 export async function findInvitedCoven(workspaceId: string): Promise<InvitedCoven | undefined> {
   const row = await selectOne(
     workspaces,
@@ -164,10 +146,7 @@ export async function findInvitedCoven(workspaceId: string): Promise<InvitedCove
   return row && { name: row.name, slug: row.slug };
 }
 
-/**
- * One invitation of the proof's workspace by id, in any state, or `undefined` for a missing, other-workspace or
- * deleted one. `revokeInvitation` matches pending rows only, so this tells an accepted invitation from a missing one.
- */
+/** `revokeInvitation` matches pending rows only, so this tells an accepted invitation from a missing one. */
 export function findInvitationInWorkspace(
   membership: Membership,
   id: string,
@@ -225,10 +204,7 @@ export function findPendingSiteInvitationCount(
   );
 }
 
-/**
- * When the session's account created each coven invitation it has made in the last `windowSeconds`, revoked or not: the rows
- * a sender's mail limit counts. No proof, as the limit is on the sender across every coven they own.
- */
+/** No proof, as the limit is on the sender across every coven they own. */
 export async function findRecentCovenInvitationTimes(
   session: AuditSession,
   windowSeconds: number,
@@ -272,11 +248,7 @@ export function findPendingWorkspaceInvitationCount(
   );
 }
 
-/**
- * One page of the pending coven invitations addressed to the session's account in a live coven, newest first.
- * No proof: the invitee holds no membership, so the scope is the session's verified address, matched in SQL. The
- * site tier is never listed; a keeper invitation is accepted by its mailed link alone.
- */
+/** No proof: the invitee holds no membership, so the scope is the session's verified address, matched in SQL. A keeper invitation is accepted by its mailed link alone, so the site tier is never listed. */
 export function findReceivedInvitationPage(
   session: AuditSession,
   page: PageRequest,
@@ -303,10 +275,7 @@ export function findReceivedInvitationCount(
   );
 }
 
-/**
- * One coven invitation by id, in any state, or `undefined` when it is not the session's (other address, site
- * tier, deleted). Read by the accept-by-id service, which tells accepted, withdrawn and lapsed from missing; no proof.
- */
+/** Read by the accept-by-id service, which tells accepted, withdrawn and lapsed from missing; no proof. */
 export function findReceivedInvitation(
   session: AuditSession,
   id: string,
@@ -317,10 +286,7 @@ export function findReceivedInvitation(
   );
 }
 
-/**
- * The id, name and slug of each live coven in `ids` holding a pending invitation to the session's account, for
- * a page of received invitations. No proof, and three fields never the row.
- */
+/** No proof, and three fields never the row. */
 export async function findReceivedInvitationCovens(
   session: AuditSession,
   ids: string[],
@@ -340,10 +306,7 @@ export async function findReceivedInvitationCovens(
   return rows.map(({ id, name, slug }) => ({ id, name, slug }));
 }
 
-/**
- * The id and name of each live user in `ids` who sent the session's account a pending coven invitation. No
- * proof; two fields never the row, a name the invitation's mail already carries.
- */
+/** No proof; two fields never the row, a name the invitation's mail already carries. */
 export async function findReceivedInvitationInviters(
   session: AuditSession,
   ids: string[],
@@ -375,7 +338,6 @@ function arrivedByCard(): SQL {
   ) as SQL;
 }
 
-// The arrivals a query keeps: the account's name or address holds it, or the batch number starts with it.
 function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
   if (!query) return undefined;
   return or(
@@ -390,10 +352,6 @@ function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
   );
 }
 
-/**
- * One page of the accounts that arrived by card, newest first: the card rows alone, each with the account that
- * accepted it, when, and its batch. A site admin's read, as the admin Arrivals view is.
- */
 export function findCardArrivalPage(
   _admin: SiteAdmin,
   filter: CardArrivalFilter,
@@ -438,8 +396,7 @@ export function findCardCount(
   return findPageCountInScope(invitations, cardsOf(batchId), CARD_ORDER, start);
 }
 
-// One card stands for each batch: the first by id of those still live. Every card of a batch is minted in one statement
-// with one expiry, so any of them carries the batch's minted-on and expiry dates.
+// Every card of a batch is minted in one statement with one expiry, so any of them carries the batch's minted-on and expiry dates.
 function batchHeads(): SQL {
   const earlier = alias(invitations, 'earlier_card');
   return and(
@@ -470,7 +427,7 @@ function batchStatusIs(status: CardBatchStatus): SQL {
   return sql`not ${pending} and ${unaccepted} and ${lapsed}`;
 }
 
-// The batches a filter keeps. The head card stands for its batch, so its dates are the batch's; the days are whole, UTC.
+// The head card stands for its batch; the days are whole, UTC.
 function batchesWhere(filter: CardBatchFilter): SQL | undefined {
   const { batch, status, mintedFrom, mintedTo, expiresFrom, expiresTo } = filter;
   const through = (column: AnyPgColumn, from?: string, to?: string) => [
@@ -487,10 +444,6 @@ function batchesWhere(filter: CardBatchFilter): SQL | undefined {
   );
 }
 
-/**
- * One page of the batches, newest first: each entry is the batch's first card, which holds its batch id and dates. A site
- * admin's read; the counts per batch come from `findCardBatchTotals`.
- */
 export function findCardBatchPage(
   _admin: SiteAdmin,
   filter: CardBatchFilter,
@@ -555,7 +508,6 @@ const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
   },
 ];
 
-// The attempts at any live card of the batch, found in the same statement.
 function attemptsOnBatch(batchId: string): SQL {
   return sql`${cardInvitationAttempts.invitationId} in (select ${invitations.id} from ${invitations} where ${invitations.batchId} = ${batchId} and ${invitations.deletedAt} is null)`;
 }
@@ -629,8 +581,7 @@ export function invitationWrites({
         ...tier,
       });
     },
-    // A batch of cards in one statement: the tokens are hashed here, one row each, sharing the batch and the expiry,
-    // and bound to nothing. Not `insert`, which stamps one row.
+    // Not `insert`, which stamps one row.
     insertInvitationCards: (
       _admin: SiteAdmin,
       { tokens, batchId, expiresAt, note, beta }: CardInvitationValues,
@@ -691,9 +642,7 @@ export function invitationWrites({
           },
         })
         .returning() as never,
-    // The match in the statement, not only in the accept service: the service checks first to say why, and this is
-    // what holds if it forgot. An address invitation needs the invited address, verified; a card needs a verified
-    // account that has accepted no card before, and no address.
+    // The match is in the statement, not only the service: the service checks first to say why, and this holds if it forgot.
     acceptInvitation: (token: string) =>
       update(
         invitations,
@@ -714,9 +663,7 @@ export function invitationWrites({
         { acceptedAt: sql`now()`, acceptedBy: session.userId },
         pendingInvitation(eq(invitations.id, id), receivedBy(session), inLiveWorkspace()),
       ),
-    // The invitee's no, found by id and matched to the session's verified
-    // address in the statement, as the accept by id is: a pending coven
-    // invitation only.
+    // Matched to the session's verified address in the statement, as the accept by id is.
     declineReceivedInvitation: (id: string) =>
       update(
         invitations,
