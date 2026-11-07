@@ -102,7 +102,7 @@ cannot:
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
 - `axe-scans.test.ts` — the accessibility sweep's scan list names every
-  page under `src/app`, every route in DESIGN.md §9 and every file that draws
+  page under `src/app`, every route in §9 (`design/routes.md`) and every file that draws
   a modal, and nothing that has gone ("Accessibility — axe-core", below).
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
@@ -477,7 +477,7 @@ helper rejects, proof the scan fails a run instead of passing vacuously.
 serves, each with the people it is scanned as (signed out, an account with no
 seat, each coven role, a curator, a keeper, and the accounts the gates hold
 back), and every modal, each with the file that draws it and who opens it. A
-route DESIGN.md §9 names with no page yet is listed as `unbuilt` and skipped.
+route §9 (`design/routes.md`) names with no page yet is listed as `unbuilt` and skipped.
 `axe.spec.ts`'s "the accessibility sweep" runs one test per person for the
 pages and one for the modals. Each seeds its own coven, signs in, visits or
 opens every entry in turn, and scans it in the dark theme and then the light.

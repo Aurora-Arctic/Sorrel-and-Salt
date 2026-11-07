@@ -3,9 +3,9 @@ import { describe, expect, inject, it } from 'vitest';
 import { MODAL_SCANS, ROUTE_SCANS } from '../e2e/axe-scans';
 import { fromRoot } from '../support/paths';
 
-// The accessibility sweep scans what tests/e2e/axe-scans.ts lists, so the list must name every route and every
-// modal: a page added under src/app, a route added to DESIGN.md §9, or a file that starts drawing a modal fails
-// here until the list names it, and an entry left behind by a removed page or modal fails too.
+// The accessibility sweep scans what tests/e2e/axe-scans.ts lists, so a page added under src/app, a route added
+// to §9 (claude-docs/design/routes.md), or a file that starts drawing a modal fails here until the list names it,
+// and an entry left behind by a removed page or modal fails too.
 
 const PAGE_FILE = /^src\/app\/(.*\/)?page\.tsx$/;
 const SOURCE_FILE = /^src\/.*\.tsx$/;
@@ -35,13 +35,10 @@ function routeOf(file: string): string {
   return `/${segments.join('/')}`;
 }
 
-/** The routes DESIGN.md §9's table names, from its first column. */
+/** The routes §9's table names (claude-docs/design/routes.md), from its first column. */
 function designRoutes(): string[] {
-  const design = readFileSync(fromRoot('claude-docs/DESIGN.md'), 'utf8');
-  const section = design.slice(
-    design.indexOf('## 9. Routes and components'),
-    design.indexOf('### Components'),
-  );
+  const design = readFileSync(fromRoot('claude-docs/design/routes.md'), 'utf8');
+  const section = design.slice(0, design.indexOf('## Components'));
   return [...section.matchAll(/^\| `([^`]+)`/gm)].map(([, route]) => route);
 }
 
@@ -62,7 +59,7 @@ describe('the accessibility scan list', () => {
     expect(built.filter((route) => !routes.includes(route))).toEqual([]);
   });
 
-  it('names every route in DESIGN.md §9', () => {
+  it('names every route in §9', () => {
     const routes = designRoutes();
 
     expect(routes.length).toBeGreaterThan(30);

@@ -1,5 +1,5 @@
 // The accessibility sweep's scan list: every route and modal, each with the people it is scanned as.
-// tests/e2e/axe.spec.ts scans it; tests/guards/axe-scans.test.ts fails on a page, a DESIGN.md §9 route or a
+// tests/e2e/axe.spec.ts scans it; tests/guards/axe-scans.test.ts fails on a page, a §9 route (design/routes.md) or a
 // modal file with no entry. Plain data, with no Playwright import, so the Vitest guard can read it.
 
 /** Who a scan signs in as. Coven roles are the schema's; `user` holds no coven seat. */
@@ -18,7 +18,7 @@ export type Persona =
   | 'keeper';
 
 export interface RouteScan {
-  /** The address pattern, as DESIGN.md §9 writes it: route groups and parallel-route slots left out. */
+  /** The address pattern, as §9 (claude-docs/design/routes.md) writes it: route groups and parallel-route slots left out. */
   route: string;
   /** Everyone the page is scanned as; empty only for a route §9 names that has no page yet. */
   as: readonly Persona[];
@@ -100,6 +100,7 @@ export const ROUTE_SCANS = [
   { route: '/keepers/invitations', as: ['keeper'] },
   { route: '/keepers/invitation-cards', as: ['keeper'] },
   { route: '/keepers/card-sign-ups', as: ['keeper'] },
+  { route: '/keepers/business-cards', as: ['keeper'] },
   { route: '/keepers/documents', as: ['keeper'] },
   { route: '/keepers/documents/[key]', as: ['keeper'] },
   { route: '/keepers/help', as: [], unbuilt: true },

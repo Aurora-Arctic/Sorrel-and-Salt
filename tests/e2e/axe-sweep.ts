@@ -316,6 +316,7 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/keepers/invitations': () => '/keepers/invitations',
   '/keepers/invitation-cards': () => '/keepers/invitation-cards',
   '/keepers/card-sign-ups': () => '/keepers/card-sign-ups',
+  '/keepers/business-cards': () => '/keepers/business-cards',
   '/keepers/documents': () => '/keepers/documents',
   '/keepers/documents/[key]': () => '/keepers/documents/terms',
   '/keepers/help': () => null,
