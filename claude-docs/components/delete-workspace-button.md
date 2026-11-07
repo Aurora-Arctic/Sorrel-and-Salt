@@ -19,21 +19,10 @@ component taking the workspace's `workspaceId` and `name`.
   be a 404, since the deleting user has no membership of the coven any more.
 - **The page decides who sees it**, from `rolePermits(role, { workspace: ['delete'] })`, never from a
   rank. The service checks the same permission whatever the page shows.
+- **Placement**: the coven index gives it a section of its own, "Delete This Coven", shown to
+  stewards only, so it is never beside Leave Coven.
 
-The optional `inModal` prop asks the confirmation over the dialog the button sits in rather than
-opening a second modal on top, and `onlyOwner` leaves "other stewards included" out of the question,
-since there are none. With `inModal`, a refusal is a plain error `Notice` inside the dialog,
-on its own line above the dialog's buttons (the shared `.modal__actions` style), with no badge. The only steward's guided exit
-([`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
-
-## Styling
-
-None of its own: the directory has no `index.scss`. The button is the `.btn.btn--destructive`
-primitive, and the confirmation is `ConfirmedAction`'s modal ([`user-list.md`](user-list.md)).
-Where it sits is the page's: the coven index gives it a section of its own, "Delete This Coven",
-shown to stewards only, with a sentence saying what it does, so it is never beside
-Leave Coven.
-
-## Stories and tests
-
-`src/components/DeleteWorkspaceButton/index.stories.tsx`: in the workshop the call reaches no server, so confirming shows the failure. The button in its page is the coven index's, which reads the session and so has no story. Tests: `tests/components/DeleteWorkspaceButton/index.test.tsx`; the only steward's route is `tests/components/LeaveWorkspaceButton/owner-exit.test.tsx`; the page's choice to show it by permission is `tests/app/(shell)/coven/page.test.tsx`.
+`inModal` asks the confirmation over the dialog the button sits in rather than opening a second
+modal on top; a refusal is then a plain error `Notice` inside the dialog, above its buttons, with no
+badge. `onlyOwner` leaves "other stewards included" out of the question, since there are none. The
+only steward's guided exit ([`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
