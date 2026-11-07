@@ -180,10 +180,15 @@ describe('SupportRequestByLink, while the request is read', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
     // The skeleton is drawn for the eye alone, so it is found by being hidden from assistive technology.
     expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    // The waiting region says it is still loading, as every loading region does (claude-docs/loading.md).
+    expect(screen.getByRole('generic', { busy: true })).toContainElement(
+      screen.getByRole('status'),
+    );
 
     release();
 
     expect(await screen.findByRole('heading', { name: SUBJECT })).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('generic', { busy: true })).toBeNull();
   });
 });

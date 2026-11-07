@@ -324,6 +324,9 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
 };
 
 const dialogNamed = (page: Page, name: string | RegExp) => page.getByRole('dialog', { name });
+/** A ConfirmDialog asks before an action, so it is an alert dialog. */
+const confirmNamed = (page: Page, name: string) =>
+  page.getByRole('alertdialog', { name, exact: true });
 
 /** Opens `path` and waits for what it loads to finish showing. */
 export async function visit(page: Page, path: string, status?: number): Promise<void> {
@@ -440,12 +443,12 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
   'make-it-ours': async (page, w) => {
     await openEntryMenu(page, w);
     await page.getByRole('menuitem', { name: 'Make It Ours' }).click();
-    return dialogNamed(page, 'Make It Ours');
+    return confirmNamed(page, 'Make It Ours');
   },
   'remove-from-cupboard': async (page, w) => {
     await openEntryMenu(page, w);
     await page.getByRole('menuitem', { name: 'Remove', exact: true }).click();
-    return dialogNamed(page, 'Remove from Cupboard');
+    return confirmNamed(page, 'Remove from Cupboard');
   },
   'edit-stock': async (page, w) => {
     await openEntryMenu(page, w);
@@ -456,7 +459,7 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
     await visit(page, `/coven/${w.coven.slug}/ingredients/${w.local.ingredientId}`);
     await page.getByRole('button', { name: `More for ${w.local.name}`, exact: true }).click();
     await page.getByRole('menuitem', { name: /^Delete/ }).click();
-    return dialogNamed(page, 'Delete Ingredient');
+    return confirmNamed(page, 'Delete Ingredient');
   },
   'entry-summary': async (page, w) => {
     await visit(
@@ -498,7 +501,7 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
     await visit(page, `/coven/${w.coven.slug}/grimoire`);
     await page.getByRole('button', { name: `More for ${w.spell.title}`, exact: true }).click();
     await page.getByRole('menuitem', { name: /^Delete/ }).click();
-    return page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    return confirmNamed(page, 'Delete Spell');
   },
   'record-working-card': async (page, w) => {
     await visit(page, `/coven/${w.coven.slug}/grimoire`);

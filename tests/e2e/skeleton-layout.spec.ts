@@ -116,6 +116,8 @@ interface Navigation {
   dynamicTitle?: boolean;
   /** Parts that stack under content that varies by item at phone width: only x and width are compared. */
   stackedParts?: string[];
+  /** The account menu draws its links only once opened, so it is opened before the link is looked for. */
+  inAccountMenu?: boolean;
 }
 
 const navigations: Navigation[] = [
@@ -131,7 +133,13 @@ const navigations: Navigation[] = [
   { name: 'privacy', as: 'steward', from: () => '/compendium', to: () => '/privacy' },
   { name: 'code-of-ethics', as: 'steward', from: () => '/compendium', to: () => '/code-of-ethics' },
   { name: 'disclaimer', as: 'steward', from: () => '/compendium', to: () => '/disclaimer' },
-  { name: 'account', as: 'steward', from: () => '/compendium', to: () => '/account' },
+  {
+    name: 'account',
+    as: 'steward',
+    from: () => '/compendium',
+    to: () => '/account',
+    inAccountMenu: true,
+  },
   { name: 'account-sign-in', as: 'steward', from: () => '/account', to: () => '/account/sign-in' },
   { name: 'account-support', as: 'steward', from: () => '/account', to: () => '/account/support' },
   {
@@ -568,6 +576,10 @@ for (const as of ['steward', 'keeper'] as const) {
             await hydrated(page, '[role="combobox"]');
             await page.getByRole('combobox', { name: 'Coven' }).first().click();
           } else {
+            if (navigation.inAccountMenu) {
+              await hydrated(page, '.account-menu__button');
+              await page.locator('.account-menu__button').click();
+            }
             // Why the comparison means something: the old page carries a real link to the destination.
             await expect
               .poll(() => markLink(page, to), {

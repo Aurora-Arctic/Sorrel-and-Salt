@@ -135,7 +135,7 @@ const SupportRequestByLink = (): ReactElement => {
   // The one status announces the wait; the quiet skeleton beside it is for the eye alone.
   if (state.phase === 'loading') {
     return (
-      <div className="page-with-nav">
+      <div className="page-with-nav" aria-busy="true">
         <p role="status">Opening your request.</p>
         <Skeleton shape="line" count={4} quiet />
       </div>
