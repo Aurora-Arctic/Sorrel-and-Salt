@@ -323,7 +323,7 @@ const supportPages = [
     1,
     'Sending a Request and Reading Replies',
     'The request form and where replies arrive.',
-    `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The topics are Accessibility, Bug, Account & Sign-In, Compendium Entry, Privacy & Data, Feedback and Question.
+    `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The signed-in form offers Accessibility, Bug, Account & Sign-In, Compendium Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
 
 A reply is read on the support page behind sign-in, and the email only tells you one has arrived. A signed-out sender is mailed the reply whole. Reply with "Your Reply". A reply is at most 4,000 characters. A request you sent while signed out moves to your account once the account has that address verified.`,
   ),
