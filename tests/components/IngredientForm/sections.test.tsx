@@ -9,7 +9,7 @@ import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// claude-docs/components/ingredient-form.md, "Sections"
+// claude-docs/components/ingredient-form.md, "Sections fold"
 
 const SECTIONS = ['Identity', 'Details & Care', 'Correspondences', 'Relations', 'Sources', 'Forms'];
 

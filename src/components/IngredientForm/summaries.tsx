@@ -21,7 +21,7 @@ import { FIELD_NOUNS, UNNAMED_FORM, texts } from './values';
 
 // What a folded section's line says: what has been entered in it, in its fields' order, joined by a
 // middle dot. Each summary watches its own fields; a variant's card line uses the same parts
-// (claude-docs/components/ingredient-form.md, "Sections").
+// (claude-docs/components/ingredient-form.md, "Sections fold").
 
 const NOTHING = 'Nothing yet';
 
