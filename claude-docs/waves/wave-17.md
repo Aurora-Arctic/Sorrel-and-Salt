@@ -18,6 +18,8 @@
 
 **M17.12 follows M17.11**, minted on 2026-11-03 on the owner's call: it gives each PR one Vitest comment and one Playwright comment, each updated in place as results arrive, in place of four comments that each appear only when their job ends. It is developer tooling and a prerequisite for nothing.
 
+**M17.19 and M17.20 follow M17.4**, minted on 2026-11-07 on the owner's call: two housekeeping tasks with no behaviour change. M17.19 keeps one Drizzle snapshot in `src/db/migrations/meta/` in place of one per migration, and M17.20 adds the stories eleven components lack. Neither is a prerequisite for anything.
+
 **MB.163 is unscheduled by design and sits last in the row, after M17.4** (the owner's call, 2026-11-06), moved here from Wave 15 on the owner's call of 2026-11-03: it moves a curated rename's rewrite of compendium entries into a background job, which is post-launch work. It is trigger-based, not wave-based, and a prerequisite for nothing, since the rewrite runs in the rename's own transaction until it lands. Its trigger is a measured rewrite time near the function's time limit, which is unlikely to fire at the compendium's expected size. It builds on MB.290, which extends that rewrite to each variant's own lists. Its entry is in [`tasks/mb.md`](../tasks/mb.md). It sits after M17.6 → M17.12 and M17.4 for the reason M7.A.1 sits last in Wave 15: every open task needs a place, and only its trigger starts it.
 
 **MB.78 stays on Wave 15**, until the owner moves it: it was minted before this wave existed and nothing about it changed. It is unscheduled by design and trigger-based.
