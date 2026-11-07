@@ -22,10 +22,7 @@ import { assertMembership } from '@/modules/coven';
 const cachedFacets = cachedCompendiumRead('compendium-facets', findCompendiumFacets);
 
 /**
- * How many compendium entries each filter value would list under the rest of
- * `filter`, the No Refs switch's count and zeros included. Needs no session: the
- * compendium is the public surface. The Reviewed counts are a curator's alone;
- * for anyone else they are not read and the answer is null
+ * Needs no session: the compendium is the public surface. The Reviewed counts are a curator's alone; for anyone else they are not read and the answer is null
  * (claude-docs/db/compendium-read.md, "Facet counts").
  *
  * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
@@ -41,10 +38,7 @@ export async function compendiumFacets(
 }
 
 /**
- * How many of a coven's ingredients each filter value would list, counted as
- * `compendiumFacets` counts, over the rows `listWorkspaceIngredients` reads.
- * Never cached: what it counts is the coven's. Adds the Source strip's two
- * values and the In Stock switch, each under the rest of the filter.
+ * Never cached: what it counts is the coven's. Adds the Source strip's two values and the In Stock switch, each under the rest of the filter.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.

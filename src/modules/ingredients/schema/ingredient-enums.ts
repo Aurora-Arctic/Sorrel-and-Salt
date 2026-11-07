@@ -30,7 +30,6 @@ export const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
   'zoological',
 ]);
 
-/** Whether a nomenclature’s formal name is set in italics; one rule for the entry page and the card. */
 export const isBinomial = (kind: string): boolean => BINOMIAL_KINDS.has(kind);
 
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
@@ -117,6 +116,5 @@ export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];
 export const COMPENDIUM_SORTS = ['name', 'sourcing_score'] as const;
 export type CompendiumSort = (typeof COMPENDIUM_SORTS)[number];
 
-/** Which way a compendium sort runs: `asc` is its first-click direction, `desc` the reverse. */
 export const COMPENDIUM_ORDERS = ['asc', 'desc'] as const;
 export type CompendiumOrder = (typeof COMPENDIUM_ORDERS)[number];

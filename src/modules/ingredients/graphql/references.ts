@@ -19,15 +19,12 @@ import type { ReferenceTextField } from '../validation/types';
 // A reference as DESIGN.md §7 sketches it: its fields, the tier as `isGlobal`, and the citation rendered on the server by the one
 // renderer. `Ingredient.references` reads through the request's loader; `workspaceId` stays off the wire, as it does on `Ingredient`.
 
-/** Every text field but the title, which every kind of reference requires. */
 const OPTIONAL_FIELDS = REFERENCE_TEXT_FIELDS.filter(
   (field): field is Exclude<ReferenceTextField, 'title'> => field !== 'title',
 );
 
-/** The fields a day is written in, which the wire types as one; the rest are text. */
 const DAY_FIELDS: ReadonlySet<ReferenceTextField> = new Set(['modified', 'accessed']);
 
-/** What the type says of a field its name does not explain. */
 const DESCRIPTION_OF: Partial<Record<ReferenceTextField, string>> = {
   container:
     "The book of a chapter, the journal of an article, the reference work of an entry, or a web page's site.",
@@ -72,7 +69,6 @@ export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').impleme
   }),
 });
 
-/** One row's link to a source: the locator is the link's, not the reference's. */
 export const ReferenceLinkRef = builder.objectRef<CitedReference>('ReferenceLink').implement({
   description: "One row's link to a source.",
   fields: (t) => ({
@@ -94,7 +90,6 @@ export const ReferenceLinkRef = builder.objectRef<CitedReference>('ReferenceLink
   }),
 });
 
-/** A reference an ingredient cites: an existing reference's id, an optional locator, and on the compendium tier the two attributes. */
 export const ReferenceLinkInput = builder.inputType('ReferenceLinkInput', {
   fields: (t) => ({
     referenceId: t.id({ required: true }),
@@ -110,7 +105,7 @@ export const ReferenceLinkInput = builder.inputType('ReferenceLinkInput', {
   }),
 });
 
-/** A reference's fields, validated per `kind` by the shared schema. One input for both writes: an update replaces the reference, so a field left out is cleared. */
+// An update replaces the reference, so a field left out is cleared.
 const ReferenceInput = builder.inputType('ReferenceInput', {
   description: 'A reference, whole. On an update, a field left out or null is cleared.',
   fields: (t) => ({
@@ -188,5 +183,4 @@ builder.queryField('reference', (t) =>
   }),
 );
 
-// The reference picker's search.
 suggestionConnection('referenceSuggestions', ReferenceRef, suggestReferences);

@@ -44,7 +44,6 @@ export const ingredients = pgTable(
     canonicalName: text('canonical_name'),
     // No database default: the Zod variants supply or demand it (claude-docs/db/identity-model.md, "Ingredient table details").
     nomenclature: nomenclatureKind('nomenclature').notNull(),
-    // No form: an entry's forms are its variants (`ingredient_variants`).
 
     // The formal name alone: what the tier-split unique indexes hold once per tier. GENERATED ALWAYS, so Postgres refuses a
     // direct write (claude-docs/db/identity-model.md, "Ingredient table details").

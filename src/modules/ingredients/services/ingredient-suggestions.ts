@@ -12,9 +12,7 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
 import { CompendiumFilter } from '../validation/compendium-filter';
 
 /**
- * What the substitute picker offers as `query` is typed: the ingredients a
- * substitute in this workspace may link, in two groups (the coven's cupboard,
- * then the rest of the compendium), each best match first and cut at a limit.
+ * Two groups, the coven's cupboard then the rest of the compendium, each best match first and cut at a limit.
  * It answers with ingredients, unlike `suggestCommonNames`, since picking one
  * writes a link (claude-docs/db/compendium-read.md, "Ingredient suggestions").
  * Asks only `ingredient: ['read']` (claude-docs/db/fuzzy-matching.md).

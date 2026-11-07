@@ -21,7 +21,6 @@ const UnitDimensionEnum = builder.enumType('UnitDimension', {
   values: UNIT_DIMENSIONS,
 });
 
-/** `numeric` text as Postgres returns it, as a number; null stays null. */
 const amount = (value: string | null) => (value === null ? null : Number(value));
 
 export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').implement({
@@ -63,10 +62,7 @@ export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').imp
   }),
 });
 
-/**
- * The jar's ingredient, read in the jar's coven. The stock read already
- * proved it live and readable, so a null here is a row deleted since.
- */
+// The stock read already proved the jar's ingredient live, so a null here is a row deleted since.
 async function ingredientOf(
   row: StockRow,
   loaders: Built<{ ingredientsById: typeof ingredientsById }>,
@@ -79,10 +75,7 @@ async function ingredientOf(
   return ingredient;
 }
 
-/**
- * The `StockInput` on the wire. A field left out keeps its value on an
- * update and null clears it; `variantId` is the add's argument, not a field.
- */
+// A field left out keeps its value on an update and null clears it; `variantId` is the add's argument, not a field.
 const StockInput = builder.inputType('StockInput', {
   fields: (t) => ({
     quantityOnHand: t.float(),

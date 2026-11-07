@@ -16,27 +16,19 @@ import { idColumn } from '../../../db/schema-parts';
 
 export const nameBasis = pgEnum('name_basis', NAME_BASES);
 
-/**
- * The tables a reference can support, each by the property and column that
- * key it. The order is the columns', the CHECK's and the indexes'.
- */
 export const SOURCED = {
   ingredientId: { column: 'ingredient_id', table: ingredients },
   deityId: { column: 'deity_id', table: deities },
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
   celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
-  // One form's own sources, beside its ingredient's.
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
 } as const;
 
-/** A sourced entity's property on `referenceLinks`: `ingredientId`, `deityId`, … */
 export type SourcedKey = keyof typeof SOURCED;
 
-/** The registry's keys, in its order. */
 export const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
 
-/** One nullable foreign key per sourced table, under the registry's own keys. */
 function sourcedColumns() {
   return Object.fromEntries(
     SOURCED_KEYS.map((key) => {

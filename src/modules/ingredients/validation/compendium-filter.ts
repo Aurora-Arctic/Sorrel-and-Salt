@@ -11,9 +11,7 @@ import {
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
 
-// The compendium list's filter as the `compendium` query receives it, parsed by
-// the service because the browser is not the only caller. Zod only, so the form
-// side loads it too (claude-docs/validation.md, "Where the schemas live").
+// Zod only, so the form side loads it too (claude-docs/validation.md, "Where the schemas live").
 
 /**
  * Optional text as a filter takes it: blank, null or missing is no filter, so
@@ -65,7 +63,6 @@ export const CompendiumFilter = z.object({
   deityIds: filterIds,
   zodiacSigns: filterTexts,
   celestialBodies: filterTexts,
-  // An entry whose own `elements` holds any one listed.
   elements: filterElements,
   // `any`, like null or missing, is no filter.
   toxic: z

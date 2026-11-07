@@ -28,9 +28,7 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
   ].join(' and '),
 );
 
-// What a workspace holds. Stock hangs off the ingredient, not the other way
-// round, which is also why `spell_steps` references `ingredients` and
-// not this table.
+// Stock hangs off the ingredient, which is why `spell_steps` references `ingredients` and not this table.
 export const inventoryItems = pgTable(
   'inventory_items',
   {
@@ -63,7 +61,6 @@ export const inventoryItems = pgTable(
     // Where this jar came from ("foraged by the creek") — where the stock came
     // from, not where the entry did (`ingredients.workspace_id`).
     source: text('source'),
-    // A date, not a timestamp: nobody records the hour they were handed a jar.
     acquiredDate: date('acquired_date'),
     ...auditColumns,
   },

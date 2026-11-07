@@ -36,8 +36,6 @@ export const references = pgTable(
     kind: referenceKind('kind').notNull(),
     authors: text('authors'),
     title: text('title').notNull(),
-    // The book of a chapter, the journal of an article, the reference work
-    // of an entry, or the site of a web page.
     container: text('container'),
     contributors: text('contributors'),
     edition: text('edition'),
@@ -48,7 +46,6 @@ export const references = pgTable(
     publisher: text('publisher'),
     published: text('published'),
     pages: text('pages'),
-    // The repository a print work was read through: Perseus, Encyclopedia.com.
     host: text('host'),
     url: text('url'),
     modified: date('modified'),

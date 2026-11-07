@@ -80,7 +80,6 @@ builder.objectField(IngredientRef, 'inCupboard', (t) =>
   }),
 );
 
-// The Add flow's question: the exact matches, a page at a time.
 builder.queryField('compendiumMatches', (t) =>
   t.pagedConnection({
     type: IngredientRef,
@@ -92,8 +91,7 @@ builder.queryField('compendiumMatches', (t) =>
   }),
 );
 
-// The three writes. The resolvers refuse only a missing session; who
-// may write which coven's cupboard is the service's check.
+// The resolvers refuse only a missing session; the service checks the coven.
 
 const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
   description:
@@ -109,10 +107,7 @@ const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
   }),
 });
 
-/**
- * The written row with the compendium entry's own name beside it. `read` fetches the entry where the loader cannot:
- * the loader reads live entries only, and a coven annotates a retired entry it still holds.
- */
+// `read` fetches the entry where the loader cannot: the loader reads live entries only, and a coven annotates a retired entry it still holds.
 async function nodeOf(
   row: CupboardEntryRow,
   loaders: Built<{
@@ -183,7 +178,6 @@ builder.mutationField('annotateCupboardEntry', (t) =>
   }),
 );
 
-// Answers the compendium entry's id, as every delete answers the id it removed.
 builder.mutationField('removeCupboardEntry', (t) =>
   t.id({
     description:

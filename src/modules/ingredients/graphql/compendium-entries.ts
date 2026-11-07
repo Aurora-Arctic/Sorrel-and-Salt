@@ -21,7 +21,7 @@ import { ingredientInputFields } from './ingredient-input';
 const SHOWN =
   'Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.';
 
-/** A compendium entry as the admin's form sends it: `IngredientInput`'s fields with `nomenclature` required, as the compendium declares one for every entry. */
+// `nomenclature` is required, as the compendium declares one for every entry.
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
   fields: (t) => ({
     ...ingredientInputFields(t, { tier: 'compendium', whole: false }),

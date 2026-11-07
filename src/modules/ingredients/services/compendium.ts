@@ -62,10 +62,6 @@ import type {
   PickedLists,
 } from '../types';
 
-// The compendium: the public list and entry reads (claude-docs/db/compendium-read.md, "The compendium read"),
-// curator and keeper writes (claude-docs/db/compendium-writes.md, "Compendium writes"),
-// and addresses with redirects (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
-
 // The list and its count, held in the data cache under the `compendium` tag, keyed by the parsed filter (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('compendium-page', findCompendiumPage);
 const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount);
@@ -87,8 +83,6 @@ export async function listCompendium(
 }
 
 /**
- * How many entries the compendium holds under `filter`, and how many come before `start`; parsed as `listCompendium` parses.
- *
  * @throws {Forbidden} the filter sets what only a curator may (`compendiumFilterFor`) and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.
  */
@@ -125,8 +119,7 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry with its folk names, substitutes, deities, references, categories and forms in one
- * transaction, curated values in their rows' spelling (claude-docs/db/compendium-writes.md, "Compendium service details").
+ * Curated values are written in their rows' spelling (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper, checked before the input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`, a curated pick, a collision, an unconfirmed
@@ -164,8 +157,7 @@ export async function createCompendiumEntry(
 }
 
 /**
- * Replaces a compendium entry with `input`, the whole entry, so a field left out
- * is cleared (claude-docs/db/compendium-writes.md, "Compendium service details").
+ * A field left out is cleared (claude-docs/db/compendium-writes.md, "Compendium service details").
  * `expectedRevision` is the revision the save read; null writes whatever the row holds.
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
@@ -280,9 +272,7 @@ export async function promoteCompendiumFolkName(
 }
 
 /**
- * Marks a compendium entry reviewed by this curator, or clears the mark; the only function that writes it
- * (claude-docs/db/compendium-writes.md, "Compendium service details").
- *
+ * The only function that writes the mark (claude-docs/db/compendium-writes.md, "Compendium service details").
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
@@ -303,7 +293,7 @@ export async function setCompendiumEntryReviewed(
 }
 
 /**
- * Hides a compendium entry from the public compendium, or shows it again. Admin screens, the audit queue and a coven's cupboard still see a hidden entry.
+ * Admin screens, the audit queue and a coven's cupboard still see a hidden entry.
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
@@ -325,7 +315,7 @@ export async function setCompendiumEntryShown(
 }
 
 /**
- * When a curator last marked a compendium entry reviewed, `null` while it needs review; uncached.
+ * Uncached.
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
@@ -407,7 +397,6 @@ export async function readCompendiumEntryAsCurator(
   } satisfies CompendiumEntryPage;
 }
 
-/** What each field named by spelling is called in a refusal. */
 const NOUN_OF: Record<CuratedField, string> = {
   celestialBodies: 'celestial body',
   zodiacSigns: 'zodiac sign',
@@ -444,7 +433,6 @@ async function inCuratedValues(
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
-  // The entry's own lists, then each form's, as `input` sent them.
   const sent = [
     { at: [], lists: input },
     ...(input.variants ?? []).map((lists, index) => ({ at: ['variants', index], lists })),
@@ -493,7 +481,6 @@ const FIELD_ORDER = [
   'variants',
 ];
 
-/** Refuses a write whose slug another entry's redirect runs from, unless the admin confirmed ending it with `endRedirect`. */
 async function refuseEndingARedirect(
   slug: string,
   at: Date,
@@ -506,8 +493,7 @@ async function refuseEndingARedirect(
 }
 
 /**
- * Soft-deletes a compendium entry, stamping who deleted it; its folk names and category links stay
- * (claude-docs/db/spell-visibility.md, "What a spell holds").
+ * Its folk names and category links stay (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
@@ -521,7 +507,6 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
 }
 
 /**
- * How many covens hold this compendium entry in their cupboard, a count only, for the delete confirm.
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
@@ -534,8 +519,7 @@ export async function countCompendiumEntryUsers(session: Session, id: string): P
 }
 
 /**
- * A write that broke one of the compendium's unique indexes, as a `ValidationError` on the field that caused it;
- * any other error unchanged (claude-docs/db/compendium-writes.md, "Compendium service details").
+ * Other errors pass unchanged (claude-docs/db/compendium-writes.md, "Compendium service details").
  */
 async function refuseCollision(
   error: unknown,

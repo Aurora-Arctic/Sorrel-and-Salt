@@ -31,9 +31,6 @@ const SIZE_IN_BASE_UNIT = {
   [D in Convertible]: Record<(typeof UNITS_BY_DIMENSION)[D][number], string>;
 };
 
-// A number's shortest text, as `String` gives it: `0.1` stays the decimal the
-// caller meant, and large or small values carry an exponent (`1e+21`, `1e-7`).
-// Every finite number at or above zero matches.
 const DECIMAL = /^(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/;
 
 function decimalOf(text: string): Decimal {

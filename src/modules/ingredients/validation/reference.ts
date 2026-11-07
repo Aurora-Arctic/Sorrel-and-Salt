@@ -21,15 +21,10 @@ import type { ReferenceTextField } from './types';
  */
 const textField = (field: ReferenceTextField) => optionalText(FORMAT_OF[field]);
 
-/**
- * Every text field as `textField` takes it, from the one list of them; the
- * fields that take more are overridden below.
- */
 const TEXT_FIELDS = Object.fromEntries(
   REFERENCE_TEXT_FIELDS.map((field) => [field, textField(field)]),
 ) as Record<ReferenceTextField, ReturnType<typeof textField>>;
 
-/** A full day, `YYYY-MM-DD`, or absent: `modified` and `accessed` are `date`s. */
 const optionalDay = (field: 'modified' | 'accessed') =>
   textField(field).pipe(CalendarDay.nullish());
 
@@ -39,7 +34,6 @@ const url = textField('url').superRefine((value, ctx) => {
   if (problem) ctx.addIssue({ code: 'custom', message: problem });
 });
 
-/** Where each kind's container is named, and so what its refusal says. */
 const CONTAINER_OF = {
   chapter: 'Name the book this chapter is in',
   article: 'Name the journal this article is in',

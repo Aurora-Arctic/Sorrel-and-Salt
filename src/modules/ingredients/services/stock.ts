@@ -25,16 +25,14 @@ import { variantsOf } from './ingredient-children';
 import type { IngredientVariantRow, SaveStockValues, StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
-// What a coven holds of each form, written by practitioners and stewards and read by everyone in it (claude-docs/db/stock.md, "The stock service").
-// Writes check `inventory: update` (the statement has no `create` or `delete`), reads `inventory: read`; the dimension is the unit's, never input.
+// Writes check `inventory: update` (the statement has no `create` or `delete`), reads `inventory: read`; the dimension is the unit's, never input (claude-docs/db/stock.md, "The stock service").
 
 const NO_FORM = 'No such form for this coven to stock';
 const NO_JAR = 'No such stock in this coven';
 const HELD = 'Your coven already holds this form';
 
 /**
- * Starts the coven's jar of a form with `input`'s amounts; a form already held is refused, not topped up
- * (claude-docs/db/stock.md, "Stock service details").
+ * A form already held is refused, not topped up (claude-docs/db/stock.md, "Stock service details").
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`, or the coven already holds the form.
@@ -223,8 +221,6 @@ export async function saveStock(
 }
 
 /**
- * Soft-deletes a jar of this coven, stamping who deleted it.
- *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {NotFound} no live jar in this coven has this id, as `updateStock`.
  */
@@ -243,8 +239,7 @@ export async function deleteStock(
 }
 
 /**
- * One jar of this coven, for any member, observers included.
- *
+ * Any member, observers included.
  * @throws {Forbidden} the caller may not read this coven's stock.
  * @throws {NotFound} no live jar in this coven has this id, as `updateStock`.
  */
@@ -347,7 +342,6 @@ async function formsHeldBy(
   return forms;
 }
 
-/** The live jars `membership`'s coven holds of these forms, in one read (claude-docs/db/stock.md, "Stock service details"). */
 export function jarsOfForms(
   membership: Membership,
   variantIds: readonly string[],
@@ -355,7 +349,6 @@ export function jarsOfForms(
   return findStockOfVariants(membership, variantIds);
 }
 
-/** One coven's live jars of these ingredients, or the refusal its proof threw. */
 async function jarsOf(
   session: Session,
   workspaceId: string,
@@ -379,7 +372,6 @@ async function readableJar(membership: Membership, id: string): Promise<StockRow
   return row;
 }
 
-/** A new jar's columns: `input`'s, with the unit's default threshold when it states none. */
 function newJarColumns(input: StockInput) {
   const unit = input.unit ?? null;
   return stockColumns({

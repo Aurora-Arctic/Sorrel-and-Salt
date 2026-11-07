@@ -21,12 +21,10 @@ import {
 import { assertMembership } from '@/modules/coven';
 import type { IngredientRow, IngredientValues } from '../types';
 
-// A coven's own ingredients. Every read and write is under the proof, so the tier is the proof's: `workspace_id` is never read from
-// the input, and nothing here can write the compendium (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
+// The tier is the proof's: `workspace_id` is never read from the input (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
 
 /**
- * Creates an ingredient in this coven with its children in one transaction (claude-docs/db/workspace-ingredients.md,
- * "Workspace ingredient service details").
+ * One transaction (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
@@ -55,10 +53,8 @@ export async function createWorkspaceIngredient(
 }
 
 /**
- * Replaces an ingredient of this coven with `input`, the whole ingredient and its
- * children, in one transaction (claude-docs/db/workspace-ingredients.md,
- * "Workspace ingredient service details"). `expectedRevision` is the revision the
- * save read; null writes whatever the row holds.
+ * The whole ingredient and its children, so a field left out is cleared (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
+ * `expectedRevision` is the revision the save read; null writes whatever the row holds.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
@@ -107,8 +103,7 @@ export async function updateWorkspaceIngredient(
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
 /**
- * Swaps the display name of an ingredient of this coven with one of its folk names, in one transaction
- * (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
+ * One transaction (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
  * @throws {ValidationError} the new display name collides with another of the coven's ingredients.
@@ -144,8 +139,7 @@ export async function promoteWorkspaceFolkName(
 }
 
 /**
- * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk names, category links and stock stay; a spell
- * holding it still reaches it (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
+ * Its folk names, category links and stock stay; a spell holding it still reaches it (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
  *
  * @throws {Forbidden} the caller may not delete this coven's ingredients.
  * @throws {NotFound} no live ingredient in this coven has this id.
@@ -162,7 +156,7 @@ export async function deleteWorkspaceIngredient(
 }
 
 /**
- * One of this coven's ingredients, for any member, observers included.
+ * Any member, observers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  * @throws {NotFound} no such ingredient in this coven.

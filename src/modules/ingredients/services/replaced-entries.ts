@@ -4,7 +4,6 @@ import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import type { CompendiumMatches, IngredientRow } from '../types';
 
-/** How many matches the entry page links by name; the rest sit behind "See All". */
 const MATCHES_SHOWN = 3;
 
 /**

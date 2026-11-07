@@ -47,7 +47,6 @@ export const ingredientVariants = pgTable(
     // Not partial, the one named exception to CLAUDE.md rule 4: it is the target of the composite foreign keys that tie a stock row, layer,
     // category pair or substitute to a variant of its own ingredient, which a partial index cannot be. It reserves nothing the primary key does not.
     uniqueIndex('ingredient_variants_id_ingredient_id_unique').on(table.id, table.ingredientId),
-    // The pick read backwards, for the vocabulary's in-use reads.
     index('ingredient_variants_form_id_idx')
       .on(table.formId)
       .where(sql`${table.deletedAt} is null`),

@@ -30,12 +30,10 @@ const DIMENSION_BY_UNIT = new Map<string, UnitDimension>(
   ),
 );
 
-/** The dimension a unit belongs to; total over `Unit`. */
 export function dimensionOf(unit: Unit): UnitDimension {
   return DIMENSION_BY_UNIT.get(unit) as UnitDimension;
 }
 
-/** Narrows an arbitrary string — a request body's — to `Unit`. */
 export function isUnit(value: string): value is Unit {
   return DIMENSION_BY_UNIT.has(value);
 }
