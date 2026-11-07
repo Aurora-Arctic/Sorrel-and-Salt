@@ -75,7 +75,7 @@ beforeEach(async () => {
     E.id,
   );
 
-  // The articles: two public top-level, one staff, one keeper, one deleted.
+  // The articles: three public top-level, one staff, one keeper, one deleted.
   guideId = await insertHelpArticle(
     sql,
     { title: 'Testwort Guide', slug: 'testwort-guide', position: 2 },
@@ -84,6 +84,11 @@ beforeEach(async () => {
   await insertHelpArticle(
     sql,
     { title: 'Testwort Primer', slug: 'testwort-primer', position: 1 },
+    E.id,
+  );
+  await insertHelpArticle(
+    sql,
+    { title: 'Testwort Almanac', slug: 'testwort-almanac', position: 3 },
     E.id,
   );
   staffGuideId = await insertHelpArticle(
@@ -147,7 +152,11 @@ describe('the public finder', () => {
 
   it('reads the public top-level articles as the index, in position order', async () => {
     // No child, FAQ entry, term, staff, keeper or deleted row is in it.
-    expect(titles(await readHelpArticleIndex(PAGE))).toEqual(['Testwort Primer', 'Testwort Guide']);
+    expect(titles(await readHelpArticleIndex(PAGE))).toEqual([
+      'Testwort Primer',
+      'Testwort Guide',
+      'Testwort Almanac',
+    ]);
   });
 
   it('reads one article by slug with its public children in position order', async () => {
