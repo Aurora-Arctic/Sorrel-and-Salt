@@ -25,6 +25,32 @@ const addLink = (page: Page) =>
 const editLink = (page: Page, title: string) =>
   page.getByRole('main').getByRole('link', { name: `Edit ${title}`, exact: true });
 
+/**
+ * Opens the list at the page holding the row, walking Next from the first page, and says whether any page holds it.
+ * The shipped help rows fill the first pages, so a row the test writes can land on any of them.
+ */
+async function findRow(page: Page, title: string): Promise<boolean> {
+  await page.goto(PATH);
+  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
+  for (;;) {
+    if ((await editLink(page, title).count()) > 0) return true;
+    const next = page
+      .getByRole('navigation', { name: 'Pages' })
+      .getByRole('link', { name: /Next/ });
+    if ((await next.count()) === 0 || (await next.getAttribute('aria-disabled')) === 'true')
+      return false;
+    const before = page.url();
+    await next.click();
+    await expect(page).not.toHaveURL(before);
+  }
+}
+
+const expectListed = async (page: Page, title: string) =>
+  expect(await findRow(page, title), `${title} is on a page of the list`).toBe(true);
+
+const expectNotListed = async (page: Page, title: string) =>
+  expect(await findRow(page, title), `${title} is on no page of the list`).toBe(false);
+
 /** The choices a picker in the dialog offers, by opening its list. */
 async function openChoices(page: Page, dialog: Locator, label: string): Promise<Locator> {
   await dialog.getByRole('combobox', { name: new RegExp(`^${label}`) }).click();
@@ -46,6 +72,7 @@ async function openAdd(page: Page): Promise<Locator> {
 }
 
 async function openEdit(page: Page, title: string): Promise<Locator> {
+  await expectListed(page, title);
   await editLink(page, title).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('textbox', { name: /^Title/ })).toHaveValue(title);
@@ -60,8 +87,9 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   const response = await page.goto(PATH);
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
-  // Precondition: the e2e database holds no help rows, so each row below is one this test wrote.
-  await expect(editLink(page, PARENT)).toHaveCount(0);
+  // Precondition: no page lists the rows yet, so each row below is one this test wrote.
+  await expectNotListed(page, PARENT);
+  await expectNotListed(page, CHILD);
   await assertNoAccessibilityViolations(page);
 
   // The parent: a public article, its body previewed through the renderer as it is typed.
@@ -79,7 +107,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Save Article' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, PARENT)).toBeVisible();
+  await expectListed(page, PARENT);
 
   // The sub page: under the public parent, at the narrower staff audience.
   dialog = await openAdd(page);
@@ -90,9 +118,9 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await dialog.getByRole('textbox', { name: /^Position/ }).fill('1');
   await dialog.getByRole('button', { name: 'Save Article' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, CHILD)).toBeVisible();
+  await expectListed(page, CHILD);
   // Both rows are listed, the staff one beside the public one.
-  await expect(editLink(page, PARENT)).toBeVisible();
+  await expectListed(page, PARENT);
 
   // A new row offers the parent, never the sub page, which is itself a child.
   dialog = await openAdd(page);
@@ -113,7 +141,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await dialog.getByRole('button', { name: 'Discard Changes' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, 'Fixturewort Reserved')).toHaveCount(0);
+  await expectNotListed(page, 'Fixturewort Reserved');
 
   // A parent made narrower than its staff child is refused beside Audience.
   dialog = await openEdit(page, PARENT);
@@ -134,24 +162,22 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await expect(dialog.getByRole('alert')).toBeVisible();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, PARENT)).toBeVisible();
+  await expectListed(page, PARENT);
 
   // The child, then the parent, each after its confirmation.
   dialog = await openEdit(page, CHILD);
   await dialog.getByRole('button', { name: 'Delete Article' }).click();
   await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, CHILD)).toHaveCount(0);
+  await expectNotListed(page, CHILD);
 
   dialog = await openEdit(page, PARENT);
   await dialog.getByRole('button', { name: 'Delete Article' }).click();
   await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(editLink(page, PARENT)).toHaveCount(0);
+  await expectNotListed(page, PARENT);
 
-  await page.reload();
-  await expect(editLink(page, PARENT)).toHaveCount(0);
-  await expect(editLink(page, CHILD)).toHaveCount(0);
+  await expectNotListed(page, CHILD);
 });
 
 // Why each could have reached it: the curator opens Support under the same Keepers layout, the practitioner opens
