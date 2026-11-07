@@ -28,8 +28,6 @@ export function forgetScroll(href: string): void {
   if (saved !== undefined) write(rest);
 }
 
-// The pending restore outlives the listener: a Back that changes layout unmounts the host that heard it in the very
-// commit that draws the page, and the arriving host's listener comes too late for that popstate.
 let frame = 0;
 
 // The router draws a traversed entry's page in a transition after popstate, and writes the entry again as it commits,
@@ -52,14 +50,14 @@ const onPopState = (event: PopStateEvent) => {
   frame = requestAnimationFrame(check);
 };
 
-let listeners = 0;
+let listening = false;
 
-/** Restores a saved position on Back and Forward; counted, so two skeleton hosts restore once. Returns the removal. */
-export function listenForTraversals(): () => void {
-  listeners += 1;
-  if (listeners === 1) window.addEventListener('popstate', onPopState);
-  return () => {
-    listeners -= 1;
-    if (listeners === 0) window.removeEventListener('popstate', onPopState);
-  };
+/**
+ * Restores a saved position on Back and Forward. The listener is added once and stays for the page's life, so a
+ * Back is heard whichever hosts are mounted as it happens; a layout change swaps them.
+ */
+export function listenForTraversals(): void {
+  if (listening) return;
+  listening = true;
+  window.addEventListener('popstate', onPopState);
 }

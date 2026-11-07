@@ -15,7 +15,7 @@ When a wait ends, the shell's bodies do not drop the skeleton at once. They keep
 
 ## The page is held, not swapped
 
-During a wait the old page stays mounted, hidden, at its full height, and the skeleton is laid over it (MB.271). Swapping the page for the skeleton made the document shorter than the place the reader had scrolled to, so the browser pulled the scroll position up, and Chrome then saved that shortened position into the history entry when Next pushed the new address: Back returned to the wrong place. Held, the page keeps the document's height until the new page arrives.
+During a wait the old page stays mounted, hidden, at its full height, and the skeleton is laid over it (MB.271). Swapping the page for the skeleton made the document shorter than the place the reader had scrolled to, so the browser pulled the scroll position up, and Chrome then saved that shortened position into the history entry when Next pushed the new address: Back returned to the wrong place. Held, the page keeps the document's height until the new page arrives. The window now scrolls to the top as the skeleton shows, so the browser's own saved position is no longer the reader's; the hook saves and restores that position itself (see "Back after a skeleton").
 
 - **Hidden, not removed.** `visibility: hidden` keeps the page's layout; `inert` and `aria-hidden` take it out of reach of the keyboard, the pointer and a screen reader, so nobody acts on the old page in the wait. `display: none` would collapse the height, which is the bug, and React's `<Activity>` hides with `display: none` too.
 - **The page keeps its box.** The page is a child of the same element in both states, so React never remounts it, and a section frame keeps the page as its direct children, so its flex column and gap are untouched.
@@ -32,7 +32,17 @@ During a wait the old page stays mounted, hidden, at its full height, and the sk
 
 ## Holding the page during a wait
 
-While a wait is on, the page stays mounted at its full height but unseen (`visibility`) and out of reach (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. `visibility` is used because it keeps the page's box, where `display: none` or React's `<Activity>` would collapse it. The page is not taken away because the browser saves the scroll position into the history entry when the navigation writes it, after the skeleton is up. A page swapped for a shorter skeleton would clamp the scroll first, and Back would return to the clamped position. The element is the same whether waiting or not, so React keeps the page mounted.
+While a wait is on, the page stays mounted at its full height but unseen (`visibility`) and out of reach (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. `visibility` is used because it keeps the page's box, where `display: none` or React's `<Activity>` would collapse it. The page is not taken away so the document keeps its height through the wait, and the element is the same whether waiting or not, so React keeps the page mounted.
+
+## Back after a skeleton
+
+The browser saves the scroll position into a history entry when Next pushes the next address, and Next pushes after the skeleton has shown. By then the hook has scrolled the window to the top, so the browser's own record of the page left is 0, and Back would open it at the top. `useLeavingSkeleton` therefore keeps the position itself, in `src/components/SkeletonFade/back-scroll.ts`:
+
+- **Saved before the scroll.** As a skeleton shows, the hook writes the current `scrollY` into the page's own history entry with `history.replaceState`, keeping every key Next stores there, and only then scrolls to the top. A wait that ends on the same page (a refresh, a cancelled navigation) removes the key again.
+- **Restored once the page has drawn.** On Back or Forward, Next keeps custom keys in the entry and draws the page in a transition after `popstate`. The restore waits, a frame at a time and for at most 600 frames, until Next writes the entry again (a new `history.state` object), which it does as it commits the page, then scrolls once to the saved position and removes the key. Next itself does not scroll on a traversal, so nothing scrolls after it.
+- **One listener for the page's life.** The `popstate` listener is added the first time a host mounts and is never removed. A Back that changes layout (a curator page left for `/privacy`, say) swaps the hosts, and a listener tied to a host's lifetime was not attached when that `popstate` fired, so the position was lost.
+
+`tests/e2e/skeleton-back-scroll.spec.ts` proves it from far down the compendium and from the curator compendium list, at desktop and phone widths.
 
 ## The fade out
 

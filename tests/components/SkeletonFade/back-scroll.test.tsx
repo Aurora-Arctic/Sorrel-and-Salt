@@ -141,6 +141,22 @@ describe('useLeavingSkeleton and the scroll position Back returns to', () => {
     expect(scrollTo).toHaveBeenCalledWith({ top: 918, behavior: 'instant' });
   });
 
+  it('restores on a Back heard while no skeleton host is mounted', async () => {
+    setScrollY(918);
+    const leaving = setup(null);
+    leave(leaving.rerender);
+    leaving.unmount();
+    scrollTo.mockClear();
+
+    back();
+    await vi.waitFor(() => expect(window.location.pathname).toBe('/origin'));
+    setup(null);
+    routerDraws();
+    act(() => void vi.advanceTimersByTime(100));
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 918, behavior: 'instant' });
+  });
+
   it('forgets the saved position when the wait ends without leaving the page', () => {
     setScrollY(1200);
     const { rerender } = setup(null);

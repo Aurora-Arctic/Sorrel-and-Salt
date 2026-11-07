@@ -31,7 +31,9 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
     setLeaving(isShown ? null : kept);
   }
 
-  useEffect(() => listenForTraversals(), []);
+  useEffect(() => {
+    listenForTraversals();
+  }, []);
 
   // The window goes to the top as the skeleton appears, so a click made far down the page moves it once, at the
   // tap, and the arrived page has no scroll left to reset. Instant, so no animation is mid-flight when it is measured.
