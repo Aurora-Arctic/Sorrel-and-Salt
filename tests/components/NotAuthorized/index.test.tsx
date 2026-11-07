@@ -2,14 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import NotAuthorized from '@/components/NotAuthorized';
 
-// What a signed-in non-keeper sees at `/keepers`: a refusal that says why,
-// and nothing that names a keeper or asks one for anything
-// (claude-docs/components/error-page.md).
+// claude-docs/components/error-page.md
 
 describe('NotAuthorized', () => {
   // Nothing to press and no one to write to: a request control or an address
   // would be a way to request access, and a name would say who the keepers are.
-  // The one way on is back to the front page.
   it('names no keeper and offers no way to request access, only the way back', () => {
     const { container } = render(<NotAuthorized />);
 
