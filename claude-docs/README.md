@@ -57,7 +57,10 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
 
 ## What a doc holds
 
-A live doc holds only what adding a feature in its area needs, and holds each fact once. The test for every sentence is two questions: would an agent adding a feature here need it, and is it said nowhere else? A no to either cuts it, or turns it into a clause and a citation to the fact's one home. History that informs no future decision (what was tried, who decided, when, which task) leaves the live docs; a decision record keeps the argument behind a choice that would otherwise be re-argued, and the rest goes to `archive/`. A fact is never dropped for being old: a rule that still binds, a constraint's reason, a named exception, a command, a path, an env var, a number with its unit each stay, in one home.
+A live doc holds only what adding a feature in its area needs, and holds each fact once. The test for every sentence is two questions: would an agent adding a feature here need it, and is it said nowhere else? A no to either cuts it, or turns it into a clause and a citation to the fact's one home. Two kinds of sentence, judged differently:
+
+- **A binding fact stays**, whatever its age or how much like background it reads: a rule that still binds, a constraint's reason, a named exception, a command, a path, an env var, a number with its unit. Cutting one of these is a loss, and a doc that would drop one to get shorter is not made shorter.
+- **History goes**: what was tried, who decided, when, which task, what it replaced. Age is not the test; what the sentence does is. A decision record keeps the argument behind a choice that would otherwise be re-argued, and the rest is deleted or tarballed in `archive/`.
 
 ## One home per fact
 
@@ -163,9 +166,9 @@ where it is cheapest to fix and hardest to forget. Decision records stay live
 and are superseded in place.
 
 - **Two tests, in order: "is this statement out of date?", then "does adding a
-  feature need it?"** A forward-looking rule that still binds later work is
-  never cut for reading like background; that is how a rule gets lost. True
-  history that informs no future decision is cut ("What a doc holds" above).
+  feature need it?"** A wrong statement is corrected. A right one stays if it
+  is a binding fact and goes if it is history, by the split in "What a doc
+  holds" above; a rule that reads like background is still a rule.
 - **A summary must stand on its own.** If understanding how the system works
   today means opening a decision record or an archived file, that is a defect
   in the summary, not a research step.
