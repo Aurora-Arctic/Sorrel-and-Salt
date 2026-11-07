@@ -17,9 +17,6 @@ import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
-// repository's keyset finders exactly as a connection resolver will.
-
 const leaves = pgTable('pagination_probe_leaves', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),

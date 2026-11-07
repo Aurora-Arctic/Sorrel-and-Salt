@@ -21,8 +21,6 @@ import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
-// This is the per-entity sweep; each rule behind a refusal is its service's, and the Membership mechanism is tests/db/repository/finders.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {

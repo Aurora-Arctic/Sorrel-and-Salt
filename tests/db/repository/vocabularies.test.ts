@@ -18,10 +18,6 @@ import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { DeityFilter, IngredientFormValueRow } from '@/modules/vocabulary';
 
-// The curated form vocabulary as `ingredientFormValues` pages it: every live
-// form whose group is live too, in (name, id) order — the same "curated"
-// `findVocabularySuggestions` means (claude-docs/db/compendium-read.md, "The compendium read").
-
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {
@@ -217,8 +213,6 @@ describe('findAstrologyValueCount', () => {
   });
 });
 
-// The deity vocabulary as the keeper's deities page lists it: every live deity under a live tradition (the same "curated" the autofill means), by tradition name then its own,
-// narrowed by a name fragment and a tradition.
 describe('findDeityPage and findDeityCount', () => {
   afterEach(async () => {
     await sql`
