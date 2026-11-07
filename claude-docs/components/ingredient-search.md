@@ -37,7 +37,11 @@ the filter row. Its props (`IngredientSearchFormProps`):
 | `children`    | Optional: the consumer's other fields, after the search box                     |
 
 `useSearchText()` returns the text in the box now, searched or not, for a field
-in the filter slot to carry.
+in the filter slot to carry. The text is held in a small store, not a context value, so a
+field redraws on a keystroke only if it asks for it live: `useSearchText(false)` never does.
+The Compendium list's facet panel asks only while its facets differ from the filter shown,
+so a keystroke in the box writes nothing to the panel's radios and checkboxes
+(`claude-docs/design-decisions/m15.82-search-keystroke-cost.md`).
 
 ## Contracts
 
@@ -422,8 +426,9 @@ The task was written as if a keystroke redrew the cards. Measured on the compend
 does not: a keystroke makes no DOM change in the card list. The cost per key, at normal speed, was
 browser style, layout and paint (166, 76, 61 and 73 ms over four keys), the dropdown (0, 29, 46 and
 64 DOM changes, 13 to 14 ms of Combobox work) and React's own work. So the deferral sits on the
-dropdown, the one part that changes per key, and the list needed none. The cause of the style and
-layout cost was not isolated. Two selectors are candidates and neither has been tried:
+dropdown, the one part that changes per key, and the list needed none. The style cost was traced later: it is the page's `:has()` rules re-checked for every DOM change, and the avoidable changes were the facet panel's rewrites (see the record above).
+The older note follows. The cause of the style and
+layout cost was not isolated then. Two selectors are candidates and neither has been tried:
 `html:has(... .ingredient-search)` (the scroll margin, which the browser may re-check on every DOM
 change below the root) and the dropdown's `position: fixed` list changing size per key. Measure
 with a rule removed before changing either.
