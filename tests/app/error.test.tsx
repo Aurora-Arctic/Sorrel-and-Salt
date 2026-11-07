@@ -6,7 +6,7 @@ import ErrorBoundary from '@/app/error';
 import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/gone' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/gone', useRouter: () => ({}) }));
 window.history.replaceState({}, '', '/gone');
 
 // React marks `document` as listening the first time any root mounts, and a later root whose container is

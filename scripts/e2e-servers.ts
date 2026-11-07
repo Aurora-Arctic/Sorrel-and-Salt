@@ -4,12 +4,13 @@
 // Usage: npm run e2e:servers. Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts).
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { SERVERS_READY, SLOTS_ONLY, allServers, slotServers } from '../tests/e2e/servers.ts';
+import { SERVERS_READY, allServers, slotServers } from '../tests/e2e/servers.ts';
 
 // `--playwright` is how playwright.config.ts's one `webServer` entry runs this: a build is skipped when the slot servers are already
 // up (as `reuseExistingServer` did), and SERVERS_READY is printed for the entry to wait for.
 const forPlaywright = process.argv.includes('--playwright');
-const servers = forPlaywright && process.env[SLOTS_ONLY] ? slotServers : allServers;
+// Read by its literal name, which the .env.example guard scans for; tests/e2e/servers.ts sets it as `SLOTS_ONLY`.
+const servers = forPlaywright && process.env.E2E_SLOT_SERVERS_ONLY ? slotServers : allServers;
 
 const READY_TIMEOUT_MS = 60_000;
 const [first] = servers;

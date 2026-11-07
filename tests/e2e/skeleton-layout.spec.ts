@@ -35,7 +35,7 @@ test.beforeAll(async ({ browser }) => {
   await recreateE2eDatabase();
   const setup = await browser.newPage();
   try {
-    coven = await seedCoven(setup, 'Fixture Coven Layout', 'skeleton-layout.test', {
+    coven = await seedCoven(setup, 'Fixture Covenant', 'skeleton-layout.test', {
       A: 'owner',
       B: 'member',
     });
@@ -114,6 +114,8 @@ interface Navigation {
   to: (slug: string) => string | RegExp | 'switcher';
   /** The title is content (an entry's or a spell's name), so only its position is compared. */
   dynamicTitle?: boolean;
+  /** Parts that stack under content that varies by item at phone width: only x and width are compared. */
+  stackedParts?: string[];
 }
 
 const navigations: Navigation[] = [
@@ -182,6 +184,7 @@ const navigations: Navigation[] = [
     from: (slug) => `/coven/${slug}/grimoire`,
     to: (slug) => new RegExp(`^/coven/${slug}/grimoire/[0-9a-f-]{36}$`),
     dynamicTitle: true,
+    stackedParts: ['aside'],
   },
   {
     name: 'coven-ingredients',
@@ -195,6 +198,7 @@ const navigations: Navigation[] = [
     from: (slug) => `/coven/${slug}/ingredients`,
     to: (slug) => new RegExp(`^/coven/${slug}/ingredients/[^/]+$`),
     dynamicTitle: true,
+    stackedParts: ['list', 'item'],
   },
   { name: 'curator', as: 'keeper', from: () => '/keepers', to: () => '/curator' },
   {
@@ -416,7 +420,13 @@ const layoutOf = (page: Page, inSkeleton: boolean) =>
   }, inSkeleton);
 
 /** Which dimensions of each part are static: a dynamic title fixes only where the heading starts. */
-function staticDimensions(part: string, navigation: Navigation, layout: Layout): Dimension[] {
+function staticDimensions(
+  part: string,
+  navigation: Navigation,
+  layout: Layout,
+  phone: boolean,
+): Dimension[] {
+  if (phone && navigation.stackedParts?.includes(part)) return ['x', 'w'];
   switch (part) {
     case 'h1':
       return navigation.dynamicTitle ? ['x', 'y'] : ['x', 'y', 'h'];
@@ -438,7 +448,12 @@ function staticDimensions(part: string, navigation: Navigation, layout: Layout):
 }
 
 /** Every static difference past the tolerance, worded with both values and the gap. */
-function differences(navigation: Navigation, skeleton: Layout, arrived: Layout): string[] {
+function differences(
+  navigation: Navigation,
+  skeleton: Layout,
+  arrived: Layout,
+  phone: boolean,
+): string[] {
   const found: string[] = [];
   for (const part of Object.keys(arrived.parts)) {
     // A table wider than its frame scrolls inside it, so the frame is the static part, not the table.
@@ -456,7 +471,7 @@ function differences(navigation: Navigation, skeleton: Layout, arrived: Layout):
       continue;
     }
     if (!want || !got) continue;
-    for (const dimension of staticDimensions(part, navigation, arrived)) {
+    for (const dimension of staticDimensions(part, navigation, arrived, phone)) {
       const gap = Math.round(Math.abs(got[dimension] - want[dimension]));
       if (gap > TOLERANCE) {
         found.push(
@@ -603,7 +618,7 @@ for (const as of ['steward', 'keeper'] as const) {
           const found = [
             ...frameMoves('old page to skeleton:', frameBefore, frameWaiting),
             ...frameMoves('skeleton to page:', frameWaiting, frameArrived),
-            ...differences(navigation, skeleton, arrived),
+            ...differences(navigation, skeleton, arrived, width === 375),
           ];
           expect(found, found.join('\n')).toEqual([]);
         });

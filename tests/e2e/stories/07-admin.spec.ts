@@ -275,7 +275,8 @@ const rowOf = (page: Page, table: string | null, name: string) =>
     .getByRole('row')
     .filter({
       has: page
-        .getByRole('cell', { name, exact: true })
+        .getByRole('rowheader', { name, exact: true })
+        .or(page.getByRole('cell', { name, exact: true }))
         .or(page.getByRole('link', { name, exact: true })),
     });
 

@@ -340,12 +340,8 @@ describe('AdminCards', () => {
       .getAllByRole('columnheader')
       .findIndex((cell) => cell.textContent === 'Beta');
     expect(column).toBeGreaterThan(-1);
-    expect(
-      within(within(first!).getAllByRole('cell')[column]!).getByText('Yes'),
-    ).toBeInTheDocument();
-    expect(
-      within(within(second!).getAllByRole('cell')[column]!).getByText('No'),
-    ).toBeInTheDocument();
+    expect(within(rowCells(first!)[column]!).getByText('Yes')).toBeInTheDocument();
+    expect(within(rowCells(second!)[column]!).getByText('No')).toBeInTheDocument();
   });
 
   it('opens the mint form by the address, from a link', () => {
@@ -674,7 +670,7 @@ describe('AdminArrivals', () => {
     const beta = headings.findIndex((cell) => cell.textContent === 'Beta');
     expect(beta).toBeGreaterThan(-1);
     expect(within(cells[beta]!).getByText('Yes')).toBeInTheDocument();
-    expect(within(within(second).getAllByRole('cell')[beta]!).getByText('No')).toBeInTheDocument();
+    expect(within(rowCells(second)[beta]!).getByText('No')).toBeInTheDocument();
   });
 
   it("opens the account's user modal from its name, and leaves a removed account as plain text", () => {

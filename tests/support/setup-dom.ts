@@ -87,6 +87,23 @@ vi.mock('@/lib/jobs/runtime', () => ({
 
 // A page that reported it was leaving (src/lib/navigation/store.ts) stays leaving until the browser restores it
 // from the back-forward cache. Restored here after every test, so one test's report is not the next one's busy hint.
-afterEach(() => {
-  window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+afterEach(async () => {
+  await act(() => {
+    window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+  });
 });
+
+// The App Router is not mounted in a component test, and `useRouter` throws without it. Every in-app link navigates through
+// `usePendingNavigation` (src/lib/navigation), which calls it on render, so a test that does not mock `next/navigation` itself gets
+// a router whose calls do nothing. A test that mocks the module with its own factory replaces this one.
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
+  useRouter: () => ({
+    push: () => undefined,
+    replace: () => undefined,
+    refresh: () => undefined,
+    back: () => undefined,
+    forward: () => undefined,
+    prefetch: () => undefined,
+  }),
+}));
