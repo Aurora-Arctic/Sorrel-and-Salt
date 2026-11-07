@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
+import LoadingStatus from './loading-status';
 import type { SwapPanelProps } from './types';
 
 // The swap a tab's panel and a list's body share: the content, or the skeleton while the next is
@@ -21,8 +22,7 @@ const SwapPanel = ({
       className={className}
       style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
     >
-      <output className="visually-hidden">Loading</output>
-      {skeleton}
+      <LoadingStatus>{skeleton}</LoadingStatus>
     </div>
   ) : (
     <div key="content" className={className} data-arrived={swapped || undefined}>

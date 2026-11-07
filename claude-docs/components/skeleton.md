@@ -17,6 +17,7 @@ Since M11.9 `Skeleton` is only the two smallest pieces, a line of text and a con
 ## Contracts
 
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader hears one announcement whatever is drawn. The drawn shapes are `aria-hidden`. A page skeleton built from several `Skeleton`s passes `quiet` to all of them and carries the one status itself, in the shell body that draws it.
+- **A body skeleton carries no status; its host wraps it in `LoadingStatus`** (`Skeleton/loading-status.tsx`), which renders the hidden "Loading" beside it. `SwapPanel` and the refused-opens table in `AdminCards/attempts.tsx` do.
 - **It leaves by fading**: the shell's bodies keep the last skeleton over the arrived page for 200ms, and it fades out ([`SkeletonFade`](skeleton-fade.md)). The skeleton itself knows nothing of it; its own fade-in is switched off in the overlay.
 - **It shows at once**, with the short `$motion-short` fade (`arrived`): the press has already taken the old content away, and holding the skeleton back would leave a blank panel. Only the spinner waits for `$loading-delay`.
 - **Shimmer through `skeleton-shape`**, which uses `loading-motion`: a band of `$shimmer-duration` (1.4s), or under reduced motion the shared `loading-pulse` of `$pulse-duration` (2s).

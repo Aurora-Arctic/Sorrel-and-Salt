@@ -13,6 +13,7 @@ import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { CardAttemptsBodySkeleton } from './skeleton';
 import { userListHref } from '../UserList/href';
+import LoadingStatus from '../Skeleton/loading-status';
 import UserLink from '../UserList/user-link';
 import { batchName } from './batches';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
@@ -116,8 +117,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   }, [batchId, asked]);
 
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
-  // The first read has no rows to keep on screen, so the table's own skeleton stands in, with the one "Loading" status the skeleton leaves to its host; a later page keeps its rows and
-  // busies the Show More button instead (claude-docs/loading.md).
+  // The first read has no rows to keep on screen, so the table's own skeleton stands in, with the
+  // one "Loading" status the skeleton leaves to its host; a later page keeps its rows and busies
+  // the Show More button instead (claude-docs/loading.md).
   const reading = loading && attempts.length === 0;
   return (
     <>
@@ -125,10 +127,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         Every card listed here already admits nobody. Further tries are refused and counted here.
       </p>
       {reading ? (
-        <>
-          <output className="visually-hidden">Loading</output>
+        <LoadingStatus>
           <CardAttemptsBodySkeleton />
-        </>
+        </LoadingStatus>
       ) : (
         <StackTable
           columns={[
