@@ -39,6 +39,9 @@ export const InvitationCardRef = builder.objectRef<CardRow>('InvitationCard').im
     batchId: t.exposeID('batchId', {
       description: 'The mint that made it, shared by the whole batch.',
     }),
+    beta: t.exposeBoolean('beta', {
+      description: 'Whether its batch was minted for beta testers.',
+    }),
     state: t.field({ type: CardStateEnum, resolve: (row) => cardState(row) }),
     expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
     acceptedAt: t.expose('acceptedAt', { type: 'DateTime', nullable: true }),
@@ -115,6 +118,7 @@ export interface CardBatch {
   mintedAt: Date;
   expiresAt: Date;
   note: string | null;
+  beta: boolean;
 }
 
 const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').implement({
@@ -126,6 +130,10 @@ const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').impleme
     note: t.exposeString('note', {
       nullable: true,
       description: "The admin's note written when the batch was minted; null for none.",
+    }),
+    beta: t.exposeBoolean('beta', {
+      description:
+        'Whether the batch was minted for beta testers; set at minting and never changed.',
     }),
     cards: t.int({
       description: 'How many cards the batch holds.',
@@ -204,6 +212,7 @@ builder.queryField('invitationCardBatches', (t) =>
           mintedAt: entry.node.createdAt,
           expiresAt: entry.node.expiresAt,
           note: entry.node.note,
+          beta: entry.node.beta,
         },
       })),
   }),
@@ -242,7 +251,7 @@ builder.mutationField('createInvitationCards', (t) =>
   t.field({
     type: MintedCardsRef,
     description:
-      'Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.',
+      'Mints `sheets` sheets of ten cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 50 sheets.',
     args: {
       sheets: t.arg.int({ required: true }),
       expiresAt: t.arg({ type: 'DateTime', required: true }),
@@ -250,10 +259,14 @@ builder.mutationField('createInvitationCards', (t) =>
         required: false,
         description: `Plain text for the admins to track the batch by, at most ${MAX_NOTE_LENGTH} characters; blank is none.`,
       }),
+      beta: t.arg.boolean({
+        required: true,
+        description: 'Whether the batch is for beta testers; every card of it carries the flag.',
+      }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { sheets, expiresAt, note }, context) =>
-      mintInvitationCards(sessionOf(context), sheets, expiresAt, note),
+    resolve: (_root, { sheets, expiresAt, note, beta }, context) =>
+      mintInvitationCards(sessionOf(context), sheets, expiresAt, note, beta),
   }),
 );
 

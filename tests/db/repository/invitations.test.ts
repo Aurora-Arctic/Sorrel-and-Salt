@@ -31,7 +31,7 @@ import { eq } from 'drizzle-orm';
 import { makeWorkspace } from '../../support/fixtures';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
-import { A, B, D, E, asUser } from '../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../support/as-user';
 import type { SessionUser } from '../../support/types';
 import { sql, useRawClient } from '../../support/db/probe-tables';
 import type { InvitationOverrides } from './types';
@@ -964,7 +964,7 @@ describe('invitation cards', () => {
 
   const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
     withAudit(asUser(E), (write) =>
-      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null }),
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null, beta: false }),
     );
   const cardAccept = (user: SessionUser, token = CARD) =>
     withAudit(asUser(user), (write) => write.acceptInvitation(token));
@@ -1209,7 +1209,7 @@ describe('invitation cards', () => {
       await mint(['cardtokenREVK0001'], LATER(), REVOKED);
       await cardAccept(B, 'cardtokenLIVE0001');
       await sql`update invitations set revoked_at = now() where token_hash = ${sha256('cardtokenLIVE0002')}`;
-      await cardAccept(B, 'cardtokenUSED0001');
+      await cardAccept(C, 'cardtokenUSED0001');
       await sql`update invitations set expires_at = now() - interval '1 hour' where batch_id = ${EXPIRED}`;
       await sql`update invitations set revoked_at = now() where batch_id = ${REVOKED}`;
 

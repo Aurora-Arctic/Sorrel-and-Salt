@@ -6,6 +6,7 @@ import {
   findOpenAdminRoleChangePause,
   findReceivedInvitation,
   findWorkspaceRole,
+  hasAcceptedCard,
   withAudit,
 } from '../../../db/repository';
 import type {
@@ -37,6 +38,8 @@ const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
   accepted: 'This invitation has already been accepted.',
   'used-by-you': "You've already used this card. You can start a coven from your account.",
+  'used-another-card':
+    "You've already used an invitation card, so this one stays free for someone else.",
   declined:
     'This invitation was declined. If you change your mind, ask whoever sent it for a new one.',
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
@@ -111,6 +114,8 @@ async function checkInvitation(
   if (invitation.kind === 'card') {
     if (!user) return { refusal: 'invalid', card };
     if (!user.emailVerified) return { refusal: 'unverified', card };
+    // One card per account: a second stays pending for someone else.
+    if (await hasAcceptedCard(user.id)) return { refusal: 'used-another-card', card };
     return { tier: 'card', invitation, user };
   }
   if (!user || invitation.email === null || !sameAddress(user.email, invitation.email))

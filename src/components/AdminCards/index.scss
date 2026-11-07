@@ -92,10 +92,9 @@
     flex: 0 1 auto;
   }
 
-  // The sheets label carries an info tip and so stands taller than the other two; every label row here takes that
-  // height so the three controls start on one line.
-  .field__label-row,
-  > .switch > .field__label {
+  // The sheets label carries an info tip and so stands taller than the date's; both label rows take that height so the
+  // two controls start on one line.
+  .field__label-row {
     min-block-size: 24px;
   }
 
@@ -104,14 +103,16 @@
     flex-wrap: nowrap;
     white-space: nowrap;
   }
+}
 
-  > .switch > .field__label {
-    display: flex;
-    align-items: center;
-  }
+// The two print choices sit side by side from the form edge.
+.admin-cards__switches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: space(6);
 
-  // The shared switch centres its track under its label; here the track starts at the label's left edge, as the
-  // date field's control does under its label.
+  // The shared switch centres its track under its label; here the track starts at the label's left edge.
   > .switch {
     align-items: flex-start;
   }

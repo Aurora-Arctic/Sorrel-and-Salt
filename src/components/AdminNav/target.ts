@@ -33,6 +33,8 @@ const PARTS: Record<string, Parts> = {
   },
   // The four document editors, the tab row on a line beneath the heading, with no action or filter.
   '/keepers/documents/terms': { shape: 'document', title: true, tabs: true, tabsBelow: true },
+  // A form's fields and buttons under the heading; one tab, so no tab row.
+  '/keepers/business-cards': { shape: 'form', title: true },
   // Its action is the pause control; the filter is the user search.
   '/keepers/users': CURATED,
 };

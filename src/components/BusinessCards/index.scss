@@ -1,0 +1,29 @@
+@use '../../scss/variables' as *;
+
+// The shared switch centres its track under its label across the whole form; here the control shrinks to its content and
+// sits at the form's left edge, its track under the label's start.
+.business-cards > .switch {
+  align-items: flex-start;
+  align-self: flex-start;
+}
+
+// The page's heading starts where the form's centred column starts: the header takes the form's width and centring, so its
+// text lines up with the form's left edge at every width.
+.tabbed-page:has(.business-cards) > .page-header {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: $narrow-column;
+  margin-inline: auto;
+}
+
+// The header holds only the heading, but the narrow-column rule makes the heading a full line, so the empty action wrapper
+// wraps beneath it and the header's row gap would add a blank row below the heading.
+.tabbed-page:has(.business-cards) > .page-header {
+  row-gap: 0;
+}
+
+// The saved-message region is always present for screen readers but empty until a card is saved; empty, its form gap would
+// stand between Include Backs and Generate, so it takes one gap back.
+.business-cards > [aria-live]:empty {
+  margin-top: calc(-1 * #{space(5)});
+}

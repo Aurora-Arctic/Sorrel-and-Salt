@@ -145,6 +145,8 @@ export type InvitationRefusal =
   | 'accepted'
   /** A card the signed-in account itself accepted. */
   | 'used-by-you'
+  /** A card, refused because the signed-in account has already accepted another. */
+  | 'used-another-card'
   | 'declined'
   | 'revoked'
   | 'expired'
@@ -180,6 +182,11 @@ export type InvitationCheck =
 
 /** Where a card stands: pending until accepted, revoked or past its date. */
 export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
+
+/** A pending card as its landing page tells a signed-out visitor of it: whether its batch was minted for beta testers. */
+export interface LiveCard {
+  beta: boolean;
+}
 
 /** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
 export interface MintedCards {

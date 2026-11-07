@@ -551,6 +551,7 @@ export type RevokeInvitationCardBatchMutation = { revokeInvitationCardBatch: Arr
 export type CreateInvitationCardsMutationVariables = Exact<{
   sheets: number;
   expiresAt: string;
+  beta: boolean;
   note?: string | null | undefined;
 }>;
 
@@ -1656,8 +1657,13 @@ export const RevokeInvitationCardBatchDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<RevokeInvitationCardBatchMutation, RevokeInvitationCardBatchMutationVariables>;
 export const CreateInvitationCardsDocument = new TypedDocumentString(`
-    mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {
-  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {
+    mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $beta: Boolean!, $note: String) {
+  createInvitationCards(
+    sheets: $sheets
+    expiresAt: $expiresAt
+    beta: $beta
+    note: $note
+  ) {
     batchId
     expiresAt
     tokens

@@ -500,7 +500,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   createInvitationCards: write(
-    'mutation { createInvitationCards(sheets: 1, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
+    'mutation { createInvitationCards(sheets: 1, beta: false, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
   ),
   revokeInvitationCardBatch: write(
     `mutation { revokeInvitationCardBatch(batchId: "${NOWHERE}") { id } }`,
