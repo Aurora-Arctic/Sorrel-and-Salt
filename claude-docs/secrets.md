@@ -421,3 +421,38 @@ devcontainer carries isn't scoped to manage Actions secrets/variables
   absent and skip cleanly rather than failing (`claude-docs/ci/deploy.md`
   describes the guard-skip steps) — setting these rows turns those jobs
   on; it doesn't require touching the workflow files again.
+
+## Every variable
+
+The root `.env.example` names every environment variable `src/` and `scripts/` read, with a safe local value or a blank, and one comment line each saying what it is for. `npm run setup` copies it to `.env.local`. `tests/guards/env-example.test.ts` fails when the code reads a variable the file does not name, when the file names one the code never reads, or when a credential in it holds a value. The guard finds a read as `process.env.X` or `env.X`, as `requiredInProduction('X')` (`src/lib/env.ts`), and as a quoted name in `src/lib/social-providers-config.ts`, which reads by a name map; a read by a computed name anywhere else fails it.
+
+Two rules shape the file:
+
+- **Tool-set variables are not keys.** `NODE_ENV`, `PORT`, `CI`, every `VERCEL_*` and every `GITHUB_*` are set by the tool that runs the code (Next, Vercel, GitHub Actions or a test runner), never by a developer, so a key for one would only shadow it. The guard holds them as an allow-list and fails if the file names one.
+- **A credential's value is blank.** Every key whose name says it holds a credential (`SECRET`, `TOKEN`, a trailing `_KEY` or `_PAT`) is blank, bar `BETTER_AUTH_SECRET=local-dev-not-a-real-secret`, the documented local value. Variables with no safe local value, such as `MAIL_FROM` and `MAILTRAP_SANDBOX_ID`, are blank too. A blank value reads as unset in every reader, and a value the shell or Docker compose sets wins over the file.
+
+| Variable                                           | What it is for                                                                  | Local value                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------- |
+| `DATABASE_URL`                                     | The Postgres database; `src/db/connection.ts` throws at import when it is unset | the compose database                  |
+| `BETTER_AUTH_SECRET`                               | Signs sessions and email links                                                  | `local-dev-not-a-real-secret`         |
+| `BETTER_AUTH_SECRETS`                              | The versioned list used while rotating the secret                               | blank                                 |
+| `AUTH_SECRET`                                      | The email-link signing fallback in `src/lib/auth-secrets.ts`                    | blank                                 |
+| `ADMIN_BOOTSTRAP_EMAIL`                            | The address made keeper at its first verified sign-in                           | `placeholder@admin-bootstrap.invalid` |
+| `CRON_SECRET`                                      | The bearer Vercel Cron sends; while blank, the cron routes refuse every call    | blank                                 |
+| `MAIL_TRANSPORT`                                   | `resend`, `mailtrap` or `mailpit`; while blank, mail is logged                  | blank                                 |
+| `MAIL_FROM`, `RESEND_API_KEY`                      | The Resend sender and key                                                       | blank                                 |
+| `MAILTRAP_SANDBOX_ID`, `MAILTRAP_SANDBOX_TOKEN`    | The Mailtrap sandbox inbox and key                                              | blank                                 |
+| `MAILPIT_URL`                                      | The local Mailpit server                                                        | `http://mailpit:8025`                 |
+| `<PROVIDER>_CLIENT_ID`, `<PROVIDER>_CLIENT_SECRET` | Google, Discord, Facebook and Microsoft sign-in; both halves register one       | blank                                 |
+| `MICROSOFT_TENANT_ID`                              | The Microsoft tenant; unset means `common`                                      | blank                                 |
+| `ENABLE_IMPERSONATION`                             | `true` lets a keeper act as another user, never on production                   | blank                                 |
+| `E2E_PLAIN_SESSION_COOKIE`                         | Set by the e2e servers for a plain-http session cookie                          | blank                                 |
+| `DEBUG_SQL`                                        | `1` prints every statement                                                      | blank                                 |
+| `SEED_SCENARIO`                                    | `minimal`, `standard` or `demo` for `npm run db:seed`                           | `minimal`                             |
+| `WORKSHOP_API_PREFIX`                              | The API path prefix the workshop's build sets                                   | blank                                 |
+| `DESTRUCTIVE_DDL_FILES`                            | The files `check:destructive-ddl` scans instead of the branch's changes         | blank                                 |
+| `ASANA_PAT`                                        | The token the Asana migration script reads                                      | blank                                 |
+| `LIGHTHOUSE_CDP_HOST`, `LIGHTHOUSE_CDP_PORT`       | The Chrome the Lighthouse script drives; the devcontainer sets them             | blank                                 |
+| `PLAYWRIGHT_WS_ENDPOINT`                           | The shared Playwright browser server; the devcontainer sets it                  | blank                                 |
+
+Variables read only by tests, the Playwright and Vitest configs, `next.config.ts`, Docker compose and the workflows are not keys: none of them is read by `src/` or `scripts/`.

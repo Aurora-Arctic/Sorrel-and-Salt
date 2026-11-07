@@ -1320,95 +1320,18 @@ kept. Each rule sits in a `forced-colors` block, uses only `Canvas`, `CanvasText
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
-  colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
-  width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, the loading tokens (`$loading-delay` 100ms, `$spin-duration`
-  0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
-  200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
-  `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
-  Sizes with a role of their own sit beside them: `$brand-size` (1.375rem, the
-  site name in the bars, set in the heading face), `$inline-mark-size` (0.72em,
-  an icon sized to the text beside it), `$text-stroke-hairline` (0.6px, the
-  safety note heading's stroke), `$safety-bar-width` (the safety note's side
-  bar, `$rule-heavy`), `$nav-link-size` (1.125rem, a grouped jump menu's
-  top-level link), `$notice-mark-size` (1.0125rem, a notice's warning triangle) and `$notice-mark-drop` (0.05rem, which sets it on the first line), `$step-ink-drop` (0.05rem, which sets a spell step's first-line icons level with its name), the date field's calendar sizes and fades (`$day-picker-*`, [`components/date-field.md`](components/date-field.md)), the small optical corrections in `em` (`$optical-nudge`
-  0.04em, `$back-chevron-pull` 0.5em, `$link-hint-drop` 0.125em, `$cap-middle`
-  0.648em, `$recency-icon-size` 1.375em, each explained where it is declared), and the ingredient card drawer's `$drawer-inset` (10px),
-  `$drawer-wall` (7px), `$drawer-back-stop` and `$drawer-seam-stop` (38% and
-  48%), `$drawer-slot-shadow` and `$drawer-rim-shadow`. The last six are proposed
-  for MB.120; the card and note stylesheets take them in their own lanes.
-- `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
-  `icon-button` and `icon-button-edit` (an icon control's square box, and
-  the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
-  `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
-  badge custom properties), `focus-ring`,
-  `theme-transition`, `nav-current` (a bar link's current-page mark: weight and a
-  `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
-  `font-smoothing-antialiased`, `notice-row` (a notice laid out as a row of sentence and buttons, as the recovery and conflict notices are under a dialog's title),
-  `heading-face` (the headings' family, weight and letter spacing).
-  The shapes that repeated by hand are mixins too, one line each:
-  `color-scheme-light` and `forced-colors` (the two media queries, as
-  `reduced-motion` wraps its own); `list-reset` (a list with no margin,
-  indent or marker, its items' too); `truncate` (one line cut with an
-  ellipsis); `visually-hidden` (the clipped box a screen reader still
-  reads, which the `.visually-hidden` class includes); `button-reset` (a
-  button with its box taken away); `stack($step)` (a column a step of space
-  apart); `busy-faded` (colour out and `$opacity-disabled` left);
-  `tip-anchor` and `tip-above($layer, $capped)` (a fixed bubble, placed by
-  `useTip` through Floating UI and kept on screen; capped to `$tip-width` and
-  the window; a `$align` still pins the old way and is for EntryMarks and
-  IngredientCard until they adopt the hook); `tip-bubble-open` (a bubble's open state alone, for one opened
-  by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
-  turns `$text-primary` when pointed at or focused), `icon-button-edit`
-  and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
-  account menu's turn-over on open, eased and still under reduced motion,
-  which every chevron shares, M8.16) and `disclosure-chevron` (a section's
-  chevron, sized and inked, with that flip); `floating-panel`
-  (the card surface, floating shadow and muted edge a list or summary
-  floats on); `field-box` (the edge, ground and height a field and the
-  admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `fade-in` keyframe (`fade-out` beside it),
-  `$arrive-duration` by default); `loading-motion($animation, $delay)`
-  (applies a loading animation and, under `reduced-motion`, swaps it for the
-  `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse
-  every wait falls back to; a `$delay` adds `loading-appear`, which holds
-  `visibility: hidden` until then and so survives the pulse; both keyframes
-  are in `_primitives.scss`); and
-  `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
-  rows; its one-line cells, wrapping again as cards), each emitted once by
-  `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
-  modifiers a table takes by class; `value-and-control` (a cell's value on
-  the left and the control that changes it on the right); and
-  `sticky-action-column($layer)` (a stacking table's pinned row-action
-  column on a neutral `$hairline` rule: the Compendium's Edit and the members' Remove, and its card placement) and
-  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate).
-- **Three `*-base` mixins**, each emitting nothing on its own `@use` and
-  `@include`d at exactly one site, `globals.scss`'s `body`:
-  - `_typography.scss` → `typography-base` — headings, body copy capped at
-    `$measure`, links, lists, the text roles `.eyebrow`, `.meta`,
-    `.binomial` and `.lede`, and `.tight-headings`.
-  - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
-    `.header` / `.footer`.
-  - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
-    `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
-    the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*` (the `IngredientCard`'s look; Foundations renders the card itself),
-    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
-    screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
-- `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
-  self-hosted at build time via `next/font/google`. The CSS variables it defines
-  on `<html>` are what `$font-heading` / `$font-body` reference.
-- `src/app/globals.scss` — the single global stylesheet, imported once by the
-  root layout, and the one `@include` site for the three mixins above. Resolves
-  the theme in **three** states, not two: `:root { @include theme-dark }` (dark
-  is the default), a `prefers-color-scheme: light` block, and an explicit
-  `html[data-theme='light']` override.
-- No `_buttons.scss` — `.btn` and its variants live in `_primitives.scss`.
-  No `_print.scss` outside M10.22 (the spell recipe view).
-- Component styling adds no new hand-picked colour and no per-component design
-  work beyond the tokens, mixins and the `_primitives.scss` class layer.
+Each token and mixin is explained where it is declared; this section says where things live.
+
+- `src/scss/_variables.scss` — the palette, badge tokens, brand colours and `brand-color()`, the font stacks, `$measure`, `$narrow-column`, `$pager-tight-width`, the loading tokens ([`loading.md`](loading.md)), the four scales with their accessors (`type-size()`, `heading-size()`, `space()`, `radius()`), and the sizes with a role of their own (the brand size, the notice mark, the date field's calendar sizes in [`components/date-field.md`](components/date-field.md), the optical corrections in `em`, the ingredient card drawer's dimensions). A component `@use`s it directly.
+- `src/scss/_mixins.scss` — the shapes that repeat: `modal-surface`, `chip`, `badge`, `tip-bubble` and `tip-above`, the icon-button family ([`components/icon-tip.md`](components/icon-tip.md)), `theme-dark` / `theme-light`, `semantic-tokens`, `focus-ring`, `reduced-motion`, `forced-colors`, `loading-motion`, `arrived`, the table mixins (`data-table-roomy`, `data-table-nowrap`, `sticky-action-column`, `row-action-column`) and small resets (`list-reset`, `truncate`, `visually-hidden`, `button-reset`, `stack`).
+- **Three `*-base` mixins**, each emitting nothing on its own `@use` and `@include`d at exactly one site, `globals.scss`'s `body`:
+  - `_typography.scss` → `typography-base` — headings, body copy capped at `$measure`, links, lists, and the text roles `.eyebrow`, `.meta`, `.binomial`, `.lede` and `.tight-headings`.
+  - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus `.header` / `.footer`.
+  - `_primitives.scss` → `primitives-base` — the class layer: `.panel`, `.btn` and its `--solid` / `--quiet` / `--destructive` variants and `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`, the form fields, `.modal`, `.specimen*` (the `IngredientCard`'s look), `.chip`, the `.badge--*` classes, `.visually-hidden`, and `.spoken-separator` (a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it).
+- `src/app/fonts.ts` — Cormorant Unicase (500/600/700) and Lexend, self-hosted at build time through `next/font/google`. The CSS variables it defines on `<html>` are what `$font-heading` and `$font-body` reference.
+- `src/app/globals.scss` — the single global stylesheet, imported once by the root layout, and the one `@include` site for the three mixins above. It resolves the theme in three states: `:root { @include theme-dark }` (dark is the default), a `prefers-color-scheme: light` block, and an explicit `html[data-theme='light']` override.
+- There is no `_buttons.scss` (`.btn` lives in `_primitives.scss`) and no `_print.scss` outside the spell recipe view.
+- Component styling adds no hand-picked colour and no per-component design work beyond the tokens, mixins and the `_primitives.scss` class layer.
 
 ## Known issue
 
