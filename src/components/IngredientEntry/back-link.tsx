@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
+import { BackChevron } from './back-chevron';
 import { listReturnHref } from './back-href';
-import './back-link.scss';
 
 interface BackLinkProps {
   href: Route;
@@ -14,21 +14,6 @@ interface BackLinkProps {
   also?: readonly { path: string; label: string }[];
   className?: string;
   children?: ReactNode;
-}
-
-export function BackChevron(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
-      <path
-        d="M10 3.5L5.5 8l4.5 4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 function previousListHref(listPaths: readonly string[]): string | undefined {

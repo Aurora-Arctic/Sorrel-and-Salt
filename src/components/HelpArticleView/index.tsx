@@ -3,7 +3,7 @@ import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
-import { BackChevron } from '../IngredientEntry/back-link';
+import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { HelpArticleViewProps } from './types';
