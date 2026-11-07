@@ -101,10 +101,10 @@ flock /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
   BETTER_AUTH_SECRET=local-dev-not-a-real-secret npm run help:screenshots
 ```
 
-| File                   | What it shows                                                         | Article                       |
-| ---------------------- | --------------------------------------------------------------------- | ----------------------------- |
-| `compendium-entry.png` | The Rosemary entry page, signed out, from the seeded compendium       | Read an Entry and Its Sources |
-| `spell-builder.png`    | The spell builder over a draft, every section open, three steps in it | Build a Spell                 |
+| File                   | What it shows                                                              | Article                       |
+| ---------------------- | -------------------------------------------------------------------------- | ----------------------------- |
+| `compendium-entry.png` | The Rosemary entry page, signed out, marked reviewed by the seeded curator | Read an Entry and Its Sources |
+| `spell-builder.png`    | The spell builder over a draft, every section open, three steps in it      | Build a Spell                 |
 
 ## Links to help
 

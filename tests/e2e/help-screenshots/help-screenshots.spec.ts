@@ -16,6 +16,8 @@ import { ingredientSlug } from '@/lib/slugify';
 // "Screenshots"); the pictures are committed, and an article shows one with `![alt](/help/screens/<name>.png "caption")`.
 
 const SCREENS = join(process.cwd(), 'public', 'help', 'screens');
+/** The standard seed's site curator, fixture F. */
+const CURATOR = '00000000-0000-0000-0000-000000000008';
 
 test.use({ viewport: { width: 1024, height: 768 }, colorScheme: 'light', deviceScaleFactor: 1 });
 
@@ -32,16 +34,32 @@ async function settled(page: Page): Promise<void> {
 test('the compendium entry page, read signed out', async ({ page }) => {
   const slug = await withSql(async (sql) => {
     const rosemary = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    // No seeded entry is curator reviewed, and the picture shows a reviewed one rather than Needs Review: the seeded
+    // curator (F) reviews it here, on a fixed day.
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${CURATOR}, true)`;
+      await tx`
+        update ingredients set curator_reviewed_at = '2026-11-01T12:00:00Z', curator_reviewed_by = ${CURATOR}
+        where id = ${rosemary.ingredientId}`;
+    });
     const [entry] = await sql<{ canonical_name: string | null }[]>`
       select canonical_name from ingredients where id = ${rosemary.ingredientId}`;
     return ingredientSlug('Rosemary', entry.canonical_name);
   });
 
+  // Tall enough that the whole entry is in frame; the picture ends with the page's main.
+  await page.setViewportSize({ width: 1024, height: 2400 });
   await page.goto(`/compendium/ingredients/${slug}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Rosemary' })).toBeVisible();
+  await expect(page.getByText('Needs Review')).toHaveCount(0);
   await settled(page);
+  const main = await page.locator('main').first().boundingBox();
+  if (!main) throw new Error('the entry page drew no main');
 
-  await page.screenshot({ path: join(SCREENS, 'compendium-entry.png') });
+  await page.screenshot({
+    path: join(SCREENS, 'compendium-entry.png'),
+    clip: { x: 0, y: 0, width: 1024, height: Math.ceil(main.y + main.height) },
+  });
 });
 
 test('the spell builder, open on a draft', async ({ page }) => {

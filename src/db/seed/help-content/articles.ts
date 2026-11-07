@@ -103,7 +103,7 @@ Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
 
 What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]: a work with a locator pointing to where in it the claim is found. A reference can also say what it supports, and the basis of a name.
 
-![The Rosemary entry page in the Compendium, showing its formal name, folk names, description, safety notes, correspondences, categories and forms](/help/screens/compendium-entry.png "An entry page, read without signing in.")`,
+![The Rosemary entry page in the Compendium, signed out, showing its formal name, a Reviewed By Curator mark, its description, correspondences, folk names and categories, its two forms, Herb and Oil, with a caution on the oil, and its references](/help/screens/compendium-entry.png "An entry page, read without signing in.")`,
   ),
   subPage(
     compendium,
