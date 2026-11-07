@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { readGraphqlFailure } from '../../lib/graphql-failure';

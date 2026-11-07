@@ -15,6 +15,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import { CompendiumListBodySkeleton } from './skeleton';
 import IngredientSearch from '../IngredientSearch';
+import { facetChoices, vocabulariesOf } from './facets';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import CompendiumListFilter from './filter';
 import { compendiumHref } from './href';
@@ -274,7 +275,7 @@ export function emptyText(
 const CompendiumList = ({
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -304,7 +305,7 @@ const CompendiumList = ({
         // focus, and the sentence above the results keeps its typing across a search.
         <CompendiumListFilter
           filter={filter}
-          facets={facets}
+          counts={counts}
           categories={categories}
           vocabulary={vocabulary}
           total={total}
@@ -320,7 +321,11 @@ const CompendiumList = ({
         otherOrders={bestMatch(filter)}
         rows={entries}
         rowKey={(entry) => entry.id}
-        empty={emptyText(filter, categories, facets)}
+        empty={emptyText(
+          filter,
+          categories,
+          facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+        )}
         emptyLabel={matched ? 'No Matches' : undefined}
         emptyAction={
           matched ? (

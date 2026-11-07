@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';

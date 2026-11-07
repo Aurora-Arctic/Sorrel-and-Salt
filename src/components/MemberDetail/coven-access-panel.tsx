@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { longMinuteInZone } from '../../lib/utc';
 import { stands } from '../UserDetail/access-pause-parts';

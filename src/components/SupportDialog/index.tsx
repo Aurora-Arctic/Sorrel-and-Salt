@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { useQuery } from '@tanstack/react-query';
 import { Suspense, type ReactElement } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { RouteModal } from '../Modal';

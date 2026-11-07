@@ -8,7 +8,7 @@ import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import PublicFrame from '../PublicFrame';
-import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { NO_COUNTS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 
 const meta = {
@@ -32,7 +32,7 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
                 covenSlug="fixture-coven"
                 workspaceId="00000000-0000-4000-8000-000000000001"
                 filter={filter}
-                facets={NO_FACETS}
+                counts={NO_COUNTS}
                 categories={[]}
                 vocabulary={{ deities: [], formIcons: {} }}
                 total={NAMES.length}

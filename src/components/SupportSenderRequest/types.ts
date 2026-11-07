@@ -28,6 +28,8 @@ export interface SupportSenderRequestEntry {
 export interface SupportSenderRequestProps {
   request: SupportSenderRequestEntry;
   reply?: ReactNode;
+  /** The level of the Thread heading: 2 on a page whose only heading above it is its h1. */
+  headingLevel?: 2 | 3;
 }
 
 export interface SupportSenderReplyBoxProps {

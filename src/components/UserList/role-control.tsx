@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { ADMIN_CHANGES_PAUSED_REFUSAL, PRIMARY_ADMIN_REFUSAL } from '../../lib/primary-admin';
 import type { UserRole } from '../../lib/session';

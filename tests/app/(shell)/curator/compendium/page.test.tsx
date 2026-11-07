@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
@@ -8,6 +9,11 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
+
+// The form loads on first use; loading it once up front keeps each test off a cold import.
+beforeAll(async () => {
+  await loadCompendiumEntryForm();
+});
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({
@@ -512,17 +518,22 @@ describe('the /curator/compendium details modal', () => {
   const DETAILS_TESTWORT = 'Testwort';
   const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
   const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });
+  // The details body loads on first use, so each test waits for its head before looking inside.
+  const loaded = async () => {
+    await screen.findByRole('link', { name: 'See in Compendium' });
+    return details();
+  };
 
   it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(within(details()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
+    expect(within(await loaded()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${TESTWORT.slug}`,
     );
-    expect(within(details()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
+    expect(within(await loaded()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
       'href',
       `${ON_DETAILS}&edit=${TESTWORT.slug}`,
     );
@@ -534,12 +545,12 @@ describe('the /curator/compendium details modal', () => {
 
     expect(ingredientDetailOf).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT);
     expect(
-      within(within(details()).getByRole('region', { name: 'Caution' })).getByText(
+      within(within(await loaded()).getByRole('region', { name: 'Caution' })).getByText(
         'Fixture admin caution.',
       ),
     ).toBeInTheDocument();
     expect(
-      within(within(details()).getByRole('list', { name: 'Folk Names' })).getByText(
+      within(within(await loaded()).getByRole('list', { name: 'Folk Names' })).getByText(
         'Fixture Adminbane',
       ),
     ).toBeInTheDocument();
@@ -550,7 +561,7 @@ describe('the /curator/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
+    expect(within(await loaded()).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
   });
 
   it("shows the switch above the edit form's buttons, for the entry it edits", async () => {
@@ -572,7 +583,7 @@ describe('the /curator/compendium details modal', () => {
   it('shows an entry with no mark as needing review', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
+    expect(within(await loaded()).getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
   });
 
   it("reads no entry's sections when no details are open", async () => {
@@ -592,7 +603,7 @@ describe('the /curator/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    const covens = within(details()).getByRole('list', { name: 'In Your Cupboards' });
+    const covens = within(await loaded()).getByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/coven\/fixture-coven\/ingredients\//),
@@ -610,12 +621,13 @@ describe('the /curator/compendium details modal', () => {
     expect(
       within(row).getByRole('link', { name: EDITING_TESTWORT.replace(' Ingredient,', '') }),
     ).toHaveAttribute('href', `${FILTERED_HREF}&edit=${TESTWORT.slug}`);
+    await loaded();
   });
 
   it('closes the details back to the filtered page they opened over', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
@@ -625,6 +637,7 @@ describe('the /curator/compendium details modal', () => {
 
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
     expect(details()).toBeInTheDocument();
+    await loaded();
     const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Close' }));
@@ -637,9 +650,9 @@ describe('the /curator/compendium details modal', () => {
 
     // Why it could have an Edit: the details alone carry one.
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
-    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    expect(within(await loaded()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`, {
       scroll: false,
@@ -649,9 +662,9 @@ describe('the /curator/compendium details modal', () => {
   it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: 'fixture-other' });
 
-    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    expect(within(await loaded()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`, {
       scroll: false,

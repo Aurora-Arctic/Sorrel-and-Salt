@@ -33,6 +33,15 @@
 - **The fill is not themed.** The crescent is always `$soot` and the sun always `$parchment`, in both themes, set per facet in `index.scss` from the raw palette rather than the runtime tokens. Only the rotate swaps which one shows, and nothing about the icons transitions on a theme change.
 - **The two facets are sized apart by 5%** (moon 102%, sun 95%, both holding the pivot corner), because the crescent carries less visual weight. The size is the box's, not `transform: scale()`, because the `--out` and `--pre-enter` classes overwrite `transform` wholesale.
 
+## The theme swap
+
+**The page cross-fades once; no element fades its own colours**, because about 300 elements each running a 400ms colour fade froze a slow phone for about half a second. `handleToggle` swaps the theme inside `document.startViewTransition`'s update callback, so the browser fades from a picture of the old page to the new one. The default cross-fade is used unstyled: no `::view-transition-*` rule exists.
+
+- **The API is past the browser floor**, so the call sits behind `'startViewTransition' in document`. A browser without it swaps the theme at once.
+- **Reduced motion skips the API.** `prefersReducedMotion()` is read at click time, and the theme swaps with no cross-fade.
+- **The theme ends up set on every path.** `applyTheme` (the attribute and the stored choice) is the update callback on one path and a direct call on the other.
+- **Nothing in the stylesheets transitions on a theme change.** There is no theme-wide transition mixin, and `tests/guards/no-theme-transition.test.ts` keeps it so. A hover or focus fade is set on the element's own rule with `state-fade()`, so it runs into the state and back out. `swapTheme` holds every transition off (`html[data-theme-swap]` in `globals.scss`) while it applies the theme and reads the new styles, on both paths; the toggle's own facets keep theirs.
+
 ## Styling
 
 - **Hover scales the corner disc by 1.07**, because on the dark theme `$accent` and `$accent-hover` are a shade apart and the colour step alone reads as almost nothing. The inline disc has no scale.

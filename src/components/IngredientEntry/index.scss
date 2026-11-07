@@ -592,7 +592,7 @@ $replaces-gap: space(5);
 .ingredient-summary__covens a {
   color: $text-primary;
   @include faded-underline;
-  @include theme-transition(color);
+  @include state-fade(color);
 
   &:hover,
   &:focus-visible {
@@ -685,19 +685,9 @@ $replaces-gap: space(5);
   height: 1lh;
 }
 
-// A pending section heading: the heading's own box and rule, with a bar for its text.
-.ingredient-entry__pending-heading {
-  inline-size: 8rem;
-
-  .skeleton__line {
-    height: 1lh;
-  }
-}
-
+// `list-reset` also clears the `ul li::before` ✦ that `list-style: none` leaves.
 .ingredient-entry__pending-shelf {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 }
 
 // A pending cupboard shelf before the name: out of the line past a phone, as the real mark hangs into

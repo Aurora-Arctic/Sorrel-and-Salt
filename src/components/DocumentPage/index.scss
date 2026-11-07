@@ -68,11 +68,6 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
       height: space(8);
       pointer-events: none;
       opacity: 0;
-      @include theme-transition(opacity);
-
-      @include reduced-motion {
-        transition: none;
-      }
     }
 
     > .page-nav::before {
@@ -159,7 +154,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   .document-page__sources a {
     color: $text-primary;
     @include faded-underline;
-    @include theme-transition(color);
+    @include state-fade(color);
 
     &:hover,
     &:focus-visible {

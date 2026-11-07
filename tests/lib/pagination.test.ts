@@ -66,6 +66,18 @@ describe('cursor', () => {
     expect(decoded).toEqual({ k: ['Testwort'], i: ID });
   });
 
+  // The codec runs in the browser without `Buffer`, so a cursor already in a link, written by `Buffer`, must still read, and a
+  // new one must read the same, letters past ASCII included.
+  it('writes and reads the same base64url as Node, for a key past ASCII', () => {
+    const cursor = { key: ['Ærøskøbing wort', '月桂'], id: ID };
+    const byNode = Buffer.from(JSON.stringify({ k: cursor.key, i: cursor.id })).toString(
+      'base64url',
+    );
+
+    expect(encodeCursor(cursor)).toBe(byNode);
+    expect(decodeCursor(byNode)).toEqual(cursor);
+  });
+
   it('refuses a cursor that is not one of its own', () => {
     const forged = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
 

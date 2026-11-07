@@ -1,15 +1,15 @@
 'use client';
 
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import Skeleton from '../Skeleton';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
 import type { SupportAbout, SupportStatus } from '../SupportRequests/types';
-import Skeleton from '../Skeleton';
 import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
@@ -135,7 +135,7 @@ const SupportRequestByLink = (): ReactElement => {
   // The one status announces the wait; the quiet skeleton beside it is for the eye alone.
   if (state.phase === 'loading') {
     return (
-      <div className="page-with-nav">
+      <div className="page-with-nav" aria-busy="true">
         <p role="status">Opening your request.</p>
         <Skeleton shape="line" count={4} quiet />
       </div>
@@ -168,6 +168,7 @@ const SupportRequestByLink = (): ReactElement => {
         </span>
       </div>
       <SupportSenderRequest
+        headingLevel={2}
         request={{ ...request, path: null, errorCode: null, followUpId: null, timedOut: null }}
         reply={
           <SupportViewReplyForm

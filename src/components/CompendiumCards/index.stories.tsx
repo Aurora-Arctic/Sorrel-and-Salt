@@ -7,7 +7,7 @@ import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
-import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { NO_COUNTS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
 const meta = {
   title: 'Ingredients / Compendium Cards',
@@ -63,7 +63,7 @@ const COVENS = [
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: NO_FACETS,
+  counts: NO_COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

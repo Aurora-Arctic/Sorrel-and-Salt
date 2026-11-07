@@ -75,7 +75,6 @@
 
   a {
     color: $accent;
-    transition: color 200ms $theme-transition-easing;
 
     // Inside `:where()`, so it adds nothing to `a`'s specificity: as a plain
     // `:visited` it outranked every class-level link colour, and a followed

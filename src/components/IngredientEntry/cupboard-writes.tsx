@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import ConfirmDialog from '../ConfirmDialog';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';

@@ -2,9 +2,9 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
@@ -219,6 +219,9 @@ const IngredientSearchBox = ({
     (): IngredientSearchOption[] => (searchesNow && !belowFloor && answer ? answer.rows : []),
     [answer, searchesNow, belowFloor],
   );
+  // The box takes each keystroke at once; the dropdown's rows follow at low priority, so a long
+  // list of matches never holds a key press back on a slow device.
+  const shownOptions = useDeferredValue(options);
   const hasMore = searchesNow && !belowFloor && answer?.hasNextPage === true;
   const seeAllHref = searchHref(query);
 
@@ -249,8 +252,8 @@ const IngredientSearchBox = ({
       onPick={pick}
       onCommit={(value) => apply(searchHref(value.trim()))}
       suggestions={{
-        options,
-        pending: !belowFloor && (text.trim() !== query || isFetching),
+        options: shownOptions,
+        pending: !belowFloor && (text.trim() !== query || isFetching || shownOptions !== options),
       }}
       empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
       // The last row of the listbox, reached by the arrows like a result, in italics so it reads

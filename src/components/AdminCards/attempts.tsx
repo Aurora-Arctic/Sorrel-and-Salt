@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, type ReactElement, type ReactNode, useEffect, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { cardPlace } from '../../lib/invitation-cards/limits';

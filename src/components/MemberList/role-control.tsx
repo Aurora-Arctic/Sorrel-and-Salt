@@ -2,7 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import type { WorkspaceRole } from '@/modules/coven';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { RadioGroupField } from '../Field';
 import ConfirmedAction from '../ConfirmedAction';

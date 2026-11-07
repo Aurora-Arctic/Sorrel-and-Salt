@@ -16,7 +16,6 @@ $theme-toggle-icon-arc: 130deg;
 .theme-toggle {
   border: none;
   cursor: pointer;
-  @include theme-transition(background-color, color, transform);
 }
 
 .theme-toggle--corner {
@@ -42,6 +41,7 @@ $theme-toggle-icon-arc: 130deg;
   // Hover grows from the pinned corner: on dark $accent and $accent-hover are a
   // shade apart, so colour alone cannot carry it.
   transform-origin: 100% 0;
+  @include state-fade(background-color, transform);
 
   &:focus-visible {
     @include focus-ring($text-on-color);
@@ -87,7 +87,7 @@ $theme-toggle-facet: 1.1875rem;
     border-radius: 50%;
     background-color: $accent;
     color: $text-on-color;
-    @include theme-transition(background-color);
+    @include state-fade(background-color);
   }
 
   .theme-toggle__facets {
@@ -124,7 +124,7 @@ $theme-toggle-facet: 1.1875rem;
   width: 100%;
   height: 100%;
   transform-origin: 100% 0;
-  @include theme-transition(transform);
+  @include motion(transform);
   transform: rotate(0deg);
 
   // Raw palette, not the runtime tokens: the knotwork is not themed. A box rather than `scale()` because --out /

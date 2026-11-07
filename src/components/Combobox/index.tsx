@@ -36,6 +36,8 @@ export { ComboboxSortableEntries } from './sortable';
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`: the hook owns the ARIA and the keyboard, the markup and Sass are ours (claude-docs/components/combobox.md).
 // It changes no text itself, and free text is the default; see claude-docs/components/combobox.md.
 
+const NOTHING: never[] = [];
+
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
 const isAction = <O extends ComboboxOption>(item: Item<O>): item is ActionRow => 'action' in item;
 
@@ -205,12 +207,27 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
+  const busy = suggestions?.pending === true;
+  // A lookup still pending with no rows of its own keeps the open list's last rows until its answer replaces them; a closed list keeps none.
+  const [kept, setKept] = useState<O[]>(NOTHING);
+  const waiting = busy && suggestions.options.length === 0;
+  const shown = !suggestions
+    ? NOTHING
+    : waiting
+      ? wantsOpen
+        ? kept
+        : NOTHING
+      : suggestions.options;
+  if (shown !== kept) setKept(shown);
   const actionLabel = action?.label;
   const { items, buckets, firstRow, lastRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped, actionFirst),
-    [suggestions, value, actionLabel, offerTyped, actionFirst],
+    () => arrange(shown, value.trim(), actionLabel, offerTyped, actionFirst),
+    [shown, value, actionLabel, offerTyped, actionFirst],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
+  // Not an option: drawn hidden from the reader, who hears it from the status.
+  const loading = hasSource && wantsOpen && busy && shown.length === 0;
+  const listOpen = isOpen || loading;
   // A settled lookup with nothing found, said aloud rather than left as a
   // list that never opens. Not "open" to Downshift, which has no rows to hold.
   const message = empty === false ? undefined : (empty ?? noMatch(value));
@@ -220,8 +237,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     suggestions?.pending === false &&
     value.trim() !== '' &&
     items.length === 0;
-  const popupOpen = isOpen || showEmpty;
-  const busy = suggestions?.pending === true;
+  const popupOpen = listOpen || showEmpty;
   const wrapped = message !== undefined;
   const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
@@ -270,10 +286,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
-    // Escape on a box with no open list is the dialog's, unless the "no matches" message is showing, which Downshift cannot see and Escape closes alone
+    // Escape on a box with no open list is the dialog's, unless the "no matches" message or the loading row is showing, which Downshift cannot see and Escape closes alone
     // (claude-docs/components/combobox.md, "Typed box and Escape").
     if (event.key === 'Escape' && !isOpen) {
-      if (showEmpty) {
+      if (showEmpty || loading) {
         setWantsOpen(false);
         event.preventDefault();
         return;
@@ -518,7 +534,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
       >
         <ul
-          className={['combobox__list', isOpen && 'is-open', wrapped && 'is-inset']
+          className={['combobox__list', listOpen && 'is-open', wrapped && 'is-inset']
             .filter(Boolean)
             .join(' ')}
           style={wrapped ? undefined : listStyle}
@@ -526,6 +542,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           {...getMenuProps({
             ref: wrapped ? undefined : setList,
             'aria-label': `${label} ${noun}s`,
+            'aria-busy': busy || undefined,
           })}
         >
           {isOpen && firstRow && row(firstRow)}
@@ -552,12 +569,23 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               ),
             )}
           {isOpen && !actionFirst && lastRow && row(lastRow)}
+          {loading && (
+            <li className="combobox__loading" aria-hidden="true">
+              <Spinner />
+              {`Looking for ${noun}s`}
+            </li>
+          )}
         </ul>
       </Popup>
       {/* What the list holds, for a screen reader, as the rows arrive after the typing. */}
       {hasSource && (
         <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
-          {statusOf(isOpen, suggestions, noun, showEmpty ? message : undefined)}
+          {statusOf(
+            listOpen,
+            suggestions && { options: shown, pending: busy },
+            noun,
+            showEmpty ? message : undefined,
+          )}
         </output>
       )}
     </div>

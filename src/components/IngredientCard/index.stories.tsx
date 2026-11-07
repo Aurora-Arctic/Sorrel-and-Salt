@@ -5,16 +5,14 @@ import { fn } from 'storybook/test';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { Jars } from './story-jars';
 import IngredientCard from '.';
+import { categoryRefs } from './category-refs';
+import { CardCategoryVocabulary } from './category-vocabulary';
 import { IngredientCardSkeleton } from './skeleton';
 import type { SafetyVariant } from '../SafetyNote/types';
 import DetailsLink from '../IngredientEntry/details-link';
 import { detailsHeading } from '../IngredientEntry/details';
 import { route } from '../../../.storybook/route';
 
-const meta = {
-  title: 'Ingredients / Ingredient Card',
-} satisfies Meta;
-export default meta;
 type Story = StoryObj<{ onUse: () => void; onRestock: () => void; lastPressed: string }>;
 
 const VARIANTS: SafetyVariant[] = [
@@ -39,12 +37,37 @@ const CATEGORIES = [
   },
 ];
 
+const MANY_CATEGORIES = ['Binding', 'Clarity', 'Healing', 'Protection', 'Sleep', 'Strength'].map(
+  (name, index) => ({
+    category: { id: name, name },
+    group: CATEGORIES[index % CATEGORIES.length].group,
+  }),
+);
+
+// The cards name their categories by id, as a list's do; this is the list's vocabulary.
+const VOCABULARY = [...CATEGORIES, ...MANY_CATEGORIES].map(({ category, group }) => ({
+  ...category,
+  group,
+}));
+
+const meta = {
+  title: 'Ingredients / Ingredient Card',
+  decorators: [
+    (Story) => (
+      <CardCategoryVocabulary categories={VOCABULARY}>
+        <Story />
+      </CardCategoryVocabulary>
+    ),
+  ],
+} satisfies Meta;
+export default meta;
+
 const BASE = {
   href: route('/compendium/ingredients/testwort-testalis'),
   label: 'Testwort',
   formalName: 'Fixtura testalis',
   nomenclature: 'botanical' as const,
-  categories: CATEGORIES,
+  categories: categoryRefs(CATEGORIES),
   variants: VARIANTS,
 };
 
@@ -192,16 +215,7 @@ const withStartActionsNode = (onRestock: () => void): ReactNode => (
 
 const manyCategoriesNode = (
   <div style={{ inlineSize: '20rem' }}>
-    <IngredientCard
-      {...BASE}
-      kind="compendium"
-      categories={['Binding', 'Clarity', 'Healing', 'Protection', 'Sleep', 'Strength'].map(
-        (name, index) => ({
-          category: { id: name, name },
-          group: CATEGORIES[index % CATEGORIES.length].group,
-        }),
-      )}
-    />
+    <IngredientCard {...BASE} kind="compendium" categories={categoryRefs(MANY_CATEGORIES)} />
   </div>
 );
 

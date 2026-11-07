@@ -27,11 +27,11 @@ The props are typed in `types.ts`; the facts that file cannot carry are here and
 - **Two buckets, told apart by structure.** Rows with `curated` set sit under "From Compendium" and "From Coven" headings, true because a compendium entry holds curated values alone, so every other value in use is the coven's. Each bucket is `role="group"` named by its heading, on a `div` inside a presentational `li`, because ARIA allows no `group` role on an `li` (axe's `aria-allowed-role`).
 - **Or the source's own buckets.** A row carrying `heading` is grouped under it, and once any row carries one `curated` is not read. Each heading is keyed by its place (`heading-0`), not its text, which may hold a space and would split the `aria-labelledby` reference.
 - **A pick closes the list**, unless `keepOpen` is set. Two rows that pick as the same text ("Wax (Animal)", "Wax (Substance)") are told apart after the pick by the caller's `qualifier`; a variant's `form` stores the string (DESIGN.md §5).
-- **It opens as text is typed, on ArrowDown, and from its chevron**, and only once there are rows; a list wanted while the lookup is pending opens as the rows arrive, the typed row counting as one. The pending `Spinner` shows after `$loading-delay`, so a quick answer never flashes it.
+- **It opens as text is typed, on ArrowDown, and from its chevron**, and opens at once: a lookup still pending shows the loading row until its rows arrive ("The loading row"). The pending `Spinner` shows after `$loading-delay`, so a quick answer never flashes it.
 - **Leaving the box shuts its list for good.** A list wanted but without rows is not open to Downshift, so without a blur dropping the wish, a late answer would open the list and Downshift would focus the box, pulling the focus from whatever was in use. An open list is Downshift's own to close.
 - **Enter.** A highlighted row is picked. Otherwise, with `onCommit`, Enter is the caller's and never the form's submit. Without `onCommit`, Enter closes an open list, and on a closed box reaches the form as any text box's Enter does.
 - **The control is the box.** A press on its padding, between the entries, or where a hidden clear keeps its room puts the caret in the text, as a plain input would. The control is `role="presentation"`; the box inside is what a reader and the keyboard reach.
-- **The list is announced** by a visually hidden `<output>`, named like the list, reading "3 suggestions", "No suggestions" or "Looking for suggestions" while open. It is its own region, not Downshift's `getA11yStatusMessage`, which announces on the box's state and not on rows arriving after the debounce. A ListField's own `<output>` is named "Folk Names changes" so the two are told apart.
+- **The list is announced** by a visually hidden `<output>`, named like the list, reading "3 suggestions", "No suggestions" or "Looking for suggestions" while open or while the loading row shows. It is its own region, not Downshift's `getA11yStatusMessage`, which announces on the box's state and not on rows arriving after the debounce. A ListField's own `<output>` is named "Folk Names changes" so the two are told apart.
 - **`aria-activedescendant`** is left off while no option is highlighted: Downshift writes `""`, which points at nothing and which a checker reads as a broken reference.
 
 #### Row order
@@ -52,17 +52,34 @@ Downshift's open callback fires only when the open state differs from the props 
 
 - **As wide as its anchor**: `listAnchor`, else the control.
 - **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll.
-- **Followed only while open** (`autoUpdate`); every box's closed list stays in the page, as Downshift asks.
+- **Followed only while open** (`autoUpdate`). Every box's closed list stays in the page, as Downshift asks, and is not followed. A pending lookup never closes an open list, which keeps its last rows or shows the loading row, so typing never subscribes again and never reads the page's layout inside the keystroke.
 - **Fixed, not absolute**, so a scrolling ancestor such as a modal cannot clip it.
 - **Shared.** An entry's summary uses it with `matchWidth: false`. MenuButton's menu uses it with `placement: 'bottom-end'`, `gap: 8` (not 4) and `matchWidth: false` ([`menu-button.md`](menu-button.md), "Where it opens").
 
 ### Bottom bar room
 
-The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, which Floating UI cannot see. `flip`, `shift` and `size` therefore take a `bottom` padding of the edge plus the bar's measured height, read at every placement, so a field near the foot opens above. Without it `size` shrinks the list to the sliver left, which still "fits" below, so `flip` never fires. The height is measured, not restated from tokens, because only the browser knows the device's safe area; the bar is found by its class, not a prop threaded through every box.
+The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, which Floating UI cannot see. `flip`, `shift` and `size` therefore take a `bottom` padding of the edge plus the bar's measured height, read once per placement by a first middleware (`measureBar`) and shared by the three, so a field near the foot opens above. Without it `size` shrinks the list to the sliver left, which still "fits" below, so `flip` never fires. The height is measured, not restated from tokens, because only the browser knows the device's safe area; the bar is found by its class, not a prop threaded through every box.
 
 ### The popup
 
 `combobox__popup` holds the listbox and, beneath it, the empty message; it is the one element placed, so the two move together. With `empty={false}` the listbox is placed itself. The `<ul>` keeps Downshift's `getMenuProps`, so its `id` and the input's `aria-controls` agree. Downshift counts only the input, the toggle and the listbox as inside, and closes on a press anywhere else. The `<ul>` scrolls, not the popup, because Downshift scrolls the highlighted row into view within the menu element and a scroller outside it is never moved.
+
+## What a keystroke writes
+
+Every write to the page re-checks its `:has()` style rules, so a key writes
+only what it changes ([`ui.md`, "The suggestion field writes only what a keystroke changes"](../design-decisions/ui.md#the-suggestion-field-writes-only-what-a-keystroke-changes)):
+
+- **`aria-busy`**, on the box and on the listbox, changes only when a lookup
+  starts or settles, since React writes an attribute only when its value
+  changes.
+- **The list's `width` and `--combobox-list-room`** are set only when they
+  differ from what the list already holds.
+- **The input's `name` is rewritten by React on every key**, and on every
+  render of the box, by React DOM's own input update code. The field cannot
+  stop that while React renders the input, so it is left alone.
+
+`tests/components/Combobox/keystroke.test.tsx` watches the box and the list
+for these writes.
 
 ## The empty message
 
@@ -70,6 +87,14 @@ The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, 
 
 - It shows once the lookup has settled (`pending` false), the text is not blank, the person wants the list open, and there are no rows at all. The typed and action rows count as rows, so a caller wanting the message passes `offerTyped={false}`.
 - It is drawn beneath the listbox, never in it, because it is not an option and a reader must not count it as one. The status reads it; with rows the status keeps its count and no message shows. Downshift still reads the list as closed (`aria-expanded` false).
+
+## The loading row
+
+**The list opens on the key that starts a lookup, not when the answer comes.**
+
+- While a lookup is pending and no suggestion row is shown, the list holds one row: the `Spinner` and "Looking for suggestions" (the `noun`), beneath any typed or action row. It follows the loading standard ([`loading.md`](../loading.md)): the spinner appears after `$loading-delay`, and the listbox carries `aria-busy`.
+- It is not an option. It is an `aria-hidden` `<li>` with no role, so the keys never highlight it and Enter never picks it, and a reader hears it once, from the status. Downshift reads the list as closed while it is the only row (`aria-expanded` false), as with the empty message. Escape closes it alone, and the next Escape is the dialog's.
+- **While the next lookup is pending, the list keeps the last rows**, still pickable, with `aria-busy` on the listbox, until the answer replaces them. A pending answer with rows of its own shows those. A list that was closed keeps nothing, so the next lookup opens on the loading row, never on rows for older text.
 
 ## The action row
 

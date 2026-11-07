@@ -88,7 +88,7 @@
   text-align: start;
   text-decoration: none;
   white-space: nowrap;
-  @include theme-transition(background-color);
+  @include state-fade(background-color);
 
   &:hover,
   &:focus-visible,
@@ -97,10 +97,6 @@
   }
 
   .is-closing & {
-    transition: none;
-  }
-
-  @include reduced-motion {
     transition: none;
   }
 
@@ -113,11 +109,7 @@
 // hover and focus as that button is.
 .menu-button__item--destructive {
   color: $secondary;
-  @include theme-transition(background-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
+  @include state-fade(background-color, color);
 
   &:hover,
   &:focus-visible,

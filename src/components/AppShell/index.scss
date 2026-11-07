@@ -57,7 +57,7 @@
     color: $text-primary;
     text-decoration: none;
     white-space: nowrap;
-    @include theme-transition(background-color, color);
+    @include state-fade(background-color);
 
     &:hover {
       background-color: $fill-quiet;
@@ -70,10 +70,6 @@
 
     &[aria-current='page'] {
       @include nav-current;
-    }
-
-    @include reduced-motion {
-      transition: none;
     }
   }
 }

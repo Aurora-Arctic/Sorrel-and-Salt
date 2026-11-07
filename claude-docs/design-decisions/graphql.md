@@ -314,3 +314,39 @@ MB.81 lands the columns and the table; MB.82 the behaviour. Table first, behavio
 ### v2: suggesting a change to an entry
 
 The public entry page is where a reader notices a correspondence is wrong, so §13's suggestion queue gains a second subject: a proposed change to an existing entry, beside a proposed new one. DESIGN.md §13, "Compendium and category suggestions", specifies it — offered on the entry page to a signed-in account, accepted by a keeper as an ordinary compendium write — and v1 builds only the entry page's shape. Asking a visitor to sign in before suggesting is the one thing the public compendium asks of anyone, and it is what keeps the queue attributable.
+
+## Each GraphQL document ships as its caller's text
+
+**Status:** decided. Live home: `claude-docs/graphql/client-types.md`.
+
+### Decision
+
+1. **Codegen writes each document as a string** (`documentMode: 'string'`), not a parsed syntax tree, so the browser parses nothing at load. The client sends `String(document)` and reads the operation name with `operationNameOf`.
+2. **Callers import `graphql` from `src/lib/graphql-document.ts`**, which returns the text it is given, typed as codegen's generated function. Codegen still finds and types every call, but nothing in the browser imports `src/gql/gql.ts`, the map of every document. `tests/lib/graphql-document.test.ts` asserts that each call's text is the document codegen generated for it.
+3. **There are no shared fragments.** A caller's text must be its whole document, so `ReferenceRow` is written out in each caller.
+4. **No server package reaches the browser.** The page sizes and the cursor codec live in `src/lib/cursor.ts`, which imports neither `@pothos/core` nor `graphql` and encodes with `btoa` and `atob` rather than `Buffer`; `src/lib/pagination.ts` re-exports them. `tests/guards/browser-server-packages.test.ts` walks every file a `'use client'` file imports and fails on a runtime import of either package, or of `src/gql/`.
+
+### Why
+
+The browser downloaded every document in the app with any one of them. On a production build, first-load scripts (gzip) fell from 454.0 KB to 417.1 KB on `/compendium` (documents held: 130 to 31) and from 485.8 KB to 448.8 KB on a coven's ingredients page (130 to 48). Gone from both: `graphql` (13.2 KB), `@pothos/core` (10.6 KB), the generated map and documents (11.8 KB) and Next's `Buffer` polyfill (5.7 KB).
+
+What stays on first load, with `/compendium`'s gzip share:
+
+| Packages                                                                                                                                          | Size    | Why they stay                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `react-dom`, `react`, `scheduler`, `react-server-dom-turbopack`, `react-is`, `prop-types`                                                         | 75.4 KB | The renderer.                                                                                                             |
+| `next`, `@swc/helpers`, `next/compiled/process`                                                                                                   | 58.6 KB | The router and runtime.                                                                                                   |
+| Next's polyfill chunk                                                                                                                             | 39.6 KB | Next's own legacy polyfills, which Next adds to every page. Whether a modern browser skips it was not checked.            |
+| `zod`, `react-hook-form`, `@hookform/resolvers`                                                                                                   | 47.3 KB | The forms: the add-to-coven choice on a card's menu (`IngredientEntry/coven-choice.tsx`) and every `Field`.               |
+| `react-day-picker`, `date-fns`, `@date-fns/tz`                                                                                                    | 20.5 KB | The date field, reached from the search box through `SpellCard/record-working.tsx` and `RecordWorking/form.tsx`.          |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `@dnd-kit/accessibility`                                                              | 13.6 KB | The sortable list field, reached from a card's menu through `StockDialog` and `Combobox/sortable.tsx`.                    |
+| `@tanstack/query-core`, `@tanstack/react-query`                                                                                                   | 11.7 KB | The GraphQL client's cache.                                                                                               |
+| `downshift`, `compute-scroll-into-view`, `@floating-ui/*`                                                                                         | 20.2 KB | The combobox and the popovers.                                                                                            |
+| `better-auth`, `@better-auth/core`, `@better-auth/passkey`, `@better-fetch/fetch`, `@simplewebauthn/browser`, `better-call`, `nanostores`, `defu` | 18.2 KB | The auth client, for the account menu's sign-out and the impersonation banner. It carries every plugin, passkey included. |
+
+An auth client without the passkey and two-factor plugins for the account menu and the banner (about 5 KB) touches sign-in, so it is the owner's decision and is not built.
+
+### Rules out
+
+- **Codegen's Babel compiler plugin under Turbopack.** It runs, but Turbopack keeps every export of `src/gql/graphql.ts` live, so a page still held all 130 documents (about 1% smaller). Two tool facts found on the way: the preset's `exports` map hides its `babel` subpath, so the plugin cannot be named from the package; and `withWorkflow` owns the plain `*.ts` and `*.tsx` `turbopack.rules` keys and adds its own content test, so a rule must use brace keys (`*.{ts,cts}`, `*.{tsx,jsx}`) to reach every file.
+- **A custom codegen plugin emitting one module per document**: a larger task, and the identity function reaches the same split.

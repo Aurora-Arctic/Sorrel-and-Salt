@@ -148,7 +148,8 @@ test('a coven switch takes the old coven away at once, marks the switcher busy, 
   await expect(switcher(page)).toHaveText(WILLOW);
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   await expect(statuses(page)).toHaveCount(1);
-  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  // The address moves at the press, so Back during the wait returns to the page left.
+  expect(new URL(page.url()).pathname).toBe(`/coven/${willow.slug}/ingredients`);
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -173,7 +174,7 @@ test("a section link takes the coven's page away at once and puts one status in 
 
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   await expect(statuses(page)).toHaveCount(1);
-  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/members`);
 
   await server.release();
 
@@ -193,7 +194,7 @@ test("a site link takes the shell's page away at once and puts one status in its
 
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   await expect(statuses(page)).toHaveCount(1);
-  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  expect(new URL(page.url()).pathname).toBe('/compendium');
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -264,7 +265,7 @@ test("a curator nav link keeps the curator page's wait until the server answers,
   await page.waitForTimeout(500);
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
-  expect(new URL(page.url()).pathname).toBe('/curator/categories');
+  expect(new URL(page.url()).pathname).toBe(href);
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -291,7 +292,7 @@ test("a Contents link on the coven home keeps the coven's wait until the server 
   await expect(statuses(page)).toHaveCount(1);
   await expect(contents).toHaveCount(0);
   // That the wait is held for a while, not flashed, is the admin nav test's: the three share one path.
-  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}`);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
 
   await server.release();
 
@@ -313,7 +314,7 @@ test("Create Coven in the switcher keeps the shell's wait until the server answe
   await expect(statuses(page)).toHaveCount(1);
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   // That the wait is held for a while, not flashed, is the admin nav test's: the three share one path.
-  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  expect(new URL(page.url()).pathname).toBe('/coven/new');
 
   await server.release();
 
@@ -413,7 +414,7 @@ test("signed out, the Compendium link takes an entry's page away at once and put
   await expect(page.getByRole('heading', { level: 1, name, exact: true })).toHaveCount(0);
   await expectOneWait(page);
   await expectFrameStanding(page);
-  expect(new URL(page.url()).pathname).toBe(href);
+  expect(new URL(page.url()).pathname).toBe('/compendium');
   await assertNoAccessibilityViolations(page);
 
   await server.release();
@@ -440,7 +441,7 @@ test("signed out, a card takes the Compendium away at once and puts an entry's p
   await expect(compendiumList(page)).toHaveCount(0);
   await expectOneWait(page);
   await expectFrameStanding(page);
-  expect(new URL(page.url()).pathname).toBe('/compendium');
+  expect(new URL(page.url()).pathname).toBe(href);
 
   await server.release();
 

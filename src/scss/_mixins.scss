@@ -4,19 +4,26 @@
 @use 'sass:string';
 @use './variables' as *;
 
-// One pair for every colour fade, so everything reacting to the toggle stays in lockstep.
-@mixin theme-transition($props...) {
+// One transition list for a state change (a hover, a flip, a fade): each property at the long duration
+// and one easing. A theme change has no transition of its own; ThemeToggle cross-fades the page.
+@mixin motion($props...) {
   $transitions: ();
 
   @each $prop in $props {
-    $transitions: list.append(
-      $transitions,
-      #{$prop} $theme-transition-duration $theme-transition-easing,
-      comma
-    );
+    $transitions: list.append($transitions, #{$prop} $motion-long $motion-easing, comma);
   }
 
   transition: $transitions;
+}
+
+// A hover or focus fade of `$props`, set on the element's own rule so it runs into the state and back out; a theme
+// change holds every transition off (globals.scss); snapped under reduced motion.
+@mixin state-fade($props...) {
+  @include motion($props...);
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 @mixin reduced-motion {
@@ -218,12 +225,6 @@
   color: $text-primary;
   border-radius: radius('surface');
   box-shadow: $shadow;
-
-  @include theme-transition(background-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // A wash, a border and a label mixed with body ink to hold 4.5:1 (claude-docs/styling.md, "Category chips").
@@ -282,12 +283,6 @@
   @if $size != regular and $size != compact {
     @error 'Unknown chip size "#{$size}". Expected regular or compact.';
   }
-
-  @include theme-transition(background-color, border-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // Lexend's capitals sit above the centre of the line box by up to 1.3px, so the top gains what the bottom loses. Padding, not
@@ -330,12 +325,6 @@
     color: badge-token($palette, 'fg');
     border: 1px solid badge-token($palette, 'border');
   }
-
-  @include theme-transition(background-color, border-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // The badge mixin sets the default; the card applies medium and small to the badges inside it, on a deeper selector
@@ -372,8 +361,8 @@
   visibility: hidden;
   transform: translateY(2px);
   transition:
-    opacity $fade $theme-transition-easing,
-    transform $fade $theme-transition-easing,
+    opacity $fade $motion-easing,
+    transform $fade $motion-easing,
     visibility 0s linear $fade;
 
   &.is-open {
@@ -391,8 +380,8 @@
   visibility: visible;
   transform: none;
   transition:
-    opacity $fade $theme-transition-easing,
-    transform $fade $theme-transition-easing,
+    opacity $fade $motion-easing,
+    transform $fade $motion-easing,
     visibility 0s;
 
   @include reduced-motion {
@@ -878,7 +867,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   background-color: transparent;
   color: $text-muted;
   cursor: $cursor;
-  @include theme-transition(background-color, color);
+  @include state-fade(background-color, color);
 
   svg {
     width: $glyph;
@@ -921,7 +910,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // `$open` is a selector, ending in `>` for a parent, matched against an ancestor. Drawn only, so a press reaches the control beneath.
 // With `$flip` the caller names the transition.
 @mixin chevron-flip($open, $props...) {
-  @include theme-transition(transform, $props...);
+  @include motion(transform, $props...);
 
   @include reduced-motion {
     transition: none;
@@ -1021,6 +1010,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --notice-button-ink: var(--accent);
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
+  --jar-shade: #{$jar-shade-dark};
+  --jar-shine: #{$jar-shine-dark};
   --moon-lit: #{$moon-lit-dark};
   --moon-shadow: #{$moon-shadow-dark};
   --moon-mare: #{$moon-mare-dark};
@@ -1072,6 +1063,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --last-edit-ink: var(--text-muted);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
+  --jar-shade: #{$jar-shade-light};
+  --jar-shine: #{$jar-shine-light};
   --moon-lit: #{$moon-lit-light};
   --moon-shadow: #{$moon-shadow-light};
   --moon-mare: #{$moon-mare-light};
@@ -1107,7 +1100,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 @mixin icon-link {
   color: $text-primary;
   text-decoration: none;
-  @include theme-transition(color);
+  @include state-fade(color);
 
   svg {
     width: 1em;
@@ -1115,7 +1108,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
     margin-inline-start: space(1);
     vertical-align: -0.125em;
     transform-origin: left center;
-    @include theme-transition(transform);
+    @include motion(transform);
   }
 
   &:hover,

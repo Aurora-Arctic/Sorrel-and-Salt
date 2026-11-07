@@ -22,6 +22,9 @@ const config: CodegenConfig = {
         // run on an unmapped one rather than typing it `any`.
         strictScalars: true,
         scalars: { DateTime: 'string', LocalDate: 'string' },
+        // Each document is its query text alone: the browser downloads it once, and no
+        // parsed copy rides beside it. claude-docs/graphql/client-types.md, "Client types".
+        documentMode: 'string',
         enumsAsTypes: true,
         useTypeImports: true,
       },

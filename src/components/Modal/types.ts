@@ -63,6 +63,8 @@ export interface RouteModalContent {
   /** What it holds, given `done`, the modal's own close, so it fades out before the page goes back. */
   body: (done: () => void) => ReactNode;
   foot?: ReactNode;
+  /** True while part of the window's code is still on its way: the head shows over the loading body, as while its address is. */
+  loading?: boolean;
 }
 
 export interface RouteModalProps {

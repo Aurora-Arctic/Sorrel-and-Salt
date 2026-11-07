@@ -91,7 +91,18 @@ The label colour for anything drawn as a solid fill — the selected chip, the s
 
 ### `$ornament-screen` and `$ornament-multiply`
 
-How `Backdrop`'s grey corner ornaments meet the page: the opacity of its `screen` layer (0.3 on dark, 0 on light) and of its `multiply` layer (0 on dark, 0.4 on light). The image carries the photograph's levelled luminance, so a blend mode keeps its tones the right way round on both themes, where any single tint moved the whole subject one way. Two opacities rather than one blend-mode token, because a blend mode cannot animate and an opacity can: the toggle cross-fades the layers on the same 400ms as every other colour. Decorative, so no contrast table, and `prefers-contrast: more` removes the ornaments entirely ([`components/backdrop.md`](components/backdrop.md)).
+How `Backdrop`'s grey corner ornaments meet the page: the opacity of its `screen` layer (0.3 on dark, 0 on light) and of its `multiply` layer (0 on dark, 0.4 on light). The image carries the photograph's levelled luminance, so a blend mode keeps its tones the right way round on both themes, where any single tint moved the whole subject one way. Two opacities rather than one blend-mode token, because a blend mode cannot animate and an opacity can: the theme swap cross-fades the layers with the rest of the page. Decorative, so no contrast table, and `prefers-contrast: more` removes the ornaments entirely ([`components/backdrop.md`](components/backdrop.md)).
+
+### The faceted jar's bands
+
+`$jar-shade` and `$jar-shine` (`--jar-shade`, `--jar-shine`) are the two bands of a faceted jar in `JarShelf`, which is their only user. Each is a solid colour with one value per theme, taken from the card (`--surface-card`), and the two swap roles between themes.
+
+| Token         | Light                                                                          | Dark                                                                   |
+| ------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `--jar-shade` | iron-gall stirred into the raised parchment at 8%, a step darker than the card | chalk stirred into the raised soot at 8%, a step lighter than the card |
+| `--jar-shine` | the lifted parchment, a step lighter than the card                             | the soot page colour, a step darker than the card                      |
+
+Decorative, so held to no contrast ratio. A row in `tests/scss/tokens.test.ts` asserts that both are set in each theme and sit on the sides of the card given above. ([`components/jar-shelf.md`](components/jar-shelf.md), "Contracts")
 
 ## Category chips
 
@@ -383,7 +394,7 @@ Forced colours (Windows High Contrast) repaint every background to `Canvas`, dro
 Each token and mixin is explained where it is declared; this section says where things live.
 
 - `src/scss/_variables.scss`: the palette, badge tokens, brand colours and `brand-color()`, the font stacks, `$measure`, `$narrow-column`, `$pager-tight-width`, the loading tokens ([`loading.md`](loading.md)), the four scales with their accessors (`type-size()`, `heading-size()`, `space()`, `radius()`), and the sizes with a role of their own. A component `@use`s it directly.
-- `src/scss/_mixins.scss`: the shapes that repeat (`modal-surface`, `chip`, `badge`, `tip-bubble`, the icon-button family in [`components/icon-tip.md`](components/icon-tip.md), `theme-dark` / `theme-light`, `semantic-tokens`, `focus-ring`, `reduced-motion`, `forced-colors`, `loading-motion`, `arrived`, the table mixins and small resets).
+- `src/scss/_mixins.scss`: the shapes that repeat (`modal-surface`, `chip`, `badge`, `tip-bubble`, the icon-button family in [`components/icon-tip.md`](components/icon-tip.md), `theme-dark` / `theme-light`, `semantic-tokens`, `focus-ring`, `motion` (a transition list for a state change), `state-fade` (a hover or focus fade, set on the element's own rule so it runs into and out of the state, and snapped under reduced motion), `reduced-motion`, `forced-colors`, `loading-motion`, `arrived`, the table mixins and small resets).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and `@include`d at exactly one site, `globals.scss`'s `body`: `_typography.scss` (`typography-base`: headings, body copy capped at `$measure`, links, lists, `.eyebrow`, `.meta`, `.binomial`, `.lede`, `.tight-headings`), `_layout.scss` (`layout-base`: bare `section` / `header` structure, `.header` / `.footer`) and `_primitives.scss` (`primitives-base`: the class layer, including `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it).
 - `src/app/fonts.ts`: Cormorant Unicase (500/600/700) and Lexend, self-hosted at build time through `next/font/google`. The CSS variables it defines on `<html>` are what `$font-heading` and `$font-body` reference.
 - `src/app/globals.scss`: the single global stylesheet, imported once by the root layout.

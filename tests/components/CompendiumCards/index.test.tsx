@@ -5,10 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumCards from '@/components/CompendiumCards';
 import type { CompendiumCardEntry, CompendiumCardsProps } from '@/components/CompendiumCards/types';
-import type {
-  CompendiumFacetCounts,
-  CompendiumListFilter,
-} from '@/components/CompendiumList/types';
+import type { CompendiumListFilter } from '@/components/CompendiumList/types';
+import type { CompendiumFacets } from '@/modules/ingredients';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm, sent } from '../../support/filter-form';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
@@ -46,16 +44,17 @@ const NO_FILTER: CompendiumListFilter = {
   covensNot: false,
 };
 
-const FACETS: CompendiumFacetCounts = {
+const COUNTS: CompendiumFacets = {
   forms: [],
   deities: [],
   categories: [],
-  zodiac: [],
+  zodiacSigns: [],
   celestialBodies: [],
   elements: [],
   toxic: [],
   withoutReferences: 4,
   withoutForms: 0,
+  reviewed: null,
 };
 
 const entry = (
@@ -90,7 +89,7 @@ const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const props = (over: Partial<CompendiumCardsProps> = {}): CompendiumCardsProps => ({
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: FACETS,
+  counts: COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

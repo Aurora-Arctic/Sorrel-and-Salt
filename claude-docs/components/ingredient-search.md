@@ -46,9 +46,11 @@ Every caller uses only the table's four functions:
 
 There is no `nomenclature` entry: the compendium search does not filter by classification. The GraphQL query and the service still accept the argument, and a `?nomenclature=` left in an old link is ignored.
 
-**One variables string reads the list and its counts.** The page builds `JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups))` once, with `lookups = { categories, deities }`, and gives that same string to the cached list read and the cached facet read (`compendiumFacets`), so the counts beside each facet value are taken under exactly the filter the list is under. `compendiumFacetCounts` (`CompendiumList/facets.ts`) turns the counts, keyed by id for deities and categories and by text for the rest, into the props the filter draws. It drops an id the vocabulary no longer holds, and sorts forms, deities and categories by count, highest first, then label.
+**One variables string reads the list and its counts.** The page builds `JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups))` once, with `lookups = { categories, deities }`, and gives that same string to the cached list read and the cached facet read (`compendiumFacets`), so the counts beside each facet value are taken under exactly the filter the list is under. The page sends those counts as the service returns them, keyed by id for deities and categories and by text for the rest, so each category and deity name reaches the browser once, in the `categories` and `vocabulary` props. In the browser, `facetChoices` (`CompendiumList/facets.ts`) turns them, through `compendiumFacetCounts` or a coven's `covenFacetCounts`, into the choices the filter draws. It drops an id the vocabulary no longer holds, and sorts forms, deities and categories by count, highest first, then label.
 
 **The cursor rule.** A cursor names a place in one filter's results, so it belongs to the filter it was read under. Any change to the filter opens the first page: the filter's controls build their address from `filter` alone, never from the cursor, and `changed` drops `after` and `before`. Only the pager and a modal's way back write a cursor, through `extra`. Reload and Back need nothing built for them: the address is the state, so a reload reads it again and Back steps through the filters one change at a time. `tests/e2e/admin-compendium.spec.ts` asserts both.
+
+**What the page sends for each card.** Each result card reaches React's data as its props, not as drawn markup, with its safety notes only as a stand-in and its categories by id ([`ingredient-card.md`](ingredient-card.md), "What the page sends").
 
 ## The search sentence
 
@@ -96,6 +98,12 @@ Under `$narrow-column` (the filter row's container width) the row is two lines a
 ## Scroll margin
 
 A focus or a jump that scrolls a control into view lands it below the stuck row, not under it. The root's `scroll-padding-top` is the bar, the row's own height, and a step of air; the root is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The first `space(2)` is the gap under the row, a margin when the tray is shut and padding when it is open, so a jump lands in the same place either way. Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one more control height plus `space(3)`. That query is the container query's width on the window: the column (`$narrow-column`) plus the page's two gutters.
+
+## Low-priority suggestions
+
+The box shows each keystroke at once. The dropdown's rows go through `useDeferredValue`, so React draws them after the box on a slow device, and the dropdown shows its pending state until they have caught up. Clear, Next Page and Previous Page already navigate in a transition, so their lists draw at low priority too.
+
+A keystroke makes no change in the card list, so the list is not deferred. The cost per key is browser style, layout and paint, the dropdown and React's own work. Two selectors are candidates for the style and layout cost and neither has been tried: `html:has(... .ingredient-search)` (the scroll margin) and the dropdown's `position: fixed` list changing size per key. Measure with a rule removed before changing either.
 
 ## Testing
 

@@ -3,6 +3,8 @@
 import {
   autoUpdate,
   flip,
+  type Middleware,
+  type MiddlewareState,
   offset,
   type Placement,
   shift,
@@ -16,12 +18,26 @@ import { useEffect, useState } from 'react';
 
 const EDGE_PX = 8;
 
-const edges = () => ({
+/** The bar at the foot, measured once per placing by the first middleware and read by the three after it. */
+const BAR = 'bottomBar';
+const measureBar: Middleware = {
+  name: BAR,
+  // A placing that restarts keeps its data, so the bar is not measured again.
+  fn: ({ middlewareData }) => (middlewareData[BAR] ? {} : { data: { px: bottomBarPx() } }),
+};
+
+const edges = ({ middlewareData }: MiddlewareState) => ({
   top: EDGE_PX,
   left: EDGE_PX,
   right: EDGE_PX,
-  bottom: EDGE_PX + bottomBarPx(),
+  bottom: EDGE_PX + ((middlewareData[BAR] as { px: number } | undefined)?.px ?? 0),
 });
+
+/** Sets an inline style only when it differs, since every write re-checks the page's `:has()` rules. */
+function setStyle(element: HTMLElement, property: string, value: string): void {
+  if (element.style.getPropertyValue(property) !== value)
+    element.style.setProperty(property, value);
+}
 
 /** Room the phone's fixed bottom bar takes from the foot of the window, or 0; measured because its height includes the device's safe area (claude-docs/components/combobox.md, "Bottom bar room"). */
 function bottomBarPx(): number {
@@ -51,12 +67,14 @@ export function useListPosition(
     placement: preferred,
     strategy: 'fixed',
     middleware: [
+      measureBar,
       offset(gap),
-      // A function, so the bar is measured at every placement; a list that would open behind it flips above.
-      flip(() => ({ padding: edges() })),
+      // A function, so the bar is read at every placement; a list that would open behind it flips above.
+      flip((state) => ({ padding: edges(state) })),
       // Never held further in than the anchor itself stands, so a control closer than the edge to the window's side has its list line up with it.
-      shift(({ rects }) => {
-        const { left, right, ...rest } = edges();
+      shift((state) => {
+        const { rects } = state;
+        const { left, right, ...rest } = edges(state);
         return {
           padding: {
             ...rest,
@@ -68,12 +86,12 @@ export function useListPosition(
           },
         };
       }),
-      size(() => ({
-        padding: edges(),
+      size((state) => ({
+        padding: edges(state),
         // As wide as the anchor unless told not to be, no taller than the room it has.
         apply({ rects, availableHeight, elements: { floating } }) {
-          if (matchWidth) floating.style.width = `${rects.reference.width}px`;
-          floating.style.setProperty('--combobox-list-room', `${Math.max(0, availableHeight)}px`);
+          if (matchWidth) setStyle(floating, 'width', `${rects.reference.width}px`);
+          setStyle(floating, '--combobox-list-room', `${Math.max(0, availableHeight)}px`);
         },
       })),
     ],

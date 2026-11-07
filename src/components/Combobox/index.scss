@@ -340,6 +340,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   padding: space(2) space(3);
 }
 
+// Not an option, so drawn as the empty message is, with the spinner ahead of its words.
+.combobox__loading {
+  display: flex;
+  gap: space(2);
+  align-items: center;
+  padding: space(2) space(3);
+  color: $text-muted;
+}
+
 .combobox__group,
 .combobox__option {
   margin: 0;
@@ -719,10 +728,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
   min-width: 0;
   border-radius: radius('sharp');
-  @include theme-transition(color);
+  @include state-fade(color);
 
   .combobox__entry-mark {
     color: $accent;
+    @include state-fade(color);
   }
 
   &:hover,

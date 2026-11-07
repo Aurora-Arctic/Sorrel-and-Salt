@@ -1,4 +1,4 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import type { Resolver } from 'react-hook-form';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { z } from 'zod';
@@ -73,9 +73,9 @@ export type GroupedValueParsed = Pick<GroupedValueValues, 'name' | 'description'
 export interface GroupedValueKindSpec<Input extends object> extends GroupedValueCopy {
   schema: z.ZodType<GroupedValueParsed, GroupedValueParsed>;
   toInput: (values: GroupedValueValues) => Input;
-  create: TypedDocumentNode<unknown, { input: Input }>;
-  update: TypedDocumentNode<unknown, { id: string; input: Input }>;
-  remove: TypedDocumentNode<unknown, { id: string }>;
+  create: DocumentTypeDecoration<unknown, { input: Input }>;
+  update: DocumentTypeDecoration<unknown, { id: string; input: Input }>;
+  remove: DocumentTypeDecoration<unknown, { id: string }>;
 }
 
 export interface GroupedValueFormKind extends GroupedValueCopy {

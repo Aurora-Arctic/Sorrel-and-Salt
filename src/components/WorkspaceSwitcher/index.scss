@@ -22,10 +22,7 @@ $switcher-min-width: 12rem;
     border-color: $hairline;
     background-color: transparent;
     cursor: pointer;
-    @include theme-transition(background-color, border-color);
-    @include reduced-motion {
-      transition: none;
-    }
+    @include state-fade(background-color);
 
     &:hover {
       border-color: $hairline;

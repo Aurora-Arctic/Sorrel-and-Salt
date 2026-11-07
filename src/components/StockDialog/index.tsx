@@ -2,7 +2,7 @@
 
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { FormProvider, useFieldArray, useForm, useFormContext, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';

@@ -14,7 +14,6 @@ import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
 import { single } from '../../../../lib/search-params';
 import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
-import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumListEntry,
   CompendiumListFilter,
@@ -82,11 +81,6 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
     entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
   ]);
-  const facets = compendiumFacetCounts(counts, {
-    formIcons,
-    deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
-    categories: new Map(categories.map((category) => [category.id, category])),
-  });
   const list = { ...filter, after, before };
   const here = { ...list, entry: shown ? entrySlug : undefined };
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
@@ -152,7 +146,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <CompendiumList
         entries={entries}
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories}
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}

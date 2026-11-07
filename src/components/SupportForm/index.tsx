@@ -2,7 +2,7 @@
 
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
