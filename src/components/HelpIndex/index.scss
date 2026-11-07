@@ -30,6 +30,8 @@
     padding: 0;
     list-style: none;
     font-size: type-size('small');
+    // A link's own spacing, so the skeleton's unlinked titles take the links' widths.
+    letter-spacing: 0.02em;
   }
 
   &__guides {

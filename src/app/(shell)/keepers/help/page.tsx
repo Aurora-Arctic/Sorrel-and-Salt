@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { ADMIN_PAGES } from '../../../../components/AdminNav/sections';
 import HelpList from '../../../../components/HelpList';
 import type { HelpListEntry } from '../../../../components/HelpList/types';
-import TabbedPage from '../../../../components/TabbedPage';
+import PageHeader from '../../../../components/PageHeader';
 import { listHref, pagerHrefs } from '../../../../lib/list-href';
 import { allPages, resolvePage } from '../../../../lib/pagination';
 import { readPageCursors } from '../../../../lib/numbered-page';
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: 'Help',
 };
 
-const { label, tabs } = ADMIN_PAGES.help;
+const { label } = ADMIN_PAGES.help;
 const PATH = '/keepers/help';
 
 // Every row once, so the parent choices and an edit lookup reach rows off the shown page. A keeper writes few of them.
@@ -63,18 +63,19 @@ export default async function KeepersHelpPage({
   const closeHref = listHref(PATH, here);
 
   return (
-    <TabbedPage
-      title={label}
-      tabs={tabs}
-      action={
-        <AddAction
-          href={listHref(PATH, { ...here, new: true })}
-          heading={{ title: 'Add Help Article' }}
-        >
-          Add Help Article
-        </AddAction>
-      }
-    >
+    // One tab, so a plain heading, as its skeleton draws it (AdminPageSkeleton).
+    <main>
+      <PageHeader
+        title={label}
+        action={
+          <AddAction
+            href={listHref(PATH, { ...here, new: true })}
+            heading={{ title: 'Add Help Article' }}
+          >
+            Add Help Article
+          </AddAction>
+        }
+      />
       <HelpList
         articles={articles}
         {...pagerHrefs(page.pageInfo, (cursor) => listHref(PATH, cursor))}
@@ -101,6 +102,6 @@ export default async function KeepersHelpPage({
               }
         }
       />
-    </TabbedPage>
+    </main>
   );
 }
