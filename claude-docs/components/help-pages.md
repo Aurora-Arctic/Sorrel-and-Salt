@@ -39,6 +39,17 @@ Every help page but the front page (`/help`, and the staff index, whose h1 is St
 - **The index lists the glossary among the guides**, as a described item ("The words Sorrel & Salt uses, and what each one means."), so the Guides section is always drawn. The FAQ is open text with no accordion, and the glossary has no A–Z bar.
 - **Search results** open with a count ("7 results for “steward”", an `output`), then each result under a label of its kind (Question, Guide or Term) and, for a row whose audience is not `public`, "Staff"; the staff search is the only one that returns such rows. A query that finds nothing says so and links the guides and the glossary; an empty query draws neither results nor links.
 
+## Glossary marks
+
+A body marks a glossary term as `[[Term]]`, or `[[Term|shown text]]` to show other words. The part before the bar matches a term row's title in any case, or its slug through `slugify`. Nothing is matched without a mark.
+
+- **Where they render.** `renderMarkdown` takes the terms as its last argument and the help views pass them (`HelpArticleView`, `HelpIndex`, `HelpGlossary`), so the site documents, which pass none, are unchanged. The terms come from the cached public glossary read (tag `help`, `readGlossaryTerms` in `src/lib/help-glossary.ts`), once per page, never per mark. Staff pages read the same public terms.
+- **What a mark becomes.** A [HelpTerm](help-term.md): a link to `/help/glossary#<slug>` with a tooltip of the term's title and its definition as plain text. A mark naming no row shows its shown text and no link.
+- **Where they do not.** A heading, a link and a code span or block hold no mark: in a heading or link the shown text is plain, and in code the mark stays as typed so the syntax can be written down. The body preview in `HelpArticleForm` passes no terms and shows marks as typed.
+- **The glossary page** links a mark in a definition to its anchor with no tooltip, since every definition is on the page.
+- **Summaries** (search results, index and sub page lists, the page description) show the shown text as plain text.
+- **Saving.** `createHelpArticle` and `updateHelpArticle` refuse a body that marks a term no live glossary row holds, as a `ValidationError` on `body` naming each missing term; an update that leaves the body alone is not checked. A term being saved counts as present in its own body. The seed test asserts every mark in the shipped prose names a seeded term.
+
 ## Links to help
 
 `Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.

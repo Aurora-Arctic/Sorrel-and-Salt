@@ -3454,6 +3454,10 @@ public pages (M17.16), not before.
 | M17.16 — The Public Help Pages, the Glossary and Sub Pages | `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`; after M17.14          |
 | M17.17 — Seed the Help Articles and the Glossary           | The `help` seed target and the terms; after M17.13                                        |
 
+### Glossary marks
+
+A writer marks a term in Markdown; nothing is matched by itself, so a common word is never linked by accident. The mark is `[[Term]]` or `[[Term|shown text]]`, matched to a term row by title in any case or by slug. A mark is drawn as a link to the glossary anchor with a tooltip, so the link works without script and a touch reader still reaches the definition. The definitions come from the cached public finder with the rest of the page, not one read per term. A save that marks a term with no row is refused, so a dead mark cannot be published; a term deleted later leaves its marks showing as plain text. The cost is that a Keeper adds a term before the prose that marks it.
+
 ### What it rules out
 
 - Help text kept in the repository, for the reasons above.
