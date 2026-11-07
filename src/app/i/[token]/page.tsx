@@ -24,15 +24,17 @@ export default async function CardPage({ params }: InvitePageProps) {
   return (
     <main className="page-frame page-frame--narrow">
       {card && (
-        <section className="panel" aria-labelledby="card-welcome">
-          <h2 id="card-welcome">Welcome to {WORDMARK}</h2>
-          <p>{LEDE}</p>
-          <p>
-            This card gives you an account and the right to start a coven of your own. Once
-            you&apos;re in, invite whoever you like.
-          </p>
+        <section className="panel card-welcome" aria-labelledby="card-welcome">
+          <div className="card-welcome__part">
+            <h2 id="card-welcome">Welcome to {WORDMARK}</h2>
+            <p>{LEDE}</p>
+            <p>
+              This card gives you an account and the right to start a coven of your own. Once
+              you&apos;re in, invite whoever you like.
+            </p>
+          </div>
           {card.beta && (
-            <>
+            <div className="card-welcome__part">
               <h2>You&apos;re a Beta Tester</h2>
               <p>
                 {WORDMARK} is still being built. Explore it, and tell us about anything that goes
@@ -42,7 +44,7 @@ export default async function CardPage({ params }: InvitePageProps) {
                 When {WORDMARK} starts charging, the first coven you start gets three months free.
                 Everyone else gets one.
               </p>
-            </>
+            </div>
           )}
         </section>
       )}

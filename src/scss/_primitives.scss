@@ -1296,6 +1296,21 @@
     gap: space(4);
   }
 
+  // The invitation card's welcome panel: each heading with its paragraphs is one part, its children one
+  // gap apart and no margin of their own, and the parts stand a wider step apart, so a heading sits
+  // nearer the text it opens than the text before it.
+  .card-welcome {
+    gap: space(6);
+  }
+
+  .card-welcome__part {
+    @include stack(3);
+
+    > * {
+      margin-block: 0;
+    }
+  }
+
   .form {
     display: flex;
     flex-direction: column;
