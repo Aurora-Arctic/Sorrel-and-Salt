@@ -10,10 +10,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The intent-against-ingredients panel: both gaps, named
-// apart, and the ingredient with no reason to be in the jar singled out in
-// words. The panel is drawn from what the builder holds now, saved or not.
-
 const cat = (name: string) => ({ id: `c-${name}`, name });
 
 function step(name: string, categories: string[], extra: Partial<SpellStepValue> = {}) {
@@ -44,7 +40,6 @@ const groups = new Map(
 );
 
 const panel = () => screen.getByRole('region', { name: 'Category Match' });
-/** The chips on one of the three rows (Carried, Missing, Extra), or null if the row is left out. */
 const row = (label: 'Carried' | 'Missing' | 'Extra') => {
   const term = within(panel()).queryByText(label, { selector: 'dt' });
   return term ? (term.nextElementSibling as HTMLElement) : null;
@@ -285,7 +280,6 @@ describe('the panel in the builder', () => {
         />
       </QueryClientProvider>,
     );
-    // A saved spell opens with its sections shut; the panel is in the Jar's.
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     await waitFor(() =>
       expect(

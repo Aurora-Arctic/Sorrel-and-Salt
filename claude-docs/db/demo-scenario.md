@@ -28,7 +28,7 @@ W's own entries list their forms as `variants`, as the compendium's do, written 
 
 After `seedStandardContent`, in the same transaction, `demo` calls `seedCompendiumContent(tx, COMPENDIUM)`, so a person exploring finds every curated entry and its sources beside standard's fixture entries. The fixture entries go in first and keep their rows; a curated entry of the same identity, name or slug is skipped as present. `assertCompendiumValid` runs before the transaction opens, so an invalid literal writes nothing. `standard` stays without it: it is the test fixture cast. The layers name fixture entries by tier and identity, so the extra entries make none ambiguous.
 
-`demo` passes `restoreDeletedDeityPicks: false` to `seedStandardContent`, so the one row a reseed of `standard` puts back, a compendium deity pick a keeper deleted, stays deleted here (["A reseed of standard puts a deity pick back; demo does not"](standard-scenario.md)).
+`demo` passes `restoreDeletedDeityPicks: false` to `seedStandardContent`, so the one row a reseed of `standard` puts back, a compendium deity pick a keeper deleted, stays deleted here ((standard-scenario.md, "A reseed of `standard` puts a deity pick back; `demo` does not")).
 
 ### W's cupboard, own entries and stock
 

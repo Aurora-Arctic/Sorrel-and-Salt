@@ -18,7 +18,6 @@ import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-// The address as the browser has it, which New Spell's press writes without a server read.
 const address = vi.hoisted(() => ({ search: '' }));
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
@@ -27,8 +26,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: SpellDialog } = await import('@/components/SpellBuilder/spell-dialog');
 
-// The spell builder as a modal over the grimoire (claude-docs/design-decisions/m10.12-spell-builder-modal.md): `?new=spell` opens it empty, its first save swaps the address for `?edit=<id>`, and Close saves what is unsaved with no question.
-// A saved spell's steps are read once it opens and nothing is sent before they land. MSW answers the reads and saves in /api/graphql's shape.
+// claude-docs/design-decisions/m10.12-spell-builder-modal.md
 
 const CLOSE = '/coven/fixture-coven/grimoire' as Route;
 const editHref = (id: string) => `/coven/fixture-coven/grimoire?edit=${id}` as Route;
@@ -47,7 +45,6 @@ const SAVED = {
   steps: [],
 };
 
-/** A saved step, as the dialog's read of a saved spell's steps answers it. */
 const ROSEWORT_STEP: SpellBuilderStep = {
   id: '00000000-0000-4000-8000-000000000008',
   name: 'Fixture Rosewort',
@@ -71,7 +68,6 @@ const ROSEWORT_STEP: SpellBuilderStep = {
   },
 };
 
-/** `ROSEWORT_STEP` as an update sends it back. */
 const ROSEWORT_SENT = {
   id: ROSEWORT_STEP.id,
   ingredientId: ROSEWORT_STEP.ingredient?.id,
@@ -80,7 +76,6 @@ const ROSEWORT_SENT = {
   unit: 'g',
 };
 
-/** Answers the read of a saved spell's steps with `steps`, once `landed` settles. */
 function answerSteps(steps: SpellBuilderStep[] = [], landed?: Promise<void>) {
   const reads: SpellBuilderStepsQueryVariables[] = [];
   server.use(
@@ -116,12 +111,9 @@ const field = (name: string) => within(dialog()).getByRole('textbox', { name });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const save = () => within(dialog()).getByRole('button', { name: /^Sav/ });
 const close = () => within(dialog()).getByRole('button', { name: 'Close' });
-// A saved spell opens with its sections shut, as an edited ingredient does: Open All shows its fields.
 const openAll = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Open All' }));
-/** The jar's list of steps, drawn once a saved spell's steps have landed. */
 const stepsLanded = () => within(dialog()).findByRole('list', { name: 'Steps' });
 
-/** The spell as the server answers a save: every field as sent, at `revision`. */
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
   return {
     id,
@@ -180,8 +172,6 @@ describe('SpellDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  // Headed as Add Ingredient is: the coven it lands in over the title, the dialog named
-  // by the phrase.
   it('opens New Spell to its coven, with the builder empty', () => {
     renderDialog({});
 
@@ -244,7 +234,6 @@ describe('SpellDialog', () => {
     renderDialog({ spell: SAVED });
     openAll();
 
-    // Until they land the jar shows its loading state, and there is nothing to save.
     expect(within(dialog()).getByRole('region', { name: 'Steps' })).toHaveAttribute(
       'aria-busy',
       'true',
@@ -277,7 +266,6 @@ describe('SpellDialog', () => {
 
     land();
     await stepsLanded();
-    // The change typed while they loaded is kept, and now saves with them.
     expect(field('Intent')).toHaveValue('Calmer');
     fireEvent.click(save());
     await waitFor(() => expect(updated).toHaveLength(1));
@@ -303,7 +291,6 @@ describe('SpellDialog', () => {
     );
     // Replaced, not pushed: Back goes to the grimoire, not to an empty New Spell.
     expect(router.push).not.toHaveBeenCalled();
-    // The same form, not a fresh one: what was typed stays.
     expect(field('Title')).toHaveValue('Fixture Working');
   });
 
@@ -438,7 +425,6 @@ describe('SpellDialog', () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
       openAll();
-      // A change, so Close has something it would save, and a save would be refused.
       type('Intent', 'Calmer');
 
       expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();

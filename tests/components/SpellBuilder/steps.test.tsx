@@ -21,7 +21,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's Add to Jar: the ingredient picker, a one-off ingredient, each step's quantity and unit, and Remove. MSW answers the picker in /api/graphql's shape.
 // That a save writes ingredient and form ids and never a cupboard entry, and who may save one, is tests/modules/grimoire/services/spell-ingredient-steps.test.ts's.
 
 type Edge = SpellIngredientSuggestionsQuery['ingredientSuggestions']['edges'][number];
@@ -44,19 +43,15 @@ interface FormSpec {
   form: string;
   icon?: FormGroupIcon | null;
   categories?: string[];
-  /** The unit of the coven's jar of this form; left out, the coven holds none. */
   jar?: Unit;
-  /** How much that jar holds, and its low-stock threshold; left out, it is held unweighed. */
   held?: number | null;
   threshold?: number | null;
-  /** This form's own flag and notes. */
   toxic?: boolean;
   safetyNotes?: string;
 }
 
 const category = (name: string) => ({ id: `c-${name}`, name });
 
-/** One ingredient as the suggestions answer it, in `group`. */
 function suggestion(
   group: 'yours' | 'compendium',
   id: string,
@@ -121,7 +116,6 @@ function suggest(...edges: Edge[]) {
   }));
 }
 
-/** The spell a save answers: the fields as sent, and steps as `steps`. */
 function answer(id: string, revision: number, steps: SpellBuilderSpell['steps'] = []) {
   return {
     id,
@@ -167,7 +161,6 @@ function renderBuilder(
   props: Partial<SpellBuilderProps> = {},
   categories: Parameters<typeof offerCategories>[0] = [],
 ) {
-  // The builder reads the coven's categories as it opens.
   offerCategories(categories);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -184,30 +177,25 @@ const stepRow = (text: string) => {
   if (!row) throw new Error(`No step reads ${text}`);
   return row;
 };
-/** Opens a closed step's fields with its pencil: one row is open at a time. */
 const openRow = (name: string) =>
   fireEvent.click(screen.getByRole('button', { name: `Edit ${name}`, expanded: false }));
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
-/** Types into the picker and waits for `option` to be offered. */
 async function lookUp(text: string, option: string | RegExp): Promise<HTMLElement> {
   act(() => search().focus());
   fireEvent.change(search(), { target: { value: text } });
   return screen.findByRole('option', { name: option });
 }
 
-/** Picks `option` from the picker for `text`: Add to Jar. */
 async function add(text: string, option: string | RegExp): Promise<void> {
   fireEvent.click(await lookUp(text, option));
 }
 
-/** Types a name into the box and picks its first row: a one-off ingredient. */
 async function addOneOff(name: string): Promise<void> {
   await add(name, `Add "${name}" as a one-off ingredient`);
 }
 
-/** Chooses `unit` from a step row's Unit list. */
 function chooseUnit(row: HTMLElement, unit: string): void {
   fireEvent.click(within(row).getByRole('combobox', { name: /^Unit/ }));
   fireEvent.click(
@@ -217,7 +205,6 @@ function chooseUnit(row: HTMLElement, unit: string): void {
   );
 }
 
-/** The markup a row's icon draws, to tell which group's icon it is. */
 const iconOf = (row: HTMLElement) => row.querySelector('svg.form-icon')?.innerHTML;
 const drawn = (name: FormGroupIcon | null) => {
   const { container, unmount } = render(<FormIcon name={name} />);
@@ -253,7 +240,6 @@ describe('the spell builder’s Add to Jar', () => {
 
     await lookUp('Fixture', /Fixture Twinwort \(Seed\)/);
 
-    // The one-off row stands first, the row nearest the box the list opens beneath.
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'Add "Fixture" as a one-off ingredient',
       expect.stringContaining('Fixture Twinwort (Leaf)'),
@@ -443,7 +429,6 @@ describe('the spell builder’s Add to Jar', () => {
     const quantity = () =>
       within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
     fireEvent.change(quantity(), { target: { value: '7' } });
-    // The row is open after typing, and Remove shows only on a closed row.
     fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort (Dried Leaf)' }));
     fireEvent.click(
       within(stepRow('Fixture Rosewort')).getByRole('button', {
@@ -477,7 +462,6 @@ describe('the spell builder’s Add to Jar', () => {
     await add('Fixture', /Fixture Mockroot/);
     const pencil = () =>
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ });
-    // The second add opened Mockroot and closed Rosewort.
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(
@@ -528,7 +512,6 @@ describe('the spell builder’s Add to Jar', () => {
     for (const label of row.querySelectorAll('label, p, section')) {
       if (label.closest('.step-row__open')) fireEvent.click(label);
     }
-    // The row's blank gaps and its marks are not the header text either.
     fireEvent.click(row);
     open();
     fireEvent.click(within(row).getByText(/Fixture Rosewort/, { selector: 'p' }));
@@ -571,13 +554,11 @@ describe('the spell builder’s Add to Jar', () => {
     const row = stepRow('Fixture Rosewort');
     const unit = within(row).getByRole('combobox', { name: /^Unit/ });
 
-    // The jar is weighed: a volume cannot be taken from it.
     chooseUnit(row, 'ml');
     await waitFor(() => expect(unit).toHaveAttribute('aria-invalid', 'true'));
     expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT);
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    // Another weight converts.
     chooseUnit(row, 'kg');
     await waitFor(() => expect(unit).not.toHaveAttribute('aria-invalid', 'true'));
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
@@ -592,7 +573,6 @@ describe('the spell builder’s Add to Jar', () => {
 
     expect(rosewort).toHaveTextContent('Calm');
     expect(rosewort).not.toHaveTextContent('Love');
-    // Two categories at the row's cap of one: the first shows, the other folds into the +1.
     expect(mockroot).toHaveTextContent('Love+1');
     fireEvent.click(within(mockroot).getByRole('button', { name: /1 more category/ }));
     expect(mockroot).toHaveTextContent('Protection');
@@ -605,11 +585,9 @@ describe('the spell builder’s Add to Jar', () => {
     await add('Fixture', /Fixture Rosewort/);
     const unit = (name: string) => within(stepRow(name)).getByRole('combobox', { name: /^Unit/ });
     expect(unit('Fixture Rosewort')).toHaveTextContent('g');
-    // The member can still change it.
     chooseUnit(stepRow('Fixture Rosewort'), 'kg');
     expect(unit('Fixture Rosewort')).toHaveTextContent('kg');
 
-    // A form with no jar starts blank; adding it closes the first row.
     await add('Fixture', /Fixture Mockroot/);
     expect(unit('Fixture Mockroot')).not.toHaveTextContent(/\b(g|kg|ml)\b/);
   });
@@ -670,7 +648,6 @@ describe('the spell builder’s Add to Jar', () => {
         ],
       },
     });
-    // A saved spell opens shut: the Jar's line counts the ingredients laid.
     const jar = screen.getByRole('button', { name: 'Jar' });
     expect(jar).toHaveAttribute('aria-expanded', 'false');
     expect(jar).toHaveAccessibleDescription('2 ingredients');
@@ -715,9 +692,7 @@ describe('the spell builder’s Add to Jar', () => {
   });
 });
 
-// A warning on an ingredient that is toxic or needs care. The
-// mark and the note are SafetyNote's own (tests/components/SafetyNote); this is
-// only that the builder draws them for the right steps, and never blocks a save.
+// The mark and the note are SafetyNote's own (tests/components/SafetyNote); this is only that the builder draws them for the right steps, and never blocks a save.
 describe('the spell builder’s safety warning', () => {
   const TOXWORT = suggestion(
     'compendium',
@@ -895,14 +870,12 @@ describe('the spell builder’s jar fill colours', () => {
     expect(chip).toHaveClass('chip');
     expect(chip.style.getPropertyValue('--chip-dark')).toBe('#50a58e');
     expect(chip.style.getPropertyValue('--chip-light')).toBe('#1d755d');
-    // Protection folds into the +1 beside Love; its panel carries the words.
     expect(within(mockroot).getByText('Love')).toHaveClass('chip');
     expect(mockroot).toHaveTextContent('Love+1');
   });
 
   it('draws a layer in the one group colour of its first category, and a layer with no known group in the muted ink', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    // Rosewort carries Calm then Love; Mockroot carries Protection, which has no known group, then Love.
     renderBuilder({}, [
       node('Love', group('Love', '#cf6e87', '#a44c63')),
       node('Calm', group('Calm', '#50a58e', '#1d755d')),
@@ -912,7 +885,6 @@ describe('the spell builder’s jar fill colours', () => {
 
     await waitFor(() => expect(fills()).toHaveLength(2));
     const [mockroot, rosewort] = fills();
-    // One colour each: Mockroot skips Protection for Love, and Rosewort takes its first, which is Love.
     expect(mockroot.style.getPropertyValue('--band-light')).toBe('#a44c63');
     expect(rosewort.style.getPropertyValue('--band-light')).toBe('#a44c63');
     await addOneOff('Testwort');
@@ -986,7 +958,6 @@ describe('the spell builder’s open and closed steps', () => {
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '3' },
     });
-    // Inside the row is not outside it.
     fireEvent.pointerDown(within(row).getByRole('spinbutton', { name: /^Quantity/ }));
     expect(
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
@@ -1053,7 +1024,6 @@ describe('the spell builder’s open and closed steps', () => {
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
     ).toHaveAttribute('aria-expanded', 'true');
 
-    // The box is where the next ingredient is typed: still inside.
     fireEvent.click(search());
     act(() => search().focus());
     expect(
@@ -1071,7 +1041,6 @@ describe('the spell builder’s Add to Jar categories', () => {
   const group = { id: 'g-all', name: 'All', colorDark: '#50a58e', colorLight: '#1d755d' };
   const offered = (...names: string[]) =>
     names.map((name) => ({ ...category(name), description: null, group })) as never;
-  // A saved spell opens with its empty sections folded; the picker is in the Jar's.
   const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   const assigned = (...names: string[]) => ({
     ...answer('s3', 1),
@@ -1099,12 +1068,10 @@ describe('the spell builder’s Add to Jar categories', () => {
     const many = await lookUp('Fixture', /Fixture Manywort/);
     const one = screen.getByRole('option', { name: /Fixture Onewort/ });
 
-    // The same CategoryMore button the cards have, not a hand-rolled chip.
     const more = within(many).getByRole('button', { name: /4 more categories/ });
     expect(more).toHaveTextContent('+4');
     expect(more).not.toHaveAttribute('title');
     expect(more).toHaveAttribute('aria-expanded', 'false');
-    // A click pins its panel open with the folded names, and does not pick the row.
     fireEvent.click(more);
     expect(more).toHaveAttribute('aria-expanded', 'true');
     const panel = within(many).getByRole('group', { name: /More categories/ });
@@ -1125,8 +1092,6 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
-    // Nothing in the jar carries Ember or Bind yet, so both are Missing and lead, in the row's
-    // order; Aid and Calm are not the spell's, and Dawn folds into the +N.
     expect(many).toHaveTextContent('Bind+4');
     fireEvent.click(within(many).getByRole('button', { name: /4 more categories/ }));
     expect(within(many).getByRole('group', { name: /More categories/ })).toHaveTextContent(
@@ -1171,7 +1136,6 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
-    // The jar carries Ember, so Bind is the one still Missing: Bind, then Carried Ember, then the rest.
     expect(many).toHaveTextContent('Bind+4');
     fireEvent.click(within(many).getByRole('button', { name: /4 more categories/ }));
     expect(within(many).getByRole('group', { name: /More categories/ })).toHaveTextContent(
@@ -1208,7 +1172,6 @@ describe('the spell builder’s Add to Jar categories', () => {
     // Why it could have been marked: Mockroot is a form too, and no step lays it.
     expect(mockroot).not.toHaveAccessibleName(/In Jar/);
     expect(within(mockroot).queryByText('In Jar')).toBeNull();
-    // Information only: a repeat is allowed.
     expect(rosewort).not.toHaveAttribute('aria-disabled', 'true');
   });
 

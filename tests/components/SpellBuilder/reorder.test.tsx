@@ -23,9 +23,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's step order: each step moved by its
-// handle, by keyboard or by pointer, each move said, and the order sent on
-// save. That the save moves the rows in place is tests/modules/grimoire/services/spells.test.ts's.
+// That the save moves the rows in place is tests/modules/grimoire/services/spells.test.ts's.
 
 const ID = {
   rosewort: '00000000-0000-4000-8000-000000000001',
@@ -35,7 +33,6 @@ const ID = {
   stepStir: '00000000-0000-4000-8000-000000000013',
 };
 
-/** A saved spell of three steps, one of each kind: linked, one-off and instruction. */
 const SPELL: SpellBuilderSpell = {
   id: 's3',
   revision: 4,
@@ -111,7 +108,6 @@ function acceptUpdate() {
   return calls;
 }
 
-/** Like `acceptUpdate`, but the answer holds the steps as they were sent, as the server's does. */
 function acceptUpdateEchoingSteps() {
   const calls: UpdateSpellMutationVariables[] = [];
   mockGraphQLMutation<UpdateSpellMutation, UpdateSpellMutationVariables>(
@@ -128,20 +124,17 @@ function acceptUpdateEchoingSteps() {
 }
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  // The builder reads the coven's categories as it opens.
   offerCategories([]);
   const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" spell={SPELL} {...props} />
     </QueryClientProvider>,
   );
-  // A saved spell opens with its sections shut: Open All shows its jar.
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
 
 const steps = () => screen.getByRole('list', { name: 'Steps' });
-/** Each row's first words, in the order the list shows them. */
 const order = () =>
   within(steps())
     .getAllByRole('button', { name: /^Move / })
@@ -171,7 +164,6 @@ describe('the spell builder’s step order', () => {
 
   it('moves a step by keyboard alone, says each step, and keeps the focus on its handle', async () => {
     renderBuilder();
-    // Present before the move: the list is the one to be reordered.
     expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
 
     const moving = handle('Testwort');
@@ -312,12 +304,10 @@ describe('the spell builder’s undo of step changes', () => {
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
     submit();
     await waitFor(() => expect(calls).toHaveLength(1));
-    // A save keeps the values the form holds, so the list stays as it was moved.
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
     expect(order()).toEqual(['Stir thrice', ROSEWORT, 'Testwort']);
 
-    // Undo takes back the move made after the save, not the save.
     undo();
     await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']));
   });

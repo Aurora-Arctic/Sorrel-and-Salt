@@ -18,8 +18,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's title, intent and jar fields. MSW answers the saves in /api/graphql's shape, so a refusal is read through the route's own error mapping.
-// That the service refuses a viewer, and a complete spell with no title, is tests/modules/grimoire/services/spells.test.ts's.
+// MSW answers the saves in /api/graphql's shape, so a refusal is read through the route's own error mapping. What the service refuses is tests/modules/grimoire/services/spells.test.ts's.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   return render(
@@ -29,21 +28,16 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
-// Moon phase and day of the week are boxes that suggest (comboboxes); the rest are text boxes.
 const field = (name: string) =>
   screen.queryByRole('textbox', { name }) ?? screen.getByRole('combobox', { name });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
-// The four sections, in order, each folding under its heading as the ingredient
-// form's do: open on a new spell, shut on a saved one.
 const SECTIONS = ['Purpose', 'Jar', 'When to Work It', 'Notes'] as const;
 const section = (name: (typeof SECTIONS)[number]) => screen.getByRole('button', { name });
 const when = () => section('When to Work It');
-// A saved spell opens with every section shut: Open All shows its fields.
 const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
 
-/** The spell as the server answers a save: every field as sent, at `revision`. */
 function saved(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
   return {
     id,
@@ -116,7 +110,6 @@ describe('SpellBuilder', () => {
       expect(field(label)).toHaveValue('');
       expect(field(label)).not.toBeRequired();
     }
-    // The recipe's steps are their own field; a step's instruction is edited there.
     expect(screen.queryByRole('textbox', { name: 'Instructions' })).toBeNull();
   });
 
@@ -124,7 +117,6 @@ describe('SpellBuilder', () => {
     renderBuilder();
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    // Blank is none, as the service reads it: still nothing to save.
     type('Intent', '   ');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
@@ -277,7 +269,6 @@ describe('SpellBuilder', () => {
     expect(field('Moon Phase')).toHaveValue('');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    // A field emptied is a field cleared: null, not left out.
     type('Seal Wax', '');
     submit();
 
@@ -317,7 +308,6 @@ describe('SpellBuilder', () => {
     expect(field('Title')).toHaveAccessibleDescription(
       'Give the spell a title before marking it complete',
     );
-    // Only the save status speaks; no notice repeats the field’s error.
     expect(
       screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
     ).toEqual([]);
@@ -341,8 +331,6 @@ describe('SpellBuilder', () => {
     expect(save()).toBeEnabled();
   });
 
-  // Moon phase and day of the week suggest a fixed list and still take what is
-  // typed: the columns stay free text.
   describe('the moon phase and day of the week suggestions', () => {
     const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
 
@@ -442,11 +430,7 @@ describe('SpellBuilder', () => {
     });
   });
 
-  // The builder's fields in four sections, as the ingredient form's are
-  // (CollapsibleSection): each folds under its heading, its line saying what
-  // it holds, and one control opens or shuts them all.
   describe('the sections', () => {
-    /** The fields a section's toggle opens and shuts. */
     const fieldsOf = (name: (typeof SECTIONS)[number]) =>
       document.getElementById(section(name).getAttribute('aria-controls') ?? '') as HTMLElement;
     const expanded = () => SECTIONS.map((name) => section(name).getAttribute('aria-expanded'));
@@ -497,17 +481,14 @@ describe('SpellBuilder', () => {
 
       expect(expanded()).toEqual(['false', 'false', 'false', 'false']);
       expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
-      // One line each, the intent's line breaks closed up, as the ingredient form's are.
       expect(section('Purpose')).toHaveAccessibleDescription('Fixture Working · To see clearly');
       expect(section('Jar')).toHaveAccessibleDescription('4 oz · Blue');
       expect(when()).toHaveAccessibleDescription('Waxing Moon · Monday');
-      // Notes holds no note, and the visibility is the footer's, so its line has nothing to read.
       expect(section('Notes')).toHaveAccessibleDescription('Nothing yet');
     });
 
     it('shuts every section with Close All, then opens every one with Open All', () => {
       renderBuilder();
-      // The precondition: a new spell opens all open, offering Close All.
       expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
 
       fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
@@ -561,7 +542,6 @@ describe('SpellBuilder', () => {
   });
 
   describe('guarding typed changes', () => {
-    /** Whether closing the tab now would ask the browser's question. */
     const tabCloseAsks = () => {
       const event = new Event('beforeunload', { cancelable: true });
       window.dispatchEvent(event);
