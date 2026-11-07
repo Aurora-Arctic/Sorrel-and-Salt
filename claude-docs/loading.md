@@ -281,6 +281,8 @@ with the value already put back.
      page's card frame (`IngredientCard` and `SpellCard` export their frames, which the card and its
      skeleton both draw). A `StackTable` takes `pendingRows`.
 3. Add the entry to `src/app/skeletons.ts`: the route pattern, the host, the component.
+   Then add the route to `navigations` in `tests/e2e/skeleton-layout.spec.ts` and run the spec for it
+   (see the layout spec, below).
 4. `tests/guards/skeletons.test.ts` enforces both: it fails when a `page.tsx` has no entry (bar the
    pages listed in the test by name, each with its reason: auth forms with no data, the root landing,
    the signed-out request page), and when an entry names no page.
@@ -290,6 +292,76 @@ draws while that tab is on its way. It is optional on `PageTab`: a tab whose pag
 there, and the tab row of a page that is not a tab destination, need none, and the type does not
 make a tab pretend to have one (the decision record says why). `ListBody` is different. It always
 swaps in a skeleton while a pager or filter is pending, so its `skeleton` prop is required.
+
+### How closely a skeleton matches its page
+
+The owner's standard: "The skeletons should mostly look like the pages they represent. When there
+is dynamic content that can be a bit off." And: "The point of the loading pieces is to gracefully
+switch between pages without a bunch of layout jump."
+
+So the line is between what is **static** and what is **dynamic**:
+
+- **Static** parts are drawn exactly, in the page's own components and classes, and stand where the
+  real ones will: the heading, the page header, the eyebrow, the lede, the actions, the tabs, the
+  filter row, the page menu, the table headings, the editor's toolbar and the frame around the page.
+- **Dynamic** parts may be a little off: the contents of cards, the widths of table cells and the
+  text of a published document. A skeleton draws bars of about the right size for these.
+
+A title that comes from data (an entry's or a spell's name) is dynamic in its text, so its bar is a
+`pendingTitle` and only its position counts.
+
+### The layout spec
+
+`tests/e2e/skeleton-layout.spec.ts` is the gate for this standard. For every route in its list it
+signs in, holds the server's answer, clicks the real link, and measures the skeleton. It then lets the
+page arrive and measures that. It checks two things:
+
+- **Each static part is within 2px of the page's** on x, y, width and height. The parts are the
+  heading, header, eyebrow, lede, actions, tabs, filter row, page menu, table headings and toolbar.
+- **The frame does not move** between the skeleton and the arrived page: the site bar and the context
+  row stay where they were.
+
+Every route runs at three widths and themes: 1280 light, 375 light and 375 dark.
+
+Rules the spec follows:
+
+- A table wider than its frame scrolls sideways inside it. Then the frame's box is the static part,
+  not the table's.
+- Lists and tables inside `.document-page__body` are published text, so they are not required.
+- It waits until nothing on the page has `aria-busy="true"` before measuring. A part that loads after
+  the page arrives (the document editor, which `next/dynamic` loads) must mark its own placeholder
+  `aria-busy="true"` so the spec measures it once it is drawn.
+- The origin page is scrolled so the clicked link is on screen. A page that resets its scroll on
+  arrival can therefore show a frame move the skeleton cannot remove.
+
+To run it for named routes (the pattern is the route name followed by `at`):
+
+```sh
+BETTER_AUTH_SECRET=local-dev-not-a-real-secret \
+  npx playwright test tests/e2e/skeleton-layout.spec.ts --grep "(keepers-document|keepers-documents) at "
+```
+
+### Frames, context rows and the pin
+
+Some pages sit in a layout that draws a row of its own above the page: the context row (the coven
+switcher or the admin area's row). A skeleton for such a page is drawn without that row when the host
+stands, because the layout keeps it up. When the host does not stand, `framed(host, Page)` in
+`src/components/SkeletonFrame` wraps the skeleton in a `SkeletonContextRow` and the page's column
+(`.page-column` or `.coven-layout`), so the frame is the same either way. `skeletonFor` does this for
+every `main` skeleton that is not standing, so a registered skeleton never draws a frame itself.
+
+The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`). The context row is not
+sticky and scrolls away, so when the real row is above the cover (the row stays up and the cover holds
+only the page) the pin is lowered by the row's height, using the same height tokens as the row. A
+skeleton that draws its own context row inside the cover is left alone.
+
+### A skeleton runs no query
+
+A skeleton must not render a component that runs a data hook such as a query: the skeleton is drawn
+outside the providers that hook needs, and the page would fetch to draw a placeholder. Draw the
+component's markup with the same classes instead, as `DocumentEditorSkeleton` does for the editor's
+head and toolbar. `tests/guards/skeleton-heading.test.tsx` renders every registered skeleton and fails
+on a query hook (it reports "No QueryClient set").
 
 ### Where the skeletons are used
 
