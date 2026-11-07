@@ -74,7 +74,7 @@ export interface CardMoreProps extends Pick<
 
 export interface CovenCardsProps extends Pick<
   CompendiumListProps,
-  | 'facets'
+  | 'counts'
   | 'categories'
   | 'vocabulary'
   | 'previousHref'

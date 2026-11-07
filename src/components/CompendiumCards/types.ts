@@ -99,7 +99,7 @@ export type CompendiumCardsAction = 'add' | 'none';
 export interface CompendiumCardsProps extends Pick<
   CompendiumListProps,
   | 'filter'
-  | 'facets'
+  | 'counts'
   | 'categories'
   | 'vocabulary'
   | 'previousHref'

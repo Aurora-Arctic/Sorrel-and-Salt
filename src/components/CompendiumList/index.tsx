@@ -15,6 +15,7 @@ import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
+import { facetChoices, vocabulariesOf } from './facets';
 import CompendiumListFilter from './filter';
 import { compendiumHref } from './href';
 import type {
@@ -291,7 +292,7 @@ export function emptyText(
 const CompendiumList = ({
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -307,7 +308,7 @@ const CompendiumList = ({
       // focus, and the sentence above the results keeps its typing across a search.
       <CompendiumListFilter
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories}
         vocabulary={vocabulary}
         total={total}
@@ -323,7 +324,11 @@ const CompendiumList = ({
       otherOrders={bestMatch(filter)}
       rows={entries}
       rowKey={(entry) => entry.id}
-      empty={emptyText(filter, categories, facets)}
+      empty={emptyText(
+        filter,
+        categories,
+        facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+      )}
       className="data-table--nowrap"
     />
   </IngredientSearch>

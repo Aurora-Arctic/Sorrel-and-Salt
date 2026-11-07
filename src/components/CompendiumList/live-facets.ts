@@ -9,7 +9,7 @@ import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums'
 import { DEBOUNCE_MS, useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
-import { compendiumFacetCounts, covenFacetCounts } from './facets';
+import { compendiumFacetCounts, covenFacetCounts, vocabulariesOf } from './facets';
 import { COMPENDIUM_PARAMS } from './params';
 import type {
   CompendiumCategoryChoice,
@@ -238,11 +238,7 @@ export function useLiveFacets({
     throwOnError: false,
   });
   const facets = useMemo(() => {
-    const idsOf = {
-      formIcons: new Map(Object.entries(vocabulary.formIcons)),
-      deities: new Map(vocabulary.deities.map(({ id, ...deity }) => [id, deity])),
-      categories: new Map(categories.map((category) => [category.id, category])),
-    };
+    const idsOf = vocabulariesOf(categories, vocabulary);
     // The answer's toxic counts are the two settings; the type is the filter's, which adds `any`.
     const settings = (toxic: { value: ToxicFilter; count: number }[]) =>
       toxic.flatMap(({ value, count }) => (value === 'any' ? [] : [{ value, count }]));

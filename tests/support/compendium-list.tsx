@@ -6,8 +6,8 @@ import CompendiumListBase from '@/components/CompendiumList';
 import IngredientSearch from '@/components/IngredientSearch';
 import AudienceFilter from '@/components/CompendiumList/filter';
 import { compendiumHref } from '@/components/CompendiumList/href';
+import type { CompendiumFacets } from '@/modules/ingredients';
 import type {
-  CompendiumFacetCounts,
   CompendiumListEntry,
   CompendiumListFilter,
   CompendiumListFilterProps,
@@ -176,27 +176,24 @@ export const FORMS = [
   { value: 'Fixture Powder', label: 'Fixture Powder', count: 2, icon: null },
   { value: 'Fixture Resin', label: 'Fixture Resin', count: 1, icon: null },
 ];
-export const FACETS: CompendiumFacetCounts = {
-  forms: FORMS,
+/** The counts the page reads, as the service answers them: a category by its id, a form by its spelling. */
+export const COUNTS: CompendiumFacets = {
+  forms: FORMS.map(({ value, count }) => ({ value, count })),
   deities: [],
-  categories: CATEGORIES.map(({ slug, name, group }, i) => ({
-    value: slug,
-    label: name,
-    count: i + 1,
-    group,
-  })),
-  zodiac: [],
+  categories: CATEGORIES.map(({ id }, i) => ({ value: id, count: i + 1 })),
+  zodiacSigns: [],
   celestialBodies: [],
   elements: [],
   toxic: [],
   withoutReferences: 0,
   withoutForms: 0,
+  reviewed: null,
 };
 
 export const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: FACETS,
+  counts: COUNTS,
   categories: CATEGORIES,
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

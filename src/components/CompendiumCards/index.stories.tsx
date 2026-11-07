@@ -7,7 +7,7 @@ import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
-import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { NO_COUNTS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
 // Render-only; what shows and when is asserted in tests/components/CompendiumCards. The
 // filter navigates to /compendium, which the workshop does not serve.
@@ -68,7 +68,7 @@ const COVENS = [
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: NO_FACETS,
+  counts: NO_COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

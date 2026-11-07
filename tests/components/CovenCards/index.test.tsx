@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CovenCards from '@/components/CovenCards';
 import type { CovenCardEntry, CovenCardsProps } from '@/components/CovenCards/types';
-import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
+import type { WorkspaceIngredientFacets } from '@/modules/ingredients';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { filterForm, sent } from '../../support/filter-form';
@@ -49,19 +49,17 @@ const FILTER: CovenCardsProps['filter'] = {
   lowStockOnly: false,
 };
 
-const FACETS: CompendiumFacetCounts = {
+const COUNTS: WorkspaceIngredientFacets = {
   forms: [],
   deities: [],
   categories: [],
-  zodiac: [],
+  zodiacSigns: [],
   celestialBodies: [],
   elements: [],
   toxic: [],
-  withoutReferences: 0,
-  withoutForms: 0,
   source: [
-    { value: 'local', label: 'Local', count: 1 },
-    { value: 'compendium', label: 'Compendium', count: 2 },
+    { value: 'local', count: 1 },
+    { value: 'compendium', count: 2 },
   ],
   inStock: 1,
   lowStockOnly: 0,
@@ -102,7 +100,7 @@ const props = (over: Partial<CovenCardsProps> = {}): CovenCardsProps => ({
   workspaceId: 'w1',
   entries: ENTRIES,
   filter: FILTER,
-  facets: FACETS,
+  counts: COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

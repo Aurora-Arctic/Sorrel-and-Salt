@@ -21,7 +21,7 @@ const CovenCards = ({
   workspaceId,
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -40,7 +40,7 @@ const CovenCards = ({
           covenSlug={covenSlug}
           workspaceId={workspaceId}
           filter={filter}
-          facets={facets}
+          counts={counts}
           categories={categories}
           vocabulary={vocabulary}
           total={total}

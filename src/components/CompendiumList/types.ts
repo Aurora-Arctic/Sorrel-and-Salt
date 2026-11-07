@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { CompendiumFacets, WorkspaceIngredientFacets } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type {
   IngredientElement,
@@ -52,8 +53,12 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   entries: readonly CompendiumListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: CompendiumListFilter;
-  /** What each filter offers, and how many entries each choice would list. */
-  facets: CompendiumFacetCounts;
+  /**
+   * How many entries each filter's choice would list, as the service counts them: a category and a
+   * deity by id, so each one's name and colours reach the browser once, in `categories` and
+   * `vocabulary`, and the choices are drawn from both there (`facetChoices`).
+   */
+  counts: FacetCountsById;
   /** Every live category, which the Categories box offers and the address names by slug. */
   categories: readonly CompendiumCategoryChoice[];
   /** What the panel needs to read its own live counts, which name a deity by id and a form by spelling. */
@@ -65,6 +70,9 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   /** The cursor of the page shown, which a pick's Quick Look opens over and closes back to. */
   cursor?: SearchCursor;
 }
+
+/** The service's counts for the compendium's lists, or a coven's, which add Source and the two stock switches. */
+export type FacetCountsById = CompendiumFacets | WorkspaceIngredientFacets;
 
 /** What turns the counts the panel asks for into choices: every live deity, and each curated form's group icon by its name folded to lower case. */
 export interface CompendiumFacetVocabulary {
@@ -177,7 +185,7 @@ export type CovenListDialog = { edit: string } | { annotate: string };
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary' | 'cursor'
+  'counts' | 'categories' | 'vocabulary' | 'cursor'
 > & {
   /**
    * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only

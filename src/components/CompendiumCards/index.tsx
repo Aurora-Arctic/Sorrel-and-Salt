@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
+import { facetChoices, vocabulariesOf } from '../CompendiumList/facets';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { cardName } from '../IngredientCard/card-name';
@@ -95,7 +96,7 @@ const footOf = (
 const CompendiumCards = ({
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -114,7 +115,7 @@ const CompendiumCards = ({
       <CompendiumListFilter
         audience="public"
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories}
         vocabulary={vocabulary}
         total={total}
@@ -127,7 +128,14 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, emptyList('ingredients'))}</p>
+      <p>
+        {emptyText(
+          filter,
+          categories,
+          facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+          emptyList('ingredients'),
+        )}
+      </p>
     ) : (
       <IngredientCardList label="Compendium">
         {entries.map((entry) => (

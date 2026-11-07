@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   compendiumFacetCounts,
   covenFacetCounts,
+  facetChoices,
+  vocabulariesOf,
   type FacetVocabularies,
 } from '@/components/CompendiumList/facets';
 import type { CompendiumCategoryChoice } from '@/components/CompendiumList/types';
@@ -254,5 +256,42 @@ describe("a coven's facet counts as its panel takes them", () => {
     expect(counts).not.toHaveProperty('source');
     expect(counts).not.toHaveProperty('inStock');
     expect(counts).not.toHaveProperty('lowStockOnly');
+  });
+});
+
+// The browser maps the counts itself, from the vocabularies the list's props carry once.
+describe('the choices a list maps from its own props', () => {
+  const vocabularies = vocabulariesOf([WARD, CRAFT], {
+    deities: [{ id: 'd-1', slug: 'testa-greek', name: 'Testa', tradition: 'Fixture Greek' }],
+    formIcons: { 'fixture oil': 'fluid' },
+  });
+
+  it('names a category, a deity and a form icon from the props, by the keys the counts use', () => {
+    const choices = facetChoices(
+      {
+        ...EMPTY,
+        forms: [{ value: 'Fixture Oil', count: 1 }],
+        deities: [{ value: 'd-1', count: 2 }],
+        categories: [{ value: 'c-2', count: 3 }],
+      },
+      vocabularies,
+    );
+
+    expect(choices.forms.map(({ icon }) => icon)).toEqual(['fluid']);
+    expect(choices.deities.map(({ value, count }) => [value, count])).toEqual([['testa-greek', 2]]);
+    expect(choices.categories.map(({ value, count }) => [value, count])).toEqual([
+      ['testcraft', 3],
+    ]);
+  });
+
+  it("maps a coven's counts with its Source strip, and the compendium's without", () => {
+    const coven = facetChoices(
+      { ...EMPTY, source: [{ value: 'local', count: 1 }], inStock: 1, lowStockOnly: 0 },
+      vocabularies,
+    );
+    const compendium = facetChoices(EMPTY, vocabularies);
+
+    expect(coven.source?.map(({ value, count }) => [value, count])).toEqual([['local', 1]]);
+    expect(compendium).not.toHaveProperty('source');
   });
 });
