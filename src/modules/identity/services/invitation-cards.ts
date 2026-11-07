@@ -74,7 +74,7 @@ const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
  * is readable, as the rows hold the hash alone.
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * `note` is trimmed and written on every card of the batch; blank or absent is none.
+ * `note` is trimmed and written on every card of the batch; blank or absent is none. `beta` marks every card of it as a beta tester's.
  *
  * @throws {ValidationError} on `sheets`: not a whole number from 1 to `MAX_SHEETS_PER_BATCH`, so a part sheet is never minted; on `expiresAt`: not a future date; on `note`: over `MAX_NOTE_LENGTH` characters.
  */
@@ -83,6 +83,7 @@ export async function mintInvitationCards(
   sheets: number,
   expiresAt: Date,
   note?: string | null,
+  beta = false,
 ): Promise<MintedCards> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const issues = [];
@@ -107,7 +108,7 @@ export async function mintInvitationCards(
   const batchId = randomUUID();
   const tokens = Array.from({ length: sheets * CARDS_PER_SHEET }, newCardToken);
   const rows = await withAudit(session, (write) =>
-    write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: trimmedNote }),
+    write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: trimmedNote, beta }),
   );
   return { batchId, expiresAt: rows[0]?.expiresAt ?? expiresAt, tokens };
 }
@@ -224,7 +225,7 @@ export async function countCardArrivals(
   return findCardArrivalCount(admin, parsedArrivalFilter(filter), start);
 }
 
-const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch', 'Covens Owned'];
+const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch', 'Beta', 'Covens Owned'];
 const ARRIVAL_PAGE = 100;
 
 /** The names of the covens each account owns, keyed by account id, for every id asked in one call. */
@@ -233,7 +234,7 @@ export type OwnedCovenLookup = (
 ) => Promise<ReadonlyMap<string, readonly string[]>>;
 
 /**
- * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted, the batch's short name and the covens the account owns now,
+ * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted, the batch's short name, Yes or No for a beta batch and the covens the account owns now,
  * as the Card Sign-Ups table shows them. `identity` may import no module, so the caller supplies `ownedCovens`; it is asked once, for every account on the list.
  * A cell that opens with a character a spreadsheet reads as a formula is prefixed with an apostrophe.
  *
@@ -246,7 +247,7 @@ export async function cardArrivalsCsv(
 ): Promise<string> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const narrowed = parsedArrivalFilter(filter);
-  const arrivals: { acceptedBy: string; acceptedAt: Date; batchId: string }[] = [];
+  const arrivals: { acceptedBy: string; acceptedAt: Date; batchId: string; beta: boolean }[] = [];
   let after: PageRequest['after'];
   for (;;) {
     const page = await findCardArrivalPage(admin, narrowed, {
@@ -275,6 +276,7 @@ export async function cardArrivalsCsv(
         account?.email ?? '',
         node.acceptedAt.toISOString().slice(0, 10),
         batchName(node.batchId),
+        node.beta ? 'Yes' : 'No',
         (owned.get(node.acceptedBy) ?? []).join('; '),
       ]
         .map(csvCell)

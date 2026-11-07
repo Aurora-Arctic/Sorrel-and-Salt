@@ -964,7 +964,7 @@ describe('invitation cards', () => {
 
   const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
     withAudit(asUser(E), (write) =>
-      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null }),
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null, beta: false }),
     );
   const cardAccept = (user: SessionUser, token = CARD) =>
     withAudit(asUser(user), (write) => write.acceptInvitation(token));

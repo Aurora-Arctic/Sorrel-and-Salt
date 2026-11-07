@@ -1379,6 +1379,8 @@ export interface CardInvitationValues {
   expiresAt: Date;
   /** Written on every card of the batch; null for none. */
   note: string | null;
+  /** Whether the batch is for beta testers, written on every card of it. */
+  beta: boolean;
 }
 
 /** A card's place in its batch, from 1; null for a card minted before places were kept. */

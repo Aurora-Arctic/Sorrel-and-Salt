@@ -888,6 +888,9 @@ type InvitationCard {
 
   """The mint that made it, shared by the whole batch."""
   batchId: ID!
+
+  """Whether its batch was minted for beta testers."""
+  beta: Boolean!
   expiresAt: DateTime!
   id: ID!
 
@@ -933,6 +936,11 @@ type InvitationCardBatch {
   """How many of its cards were accepted."""
   accepted: Int!
   batchId: ID!
+
+  """
+  Whether the batch was minted for beta testers; set at minting and never changed.
+  """
+  beta: Boolean!
 
   """How many cards the batch holds."""
   cards: Int!
@@ -1077,6 +1085,10 @@ type Mutation {
   Mints `sheets` sheets of twelve cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 41 sheets.
   """
   createInvitationCards(
+    """
+    Whether the batch is for beta testers; every card of it carries the flag.
+    """
+    beta: Boolean!
     expiresAt: DateTime!
 
     """

@@ -683,7 +683,7 @@ export function invitationWrites({
     // and bound to nothing. Not `insert`, which stamps one row.
     insertInvitationCards: (
       _admin: SiteAdmin,
-      { tokens, batchId, expiresAt, note }: CardInvitationValues,
+      { tokens, batchId, expiresAt, note, beta }: CardInvitationValues,
     ) =>
       tokens.length === 0
         ? Promise.resolve([])
@@ -698,6 +698,7 @@ export function invitationWrites({
                       kind: 'card',
                       batchId,
                       note,
+                      beta,
                       expiresAt,
                       tokenHash: hashToken(token),
                       position: index + 1,

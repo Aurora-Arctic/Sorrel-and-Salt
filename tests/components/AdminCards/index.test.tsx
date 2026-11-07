@@ -45,6 +45,7 @@ const BATCHES = [
     pending: 29,
     attempts: 3,
     note: null,
+    beta: true,
     status: 'live' as const,
   },
   {
@@ -56,6 +57,7 @@ const BATCHES = [
     pending: 0,
     attempts: 0,
     note: null,
+    beta: false,
     status: 'used-up' as const,
   },
   {
@@ -67,6 +69,7 @@ const BATCHES = [
     pending: 0,
     attempts: 0,
     note: null,
+    beta: false,
     status: 'revoked' as const,
   },
   {
@@ -78,6 +81,7 @@ const BATCHES = [
     pending: 0,
     attempts: 0,
     note: null,
+    beta: false,
     status: 'expired' as const,
   },
 ];
@@ -331,6 +335,22 @@ describe('AdminCards', () => {
     expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
   });
 
+  it('marks a beta batch with a check and a plain batch with a cross, under Beta', () => {
+    render(<AdminCards batches={BATCHES} />);
+
+    const [head, first, second] = screen.getAllByRole('row');
+    const column = within(head!)
+      .getAllByRole('columnheader')
+      .findIndex((cell) => cell.textContent === 'Beta');
+    expect(column).toBeGreaterThan(-1);
+    expect(
+      within(within(first!).getAllByRole('cell')[column]!).getByText('Yes'),
+    ).toBeInTheDocument();
+    expect(
+      within(within(second!).getAllByRole('cell')[column]!).getByText('No'),
+    ).toBeInTheDocument();
+  });
+
   it('opens the mint form by the address, from a link', () => {
     render(<MintCards />);
 
@@ -370,7 +390,7 @@ describe('AdminCards', () => {
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-02T12:00:00.000Z' });
+    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-02T12:00:00.000Z', beta: false });
     expect(
       await within(dialog()).findByText(/only copy of these cards and cannot be made again/),
     ).toBeInTheDocument();
@@ -449,7 +469,7 @@ describe('AdminCards', () => {
   });
 
   const sent: CreateInvitationCardsMutationVariables[] = [];
-  const mintTwo = async (printBacks = true, note?: string) => {
+  const mintTwo = async (printBacks = true, note?: string, beta = false) => {
     sent.length = 0;
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
@@ -477,6 +497,7 @@ describe('AdminCards', () => {
     });
     pickFirstOfFebruary();
     if (!printBacks) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Print Backs' }));
+    if (beta) fireEvent.click(within(dialog()).getByRole('checkbox', { name: 'Beta Testers' }));
     if (note !== undefined) {
       fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
         target: { value: note },
@@ -489,6 +510,16 @@ describe('AdminCards', () => {
   it('sends the Note typed, trimmed, with the mint', async () => {
     await mintTwo(true, '  For the autumn fair  ');
     expect(sent[0]?.note).toBe('For the autumn fair');
+  });
+
+  it('offers Beta Testers unticked, and sends beta false unless it is ticked', async () => {
+    await mintTwo();
+    expect(sent[0]?.beta).toBe(false);
+  });
+
+  it('sends beta true when Beta Testers is ticked', async () => {
+    await mintTwo(true, undefined, true);
+    expect(sent[0]?.beta).toBe(true);
   });
 
   it('sends no note when the Note is left blank', async () => {
@@ -595,7 +626,7 @@ describe('Mint Cards default expiry', () => {
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-29T12:00:00.000Z' });
+    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-29T12:00:00.000Z', beta: false });
   });
 });
 
@@ -615,6 +646,7 @@ describe('AdminArrivals', () => {
             accountEmail: 'wort@example.test',
             acceptedAt: new Date('2026-10-30T10:00:00Z'),
             batchId: 'b1111111-0000-4000-8000-000000000001',
+            beta: true,
             covens: ['Testwort Coven', 'Second Coven'],
             account: WORT,
           },
@@ -624,6 +656,7 @@ describe('AdminArrivals', () => {
             accountEmail: 'fern@example.test',
             acceptedAt: new Date('2026-10-29T10:00:00Z'),
             batchId: 'b1111111-0000-4000-8000-000000000001',
+            beta: false,
             covens: [],
             account: null,
           },
@@ -643,6 +676,10 @@ describe('AdminArrivals', () => {
     expect(cells[1]).toHaveTextContent('wort@example.test');
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
     expect(within(second).getByText('None yet')).toBeInTheDocument();
+    const beta = headings.findIndex((cell) => cell.textContent === 'Beta');
+    expect(beta).toBeGreaterThan(-1);
+    expect(within(cells[beta]!).getByText('Yes')).toBeInTheDocument();
+    expect(within(within(second).getAllByRole('cell')[beta]!).getByText('No')).toBeInTheDocument();
   });
 
   it("opens the account's user modal from its name, and leaves a removed account as plain text", () => {
@@ -657,6 +694,7 @@ describe('AdminArrivals', () => {
               accountEmail: 'wort@example.test',
               acceptedAt: new Date('2026-10-30T10:00:00Z'),
               batchId: 'b1111111-0000-4000-8000-000000000001',
+              beta: false,
               covens: [],
               account: WORT,
             },
@@ -666,6 +704,7 @@ describe('AdminArrivals', () => {
               accountEmail: '',
               acceptedAt: new Date('2026-10-29T10:00:00Z'),
               batchId: 'b1111111-0000-4000-8000-000000000001',
+              beta: false,
               covens: [],
               account: null,
             },

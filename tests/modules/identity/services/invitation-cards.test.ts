@@ -110,6 +110,18 @@ describe('mintInvitationCards', () => {
     expect(await notes(blank.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
   });
 
+  it('marks every card of a beta batch as beta, and no card of a plain one', async () => {
+    const beta = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, true);
+    const plain = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, false);
+    const unsaid = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+
+    const flags = async (batchId: string) =>
+      (await sql`select beta from invitations where batch_id = ${batchId}`).map((row) => row.beta);
+    expect(await flags(beta.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(true));
+    expect(await flags(plain.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(false));
+    expect(await flags(unsaid.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(false));
+  });
+
   it('takes a note of the longest length and refuses one a character over, writing nothing', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), 'x'.repeat(MAX_NOTE_LENGTH));
     expect(await cards()).toHaveLength(CARDS_PER_SHEET);
@@ -292,11 +304,20 @@ describe('the arrivals CSV', () => {
     const csv = await cardArrivalsCsv(asUser(E));
 
     const lines = csv.trimEnd().split('\r\n');
-    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Covens Owned');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Beta,Covens Owned');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe(
-      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)},`,
+      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)},No,`,
     );
+  });
+
+  it('says Yes in the Beta column for an account that arrived by a beta card', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), null, true);
+    const [first] = await cards();
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${first!.id}`;
+
+    const [, row] = (await cardArrivalsCsv(asUser(E))).trimEnd().split('\r\n');
+    expect(row).toMatch(/,[0-9a-f]{8},Yes,$/);
   });
 
   it('holds only the arrivals the filter keeps', async () => {
@@ -313,7 +334,7 @@ describe('the arrivals CSV', () => {
     expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
     expect(byName).toContain(B.email);
     expect(byName).not.toContain(A.email);
-    expect(byNoBatch).toBe('Account,Email,Accepted On,Batch,Covens Owned\r\n');
+    expect(byNoBatch).toBe('Account,Email,Accepted On,Batch,Beta,Covens Owned\r\n');
   });
 
   it('lists the covens each account owns from one lookup for every row, joined and guarded', async () => {
@@ -338,7 +359,7 @@ describe('the arrivals CSV', () => {
   it('is only a header when nobody arrived', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     expect(await cardArrivalsCsv(asUser(E))).toBe(
-      'Account,Email,Accepted On,Batch,Covens Owned\r\n',
+      'Account,Email,Accepted On,Batch,Beta,Covens Owned\r\n',
     );
   });
 });

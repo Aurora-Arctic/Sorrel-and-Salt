@@ -24,6 +24,7 @@ const BATCHES: BatchEntry[] = [
     pending: 29,
     attempts: 3,
     note: 'Handed out at the autumn fair stall. Two sheets went to the shop on the high street, one to the library desk, and the rest are held back for the winter market, so check with the stall lead before minting another batch.',
+    beta: true,
     status: 'live',
   },
   {
@@ -35,6 +36,7 @@ const BATCHES: BatchEntry[] = [
     pending: 0,
     attempts: 0,
     note: 'Shop counter',
+    beta: false,
     status: 'revoked',
   },
   {
@@ -46,6 +48,7 @@ const BATCHES: BatchEntry[] = [
     pending: 0,
     attempts: 0,
     note: null,
+    beta: false,
     status: 'expired',
   },
   {
@@ -57,6 +60,7 @@ const BATCHES: BatchEntry[] = [
     pending: 0,
     attempts: 0,
     note: null,
+    beta: false,
     status: 'used-up',
   },
 ];
@@ -67,6 +71,7 @@ const ARRIVALS: ArrivalEntry[] = [
     accountEmail: 'fixture.wort@example.test',
     acceptedAt: new Date('2026-10-30T10:00:00Z'),
     batchId: BATCH,
+    beta: true,
     covens: ['Fixture Coven'],
     account: {
       openHref: '/keepers/users?user=fixture',

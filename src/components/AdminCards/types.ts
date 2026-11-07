@@ -12,6 +12,8 @@ export interface BatchEntry {
   expiresAt: Date;
   /** The keeper's note written at the mint; null for none. */
   note: string | null;
+  /** Whether the batch was minted for beta testers. */
+  beta: boolean;
   /** How many cards the mint made. */
   cards: number;
   /** How many of them have been accepted. */
@@ -86,6 +88,8 @@ export interface ArrivalEntry {
   accountEmail: string;
   acceptedAt: Date;
   batchId: string;
+  /** Whether the card came from a batch minted for beta testers. */
+  beta: boolean;
   /** The covens the account owns now, by name. */
   covens: string[];
   /** Where the account's name opens its user modal, as the Users list does; null once the account is gone. */
