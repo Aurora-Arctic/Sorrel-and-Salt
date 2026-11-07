@@ -1,6 +1,5 @@
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { ReactElement, ReactNode } from 'react';
 import LastEdit from '../LastEdit';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
@@ -71,7 +70,7 @@ function substituteItems(
       // A typed name may repeat, so its place keys it.
       <li key={`${at}-${label}`}>
         {href ? (
-          <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+          <PendingLink href={href}>
             {label} <LinkHint />
           </PendingLink>
         ) : (
@@ -180,10 +179,7 @@ function ReplacesBlock({
   const whyId = `${block.id}-why`;
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
-      <PendingLink
-        href={replaces.allHref}
-        navigationTarget={ingredientLinkTarget(replaces.allHref)}
-      >
+      <PendingLink href={replaces.allHref}>
         See All {replaces.total}
         <LinkHint />
       </PendingLink>
@@ -204,7 +200,7 @@ function ReplacesBlock({
       >
         {replaces.entries.map(({ title, href }) => (
           <li key={href}>
-            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+            <PendingLink href={href}>
               <span className="ingredient-entry__entry-title">{title}</span>
               <LinkIconHint />
             </PendingLink>
@@ -350,10 +346,7 @@ const IngredientEntry = ({
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
             The ingredient that was at this address has been moved to{' '}
-            <PendingLink
-              href={movedAway.href}
-              navigationTarget={ingredientLinkTarget(movedAway.href)}
-            >
+            <PendingLink href={movedAway.href}>
               {movedAway.name} <LinkHint />
             </PendingLink>
           </Notice>

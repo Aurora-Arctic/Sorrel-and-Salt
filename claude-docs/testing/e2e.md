@@ -1,11 +1,13 @@
 ## E2E — Playwright
 
 `playwright.config.ts` (repo root) runs specs under `tests/e2e/` against a
-**production build**, not `next dev`: the first `webServer` entry is
-`npm run build && npm run start`, on **8001** (`PORT` env override; `start`
-defaults to 8000, `next dev`'s port, which an e2e run keeps clear of).
-`reuseExistingServer` is off whenever `CI` is set, so a CI run always builds
-and starts its own servers.
+**production build**, not `next dev`: its one `webServer` entry runs
+`scripts/e2e-servers.ts --playwright`, which builds once and then starts every
+server together, the first on **8001** (`PORT` env override; `start` defaults to
+8000, `next dev`'s port, which an e2e run keeps clear of). The entry is ready
+when the script prints `e2e servers ready`. The script attaches to a server it
+finds already answering, and skips the build when the first slot's does, except
+whenever `CI` is set, so a CI run always builds and starts its own servers.
 
 **A spec proves what only a real server and browser can** (rule 9 of
 [`layer-ownership.md`](layer-ownership.md), "What a test may assert"):
@@ -96,10 +98,11 @@ holds the argument and the two alternatives turned down).
   four-vCPU runner. A test spends most of its time waiting on the browser and
   the server, so four workers finish sooner than two even sharing four cores
   with the servers.
-- **Slot `n` serves on `8001 + n`, from `sorrel_e2e_<n>`.** Slot 0's entry
-  builds; each further slot's runs `npm run start` over that build.
-  Playwright starts `webServer` entries one after another, which is what lets
-  the later ones serve the first's build. `tests/e2e/fixtures.ts` overrides
+- **Slot `n` serves on `8001 + n`, from `sorrel_e2e_<n>`.** The startup script
+  builds once with slot 0's environment, then runs `npm run start` for every
+  slot at once, each with its own port and `DATABASE_URL`, and waits for every
+  port. It starts them together because Playwright starts separate `webServer`
+  entries one after another and waits for each. `tests/e2e/fixtures.ts` overrides
   `baseURL` with the slot's server for any project that sets none; there is no
   top-level `use.baseURL`. A further slot costs about half a second and
   180 MB.
@@ -130,10 +133,11 @@ OAuth credentials per request and its two provider states cannot share a
 process. Every slot's server runs with each provider variable set to `''`
 (blank rather than absent, because Next never lets `.env.local` override a
 variable already set, so a developer's real credentials cannot leak into it).
-Its `webServer` entry, after the slots', runs `npm run start` on **8100** with
+Started by the same script with the slots', it runs `npm run start` on **8100** with
 placeholder credentials for all four providers, against
 `sorrel_e2e_providers`, which no spec reseeds. 8100 sits above every slot's
 port and the 99-slot cap keeps it there, so no slot can reach or attach to it.
+The story config starts neither special server.
 Two projects split the specs: `chromium` (everything except
 `tests/e2e/sign-in-configured-providers.spec.ts`, against its slot's server)
 and `chromium-configured-providers` (that spec alone, against 8100 through its
@@ -168,16 +172,15 @@ against it, and `chromium` ignores that spec
   reads each socket's close only some milliseconds later, and a test's first
   request in that gap writes to a dead socket and gets a 500
   (`CONNECTION_CLOSED`, `EPIPE` or `57P01`). The lookups find the dead
-  connections first, and the pool replaces them. `dropE2eTemplate()` removes
-  the template again.
+  connections first, and the pool replaces them.
 - **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()`
   and then `cloneE2eDatabases()`, once per run. It runs _after_ the servers
   have started, since Playwright sets up the `webServer` entries first, and
   still finishes before any test. So nothing may query a database at server
   boot or on the readiness poll's `GET /`, which on a first run would find none
   ([`ci.md`, "Each Playwright worker slot gets a server, not just a database"](../design-decisions/ci.md#each-playwright-worker-slot-gets-a-server-not-just-a-database),
-  "Setup runs after the servers"). `global-teardown.ts` drops the template after
-  the last spec; the slot and providers databases are left for inspection.
+  "Setup runs after the servers"). `dropE2eTemplate()` removes the template
+  again: `global-teardown.ts` drops it after the last spec; the slot and providers databases are left for inspection.
 - **No Neon connection anywhere.** `e2eDatabaseUrl()` and `adminUrl()` only
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the local
   `postgres` Docker service exactly as Vitest's does.
@@ -326,7 +329,7 @@ authenticator holding one of them refuses to make another.
 - **CI restores `.next-e2e/cache` before the build**: `playwright.yml`'s
   `actions/cache/restore` step, keyed `nextjs-e2e` on the lockfile and the
   source hashes, falling back to the newest entry for the same lockfile. The
-  build runs inside `npm run e2e` as slot 0's `webServer` command, so the
+  build runs inside `npm run e2e`, in the `webServer` entry's startup script, so the
   restore has to come before that step; Turbopack's persistent cache under it
   is what a warm build reuses. The e2e image is Debian's, whose GNU `tar`
   `actions/cache` needs. It carries no `zstd`, so the cache is gzip: the
@@ -341,7 +344,7 @@ authenticator holding one of them refuses to make another.
   touches what the build compiles or runs under, it calls `playwright.yml` with
   `build-only: true`, which adds `--grep-invert . --pass-with-no-tests` to
   `npm run e2e`. Every test title matches `.`, so no spec runs, but Playwright
-  starts its `webServer` entries before it loads a spec, so slot 0 still runs
+  starts its `webServer` entry before it loads a spec, so the startup script still runs
   `npm run build`, and an `actions/cache/save` step after it saves
   `/app/.next-e2e/cache` under the restore step's key. Because it is the same
   workflow, the warm build has the pull request's image, path, build directory
@@ -456,7 +459,8 @@ sign-off rather than during it, at the cost of one image pull and no CI minutes.
 
 **Every e2e run from the devcontainer serialises on
 `flock /tmp/sorrel-e2e.lock`.** Two runs collide on `sorrel_e2e_template`,
-which global setup drops and rebuilds, even when their ports differ, and a
+which global setup drops and rebuilds, and on the slot databases, which it
+recreates on every run, even when their ports differ, and a
 second session's run may be invisible to `ps`. So a run from a session is
 `flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test …`;
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that every

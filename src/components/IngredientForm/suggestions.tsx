@@ -2,11 +2,11 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -197,7 +197,7 @@ const qualified = (value: string, by: string | null | undefined): string =>
 /** The rows for `text` once settled, while `active`: the last answer stays on screen while the
  * next is fetched, and a failed lookup offers nothing. */
 export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
-  document: TypedDocumentNode<TResult, TScope & LookupText>,
+  document: DocumentTypeDecoration<TResult, TScope & LookupText>,
   scope: TScope,
   text: string,
   active: boolean,

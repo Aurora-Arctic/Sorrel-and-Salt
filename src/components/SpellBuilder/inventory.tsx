@@ -1,5 +1,6 @@
 'use client';
 
+import EmptyState from '../EmptyState';
 import type { ReactElement, ReactNode } from 'react';
 import JarLine from '../JarLine';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -107,7 +108,7 @@ export function InCovenInventory({
     <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
       <h2 id="spell-inventory-heading">In the Cupboard</h2>
       {lines.length === 0 ? (
-        <p className="spell-aside__empty">Nothing in the jar yet.</p>
+        <EmptyState size="compact">Nothing in the jar yet.</EmptyState>
       ) : (
         <ul className="spell-inventory__list">
           {lines.map((step, index) => (

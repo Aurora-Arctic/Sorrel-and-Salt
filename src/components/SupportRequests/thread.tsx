@@ -10,11 +10,21 @@ export interface SupportThreadEntry {
   body: string;
 }
 
-const SupportThread = ({ entries }: { entries: readonly SupportThreadEntry[] }): ReactElement => {
+// `headingLevel` follows the title above it: 3 under a dialog’s title, 2 on a page whose only heading above is its h1.
+const SupportThread = ({
+  entries,
+  headingLevel = 3,
+}: {
+  entries: readonly SupportThreadEntry[];
+  headingLevel?: 2 | 3;
+}): ReactElement => {
   const headingId = useId();
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <section aria-labelledby={headingId}>
-      <h3 id={headingId}>Thread</h3>
+      <Heading id={headingId} className="support-detail__thread-title">
+        Thread
+      </Heading>
       <ol className="support-detail__thread">
         {entries.map((entry) => (
           <li key={entry.id} className="support-detail__entry">

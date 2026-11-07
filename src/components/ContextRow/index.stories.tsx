@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { WorkshopPathname } from '../../../.storybook/navigation';
-import { adminTarget } from '../AdminNav/target';
 import { PendingLink } from '../../lib/navigation';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import AdminNav from '../AdminNav';
@@ -34,11 +33,7 @@ const WORKSPACES = [
 const SOLE = [WORKSPACES[0]];
 
 const AdminName = () => (
-  <PendingLink
-    href="/keepers"
-    className="context-row__name"
-    navigationTarget={adminTarget('/keepers')}
-  >
+  <PendingLink href="/keepers" className="context-row__name">
     Admin
   </PendingLink>
 );

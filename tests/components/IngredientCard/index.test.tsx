@@ -6,10 +6,14 @@ import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
+import { categoryRefs } from '@/components/IngredientCard/category-refs';
+import { CardCategoryVocabulary } from '@/components/IngredientCard/category-vocabulary';
 import { StockBadge } from '@/components/StockBadge';
 
-// claude-docs/components/ingredient-card.md
+// (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
+// Marks are found by their exact text and asserted by presence or absence, never by what the words say.
 
+// The name link navigates through the shared hook, so the App Router is mocked.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
@@ -94,22 +98,15 @@ describe('IngredientCard', () => {
   });
 
   it('lays the body out as the top row, the categories, the forms, then the jar lines', () => {
+    const group = { colorDark: '#112233', colorLight: '#445566' };
     render(
-      <IngredientCard
-        {...BASE}
-        kind="own"
-        variants={[LEAF]}
-        categories={[
-          {
-            category: { id: 'c1', name: 'Testing' },
-            group: { colorDark: '#112233', colorLight: '#445566' },
-          },
-        ]}
-      >
-        <ul aria-label="Jars">
-          <li>Testleaf</li>
-        </ul>
-      </IngredientCard>,
+      <CardCategoryVocabulary categories={[{ id: 'c1', name: 'Testing', group }]}>
+        <IngredientCard {...BASE} kind="own" variants={[LEAF]} categories={[{ id: 'c1' }]}>
+          <ul aria-label="Jars">
+            <li>Testleaf</li>
+          </ul>
+        </IngredientCard>
+      </CardCategoryVocabulary>,
     );
 
     const follows = (a: HTMLElement, b: HTMLElement) =>
@@ -149,13 +146,48 @@ describe('IngredientCard', () => {
 
   it('puts the categories past the limit behind a +N button', () => {
     const group = { colorDark: '#112233', colorLight: '#445566' };
-    const categories = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
-      category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+    const vocabulary = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
+      id: `c${i}`,
+      name: `Fixture Category ${i + 1}`,
       group,
     }));
-    render(<IngredientCard {...BASE} categories={categories} />);
+    render(
+      <CardCategoryVocabulary categories={vocabulary}>
+        <IngredientCard {...BASE} categories={vocabulary.map(({ id }) => ({ id }))} />
+      </CardCategoryVocabulary>,
+    );
 
     expect(screen.getByRole('button', { name: /3 more categories for/i })).toHaveTextContent('+3');
+  });
+
+  // A list sends each category's name once, in its vocabulary, and its cards name categories by id.
+  describe('categories named by id', () => {
+    const group = { colorDark: '#112233', colorLight: '#445566' };
+    const VOCABULARY = [
+      { id: 'c-known', name: 'Fixture Known', group },
+      { id: 'c-other', name: 'Fixture Other', group },
+    ];
+    const KNOWN = { category: { id: 'c-known', name: 'Fixture Known' }, group };
+
+    it('draws a chip for each id the vocabulary above it holds, and none for an id it lacks', () => {
+      render(
+        <CardCategoryVocabulary categories={VOCABULARY}>
+          <IngredientCard {...BASE} categories={[{ id: 'c-known' }, { id: 'c-unlisted' }]} />
+        </CardCategoryVocabulary>,
+      );
+
+      expect(screen.getByText('Fixture Known')).toBeInTheDocument();
+      // Only the card's own categories are drawn, not the whole vocabulary.
+      expect(screen.queryByText('Fixture Other')).toBeNull();
+      expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    });
+
+    it('names every category by id, keeping the forms that carry it', () => {
+      expect(categoryRefs([KNOWN, { ...KNOWN, forms: ['testoil'] }])).toEqual([
+        { id: 'c-known' },
+        { id: 'c-known', forms: ['testoil'] },
+      ]);
+    });
   });
 
   describe('safety', () => {
@@ -282,12 +314,14 @@ describe('IngredientCard actions', () => {
   });
 });
 
+// The name link is the card's one way onward, and the page it leads to draws
+// its own skeleton while it loads: the card names that page by its address.
 describe('IngredientCard navigation', () => {
   let target: unknown;
   function Probe() {
     const state = useNavigationState();
     useEffect(() => {
-      target = state.target;
+      target = state.href;
     });
     return null;
   }
@@ -304,7 +338,7 @@ describe('IngredientCard navigation', () => {
     await act(async () => arrive());
   });
 
-  it('presses through to a compendium entry as a main page with its jump menu', async () => {
+  it('presses through to a compendium entry by its address', async () => {
     render(
       <Navigating push={router.push} arrives={arrives()}>
         <IngredientCard {...BASE} />
@@ -315,10 +349,10 @@ describe('IngredientCard navigation', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
     expect(router.push.mock.calls[0]?.[0]).toBe(HREF);
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe(HREF);
   });
 
-  it("presses through to a coven's entry as a coven page with its jump menu", async () => {
+  it("presses through to a coven's entry by its address", async () => {
     render(
       <Navigating push={router.push} arrives={arrives()}>
         <IngredientCard
@@ -332,7 +366,7 @@ describe('IngredientCard navigation', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
-    expect(target).toEqual({ region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe('/coven/fixture-coven/ingredients/some-id');
   });
 });
 

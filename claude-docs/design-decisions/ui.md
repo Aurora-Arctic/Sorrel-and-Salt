@@ -527,6 +527,9 @@ site has three parts: the control that was pressed answers at once, the region
 that changes shows a skeleton, and a thin bar along the global bar marks every
 navigation. The standard itself is [`../loading.md`](../loading.md).
 
+> Link targets (`navigationTarget`) and the hidden `<h1>Loading</h1>` were later replaced by skeletons chosen by the destination's address, each drawing its page's own heading: see
+> [`m11.9-skeletons-beside-pages.md`](m11.9-skeletons-beside-pages.md).
+
 ### The calls
 
 - **A page bar on every navigation.** A thin indeterminate bar sits under the
@@ -638,6 +641,7 @@ swap their children for a skeleton, which unmounts the link that was pressed.
   error, so nothing settles by hand.
 - Where two navigations overlap the later one's value shows, and the value goes
   when the last of them has ended.
+- A push to another path moves the address bar and history at once (`pushState` with the current entry's router state), then calls `router.replace`, so Back during the wait returns to the page left and a redirect adds no entry. The early entry is marked, so a Forward onto one that never loaded fetches its page afresh rather than restoring the router state it carries ([`../loading.md`](../loading.md), "Why there is no `loading.tsx`").
 - A navigation waits first on any mounted form with unsaved changes
   (`useLeaveGuard`). A refresh leaves the page where it is, so nothing holds it.
 
@@ -1128,3 +1132,47 @@ The held noun follows the vocabulary: a coven's own stock is its cupboard (`CLAU
 - A Compact switch on the public list.
 - Fixing hand-written repeats of a mixin or token inside a design-review PR; they are collected into their own task.
 - Treating LinkHint's drop, the navigation bar's 3px and the Combobox ring as repeats: each is a design choice and stays as it is.
+
+## The suggestion field writes only what a keystroke changes
+
+**Status:** decided. Live home: `claude-docs/components/combobox.md`, "What a keystroke writes".
+
+### Decision
+
+1. **A pending lookup never closes an open list**, which keeps its last rows or shows the loading row (`claude-docs/components/combobox.md`, "The loading row"). `useListPosition` (`src/components/Combobox/position.ts`) follows the list with `autoUpdate` only while it is open, so typing subscribes nothing again; a close by Escape, a pick or a blur ends the subscription.
+2. **Each placing measures the phone's bottom bar once** (`measureBar`), and `flip`, `shift` and `size` share the result.
+3. **The `size` step writes the list's `width` and `--combobox-list-room` only when they change.**
+4. **Kept:** the ResizeObserver and the layout-shift tracking, because the list's own size decides whether it flips above the box, and a page that shifts moves the box.
+5. **The input's `name` is left to React.** `aria-busy` is not touched either: React writes an ordinary attribute only when its value changes, so each write is a real change.
+
+`tests/components/Combobox/keystroke.test.tsx` proves no `aria-busy` write on a key that leaves it as it was, no unchanged style write on the list across a key and a pending lookup, and one subscription across that lookup.
+
+### Why
+
+Every write to the page re-checks its `:has()` style rules, and a subscription made by `autoUpdate` reads every scrolling ancestor's style and the input's position. React runs that effect straight after a keystroke's render, so a reopen's reads landed inside the keystroke.
+
+React DOM's `updateInput` sets `name` to empty and back (two writes, or adding and removing `name=""` with no prop) after every input event, through its restore step, and on every commit of the input, which happens on every render because Downshift's `getInputProps` builds a new props object. The field cannot stop either while React renders the `<input>`; setting `name` from a ref is undone by the next run.
+
+### Rules out
+
+- **An input React does not own**, created, attributed and listened to by the Combobox and kept in the server-rendered page for the form to work before hydration: too large and risky a change to a field every form uses.
+
+## The compendium page sends each thing once
+
+**Status:** decided. Live homes: `claude-docs/components/compendium-list.md` and `claude-docs/components/ingredient-card.md`, "What the page sends".
+
+### Decision
+
+1. **The pages send the service's facet counts as they come** (`counts`, keyed by id for a category or a deity and by text for the rest). The filter labels them in the browser with `facetChoices(counts, vocabulariesOf(categories, vocabulary))` (`src/components/CompendiumList/facets.ts`), the code that already labels a live answer, so the browser downloads no new mapping code. The coven ingredients page and the curator compendium take the same props.
+2. **A card names its categories by id** (`categoryRefs`, `src/components/IngredientCard/category-refs.ts`), and the face reads names and colours from `CardCategoryVocabulary`, a client context the list wraps around its cards. The vocabulary always holds every chip: categories are global, and `readCardCategoriesOf` keeps only categories in `readCategories()`, the same request-cached list the page hands the vocabulary. So a card carries ids only.
+3. **`IngredientCard` is a server wrapper around the client `CardFace`** (`face.tsx`), so React's data carries each card as its props, not as its drawn element tree. The wrapper reduces the props first: safety notes become `'*'` or `null`, and each variant keeps only its form, its group's icon, and whether it is toxic or has notes.
+4. **What is still sent drawn:** whatever a page passes in `actions`, `startActions` and the jar slot, and the heading's details link.
+
+### Why
+
+Each category and deity reached the browser twice, once for the suggestions and again as labelled filter choices, and each card was sent as HTML and again, in full, in React's data. On a production build of the `standard` seed, `/compendium`'s HTML fell by 117.0 KB raw (4.7 KB gzip) while its first-load scripts grew by 2.0 KB gzip; one card's share of React's data fell from about 5.0 KB to about 1.5 KB. A first visit that starts on a coven's ingredients page downloads about 0.9 KB more (scripts +2.6 KB, HTML −1.7 KB gzip), but the scripts are cached and the HTML saving recurs on every visit, so both pages use the same card.
+
+### Rules out
+
+- **Sending only the labelled choices** and dropping the full lists: the suggestions offer every category and deity, including those no entry under the current filter carries.
+- **Keeping the card a server component and trimming its markup:** every class name and icon would still be sent twice.

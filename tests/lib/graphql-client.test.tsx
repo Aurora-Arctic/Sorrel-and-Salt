@@ -1,7 +1,6 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { parse } from 'graphql';
 import { HttpResponse } from 'msw/http';
 import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -19,12 +18,19 @@ import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../support/msw/
 import { server } from '../support/msw/server';
 import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';
 
-const OkDocument = parse('query Ok { ok }') as TypedDocumentNode<OkQuery, OkQueryVariables>;
+// A document is its query text, as codegen's string mode writes it.
+class TextDocument<TResult, TVariables>
+  extends String
+  implements DocumentTypeDecoration<TResult, TVariables>
+{
+  __apiType?: (variables: TVariables) => TResult;
+}
 
-const EchoDocument = parse('query Echo($word: String!) { echo(word: $word) }') as TypedDocumentNode<
-  EchoQuery,
-  EchoQueryVariables
->;
+const OkDocument = new TextDocument<OkQuery, OkQueryVariables>('query Ok { ok }');
+
+const EchoDocument = new TextDocument<EchoQuery, EchoQueryVariables>(
+  'query Echo($word: String!) { echo(word: $word) }',
+);
 
 function Ok() {
   const { data } = useQuery(graphqlQuery(OkDocument));
@@ -186,7 +192,7 @@ describe('graphqlQuery', () => {
   });
 
   it('refuses an anonymous operation, which has nothing to key it by', () => {
-    const anonymous = parse('{ ok }') as TypedDocumentNode<OkQuery, OkQueryVariables>;
+    const anonymous = new TextDocument<OkQuery, OkQueryVariables>('{ ok }');
 
     expect(() => graphqlQuery(anonymous)).toThrow(/operation name/);
   });

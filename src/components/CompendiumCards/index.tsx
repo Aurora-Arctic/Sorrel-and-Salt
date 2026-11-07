@@ -2,11 +2,15 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
+import { facetChoices, vocabulariesOf } from '../CompendiumList/facets';
+import EmptyState from '../EmptyState';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
+import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
 import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import AddIcon from '../AddIcon';
 import { emptyList } from '../../lib/text';
@@ -89,7 +93,7 @@ const footOf = (
 const CompendiumCards = ({
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -103,12 +107,12 @@ const CompendiumCards = ({
   myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
-    shape="cards"
+    skeleton={<ListBodySkeleton label="Compendium" card="compendium" />}
     search={
       <CompendiumListFilter
         audience="public"
         filter={filter}
-        facets={facets}
+        counts={counts}
         categories={categories}
         vocabulary={vocabulary}
         total={total}
@@ -121,29 +125,38 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, emptyList('ingredients'))}</p>
+      <EmptyState size="compact" label="No Ingredients">
+        {emptyText(
+          filter,
+          categories,
+          facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+          emptyList('ingredients'),
+        )}
+      </EmptyState>
     ) : (
-      <IngredientCardList label="Compendium">
-        {entries.map((entry) => (
-          <IngredientCard
-            key={entry.id}
-            href={entryHref(entry)}
-            label={entry.name}
-            formalName={entry.canonicalName}
-            nomenclature={entry.nomenclature}
-            categories={entry.categories}
-            variants={entry.variants}
-            toxic={entry.toxic}
-            safetyNotes={entry.safetyNotes}
-            kind="compendium"
-            recency={entry.recency}
-            actions={footOf(entry, action, workspaceId, covens)}
-            startActions={
-              entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
-            }
-          />
-        ))}
-      </IngredientCardList>
+      <CardCategoryVocabulary categories={categories}>
+        <IngredientCardList label="Compendium">
+          {entries.map((entry) => (
+            <IngredientCard
+              key={entry.id}
+              href={entryHref(entry)}
+              label={entry.name}
+              formalName={entry.canonicalName}
+              nomenclature={entry.nomenclature}
+              categories={entry.categories}
+              variants={entry.variants}
+              toxic={entry.toxic}
+              safetyNotes={entry.safetyNotes}
+              kind="compendium"
+              recency={entry.recency}
+              actions={footOf(entry, action, workspaceId, covens)}
+              startActions={
+                entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
+              }
+            />
+          ))}
+        </IngredientCardList>
+      </CardCategoryVocabulary>
     )}
   </IngredientSearch>
 );

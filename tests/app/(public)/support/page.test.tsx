@@ -15,7 +15,11 @@ vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 const redirect = vi.fn((path: string) => {
   throw new Error(`redirect:${path}`);
 });
-vi.mock('next/navigation', () => ({ redirect }));
+vi.mock('next/navigation', () => ({
+  redirect,
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/support',
+}));
 
 vi.mock('@/components/SupportPanel', () => ({
   default: ({ state }: { state: { kind: string } }) => <p>{`panel:${state.kind}`}</p>,

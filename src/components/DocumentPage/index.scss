@@ -68,11 +68,6 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
       height: space(8);
       pointer-events: none;
       opacity: 0;
-      @include theme-transition(opacity);
-
-      @include reduced-motion {
-        transition: none;
-      }
     }
 
     > .page-nav::before {
@@ -109,6 +104,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   margin: 0 0 space(2);
   color: $text-muted;
   font-size: type-size('small');
+}
+
+// The skeleton's bar in that line is as tall as the line, so the head below it keeps its place.
+.document-page__updated .skeleton__shapes .skeleton__line {
+  height: 1lh;
 }
 
 .document-page__body {
@@ -154,7 +154,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   .document-page__sources a {
     color: $text-primary;
     @include faded-underline;
-    @include theme-transition(color);
+    @include state-fade(color);
 
     &:hover,
     &:focus-visible {
@@ -198,4 +198,10 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   .data-table td {
     line-height: 1.5;
   }
+}
+
+// The skeleton's lede holds the three lines every document's takes on a phone, so the menu below it
+// stands where it will.
+.document-page__head .lede .skeleton {
+  min-height: 3lh;
 }

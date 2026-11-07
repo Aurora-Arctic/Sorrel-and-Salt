@@ -1,5 +1,6 @@
 'use client';
 
+import EmptyState from '../EmptyState';
 import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useCategoryIndex } from './category-index';
@@ -101,9 +102,9 @@ export function ComparisonPanel({
 
   let body: ReactElement;
   if (intended.length === 0 && steps.length === 0) {
-    body = <p className="spell-aside__empty">Nothing to compare yet.</p>;
+    body = <EmptyState size="compact">Nothing to compare yet.</EmptyState>;
   } else if (intended.length === 0) {
-    body = <p className="spell-aside__empty">Assign categories to compare.</p>;
+    body = <EmptyState size="compact">Assign categories to compare.</EmptyState>;
   } else {
     body = (
       <dl className="comparison-panel__rows">

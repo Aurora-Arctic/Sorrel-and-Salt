@@ -3,7 +3,7 @@ import {
   parseCursorConnectionArgs,
   validateConnectionArguments,
 } from '@pothos/core';
-import { InvalidCursor } from './errors';
+import { MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE, decodeCursor, encodeCursor } from './cursor';
 import type {
   ConnectionArgs,
   Cursor,
@@ -14,13 +14,16 @@ import type {
   PageRequest,
 } from './types';
 
-// CLAUDE.md rule 8, the one pagination rule (claude-docs/graphql/pagination.md, "Pagination").
+// CLAUDE.md rule 8, the one pagination rule (claude-docs/graphql/pagination.md, "Pagination"). The sizes
+// and the cursor codec live in `cursor.ts`, which the browser loads too.
 
-export const DEFAULT_PAGE_SIZE = 25;
-/** What a card list pages by: 24 divides by 1, 2, 3 and 4 columns, so the last row of the grid is full. */
-export const CARD_PAGE_SIZE = 24;
-/** A client asking for more gets this many, not an error. */
-export const MAX_PAGE_SIZE = 100;
+export {
+  CARD_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+  decodeCursor,
+  encodeCursor,
+} from './cursor';
 
 const LIMITS = { defaultSize: DEFAULT_PAGE_SIZE, maxSize: MAX_PAGE_SIZE };
 
@@ -28,33 +31,6 @@ const LIMITS = { defaultSize: DEFAULT_PAGE_SIZE, maxSize: MAX_PAGE_SIZE };
 export function pageSize(args: Pick<ConnectionArgs, 'first' | 'last'>): number {
   validateConnectionArguments(args);
   return getConnectionPageSize({ args, ...LIMITS }).expectedSize;
-}
-
-export function encodeCursor({ key, id }: Cursor): string {
-  return Buffer.from(JSON.stringify({ k: key, i: id }), 'utf8').toString('base64url');
-}
-
-export function decodeCursor(cursor: string): Cursor {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-  } catch {
-    throw new InvalidCursor();
-  }
-  if (
-    typeof decoded !== 'object' ||
-    decoded === null ||
-    !('k' in decoded) ||
-    !('i' in decoded) ||
-    !Array.isArray(decoded.k) ||
-    decoded.k.length === 0 ||
-    !decoded.k.every((part) => typeof part === 'string') ||
-    typeof decoded.i !== 'string' ||
-    decoded.i === ''
-  ) {
-    throw new InvalidCursor();
-  }
-  return { key: decoded.k as string[], id: decoded.i };
 }
 
 /** `fetch` sees a `PageRequest`, never the raw arguments, so no finder can skip the clamp. */

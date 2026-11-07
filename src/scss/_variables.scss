@@ -82,6 +82,13 @@ $drawer-side-dark: color.mix($chalk, $soot, 25%);
 $drawer-back-dark: color.mix($chalk, $soot, 2%);
 $drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
 
+// The faceted jar's two bands per theme, solid and from the card (claude-docs/styling.md,
+// "The faceted jar's bands").
+$jar-shade-light: color.mix($iron-gall, $parchment-raised, 8%);
+$jar-shine-light: $parchment-lifted;
+$jar-shade-dark: color.mix($chalk, $soot-raised, 8%);
+$jar-shine-dark: $soot;
+
 // Dark shades with black, as the site's shadows do. Light shades with iron-gall at alpha and lighter, as the dark's strengths over
 // a light floor read as a hole.
 $drawer-shade-dark: rgba(0, 0, 0, 0.5);
@@ -429,6 +436,9 @@ $notice-button-ink: var(--notice-button-ink);
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
 
+$jar-shade: var(--jar-shade);
+$jar-shine: var(--jar-shine);
+
 // An alias for the page surface: on dark the fill is the light thing and the label goes dark, on light the reverse. Worst pairing
 // 4.68:1. See claude-docs/styling.md, "$text-on-color".
 $text-on-color: var(--surface-page);
@@ -575,8 +585,8 @@ $recipe-sheet-width: math.div($print-content-width, $print-root) * 1rem;
 // it (claude-docs/styling.md, "The top inset").
 $top-inset: var(--top-inset, 0px);
 
-$theme-transition-duration: 400ms;
-$theme-transition-easing: ease-in-out;
+$motion-long: 400ms;
+$motion-easing: ease-in-out;
 
 // How long a tip bubble takes to fade in and out: 500ms (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;
@@ -644,6 +654,13 @@ $action-look-glyph-size: $action-glyph-size * $action-mark-scale;
 
 // Written as `min($tip-width, calc(100vw - space(6)))` so a tip never runs off a phone.
 $tip-width: 18rem;
+
+// A floating menu (the account menu, the workspace switcher) is never narrower than its control and never wider than this; a search field's suggestions stay at the field's width.
+$panel-min-width: 15rem;
+$panel-max-width: 18rem;
+
+// A floating menu's row height, shared so the account menu and the switcher stand the same height.
+$panel-row-height: 2.8125rem;
 
 // One width for the native select the server draws and the type-ahead that replaces it once hydrated, so the swap moves nothing.
 // 14rem: most names fit, and the longest seeded one (18rem as the box draws it) runs on inside the box; its option in the list is drawn whole.
@@ -932,3 +949,45 @@ $burn-rim-frames: (
 $burn-char-blur: 1px;
 $burn-char-line-blur: 0.5px;
 $burn-char-line-spread: 4.75px;
+
+// The height a list's card skeleton stands, per kind of card and density: the tallest card of that
+// list (a card with its stock, forms or actions), which is the height the cards of a row stretch to.
+$card-skeleton-heights: (
+  'cupboard': (
+    'regular': 17.95rem,
+    'compact': 14.81rem,
+  ),
+  'compendium': (
+    'regular': 14.19rem,
+    'compact': 10.67rem,
+  ),
+  'spell': (
+    'regular': 16.52rem,
+    'compact': 15.26rem,
+  ),
+  'spell-draft': (
+    'regular': 18.52rem,
+    'compact': 17.01rem,
+  ),
+);
+
+// The height a table's placeholder row stands at phone width, where each row is a card: one block as
+// tall as that list's real stacked row (a typical row, with its longest cells). 'default' is a row
+// with no list named.
+$stack-row-skeleton-heights: (
+  'default': 16rem,
+  'users': 32rem,
+  'members': 23.25rem,
+  'support': 29.416rem,
+  'invitation-cards': 28.25rem,
+  'card-sign-ups': 21rem,
+  'refused-opens': 15.25rem,
+  'keeper-invitations': 16.625rem,
+  'privilege-changes': 22.75rem,
+  'pending-invitations': 13.375rem,
+  'received-invitations': 11rem,
+  'groups': 12.637rem,
+  'values': 20rem,
+  'category-values': 14.625rem,
+  'compendium': 23.612rem,
+);

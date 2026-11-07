@@ -49,6 +49,19 @@ describe('TabbedPage', () => {
     expect(within(screen.getByRole('main')).getByRole('table', { name: 'Users' })).toBeVisible();
   });
 
+  it('draws as a plain box, with no landmark of its own, inside a body that already has one', () => {
+    render(
+      <main>
+        <TabbedPage as="div" title="People" tabs={TABS}>
+          <p>Content</p>
+        </TabbedPage>
+      </main>,
+    );
+
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(tabs()).toHaveLength(TABS.length);
+  });
+
   it('draws no tab row for a page with one tab, and still shows its action and content', () => {
     render(
       <TabbedPage title="People" tabs={[TABS[0]]} action={<a href="/keepers/users?pause">Pause</a>}>
@@ -144,6 +157,30 @@ describe('TabbedPage', () => {
       fireEvent.click(tab('Privilege Changes'));
     });
     expect(router.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("draws the pressed tab's own skeleton in the panel while it is on its way", async () => {
+    render(
+      <Navigating push={router.push}>
+        <TabbedPage
+          title="People"
+          tabs={[
+            TABS[0],
+            { ...TABS[1], skeleton: <p aria-hidden="true">Invitations placeholder</p> },
+            TABS[2],
+          ]}
+        >
+          <table aria-label="Users" />
+        </TabbedPage>
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(tab('Invitations'));
+    });
+
+    expect(within(panel()).getByText('Invitations placeholder')).toBeInTheDocument();
+    expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
   });
 
   it('moves the current page to the pressed tab once it has rendered', () => {

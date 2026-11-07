@@ -2,10 +2,11 @@
 
 import { type ReactElement, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { saveFile } from './save-file';
 
-// Download CSV: reads the arrivals as one string through GraphQL, then hands it to the browser as a file. A failure
+// Download CSV: reads the arrivals as one string through GraphQL, then hands it to the browser as a file. The button stays enabled while busy, so it keeps the focus; a second press does nothing. A failure
 // is the button's click feedback, so it is read where the press was, not in the heading's action slot.
 
 const DownloadCsv = ({ read }: { read: () => Promise<string> }): ReactElement => {
@@ -13,6 +14,7 @@ const DownloadCsv = ({ read }: { read: () => Promise<string> }): ReactElement =>
   const { anchorRef, report, feedback } = useClickFeedback({ name: 'Download CSV' });
 
   async function download() {
+    if (busy) return;
     setBusy(true);
     report(undefined);
     try {
@@ -26,15 +28,15 @@ const DownloadCsv = ({ read }: { read: () => Promise<string> }): ReactElement =>
 
   return (
     <>
-      <button
+      <BusyButton
         ref={anchorRef}
-        type="button"
         className="btn btn--solid"
-        disabled={busy}
+        busy={busy}
+        busyLabel="Preparing"
         onClick={() => void download()}
       >
-        {busy ? 'Preparing' : 'Download CSV'}
-      </button>
+        Download CSV
+      </BusyButton>
       {feedback}
     </>
   );

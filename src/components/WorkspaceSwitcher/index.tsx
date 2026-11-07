@@ -2,11 +2,10 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
+import { NEW_COVEN_PATH, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
 import { covenPausedPath, pausedCovenSlugOf } from '../../lib/access-paused';
 import { pauseNote } from '../../lib/pause-note';
-import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
@@ -17,13 +16,6 @@ import './index.scss';
 // the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
-
-const NARROW_PANEL: NavigationTarget = { region: 'main', shape: 'form', frame: 'narrow' };
-
-function targetOf(path: string): NavigationTarget {
-  if (path === NEW_COVEN_PATH || pausedCovenSlugOf(path) !== undefined) return NARROW_PANEL;
-  return { ...covenTarget(path), coven: covenSlugOf(path) ?? undefined };
-}
 
 // Set when a switch starts and read once by the next switcher to mount, so focus survives the
 // `[slug]` layout's remount; a module variable survives it and, unlike `sessionStorage`, dies with
@@ -95,7 +87,7 @@ export default function WorkspaceSwitcher({
                   });
           setPicked(value);
           focusAfterSwitch = value === CREATE.value ? undefined : value;
-          navigate(href, { target: targetOf(href) });
+          navigate(href);
         }}
         choices={canCreate ? [...choices, CREATE] : choices}
         placeholder="Choose a coven"

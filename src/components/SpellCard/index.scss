@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
@@ -8,17 +9,12 @@
 // `.spell-card__face` layer (_smoulder.scss), so the smouldering edge can burn through both.
 .spell-card {
   @include smoulder-base;
-  @include theme-transition(color);
 
   // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
   color: $text-primary;
   border-radius: radius('surface');
-
-  @include reduced-motion {
-    transition: none;
-  }
 
   // The content, positioned so it paints over the face and glow in markup order, with no z-index anywhere: one on the
   // card would trap the category chips' tips beneath the next card.
@@ -129,4 +125,22 @@
 // Regular choice sits on <html> (data-card-density, CardDensitySwitch).
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include spell-card-compact;
+}
+
+// The skeleton: the card's frame at the height the grimoire's cards stand (`$card-skeleton-heights`), the
+// block filling it.
+.spell-card--skeleton {
+  @include card-skeleton-fill;
+  box-sizing: border-box;
+}
+
+@each $kind in ('spell', 'spell-draft') {
+  .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'regular');
+  }
+
+  [data-density='compact']:not(:root[data-card-density='regular'] *)
+    .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'compact');
+  }
 }

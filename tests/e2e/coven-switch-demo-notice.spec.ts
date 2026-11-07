@@ -68,11 +68,13 @@ test('the demo warning leaves when a switch to another coven starts, and is not 
   await page.getByRole('option', { name: 'Fixture Coven Demo Switch', exact: true }).click();
   await expect.poll(server.navigations).toBeGreaterThan(0);
   await expect(switcher).toHaveAttribute('aria-busy', 'true');
-  // Still the demo coven's address: the other coven has not rendered.
-  expect(new URL(page.url()).pathname).toBe(`/coven/${DEMO_SLUG}/ingredients`);
+  // The address moves at the press; the busy switcher shows the other coven has not rendered.
+  expect(new URL(page.url()).pathname).toBe(`/coven/${other.slug}/ingredients`);
   await expect(demoNotice(page)).toHaveCount(0);
   await server.release();
   await expect(page).toHaveURL(`/coven/${other.slug}/ingredients`);
+  // The address is set at the press, so the idle switcher, not the address, says the other coven has rendered.
+  await expect(switcher).not.toHaveAttribute('aria-busy', 'true');
   await expect(demoNotice(page)).toHaveCount(0);
 
   // The reverse: nothing of the demo coven shows while it loads, and it shows once it has.

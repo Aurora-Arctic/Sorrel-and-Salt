@@ -2,8 +2,8 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { publicGuidePath } from '../../lib/help-paths';
 import { PendingLink } from '../../lib/navigation';
-import { NO_MATCH_HINT } from '../../lib/text';
-import { siteLinkTarget } from '../AppShell/site-target';
+import { emptyList, NO_MATCH_HINT } from '../../lib/text';
+import EmptyState from '../EmptyState';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import type { EmptyGrimoireProps } from './types';
 
@@ -14,29 +14,32 @@ import type { EmptyGrimoireProps } from './types';
 // The Grimoire guide's slug is its title's (src/db/seed/help-content/articles.ts).
 const GRIMOIRE_GUIDE = publicGuidePath('grimoire') as Route;
 
-const EmptyGrimoire = ({ status, filter, canCreate }: EmptyGrimoireProps): ReactElement => {
+const EmptyGrimoire = ({ status, filter, canCreate, path }: EmptyGrimoireProps): ReactElement => {
   const { hasFilter } = buildSearchSentence({ filter, total: 0 });
   if (!hasFilter) {
     const drafts = status === 'draft';
     return (
-      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- holds paragraphs, which <output> may not
-      <div
-        role="status"
-        aria-label={drafts ? 'No Drafts' : 'No Spells'}
-        className="grimoire-list__empty"
+      <EmptyState
+        label={drafts ? 'No Drafts' : 'No Spells'}
+        detail={canCreate ? undefined : 'A practitioner or steward of this coven can write them.'}
+        action={<PendingLink href={GRIMOIRE_GUIDE}>Learn More</PendingLink>}
       >
-        <p>{drafts ? 'There are no drafts here yet.' : 'There are no complete spells here yet.'}</p>
-        {!canCreate && <p>A practitioner or steward of this coven can write them.</p>}
-        <PendingLink href={GRIMOIRE_GUIDE} navigationTarget={siteLinkTarget('/help')}>
-          Learn More
-        </PendingLink>
-      </div>
+        {emptyList(drafts ? 'drafts' : 'complete spells')}
+      </EmptyState>
     );
   }
   return (
-    <output aria-label="No Matches" className="grimoire-list__no-match">
+    <EmptyState
+      label="No Matches"
+      size="compact"
+      action={
+        <PendingLink href={path} className="btn btn--quiet">
+          Clear Filters
+        </PendingLink>
+      }
+    >
       {NO_MATCH_HINT}
-    </output>
+    </EmptyState>
   );
 };
 

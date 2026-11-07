@@ -1,0 +1,19 @@
+@use '../../scss/variables' as *;
+
+// The question's dialog: the modal surface at a narrow column, a title and the question over the answers.
+.confirm-dialog {
+  width: min(24rem, calc(100vw - #{space(8)}));
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.confirm-dialog__title {
+  margin: 0 0 space(3);
+  font-size: heading-size(4);
+}
+
+.confirm-dialog__question {
+  margin: 0;
+}

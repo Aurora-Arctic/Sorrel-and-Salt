@@ -12,6 +12,7 @@ import { useApplyFilter } from '../FilterForm';
 import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
 import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
+import { facetChoices, vocabulariesOf } from './facets';
 import { useLiveFacets } from './live-facets';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
@@ -23,13 +24,16 @@ import {
   covenIngredientsPath,
 } from './href';
 import { COMPENDIUM_PARAMS } from './params';
-import type { CompendiumListFilterProps } from './types';
+import type { CompendiumFacetCounts, CompendiumListFilterProps } from './types';
 
 // The compendium's filter row: the name search, the Filters button with its panel of facets and the
 // search sentence. The panel holds its changes until it shuts; a coven's list is the same row on
 // COVEN_PARAMS (claude-docs/components/compendium-list.md, "The filter row").
 
 type Held = CompendiumListFilterProps['filter'];
+
+/** The row's props, with the counts already drawn into choices once. */
+type RowProps = Omit<CompendiumListFilterProps, 'counts'> & { facets: CompendiumFacetCounts };
 
 interface Where {
   path: Route;
@@ -157,7 +161,7 @@ const PanelFacets = ({
   covens,
   panel,
   onPanel,
-}: CompendiumListFilterProps & {
+}: RowProps & {
   panel: FacetPanelFilter;
   onPanel: (next: FacetPanelFilter) => void;
 }): ReactElement => {
@@ -206,7 +210,7 @@ const CompendiumListFilterRow = ({
   workspaceId,
   covens,
   cursor,
-}: CompendiumListFilterProps): ReactElement => {
+}: RowProps): ReactElement => {
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
   // The panel as held: the filter shown until something in it is changed, and the filter
@@ -266,7 +270,7 @@ function labelsOf({
   facets,
   categories,
   covens = [],
-}: Pick<CompendiumListFilterProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
+}: Pick<RowProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
   const named = (rows: readonly { value: string; label: string }[]) =>
     Object.fromEntries(rows.map(({ value, label }) => [value, label]));
   const sameName = (name: string) =>
@@ -293,7 +297,7 @@ function filterOf(href: string, shown: Held, coven: boolean): Held {
 
 const CompendiumListFilterWithSentence = ({
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   audience = 'admin',
@@ -304,6 +308,12 @@ const CompendiumListFilterWithSentence = ({
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   const { searching, target } = useListNavigation();
+  // The choices, named from the vocabularies here rather than sent named: each category and deity
+  // then reaches the browser once.
+  const facets = useMemo(
+    () => facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+    [counts, categories, vocabulary],
+  );
   // The page still shows the previous search while the new one is read, so the sentence names the
   // term and the facets of the address the navigation is opening, not those of `filter`.
   const searched =
@@ -342,7 +352,10 @@ const CompendiumListFilterWithSentence = ({
         covens={covens}
         cursor={cursor}
       />
-      <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      {/* An empty list with no filter says so itself, so the count line stays out. */}
+      {(total > 0 || sentence.hasFilter) && (
+        <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      )}
     </>
   );
 };

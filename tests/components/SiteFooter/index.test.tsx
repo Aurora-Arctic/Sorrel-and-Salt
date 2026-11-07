@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   usePathname: () => '/coven/hearth',
   useSearchParams: () => new URLSearchParams(),
 }));

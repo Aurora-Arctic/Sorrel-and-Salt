@@ -20,3 +20,8 @@
   color: $text-muted;
   font-size: type-size('small');
 }
+
+/* A held pick's skeleton: about the width of a short chip. */
+.category-picker__held {
+  inline-size: 6rem;
+}

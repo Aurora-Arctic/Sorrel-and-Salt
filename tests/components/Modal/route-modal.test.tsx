@@ -266,55 +266,13 @@ describe('RouteModal giving the focus back', () => {
 });
 
 describe('EditLink outside a provider', () => {
-  it('is a plain link', () => {
+  it('navigates to its address through the router, without a scroll to the top', () => {
     render(<EditLink href={EDIT} name="Testcraft" heading={HEADING} />);
 
-    // `true`: nothing prevented the link's own navigation.
-    expect(fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }))).toBe(true);
-  });
-});
-
-describe('two modal places on one page', () => {
-  const DETAILS: Route = '/curator/categories?entry=testcraft';
-  const DETAILS_HEADING: ModalHeading = { eyebrow: 'Ingredient', title: 'Testcraft' };
-  const NameLink = () => {
-    const onClick = useOpenModalClick(DETAILS, DETAILS_HEADING, 'details');
-    return (
-      <a href="/compendium/ingredients/testcraft" onClick={onClick}>
-        Testcraft
-      </a>
-    );
-  };
-  const renderPage = () =>
-    render(
-      <Navigating push={router.push}>
-        <RouteModalProvider>
-          <NameLink />
-          <EditLink href={EDIT} name="Testcraft" heading={HEADING} />
-          <RouteModal place="details" closeHref={CLOSE} />
-          <RouteModal closeHref={CLOSE} />
-        </RouteModalProvider>
-      </Navigating>,
-    );
-
-  it('shows a press of the name in the details place alone', async () => {
-    renderPage();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Testcraft' }));
-    });
-
-    expect(router.push).toHaveBeenCalledWith(DETAILS, { scroll: false });
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(screen.getByRole('dialog', { name: 'Ingredient, Testcraft' })).toBeInTheDocument();
-  });
-
-  it('shows a press of Edit in the unnamed place alone, as before', async () => {
-    renderPage();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }));
-    });
-
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
+    // Precondition: the link carries its address, so it still works as a link to the browser.
+    expect(screen.getByRole('link', { name: 'Edit Testcraft' })).toHaveAttribute('href', EDIT);
+    // `false`: the link's own navigation was prevented, the router's taking its place.
+    expect(fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }))).toBe(false);
+    expect(router.push).toHaveBeenCalledWith(EDIT, { scroll: false });
   });
 });

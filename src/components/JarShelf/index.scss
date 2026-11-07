@@ -176,15 +176,14 @@ $-bracket: 7px;
   fill-opacity: 0.12;
 }
 
-// A faceted jar's two bands, a step darker and lighter than the glass, from the text and card
-// colours since no token exists; they swap roles in the dark theme
-// (claude-docs/components/jar-shelf.md, "Contracts").
+// A faceted jar's two bands, a step darker and lighter than the glass; they swap roles in dark
+// (claude-docs/styling.md, "The faceted jar's bands").
 .jar-shelf__shade {
-  fill: color-mix(in srgb, $text-primary 8%, transparent);
+  fill: $jar-shade;
 }
 
 .jar-shelf__shine {
-  fill: color-mix(in srgb, $surface-card 55%, transparent);
+  fill: $jar-shine;
 }
 
 .jar-shelf__level {

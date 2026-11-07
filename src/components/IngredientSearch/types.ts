@@ -29,10 +29,10 @@ export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   action?: ReactNode;
   children: ReactNode;
   position?: PagePosition;
+  /** The list's own root class, beside `list-frame`. */
   className?: string;
-  shape?: 'table' | 'cards';
-  /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
+  /** What the results area draws while another page is on its way: the list's own placeholder. */
+  skeleton: ReactNode;
 }
 
 export interface IngredientSearchFormProps {
@@ -46,7 +46,10 @@ export interface IngredientSearchFormProps {
   pickPlace?: string;
   source?: SearchSource;
   clear?: boolean;
+  /** Joins the form's class. */
   className?: string;
+  /** Draw the box empty and asking nothing, for a list on its way. */
+  idle?: boolean;
   children?: ReactNode;
 }
 

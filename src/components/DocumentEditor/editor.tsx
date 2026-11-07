@@ -2,14 +2,14 @@
 
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 import { type ReactElement, useMemo, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { editorPlugins } from './elements';
 import Toolbar from './toolbar';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';

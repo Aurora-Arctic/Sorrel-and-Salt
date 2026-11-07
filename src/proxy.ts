@@ -1,13 +1,18 @@
 import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 import { Forbidden } from './lib/errors';
+import { matchPattern } from './lib/navigation/match-pattern';
+import { PAGE_PATTERNS, PUBLIC_FILES } from './lib/page-routes';
 import { RETURN_PATH_HEADER, signInPath } from './lib/sign-in';
 import { assertWorkshopAccess } from '@/modules/identity';
 
 // Route protection's first layer: deny by default, an optimistic cookie check that never touches the
 // database, except under /workshop (claude-docs/auth/route-protection.md, "Route protection").
 
-/** An entry is an exact path, or a path ending `/*` for everything beneath it, so `/sign-in` does not admit `/sign-in-help`. */
+/**
+ * The pages a signed-out visitor may reach. An entry is an exact path, or a path ending `/*` for everything beneath it, so
+ * `/sign-in` does not admit `/sign-in-help`.
+ */
 const PUBLIC_ROUTES = [
   '/',
   '/sign-in',
@@ -61,6 +66,17 @@ function isPublic(pathname: string): boolean {
 }
 
 /**
+ * Whether an address is a page or a file the app serves; one that is neither holds nothing to protect, so a signed-out visitor
+ * reaches the 404, not Sign In. `/coven/<any slug>` is a page, so no coven's existence shows. Generated from `src/app` and `public/`
+ * (claude-docs/design-decisions/mb.124-signed-out-404-route-list.md).
+ */
+function isKnownAddress(pathname: string): boolean {
+  // An empty segment (`//host/x`) is never an ordinary mistyped address, so it keeps the redirect.
+  if (pathname.includes('//')) return true;
+  return PUBLIC_FILES.includes(pathname) || matchPattern(PAGE_PATTERNS, pathname) !== null;
+}
+
+/**
  * The staging component workshop's static files have no page to call `requireSession()`, so the proxy asks
  * the database itself here (claude-docs/workshop.md, "On staging").
  */
@@ -111,7 +127,11 @@ async function route(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
-  if (!isPublic(pathname) && !getSessionCookie(request)) {
+  if (
+    !isPublic(pathname) &&
+    (isKnownAddress(pathname) || isWorkshop(pathname)) &&
+    !getSessionCookie(request)
+  ) {
     return NextResponse.redirect(new URL(signInPath(returnPath), request.url));
   }
 

@@ -51,6 +51,7 @@ function renderSearch(
 ) {
   return renderWithClient(
     <IngredientSearch
+      skeleton={null}
       search={
         <IngredientSearchForm
           label="Filter Ingredients"
@@ -318,6 +319,7 @@ describe('IngredientSearch', () => {
     renderWithClient(
       <RouteModalContext.Provider value={{ loading: undefined, open, cancel: () => undefined }}>
         <IngredientSearch
+          skeleton={null}
           search={
             <IngredientSearchForm
               label="Filter Ingredients"

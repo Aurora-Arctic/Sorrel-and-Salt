@@ -101,6 +101,9 @@ cannot:
   `web-features` package, which lint cannot.
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
+- `axe-scans.test.ts` — the accessibility sweep's scan list names every
+  page under `src/app`, every route in §9 (`design/routes.md`) and every file that draws
+  a modal, and nothing that has gone ("Accessibility — axe-core", below).
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
 - `daily-job-starts.test.ts` — a daily job starts from its Vercel Cron route alone; the set of callers is pinned.
@@ -469,6 +472,24 @@ current page and fails the test with a per-rule summary (rule id, help text,
 node count) if any violations are returned. `tests/e2e/axe.spec.ts` seeds a
 violation (`page.setContent` with an `<img>` missing `alt`) and asserts the
 helper rejects, proof the scan fails a run instead of passing vacuously.
+
+**The sweep.** `tests/e2e/axe-scans.ts` is the scan list: every route the app
+serves, each with the people it is scanned as (signed out, an account with no
+seat, each coven role, a curator, a keeper, and the accounts the gates hold
+back), and every modal, each with the file that draws it and who opens it. A
+route §9 (`design/routes.md`) names with no page yet is listed as `unbuilt` and skipped, and a page that answers with an error, such as the 404 for an unmatched address, names the status it expects.
+`axe.spec.ts`'s "the accessibility sweep" runs one test per person for the
+pages and one for the modals. Each seeds its own coven, signs in, visits or
+opens every entry in turn, and scans it in the dark theme and then the light.
+Findings are collected rather than thrown, so one run reports them all; the
+test fails at the end with one line per finding and writes the full result,
+with each finding's selector, to `.reports/axe-sweep/<person>-<pages|modals>.json`.
+A scan the sweep could not reach is reported the same way, with the page's
+accessibility tree. `tests/e2e/axe-sweep.ts` holds the visits and the openers,
+typed by the scan list, so an entry added without one fails the type check;
+`tests/guards/axe-scans.test.ts` fails when a page, a §9 route or a file that
+draws a modal has no entry, or an entry has no page or file left.
+
 `pr-gate.yml`'s `playwright` job calls `.github/workflows/playwright.yml`,
 path-filtered off `src/**`, `tests/e2e/**`, `tests/support/**` (which
 `tests/e2e/database.ts` imports), `playwright.config.ts`, `next.config.ts`

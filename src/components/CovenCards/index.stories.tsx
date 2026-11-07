@@ -3,11 +3,8 @@ import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
-import type { CompendiumFacetCounts } from '../CompendiumList/types';
-import {
-  NO_FACETS as COMPENDIUM_NO_FACETS,
-  NO_FILTER as COMPENDIUM_NO_FILTER,
-} from '../../../.storybook/compendium-fixtures';
+import type { WorkspaceIngredientFacets } from '@/modules/ingredients';
+import { NO_FILTER as COMPENDIUM_NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import PageHeader from '../PageHeader';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { route } from '../../../.storybook/route';
@@ -25,11 +22,17 @@ const NO_FILTER: CovenCardsProps['filter'] = {
   lowStockOnly: false,
 };
 
-const NO_FACETS: CompendiumFacetCounts = {
-  ...COMPENDIUM_NO_FACETS,
+const NO_COUNTS: WorkspaceIngredientFacets = {
+  forms: [],
+  deities: [],
+  categories: [],
+  zodiacSigns: [],
+  celestialBodies: [],
+  elements: [],
+  toxic: [],
   source: [
-    { value: 'local', label: 'Local', count: 2 },
-    { value: 'compendium', label: 'Compendium', count: 1 },
+    { value: 'local', count: 2 },
+    { value: 'compendium', count: 1 },
   ],
   inStock: 2,
   lowStockOnly: 1,
@@ -79,7 +82,7 @@ const BASE: CovenCardsProps = {
   workspaceId: 'workshop',
   entries: ENTRIES,
   filter: NO_FILTER,
-  facets: NO_FACETS,
+  counts: NO_COUNTS,
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,

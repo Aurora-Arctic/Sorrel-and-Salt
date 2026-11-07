@@ -1516,6 +1516,95 @@ describe('Combobox empty message', () => {
   });
 });
 
+describe('Combobox pending lookup', () => {
+  const LOOKING: Suggestions = { options: [], pending: true };
+  const status = () => screen.getByRole('status', { name: 'Form suggestions' });
+  const listbox = () => screen.getByRole('listbox', { name: 'Form suggestions', hidden: true });
+  const loadingRow = () => screen.queryByText('Looking for suggestions', { selector: 'li' });
+
+  it('opens at once with one loading row that is not an option and is said once', () => {
+    const onPick = vi.fn();
+    render(<Harness offerTyped={false} suggestions={LOOKING} onPick={onPick} />);
+
+    type('wax');
+
+    const row = loadingRow();
+    expect(row).toBeVisible();
+    expect(listbox()).toContainElement(row);
+    expect(listbox()).toHaveAttribute('aria-busy', 'true');
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    // Hidden from the reader, who hears it once, from the live status.
+    expect(row?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(status()).toHaveTextContent('Looking for suggestions');
+
+    // Never highlighted, never picked.
+    key('ArrowDown');
+    expect(box()).not.toHaveAttribute('aria-activedescendant');
+    key('Enter');
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it('draws the loading row beneath a typed row while no suggestion has arrived', () => {
+    render(<Harness suggestions={LOOKING} />);
+
+    type('wax');
+
+    expect(options()).toHaveLength(1);
+    expect(loadingRow()).toBeVisible();
+  });
+
+  it('keeps the last rows, marked busy, while the next lookup is pending, then replaces them', () => {
+    const { rerender } = render(<Harness offerTyped={false} suggestions={ONE_BUCKET} />);
+    type('fix');
+    expect(options()).toHaveLength(2);
+    expect(listbox()).not.toHaveAttribute('aria-busy');
+
+    type('fixt');
+    rerender(<Harness offerTyped={false} suggestions={LOOKING} />);
+
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+    expect(options()).toEqual(['Hedge FixtureUsed by Testwort', 'Fixture Bane']);
+    expect(listbox()).toHaveAttribute('aria-busy', 'true');
+    expect(loadingRow()).not.toBeInTheDocument();
+
+    rerender(
+      <Harness
+        offerTyped={false}
+        suggestions={{ options: [{ value: 'Fixture Root' }], pending: false }}
+      />,
+    );
+
+    expect(options()).toEqual(['Fixture Root']);
+    expect(listbox()).not.toHaveAttribute('aria-busy');
+    expect(status()).toHaveTextContent('1 suggestion');
+  });
+
+  it('keeps nothing from a list that was closed, so the next lookup shows the loading row', () => {
+    const { rerender } = render(<Harness offerTyped={false} suggestions={ONE_BUCKET} />);
+    type('fix');
+    key('Escape');
+    expect(box()).toHaveAttribute('aria-expanded', 'false');
+
+    rerender(<Harness offerTyped={false} suggestions={LOOKING} />);
+    type('fixt');
+
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(loadingRow()).toBeVisible();
+  });
+
+  it('closes the loading row on Escape alone, then leaves the next Escape to the dialog', () => {
+    render(<Harness offerTyped={false} suggestions={LOOKING} />);
+    type('wax');
+    expect(loadingRow()).toBeVisible();
+
+    expect(key('Escape')).toBe(false);
+    expect(loadingRow()).not.toBeInTheDocument();
+    expect(status()).not.toHaveTextContent(/\S/);
+
+    expect(key('Escape')).toBe(true);
+    expect(box()).toHaveValue('wax');
+  });
+});
 describe('Combobox leading node and toggle', () => {
   const control = () => box().closest('.combobox__control') as HTMLElement;
 

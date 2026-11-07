@@ -6,6 +6,7 @@ import { RadioGroupField, SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
 import IngredientCard from '../src/components/IngredientCard';
 import { Jars } from '../src/components/IngredientCard/story-jars';
+import { CardCategoryVocabulary } from '../src/components/IngredientCard/category-vocabulary';
 import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
 import PageNav from '../src/components/PageNav';
@@ -36,7 +37,7 @@ function seededGroup(name: string): SeedCategoryGroup {
 // The card's sample data, invented (Testwort, never a real plant). Its chips
 // read the seeded groups' colour pairs, as a page's chips would.
 const SPECIMEN_CATEGORIES = ['Protection & Defense', 'Mind & Spirit', 'Craft & Change'].map(
-  (name, i) => ({ category: { id: `specimen-${i}`, name }, group: seededGroup(name) }),
+  (name, i) => ({ id: `specimen-${i}`, name, group: seededGroup(name) }),
 );
 const SPECIMEN_FORMS: SafetyVariant[] = [
   { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
@@ -888,18 +889,20 @@ export default function Foundations(): ReactElement {
           Testwort is flagged toxic — which is what the safety badge is for.
         </SectionHead>
         <div className="fd-stage">
-          <IngredientCard
-            href={route('/compendium/ingredients/testwort-testalis')}
-            label="Testwort"
-            formalName="Fixtura testalis"
-            nomenclature="botanical"
-            kind="own"
-            toxic
-            categories={SPECIMEN_CATEGORIES}
-            variants={SPECIMEN_FORMS}
-          >
-            <Jars />
-          </IngredientCard>
+          <CardCategoryVocabulary categories={SPECIMEN_CATEGORIES}>
+            <IngredientCard
+              href={route('/compendium/ingredients/testwort-testalis')}
+              label="Testwort"
+              formalName="Fixtura testalis"
+              nomenclature="botanical"
+              kind="own"
+              toxic
+              categories={SPECIMEN_CATEGORIES.map(({ id }) => ({ id }))}
+              variants={SPECIMEN_FORMS}
+            >
+              <Jars />
+            </IngredientCard>
+          </CardCategoryVocabulary>
         </div>
       </section>
 

@@ -223,6 +223,53 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('status', { name: 'No Spells' })).toBeNull();
   });
 
+  // The empty region says there are none, so the count line above it, which would say so too, is not drawn:
+  // the one status region left is the empty one. With a filter in force the count line stays, as it carries
+  // the search sentence the no-match region leans on.
+  it('draws no count line over an empty tab, and keeps it over a filter that matched nothing', () => {
+    // The title box's results announcer is a status region too, empty until a search offers titles.
+    const saying = () => screen.getAllByRole('status').filter((region) => region.textContent);
+    const empty = { spells: [], total: 0, position: undefined };
+    const { unmount } = render(<List {...props(empty)} />);
+    expect(saying()).toEqual([screen.getByRole('status', { name: 'No Spells' })]);
+    unmount();
+
+    render(
+      <List
+        {...props({
+          ...empty,
+          filter: { query: 'nothing', categories: [], categoryMode: 'all', ...OPEN },
+        })}
+      />,
+    );
+    expect(saying()).toHaveLength(2);
+  });
+
+  // A filter that matched nothing offers the way back to the whole tab: its own address, every filter
+  // dropped. An empty tab with no filter has nothing to clear.
+  it('offers Clear Filters where a filter matched nothing, back to the tab with no filter', () => {
+    const empty = { spells: [], total: 0, position: undefined };
+    render(
+      <List
+        {...props({
+          ...empty,
+          status: 'draft',
+          path: `${PATH}/drafts` as Route,
+          filter: { query: 'nothing', categories: ['testwarding'], categoryMode: 'all', ...OPEN },
+        })}
+      />,
+    );
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      `${PATH}/drafts`,
+    );
+    cleanup();
+
+    render(<List {...props(empty)} />);
+    expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
+  });
+
   it("searches by title from its own tab's address", () => {
     render(
       <List

@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const paged = (pager: ReactElement) => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <table aria-label="Fixtures" />
       {pager}
     </ListBody>

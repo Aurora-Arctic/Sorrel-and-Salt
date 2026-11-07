@@ -8,16 +8,15 @@ import AddAction from '../../app/(shell)/curator/add-action';
 import CompendiumList from '.';
 import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
-import { capitalise } from '../../lib/text';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
 import { detailsHeading } from '../IngredientEntry/details';
 import type {
   CompendiumCategoryChoice,
-  CompendiumFacetCounts,
   CompendiumFacetVocabulary,
   CompendiumListEntry,
 } from './types';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
+import type { CompendiumFacets } from '@/modules/ingredients';
 import {
   INGREDIENT_ELEMENTS,
   type NomenclatureKind,
@@ -58,44 +57,32 @@ const CATEGORIES: CompendiumCategoryChoice[] = [
   { id: 'c-3', slug: 'testcraft', name: 'Testcraft', group: CRAFTS },
 ];
 
-const FACETS: CompendiumFacetCounts = {
+const DEITIES = [
+  { id: 'd-1', slug: 'hecate-greek', name: 'Hecate', tradition: 'Greek' },
+  { id: 'd-2', slug: 'hecate-roman', name: 'Hecate', tradition: 'Roman' },
+  { id: 'd-3', slug: 'janus-roman', name: 'Janus', tradition: 'Roman' },
+];
+
+const COUNTS: CompendiumFacets = {
   forms: ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name, i) => ({
     value: name,
-    label: name,
     count: 6 - i,
-    icon: null,
   })),
-  deities: [
-    { value: 'hecate-greek', label: 'Hecate', count: 2, tradition: 'Greek' },
-    { value: 'hecate-roman', label: 'Hecate', count: 1, tradition: 'Roman' },
-    { value: 'janus-roman', label: 'Janus', count: 1, tradition: 'Roman' },
-  ],
-  categories: CATEGORIES.map(({ slug, name, group }, i) => ({
-    value: slug,
-    label: name,
-    count: 3 - i,
-    group,
-  })),
-  zodiac: [{ value: 'aries', label: 'Aries', count: 2 }],
-  celestialBodies: [{ value: 'mars', label: 'Mars', count: 2 }],
-  elements: INGREDIENT_ELEMENTS.map((value) => ({ value, label: capitalise(value), count: 1 })),
+  deities: DEITIES.map(({ id }, i) => ({ value: id, count: i === 0 ? 2 : 1 })),
+  categories: CATEGORIES.map(({ id }, i) => ({ value: id, count: 3 - i })),
+  zodiacSigns: [{ value: 'aries', count: 2 }],
+  celestialBodies: [{ value: 'mars', count: 2 }],
+  elements: INGREDIENT_ELEMENTS.map((value) => ({ value, count: 1 })),
   toxic: [
-    { value: 'toxic', label: 'Toxic', count: 1 },
-    { value: 'not_toxic', label: 'Not Toxic', count: 5 },
+    { value: 'toxic', count: 1 },
+    { value: 'not_toxic', count: 5 },
   ],
   withoutReferences: 2,
   withoutForms: 3,
+  reviewed: null,
 };
 
-const VOCABULARY: CompendiumFacetVocabulary = {
-  deities: FACETS.deities.map(({ value, label, tradition }) => ({
-    id: value,
-    slug: value,
-    name: label,
-    tradition,
-  })),
-  formIcons: {},
-};
+const VOCABULARY: CompendiumFacetVocabulary = { deities: DEITIES, formIcons: {} };
 
 const ICONS: Record<string, FormGroupIcon> = {
   Dried: 'botanical',
@@ -152,7 +139,7 @@ const PageOfSeveral = (): ReactElement => (
     <CompendiumList
       entries={ENTRIES}
       filter={NO_FILTER}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       previousHref={compendiumHref({ before: 'cursor' })}
@@ -170,7 +157,7 @@ const firstPageNode = (
     <CompendiumList
       entries={ENTRIES.slice(0, 2)}
       filter={NO_FILTER}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       nextHref={compendiumHref({ after: 'cursor' })}
@@ -202,7 +189,7 @@ const FilteredView = () => (
         sort: '',
         order: '',
       }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={1}
@@ -217,7 +204,7 @@ const chosenValuesCountedNode = (
     <CompendiumList
       entries={[entry('Mockroot', 'none', null, ['Powder'])]}
       filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={1}
@@ -248,7 +235,7 @@ const noMatchesNode = (
         sort: '',
         order: '',
       }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={0}
@@ -261,7 +248,7 @@ const emptyNode = (
     <CompendiumList
       entries={[]}
       filter={NO_FILTER}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={0}
@@ -274,7 +261,7 @@ const zodiacAndBodiesNode = (
     <CompendiumList
       entries={[entry('Mockroot', 'none', null, ['Powder'])]}
       filter={{ ...NO_FILTER, zodiac: ['aries'], celestialBodies: ['mars'] }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={1}
@@ -287,7 +274,7 @@ const withoutFormsNode = (
     <CompendiumList
       entries={[entry('Fixture Salt', 'unknown', null, [])]}
       filter={{ ...NO_FILTER, withoutForms: true }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={1}
@@ -300,7 +287,7 @@ const allCategoriesNode = (
     <CompendiumList
       entries={[ENTRIES[0]]}
       filter={{ ...NO_FILTER, categories: ['testward', 'testbane'], categoryMode: 'all' }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={1}
@@ -313,7 +300,7 @@ const lastPageNode = (
     <CompendiumList
       entries={ENTRIES.slice(2)}
       filter={NO_FILTER}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       previousHref={compendiumHref({ before: 'cursor' })}
@@ -328,7 +315,7 @@ const singlePageNode = (
     <CompendiumList
       entries={ENTRIES}
       filter={NO_FILTER}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={ENTRIES.length}
@@ -341,7 +328,7 @@ const sortedByScoreNode = (
     <CompendiumList
       entries={BY_SCORE}
       filter={{ ...NO_FILTER, sort: 'sourcing_score' }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={ENTRIES.length}
@@ -354,7 +341,7 @@ const sortedByNameDescendingNode = (
     <CompendiumList
       entries={[...ENTRIES].reverse()}
       filter={{ ...NO_FILTER, sort: 'name', order: 'desc' }}
-      facets={FACETS}
+      counts={COUNTS}
       categories={CATEGORIES}
       vocabulary={VOCABULARY}
       total={ENTRIES.length}
@@ -368,7 +355,7 @@ const phoneSortNode = (
       <CompendiumList
         entries={[...BY_SCORE].reverse()}
         filter={{ ...NO_FILTER, query: 'wort', sort: 'sourcing_score', order: 'desc' }}
-        facets={FACETS}
+        counts={COUNTS}
         categories={CATEGORIES}
         vocabulary={VOCABULARY}
         total={ENTRIES.length}

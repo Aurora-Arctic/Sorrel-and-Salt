@@ -1,22 +1,16 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import TabPanelLoading from '../TabbedPage/panel-loading';
+import LoadingStatus from './loading-status';
 import type { SwapPanelProps } from './types';
 
 // The swap a tab's panel and a list's body share: the content, or the skeleton while the next is
-// coming. Keyed by which it shows, so each mounts afresh and fades in; content from the server's
+// coming, with the one "Loading" status the skeleton leaves to it. Keyed by which it shows, so each mounts afresh and fades in; content from the server's
 // first render is shown at once.
 const SwapPanel = ({
   pending,
   className,
-  filter,
-  shape,
-  count,
-  columns,
-  fields,
-  density,
-  card,
+  skeleton,
   loadingMinHeight,
   children,
 }: SwapPanelProps): ReactElement => {
@@ -28,15 +22,7 @@ const SwapPanel = ({
       className={className}
       style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
     >
-      <TabPanelLoading
-        filter={filter}
-        shape={shape}
-        count={count}
-        columns={columns}
-        fields={fields}
-        density={density}
-        card={card}
-      />
+      <LoadingStatus>{skeleton}</LoadingStatus>
     </div>
   ) : (
     <div key="content" className={className} data-arrived={swapped || undefined}>

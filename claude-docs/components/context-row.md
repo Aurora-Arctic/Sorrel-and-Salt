@@ -7,8 +7,7 @@ render it, not the shell, because only a layout knows the area.
 
 - `lead` (`types.ts`): what names the area. The coven layout passes `WorkspaceSwitcher`; the
   admin layout a `PendingLink` to `/curator` reading "Curator", or to `/keepers` reading "Keepers", so
-  the area's name is its home as the switcher is the coven's. It names the `admin` region and the
-  `page` shape as its `navigationTarget`, so a press on it draws a page skeleton under the row while
+  the area's name is its home as the switcher is the coven's. Its press draws the index's skeleton under the row while
   the index is on its way ([`loading.md`](../loading.md)).
 - `children`: the section nav (`CovenNav`, `AdminNav`). It leaves the row at a phone's width by its
   own stylesheet (it becomes a bar fixed along the bottom), so there the row shows the lead alone.

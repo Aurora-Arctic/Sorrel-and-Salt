@@ -68,7 +68,7 @@ describe('GroupedValueList', () => {
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows).toHaveLength(3);
-    expect(within(rows[1]).getByRole('cell', { name: entries[0].name })).toBeInTheDocument();
+    expect(within(rows[1]).getByRole('rowheader', { name: entries[0].name })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: entries[0].groupName })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: entries[0].description })).toBeInTheDocument();
   });
@@ -83,9 +83,9 @@ describe('GroupedValueList', () => {
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(
-      within(rows[1]).getByRole('cell', { name: 'Testra Also called Testrina, Tess' }),
+      within(rows[1]).getByRole('rowheader', { name: 'Testra Also called Testrina, Tess' }),
     ).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: 'Mockra' })).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('rowheader', { name: 'Mockra' })).toBeInTheDocument();
   });
 
   it('draws an Updated column', () => {

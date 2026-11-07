@@ -8,6 +8,7 @@ import './index.scss';
 // A page in tabs: its heading with a row of links, one per tab, on the same line (or beneath it, with `tabsBelow`), the open tab's action at the line's end,
 // and its content beneath. Each tab is at its own address (claude-docs/components/tabbed-page.md, "What a tabbed page is").
 const TabbedPage = ({
+  as: Tag = 'main',
   title,
   tabs,
   open,
@@ -16,7 +17,7 @@ const TabbedPage = ({
   framed,
   children,
 }: TabbedPageProps): ReactElement => (
-  <main
+  <Tag
     className={[
       'tabbed-page',
       framed && 'tabbed-page--framed',
@@ -42,7 +43,7 @@ const TabbedPage = ({
       />
       <TabPanel>{children}</TabPanel>
     </TabSwitchProvider>
-  </main>
+  </Tag>
 );
 
 export default TabbedPage;

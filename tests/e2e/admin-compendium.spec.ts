@@ -1190,7 +1190,13 @@ test('the Sourcing Score heading sorts lowest first, then highest first, and eac
     );
   const cellScore = async (index: number): Promise<number> => {
     const column = await scoreColumn();
-    const cell = page.getByRole('table').getByRole('row').nth(index).getByRole('cell').nth(column);
+    // The first column is each row's header, not a cell.
+    const cell = page
+      .getByRole('table')
+      .getByRole('row')
+      .nth(index)
+      .getByRole('cell')
+      .nth(column - 1);
     return Number(await cell.textContent());
   };
   const row = page.getByRole('table').getByRole('row').nth(1);

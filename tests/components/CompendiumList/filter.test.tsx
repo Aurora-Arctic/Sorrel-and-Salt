@@ -6,10 +6,7 @@ import {
   compendiumHref,
   covenIngredientsHref,
 } from '@/components/CompendiumList/href';
-import type {
-  CompendiumFacetCounts,
-  CompendiumListFilter,
-} from '@/components/CompendiumList/types';
+import type { CompendiumListFilter } from '@/components/CompendiumList/types';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import {
@@ -17,7 +14,7 @@ import {
   answerCounts,
   CATEGORIES,
   escape,
-  FACETS,
+  COUNTS,
   FilterRow,
   FORMS,
   listStatus,
@@ -144,17 +141,17 @@ describe('CompendiumList filter', () => {
       off: '/curator/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
     },
   ])('writes $toggle as 1 and the toggle off by leaving it out', ({ toggle, on, shown, off }) => {
-    const facets = { ...FACETS, withoutForms: 3 };
+    const counts = { ...COUNTS, withoutForms: 3 };
     const flip = () =>
       fireEvent.click(screen.getByRole('switch', { name: new RegExp(`^${toggle}`) }));
-    const { unmount } = render(<FilterRow {...props({ facets })} />);
+    const { unmount } = render(<FilterRow {...props({ counts })} />);
     openPanel();
     flip();
     escape();
     expect(router.push).toHaveBeenLastCalledWith(on);
     unmount();
 
-    render(<FilterRow {...props({ facets, filter: shown })} />);
+    render(<FilterRow {...props({ counts, filter: shown })} />);
     openPanel();
     flip();
     escape();
@@ -164,7 +161,7 @@ describe('CompendiumList filter', () => {
   // filter would list, and the panel shows the answer before anything is applied.
   it('updates a count in the panel after a change, before Apply', async () => {
     answerCounts(7);
-    render(<FilterRow {...props({ facets: { ...FACETS, withoutReferences: 2 } })} />);
+    render(<FilterRow {...props({ counts: { ...COUNTS, withoutReferences: 2 } })} />);
     openPanel();
     expect(unsourcedSwitch()).toHaveAccessibleName('No Refs 2');
 
@@ -453,12 +450,15 @@ describe('CompendiumList filter', () => {
   });
 
   describe('the search sentence', () => {
-    const DEITIES: CompendiumFacetCounts['deities'] = [
-      { value: 'hecate-greek', label: 'Hecate', count: 2, tradition: 'Greek' },
-      { value: 'hecate-roman', label: 'Hecate', count: 1, tradition: 'Roman' },
-      { value: 'janus-roman', label: 'Janus', count: 1, tradition: 'Roman' },
+    const DEITIES = [
+      { id: 'd-hg', slug: 'hecate-greek', name: 'Hecate', tradition: 'Greek' },
+      { id: 'd-hr', slug: 'hecate-roman', name: 'Hecate', tradition: 'Roman' },
+      { id: 'd-jr', slug: 'janus-roman', name: 'Janus', tradition: 'Roman' },
     ];
-    const WITH_DEITIES: CompendiumFacetCounts = { ...FACETS, deities: DEITIES };
+    const WITH_DEITIES = {
+      counts: { ...COUNTS, deities: DEITIES.map(({ id }, i) => ({ value: id, count: i + 1 })) },
+      vocabulary: { deities: DEITIES, formIcons: {} },
+    };
     const sentence = () => listStatus()[0];
 
     // Each phase runs to its end in one act: the ticks write the line to a ref and the render only shows it; the next phase's interval starts from that render.
@@ -471,7 +471,7 @@ describe('CompendiumList filter', () => {
       const { rerender } = render(
         <FilterRow
           {...props({
-            facets: WITH_DEITIES,
+            ...WITH_DEITIES,
             filter: { ...NO_FILTER, deities: ['hecate-roman', 'janus-roman'] },
           })}
         />,
@@ -483,7 +483,7 @@ describe('CompendiumList filter', () => {
 
       rerender(
         <FilterRow
-          {...props({ facets: WITH_DEITIES, filter: { ...NO_FILTER, deities: ['hecate-greek'] } })}
+          {...props({ ...WITH_DEITIES, filter: { ...NO_FILTER, deities: ['hecate-greek'] } })}
         />,
       );
       expect(sentence()).toHaveTextContent('Hecate (Greek)');

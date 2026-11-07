@@ -1,13 +1,11 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
-import BusyButton from '../BusyButton';
-import Modal from '../Modal';
+import { graphql } from '@/lib/graphql-document';
+import ConfirmDialog from '../ConfirmDialog';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import CovenChoice from './coven-choice';
@@ -63,36 +61,24 @@ export function MakeItOursDialog({
   covens,
 }: CupboardQuestionProps): ReactElement {
   return (
-    <Modal title="Make It Ours" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
-        <div className={covens ? 'form' : undefined}>
-          {covens && <CovenChoice {...covens} />}
-          <p>
-            <MakeItOursQuestion name={name} />
-          </p>
-          <p>{MAKE_IT_OURS_DETAILS}</p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--solid"
-              busy={write.pending}
-              busyLabel="Making It Ours"
-              disabled={write.pending}
-              onClick={() => write.run()}
-            >
-              Make It Ours
-            </BusyButton>
-            <button
-              type="button"
-              className="btn btn--quiet"
-              disabled={write.pending}
-              onClick={close}
-            >
-              Cancel
-            </button>
-          </div>
+    <ConfirmDialog
+      title="Make It Ours"
+      question={<MakeItOursQuestion name={name} />}
+      confirmLabel="Make It Ours"
+      busyLabel="Making It Ours"
+      busy={write.pending}
+      tone="solid"
+      onConfirm={() => write.run()}
+      onClose={onClose}
+      returnTo={returnTo}
+    >
+      {covens && (
+        <div className="form">
+          <CovenChoice {...covens} />
         </div>
       )}
-    </Modal>
+      <p>{MAKE_IT_OURS_DETAILS}</p>
+    </ConfirmDialog>
   );
 }
 
@@ -104,35 +90,22 @@ export function RemoveDialog({
   covens,
 }: CupboardQuestionProps): ReactElement {
   return (
-    <Modal title="Remove from Cupboard" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
-        <div className={covens ? 'form' : undefined}>
-          {covens && <CovenChoice {...covens} />}
-          <p>
-            <RemoveFromCupboardQuestion name={name} />
-          </p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--destructive"
-              busy={write.pending}
-              busyLabel="Removing"
-              disabled={write.pending}
-              onClick={() => write.run()}
-            >
-              Remove
-            </BusyButton>
-            <button
-              type="button"
-              className="btn btn--quiet"
-              disabled={write.pending}
-              onClick={close}
-            >
-              Cancel
-            </button>
-          </div>
+    <ConfirmDialog
+      title="Remove from Cupboard"
+      question={<RemoveFromCupboardQuestion name={name} />}
+      confirmLabel="Remove"
+      busyLabel="Removing"
+      busy={write.pending}
+      onConfirm={() => write.run()}
+      onClose={onClose}
+      returnTo={returnTo}
+    >
+      {covens && (
+        <div className="form">
+          <CovenChoice {...covens} />
         </div>
       )}
-    </Modal>
+    </ConfirmDialog>
   );
 }
 
@@ -162,7 +135,7 @@ export function useCupboardWrites({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
     onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) => {
       const href = `/coven/${covenSlug}/ingredients/${entry.id}`;
-      navigate(href as Route, { target: ingredientLinkTarget(href) });
+      navigate(href as Route);
     },
     onError: refused,
   });

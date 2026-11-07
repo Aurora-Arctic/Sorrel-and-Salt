@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
+import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
 import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
+import { SoleStewardNotice } from '../sole-steward-notice';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
@@ -133,13 +135,8 @@ export default async function MembersPage({
         {/* Raised before it is urgent: a quiet status, since it is on the page
             from the start and asks nothing of the reader yet. Inside the
             frame, so the tabbed panel's own gap spaces it from the list. */}
-        {soleOwner && (
-          <Notice kind="warn" quiet>
-            This coven has one steward. If that person loses access, nobody can manage its members.
-            Make another member a steward to be safe.
-          </Notice>
-        )}
-        <ListBody>
+        {soleOwner && <SoleStewardNotice />}
+        <ListBody skeleton={<MemberListBodySkeleton showEmail={showEmail} showAccess={canPause} />}>
           <MemberList
             members={members}
             currentUserId={session.userId}

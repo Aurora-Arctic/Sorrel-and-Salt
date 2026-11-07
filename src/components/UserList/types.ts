@@ -1,5 +1,4 @@
 import type { Route } from 'next';
-import type { ReactNode, RefObject } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -28,9 +27,13 @@ export interface UserListEntry {
 
 export interface UserListProps extends Partial<PagerHrefs<Route>> {
   users: readonly UserListEntry[];
+  /** The name-or-email filter as asked, blank for none. */
   query: string;
+  /** Whether the list is narrowed to the users awaiting approval. */
   awaitingApproval: boolean;
+  /** The role the list is narrowed to, absent for every role. */
   role?: UserRole;
+  /** Whether the list is narrowed to the users a support time-out stands on. */
   timedOut?: boolean;
   paused?: boolean;
 
@@ -51,6 +54,7 @@ export type UserListFilterValue = UserListFilterProps;
 
 export interface HistoryLinkProps {
   email: string;
+  /** The user's name, completing the link's accessible name. */
   name: string;
 }
 
@@ -62,67 +66,19 @@ export interface UserLinkProps {
 
 export interface ImpersonateButtonProps {
   userId: string;
+  /** The user's name, completing the button's accessible name. */
   name: string;
 }
 
+/** What a row's creation control does: approve a user awaiting it, or revoke it. */
 export type CreationAction = 'approve' | 'revoke';
-
-export type ConfirmStep = 'idle' | 'confirming' | 'sending';
-
-export interface ConfirmedActionProps {
-  label: string;
-  accessibleName: string;
-  confirmLabel?: string;
-  openClass: string;
-  disabled?: boolean;
-  confirmDisabled?: boolean;
-  title: string;
-  question: ReactNode;
-  warning?: string;
-  busy: string;
-  confirmClass: string;
-  withNote?: boolean;
-  /** The write; `note` is the reason as typed, trimmed, or absent. A refusal rejects. */
-  send: (note?: string) => Promise<unknown>;
-  /** What follows a success, the confirm still busy; absent, the page is read again. */
-  onSent?: () => void;
-  /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
-  refusal?: string | ((error: unknown) => string);
-  /** Said in the status region after a success, for a screen reader; absent where success
-   * leaves the page. */
-  announcement?: string;
-  choices?: ReactNode | ((sending: boolean) => ReactNode);
-  closeOnSent?: boolean;
-  /**
-   * Drawn inside the user's modal: asks through its confirm layer and says a refusal in a plain notice, unless `refusalInModal` says otherwise
-   * (claude-docs/components/user-list.md, "Contracts").
-   */
-  inModal?: boolean;
-  /**
-   * How a refusal is said inside a modal: a plain notice (default), or the callout under the control; outside a modal it is always the callout
-   * (claude-docs/components/user-list.md, "Contracts").
-   */
-  refusalInModal?: 'notice' | 'callout';
-}
-
-export interface ConfirmAnswersProps {
-  label: string;
-  busy: string;
-  confirmClass: string;
-  /** The warning's id, which the confirm is described by; none without one. */
-  describedBy?: string;
-  sending: boolean;
-  disabled?: boolean;
-  confirmRef: RefObject<HTMLButtonElement | null>;
-  cancelRef: RefObject<HTMLButtonElement | null>;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
 
 /** What a row's role control does: make a user a keeper, or stop one being one. */
 export interface RoleControlProps {
   userId: string;
+  /** The user's name, completing the button's accessible name and the question. */
   name: string;
+  /** Whether the user's address is verified; a promotion warns when it is not. */
   emailVerified: boolean;
   /** Whether this is the primary keeper, whose Change Role says why it cannot be used. */
   primaryAdmin: boolean;
@@ -139,6 +95,7 @@ export interface RoleControlProps {
 
 export interface CreationControlProps {
   userId: string;
+  /** The user's name, completing the button's accessible name and the question. */
   name: string;
   emailVerified: boolean;
   /**

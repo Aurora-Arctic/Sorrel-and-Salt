@@ -6,7 +6,7 @@ import {
   auditWsEndpoint,
   browserUrl,
 } from './tests/e2e/slots';
-import { allServers } from './tests/e2e/servers';
+import { startupServer } from './tests/e2e/servers';
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
@@ -63,7 +63,7 @@ export default defineConfig({
       ? [['dot'], ['html', HTML_REPORT]]
       : [['html', HTML_REPORT]],
   // Production build, against the e2e databases rather than the dev one.
-  webServer: allServers,
+  webServer: startupServer(),
   projects: [
     {
       name: 'chromium',

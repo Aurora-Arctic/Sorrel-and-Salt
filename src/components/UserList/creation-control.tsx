@@ -1,10 +1,10 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
-import ConfirmedAction from './confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { CreationControlProps } from './types';

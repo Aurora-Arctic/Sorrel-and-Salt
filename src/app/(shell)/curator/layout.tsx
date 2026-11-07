@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { CuratorNav } from '../../../components/AdminNav';
-import { adminTarget } from '../../../components/AdminNav/target';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
 import SectionBody from '../../../components/SectionBody';
@@ -30,11 +28,7 @@ export default async function CuratorLayout({ children }: AdminLayoutProps) {
       {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
       <ContextRow
         lead={
-          <PendingLink
-            href="/curator"
-            className="context-row__name"
-            navigationTarget={adminTarget('/curator')}
-          >
+          <PendingLink href="/curator" className="context-row__name">
             Curator
           </PendingLink>
         }
@@ -44,7 +38,7 @@ export default async function CuratorLayout({ children }: AdminLayoutProps) {
       <SectionBody region="admin" className="page-column">
         {/* The staff and keeper help pages, which only a curator reads. */}
         <nav aria-label="Staff help">
-          <Link href="/help/staff">Staff Help</Link>
+          <PendingLink href="/help/staff">Staff Help</PendingLink>
         </nav>
         {children}
       </SectionBody>

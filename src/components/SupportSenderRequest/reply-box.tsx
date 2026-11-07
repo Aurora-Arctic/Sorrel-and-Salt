@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';

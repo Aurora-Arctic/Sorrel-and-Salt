@@ -1,6 +1,6 @@
 # CovenCards
 
-`src/components/CovenCards/` is a coven's Ingredients list: the filter row, one compact `IngredientCard` per entry of the coven's cupboard, and the pager. It is the twin of [`CompendiumCards`](compendium-cards.md) and render-only: the page reads one page of the cupboard (`CARD_PAGE_SIZE`, 24) under the address's filter and hands it over. `filter`, `facets`, `categories`, `vocabulary` and `total` are the filter state of [`compendium-list.md`](compendium-list.md), with Source, In Stock and Low Stock Only added.
+`src/components/CovenCards/` is a coven's Ingredients list: the filter row, one compact `IngredientCard` per entry of the coven's cupboard, and the pager. It is the twin of [`CompendiumCards`](compendium-cards.md) and render-only: the page reads one page of the cupboard (`CARD_PAGE_SIZE`, 24) under the address's filter and hands it over. `filter`, `counts`, `categories`, `vocabulary` and `total` are the filter state of [`compendium-list.md`](compendium-list.md), with Source, In Stock and Low Stock Only added.
 
 ## Contracts
 

@@ -70,7 +70,7 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
 
 const Rows = (): ReactElement => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <StackTable
         columns={COLUMNS}
         rows={ROWS}

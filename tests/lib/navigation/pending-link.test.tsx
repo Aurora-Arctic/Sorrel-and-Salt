@@ -11,9 +11,8 @@ const { PendingLink, useNavigationState } = await import('@/lib/navigation');
 const { default: LinkHint } = await import('@/components/LinkHint');
 
 const MEMBERS = '/coven/fixture-coven/members' as Route;
-const COVEN_TABLE = { region: 'coven', shape: 'table' } as const;
 
-let state: { busy: boolean; target?: unknown } | undefined;
+let state: { busy: boolean; href?: string } | undefined;
 function Probe() {
   const current = useNavigationState();
   // Read from committed renders only: a transition that suspends re-runs
@@ -99,14 +98,19 @@ describe('PendingLink', () => {
     expect(state?.busy).toBe(false);
   });
 
-  it('carries the navigation target it is given into the site-wide state', async () => {
-    renderLink({ navigationTarget: COVEN_TABLE });
+  // The skeleton is chosen by where the link goes, so the link's own address
+  // is what reaches the site-wide state; the link has no target prop to pass.
+  it('carries its address into the site-wide state, and no target', async () => {
+    renderLink();
 
     await act(async () => {
       fireEvent.click(link(), { button: 0 });
     });
 
-    expect(state).toEqual({ busy: true, target: COVEN_TABLE });
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(state?.busy).toBe(true);
+    expect(state?.href).toBe(MEMBERS);
+    expect(Object.keys(state ?? {}).sort()).toEqual(['busy', 'href']);
   });
 
   // Which presses are left to the browser is opensElsewhere's (tests/lib/opens-elsewhere.test.ts);

@@ -30,3 +30,6 @@ export interface SpellCardRecordWorkingProps {
   spellVisibility: SpellVisibility;
   recorder: WorkingMember;
 }
+
+/** Which spell card a skeleton stands for: a complete one, or a draft, which is taller. */
+export type SpellCardSkeletonKind = 'spell' | 'spell-draft';

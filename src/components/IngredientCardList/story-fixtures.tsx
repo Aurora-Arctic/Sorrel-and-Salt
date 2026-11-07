@@ -30,6 +30,12 @@ const CATS = {
   banishing: cat('Banishing', 'protect'),
 };
 
+/** The list's vocabulary, which names the categories the cards carry by id. */
+export const CATEGORY_VOCABULARY = Object.values(CATS).map(({ category, group }) => ({
+  ...category,
+  group,
+}));
+
 const leaf = { group: { icon: 'botanical' as const } };
 const fluid = { group: { icon: 'fluid' as const } };
 const form = (

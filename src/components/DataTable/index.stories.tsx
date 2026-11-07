@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
-import type { ListBodyProps } from '../ListFrame/types';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import StackTable, { GroupChip } from '.';
 import type { ColumnSort, SortDirection, StackColumn } from './types';
 
@@ -40,9 +40,9 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   },
 ];
 
-const Frame = ({ children }: ListBodyProps) => (
+const Frame = ({ children }: { children: ReactNode }) => (
   <ListFrame>
-    <ListBody>{children}</ListBody>
+    <ListBody skeleton={null}>{children}</ListBody>
   </ListFrame>
 );
 
@@ -71,6 +71,35 @@ const emptyNode = (
       rows={[]}
       rowKey={(row) => row.id}
       empty="There are no groups yet. Add one with Add Group."
+    />
+  </Frame>
+);
+
+const noMatchesNode = (
+  <Frame>
+    <StackTable
+      columns={COLUMNS}
+      rows={[]}
+      rowKey={(row) => row.id}
+      empty="No groups match your filters."
+      emptyLabel="No Matches"
+      emptyAction={
+        <a className="btn btn--quiet" href="?">
+          Clear Filters
+        </a>
+      }
+    />
+  </Frame>
+);
+
+// The placeholder rows a table draws under its own headings while its rows are on their way.
+const loadingNode = (
+  <Frame>
+    <ListBodySkeleton
+      label="Groups"
+      headings={['Name', 'Description', 'Edit']}
+      actions={['Edit']}
+      count={4}
     />
   </Frame>
 );
@@ -153,6 +182,8 @@ const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Roomy: roomyNode,
   Empty: emptyNode,
+  'No Matches': noMatchesNode,
+  Loading: loadingNode,
   'Foot Action And Icon Chip': footActionNode,
   Sorted: sortedNode,
   'Sorted At Phone Width': sortedPhoneNode,

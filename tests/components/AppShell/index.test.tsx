@@ -58,12 +58,12 @@ beforeEach(() => {
 });
 
 describe('AppShell', () => {
-  it('hands the viewer’s pending invitations to the account menu, which links to them', () => {
+  it('hands the viewer’s pending invitations to the account menu, which links to them', async () => {
     shell({ ...MEMBER, pendingInvitations: 2 });
 
     fireEvent.click(screen.getByRole('button', { name: /^Fixture Member/ }));
 
-    expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
       'href',
       '/account#account-invitations',
     );

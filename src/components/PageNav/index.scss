@@ -10,18 +10,22 @@
     @include list-reset;
   }
 
-  a {
+  a,
+  .page-nav__pending {
     display: flex;
     align-items: center;
     padding: space(1) space(4);
     border-radius: 0;
     color: $text-muted;
+    // A link takes the global link spacing; the skeleton's span has none of its own, and a bar narrower
+    // than the label it stands for would sit short of the real one.
+    letter-spacing: 0.02em;
     text-align: start;
     text-decoration: none;
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the entry wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
     box-shadow: inset $rule-heavy 0 0 0 transparent;
-    @include theme-transition(background-color, color);
+    @include state-fade(background-color, color);
 
     &:hover {
       background: $fill-quiet;
@@ -126,7 +130,7 @@
     cursor: pointer;
     font-weight: 400;
     list-style: none;
-    @include theme-transition(background-color);
+    @include state-fade(background-color);
 
     &::-webkit-details-marker {
       display: none;
@@ -208,7 +212,8 @@
       }
     }
 
-    a {
+    a,
+    .page-nav__pending {
       justify-content: flex-end;
       text-align: end;
       --page-nav-bar: #{$accent};
@@ -249,4 +254,16 @@
 // mixin's `<open> &` selector reads `.page-nav__fold… .page-nav__chevron`, not through `.page-nav`.
 .page-nav__chevron {
   @include disclosure-chevron('.page-nav__fold:is(.is-open, .page-nav__fold--static[open])');
+}
+
+// A skeleton's pending entry: the bar fills the entry, as a label would, and is as tall as the line a
+// label takes, so the menu keeps its height.
+.page-nav__pending > .skeleton {
+  flex: 1;
+}
+
+.page-nav__pending .skeleton__line {
+  block-size: 0.7lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
 }

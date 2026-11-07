@@ -19,7 +19,9 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// claude-docs/components/ingredient-entry.md
+// Which cupboard choices a compendium entry offers (claude-docs/components/ingredient-entry.md): the page decides from the member's permissions and the choices follow whether the coven holds the entry.
+// They are drawn as the list cards draw them: a main icon (Annotate on a coven's page, Edit in Compendium on the compendium's) and the three dots for the rest,
+// with Remove beside Make It Ours, and no bin even where Remove is the one choice left.
 
 const ANNOTATE = {
   href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
@@ -114,6 +116,7 @@ describe('CupboardActions', () => {
       fireEvent.click(more);
     });
     expect(shownChoices()).toEqual(['Make It Ours', 'Remove']);
+    // Remove is in the menu, so there is no bin beside it.
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
@@ -233,7 +236,7 @@ describe('CupboardActions', () => {
   it('draws no dialog while the address does not ask for it', () => {
     renderActions({ held: true, annotate: ANNOTATE });
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('opens the annotate form in a dialog when the address asks for it, and closing goes back to the bare address', async () => {
@@ -259,7 +262,7 @@ describe('CupboardActions', () => {
       </QueryClientProvider>,
     );
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     await waitFor(() =>
       expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toHaveFocus(),
     );
@@ -269,11 +272,11 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Remove');
-    const ask = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const ask = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     expect(within(ask).getByRole('button', { name: 'Remove' })).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
   });
 
@@ -287,16 +290,16 @@ describe('CupboardActions', () => {
     const view = renderOnPage({ held: true });
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: /Remov/ }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: /Remov/ }),
     ).toBeDisabled();
 
     view.rerender(onPage({ held: false }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toHaveFocus();
   });
 
@@ -315,9 +318,10 @@ describe('CupboardActions', () => {
     press(within(card).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(ANNOTATE.closeHref));
 
+    // The address drops ?annotate and the re-read, in one, drops the entry.
     view.rerender(onPage({ held: false, annotate: ANNOTATE }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toHaveFocus();
   });
 
@@ -331,7 +335,7 @@ describe('CupboardActions', () => {
     renderActions({ held: true, removedHref: '/coven/fixture-coven/ingredients' as Route });
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
@@ -353,13 +357,14 @@ describe('CupboardActions', () => {
     });
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
     );
-    // Busy until the list arrives: closed here, it would hand focus to Edit, which the page swap then removes.
+    // Busy until the list arrives: closed here, it would hand the focus to
+    // Edit, which the page swap then takes away with it.
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: /Remov/ }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: /Remov/ }),
     ).toBeDisabled();
 
     view.rerender(
@@ -383,11 +388,13 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // The entry stays held, so the focus goes back to the three dots, not the heading.
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(button('More for Testwort')).toHaveFocus();
+    // The refusal is the dots' callout, which can be brought back by its badge.
     expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
 
@@ -399,10 +406,10 @@ describe('CupboardActions', () => {
     renderActions({ held: true, canMakeOurs: false });
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(button('More for Testwort')).toHaveFocus();
     expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
@@ -411,10 +418,10 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Make It Ours');
-    const ask = screen.getByRole('dialog', { name: 'Make It Ours' });
+    const ask = screen.getByRole('alertdialog', { name: 'Make It Ours' });
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
     expect(router.push).not.toHaveBeenCalled();
   });
@@ -436,9 +443,9 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Make It Ours');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Make It Ours' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Make It Ours' }));
 
-    const ask = screen.getByRole('dialog', { name: 'Make It Ours' });
+    const ask = screen.getByRole('alertdialog', { name: 'Make It Ours' });
     await waitFor(() => expect(within(ask).getByRole('button', { name: 'Cancel' })).toBeDisabled());
     expect(router.push).not.toHaveBeenCalled();
     answer();
@@ -457,7 +464,7 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Make It Ours');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Make It Ours' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Make It Ours' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
@@ -477,17 +484,18 @@ describe('CupboardActions', () => {
     renderActions({ held: true });
 
     choose('Make It Ours');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Make It Ours' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Make It Ours' }));
     await screen.findByRole('alert');
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
 
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('a jar is held'));
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: /^Show the error for / })).toHaveLength(1);
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // Opening a question again forgets the last refusal.
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     choose('Make It Ours');
     await waitFor(() =>
       expect(

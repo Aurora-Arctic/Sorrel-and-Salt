@@ -30,9 +30,6 @@ export function supportHref(
   });
 }
 
-export const SUPPORT_COLUMNS = 9;
-export const SUPPORT_FIELDS = 3;
-
 export function supportViewTabs(
   filter: SupportRequestsFilter,
   counts?: Record<SupportView, number>,
@@ -41,9 +38,5 @@ export function supportViewTabs(
     href: supportHref({ ...filter, view: value }),
     label,
     count: counts?.[value],
-    filtered: true,
-    shape: 'table',
-    columns: SUPPORT_COLUMNS,
-    fields: SUPPORT_FIELDS,
   }));
 }

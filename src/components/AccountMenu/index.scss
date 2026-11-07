@@ -56,7 +56,6 @@ $account-menu-avatar: 2rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
-  @include theme-transition(background-color);
 
   // The fill that draws the disc is dropped, so a border draws the circle,
   // inside the disc's size so the bar does not move.
@@ -112,11 +111,9 @@ $account-menu-avatar: 2rem;
   top: calc(100% + #{space(2)});
   right: 0;
   z-index: layer('floating');
-  min-width: 13rem;
-  border: 1px solid $text-muted;
-  border-radius: radius('surface');
-  background-color: $surface-card;
-  box-shadow: $shadow-floating;
+  min-width: max(#{$panel-min-width}, 100%);
+  max-width: max(#{$panel-max-width}, 100%);
+  @include floating-panel;
   @include list-reset;
   // The fade, as the section nav's More sheet does it: `hidden` is display none,
   // which cannot animate, so the panel stays displayed and `hidden` takes it out
@@ -125,14 +122,14 @@ $account-menu-avatar: 2rem;
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity $theme-transition-duration $theme-transition-easing,
-    visibility 0s linear $theme-transition-duration;
+    opacity $motion-long $motion-easing,
+    visibility 0s linear $motion-long;
 
   &:not([hidden]) {
     visibility: visible;
     opacity: 1;
     transition:
-      opacity $theme-transition-duration $theme-transition-easing,
+      opacity $motion-long $motion-easing,
       visibility 0s;
   }
 
@@ -149,7 +146,7 @@ $account-menu-avatar: 2rem;
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: $control-height;
+  min-height: $panel-row-height;
   padding: 0 space(3);
   border: 0;
   background-color: transparent;
@@ -158,8 +155,7 @@ $account-menu-avatar: 2rem;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  // The wash eases in as the button's does, rather than snapping.
-  @include theme-transition(background-color, color);
+  @include state-fade(background-color, color);
 
   &:hover {
     background-color: $fill-highlight;
@@ -236,16 +232,14 @@ $account-menu-avatar: 2rem;
 
 // The panel clips nothing, so the count's tip can hang past its edge; the top
 // row's wash takes the panel's rounding itself, inside its 1px edge. The last
-// row is always Sign Out, which has room around it, so no wash meets the bottom corners.
+// row is Sign Out, rounded below.
 .account-menu__panel > li:first-child > .account-menu__item {
   border-radius: calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px) 0 0;
 }
 
-// Sign Out's button keeps the shared `.btn` edge, height, radius and colours
-// (and so its contrast); only the width is set, to the panel row's. A failure
-// floats beneath it in a callout, and its badge sits on its corner.
-.account-menu__signout-action .btn {
-  width: 100%;
+// Sign Out is a row like the others; a failure floats beneath it in a callout.
+.account-menu__signout-action {
+  position: relative;
 }
 
 .account-menu__link {
@@ -257,10 +251,14 @@ $account-menu-avatar: 2rem;
   display: block;
 }
 
-// Sign Out is the one row with room around it, so the button never touches the
-// panel's edge.
+// Sign Out is the last row, set off from the rest by a hairline above it.
 .account-menu__signout {
-  padding: space(2);
+  border-top: 1px solid $hairline;
+}
+
+// The last row's wash takes the panel's bottom rounding, inside its 1px edge.
+.account-menu__panel > li:last-child > .account-menu__signout-action > .account-menu__item {
+  border-radius: 0 0 calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px);
 }
 
 @media (max-width: $shell-tablet-width) {

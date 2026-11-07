@@ -1,11 +1,10 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
@@ -19,6 +18,9 @@ import type {
   IngredientSearchOption,
 } from './types';
 import './index.scss';
+
+// The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one
+// submit. The list changes only on Enter, the clear, a pick or the last row.
 
 const IngredientSearchMatchesDocument = graphql(`
   query IngredientSearchMatches($query: String, $first: Int) {
@@ -85,7 +87,8 @@ const GrimoireSearchMatchesDocument = graphql(`
   }
 `);
 
-const WORDING = {
+/** The words the box uses for what it searches: an ingredient's name, or a spell's title. */
+export const WORDING = {
   ingredient: {
     label: 'Name',
     placeholder: 'Search',
@@ -216,6 +219,9 @@ const IngredientSearchBox = ({
     (): IngredientSearchOption[] => (searchesNow && !belowFloor && answer ? answer.rows : []),
     [answer, searchesNow, belowFloor],
   );
+  // The box takes each keystroke at once; the dropdown's rows follow at low priority, so a long
+  // list of matches never holds a key press back on a slow device.
+  const shownOptions = useDeferredValue(options);
   const hasMore = searchesNow && !belowFloor && answer?.hasNextPage === true;
   const seeAllHref = searchHref(query);
 
@@ -230,10 +236,7 @@ const IngredientSearchBox = ({
     }
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match), pickPlace);
-    else {
-      const target = ingredientLinkTarget(href);
-      navigate(href, target ? { target } : {});
-    }
+    else navigate(href);
   }
 
   return (
@@ -249,8 +252,8 @@ const IngredientSearchBox = ({
       onPick={pick}
       onCommit={(value) => apply(searchHref(value.trim()))}
       suggestions={{
-        options,
-        pending: !belowFloor && (text.trim() !== query || isFetching),
+        options: shownOptions,
+        pending: !belowFloor && (text.trim() !== query || isFetching || shownOptions !== options),
       }}
       empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
       // The last row of the listbox, reached by the arrows like a result, in italics so it reads

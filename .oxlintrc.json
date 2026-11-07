@@ -98,6 +98,8 @@
     "sorrel/compendium-review-mark-switch-only": "error",
     "sorrel/modal-focus-return-through-modal": "error",
     "sorrel/long-form-guards-leaving": "error",
+    "sorrel/in-app-link-through-pending-link": "error",
+    "sorrel/full-page-load-reports-leaving": "error",
     "no-unused-vars": "error",
     "no-unsafe-optional-chaining": "error",
     "react-hooks/exhaustive-deps": "error",

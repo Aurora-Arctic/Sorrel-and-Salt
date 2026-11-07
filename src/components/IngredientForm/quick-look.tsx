@@ -3,18 +3,17 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
-import { headingOf } from '../IngredientEntry/details-dialog';
+import { headingOf } from '../IngredientEntry/details-parts';
 import { detailsHeading, detailsMarks } from '../IngredientEntry/details';
+import { type QuickLookNames, pendingHeading } from './quick-look-head';
 import IngredientSummary from '../IngredientEntry/summary';
 import type { SummaryJar } from '../IngredientEntry/types';
 import Modal from '../Modal';
-import Skeleton from '../Skeleton';
 import ReadFailure from './read-failure';
 import ModalLoading from '../Modal/loading';
-import type { Duplicate } from './types';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
 import type { IngredientDetail } from '@/modules/ingredients';
 
@@ -149,30 +148,6 @@ export const jarsOf = (looked: Looked): SummaryJar[] =>
     unit: jar.unit,
     threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
   }));
-
-/** The names a Quick Look's head shows before the entry arrives; the formal name's two
- * fields come together or not at all. */
-type QuickLookNames = Pick<Duplicate, 'name'> &
-  (
-    | Pick<Duplicate, 'canonicalName' | 'nomenclature'>
-    | { canonicalName?: never; nomenclature?: never }
-  );
-
-/**
- * The head before the entry arrives: the details' own head if the formal name is known; if not, a
- * line skeleton where it goes while the read is out, and nothing after a failed read, never
- * "Not yet looked up", which would say the entry has none.
- */
-function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeof detailsHeading> {
-  if (entry.canonicalName !== undefined && entry.nomenclature !== undefined) {
-    return detailsHeading({
-      ...entry,
-      canonicalName: entry.canonicalName,
-      nomenclature: entry.nomenclature,
-    });
-  }
-  return { title: entry.name, formalName: loading ? <Skeleton shape="line" /> : undefined };
-}
 
 export function DuplicateQuickLook({
   id,

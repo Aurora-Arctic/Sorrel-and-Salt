@@ -466,7 +466,7 @@ _Acceptance criteria:_
 
 **MB.123 — Design review: the grimoire** · 11h
 
-**MB.124 — Design review: error, loading and empty states, and the whole site** · 7h
+**MB.124 — Design review: error, loading and empty states, and the whole site** · 14h
 
 _Story:_ As a user, I want errors, loading and empty pages to look as finished as the rest, and the whole site to feel like one thing, so that nothing looks broken.
 
@@ -711,3 +711,24 @@ _Acceptance criteria:_
 **MB.289 — Crawlers Hit Blocked Links and Index Few Compendium Pages** · 6.5h
 
 **MB.290 — Renaming or Deleting a Celestial Body or Zodiac Sign Misses Compendium Variants** · 3h
+
+**MB.291 — Error Pages Are Blank Without JavaScript** · 4h
+
+_Story:_ As a visitor whose browser runs no JavaScript, or a search crawler that runs none, I want a missing or forbidden page to say so in the HTML the server sends, so that I see why the page did not load and how to get back.
+
+A page that answers 404 (not found) or 403 (not authorized) sends the right status code, but its HTML body holds only `<div hidden>`, 58 to 562 bytes, and the heading, message and links back appear only once JavaScript runs. The pages are drawn by `ErrorScreens` and `NotAuthorized` (`src/components/`). The cause is not yet established.
+
+It happens locally and on staging, every time. Signed out for the 404, signed in as a non-keeper for the 403. Steps to reproduce:
+
+1. Signed out, request `/compendium/ingredients/no-such-entry` with JavaScript off, or with curl.
+2. Read the HTML body the server sends.
+3. Signed in as a coven member who is not a keeper, request `/keepers/users` with JavaScript off.
+
+Actual: each body holds only `<div hidden>`, so the page is blank. Expected: the server's HTML carries the 404 page's heading, message and links back, and the styled "not authorized" page for the 403.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: with JavaScript off, a missing compendium entry and a keeper page requested by a non-keeper each show their heading in the server's HTML.
+- The 404 for a missing compendium entry, the 404 for a coven the viewer is not a member of, and the 403 for a keeper page each carry their heading and links back in the server's HTML.
+- The status codes stay 404 and 403, and the 308 redirects are unchanged.
+- `claude-docs/loading.md`, or the error-page doc, is corrected wherever it describes how these pages render.

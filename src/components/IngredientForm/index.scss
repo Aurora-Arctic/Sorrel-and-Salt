@@ -322,7 +322,6 @@ $skeleton-fade: 300ms;
     // body, which after the first row starts space(1) down (the rule above), so the centre moves half that.
     li::before {
       top: 50%;
-      @include theme-transition(background-color);
     }
 
     li + li::before {
@@ -332,7 +331,7 @@ $skeleton-fade: 300ms;
     .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
-      @include theme-transition(color);
+      @include state-fade(color);
 
       &:hover,
       &:focus-visible,
@@ -516,8 +515,6 @@ $panel-head-gap: space(3);
     align-items: center;
     margin-inline: auto calc(-1 * #{space(2)});
     background-color: $surface-card;
-
-    @include theme-transition(background-color);
 
     .form-history {
       align-self: center;

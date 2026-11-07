@@ -3,7 +3,9 @@ import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
+import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
 import IngredientCardList from '../IngredientCardList';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
 import { covenCardActions, covenCardName } from './actions';
@@ -20,7 +22,7 @@ const CovenCards = ({
   workspaceId,
   entries,
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   previousHref,
@@ -32,14 +34,14 @@ const CovenCards = ({
 }: CovenCardsProps): ReactElement => (
   <div data-density="compact">
     <IngredientSearch
-      shape="cards"
+      skeleton={<ListBodySkeleton label="Ingredients" density="compact" />}
       search={
         <CompendiumListFilter
           audience="coven"
           covenSlug={covenSlug}
           workspaceId={workspaceId}
           filter={filter}
-          facets={facets}
+          counts={counts}
           categories={categories}
           vocabulary={vocabulary}
           total={total}
@@ -53,29 +55,31 @@ const CovenCards = ({
       {entries.length === 0 ? (
         <EmptyCupboard covenSlug={covenSlug} filter={filter} canAdd={canAdd} />
       ) : (
-        <IngredientCardList label="Ingredients" density="compact">
-          {entries.map((entry) => (
-            <IngredientCard
-              key={entry.id}
-              href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
-              label={entry.label}
-              formalName={entry.canonicalName}
-              nomenclature={entry.nomenclature}
-              categories={entry.categories}
-              variants={entry.variants}
-              forms={false}
-              toxic={entry.toxic}
-              safetyNotes={entry.safetyNotes}
-              kind={entry.kind}
-              retired={entry.retired}
-              lastEdit={entry.lastEdit}
-              actions={covenCardActions(entry, workspaceId, covenSlug)}
-              startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
-            >
-              {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
-            </IngredientCard>
-          ))}
-        </IngredientCardList>
+        <CardCategoryVocabulary categories={categories}>
+          <IngredientCardList label="Ingredients" density="compact">
+            {entries.map((entry) => (
+              <IngredientCard
+                key={entry.id}
+                href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
+                label={entry.label}
+                formalName={entry.canonicalName}
+                nomenclature={entry.nomenclature}
+                categories={entry.categories}
+                variants={entry.variants}
+                forms={false}
+                toxic={entry.toxic}
+                safetyNotes={entry.safetyNotes}
+                kind={entry.kind}
+                retired={entry.retired}
+                lastEdit={entry.lastEdit}
+                actions={covenCardActions(entry, workspaceId, covenSlug)}
+                startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
+              >
+                {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
+              </IngredientCard>
+            ))}
+          </IngredientCardList>
+        </CardCategoryVocabulary>
       )}
     </IngredientSearch>
   </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';

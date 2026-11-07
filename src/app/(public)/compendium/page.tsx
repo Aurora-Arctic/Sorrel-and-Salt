@@ -2,9 +2,9 @@ import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
+import { categoryRefs } from '../../../components/IngredientCard/category-refs';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
-import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
@@ -187,11 +187,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])
       : [undefined, undefined];
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
-  const facets = compendiumFacetCounts(counts, {
-    formIcons,
-    deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
-    categories: new Map(categories.map((category) => [category.id, category])),
-  });
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. An observer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
@@ -240,7 +235,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       slug: node.slug,
       canonicalName: node.canonicalName,
       nomenclature: node.nomenclature,
-      categories: chips[i],
+      categories: categoryRefs(chips[i]),
       variants: page.variants[i],
       toxic: node.toxic,
       safetyNotes: node.safetyNotes,
@@ -289,8 +284,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       <CompendiumCards
         entries={entries}
         filter={filter}
-        facets={facets}
-        categories={categories}
+        counts={counts}
+        categories={categories.map(({ description: _description, ...rest }) => rest)}
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}

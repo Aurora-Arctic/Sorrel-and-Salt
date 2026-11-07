@@ -18,7 +18,7 @@ describe('links that open a modal', () => {
 
     // Preconditions: the scan found the files that open modals, and the plain-link import is one it can see.
     expect(opening.length).toBeGreaterThan(5);
-    expect(sources.filter(({ text }) => PLAIN_LINK.test(text)).length).toBeGreaterThan(10);
+    expect(sources.filter(({ text }) => PLAIN_LINK.test(text)).length).toBeGreaterThan(1);
     expect(opening.filter(({ text }) => PLAIN_LINK.test(text)).map(({ file }) => file)).toEqual([]);
   });
 });

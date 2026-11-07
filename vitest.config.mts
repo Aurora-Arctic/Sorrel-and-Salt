@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { workflow } from '@workflow/vitest';
 import { defineConfig } from 'vitest/config';
+import { clientReferences } from './tests/support/client-references.mts';
 import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
 
 const require = createRequire(import.meta.url);
@@ -279,6 +280,8 @@ export default defineConfig({
         // build's pass-through and a server render cannot be started at all.
         // `db` cannot carry the condition: under it `react-dom/server` throws
         // on import, and three of its files reach that through `lib/auth`.
+        // A 'use client' module is a client reference there, as Next's bundler makes it.
+        plugins: [clientReferences()],
         ssr: { resolve: { conditions: ['react-server'], externalConditions: ['react-server'] } },
         test: {
           name: 'rsc',

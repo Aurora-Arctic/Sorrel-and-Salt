@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
@@ -103,7 +103,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         disabled={sending}
       />
       <ReasonField
-        className="user-list__note"
+        className="confirmed-action__note"
         hint={NOTE_HINT}
         value={note}
         onChange={setNote}

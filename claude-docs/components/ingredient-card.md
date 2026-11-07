@@ -6,7 +6,7 @@
 
 **Content and marks**
 
-- The name is an `h2` holding the card's **one link**, a `PendingLink` naming the page it draws (`ingredientLinkTarget`, [`loading.md`](../loading.md)), so both lists show the entry page's own skeleton while it loads. It ends with a `LinkHint` ([`link-hint.md`](link-hint.md)) because entry pages cannot have a route `loading.tsx`.
+- The name is an `h2` holding the card's **one link**, a `PendingLink`, so both lists show the entry page's own skeleton, chosen by its address ([`loading.md`](../loading.md)), while it loads. It ends with a `LinkHint` ([`link-hint.md`](link-hint.md)) because entry pages cannot have a route `loading.tsx`.
 - The card owns layout and nothing else. Marks, chips and stock badges are each the project's one presentation, never restyled here.
 - `nomenclature` decides italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic.
 - The forms line puts a `FormIcon` before each form, which tells two entries sharing a label apart. `forms={false}` turns it off; the coven's cards do, because their jar lines and Quick Look already name every form. The variants still feed the safety badge.
@@ -66,6 +66,15 @@ The card is drawn as the front of an apothecary drawer. `.ingredient-card-slot` 
 **Accessibility**
 
 - Meaning is carried by words and shape, never colour alone: every badge has its text. The page that places the card owns the axe run and the keyboard walk in its Playwright spec, since the card has no page of its own.
+
+## What the page sends
+
+`index.tsx` is a server component that passes the props on to `CardFace` (`face.tsx`), a client component that draws the card, so React's data for the browser carries each card once as its props and not as its drawn element tree.
+
+- The wrapper reduces the props to what the face shows. Safety notes, the entry's and each form's, become `'*'`, or `null` for none, because the card shows only a Caution badge. Each variant keeps only its form, its group's icon, and whether it is toxic or has notes.
+- `categories` names each category by id (`CardCategoryRef`, with the forms that carry it), and the face reads its name and group colours from the `CardCategoryVocabulary` (`category-vocabulary.tsx`) the list wraps around its cards. A card needs that vocabulary above it, in a story too: an id it does not hold draws no chip. The public compendium and coven ingredients pages map their chips to ids with `categoryRefs` (`category-refs.ts`). Their vocabulary always holds every chip, because categories are global and `readCardCategoriesOf` drops any category missing from `readCategories()`, the same request-cached list the pages hand the vocabulary.
+- Whatever a page passes in `actions`, `startActions` and the jar slot is sent as it is drawn.
+- `tests/rsc/app/(public)/compendium/page.test.tsx` checks that the face is a client reference and that no notes text is in its props. The choice and its cost are in [`ui.md`, "The compendium page sends each thing once"](../design-decisions/ui.md#the-compendium-page-sends-each-thing-once).
 
 ## Styling
 

@@ -1,51 +1,23 @@
 import type { ReactNode } from 'react';
 
-export type SkeletonShape =
-  | 'table'
-  | 'cards'
-  | 'form'
-  | 'page'
-  | 'sections'
-  | 'requests'
-  | 'contents'
-  | 'line'
-  | 'recipe'
-  | 'detail'
-  | 'document';
-
-export type SkeletonHead = 'eyebrow' | 'title' | undefined;
+/** What a skeleton stands in for: `line` (a line of text) or `block` (a control-sized box). */
+export type SkeletonShape = 'line' | 'block';
 
 export interface SkeletonProps {
+  /** `line` (a line of text each, for a sentence or a short list that loads in place) or `block` (a control-sized box each, for a field). */
   shape: SkeletonShape;
-  filter?: boolean;
-  title?: boolean;
-  action?: boolean;
-  tabs?: boolean;
-  tabsBelow?: boolean;
-  columns?: number;
-  fields?: number;
-  side?: boolean;
-  menu?: boolean;
-  entry?: boolean;
-  head?: 'eyebrow' | 'title';
-  /** A `cards` skeleton draws compact cards, as the coven lists open at, unless a stored Regular choice sits on `<html>`. */
-  density?: 'compact';
-  /** A `cards` skeleton draws the Grimoire's spell cards (a title, an edited line and the card's actions) rather than the Ingredients cards. */
-  card?: 'spell';
+  /** How many lines or blocks it draws. Default 1. */
   count?: number;
+  /** Leaves out the `Loading` status, for a skeleton drawn inside a shell body that already carries the one. */
+  quiet?: boolean;
 }
-
 export interface SwapPanelProps {
   /** Whether the next content is on its way, so the skeleton shows in its place. */
   pending: boolean;
+  /** The panel's own class: "tabbed-page__panel", "list-frame__body". */
   className: string;
-  filter?: boolean;
-  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
-  columns?: number;
-  fields?: number;
-  count?: number;
-  density?: 'compact';
-  card?: 'spell';
+  /** The placeholder drawn in the content's place while the next is on its way. */
+  skeleton: ReactNode;
   /** A minimum height for the skeleton's wrapper only, so the content it replaces keeps its room; the new content takes none. */
   loadingMinHeight?: number;
   children: ReactNode;

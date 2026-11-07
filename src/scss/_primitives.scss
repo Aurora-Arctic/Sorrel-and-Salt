@@ -59,11 +59,6 @@
     background-color: $surface-card;
     border-radius: radius('surface');
     padding: space(5);
-    @include theme-transition(background-color, border-color);
-
-    @include reduced-motion {
-      transition: none;
-    }
   }
 
   // A grid cell rather than an inline badge, so the tag stays beside the name's first line when the name wraps.
@@ -144,7 +139,7 @@
     text-decoration: none;
     cursor: pointer;
     box-shadow: $shadow-floating;
-    @include theme-transition(background-color, border-color, color, box-shadow);
+    @include state-fade(background-color, color);
 
     &:hover,
     &:focus-visible {
@@ -202,8 +197,10 @@
     padding: space(1) space(4);
   }
 
-  // The left side comes in a step only while the spinner shows: a `PendingLink` button is busy with no spinner
-  // in it and would lose its left side for nothing.
+  // The spinner a save in flight shows is `Spinner`'s (src/components/Spinner).
+
+  // The side padding is sized for a word, so the left side comes in a step while the spinner shows. Only then: a
+  // `PendingLink` button is busy with no spinner in it (Quick Look's Edit Spell).
   .btn[aria-busy='true']:has(.spinner) {
     padding-left: space(3);
   }
@@ -321,6 +318,13 @@
       margin: 0;
     }
 
+    // A pending title is a bar with no width of its own (its size container), so the heading
+    // takes the row rather than shrink to nothing.
+    > h1:has(> .skeleton),
+    > .page-header__title > h1:has(> .skeleton) {
+      flex: 1 1 10rem;
+    }
+
     // Brought down to the heading's letters; relative, not a translate, which
     // would make the wrapper a stacking context and hold the Add's tip under
     // the shell's bar.
@@ -328,6 +332,12 @@
       position: relative;
       top: 0.25rem;
     }
+  }
+
+  // The head of a page that is one card, its title and lede centred: the sign-in cards', the
+  // password pages', the invitation's and Create Coven's, each with its h1 at the h2 size (`auth-title`).
+  .card-page-header {
+    text-align: center;
   }
 
   .header > .page-header {
@@ -462,6 +472,12 @@
     > p {
       margin: 0;
     }
+  }
+
+  // A list drawn as a placeholder takes no click; its controls are disabled instead of the frame being
+  // `inert`, which would mark the skeleton as held-page content.
+  .list-frame[aria-hidden='true'] {
+    pointer-events: none;
   }
 
   // A list the server drew, before any press, has no `data-arrived` and shows at once.
@@ -681,6 +697,17 @@
     }
   }
 
+  // A skeleton's page name, plain text drawn as the link beside it is.
+  .admin-contents__name {
+    color: $text-primary;
+    text-decoration: underline;
+  }
+
+  // A skeleton's name is a bar, not a link, so it draws no underline under the bar.
+  .admin-contents__name--pending {
+    text-decoration: none;
+  }
+
   // Not a `<p>`, so it takes the measure itself (claude-docs/styling.md,
   // "Binding rules").
   .admin-contents__description {
@@ -803,6 +830,7 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    // The mark's own geometry, a circle sized to sit on a line of text.
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
@@ -854,6 +882,11 @@
       border-bottom: 1px solid $text-muted;
     }
 
+    // A row header names its row but is not a heading in weight: it reads as the cell it replaces.
+    tbody th {
+      font-weight: inherit;
+    }
+
     tbody tr:nth-child(even) {
       background-color: $surface-card;
     }
@@ -893,7 +926,7 @@
   // flip, as `rotateX` on an SVG part is not drawn in every browser.
   .data-table__sort-turn {
     transform-origin: 12px 12px;
-    @include theme-transition(transform);
+    @include motion(transform);
 
     @include reduced-motion {
       transition: none;
@@ -1050,6 +1083,54 @@
     }
   }
 
+  // A table on its way: the fill cell is there only at phone width, where the whole row is one
+  // block in the card's frame at the height of its list's real row (`$stack-row-skeleton-heights`).
+  .data-table--pending > tbody > tr > .card-skeleton__fill {
+    display: none;
+  }
+
+  // A pending row's action: a small button's box filled as a bar, so the row is as tall as one with the
+  // real button; the bars for words are as tall as a line (`.skeleton-text`).
+  .data-table__pending-action {
+    @include skeleton-shape;
+
+    display: inline-block;
+    height: auto;
+    min-width: 5rem;
+    border-color: transparent;
+  }
+
+  // A skeleton's button or badge keeps its box and shows none of its colour: no outline, no shadow, only the bar.
+  .badge.badge--pending,
+  .btn.btn--pending {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    .data-table--pending > tbody > tr {
+      position: relative;
+      box-sizing: border-box;
+      padding: 0;
+      @include card-skeleton-fill;
+
+      > :not(.card-skeleton__fill) {
+        display: none;
+      }
+
+      > .card-skeleton__fill {
+        display: block;
+      }
+    }
+
+    @each $kind, $height in $stack-row-skeleton-heights {
+      .data-table--pending-#{$kind} > tbody > tr {
+        height: $height;
+      }
+    }
+  }
+
   .back-bar {
     display: flex;
     align-items: center;
@@ -1073,11 +1154,6 @@
     font-size: type-size('small');
     // A step over the 300 body weight: coloured text at this size thins out.
     font-weight: 400;
-    @include theme-transition(border-color, background-color, color);
-
-    @include reduced-motion {
-      transition: none;
-    }
 
     // A link takes the notice's own text colour, which each kind has checked
     // on its tint, and an underline so it does not rely on colour: the plain
@@ -1088,6 +1164,8 @@
       text-decoration: underline;
     }
   }
+
+  // Plain: the sorrel bar, the body ink. The default above.
 
   // Error: bar and tint in the wax, with the triangle; the text in the wax's hover shade, as the plain
   // wax falls short of 4.5:1 on the tint.
@@ -1177,9 +1255,11 @@
     }
   }
 
-  // A field is its label, an optional hint, the control and its error. The control names the hint and the error
-  // in `aria-describedby` and carries `aria-invalid`, which draws the error edge (claude-docs/styling.md, "Form fields").
+  // A field is its label, an optional hint, the control and its error, which the control names in `aria-describedby`
+  // and marks with `aria-invalid` (claude-docs/styling.md, "Form fields").
 
+  // The signed-out Support panel: its notice and form stand a step apart, one gap and no margin of
+  // their own (the notice, the form's first group and its legend all sit at zero).
   .support-panel--signed-out {
     display: grid;
     gap: space(4);
@@ -1480,7 +1560,7 @@
     font-family: $font-body;
     font-size: type-size('body');
     font-weight: 400;
-    @include theme-transition(background-color, border-color, box-shadow, color);
+    @include state-fade(border-color);
 
     &::placeholder {
       color: $text-placeholder;
@@ -1500,6 +1580,8 @@
       box-shadow: inset 0 0 0 1px $secondary;
     }
 
+    // Dashed and unfilled, as a disabled button is, with its label dimmed
+    // below: a faded field alone reads as a live one on a dim screen.
     &:disabled {
       border-style: dashed;
       background-color: transparent;
@@ -1641,6 +1723,8 @@
       background-color: $surface-card;
       appearance: none;
       cursor: pointer;
+      // The state's colour keeps pace with the thumb, rather than trailing it
+      // at the theme's 400ms.
       transition:
         background-color $motion-short ease-out,
         border-color $motion-short ease-out;
@@ -1662,6 +1746,8 @@
           background-color $motion-short ease-out;
       }
 
+      // On: the track filled with the accent, as a solid button is, and the
+      // thumb at its end in the page's colour, as that button's label is.
       &:checked {
         border-color: $accent;
         background-color: $accent;
@@ -1859,6 +1945,8 @@
         transition: scale $motion-short ease-out;
       }
 
+      // Chosen: the ring and the dot in the accent green, the dot grown to leave
+      // only a thin gap between it and the ring.
       &:checked {
         border-color: $accent;
 
@@ -1941,7 +2029,7 @@
     border: 1px solid $hairline;
     border-radius: radius('surface');
     background-color: $surface-page;
-    @include theme-transition(border-color, background-color);
+    @include state-fade(border-color, background-color);
 
     &:hover:not(:has(input:disabled)) {
       border-color: $accent;
@@ -2018,7 +2106,7 @@
     box-sizing: border-box;
     inline-size: 3rem;
     block-size: 3rem;
-    @include theme-transition(background-color, color);
+    @include state-fade(background-color);
 
     // Hidden but still focusable and reachable, as a screen-reader-only
     // control is: its own ring is drawn on the segment by :has below.
@@ -2279,7 +2367,6 @@
     padding: space(3) 0;
     border-top: 1px solid $hairline;
     background: $surface-card;
-    @include theme-transition(background-color, border-color);
 
     > .btn {
       width: 66.6%;

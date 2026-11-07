@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { RevokeControlProps } from './types';
 
 // The page draws it for stewards only; the service is the guard (claude-docs/components/pending-invitations.md).

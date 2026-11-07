@@ -1,12 +1,13 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
+import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { batchName } from './batches';
 import { Mark } from '../UserList/marks';
@@ -45,7 +46,7 @@ const AdminArrivals = ({
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <ArrivalsFilterForm key={JSON.stringify(filter)} filter={filter} />
-      <ListBody>
+      <ListBody skeleton={<CardArrivalsBodySkeleton />}>
         <StackTable
           columns={[
             {

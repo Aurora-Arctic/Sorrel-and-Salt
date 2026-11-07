@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import TabbedPage from '../../../../components/TabbedPage';
-import { ACCOUNT_TABS } from '../../../../lib/sign-in';
+import { ACCOUNT_TABS } from './tabs';
 
 // The account as a tabbed page (claude-docs/components/tabbed-page.md). No guard here: a layout does not re-run on a tab press,
 // so each page runs `requireSession()` itself. The route group leaves the unverified-email page outside the tabs.

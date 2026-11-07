@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
@@ -19,6 +18,7 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 type Problems = Partial<Record<'about' | 'subject' | 'message' | 'path', string>>;
 
@@ -183,10 +183,10 @@ const SupportForm = ({
     return (
       <div className="form">
         <Notice kind="success">
-          Your request, <Link href={SUPPORT_LIST_PATH}>{sentSubject}</Link>, was received. We aim to
-          reply within 5 working days; we are a small team. Replies appear on{' '}
-          <Link href={SUPPORT_LIST_PATH}>Your Support Requests</Link>, and we mail you when one
-          arrives.
+          Your request, <PendingLink href={SUPPORT_LIST_PATH}>{sentSubject}</PendingLink>, was
+          received. We aim to reply within 5 working days; we are a small team. Replies appear on{' '}
+          <PendingLink href={SUPPORT_LIST_PATH}>Your Support Requests</PendingLink>, and we mail you
+          when one arrives.
         </Notice>
         {onDone && (
           <div className="modal__actions">

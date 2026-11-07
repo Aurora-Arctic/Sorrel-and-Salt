@@ -9,6 +9,7 @@ A saved spell as a page at `/coven/[slug]/grimoire/[id]`, and the shared body th
 - It calls `requireSession()` itself (the shell layout does not cover it) and `requireCovenMembership`, which gives a non-member a 404.
 - `readSpell(session, workspaceId, id)` raising `NotFound` or `Forbidden` both become a 404, so another member's private spell and another coven's spell look like one that does not exist. Visibility is filtered in SQL.
 - Steps, assigned categories and the last editor's name come from services, never GraphQL, and nothing is cached. The page and the modal both read through `readRecipeOf` (`grimoire/recipe-read.ts`).
+- Its wait is the page's own skeleton, `SpellRecipeSkeleton` in `src/app/(shell)/coven/[slug]/skeleton.tsx`, registered for this path ([`loading.md`](../loading.md), "How a skeleton is chosen").
 
 ### The body
 

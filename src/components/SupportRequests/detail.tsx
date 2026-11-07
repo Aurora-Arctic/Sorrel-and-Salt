@@ -1,9 +1,9 @@
 'use client';
 
 import { type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
 import LocalTime from '../LocalTime';

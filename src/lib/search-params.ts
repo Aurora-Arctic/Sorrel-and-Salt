@@ -1,5 +1,5 @@
 import { InvalidCursor } from './errors';
-import { decodeCursor } from './pagination';
+import { decodeCursor } from './cursor';
 
 // Next hands a repeated parameter over as a list, and a hand-edited cursor as whatever was typed.
 

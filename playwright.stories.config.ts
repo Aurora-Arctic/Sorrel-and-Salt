@@ -1,14 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import { auditProjects } from './playwright.config';
 import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
-import { slotServers } from './tests/e2e/servers';
+import { startupServer } from './tests/e2e/servers';
 
 // The story suite: one browser flow per user story under tests/e2e/stories/, run by `npm run test:stories` and the PR gate's `stories` job. It shares the slot
 // servers, databases and browser options with the gate suite (playwright.config.ts). A story that passes only on retry is counted as failing by the reporter.
 export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e/stories',
-  webServer: slotServers,
+  webServer: startupServer(true),
   retries: process.env.CI ? 1 : 0,
   passWithNoTests: true,
   reporter: [

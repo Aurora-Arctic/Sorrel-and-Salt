@@ -2,7 +2,6 @@ import type { Metadata, Route } from 'next';
 import CovenCards from '../../../../../components/CovenCards';
 import { covenCardActions } from '../../../../../components/CovenCards/actions';
 import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
-import { covenFacetCounts } from '../../../../../components/CompendiumList/facets';
 import { editHeading } from '../../../../../components/CompendiumList/heading';
 import {
   covenIngredientsHref,
@@ -15,6 +14,7 @@ import type {
 import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
 import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
+import { categoryRefs } from '../../../../../components/IngredientCard/category-refs';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
 import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
@@ -92,11 +92,6 @@ export default async function CovenIngredientsPage({
     readCovenFacets(workspace.id, variables),
     readFormIcons(),
   ]);
-  const facets = covenFacetCounts(counts, {
-    formIcons,
-    deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
-    categories: new Map(categories.map((category) => [category.id, category])),
-  });
 
   const entries = page.edges.map(({ node, cupboardEntry }, i): CovenCardEntry => {
     const shown = applyCupboardEntry(node, cupboardEntry);
@@ -110,7 +105,8 @@ export default async function CovenIngredientsPage({
       },
       canonicalName: shown.canonicalName,
       nomenclature: shown.nomenclature,
-      categories: page.categories[i],
+      // By id: the cards read each category's name and colours from `categories`, sent once.
+      categories: categoryRefs(page.categories[i]),
       variants: page.variants[i],
       toxic: shown.toxic,
       safetyNotes: shown.safetyNotes,
@@ -151,7 +147,7 @@ export default async function CovenIngredientsPage({
           workspaceId={workspace.id}
           entries={entries}
           filter={filter}
-          facets={facets}
+          counts={counts}
           categories={categories}
           vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
           position={page.position}

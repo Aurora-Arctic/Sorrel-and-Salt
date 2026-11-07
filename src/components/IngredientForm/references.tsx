@@ -21,7 +21,7 @@ import {
 } from 'react-hook-form';
 import { renderShortCitation, shortCitationText } from '@/lib/short-citation';
 import { formatLocator } from '@/modules/ingredients/validation/reference-format';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import IconTip from '../IconTip';
@@ -47,26 +47,20 @@ import { draftOf, sourceTierOf } from './values';
 // one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
 // text is a search and never an entry: the last row, "New Reference", opens the panel.
 
-/** Defined before its first use and called bare: codegen reads the documents in order, as
- * text. */
-graphql(`
-  fragment ReferenceRow on Reference {
-    id
-    citation
-    isGlobal
-    kind
-    authors
-    title
-    container
-  }
-`);
-
+// The search and the panel's two saves select the same fields, written out in each: a document is its
+// caller's own text, so a fragment defined elsewhere would not be sent with it.
 export const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
     referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
-          ...ReferenceRow
+          id
+          citation
+          isGlobal
+          kind
+          authors
+          title
+          container
         }
       }
     }

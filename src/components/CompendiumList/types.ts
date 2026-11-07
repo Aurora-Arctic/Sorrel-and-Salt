@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { CompendiumFacets, WorkspaceIngredientFacets } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type {
   IngredientElement,
@@ -38,14 +39,17 @@ export interface CompendiumListForm {
 export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   entries: readonly CompendiumListEntry[];
   filter: CompendiumListFilter;
-  /** What each filter offers, and how many entries each choice would list. */
-  facets: CompendiumFacetCounts;
+  /** Each choice's count, a category and a deity by id, so their names and colours reach the browser once, in `categories` and `vocabulary`. */
+  counts: FacetCountsById;
   categories: readonly CompendiumCategoryChoice[];
   vocabulary: CompendiumFacetVocabulary;
   position?: PagePosition;
   total: number;
   cursor?: SearchCursor;
 }
+
+/** The service's counts for the compendium's lists, or a coven's, which add Source and the two stock switches. */
+export type FacetCountsById = CompendiumFacets | WorkspaceIngredientFacets;
 
 export interface CompendiumFacetVocabulary {
   deities: readonly { id: string; slug: string; name: string; tradition: string }[];
@@ -117,7 +121,7 @@ export type CovenListDialog = { edit: string } | { annotate: string };
 
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary' | 'cursor'
+  'counts' | 'categories' | 'vocabulary' | 'cursor'
 > & {
   filter: Omit<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort' | 'order'> &
     Partial<Pick<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort' | 'order'>> &

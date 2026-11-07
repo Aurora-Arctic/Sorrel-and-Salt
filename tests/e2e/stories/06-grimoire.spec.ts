@@ -377,7 +377,9 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
-  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
+  // Duplicate takes the button's place once the spell is saved as complete. While the save runs the button is
+  // named Marking Complete, so its absence under the old name proves nothing, and leaving then cancels the save.
+  await expect(edit.getByRole('button', { name: 'Duplicate' })).toBeVisible();
   await page.goto(`/coven/${coven.slug}/grimoire`);
   await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
   const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
@@ -453,7 +455,7 @@ test(
       await dots.click();
       await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     };
-    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    const question = page.getByRole('alertdialog', { name: 'Delete Spell', exact: true });
 
     // Why the delete could be refused: B is not the author, and the spell is complete and
     // shared. B is a member of the coven, which is what the delete asks.
@@ -543,7 +545,7 @@ test(
       .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
     await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
-    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    const question = page.getByRole('alertdialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
     await question.getByRole('button', { name: 'Delete', exact: true }).click();

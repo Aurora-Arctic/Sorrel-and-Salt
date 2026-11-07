@@ -120,10 +120,12 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('link', { name: 'Annotate Fixture Screens Wort' })).toBeFocused();
 
   await choose('Remove');
-  await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+  // A yes-or-no question is an alert dialog.
+  const question = page.getByRole('alertdialog');
+  await question.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(plus()).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
-  await expect(dialog).toBeHidden();
+  await expect(question).toBeHidden();
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
   await assertNoAccessibilityViolations(page);
 });

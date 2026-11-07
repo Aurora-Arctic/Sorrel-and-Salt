@@ -2,7 +2,7 @@
 // so each names the role it has. Spread from here, as oxlint's `jsx-a11y/no-redundant-roles` refuses the repetition written as attributes.
 
 export const tableRole = (
-  role: 'table' | 'rowgroup' | 'row' | 'columnheader' | 'cell',
+  role: 'table' | 'rowgroup' | 'row' | 'columnheader' | 'rowheader' | 'cell',
 ): { role: string } => ({ role });
 
 /** A stacked card's cell: its role, and the column it names; `''` for an action spanning the card. */

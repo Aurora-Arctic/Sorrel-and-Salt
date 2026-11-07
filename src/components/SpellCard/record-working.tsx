@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingSetupQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
@@ -80,7 +80,7 @@ function CardRecordWorkingDialog({
         ) : setup.isError ? (
           <Notice kind="error">{GENERIC_FAILURE}</Notice>
         ) : (
-          <Skeleton shape="form" />
+          <Skeleton shape="block" count={4} />
         )
       }
     </Modal>
