@@ -8,10 +8,6 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { ADD, HELD } from '../../support/cupboard-wording';
 
-// The card's own choice between the plus and the held check: the plus on a card some coven lacks
-// it in, the check where every coven holds it. The plus's menu, add, busy, refusal and check are
-// proved with the plus alone in AddIcon/index.test.tsx.
-
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const client = makeQueryClient();
@@ -114,7 +110,6 @@ describe('the add icon on the cards', () => {
       />,
     );
 
-    // Each card's control names its own entry, so the two are told apart by name alone.
     expect(screen.getAllByRole('button', { name: new RegExp(`^${ADD}`) })).toEqual([
       screen.getByRole('button', { name: `${ADD}: Fixture Heldone` }),
     ]);
