@@ -1,4 +1,4 @@
-## Route protection (M2.7)
+## Route protection
 
 Every page is protected unless it is named public, and two layers do the
 protecting: a cheap one that owns the redirect, and a secure one that owns the
@@ -15,14 +15,14 @@ answer.
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
-  (MB.57); `/sign-in`; `/forgot-password` and `/reset-password`, since a
+ ; `/sign-in`; `/forgot-password` and `/reset-password`, since a
   person who has forgotten their password has no session
   ([`passwords.md`](passwords.md)); `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
   (MB.66, [`email.md`](../email.md)). M15.29 adds `/support`, which shows a signed-out visitor Sign In in place of the form and holds no data. MB.83 adds `/compendium`, `/compendium/*`,
   `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` (which covers
   `ai-catalog.json` and `ard.json`, [`../seo/ai-discovery.md`](../seo/ai-discovery.md)): the public
-  compendium's pages and the files a crawler reads (MB.80), with the icon and
+  compendium's pages and the files a crawler reads, with the icon and
   manifest files M11.16 will add, listed ahead of it. M12.34 adds `/opengraph-image`, the site's
   share card that a link preview fetches with no cookie; the compendium's own cards sit under
   `/compendium/*` ([`../seo/share-card.md`](../seo/share-card.md)). The `(public)` route
@@ -67,7 +67,7 @@ answer.
   checks"), and a route that forgets to call `requireSession()` still
   redirects. It never touches the database — Next runs it on every page
   request, prefetches included — so its cost is a cookie read per navigation.
-  **The one exception is `/workshop`** (M2.10): the staging component workshop
+  **The one exception is `/workshop`**: the staging component workshop
   is static files under `public/`, with no page to run the secure check, so
   the proxy runs it there itself — `sessionFromHeaders()`, imported only on
   that branch — and applies the admin-only service rule.
@@ -80,10 +80,10 @@ answer.
   request it passes, overwriting any value the client sent, and the read still
   goes through `safeReturnPath`. The proxy forwards it on public pages too, so
   `/invite/[token]` can send a signed-out visitor to `/sign-in` and back, since
-  accepting requires a sign-in (MB.70). `/` is public but personalised (MB.57): it
+  accepting requires a sign-in. `/` is public but personalised: it
   reads the session with `getSession()` to offer a signed-in visitor the landing
   rather than sign-in, and `requireSession()` would redirect the signed-out
-  visitors it exists for. `requireSession()` has a second redirect (MB.54): a
+  visitors it exists for. `requireSession()` has a second redirect: a
   session whose address is unverified goes to
   `/account/email?next=<its own path>` from every page but that one, since a
   provisional account can do nothing else (["The email
@@ -121,8 +121,8 @@ navigation.
   guard has no fallback: a missing or unsafe `next` is no return path at all
   (`undefined`), because which landing then applies is the role's, and only
   the callback knows the role once any promotion has run.
-- **With no return path, the landing is the role's** (MB.113). A verified
-  admin lands on `/keepers`, `ADMIN_LANDING`, and a curator on `/curator`, `CURATOR_LANDING` (M11.20); everyone else on `/coven`,
+- **With no return path, the landing is the role's**. A verified
+  admin lands on `/keepers`, `ADMIN_LANDING`, and a curator on `/curator`, `CURATOR_LANDING`; everyone else on `/coven`,
   `POST_SIGN_IN_LANDING`, the post-sign-in landing M2.8 builds — not `/`:
   someone who has just signed in has been through the front door already
   ([`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md)).
@@ -142,7 +142,7 @@ navigation.
   A non-keeper who is already in a coven is sent into its page directly
   (`signedInLanding` in `src/lib/landing.ts`, the first coven the switcher
   lists), not to `/coven`
-  (MB.257): `/coven` answers such a visitor with a redirect to that page, and
+ : `/coven` answers such a visitor with a redirect to that page, and
   the dev server compiles both routes on the way, which showed as a blank page.
   A production build answers `/coven` with a bodiless 307 in about 60 ms, so
   the stop was the dev server's alone; the hop is gone from both. Someone in no

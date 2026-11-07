@@ -42,7 +42,6 @@ import {
 } from './compendium/files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
 
-// The compendium seed writes each entry whole, once, from the invented fixture files, against the real tables emptied first. The shape every seed shares is index.test.ts's; the guard's rules are compendium/guard.test.ts's and guard-files.test.ts's.
 // The five vocabularies the compendium picks from are seeded once for the file and each case empties only what it writes, because re-seeding per case cost most of the file's time;
 // cases that need other vocabularies, or none, have describes of their own that put the shared state back.
 
@@ -58,7 +57,6 @@ afterAll(async () => {
   await sql.end();
 });
 
-/** What `migrate.yml` runs before the compendium. */
 async function seedVocabularies(): Promise<void> {
   await seedCategories(db);
   await seedForms(db);
@@ -67,7 +65,6 @@ async function seedVocabularies(): Promise<void> {
   await seedSources(db);
 }
 
-/** The tables the five vocabularies fill, which no case below writes to. */
 const VOCABULARY_TABLES = new Set([
   'category_groups',
   'categories',
@@ -80,12 +77,9 @@ const VOCABULARY_TABLES = new Set([
   'deity_other_names',
 ]);
 
-/** Every other table, each after every table that references it. */
 let deleteOrder: string[];
-/** The sources seed's own rows in the two tables the compendium also writes. */
 let vocabularyRows: { references: string[]; referenceLinks: string[] };
 
-/** Empties every table, then seeds the five vocabularies the compendium picks from. */
 async function seedSharedVocabularies(): Promise<void> {
   await truncateAllTables(sql);
   await seedVocabularies();
@@ -107,7 +101,6 @@ async function resetToVocabularies(): Promise<void> {
   }
 }
 
-/** The non-vocabulary tables, ordered so no delete is refused by a foreign key. */
 async function tablesInDeleteOrder(): Promise<string[]> {
   const tables = (
     await sql<{ tablename: string }[]>`select tablename from pg_tables where schemaname = 'public'`
@@ -123,7 +116,6 @@ async function tablesInDeleteOrder(): Promise<string[]> {
   const ordered: string[] = [];
   const left = new Set(tables);
   while (left.size > 0) {
-    // A table may go once nothing still to be emptied references it.
     const ready = [...left].filter(
       (table) => !edges.some((edge) => edge.parent === table && left.has(edge.child)),
     );
@@ -143,7 +135,6 @@ async function countOf(table: string, where = ''): Promise<number> {
   return Number(count);
 }
 
-/** Every row of the compendium's tables, as text, so a run's writes show as a diff. */
 async function compendiumRows(): Promise<string[]> {
   const rows = await sql<{ row: string }[]>`
     select to_jsonb(t)::text as row from ingredients t
@@ -163,7 +154,6 @@ async function ingredientId(seedKey: string): Promise<string> {
   return row.id;
 }
 
-/** A keeper's own compendium entry, which no seed wrote. */
 async function insertAdminEntry(name: string, canonicalName: string): Promise<void> {
   await sql`
     insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -214,8 +204,6 @@ describe('seedCompendium', () => {
       ]);
     });
 
-    // The two flags are the literal's, each its own, and off where the
-    // literal leaves them out.
     it('flags an entry and a form toxic exactly where the literal says so', async () => {
       const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
         select seed_key, toxic from ingredients order by seed_key
@@ -307,7 +295,6 @@ describe('seedCompendium', () => {
         { entry: null, form: 'Oil', title: 'Samplewort', locator: null },
         { entry: null, form: 'Root', title: 'A Fixture Herbal', locator: 'p. 40' },
       ]);
-      // Two works, one row each, keyed by their citation.
       const keyed = await sql<{ seed_key: string }[]>`
         select seed_key from "references" where title in ('A Fixture Herbal', 'Samplewort')
       `;
@@ -348,7 +335,6 @@ describe('seedCompendium', () => {
   });
 
   describe('an entry already present is left as it is, with nothing beneath it written', () => {
-    /** Testwort's children, which a skipped entry must not gain. */
     const childrenOfTestwort = (id: string) =>
       Promise.all(
         [
@@ -399,7 +385,6 @@ describe('seedCompendium', () => {
     });
   });
 
-  // A source's spelling, which the deity seed loads as an other name.
   it('links a deity an entry names by one of its other names, stored under the deity name', async () => {
     const testwort = fileOf(TESTWORT, (file) => file.entry.deities?.push('Ganesh'));
 
@@ -445,7 +430,6 @@ describe('seedCompendium', () => {
     });
   });
 
-  // These two read a database with no vocabulary, or with no bootstrap user.
   describe('on an empty database', () => {
     beforeEach(async () => {
       await truncateAllTables(sql);
@@ -467,7 +451,6 @@ describe('seedCompendium', () => {
 
       await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
 
-      // Not even the bootstrap user the transaction opens with.
       expect(await countOf('users')).toBe(0);
     });
   });
@@ -508,16 +491,12 @@ describe('seedCompendium', () => {
   });
 });
 
-// A present entry is updated only when its file says so (`seedUpdate`, the hash of the file as read) and nobody's work on the site stands in the way.
-// Each case seeds the two fixture entries, runs the seed again on an edited copy and reads the rows back.
 describe('the update path', () => {
   const PATH = entryFilePath(TESTWORT);
   const A_ID = FIXTURE_USERS.A.id;
 
-  /** The two entries as the first run read them. */
   const baseline = (): RenderableEntryFile[] => [fileOf(TESTWORT), fileOf(SAMPLEWORT)];
 
-  /** A copy of `entry`'s file with `edit` applied, marked for update unless `mark` is false. */
   function edited(
     entry: SeedCompendiumEntry,
     edit: (entry: SeedCompendiumEntry) => void,
@@ -536,7 +515,6 @@ describe('the update path', () => {
     entry.description = wordsOf(words);
   };
 
-  /** Everything the first edit of case 3 changes at once. */
   function bigEdit(entry: SeedCompendiumEntry): void {
     entry.description = wordsOf(121);
     entry.folkNames = ['Proofleaf', 'Newleaf Proof'];
@@ -567,7 +545,6 @@ describe('the update path', () => {
     return row;
   }
 
-  /** The file's hash, which is what the row stores once the file is read. */
   const hashOf = (entry: SeedCompendiumEntry, edit: (entry: SeedCompendiumEntry) => void) =>
     parsed(fileOf(entry, (draft) => edit(draft.entry))).hash;
 
@@ -698,7 +675,6 @@ describe('the update path', () => {
   it('reports a mark gone stale, an edit made after marking, as pending', async () => {
     const before = await compendiumRows();
     const marked = edited(TESTWORT, reword(121));
-    // The file moved on after the mark was written.
     marked.entry.description = wordsOf(123);
     expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
 
@@ -724,7 +700,6 @@ describe('the update path', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
-  // The edit the entry files waiting on a later pass make once marked.
   it('links a deity a marked edit adds by one of its other names, under the deity name', async () => {
     const report = await run([
       edited(TESTWORT, (entry) => entry.deities?.push('Woden')),
@@ -788,7 +763,6 @@ describe('the update path', () => {
       ),
     ).toBe(1);
 
-    // What the seed itself soft-deleted is not an editor's work: the next edit lands too.
     const again = (entry: SeedCompendiumEntry) => {
       bigEdit(entry);
       entry.description = wordsOf(122);
@@ -848,7 +822,6 @@ describe('the update path', () => {
     expect(await variantIdOf(sql, id, 'Oil')).toBe(oil);
     expect(await compendiumRows()).toEqual(before);
 
-    // --force lifts refusals 1 to 4 only; a form in use stays refused.
     const forced = await run(files(), { force: true });
 
     expect(forced.refused).toHaveLength(1);
@@ -864,7 +837,6 @@ describe('the update path', () => {
     expect((await variantRowsOf(sql, id)).find((v) => v.form === 'Oil')?.deleted_at).not.toBeNull();
   });
 
-  /** Refusals 1 to 3: someone worked on the entry at the site. Each case sets the work up, checks it took, and names the reason the run prints. */
   const SITE_WORK: { name: string; reason: string; setUp: () => Promise<void> }[] = [
     {
       name: 'a curator-reviewed entry',
@@ -912,7 +884,6 @@ describe('the update path', () => {
     },
   ];
 
-  /** Refused with `reason` and nothing written; then the same marked edit, with the file's `overwriteEditor` or the run's `force`, lands and the row comes out unreviewed. */
   async function expectRefusedThenLanded(
     reason: string,
     lift: { overwrite: true } | { force: true },
@@ -961,9 +932,6 @@ describe('the update path', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
-  // `db:seed:compendium -- --force` lifts refusals 1 to 4 for every
-  // entry in the run, with no `overwriteEditor` in any file. The mark rule
-  // still holds: an edit nobody marked stays pending.
   describe('--force lifts refusals 1 to 4 for every entry', () => {
     it.each(SITE_WORK)('$name', async ({ reason, setUp }) => {
       await setUp();
@@ -1086,7 +1054,6 @@ describe('the update path', () => {
   // hash skips only a row that matches its file as well.
   describe('a row whose hash matches its file but whose content does not', () => {
     const fileHash = () => parsed(fileOf(TESTWORT)).hash;
-    /** Marked for update at its own hash: the file as it stands, approved. */
     const marked = (options: { overwrite?: boolean } = {}) => edited(TESTWORT, () => {}, options);
 
     async function toxicOf(): Promise<boolean> {
@@ -1095,7 +1062,6 @@ describe('the update path', () => {
       return row.toxic;
     }
 
-    /** The row as the old shards wrote it: unflagged, under the hash of a file that flags it. */
     async function unflag(): Promise<void> {
       await sql`update ingredients set toxic = false where seed_key = ${identityOf(TESTWORT)}`;
       expect(TESTWORT.toxic).toBe(true);
@@ -1103,7 +1069,6 @@ describe('the update path', () => {
       expect((await testwortRow()).seed_content_hash).toBe(fileHash());
     }
 
-    /** A person's edit on the row: the seed's stamp replaced by A's. */
     async function editedByA(): Promise<void> {
       await asTouch(sql, async (tx) => {
         await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
@@ -1111,7 +1076,6 @@ describe('the update path', () => {
       expect((await testwortRow()).updated_by).toBe(A_ID);
     }
 
-    /** A curator's mark on the row. */
     async function reviewed(): Promise<void> {
       await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
         where seed_key = ${identityOf(TESTWORT)}`;
@@ -1144,7 +1108,6 @@ describe('the update path', () => {
       expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
     });
 
-    /** A matching hash, a differing field and a person's work: the work stays, and the run says nothing of it. */
     async function expectQuietSkip(files = [marked(), fileOf(SAMPLEWORT)]): Promise<void> {
       const before = await compendiumRows();
 
@@ -1285,8 +1248,6 @@ describe('the update path', () => {
     },
   );
 
-  // The seed never sets the curator mark. A row it inserts, and a row it
-  // updates, both come out unreviewed; only a curator's switch marks an entry.
   const markOf = async () => {
     const [row] = await sql<{ at: Date | null; by: string | null }[]>`
       select curator_reviewed_at as at, curator_reviewed_by as by

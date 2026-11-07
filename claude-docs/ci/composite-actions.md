@@ -9,7 +9,7 @@ would need no edit at any call site; nothing passes it today.
   `./.github/actions/<name>` once checked out; this one runs _before_ that
   checkout exists, so **callers must reference it by full
   `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
-  - **Copy-only is sufficient because the image carries no source** (MB.42).
+  - **Copy-only is sufficient because the image carries no source**.
     `cp -a` overlays and never deletes, which is safe only when there is
     nothing underneath for a stale file to survive _as_: `Dockerfile.node`
     copies in the two manifests, runs `npm ci`, and stops, so `node_modules` is
@@ -51,7 +51,7 @@ would need no edit at any call site; nothing passes it today.
   than pushing an untagged ref), and `secrets.GITHUB_TOKEN` (`secrets` is out
   of scope inside a composite, so the registry password is an input — the same
   route `vercel-secrets-guard` takes).
-  - **The layer cache is in the registry** (MB.99). buildx reads and writes
+  - **The layer cache is in the registry**. buildx reads and writes
     `ghcr.io/<repo>/<path>:buildcache` with `mode=max`, one tag per image
     beside its hash tags, so a build on one PR warms the next PR's and every
     branch reads the same copy. `mode=max` caches the stages before the

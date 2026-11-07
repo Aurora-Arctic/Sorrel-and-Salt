@@ -14,14 +14,12 @@ let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
 const ADMIN = FIXTURE_USERS.E.id;
-// An invented account holding neither privilege, stamped as itself.
 const SUBJECT = '00000000-0000-0000-0000-0000000000c1';
 const NEWCOMER = '00000000-0000-0000-0000-0000000000c2';
 
 const REFUSAL = /a privilege change must declare its route/;
 
 beforeEach(async () => {
-  // The ledger first: its rows name the users deleted next.
   await sql`truncate user_privilege_changes`;
   await sql`delete from users where id in (${SUBJECT}, ${NEWCOMER})`;
   await sql`
@@ -46,8 +44,6 @@ async function privilegesOf(id: string) {
   return row;
 }
 
-// What a `psql` session does: a statement of its own, or a transaction that
-// says first how the change came about.
 describe('a psql fix', () => {
   it('refuses a privilege change that declares no route, saying so, and changes nothing', async () => {
     const refused = await failureOf(sql`

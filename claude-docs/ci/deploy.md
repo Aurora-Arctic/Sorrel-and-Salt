@@ -13,7 +13,7 @@ nothing and this workflow is the only path.
   `create-pr` also opens is skipped (`branches: [main]`).
 - `pull_request`, not `pull_request_target` — hotfix branches are never forks.
 - **A staging deploy also builds the component workshop** into
-  `public/workshop` ahead of `vercel build` (M2.10); no other target does.
+  `public/workshop` ahead of `vercel build`; no other target does.
   [`workshop.md`](../workshop.md), "On staging", covers the step and its admin
   gate.
 - The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
@@ -34,7 +34,7 @@ nothing and this workflow is the only path.
   scope**, not a personal scope. A personal-scope token is accepted as valid and
   then fails at `vercel pull` with `Could not retrieve Project Settings…`.
 - **Every _preview_ `vercel pull` passes `--git-branch`, and no production one
-  does** (MB.27, MB.45). Vercel resolves a branch-scoped
+  does**. Vercel resolves a branch-scoped
   environment variable only when the pull names the branch, and `staging`'s
   `DATABASE_URL` is precisely such a variable — the override that keeps staging
   off the Neon integration's per-preview ephemeral branches
@@ -97,7 +97,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   production snapshot.
   `claude-docs/secrets.md` is the matrix and the source of truth for which rows
   are set.
-- **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
+- **`migrate.yml`** — reusable (`workflow_call`-only) workflow, applying
   `npm run db:migrate` against the environment's `DATABASE_URL`. In
   `deploy.yml` the `migrate` job sits between `resolve-target`, whose output
   both later jobs need, and `deploy`. It calls this workflow with
@@ -118,7 +118,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   database. M1.1's "Cross-task impact" requires the two workflows to resolve
   `DATABASE_URL` identically, and that is the requirement in mechanical form.
 - **`DATABASE_URL` and `BETTER_AUTH_SECRET` come from GitHub secrets, not from
-  the pull** (MB.47). Both are Sensitive in Vercel, so the pull writes the
+  the pull**. Both are Sensitive in Vercel, so the pull writes the
   literal `[SENSITIVE]` in their place, and CI keeps its own copy of each as a
   repository secret named per target. [`secrets.md`](../secrets.md) has why no
   pull can read them, the rotation rule a second copy creates, and why named
@@ -135,7 +135,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   Next build. The two selections must stay together: choosing differently would
   migrate one database and serve another.
 
-- **Both jobs assert the pulled environment before using it** (MB.46), via
+- **Both jobs assert the pulled environment before using it**, via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
   that job needs, failing with a named cause (missing · empty · placeholder ·
   not a postgres URL · scheme without `user@host/database` · surviving quotes
@@ -167,7 +167,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `src/db/connection.ts`, whose module-scope `postgres()` parses its URL
   eagerly. A placeholder is not harmless to it.
 
-- **Both jobs then open the connection, before anything consumes it** (MB.49),
+- **Both jobs then open the connection, before anything consumes it**,
   via `scripts/probe-database.ts`. It reads a connection string from a file,
   connects, and runs `select 1`; on success it prints the role, database and
   server version that answered, and on failure the driver's own error code and
@@ -242,21 +242,21 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   a failed migration, and a failed seed blocks `deploy` for free, because it
   fails the job `deploy` already depends on.
   On every run, failed or not, the seed summary also carries the compendium
-  seed's per-entry lines (M14.1): a step before it cuts every `UPDATED`,
+  seed's per-entry lines: a step before it cuts every `UPDATED`,
   `PENDING`, `REFUSED`, `ADOPTED` and `RETIRED` line (the step runs the
   compendium seed with `--adopt`, which is what prints `ADOPTED` lines), each with its
   `  differs:` line, out of `seed.log` and hands them to `job-summary`'s
   `details` input as a collapsed block headed by the count and the totals
   line, or as one line saying there were none, so drift reported as
   `PENDING` is seen without opening the raw step log.
-  One failure is reported a step further (M14.7): when the compendium seed
+  One failure is reported a step further: when the compendium seed
   refuses an update, it exits 1 with a `REFUSED` line per entry and the
   fields that differ, and three fail-only steps find the pull request the
   deploying commit came from (`listPullRequestsAssociatedWithCommit`), cut
   those lines out of `seed.log` and post them through `pr-comment`, which is
   why the workflow holds `pull-requests: write`. A commit no pull request
   carries gets the job summary alone.
-- **Seeding an environment by hand (M14.26)** is a second way in, for a site
+- **Seeding an environment by hand** is a second way in, for a site
   admin who needs the seed without a deploy: `seed-environment.yml`, started
   only from the Actions tab (`workflow_dispatch`). It takes three inputs:
   `environment` (`preview`, which is staging, or `production`), `dry-run`
@@ -289,7 +289,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   astrology seed docs it is transcribed from, `src/db/seed/reference-rows.ts`,
   which writes its references and the compendium's, `src/db/seed/compendium.ts`
   and its modules under `src/db/seed/compendium/`, the entry files under
-  `compendium/` it reads (M14.10), the two
+  `compendium/` it reads, the two
   `*-vocabulary.ts` helpers they write through, `src/db/seed/idempotent.ts`,
   which every seed writes through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer
@@ -308,7 +308,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
 
 ### Neon snapshots
 
-- **`migrate.yml` snapshots production before it migrates it** (M1.6), by
+- **`migrate.yml` snapshots production before it migrates it**, by
   branching Neon's `main` branch as `snapshot-<short sha>` through the Neon
   API. That branch is the known-good point
   [`db/snapshot-and-restore.md`](../db/snapshot-and-restore.md)'s restore

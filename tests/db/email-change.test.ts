@@ -51,8 +51,6 @@ beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });
 
-// The harness re-clones per file, not per test; every user here is on this
-// domain or under the placeholder's.
 beforeEach(async () => {
   const mine = sql`
     select id from users where email like ${`%${DOMAIN}`} or email like '%@pending.invalid'

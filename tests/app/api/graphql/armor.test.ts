@@ -12,8 +12,6 @@ vi.mock('@/lib/request-session', () => ({
   }),
 }));
 
-// The real schema is one `ok` field, one level deep, so no query against it can reach a depth or cost limit.
-// The route is loaded over a schema that nests without end and pages without running out of rows, so the limits are the only thing that can refuse a query here.
 vi.mock('@/graphql/schema', async () => {
   const { createBuilder } = await import('@/graphql/builder');
   const scratch = createBuilder();
@@ -41,8 +39,6 @@ vi.mock('@/graphql/schema', async () => {
   return { schema: scratch.toSchema() };
 });
 
-// Staging and every preview run at NODE_ENV=production and the limits read no environment (src/graphql/armor.ts), so one environment is the whole of their behaviour.
-// The route is loaded once for the file, because loading it builds the schema in about 1.5 s.
 let POST: (typeof import('@/app/api/graphql/route'))['POST'];
 
 beforeAll(async () => {
@@ -65,7 +61,6 @@ async function query(source: string, variables?: Record<string, unknown>) {
   return (await response.json()) as { data?: unknown; errors?: { message: string }[] };
 }
 
-/** `node { child { … { name } } }`, `depth` field levels deep, `name` included. */
 function nested(depth: number): string {
   let selection = 'name';
   for (let level = 2; level < depth; level += 1) selection = `child { ${selection} }`;
@@ -106,15 +101,12 @@ describe('graphql-armor', () => {
       expect.stringMatching(/^Query exceeds maximum complexity \(complexity: \d+, max: 5000\)$/),
     ];
 
-    // The same shape, cheaper: a refusal below is the price, not the shape.
     it('answers a composed query within the limit', async () => {
       const result = await query(paged('(first: 10)'));
 
       expect(result.errors).toBeUndefined();
     });
 
-    // Seven levels and no aliases, so neither the depth nor the alias limit
-    // is what refuses it.
     it('refuses an expensive composed query', async () => {
       const result = await query(paged('(first: 100)'));
 

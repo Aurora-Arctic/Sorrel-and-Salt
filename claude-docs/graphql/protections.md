@@ -80,7 +80,7 @@ inside the limit, to show that the refusal comes from the limit, and prices a
 variable `first` the same as a literal one. `tests/graphql/pagination.test.ts`
 pins the pricing itself. That production answers no introspection and suggests no field, and serves no
 IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`. Local
-development's half is developer tooling and has no test (M14.27).
+development's half is developer tooling and has no test.
 
 ### The access boundary
 

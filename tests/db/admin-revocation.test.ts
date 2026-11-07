@@ -42,7 +42,6 @@ beforeEach(async () => {
   );
 });
 
-/** A session row for `userId` and the cookie header Better Auth would have set for it. */
 async function signedInAs(userId: string): Promise<Headers> {
   const context = await auth.$context;
   const token = randomBytes(24).toString('base64url');

@@ -1,4 +1,4 @@
-## Email and password (M16.2)
+## Email and password
 
 A person with none of the four providers signs up and in with an email
 address and a password, through Better Auth's `emailAndPassword` option in

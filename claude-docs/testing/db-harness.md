@@ -1,4 +1,4 @@
-## The db test harness — `tests/support/db/` (MB.51)
+## The db test harness — `tests/support/db/`
 
 Two modules the `tests/db/` and `tests/modules/` files share, a sweep built
 on them, and the setup inserter. They sit in their own directory under `tests/support/` because
@@ -43,7 +43,7 @@ run as a test.
   `test-database-isolation.test.ts` and `tests/db/seed/*` still open their
   own client — the isolation test's subject _is_ the connection, and the
   others either read the clone as the template built it or truncate
-  everything before a seed run they assert (MB.183).
+  everything before a seed run they assert.
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups every schema test used to build by hand:
@@ -60,20 +60,20 @@ run as a test.
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
   audit-columns sweep read one list. The tables
-  carrying a `forbid_rewrite` trigger (MB.194) are not a list in the harness; the trigger's refusals are
+  carrying a `forbid_rewrite` trigger are not a list in the harness; the trigger's refusals are
   `user-privilege-changes-schema.test.ts`'s and
-  `tests/db/privilege-change-trigger.test.ts`'s (MB.225).
+  `tests/db/privilege-change-trigger.test.ts`'s.
 
-- **`insert-ingredient.ts` — `insertIngredient(sql, fixture, author)`** (MB.101).
+- **`insert-ingredient.ts` — `insertIngredient(sql, fixture, author)`**.
   The setup inserter for an ingredient and its children, on the raw client and
   in one transaction. Its children include a variant row for each of the
-  fixture's forms, since the ingredient row has none (MB.222), and
+  fixture's forms, since the ingredient row has none, and
   `insertVariant` writes one more form beside them. Why setup goes this way rather than through `withAudit`
   is under ["Fixture factories"](fixture-factories.md), where the convention is stated. It
   has no test of its own: it is the harness, proved by every test seeding
-  through it (MB.225).
+  through it.
 
-- **`insert-spell.ts` — `insertSpell(sql, fixture, author)`** (M5.3). The
+- **`insert-spell.ts` — `insertSpell(sql, fixture, author)`**. The
   same for a spell: its row, its layers and its assigned categories, on
   `insertIngredient`'s terms. `author` is `created_by`, which is whom a
   private spell is readable by, and a layer's ingredient id is written as
@@ -99,7 +99,7 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   does not name fails this file.
 
 - **`tests/db/partial-unique-indexes.test.ts` — rule 4 once, for every
-  table** (MB.188). One test reads every partial unique index in `public`
+  table**. One test reads every partial unique index in `public`
   from `pg_index`, with each column its key, expressions and predicate read
   (through `pg_depend`), asserts the set non-empty and every index
   classified in its `ROWS` map — keyed by index rather than table, since one
@@ -116,11 +116,11 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   exception, `ingredient_variants_id_ingredient_id_unique` (MB.216, the target
   of MB.217's composite foreign keys), is decided there and any other fails.
   A table with no tombstone, `ingredient_categories`, whose two pair indexes
-  are partial on `variant_id` (MB.217), is classified `hardDeleted`: its
+  are partial on `variant_id`, is classified `hardDeleted`: its
   holder is deleted outright to free the slot.
 
 - **`tests/db/schema-drift.test.ts` — the schema files against the migrated
-  database, once for every table** (MB.226). It imports every
+  database, once for every table**. It imports every
   `src/modules/*/schema/*.ts`, asserts the tables it finds non-empty and
   exactly the `public` tables the catalogue holds, then, per table, compares
   what `tableFacts` reads off `getTableConfig` with the catalogue: each
@@ -129,7 +129,7 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   name, columns, target and `ON DELETE`; the CHECK names; and each index's
   name, uniqueness and whether it is partial. An index backing the table's own
   primary key or unique constraint is the constraint's and is left out, but
-  not one a foreign key merely points at, which records it too (MB.217). A schema file edited without its
+  not one a foreign key merely points at, which records it too. A schema file edited without its
   migration, or a migration without its schema file, fails here, which is why no
   module schema test carries a foreign-key, NOT NULL, type or index-name case.
   What a CHECK or an index _refuses_ is not compared, and stays the module
@@ -142,14 +142,14 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   file's `PENDING_DROPS` — table, kind (`column`, `index`, `check`,
   `foreignKey`, `table` or `view`), name, and the task that drops it — and the
   comparison leaves that object out; the drop task removes the line. A `view`
-  is the old name a renamed table leaves behind (MB.252), and the schema
+  is the old name a renamed table leaves behind, and the schema
   declares none, so a view the list does not hold fails too
   (["Renaming a table"](../db/expand-contract.md)). A line
   left behind fails the file's last test, which asserts every pending drop
   still names an object the catalogue holds, so the window is declared rather
   than tolerated.
 
-**What a module schema test asserts** (MB.226). Its table's exact column set
+**What a module schema test asserts**. Its table's exact column set
 on the code side, and the behaviour particular to that table: each CHECK's
 refusal with the row it would otherwise admit, identity and tier rules, a
 trigger's effect, a default the domain depends on, and a closed list as one
@@ -166,7 +166,7 @@ curated vocabularies run off one registry-driven file,
 `src/db/vocabularies.ts`'s `TWO_TIER` and `FLAT`, and the two category join
 tables off one template, `tests/modules/ingredients/schema/join-tables.test.ts`.
 
-### Two db projects (MB.238)
+### Two db projects
 
 The Postgres-backed files run in two Vitest projects rather than one, split by
 what a file does to the worker it runs in.
@@ -237,7 +237,7 @@ two db projects alone with `--coverage --maxWorkers=7` (CI's worker count):
 against 152 s and 155 s. Whole `test:coverage` runs on the same machine
 varied by more than the change between one run and the next.
 
-### Connections per run (MB.179)
+### Connections per run
 
 A `db` run can fail tests that pass alone. During M5.5 the OAuth sign-in
 tests in `tests/db/email-change.test.ts`, `tests/db/email-verification.test.ts`

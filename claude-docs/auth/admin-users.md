@@ -105,7 +105,7 @@ A keeper approves someone who has no invitation from that person's user modal on
 `/keepers/users`, so a person starting a coven of their own gets in without
 knowing an existing user, and can revoke the approval from the same modal. It is
 the second of the flag's routes: the first is accepting a workspace invitation
-(M7.5), and being made a curator or a keeper sets it in its own write (MB.177, M11.20). Neither act
+(M7.5), and being made a curator or a keeper sets it in its own write. Neither act
 touches anything but the flag: it confers no workspace access on the admin,
 creates no workspace, and a revoke leaves every workspace the user already
 created, and their ownership of it
@@ -367,7 +367,7 @@ filter, page)` is one page of the pending list, newest first, and
      declined link keeps saying so after a steward removes it from their list.
      Each is a `Forbidden` in words of its own, and none names a
      workspace.
-  3. The tier: the site tier's branch, below, or the workspace's (M7.5), which
+  3. The tier: the site tier's branch, below, or the workspace's, which
      seats the person at the invited role: a removed member's row is revived
      (`reviveMembership`, `joinedAt` restarted), a live member's is left
      alone and the invitation only stamped, and otherwise a row is inserted.

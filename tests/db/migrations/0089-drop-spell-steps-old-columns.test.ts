@@ -28,7 +28,6 @@ beforeEach(async () => {
   await sql`drop table if exists scratch_steps`;
 });
 
-/** A table shaped like `spell_steps` before the drops: both columns and a live-only unique index on each, so the refill meets the clash it must avoid. */
 async function oldShape(rows: [string, number | null, number, boolean][]) {
   await sql`create table scratch_steps (
     id serial primary key, spell_id uuid not null, name text not null,

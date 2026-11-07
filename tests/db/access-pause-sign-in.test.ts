@@ -76,7 +76,6 @@ const signInWithProvider = (email: string) =>
 const signInWithPassword = () =>
   post(auth, '/sign-in/email', { email: PASSWORD_USER, password: PASSWORD });
 
-/** The user a response's session cookie signs in, read back through get-session; `undefined` when it signs in nobody. */
 async function signedInAs(cookie: string): Promise<string | undefined> {
   const session = await auth.handler(
     new Request(`${ORIGIN}/api/auth/get-session`, { headers: { cookie } }),
@@ -89,7 +88,6 @@ async function idOf(email: string): Promise<string> {
   return id;
 }
 
-/** A verified password account, signed in once, so a refusal later is not the address or the password. */
 async function passwordAccount(): Promise<string> {
   const response = await post(auth, '/sign-up/email', {
     name: 'Fixture Person',
@@ -106,7 +104,6 @@ async function passwordAccount(): Promise<string> {
   return idOf(PASSWORD_USER);
 }
 
-/** A verified account holding a passkey, which has signed in with it once. */
 async function passkeyAccount() {
   const first = await signInWithProvider(PASSKEY_USER);
   const key = softKey();
@@ -117,7 +114,6 @@ async function passkeyAccount() {
   return { id, key };
 }
 
-/** One GraphQL operation through the real route, as the browser sends it with `cookie`. */
 async function graphql(cookie: string, query: string, variables: Record<string, unknown> = {}) {
   const { POST } = await import('@/app/api/graphql/route');
   const response = await POST(
@@ -148,10 +144,6 @@ async function requestsFrom(userId: string): Promise<number> {
   return count as number;
 }
 
-/**
- * The paused view, for a cookie that signs in `userId`: the session stands with the pause beside it, the signed-in support
- * form sends, and a call outside support answers ACCESS_PAUSED with the pause's end.
- */
 async function expectPausedView(cookie: string, userId: string, until: Date | null) {
   const { sessionStateFromHeaders } = await import('@/lib/request-session');
   const state = await sessionStateFromHeaders(new Headers({ cookie }));
@@ -170,7 +162,6 @@ async function expectPausedView(cookie: string, userId: string, until: Date | nu
   });
 }
 
-/** An unpaused view, for the precondition and the ended pause: the session stands alone, and `me` answers. */
 async function expectOpenView(cookie: string, userId: string) {
   const { sessionStateFromHeaders } = await import('@/lib/request-session');
   const state = await sessionStateFromHeaders(new Headers({ cookie }));
@@ -332,8 +323,6 @@ describe('a paused account at the compendium', () => {
     // The precondition: the cookie signs the account in.
     expect((await sessionStateFromHeaders(new Headers({ cookie }))).session?.userId).toBe(id);
 
-    // What a public page reads the viewer through, so the compendium draws its sessionless view
-    // (tests/app/(public)/compendium/page.test.tsx, "a visitor with no account").
     expect(await sessionFromHeaders(new Headers({ cookie }))).toBeNull();
     for (const path of ['/compendium', '/compendium/ingredients/testwort']) {
       const passed = await proxy(new NextRequest(`${ORIGIN}${path}`, { headers: { cookie } }));

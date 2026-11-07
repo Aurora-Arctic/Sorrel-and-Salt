@@ -1,4 +1,4 @@
-## Acting as a fixture user, and asserting a refusal (M1.26)
+## Acting as a fixture user, and asserting a refusal
 
 **`tests/support/as-user.ts`** is the one line an authorization test opens with:
 
@@ -28,15 +28,15 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   it inserts, so a missing user fails the first test that acts as one.
 - **An id alone cannot make a session** — the role has to come off the row.
   `tests/support/as-user.type-check.ts` holds that as a `@ts-expect-error`
-  compile assertion, which `npm run typecheck` reads and nothing runs (MB.224).
+  compile assertion, which `npm run typecheck` reads and nothing runs.
 - **One non-keeper stands for every one where the check reads the site role
   alone.** A refusal that `assertSiteAdmin` or the `admin` scope decides is
   asserted once, as A — a steward, the highest workspace role, and still no
   site role — with its precondition (A's role is `user`, and E's same call
   succeeds), never as A, B, C and D in turn: the four would fail in the same
-  diff for the same reason (MB.227). A refusal that turns on a workspace role
+  diff for the same reason. A refusal that turns on a workspace role
   keeps a fixture per role it distinguishes.
-- **F, the curator, stands for the role between the two** (M11.20). A
+- **F, the curator, stands for the role between the two**. A
   people-page refusal is asserted as F with two preconditions: E's same call
   succeeds, and F passes `assertCurator`, so the row fails if the admin guard
   is loosened to the curator one. A curation check that admits F is asserted
@@ -63,10 +63,10 @@ success: only an assertion that demands a rejection tells those from success,
 and a `NotFound` does not satisfy one written for a `Forbidden`.
 
 **Over GraphQL, assert the code, never the type.** A resolver test runs its
-operation through `tests/support/graphql/run.ts` (MB.185): `run(session, query,
+operation through `tests/support/graphql/run.ts`: `run(session, query,
 variables)` posts it to Yoga built on the route's schema and the route's own
 `maskedErrors`, with a fresh set of loaders, and answers the body the browser
-would receive. A fourth argument replaces part of that context (MB.186):
+would receive. A fourth argument replaces part of that context:
 loaders a test spies on or shares between operations, to read a cache either
 side of a write, or a sender that records what it was asked to mail.
 A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,

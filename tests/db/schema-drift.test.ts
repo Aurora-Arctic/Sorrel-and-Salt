@@ -117,7 +117,6 @@ const TABLES = [
 const byName = new Map(TABLES.map((table) => [getTableConfig(table).name, table]));
 const NAMES = [...byName.keys()].sort();
 
-/** `pg_constraint.confdeltype`, in the words Drizzle's `onDelete` uses. */
 const ON_DELETE: Record<string, string> = {
   a: 'no action',
   r: 'restrict',
@@ -136,7 +135,6 @@ const asCatalogued = (type: string) =>
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** What the code declares of `table`: the same facts the catalogue is read for. */
 function declared(table: PgTable) {
   const { columns, foreignKeys, checks, indexes } = tableFacts(table);
   return {
@@ -176,7 +174,6 @@ function declared(table: PgTable) {
   };
 }
 
-/** The same facts as the migrated database holds them. */
 async function migrated(name: string) {
   const columns = await sql<
     { name: string; type: string; notNull: boolean; hasDefault: boolean }[]
@@ -260,7 +257,6 @@ async function migratedAndKept(name: string, code: ReturnType<typeof declared>) 
   };
 }
 
-/** The public tables the migrations built, as the catalogue lists them. */
 async function migratedTables(): Promise<string[]> {
   const rows = await sql<{ name: string }[]>`
     select relname as name from pg_class
@@ -269,7 +265,6 @@ async function migratedTables(): Promise<string[]> {
   return rows.map((row) => row.name).sort();
 }
 
-/** The public views the migrations built, which the schema declares none of. */
 async function migratedViews(): Promise<string[]> {
   const rows = await sql<{ name: string }[]>`
     select relname as name from pg_class
@@ -307,8 +302,6 @@ describe('the Drizzle schema against the migrated database', () => {
     },
   );
 
-  // What makes the drop task remove its line: one left behind names an object
-  // the catalogue no longer holds.
   it('declares a pending drop only for an object the database still holds', async () => {
     if (PENDING_DROPS.length === 0) {
       expect(PENDING_DROPS).toEqual([]);

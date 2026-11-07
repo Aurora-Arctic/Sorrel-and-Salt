@@ -14,12 +14,12 @@
   at test-run setup (`tests/support/seeded-database.ts`;
   [`design-decisions/m1.27-template-at-setup-not-in-image.md`](../design-decisions/m1.27-template-at-setup-not-in-image.md)),
   so the image's contents depend on nothing under `src/`. Its `CMD` starts
-  the server with `max_connections=200` (MB.179): the one setting every
+  the server with `max_connections=200`: the one setting every
   consumer of the image reads, since compose passes no `command:` and a CI
   `services:` entry cannot, and it is the budget a test run is held under
   ([`testing/db-harness.md`](../testing/db-harness.md#connections-per-run-mb179)).
   Changing it changes the image's hash, so the PR rebuilds it.
-- **The test role may end an autovacuum worker** (MB.233). The test harness
+- **The test role may end an autovacuum worker**. The test harness
   drops and re-clones its databases with `DROP DATABASE ... WITH (FORCE)`,
   which ends every session still connected first. One of them can be
   Postgres's autovacuum worker, the background process that analyses a
@@ -46,12 +46,12 @@
 - **`build-db-image.yml`** — builds and publishes it to GHCR through the
   `build-image` action ([Composite actions](composite-actions.md)), tagged with
   a `hashFiles()` hash of `Docker/Dockerfile.postgres` /
-  `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo ever
+  `Docker/postgres-init/**`. No `latest` tag — nothing in the repo ever
   read it: `docker-compose.yaml` builds the Dockerfile locally rather than
   pulling any tag, and every CI caller pins the hash tag. Its triggers are
   `workflow_call`, from `pr-gate.yml` (below), and `workflow_dispatch`. The
   action's `Check if image already exists` step skips the build whenever the
-  hash tag is already published (MB.18), so buildx runs only on a genuine miss.
+  hash tag is already published, so buildx runs only on a genuine miss.
   `src/db/**` sat in the hash from M0.18 to M1.27, against the day the schema
   would be baked in — and since it was never in the build context
   (`Dockerfile.postgres` only `COPY`s `Docker/postgres-init`'s SQL), every
@@ -60,14 +60,14 @@
   this workflow at all, and the image rebuilds only when the Dockerfile or its
   init script changes.
 
-  **No `push` trigger** (MB.99). The layer cache is in the registry, one copy
+  **No `push` trigger**. The layer cache is in the registry, one copy
   every build writes and every branch reads ([Composite
   actions](composite-actions.md)), so a push has no branch-scoped cache to
   seed; and a PR that changes the image builds it through `pr-gate.yml`
   first, so a push would find the tag already published. MB.17 and MB.99 have
   the trigger's history and the timings.
 
-- **`build-db-image.yml`'s `workflow_call` trigger** (M1.14) runs whenever
+- **`build-db-image.yml`'s `workflow_call` trigger** runs whenever
   it is called, whatever the calling PR touched, and exposes an `image`
   output. The caller is
   `pr-gate.yml`'s own top-level `build-db-image` job —

@@ -1,4 +1,4 @@
-## Tables (M2.2/M2.3)
+## Tables
 
 Better Auth's own adapter tables, generated from its schema (pluralized —
 `usePlural: true` — to match this repo's `workspaces`/`ingredients`
@@ -26,7 +26,7 @@ convention) and split across two schema files:
   impersonation session and null on every other. Only the narrowed plugin
   reads or writes it, and only outside production
   ([`impersonation.md`](impersonation.md)).
-- **`rate_limits`**, in the same file (MB.75) — the model Better Auth's
+- **`rate_limits`**, in the same file — the model Better Auth's
   limiter asks for under `rateLimit.storage: 'database'`: `id`, `key` text
   unique (the client IP and the path), `count` integer, and `last_request` a
   `bigint` of epoch milliseconds, which outgrows an integer and is read back
@@ -36,7 +36,7 @@ convention) and split across two schema files:
   `rateLimits` in `drizzleAdapter`'s `schema`, the key `usePlural` looks it
   up by. Better Auth asks for the model only because the storage is
   `'database'` (MB.76; ["Rate limiting"](rate-limiting.md)).
-- **`passkeys`**, in the same file (M16.6) — the `passkey` plugin's model:
+- **`passkeys`**, in the same file — the `passkey` plugin's model:
   `id`, `name`, `public_key` (the COSE public key, base64), `user_id`
   referencing `users.id` with `onDelete: 'cascade'`, `credential_id`,
   `counter`, `device_type`, `backed_up`, `transports`, `created_at` and
@@ -65,8 +65,8 @@ convention) and split across two schema files:
   above are ordinary Drizzle `pgTable` definitions; `npm run db:generate`
   (`drizzle-kit generate`) diffed them the same way it would any other
   table and wrote `src/db/migrations/0001_lucky_centennial.sql`
-  (M2.2), `0002_solid_marauders.sql` (M2.3) and
-  `0003_sweet_madame_masque.sql` (MB.5). Better Auth never pushes or
+ , `0002_solid_marauders.sql` and
+  `0003_sweet_madame_masque.sql`. Better Auth never pushes or
   alters schema at request time.
 - **Don't regenerate this schema with `@better-auth/cli`.** The documented
   path (`npx @better-auth/cli generate`) is the wrong one here: that package
@@ -81,7 +81,7 @@ convention) and split across two schema files:
   Auth's adapter reads plain schema tables, not the relational query API.
   The two schema files are hand-maintained from here; only the SQL is
   generated.
-- **`users` spreads `...auditColumns` (M2.3); the other four tables still
+- **`users` spreads `...auditColumns`; the other four tables still
   don't.** `sessions`/`accounts`/`verifications`/`rate_limits` are Better Auth's own
   adapter tables, not application data CLAUDE.md rule 3 governs, so they
   stay without `deleted_at`/`created_by`/etc. and `users_email_unique`

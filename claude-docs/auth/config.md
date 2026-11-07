@@ -29,7 +29,7 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   convention as the `sorrel`/`sorrel` Postgres credentials already there).
   Production and staging get a real value via M0.27's secrets matrix
   (`claude-docs/secrets.md`).
-- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms** (MB.60), by the
+- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms**, by the
   same `requiredInProduction`, which `src/lib/primary-admin.ts` calls: unset at
   `NODE_ENV=production`, importing `src/lib/auth.ts` throws
   `ADMIN_BOOTSTRAP_EMAIL is not set`, so a deploy fails its build rather than
@@ -87,7 +87,7 @@ evil.example.com` — the first two resolve correctly, the third falls
   be misread; none of the four providers' token formats is. A token
   is encrypted under the current versioned key, so a new key leaves it
   readable ("Rotating the secret", below).
-- **Session lifetimes are Better Auth's defaults, pinned by test** (MB.76).
+- **Session lifetimes are Better Auth's defaults, pinned by test**.
   DESIGN.md sets none, so `src/lib/auth.ts` sets none: a session lasts seven
   days, is extended at most once a day while in use, and counts as fresh for a
   day. `tests/lib/auth.test.ts` reads the resolved values off `auth.$context`,
@@ -143,7 +143,7 @@ never set `BETTER_AUTH_SECRETS`.
 ### Deploying to staging/production
 
 Every variable this subsystem needs, and the manual steps to set each one, is
-`claude-docs/secrets.md` (M0.27) — not duplicated here. Short version:
+`claude-docs/secrets.md` — not duplicated here. Short version:
 `src/lib/auth.ts` is wired and the OAuth credentials are set (see ["Social
 providers"](config.md)). `ADMIN_BOOTSTRAP_EMAIL` is set in Preview and
 Production. Since MB.60 a deploy **fails its build** without it (`deploy.yml`'s
@@ -174,7 +174,7 @@ route.ts` does exactly one thing — hand every request straight to Better
   [`graphql/two-transports.md`](../graphql/two-transports.md)'s "The two
   transports".
 
-### The organization plugin is not used (MB.30)
+### The organization plugin is not used
 
 Better Auth ships an organization plugin — organizations, members,
 invitations, a last-owner guard, a creation gate — and it is **not
@@ -210,7 +210,7 @@ project given a real `sessions` row and an HMAC-signed
 `better-auth.session_token` cookie (`<token>.<base64 HMAC-SHA256(secret,
 token)>`); the recipe is in the record.
 
-### Social providers (M2.4/M2.5, M2.6)
+### Social providers
 
 Facebook is hidden from `/sign-in` and from the account page's offer to link it (`hidden: true` on its roster entry in `src/lib/social-providers.ts`). Its registration and icons are kept, and an account that already links it still lists it so it can be removed; removing the flag brings it back.
 

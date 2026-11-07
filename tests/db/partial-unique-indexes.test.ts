@@ -4,7 +4,6 @@ import { useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { PartialIndexRow, PartialUniqueIndex, Row } from './types';
 
-// Every unique index carries `deleted_at IS NULL`: a second live row is refused and a soft delete frees the slot.
 // A catalogue sweep, so a new partial unique index fails here until classified below
 // (claude-docs/testing/db-harness.md, "The db test harness").
 
@@ -13,7 +12,6 @@ const AUTHOR = FIXTURE_USERS.A.id;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A short token no seeded row and no other call holds. */
 const token = () => crypto.randomUUID().slice(0, 8);
 
 const stamped = (row: Row): Row => ({ ...row, created_by: AUTHOR, updated_by: AUTHOR });
@@ -25,9 +23,6 @@ async function insert(table: string, row: Row): Promise<Row> {
 
 const idOf = async (table: string, row: Row) => (await insert(table, row)).id as string;
 
-// Invented names throughout, each carrying a fresh token.
-
-/** A vocabulary row: name, slug, description and a seed key, so both its indexes apply. */
 function vocabulary(label: string, extra: Row = {}): Row {
   const t = token();
   return stamped({
@@ -56,7 +51,6 @@ const deity = async () =>
 const reference = async () =>
   stamped({ kind: 'book', title: `A Herbal of Fixture Covens ${token()}`, seed_key: token() });
 
-/** An ingredient with a formal name, in coven W or (`null`) the compendium. */
 function ingredient(workspaceId: string | null): () => Promise<Row> {
   return async () => {
     const t = token();
@@ -71,13 +65,11 @@ function ingredient(workspaceId: string | null): () => Promise<Row> {
 }
 const workspaceIngredient = ingredient(WORKSPACE_W_ID);
 const compendiumIngredient = ingredient(null);
-/** A compendium entry as the compendium seed writes it, under the key it gave. */
 const seededIngredient = async () => ({
   ...(await compendiumIngredient()),
   seed_key: `fixture-${token()}`,
 });
 
-/** A variant of a fresh ingredient, under a form no other row holds. */
 async function variant(): Promise<Row> {
   return stamped({
     ingredient_id: await idOf('ingredients', await workspaceIngredient()),
@@ -95,7 +87,6 @@ async function ingredientDeity(linked: boolean): Promise<Row> {
   });
 }
 
-/** A fresh coven ingredient and a form of it, for a row keyed on the variant. */
 async function formed(): Promise<{ ingredient_id: string; variant_id: string }> {
   const ingredientId = await idOf('ingredients', await workspaceIngredient());
   const variantId = await idOf(
@@ -105,7 +96,6 @@ async function formed(): Promise<{ ingredient_id: string; variant_id: string }> 
   return { ingredient_id: ingredientId, variant_id: variantId };
 }
 
-/** A category pair, on the parent or on one of its forms. */
 async function categoryPair(onForm: boolean): Promise<Row> {
   const { ingredient_id, variant_id } = await formed();
   return stamped({
@@ -115,7 +105,6 @@ async function categoryPair(onForm: boolean): Promise<Row> {
   });
 }
 
-/** A substitute row standing in for one form of its ingredient. */
 async function formSubstitute(linked: boolean): Promise<Row> {
   return stamped({
     ...(await formed()),
@@ -132,7 +121,6 @@ async function substitute(linked: boolean): Promise<Row> {
   });
 }
 
-/** A reference link to a fresh row of `target`, the one subject `reference_links_one_row` allows. */
 function referenceLink(column: string, target: string, row: () => Promise<Row>) {
   return async () =>
     stamped({
@@ -154,7 +142,6 @@ async function spellStep(linked: boolean): Promise<Row> {
   });
 }
 
-/** A compendium entry's presence in coven W's cupboard, with no overrides. */
 async function cupboardEntry(): Promise<Row> {
   return stamped({
     workspace_id: WORKSPACE_W_ID,
@@ -164,7 +151,6 @@ async function cupboardEntry(): Promise<Row> {
 
 const address = () => `${token()}@partial-unique.test`;
 
-/** A site document under a fresh key and seed key. */
 const documentRow = async () => {
   const t = token();
   return stamped({
@@ -174,7 +160,6 @@ const documentRow = async () => {
     seed_key: `fixture-${t}`,
   });
 };
-/** A version of a fresh document under a random number: published and dated, or the draft. */
 const documentVersion = (status: 'draft' | 'published') => async () =>
   stamped({
     document_id: await idOf('documents', await documentRow()),
@@ -183,7 +168,6 @@ const documentVersion = (status: 'draft' | 'published') => async () =>
     status,
     published_at: status === 'published' ? new Date() : null,
   });
-/** A mailing of a fresh published version. */
 const documentMailing = async () =>
   stamped({
     document_version_id: await idOf('document_versions', await documentVersion('published')()),
@@ -191,8 +175,6 @@ const documentMailing = async () =>
     recipient_count: 1,
   });
 
-// Keyed by index rather than table: one table's indexes can hold rows on
-// opposite sides of a predicate (`deity_id IS NULL` against `IS NOT NULL`).
 const ROWS: Record<string, PartialIndexRow> = {
   // `(true)` where open: at most one open pause, whatever it holds.
   admin_role_change_pauses_one_open: { row: async () => stamped({}) },
@@ -235,8 +217,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_deities_link_unique: { row: () => ingredientDeity(true) },
   ingredient_deities_name_unique: { row: () => ingredientDeity(false) },
   ingredient_deities_position_unique: { row: () => ingredientDeity(false) },
-  // The pair, on the parent or on a form: hard-deleted, so partial on the
-  // variant rather than a tombstone.
   ingredient_categories_ingredient_category_unique: {
     row: () => categoryPair(false),
     hardDeleted: true,
@@ -306,7 +286,6 @@ const ROWS: Record<string, PartialIndexRow> = {
     row: async () => stamped({ workspace_id: WORKSPACE_W_ID, ...(await formed()) }),
     clash: ['workspace_id', 'ingredient_id', 'variant_id'],
   },
-  // The site tier, a null pair: the index spans both tiers alike.
   invitations_token_hash_unique: {
     row: async () => stamped({ email: address(), token_hash: token(), site_role: 'admin' }),
   },
@@ -329,7 +308,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   references_seed_key_unique: { row: reference },
   spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
   spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
-  // One live pause per user: a fresh pause on A, whatever it holds.
   user_access_pauses_one_live: {
     row: async () => stamped({ user_id: AUTHOR, note: 'Fixture pause' }),
   },
@@ -353,7 +331,6 @@ const ROWS: Record<string, PartialIndexRow> = {
     row: async () => ({ ...(await cupboardEntry()), label: `Testleaf ${token()}` }),
     clash: ['workspace_id', 'label'],
   },
-  // One live pause per member per coven: a fresh pause on B in W, whatever it holds.
   workspace_member_pauses_one_live: {
     row: async () => stamped({ workspace_id: WORKSPACE_W_ID, user_id: FIXTURE_USERS.B.id }),
   },
@@ -369,7 +346,6 @@ const NOT_PARTIAL: Record<string, string> = {
   ingredient_variants_id_ingredient_id_unique: 'ingredient_variants',
 };
 
-/** Every partial unique index in `public`, with each column its key, expressions and predicate read. */
 async function partialUniqueIndexes(): Promise<PartialUniqueIndex[]> {
   return await sql<PartialUniqueIndex[]>`
     select ic.relname as index, tc.relname as table,
@@ -389,7 +365,6 @@ async function partialUniqueIndexes(): Promise<PartialUniqueIndex[]> {
   `;
 }
 
-/** What `row` met: the index that refused it, or `admitted`. */
 const outcomeOf = (work: Promise<unknown>) =>
   work.then(
     () => 'admitted',
@@ -397,7 +372,6 @@ const outcomeOf = (work: Promise<unknown>) =>
       error.code === '23505' ? error.constraint_name : error.message,
   );
 
-/** One index: a holder, a second live row refused by it, and the same row admitted once the holder is soft-deleted. */
 async function sweep({ index, table, columns }: PartialUniqueIndex) {
   const { row, clash, hardDeleted } = ROWS[index];
   const holder = await insert(table, await row());
@@ -434,7 +408,6 @@ describe('every partial unique index', () => {
 
     // Precondition: an empty catalogue would satisfy every comparison below.
     expect(indexes.length).toBeGreaterThan(0);
-    // Each is classified, and no row builder outlives its index.
     expect(Object.keys(ROWS).sort()).toEqual(indexes.map(({ index }) => index).sort());
 
     const outcomes = [];

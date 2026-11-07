@@ -1,7 +1,7 @@
-## Rate limiting (MB.76)
+## Rate limiting
 
 Better Auth's limiter covers `/api/auth/*` and nothing else; GraphQL's
-protections are graphql-armor's (M3.3). MB.74 chose it over leaving the
+protections are graphql-armor's. MB.74 chose it over leaving the
 shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](../design-decisions/mb.74-better-auth-plugins.md)).
 
 - **On wherever `NODE_ENV` is `production`**, which is every deploy (staging and
@@ -47,7 +47,7 @@ below come from Better Auth's own source (`dist/api/rate-limiter/index.mjs` and
 | ------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
 | `/sign-up/*`, `/change-password`, `/change-email`             | 3 per 10 seconds   | Better Auth's built-in rule, with `/sign-in/*`                                                    |
 | `/request-password-reset`, `/forget-password*`                | 3 per 60 seconds   | Better Auth's built-in rule, with `/send-verification-email`                                      |
-| `/reset-password` and `/reset-password/:token`                | 100 per 10 seconds | No special rule, so the every-other-path default; the token's 15-minute life (M16.3) is its guard |
+| `/reset-password` and `/reset-password/:token`                | 100 per 10 seconds | No special rule, so the every-other-path default; the token's 15-minute life is its guard |
 | `/two-factor/*`                                               | 3 per 10 seconds   | The `twoFactor` plugin's own rule                                                                 |
 | `/passkey/*`, which includes `/passkey/verify-authentication` | 3 per 10 seconds   | A `customRules` entry M16.7 adds, because the passkey plugin ships no rate rule                   |
 

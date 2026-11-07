@@ -63,7 +63,7 @@ column's type, or has a different number of parts from the list's sort, is
 turns that into an `Invalid cursor` GraphQL error. It is never treated as "from
 the start", which would return a page the client did not ask for.
 
-**Page numbers: `totalCount` and `countBefore`** (MB.105). A connection
+**Page numbers: `totalCount` and `countBefore`**. A connection
 declared with `count` carries two more fields beside `edges` and `pageInfo`:
 
 ```graphql
@@ -80,7 +80,7 @@ type QueryCompendiumConnection {
   `max(1, ceil(totalCount / size))`. The admin pages, which read services
   rather than the connection, do it once in `resolveNumberedPage`
   (`src/lib/pagination.ts`), which reads a page through `resolvePage` and
-  counts it from its first row (MB.132). "Showing 11–20 of 26" is
+  counts it from its first row. "Showing 11–20 of 26" is
   `countBefore + 1` to `countBefore + edges.length` of `totalCount`.
 - **A count, so it has no base to guess.** The first page's `countBefore` is
   0 because no rows come before it. The name is not `startIndex`: Google's
@@ -103,7 +103,7 @@ type QueryCompendiumConnection {
   is a resolver of its own, `(parent, args, start, context)`, handed the
   page's first cursor decoded, or none on an empty page. The connection
   object carries it memoised, so selecting both fields runs one count and
-  selecting neither runs none. The compendium's typeahead (M8.10) is the first
+  selecting neither runs none. The compendium's typeahead is the first
   page of the same search and selects neither.
 - **Priced as `pageInfo` is**: each field is one under the connection, at the
   page size, whatever the count reads.

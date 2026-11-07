@@ -1,4 +1,4 @@
-## Impersonation (MB.53)
+## Impersonation
 
 A keeper can sign in as a specific user, in local development, on staging and
 on a hotfix preview, to reproduce what that user sees rather than guess at it.
@@ -95,7 +95,7 @@ publishes it as `app.impersonated_by` beside `app.current_user_id`, from the
 session and never a request body, in the same transaction-local
 `set_config(..., true)` ([`db/write-path.md`](../db/write-path.md)). Like
 `app.privilege_route` it is published on every write, and unlike
-`app.current_user_id`, which the privilege trigger reads (MB.195), it has no
+`app.current_user_id`, which the privilege trigger reads, it has no
 reader in v1. It is empty on every write that is not an impersonation.
 
 ### Not a third access path
@@ -133,17 +133,17 @@ name and address, and carries Stop Impersonating, at the top of every page
   absent where it is shut (one environment each way, the gate's matrix
   covering the rest), and the declined ban columns. That a keeper target is refused is the
   db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
-  (MB.188).
+ .
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-keeper is
   refused, a keeper target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/keepers`'s check
   refuses it. Stop restores E's own session. A paused user is handed over, the session reads as paused, a
   signed-in GraphQL call through the real route answers `ACCESS_PAUSED` while a public read answers, Stop restores E, and
   the same impersonation reads as signed in once the pause is lifted. The file builds Better Auth once,
-  with the flags on, in its `beforeAll` (MB.188).
+  with the flags on, in its `beforeAll`.
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is
   B's, so that is the write stamped B.
 - `tests/db/schema-drift.test.ts`: the column and its foreign key, against
-  the schema file (MB.226).
+  the schema file.
 - The component, page and layout tests: the control and the banner.

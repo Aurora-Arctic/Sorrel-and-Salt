@@ -1,6 +1,6 @@
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-- **`checks.yml`** (MB.32) — nine plain jobs, `lint`, `unused`, `format`,
+- **`checks.yml`** — nine plain jobs, `lint`, `unused`, `format`,
   `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order` and
   `audit`, each reporting as `checks / <name>`. One
   workflow, because the jobs share their inputs, their
@@ -29,7 +29,7 @@
   - **`build`'s extras**: `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
     short-circuits the same way separate steps would. It posts no PR comment.
-    - **It keeps no build cache** (MB.235). Until then an `actions/cache` step
+    - **It keeps no build cache**. Until then an `actions/cache` step
       restored and saved `/app/.next/cache`, keyed `nextjs` on the lockfile
       and the source. Only pull requests ever ran it, so every save landed
       under a merge ref no other pull request can read, and it never restored
@@ -43,7 +43,7 @@
       leg is not on the gate's critical path ([Runner
       budget](runner-budget.md)), so the save bought nothing a pull request
       waits for.
-    - **The `testing` stage still carries GNU `tar` and `zstd`** (MB.37),
+    - **The `testing` stage still carries GNU `tar` and `zstd`**,
       which `actions/cache` needed inside the container, where the Alpine
       image's busybox `tar` rejects `--posix`. No step in that image uses
       them now; they go the next time `Docker/Dockerfile.node` changes.
@@ -56,7 +56,7 @@
       prerendering `/_global-error` under anything but `production`/unset —
       without the force, every real build run fails.
     - The two env vars sit at job level and are inert in the other four legs.
-      `npm run build` traces `/api/auth/[...all]` (M2.2), which reaches
+      `npm run build` traces `/api/auth/[...all]`, which reaches
       `src/db/connection.ts` (throws at import without a syntactically valid
       `DATABASE_URL`, though it never issues a query) and `src/lib/auth.ts`
       (Better Auth requires a real `BETTER_AUTH_SECRET` at
@@ -72,7 +72,7 @@
     `.github/scripts/lib/audit-fix.cjs`: when no patched release exists,
     `npm audit` can name an older major as the fix, and that reads as
     "No — downgrade only". The same script writes the same callout to
-    the job summary (MB.37). Until then the leg wrote no summary at all,
+    the job summary. Until then the leg wrote no summary at all,
     because the pass/fail `job-summary` action would have put "Dependency
     Audit passed" directly above the table — and the audit was invisible on
     the run's summary page as a result. The summary is written whether or not
@@ -87,7 +87,7 @@
   flags destructive DDL in migration files new or changed in the PR, via
   `scripts/check-destructive-ddl.ts`, and fails unless each flagged migration
   carries an acknowledgement sidecar beside it — `src/db/migrations/<tag>.ack.md`
-  holding a `Destructive DDL acknowledged: <reason>` line (MB.48). The forms:
+  holding a `Destructive DDL acknowledged: <reason>` line. The forms:
   any `DROP` except
   `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
   `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
@@ -120,7 +120,7 @@
   - **It is a leg, not a job of its own**, so the matrix notices if it is dropped: a separate job could be deleted while the `changes` job kept computing its filters and nothing looked wrong (`claude-docs/db/expand-contract.md`).
   - Its `run-destructive-ddl: false` input is for a merge-queue caller (`aggregating-workflows.md`, the "No `merge_group` workflow exists" item); no caller passes it.
 
-- **`checks / migration-order`** (MB.173) — refuses a migration journal
+- **`checks / migration-order`** — refuses a migration journal
   Drizzle's migrator would apply out of order, via
   `scripts/check-migration-order.ts`: an entry the PR adds that sits ahead of
   one its base has, or is dated no later than the base's newest, or a journal
@@ -184,7 +184,7 @@
   ([`testing/layer-ownership.md`](../testing/layer-ownership.md)).
   `should-run` path-filters the same way `lint`/
   `typecheck` do.
-- **`playwright.yml` with `suite: stories`** (M9.1) — the story suite, as
+- **`playwright.yml` with `suite: stories`** — the story suite, as
   `pr-gate.yml`'s `stories` job rather than a step of `vitest.yml`. It
   shares the gate's `build-e2e-image` and `build-db-image` jobs with
   `playwright` and runs beside it, under its own `stories` path filter. The
@@ -204,7 +204,7 @@
   and so does the report upload, which also runs when the summariser reports a test that failed and passed on retry (its `flaky` output). It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the
   gate's time down (`claude-docs/testing/acceptance.md`).
-- **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
+- **`playwright-coverage.yml`** — the two Playwright suites'
   coverage, merged, called by `pr-gate.yml`'s `playwright-coverage` job in the
   `testing` image. That job `needs` `playwright` and `stories` and runs after
   both whatever their result (its `!cancelled()` keeps a failed suite from skipping it, and it
@@ -229,11 +229,11 @@
   as a failure when either suite failed (`suites-failed`): `playwright`'s
   result, and `stories`'s run step outcome, which `playwright.yml` exposes as
   its `outcome` output because the stories job passes whatever its stories did.
-- **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
+- **`playwright.yml`** — `npm run e2e` against the servers
   `webServer` builds and starts: one per worker slot on 8001 and up — four
   on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the
   half-the-CPUs default, because a test mostly waits on the browser rather
-  than the cores (MB.236) — then the configured-providers server on 8100 and
+  than the cores — then the configured-providers server on 8100 and
   the compendium-cache server on 8101 (see `testing/e2e.md`). Runs in `build-e2e-image.yml`'s dedicated
   image, **not** `build-image.yml`'s — same
   `inputs.db-image`/`services: postgres:` shape
@@ -255,20 +255,20 @@
   inbox: the job sets `MAIL_TRANSPORT=mailpit` and
   `MAILPIT_URL=http://mailpit:8025`, which the runner and the served site
   both read, and `tests/e2e/admin-invitations.spec.ts` reads an invitation
-  the site mailed back from it (MB.65). No mail variable is set on `checks.yml`'s
+  the site mailed back from it. No mail variable is set on `checks.yml`'s
   `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
   Before the run, an `actions/cache/restore` step restores
-  `/app/.next-e2e/cache` (MB.230), the e2e build's own, keyed `nextjs-e2e` on
+  `/app/.next-e2e/cache`, the e2e build's own, keyed `nextjs-e2e` on
   the lockfile and the source, with a lockfile-only restore key. The path is
   absolute because `hashFiles()` reads `$GITHUB_WORKSPACE` while the build
   writes `/app`. A pull request restores the entry `staging` saved
-  (MB.234), since GitHub never lets one pull request's run read a cache
+ , since GitHub never lets one pull request's run read a cache
   another pull request saved, only its own, its base branch's and `main`'s.
   The input `build-only` is how that entry is made: set, the run step adds
   `--grep-invert . --pass-with-no-tests`, so the servers build and start but
   no spec runs, the coverage upload is skipped, and an `actions/cache/save`
   step after the run saves the folder under the restore step's key. Only
-  that run saves (MB.235). A single `actions/cache` step saves at the end of
+  that run saves. A single `actions/cache` step saves at the end of
   every job whose key missed, which on a pull request is nearly every push,
   and that upload took about 15s after the tests to write an entry no other
   run could read. The save has no `always()`, so a failed build saves
@@ -281,7 +281,7 @@
   `warm`, so it publishes no check name the gate also publishes
   ([Smoke checks](deploy.md)). Its cost is in
   [Runner budget](runner-budget.md).
-- **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
+- **`build-e2e-image.yml`** — the same `build-image` action as
   `build-image.yml`, but for `Docker/Dockerfile.e2e`:
   `FROM node:26.6.0-bookworm-slim` (Debian, on `Dockerfile.node`'s Node
   version; keep the two in step), with Chromium's headless shell and its
@@ -291,7 +291,7 @@
   `e2e`, `make docker-e2e`) builds this same file for local use, so a
   devcontainer session (still Alpine-based itself, via `Docker/Dockerfile.node`)
   can run the full e2e suite without a base-distro change of its own.
-  **`target: e2e` is pinned explicitly (MB.23):** `Dockerfile.e2e` gained a
+  **`target: e2e` is pinned explicitly:** `Dockerfile.e2e` gained a
   second stage, `headed` (a display, for the `playwright-server` compose
   service's `playwright codegen`/`page.pause()` support), and an unqualified
   `docker build` picks whichever stage is _last_ in the file. Without the

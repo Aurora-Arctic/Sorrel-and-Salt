@@ -6,17 +6,17 @@
   run. It calls `checks.yml` **once**, as the `checks` job, so a change to
   `checks.yml` flips the lint, typecheck, build, destructive-ddl and migration-order
   filters together, which is what sharing one workflow costs. `vitest`/`playwright`
-  (M1.14) are `workflow_call` jobs under the job names the M0-era stubs used,
-  so no required-status-check rename was ever needed. `stories` (M9.1) calls
+  are `workflow_call` jobs under the job names the M0-era stubs used,
+  so no required-status-check rename was ever needed. `stories` calls
   `playwright.yml` again with `suite: stories`, on `playwright`'s two images
   and under its own path filter, and is never a required check
-  ([Reusable checks](reusable-checks.md)). `workshop` (M12.31) runs
+  ([Reusable checks](reusable-checks.md)). `workshop` runs
   `npm run e2e:workshop` in the e2e image as a job of its own, Storybook its one
   server, under its own `workshop` path filter (Storybook's config and stories,
   `*.stories.tsx`, `src/**`, the workshop specs and their config, the e2e
   image) as a step-level `if:`; it carries
   `continue-on-error` and is never a required check. `playwright-coverage`
-  (M14.28) merges the coverage artifacts of `playwright` and `stories`
+  merges the coverage artifacts of `playwright` and `stories`
   after both, whether they passed or failed; it carries `continue-on-error`, is
   never a required check, and is the one job with a job-level `if:`
   (`!cancelled()`).
@@ -26,14 +26,14 @@
   reopen or a close cancels the PR's run in flight, whole, and an edit waits
   (below). The check jobs and `gitflow` also carry job-level
   groups that cancel in progress; the workflow's group already covers them, and
-  they are left alone. **The three image builds are cancellable too** (MB.98),
+  they are left alone. **The three image builds are cancellable too**,
   with no job-level group of their own: one cannot outlast the workflow
   cancelling the whole run, and a cancelled build has no half-written layer
   to protect. A push writes the tag with the manifest, after every blob
   it names, so a cancelled one leaves no tag for `build-image`'s
   `imagetools inspect` to find, and the layer cache commits each blob whole
   and writes its index last. The next run just rebuilds.
-- **A closed PR's gate runs are cancelled** (MB.98). `closed` is in the gate's
+- **A closed PR's gate runs are cancelled**. `closed` is in the gate's
   trigger types. Closing or merging a PR starts a run in the PR's group, which
   cancels every queued or in-progress gate run for that PR; the close's own run
   then stands down (see the next item), as does an `edited` event on a closed
@@ -50,7 +50,7 @@
   - `deploy.yml`'s own `closed` handler, which tears a hotfix preview down,
     is separate and unaffected.
 - **An edited PR's gate run waits, then stands down unless the edit
-  retargeted the base or the PR's head commit is untested** (MB.100, MB.39). `edited` is in the trigger types so a
+  retargeted the base or the PR's head commit is untested**. `edited` is in the trigger types so a
   retarget re-runs the gate against the new base, but an edit to a title or a
   description changes nothing the gate checks, and once its run cancelled the
   one in flight like a push. Blacksmith's [code]smith, while it was installed (until M11.24), appended a
@@ -80,7 +80,7 @@
     `run-name`, so the Actions list says beside the real gate what each will
     do. A close's run never covers a commit; an edit's covers one only in the
     case above.
-  - **A stand-down ends green; it does not cancel itself** (MB.39). The first
+  - **A stand-down ends green; it does not cancel itself**. The first
     step of `changes` sets a `stand-down` output, `true` for a close's run and
     for an edit's run that is not retargeted and whose commit is covered, and
     `false` otherwise. The run used to call `gh run cancel` on itself, which
@@ -117,8 +117,8 @@
   cancels, because a half-run alias can leave a domain pointing at a dead
   deployment. `deploy.yml`'s `migrate` job holds a repo-wide `migrate`
   lock, so two merges never migrate at once.
-- **`close-task-on-merge.yml`** (MB.89) — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
-- **`e2e-cache.yml`** (MB.234) — on a push to `staging` that touches the e2e build's inputs, calls `build-e2e-image.yml`, `build-db-image.yml` and `playwright.yml` with `build-only: true`, so the e2e build cache is saved where every pull request's Playwright job can restore it. Its job names are not `pr-gate.yml`'s, so it publishes no check name the gate does ([Reusable checks](reusable-checks.md)).
+- **`close-task-on-merge.yml`** — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
+- **`e2e-cache.yml`** — on a push to `staging` that touches the e2e build's inputs, calls `build-e2e-image.yml`, `build-db-image.yml` and `playwright.yml` with `build-only: true`, so the e2e build cache is saved where every pull request's Playwright job can restore it. Its job names are not `pr-gate.yml`'s, so it publishes no check name the gate does ([Reusable checks](reusable-checks.md)).
 - **No `merge_group` workflow exists.** "Require merge queue" is off on `main` and `staging`, so `merge_group` never fires. The `merge-queue` input survives on `checks.yml`, `vitest.yml`, `playwright.yml` and `gitflow.yml`, and `pr-comment`'s fail-only merge-queue thread with it; nothing passes it. A queue caller would also pass `run-destructive-ddl: false` on its `checks` call and `should-run: false` to `gitflow`, since `merge_group` has no diffable source ref and can only trust that `pr-gate.yml` already gated the PR.
 - Every check job `needs: gitflow`, so a PR from the wrong source branch burns
   no CI time on the rest. `gitflow.yml`'s own `should-run: false` path is there
@@ -130,7 +130,7 @@
   `github-actions`, `docker`). Two npm groups bump together: `react` and
   `better-auth` (with `@better-auth/*`), the second because `better-auth` pins
   its `@better-auth/core` to its own exact version and `src/lib/auth.ts`
-  imports core directly (MB.60), so a split bump would install two copies.
+  imports core directly, so a split bump would install two copies.
 - ⚠️ **No ruleset currently requires any status check** — verified against the
   live API 2026-09-10, and still deliberately true: enabling branch protection
   is not part of MB.32. Adding `gitflow / gitflow` to `Main` and `Staging` needs
@@ -182,7 +182,7 @@
     tested the rule.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
-- **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`. GitHub
+- **Runners are pinned to `ubuntu-26.04`**, not `ubuntu-latest`. GitHub
   moves the floating label to 26.04 from 2026-10-19
   (actions/runner-images#14748) and annotated every job with a notice until
   then; pinning did the move on a PR that was watched and silenced the notice.

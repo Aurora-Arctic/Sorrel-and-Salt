@@ -296,7 +296,7 @@ verification window, and three hours at most. The argument is
   (`src/modules/identity/jobs/provisional-cleanup.ts`). The job runs the delete as its own step with
   retries, so a step that fails is tried again rather than lost.
 - **An account a keeper has vouched for is not removed**. Approving
-  an unverified account for coven creation (M5.8) or making it a keeper writes a `user_privilege_changes` row naming it with a plain
+  an unverified account for coven creation or making it a keeper writes a `user_privilege_changes` row naming it with a plain
   foreign key, and the job skips any account holding one. Deleted, it
   would fail on that key, and
   the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
@@ -669,7 +669,7 @@ rest of the keeper machinery:
 
 Specified in DESIGN.md §8, "An admin can pause a user's access", and argued in
 [`design-decisions/m15.52-site-access-pause.md`](../design-decisions/m15.52-site-access-pause.md).
-The table is DESIGN.md §5's `user_access_pauses` (M15.51).
+The table is DESIGN.md §5's `user_access_pauses`.
 
 **Who and whom.** `pauseUserAccess(userId, until, note)` and `liftUserAccessPause(userId)` are admin-only
 (`assertSiteAdmin`), in `src/modules/identity/services/access-pause.ts`. Each refusal explains itself:

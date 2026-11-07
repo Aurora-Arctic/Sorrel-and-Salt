@@ -58,10 +58,10 @@ merely absent:
   one record in `loaders/ingredient-children.ts`, each exported by name for
   `LOADERS`, and `clearIngredientChildren(loaders, row)` clears a row from
   every one in it, so an ingredient write clears a loader added there without
-  naming it (MB.211). A variant's three child loaders are keyed by the variant
+  naming it. A variant's three child loaders are keyed by the variant
   row's `{ id, ingredientId, workspaceId }` in a record of their own, which
   `clearIngredientChildren` empties whole: a write knows its ingredient, not
-  which of its variants the request has loaded (MB.218). The
+  which of its variants the request has loaded. The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope
   ([`db/ingredient-children.md`](../db/ingredient-children.md),
@@ -74,9 +74,9 @@ merely absent:
   signed out, and `providersByUser` and `usersByIdForAdmin` every key to a
   non-admin: each is `defineSignedInLoader(batch)`, which answers `Forbidden`
   in every slot without a session and hands `batch` a `Session` otherwise, so
-  the four services never see a null (MB.212). `usersById` refuses nobody
+  the four services never see a null. `usersById` refuses nobody
   signed in: a stranger's id answers `null` in its own slot. The ingredient loaders answer a compendium entry for
-  anyone, since the compendium is the public surface (MB.80), and refuse a
+  anyone, since the compendium is the public surface, and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public
   reference data: each is `definePublicLoader(batch)`, whose `batch` takes the

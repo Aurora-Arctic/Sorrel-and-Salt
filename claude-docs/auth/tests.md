@@ -19,7 +19,7 @@
   reusing one `import('@/lib/auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
-- **`@/lib/auth` once per file whose env does not change (MB.188).** The
+- **`@/lib/auth` once per file whose env does not change.** The
   integration files that drive `auth.handler` — `tests/db/` account-linking,
   email-change, email-verification, sign-in-landing, last-login-method,
   oauth-token-encryption and impersonation, and
@@ -45,7 +45,7 @@
   options](admin-bootstrap.md#promotion-at-first-party-verification-mb68) off,
   with all four providers registered so the per-provider check cannot pass on an
   empty list.
-- **`tests/modules/identity/services/admin-role.test.ts` (MB.60)** — `promotePrimaryAdmin`'s
+- **`tests/modules/identity/services/admin-role.test.ts`** — `promotePrimaryAdmin`'s
   outcomes against the database, then the whole round trip through
   `auth.handler`: `POST /sign-in/social`, then `GET /callback/:id` with
   MSW standing in for each provider's token and profile endpoints (Google's
@@ -60,7 +60,7 @@
   provider requiring verification. The Facebook and Microsoft mappers' pin went
   in MB.188: `tests/db/email-verification.test.ts`'s "which providers vouch"
   is their behaviour, and the placeholder mapping test keeps the rest.
-- **`tests/db/email-verification.test.ts` (MB.66)** — the same
+- **`tests/db/email-verification.test.ts`** — the same
   `auth.handler` round trip, through `tests/support/oauth.ts` (shared with
   the admin-role test), with `@/lib/mail` mocked. A sign-up mails once and
   signs in; the mailed link verifies from the owner's session and is refused,
@@ -74,8 +74,8 @@
   then swaps the address and promotes from the row's own session. The link's
   refusals are the file's own "following the link" cases, and which address
   promotes is `tests/modules/identity/services/admin-role.test.ts`'s, which
-  covers `promotePrimaryAdminAtVerification`'s outcomes directly (MB.188).
-- **The email page (MB.54, MB.111, MB.113)** —
+  covers `promotePrimaryAdminAtVerification`'s outcomes directly.
+- **The email page** —
   `tests/modules/identity/services/email.test.ts` (the service, with a fake
   sender), `tests/modules/identity/graphql/set-email.test.ts` (the
   mutation's `next` reaching the sender, and its `VALIDATION` on the wire), `tests/db/email-change.test.ts`
@@ -90,7 +90,7 @@
   (the callback's landing, the email page's and the sign-up link's, by role
   and by return path), and the browser flows of stories 58 and 59 in
   `tests/e2e/stories/08-email-and-admin.spec.ts`.
-- **`tests/db/account-linking.test.ts` (MB.71)**: `/link-social` and
+- **`tests/db/account-linking.test.ts`**: `/link-social` and
   `/unlink-account` through `auth.handler`, on `tests/support/oauth.ts`'s
   `link` helper. A Microsoft profile reporting `email_verified: false` links
   to the signed-in Discord user, and a later Microsoft sign-in lands there. The
@@ -102,10 +102,10 @@
   provider is refused again, the last one survives, and a stranger holding
   two providers cannot remove the owner's. The different-address link and the
   last-provider refusal are `allowDifferentEmails` and `allowUnlinkingAll`
-  in behaviour, so `tests/lib/auth.test.ts` no longer pins either (MB.188);
+  in behaviour, so `tests/lib/auth.test.ts` no longer pins either;
   it still pins `trustedProviders` empty, which this file proves for
   Microsoft alone. `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
-- **`tests/db/rate-limiting.test.ts` (MB.76)**: `/sign-in/social` through
+- **`tests/db/rate-limiting.test.ts`**: `/sign-in/social` through
   `auth.handler` at the staging origin, at `NODE_ENV=production` with Vitest's
   `TEST` cleared. Better Auth reads `NODE_ENV` once, as it loads, so the stub
   precedes the first import; with either left as Vitest sets it, an unresolved
@@ -116,30 +116,30 @@
   with only the header pin removed put both in one `no-trusted-ip` row, so
   the pin is what separates them. A client varying its own
   `x-forwarded-for` is still refused on the fourth start.
-- **`tests/db/oauth-token-encryption.test.ts` (MB.76)**: a Google sign-in
+- **`tests/db/oauth-token-encryption.test.ts`**: a Google sign-in
   stores an access token that is not the one issued, and `getAccessToken`
   hands back the one issued; a token overwritten in plaintext still reads.
   `tests/lib/auth.test.ts` pins the limiter's `enabled` and the three session
   lifetimes; `storage`, the header and `encryptOAuthTokens` are proved by
   the two files above, so their pins went in MB.188.
-- **`tests/db/last-login-method.test.ts` (MB.77)**: through `auth.handler`
+- **`tests/db/last-login-method.test.ts`**: through `auth.handler`
   on `tests/support/oauth.ts`. A verified callback sets the last-used cookie to
   its provider, without `HttpOnly`, and so does an unverified one landing on
   the email page. `/sign-in/social` alone, a callback refused with
   `account_not_linked`, and a link callback set none. Each case first asserts
   whether the session cookie was set, since that is what the plugin keys on.
   `tests/lib/auth.test.ts` asserts Better Auth's `user` table gains no
-  `lastLoginMethod`; the shared cookie name is this file's (MB.188).
-- **`tests/lib/errors.test.ts` (M1.26)** — asserts each error is an `Error`
+  `lastLoginMethod`; the shared cookie name is this file's.
+- **`tests/lib/errors.test.ts`** — asserts each error is an `Error`
   that names itself and carries its message, and that `Forbidden`,
   `NotFound` and `ValidationError` are told apart by type. How Vitest's
-  `rejects.toThrow(Class)` behaves is Vitest's, and not tested here (MB.229).
+  `rejects.toThrow(Class)` behaves is Vitest's, and not tested here.
 - **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' exact
-  column set with the audit spread through Drizzle's `getTableConfig()` (MB.188),
+  column set with the audit spread through Drizzle's `getTableConfig()`,
   and against the database the lower-case email CHECK, a new account landing as
   a `user` who may not create a workspace, and the CHECK holding every keeper to
-  the creation flag (MB.177); nullability, defaults and the email index's
-  partiality are `tests/db/schema-drift.test.ts`'s (MB.226). It was kept out of the schema directory from
+  the creation flag; nullability, defaults and the email index's
+  partiality are `tests/db/schema-drift.test.ts`'s. It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
   `schema` glob, and `drizzle-kit generate` fails trying to `require()` a
   file that imports Vitest; MB.41 moved the whole suite to `tests/`, which
@@ -165,12 +165,12 @@
   `tests/db/audit-columns.test.ts` reads `accounts`, `sessions` and
   `verifications` from the catalogue as its named counter-example — the
   three tables that carry `updated_at` and no audit id, and so no trigger.
-- **Stories 1 and 2 (M2.1, M9.1)** — browser flows in
+- **Stories 1 and 2** — browser flows in
   `tests/e2e/stories/01-accounts.spec.ts`, tagged `@story-1` and `@story-2`.
   M2.1 first wrote them as deliberately red Node tests that checked a route's
   file on disk; M9.1 replaced them with flows a user could walk
   (`claude-docs/testing/acceptance.md`, "Acceptance").
-- **Route protection (M2.7)** — `tests/proxy.test.ts` pins the matcher and
+- **Route protection** — `tests/proxy.test.ts` pins the matcher and
   the public list, lookalikes included, and asserts the proxy's
   redirect, its return path, and the header it forwards, overwriting a
   client-supplied one. `tests/lib/request-session.test.ts` mocks Better Auth and
@@ -179,7 +179,7 @@
   of return paths through `signInPath()` and `safeReturnPath()`, and pins
   `postSignInLanding()` and `socialSignInTarget()`;
   `tests/db/sign-in-landing.test.ts` drives the callback's landing by role
-  (MB.113) and by membership, through `signedInLanding` (MB.257).
+  and by membership, through `signedInLanding`.
   `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
   its `next`; `tests/e2e/invite.spec.ts` renders `/invite/*` signed out, not

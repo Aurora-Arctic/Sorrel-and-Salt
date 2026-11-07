@@ -1,4 +1,4 @@
-## The admin guard (M5.4)
+## The admin guard
 
 Since M15.77 the admin area is two: `/curator` for curation and `/keepers` for support, people and invitations. Both layouts call `requireCuratorSession()`. The curation pages
 (the compendium with its references, and the vocabularies) are open to a curator as
@@ -33,7 +33,7 @@ section describes. Both answer in the same three ways, all from the server:
   it, and a segment's own `forbidden.tsx` sits inside that segment's layout. It is the one `forbidden()` in the app:
   `/coven/[slug]` answers 404.
 - **The 403 renders inside the navigation shell.** `src/app/(shell)/layout.tsx`
-  (MB.7) wraps both areas, so a signed-in non-keeper sees the shell's bar around
+  wraps both areas, so a signed-in non-keeper sees the shell's bar around
   the not-authorised page, with no Admin entry in it.
 - **The browser renders that page, not the server.** A `forbidden()` or
   `notFound()` thrown during render with no `<Suspense>` above it fails the
@@ -66,9 +66,9 @@ section describes. Both answer in the same three ways, all from the server:
   nothing. An admin page is still no data boundary: the compendium and the
   vocabularies it lists are public reads, every write is a GraphQL mutation
   whose service asserts the role itself, and a page that reads anything
-  private — `/keepers/users` (MB.52) — carries its own service-level assertion
+  private — `/keepers/users` — carries its own service-level assertion
   ([`admin-users.md`](admin-users.md), "The user list").
-- **A tabbed page's own layout runs no guard** (MB.115). Each tabbed page is
+- **A tabbed page's own layout runs no guard**. Each tabbed page is
   a route group, `src/app/(shell)/keepers/(people)/` and the like, whose `layout.tsx`
   draws the heading and the tabs and reads nothing
   ([`components/tabbed-page.md`](../components/tabbed-page.md)). A layout
@@ -94,7 +94,7 @@ section describes. Both answer in the same three ways, all from the server:
   the document, and the layout, against the built server; the signed-out
   redirect is `tests/e2e/route-protection.spec.ts`'s.
 
-## The curator guard (M11.20)
+## The curator guard
 
 A curator is a signed-in account whose site role is `curator`: it uses every
 curation screen a keeper can and none of the people pages. The guard that lets

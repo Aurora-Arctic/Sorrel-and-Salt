@@ -47,8 +47,6 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials at import; the primary keeper's address is read per
-// request, so it is stubbed beside them for the whole file.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
@@ -58,15 +56,11 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
-// The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
-  // A coven's rows first: they name the users deleted below.
   await sql`
     delete from workspace_members
     where workspace_id in (select id from workspaces where name like ${`${COVEN_PREFIX}%`})`;
   await sql`delete from workspaces where name like ${`${COVEN_PREFIX}%`}`;
-  // The ledger first: a promotion's rows name the users deleted below, and
-  // only a truncate empties it.
   await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
@@ -92,7 +86,6 @@ async function roleOf(email: string): Promise<string | undefined> {
   return row?.role as string | undefined;
 }
 
-/** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: UserRole): Promise<void> {
   // A curator or a keeper inserted by hand declares itself, as a `psql` fix
   // must, and holds the flag the CHECK asks of them.
@@ -106,7 +99,6 @@ async function insertVerified(email: string, role: UserRole): Promise<void> {
   );
 }
 
-/** A coven named `COVEN_PREFIX + name`, with the account at `email` seated in it. */
 async function seat(email: string, name: string, role: 'member' | 'viewer' = 'member') {
   const covenName = `${COVEN_PREFIX}${name}`;
   const [coven] = await sql`
@@ -120,7 +112,6 @@ async function seat(email: string, name: string, role: 'member' | 'viewer' = 'me
   return `/coven/${slugify(covenName)}`;
 }
 
-/** The link in the one verification mail sent so far. */
 function mailedLink(): string {
   expect(send).toHaveBeenCalledTimes(1);
   const link = send.mock.calls[0][0].text.match(/https?:\/\/\S+\/verify-email\?[^\s\]]+/)?.[0];
@@ -195,7 +186,6 @@ describe('a sign-in with no return path', () => {
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
-    // A keeper holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) =>
