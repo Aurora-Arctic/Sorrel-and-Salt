@@ -95,10 +95,7 @@
   // block of a `position: fixed` tip bubble, and Floating UI does not re-place a bubble when an ancestor's
   // transform changes, so a quick move between cards left a bubble misplaced.
   inset-block-start: 0;
-  transition:
-    inset-block-start $motion-medium ease,
-    box-shadow $motion-medium ease,
-    background-color $motion-medium ease;
+  transition: inset-block-start $motion-medium ease;
 
   // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
   // card stays raised while one of its tips is open.
@@ -115,6 +112,12 @@
     // The second shadow is cast upward, onto the drawer's rim above the face.
     box-shadow: $shadow-lifted, $drawer-rim-shadow;
     inset-block-start: $drawer-travel;
+    // The colour and shadow fade in only on the way into the lift, so a theme change, which also
+    // changes them, starts no transition of its own.
+    transition:
+      inset-block-start $motion-medium ease,
+      box-shadow $motion-medium ease,
+      background-color $motion-medium ease;
     // Above its neighbours while a tip may be open (hover or keyboard focus), so a
     // tip that spills over the card above is not painted under that card's buttons.
     z-index: 1;
