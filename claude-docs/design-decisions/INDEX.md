@@ -8,7 +8,6 @@ Each line below reads: record — title — status — live home.
 
 - `m2.9-granting-admin` — Granting and revoking admin — decided — auth.md
 - `m5.5-admin-compendium` — The admin compendium page: its size, its modal, its lookups — decided — this record
-- `m5.6-admin-categories` — The admin categories page: the delete, the list query, the modal — decided — this record
 - `m5.6a-admin-forms` — The admin forms page: the slug, the redirect, the stale pick — decided (history) — this record
 - `m5.6b-admin-groups` — The admin group pages: where a deleted group's rows go — decided — this record
 - `m5.8-revoking-workspace-creation` — Revoking workspace creation, and its ledger — accepted 2026-10-09, on the owner's calls while building M5.8. — this record
@@ -74,7 +73,6 @@ Each line below reads: record — title — status — live home.
 - `m6.14-global-sass-not-css-modules` — Component styling is global Sass with BEM names, not CSS Modules — decided — this record
 - `m8.5-compendium-queries` — compendium and ingredient GraphQL queries — decided and built. — this record
 - `m8.16-add-ingredient-modal-scoping` — AddIngredientModal: scoping plan — decided and built. — this record
-- `m9.3-create-stock-refuses-held-form` — Starting a jar of a form the coven holds is refused — decided — this record
 - `m9.9-edit-stock-from-the-card` — M9.9 plan: Edit stock from the card — decided and built. — this record
 - `m10.12-spell-builder-modal` — The spell builder is a modal — decided — this record
 - `m10.19-stock-off-the-builder` — stock comes off the spell builder — decided — this record
@@ -107,7 +105,6 @@ Each line below reads: record — title — status — live home.
 - `mb.165-record-the-picked-vocabulary-row` — A picked form or deity is recorded beside its text — decided — this record
 - `mb.171-seed-keys` — A seeded row keeps the key the seed gave it — decided — this record
 - `mb.215-ingredient-variants` — An ingredient and its forms — decided — this record
-- `mb.240-compendium-seed` — A researched, sourced compendium seed — decided — this record
 - `mb.251-celestial-bodies` — The planets are Celestial Bodies wherever a person reads them — decided — this record
 - `mb.252-table-rename` — A renamed table leaves a view under its old name — decided — this record
 - `postgres-driver-read-mode-and-channel-binding` — Take the new version (PR #1542): turn off the new read mode, and enforce channel binding — decided (history) — this record
@@ -120,8 +117,6 @@ Each line below reads: record — title — status — live home.
 - `m3.6-cursor-pagination-helper` — Cursor pagination helper with a hard maximum page size — decided and built. — this record
 - `m3.8-react-cache-and-the-server-read-path` — React cache() wrapper and the server read path — decided and built. — this record
 - `m3.10-me-query` — me query, User type and field-level auth scope — decided and built. — this record
-- `m10.31-graphql-request-dropped` — graphql-request dropped for a fetch wrapper — decided — this record
-- `m12.2-public-file-route-handlers` — three public files are route handlers — decided — this record
 - `mb.105-pager-counts` — The pager counts, and the typeahead is the first page of a search — decided. — claude-docs/graphql/pagination.md
 - `mb.180-graphql-transport-half` — The GraphQL file holds the transport's half — decided — this record
 
@@ -133,7 +128,6 @@ Each line below reads: record — title — status — live home.
 - `m11.22-search-facets` — Search facets take lists and a toxic setting — decided — this record
 - `m12.4-filter-layout` — How the search filters sit together — signed off by the owner from the workshop stories — this record
 - `m12.6-form-icons` — Form icons: on the group, with a generic — decided — this record
-- `m12.8-jar-follows-local` — A jar follows a local that hides its compendium entry — decided — this record
 - `m12.9-undo-and-redo` — M12.9 and M12.10 — undo and redo in the forms: the approved plan — decided and built. — this record
 - `m12.33-loading-standard` — One Loading Standard for the Site — decided — this record
 - `m12.43-fewer-tooltips` — Fewer, quieter tooltips — decided and built. — this record
@@ -142,7 +136,6 @@ Each line below reads: record — title — status — live home.
 - `m13.14-autosave` — M13.14–M13.19 — Long forms autosave, and edits of one row can conflict — decided — this record
 - `m14.32-comment-guidelines` — Comments say how the code works, and nothing else — decided — .claude/rules/writing.md
 - `mb.7-navigation` — The navigation shell is a slim bar, a context row and a bottom bar on a phone — decided — canCreateWorkspace
-- `mb.36-check-a-dark-colour-against-the-card` — Check a dark group colour against the dark card — decided — this record
 - `mb.84-page-metadata` — Robots, sitemap, page metadata and structured data — decided — this record
 - `mb.174-no-repeat-list-entries` — Stop the list fields offering or adding a repeat — decided and built. — this record
 - `mb.224-test-suite-cut` — cut the test suite to functional requirements (MB.224–MB.230, seven lanes) — decided and built. — this record
@@ -168,13 +161,11 @@ Each line below reads: record — title — status — live home.
 
 ## Other
 
-- `m1.27-template-at-setup-not-in-image` — The seeded test template is built at test-run setup, not baked into the Postgres image — decided — this record
 - `m6.3-permission-statements` — Permission statements over a role rank — decided — this record
 - `m10.20-draft-visibility` — A draft's visibility moves either way; a complete spell's only widens — decided — this record
 - `m10.32-accept-from-the-landing` — A coven invitation is accepted from the account page as well as from the mail — decided — this record
 - `m12.24-retired-entry-stays-readable` — A retired entry stays readable to the covens that use it — decided — this record
 - `m12.42-linking-goes-one-way` — Linking Goes One Way — decided — this record
-- `m13.17-draft-unshare` — A shared draft can go back to private — decided — this record
 - `m14.2-physical-uses` — How an ingredient records its physical uses — accepted by the owner and moved to v2, 2026-10-23 (DESIGN.md §13, "Physical uses") — this record
 - `m14.4-plan` — Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review — decided — this record
 - `m14.24-plan` — The sourcing score: facts, weights and the data they need — decided — this record
@@ -196,7 +187,6 @@ Each line below reads: record — title — status — live home.
 - `m17.2-plan` — Scope the Closed-Practice Warning — decided — this record
 - `m17.3-plan` — Scope the ethical warnings on ingredients — decided — this record
 - `mb.30-organization-plugin` — Better Auth's organization plugin for workspaces and invitations — decided — **not adopted** — this record
-- `mb.42-no-source-layer` — The CI images carry no source layer — decided — this record
 - `mb.131-closed-sets-on-the-combobox` — A closed set wears the combobox — decided — this record
 - `mb.138-substitute-links` — A substitute is a row that links an ingredient or names one — decided — this record
 - `mb.148-reads-on-the-write-transaction` — Reads on the write transaction — decided — this record
@@ -205,3 +195,5 @@ Each line below reads: record — title — status — live home.
 - `mb.175-help-articles` — Help and FAQ articles, and a glossary, as rows a keeper edits — decided — this record
 - `mb.175-plan` — Scope Help and FAQ Articles (plan) — decided — this record
 - `wave-13-review-record` — Wave 13 review — plan — decided and built. — this record
+
+Superseded records are in `archive/design-decisions-history.tar.gz`. List it with `tar -tzf`; git history holds the plain text.
