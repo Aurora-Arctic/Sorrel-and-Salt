@@ -9,3 +9,10 @@
 .public-frame .app-shell__nav {
   display: block;
 }
+
+// Two links in the bar (Compendium, Help) at the narrowest widths: tighter padding keeps the bar inside the window.
+@media (max-width: $shell-brand-width) {
+  .public-frame .app-shell__nav a {
+    padding: 0 space(1);
+  }
+}
