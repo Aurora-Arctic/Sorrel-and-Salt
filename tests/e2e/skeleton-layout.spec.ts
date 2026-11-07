@@ -1,4 +1,4 @@
-import type { Page, Route } from '@playwright/test';
+import type { BrowserContext, Page, Route } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs, signInAgainAs } from './session';
@@ -26,6 +26,10 @@ const SPELL_TITLE = 'Fixture Layout Charm';
 
 let coven: Coven;
 let keeperId: string;
+/** One signed-in browser state per user, built once per worker after the seed and shared by that user's cases. */
+const sessions: Partial<
+  Record<Navigation['as'], Awaited<ReturnType<BrowserContext['storageState']>>>
+> = {};
 
 test.beforeAll(async ({ browser }) => {
   await recreateE2eDatabase();
@@ -87,6 +91,15 @@ test.beforeAll(async ({ browser }) => {
     });
   } finally {
     await setup.close();
+  }
+  for (const [as, userId] of [
+    ['steward', coven.users.A],
+    ['keeper', keeperId],
+  ] as const) {
+    const context = await browser.newContext();
+    await signInAgainAs(await context.newPage(), userId);
+    sessions[as] = await context.storageState();
+    await context.close();
   }
 });
 
@@ -489,6 +502,9 @@ const markLink = (page: Page, to: string | RegExp) =>
         const path = (anchor.getAttribute('href') ?? '').split(/[?#]/)[0];
         return pattern ? new RegExp(pattern).test(path) : path === exact;
       };
+      for (const marked of document.querySelectorAll('[data-skeleton-layout-link]')) {
+        marked.removeAttribute('data-skeleton-layout-link');
+      }
       const anchors = [...document.querySelectorAll('a[href]')].filter(matches);
       const onScreen = anchors.find(
         (anchor) =>
@@ -506,72 +522,92 @@ const markLink = (page: Page, to: string | RegExp) =>
 const VARIANTS = [
   { width: 1280, theme: 'light' },
   { width: 375, theme: 'light' },
-  { width: 375, theme: 'dark' },
 ] as const;
 
-for (const navigation of navigations) {
-  for (const { width, theme } of VARIANTS) {
-    test(`${navigation.name} at ${width}px ${theme}: the skeleton's static parts stand where the page's do`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-      await page.emulateMedia({ colorScheme: theme });
-      await signInAgainAs(page, navigation.as === 'keeper' ? keeperId : coven.users.A);
-      const server = await holdServerAnswers(page);
-      await page.goto(navigation.from(coven.slug));
-      await page.waitForLoadState('networkidle');
+/** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
+const hydrated = (page: Page, selector: string) =>
+  page.waitForFunction((target) => {
+    const element = document.querySelector(target);
+    return !!element && Object.keys(element).some((key) => key.startsWith('__reactProps$'));
+  }, selector);
 
-      const to = navigation.to(coven.slug);
-      let link: { onScreen: boolean } | null = null;
-      if (to === 'switcher') {
-        await page.getByRole('combobox', { name: 'Coven' }).first().click();
-      } else {
-        link = await markLink(page, to);
-        // Why the comparison means something: the old page carries a real link to the destination.
-        expect(link, `a link to ${String(to)} on ${navigation.from(coven.slug)}`).not.toBeNull();
-        if (link?.onScreen) {
-          await page.locator('[data-skeleton-layout-link]').scrollIntoViewIfNeeded();
-        }
-      }
-      const frameBefore = await frameOf(page);
+for (const as of ['steward', 'keeper'] as const) {
+  test.describe(`as the ${as}`, () => {
+    for (const navigation of navigations.filter((each) => each.as === as)) {
+      for (const { width, theme } of VARIANTS) {
+        test(`${navigation.name} at ${width}px ${theme}: the skeleton's static parts stand where the page's do`, async ({
+          page,
+        }) => {
+          await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+          await page.emulateMedia({ colorScheme: theme });
+          const session = sessions[as];
+          if (!session) throw new Error(`no session was built for the ${as}`);
+          await page.context().addCookies(session.cookies);
+          const server = await holdServerAnswers(page);
+          await page.goto(navigation.from(coven.slug));
+          await expect(page.locator('h1').first()).toBeVisible();
 
-      server.hold();
-      if (to === 'switcher') {
-        await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
-      } else if (link?.onScreen) {
-        await page.locator('[data-skeleton-layout-link]').click();
-      } else {
-        // A link in a closed menu (the phone's More) is followed as a tap on it would follow it.
-        await page.locator('[data-skeleton-layout-link]').evaluate((anchor) => {
-          (anchor as HTMLAnchorElement).click();
+          const to = navigation.to(coven.slug);
+          let link: { onScreen: boolean } | null = null;
+          if (to === 'switcher') {
+            await hydrated(page, '[role="combobox"]');
+            await page.getByRole('combobox', { name: 'Coven' }).first().click();
+          } else {
+            // Why the comparison means something: the old page carries a real link to the destination.
+            await expect
+              .poll(() => markLink(page, to), {
+                message: `a link to ${String(to)} on ${navigation.from(coven.slug)}`,
+              })
+              .not.toBeNull();
+            link = await markLink(page, to);
+            await hydrated(page, '[data-skeleton-layout-link]');
+          }
+          // Read at the top of the old page, as the skeleton scrolls to the top when it shows.
+          expect(await page.evaluate(() => window.scrollY)).toBe(0);
+          const frameBefore = await frameOf(page);
+          if (link?.onScreen) {
+            await page.locator('[data-skeleton-layout-link]').scrollIntoViewIfNeeded();
+          }
+
+          server.hold();
+          if (to === 'switcher') {
+            await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
+          } else if (link?.onScreen) {
+            await page.locator('[data-skeleton-layout-link]').click();
+          } else {
+            // A link in a closed menu (the phone's More) is followed as a tap on it would follow it.
+            await page.locator('[data-skeleton-layout-link]').evaluate((anchor) => {
+              (anchor as HTMLAnchorElement).click();
+            });
+          }
+          await expect.poll(server.held).toBeGreaterThan(0);
+          await expect(page.locator('.skeleton-cover')).toHaveCount(1);
+          // Two frames, so the skeleton is laid out and painted before it is measured.
+          await page.evaluate(
+            () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+          );
+          const frameWaiting = await frameOf(page);
+          const skeleton = await layoutOf(page, true);
+
+          await server.release();
+          await expect(page.locator('.skeleton-cover')).toHaveCount(0, { timeout: 20_000 });
+          await expect(page.locator('.skeleton-fade')).toHaveCount(0);
+          // A part still loading its code or data says so with aria-busy, and is measured once it is drawn.
+          await expect(page.locator('[aria-busy="true"]')).toHaveCount(0, { timeout: 20_000 });
+          const frameArrived = await frameOf(page);
+          await expect(page.locator('h1').first()).toBeVisible();
+          const arrived = await layoutOf(page, false);
+          // Why the comparison means something: the page arrived and drew its heading.
+          expect(arrived.parts.h1, 'the arrived page has a heading').not.toBeNull();
+
+          const found = [
+            ...frameMoves('old page to skeleton:', frameBefore, frameWaiting),
+            ...frameMoves('skeleton to page:', frameWaiting, frameArrived),
+            ...differences(navigation, skeleton, arrived),
+          ];
+          expect(found, found.join('\n')).toEqual([]);
         });
       }
-      await expect.poll(server.held).toBeGreaterThan(0);
-      await expect(page.locator('.skeleton-cover')).toHaveCount(1);
-      // Two frames, so the skeleton is laid out and painted before it is measured.
-      await page.evaluate(
-        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-      );
-      const frameWaiting = await frameOf(page);
-      const skeleton = await layoutOf(page, true);
-
-      await server.release();
-      await expect(page.locator('.skeleton-cover')).toHaveCount(0, { timeout: 20_000 });
-      await expect(page.locator('.skeleton-fade')).toHaveCount(0);
-      await page.waitForLoadState('networkidle');
-      // A part still loading its code or data says so with aria-busy, and is measured once it is drawn.
-      await expect(page.locator('[aria-busy="true"]')).toHaveCount(0, { timeout: 20_000 });
-      const frameArrived = await frameOf(page);
-      const arrived = await layoutOf(page, false);
-      // Why the comparison means something: the page arrived and drew its heading.
-      expect(arrived.parts.h1, 'the arrived page has a heading').not.toBeNull();
-
-      const found = [
-        ...frameMoves('old page to skeleton:', frameBefore, frameWaiting),
-        ...frameMoves('skeleton to page:', frameWaiting, frameArrived),
-        ...differences(navigation, skeleton, arrived),
-      ];
-      expect(found, found.join('\n')).toEqual([]);
-    });
-  }
+    }
+  });
 }

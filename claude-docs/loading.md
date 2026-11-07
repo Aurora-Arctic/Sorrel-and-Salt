@@ -321,7 +321,8 @@ page arrive and measures that. It checks two things:
 - **The frame does not move** between the skeleton and the arrived page: the site bar and the context
   row stay where they were.
 
-Every route runs at three widths and themes: 1280 light, 375 light and 375 dark.
+Every route runs at two widths, 1280 and 375, in the light theme. Dark mode swaps colours only, so it
+is not run.
 
 Rules the spec follows:
 
@@ -331,9 +332,14 @@ Rules the spec follows:
 - It waits until nothing on the page has `aria-busy="true"` before measuring. A part that loads after
   the page arrives (the document editor, which `next/dynamic` loads) must mark its own placeholder
   `aria-busy="true"` so the spec measures it once it is drawn.
-- The origin page is scrolled so the clicked link is on screen. The window goes to the top when the
-  skeleton appears (see "Frames, context rows and the scroll"), so the frame moves once, at the tap,
-  and not again on arrival; the skeleton-to-page comparison is the one that must hold.
+- The origin page's frame is read at the top of that page, before it is scrolled to bring the
+  clicked link on screen. The window goes to the top when the skeleton appears (see "Frames, context
+  rows and the scroll"), so the skeleton's frame must match the origin's at the top, and the page's
+  must match the skeleton's.
+- It waits on conditions, never on the network going quiet or a fixed time: the origin's heading
+  shown and its link hydrated before the click; after the answer, the skeleton and its fade gone,
+  nothing busy, and the heading shown.
+- Each user signs in once per worker, and that user's cases share the browser state.
 
 To run it for named routes (the pattern is the route name followed by `at`):
 
