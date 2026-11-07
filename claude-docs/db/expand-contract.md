@@ -1,18 +1,25 @@
 ## Expand/contract and the destructive-DDL check
 
-Drizzle generates no down migrations, and hand-writing them is a reliable way to
-lose data, so none exist in this repo and none should be added. The only rollback
-path for a bad release is a **deploy rollback**: redeploy the previous app version
-against the database as it stands. That works only if every migration leaves the
-schema compatible with both the app version that shipped it _and_ the one before it.
-That is the expand/contract pattern:
+Drizzle generates no down migrations and none exist. The only rollback for a bad
+release is a **deploy rollback**: redeploy the previous app version against the
+database as it stands. That works only if every migration leaves the schema
+compatible with the app version that shipped it _and_ the one before it. That is
+expand/contract:
 
-1. **Expand.** A migration that only adds (a column, a table, an index) is always
-   safe: old code that doesn't know the new column ignores it.
-2. **Migrate the app.** Ship code that uses the new shape, typically alongside the
-   old one for a transition period (dual-write, read-with-fallback).
-3. **Contract.** Once nothing depends on the old shape (usually one release later), a
-   later migration removes it.
+1. **Expand.** A migration that only adds (a column, a table, an index) is safe: old
+   code ignores what it does not know.
+2. **Migrate the app.** Ship code that uses the new shape, alongside the old for a
+   transition (dual-write, read-with-fallback).
+3. **Contract.** Once nothing depends on the old shape, a later migration removes it.
+
+Renaming a column in one step is the case that goes wrong: `RENAME COLUMN` is atomic
+in Postgres but not across a _deploy_. While Vercel rolls traffic from the old
+version to the new, both read and write the same rows, and the old version's query
+for the old name errors. Rename in two releases: release N adds the new column,
+backfills it, writes both and reads `title ?? name`; release N+1 drops the old
+column and the fallback. Release N is safe to roll back to N-1. Rolling N+1 back to N
+breaks (N's dual-write still writes the old column), which is why the drop needs an
+acknowledgement sidecar (below).
 
 **A drop is the contract step alone, split across two tasks:** code references out
 first, then the migration `drizzle-kit generate` produces, in a second PR with its
@@ -65,56 +72,6 @@ stay in it and the drop is still the second task's to generate; a second scratch
   each entry after the rows its ingredient holds, since that list keeps the order
   entered.
 
-Renaming a column is the canonical case that goes wrong if done directly.
-`ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but not across a _deploy_: for
-the seconds-to-minutes Vercel takes to roll traffic from the old app version to the
-new one, both read and write the same row, and the old version's query for the old
-column name errors mid-rollout. Never do it in one step.
-
-**Worked example: renaming `spells.name` to `spells.title` across two releases**
-
-- **Release N, expand.** A migration adds the new column and backfills it; the app
-  writes both and reads with a fallback.
-
-  ```sql
-  -- src/db/migrations/00NN_add-spells-title.sql
-  ALTER TABLE spells ADD COLUMN title text;
-  UPDATE spells SET title = name WHERE title IS NULL;
-  ```
-
-  Both columns exist in the Drizzle schema for this release (`name` deprecated, still
-  written, read as a fallback only; `title` canonical). The write path (inside
-  `withAudit`, in the module's `services/`) writes both, and the read path prefers
-  `title`, falling back to `name` for any row a backfill or in-flight write hasn't
-  caught yet:
-
-  ```ts
-  // write
-  await tx.update(spells).set({ name: input.title, title: input.title }).where(...);
-
-  // read
-  const displayTitle = row.title ?? row.name;
-  ```
-
-  This is safe to deploy and to **roll back**: Release N-1, which only knows `name`,
-  still works against this schema, since `name` is present and kept up to date.
-
-- **Release N+1, contract.** Once Release N has run in production long enough that
-  nothing reads `name` (every row written under the dual-write, no older app version
-  deployed anywhere), a later migration drops it:
-
-  ```sql
-  -- src/db/migrations/00MM_drop-spells-name.sql
-  ALTER TABLE spells DROP COLUMN name;
-  ```
-
-  and the schema and service code drop the fallback and the dual-write. **This
-  migration is destructive**, so it needs an acknowledgement sidecar beside it,
-  `src/db/migrations/00MM_drop-spells-name.ack.md`, in the form below. A rollback of
-  Release N+1 to Release N would break (N's dual-write still writes `name`); the
-  acknowledgement line is where a human says "yes, this is the point where we give
-  up the old column", rather than it happening silently.
-
 ### Renaming a table
 
 Renaming a table in one step breaks the deploy still serving, as a column rename
@@ -122,7 +79,7 @@ does, because every statement it sends names the old table. Unlike a column, a t
 can leave its old name behind as a **view** over itself (a saved query the database
 treats like a table), so the rename needs no second table and no copying
 ([`design-decisions/mb.252-table-rename.md`](../design-decisions/mb.252-table-rename.md)).
-`planets` to `celestial_bodies` (`0067`) was the first table rename.
+`planets` to `celestial_bodies` (`0067`) is the worked case.
 
 - **Expand in one migration.** Rename with `ALTER TABLE … RENAME TO`, then
   `CREATE VIEW <old> AS SELECT * FROM <new>`. Postgres writes through a view over a
@@ -133,10 +90,6 @@ treats like a table), so the rename needs no second table and no copying
   - a connection that prepared statements against the table before the rename runs
     them through the view afterwards, because Postgres looks the name up again
     whenever it re-plans a statement
-
-  This was measured: the whole `db` test project passed with the migration applied
-  and the schema still naming the old table, and a scratch script ran prepared
-  statements across the rename.
 
 - **Rename the indexes, CHECKs and foreign keys in the same migration.**
   `vocabularyIndexes` and Drizzle's foreign-key names are built from the table's
@@ -228,18 +181,12 @@ Destructive DDL acknowledged: <reason>
 the regex). This is the one place the format is defined, so
 `claude-docs/ci/reusable-checks.md` and the script both point back here.
 
-**The acknowledgement is a sidecar, not a PR-body line.** A PR body is visible from
-one branch base and gone on merge, so a release PR (which `resolveDefaultBase` sends
-at `origin/main`, rescanning every migration since the last release) sees none of the
-acknowledgements that let those migrations land. And one body line blessed **every**
-finding in the diff, whatever file it was in. The sidecar travels with the file and
-covers only the file beside it. The PR-body path is retired rather than OR-ed with the
-sidecar, since an `OR` would keep the uncorrelated hole open, so the check reads
-nothing from GitHub at all, which is what lets `make act-check CHECK=destructive-ddl`
-prove the scan rather than the wiring. It is a `.md` file rather than a comment inside
-the `.sql` because the regex anchors at the start of a line, so Markdown matches it
-unchanged where `-- Destructive DDL acknowledged: …` would not. Every file list here is
-scoped to `*.sql`, so a sidecar is never itself scanned.
+**The acknowledgement is a sidecar, never a PR-body line.** A release PR rescans every
+migration since the last release and sees no earlier PR body, and one body line would
+bless every finding in a diff. The sidecar travels with its file and covers only that
+file. The check reads nothing from GitHub. It is a `.md` file because the regex
+anchors at the start of a line, which a `-- ` SQL comment would defeat. Every file
+list here is scoped to `*.sql`, so a sidecar is never itself scanned.
 
 **Locally, `npm run check:destructive-ddl` scans what this branch adds:** every
 migration new or changed against its Gitflow base (`origin/staging`, or `origin/main`
@@ -248,38 +195,9 @@ and not yet committed. `--base <ref>` picks another base. `--all` scans every
 committed migration instead, an audit rather than a gate; it is green when every
 destructive migration ships its sidecar and goes red on a real omission.
 
-Eighteen migrations carry findings today, and each has its sidecar:
-
-| Migration                               | Findings                                                                                                                                                                                                                                      |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0002_solid_marauders.sql`              | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                                                                                                                                        |
-| `0017_custom-spell-ingredients.sql`     | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                                                                                                                            |
-| `0025_ingredient-slugs.sql`             | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md))                                                                                                          |
-| `0028_drop-pending-slugs.sql`           | the two pending-slug indexes and columns dropped, the contract half of the pending-slug change                                                                                                                                                |
-| `0029_spell-layers-soft-delete.sql`     | the `(spell_id, layer_order)` primary key dropped for a surrogate `id`, and two partial unique indexes re-created with the filter                                                                                                             |
-| `0036_drop-ingredient-singles.sql`      | the single `planet`, `zodiac` and `color` columns dropped, the contract half of the lists                                                                                                                                                     |
-| `0037_drop-element.sql`                 | the single `element` column dropped, the contract half of the element list                                                                                                                                                                    |
-| `0038_unknown-carries-formal-name.sql`  | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name                                                                                                                                             |
-| `0039_drop-substitutes-list.sql`        | `ingredients.substitutes` dropped, the contract half of the substitutes switch, after a refill into `ingredient_substitutes`                                                                                                                  |
-| `0048_drop-deities-list.sql`            | `ingredients.deities` dropped, the contract half of the deities switch, after a refill into `ingredient_deities`                                                                                                                              |
-| `0058_drop-old-privilege-ledgers.sql`   | `admin_role_changes` and `workspace_creation_changes` dropped, the contract half of the one privilege ledger                                                                                                                                  |
-| `0059_drop-old-invitation-tables.sql`   | `workspace_invitations` and `admin_invitations` dropped, the contract half of the two-tier invitation table                                                                                                                                   |
-| `0061_ingredient-variants.sql`          | `ingredients.identity_key` added `NOT NULL` with no `DEFAULT`, a false positive: a generated column computed from `name`, itself `NOT NULL`                                                                                                   |
-| `0063_variant-children.sql`             | four unique indexes and three constraints dropped and re-created keyed on the variant or wider in one transaction, under `0029` and `0038`'s precedent, and `inventory_items.variant_id` added `NOT NULL` to an empty table                   |
-| `0064_drop-form-and-canonical-key.sql`  | `ingredients.canonical_key`, `form` and `form_id` dropped with their two CHECKs, the pick's foreign key and three indexes, the contract half of the switch to `identity_key` and `ingredient_variants`                                        |
-| `0067_celestial-bodies-expand.sql`      | `planets` renamed `celestial_bodies` with its indexes, CHECK and foreign keys, a `planets` view standing in, and `reference_links_one_row` dropped and re-added counting either link column                                                   |
-| `0069_drop-planet-columns.sql`          | `ingredients.planets`, `ingredient_variants.planets` and `reference_links.planet_id` with its foreign key and unique index dropped, and the `planets` view; `reference_links_one_row` dropped and re-added counting `celestial_body_id` alone |
-| `0083_spell-steps-expand.sql`           | `spell_ingredients` renamed `spell_steps` with its indexes, CHECKs and foreign keys, a `spell_ingredients` view standing in, and `spell_ingredients_ingredient_or_name` dropped for two wider CHECKs so a step may be an instruction alone    |
-| `0089_drop-spell-steps-old-columns.sql` | the `spell_ingredients` view, `spell_steps.layer_order` with its unique index, `spell_steps.note` and `spells.instructions` dropped, after `position` was refilled and set NOT NULL; the contract half of the `0083` rename                   |
-
-**`0002`'s sidecar was written retroactively.** Its `DROP CONSTRAINT` and two `NOT
-NULL` columns merged ([PR #73][pr73]) with no acknowledgement line, during a window
-when `destructive-ddl` ran on nothing, so the reasoning in its sidecar is
-reconstructed from the migration and the schema rather than recovered. `0017`'s ports
-[PR #126][pr126]'s wording verbatim.
-
-[pr73]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/73
-[pr126]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/126
+Each migration with findings carries its sidecar; the sidecar holds the reason, and
+`--all` is the audit that proves none is missing. A false positive is acknowledged
+the same way (`0061` adds a generated `NOT NULL` column).
 
 ### A migration gives up a lock it cannot take
 
