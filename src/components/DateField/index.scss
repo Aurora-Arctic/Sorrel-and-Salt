@@ -1,9 +1,7 @@
 @use '../../scss/variables' as *;
 
-// The day button is a `.input` box with the calendar mark at its end; the calendar's own look is
-// `calendar.scss`, shared with the day-range field.
-// As wide as the widest date it can show: the sizer and the text share one grid cell, and the sizer is
-// invisible, so the box never changes width with the day.
+// The day button is a `.input` box with the calendar mark at its end; the calendar's look is `calendar.scss`.
+// As wide as the widest date: the invisible sizer and the text share one grid cell, so the box never changes width.
 .input.date-field__button {
   display: inline-grid;
   grid-template-columns: auto auto;

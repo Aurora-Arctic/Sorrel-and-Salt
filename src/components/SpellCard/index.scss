@@ -4,10 +4,8 @@
 @use 'compact' as *;
 @use '../IngredientCard/specimen-card' as *;
 
-// The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
-// this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
-// and shadow are not on the article but on the `.spell-card__face` layer (_smoulder.scss),
-// so the smouldering edge can burn through both.
+// The Foundations specimen (`.specimen`, _primitives.scss) carries the layout. The face and shadow are on the
+// `.spell-card__face` layer (_smoulder.scss), so the smouldering edge can burn through both.
 .spell-card {
   @include smoulder-base;
   @include theme-transition(color);
@@ -22,10 +20,8 @@
     transition: none;
   }
 
-  // The content, positioned so it paints over the face and the glow before it, in the
-  // order of the markup, with no z-index anywhere: a z-index on the card, or on a layer
-  // behind it, needs a stacking context round the card, and one on the card would trap
-  // the category chips' tips beneath the next card.
+  // The content, positioned so it paints over the face and glow in markup order, with no z-index anywhere: one on the
+  // card would trap the category chips' tips beneath the next card.
   > * {
     position: relative;
   }
@@ -48,10 +44,8 @@
   overflow: hidden;
 }
 
-// The whole card is the link, as an ingredient card's is: the title's one `<a>` stretches an
-// empty `::after` over the article, not an `<a>` around the card, which a screen reader would
-// read whole as the link's name. Plain ink, no underline, at rest or on hover. The top row is
-// left unpositioned so the overlay is placed against the article.
+// The whole card is the link, as an ingredient card's is: the title's `<a>` stretches an empty `::after` over the
+// article. The top row is left unpositioned so the overlay is placed against the article.
 .spell-card > .specimen__top {
   position: static;
 }

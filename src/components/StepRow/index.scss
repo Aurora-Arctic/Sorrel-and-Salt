@@ -238,10 +238,8 @@ $step-line: type-size('body') * 1.65;
     @include icon-button;
     @include icon-button-edit;
 
-    // Open, the pencil is an up chevron that closes the row. It is light, not the
-    // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
-    // ink in light: literal white would fail on the light card), kept pointed at or focused.
-    // Open, Remove is hidden, so it ends the group at the row's right edge.
+    // Open, the pencil is an up chevron that closes the row, in the body ink (literal white would fail on the light card),
+    // kept pointed at or focused. Remove is hidden, so it ends the group at the row's right edge.
     &--close {
       &,
       &:hover,
@@ -301,10 +299,8 @@ $step-line: type-size('body') * 1.65;
     min-width: 0;
   }
 
-  // An instruction starts two lines high (the `rows` the field gives it), not the 6rem a
-  // plain textarea keeps, and grows as lines are typed. Growing is `field-sizing`, which is
-  // not Baseline widely available, so it sits in @supports: without it the box stays two
-  // lines and scrolls inside, and its resize handle still opens it by hand.
+  // An instruction starts two lines high and grows as lines are typed, by `field-sizing`, which is not Baseline widely
+  // available, so it sits in @supports: without it the box stays two lines and scrolls, and its resize handle still opens it.
   .step-row__instruction .textarea,
   .step-row__field .textarea {
     min-height: 0;
@@ -381,10 +377,8 @@ $step-line: type-size('body') * 1.65;
     color: $text-muted;
   }
 
-  // Closed, the instruction is one line the height of a closed ingredient row (two at the list's
-  // narrow width, below): its text runs on under an ellipsis, and the handle, number and buttons
-  // centre on that line, with no textarea's padding to stand clear of. Open, the textarea shows
-  // all of it.
+  // Closed, the instruction is one line the height of a closed ingredient row (two at the narrow width): its text
+  // runs on under an ellipsis. Open, the textarea shows all of it.
   &.step-row--folded {
     .step-row__text {
       padding-block: 0;

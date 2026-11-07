@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A vertical menu of jump links. The current entry carries a bar on the edge
-// facing away from the page on a phone (left), toward the page on a wide
-// screen (right, where the text is also right-aligned).
-// claude-docs/components/page-nav.md
+// A vertical menu of jump links. The current entry's bar is on the edge facing away from the page on a phone,
+// toward it on a wide screen (claude-docs/components/page-nav.md).
 .page-nav {
   // The phone's bar rule's accent, softened toward the card.
   --page-nav-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
@@ -95,10 +93,8 @@
     font-size: $nav-link-size;
   }
 
-  // An item set apart takes a gap a step wider than a group label's, the label giving up its own
-  // break so the gap is not doubled. A short hairline halfway through the gap is a pseudo-element
-  // from the entries' inset; half a pixel is taken off so the 1px rule's centre sits on the
-  // middle.
+  // An item set apart takes a gap a step wider than a group label's, the label giving up its own break; the short
+  // hairline is a pseudo-element, half a pixel off so the 1px rule's centre sits on the middle.
   .page-nav__apart {
     $break: space(6);
 

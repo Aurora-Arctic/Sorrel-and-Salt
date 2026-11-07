@@ -2,10 +2,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page around it is `.page-frame--narrow` (src/app/sign-in/page.tsx); the panel fills its
-// column on `.panel` with a step more padding, `border-box`. Compounded with `.panel` because in
-// the app the primitives compile as `body .panel`, which outranks a lone class, while the workshop
-// scopes them with `:where()`.
+// The page around it is `.page-frame--narrow`. Compounded with `.panel` because in the app the primitives compile as
+// `body .panel`, which outranks a lone class, while the workshop scopes them with `:where()`.
 .sign-in-panel.panel {
   box-sizing: border-box;
   // One column the width of the card's content, `$narrow-column` less the padding, which the email
@@ -32,10 +30,8 @@
   text-align: center;
 }
 
-// A single `max-content` column rather than `flex` + `width: 100%`: a grid
-// track sizes to the widest item's own content, so every button shrinks to
-// fit and then stretches to match the widest one, without measuring text in
-// JS. `justify-content: center` centers that one column within the panel.
+// A single `max-content` column rather than `flex` + `width: 100%`: every button shrinks to fit then stretches to the
+// widest, without measuring text in JS.
 .sign-in-panel__providers {
   display: grid;
   grid-template-columns: max-content;
@@ -49,10 +45,8 @@
   @include stack(1);
 }
 
-// Each roster button carries `.btn` for its shape; this rule is only where a brand button differs:
-// icon at the left edge, button filling its grid column, a 1px edge as Google's and Microsoft's
-// guidelines draw. Compounded with `.btn` so load order does not matter; colour is each provider's
-// own (claude-docs/components/sign-in-panel.md, "Provider branding").
+// Each roster button carries `.btn` for its shape; this is only where a brand button differs. Compounded with `.btn`
+// so load order does not matter (claude-docs/components/sign-in-panel.md, "Provider branding").
 .sign-in-panel__button.btn {
   // The containing block for the last-used badge.
   position: relative;
@@ -70,10 +64,8 @@
   border-color: $accent;
 }
 
-// One brand's button colours from `$brand-palettes` (_variables.scss), not our tokens; a white
-// button takes its brand's `edge`, one with none keeps the transparent edge above. The hover/focus
-// block restates `color`, since `.btn` changes text colour there and an omitted `color` would tie
-// with it in specificity.
+// One brand's colours from `$brand-palettes`, not our tokens. The hover/focus block restates `color`, since `.btn`
+// changes text colour there and an omitted `color` would tie in specificity.
 @mixin brand-button($brand) {
   background-color: brand-color($brand, 'fill');
   color: brand-color($brand, 'ink');
@@ -105,10 +97,8 @@
   background-color: transparent;
 }
 
-// Hangs off the button's top-left corner, out of the flow, so the marked button is the same
-// size as the rest. Colour is `.badge--last-used`'s; the shadow is the one `.btn` casts,
-// lifting it off the brand fill it overlaps. The corner's offsets are the badge's own
-// geometry against the button's edge, not spacing, so they stay off the scale.
+// Hangs off the button's top-left corner, out of the flow, so the marked button stays the same size. The offsets are
+// the badge's own geometry against the button's edge, so they stay off the scale.
 .sign-in-panel__last-used {
   position: absolute;
   top: -1.125rem;

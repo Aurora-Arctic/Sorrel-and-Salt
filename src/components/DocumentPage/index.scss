@@ -1,15 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A document reads as prose: every running line keeps to the measure, a table may run wider in
-// its own scrolling frame, and each section's heading sits a step above its text.
-// The page is `.page-with-nav` with its column widened from the narrow column to the reading
-// measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
-// rule names both classes, as the primitives are emitted under `body` and one class alone loses to
-// them.
-// The menu's column is half as wide again as `.page-with-nav`'s (`$document-menu-column`): in the narrower
-// column most section headings broke into three lines. From a tablet up the menu and the measure
-// still fit side by side inside the frame's gutters.
+// A document reads as prose: running lines keep to the measure, a table may run wider in its own scrolling frame.
+// The page is `.page-with-nav` widened to the reading measure; the rule names both classes, as the primitives are
+// emitted under `body`. The menu column is half again as wide (`$document-menu-column`), or headings broke into three lines.
 
 // The page colour easing out from an edge of the scrolling menu, opaque at the edge so no entry shows
 // cut off there; several stops rather than a straight ramp, so no line shows where it ends.

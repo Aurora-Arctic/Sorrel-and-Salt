@@ -1,9 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The ingredient modal's layout (IngredientForm, "fold" sections): sections
-// parted by a hairline, each under a small heading in the heading face, the
-// facts beneath in the body's face. Nested, to outweigh layout-base's bare
+// The ingredient modal's layout (IngredientForm, "fold" sections). Nested, to outweigh layout-base's bare
 // `body section`, whose gap and margins would otherwise set the spacing.
 .user-detail {
   display: flex;

@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A fixed-size dot that always holds its space, so showing it moves nothing.
-// Hidden until the link has been pending for `$loading-delay`, so a fast navigation
-// never flashes it. Next's own example, through the project's tokens.
-// claude-docs/components/link-hint.md
+// A fixed-size dot that always holds its space, hidden until the link has been pending for `$loading-delay`, so a
+// fast navigation never flashes it (claude-docs/components/link-hint.md).
 .link-hint {
   display: inline-block;
   width: 0.6em;

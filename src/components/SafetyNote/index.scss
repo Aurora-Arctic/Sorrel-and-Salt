@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The caution as ordinary text on the page, set apart by a bar of the safety fill down its
-// edge and a heading in the same fill; a whole block of it would be far too loud. One red
-// with the Toxic badge, not `$secondary`, which reads lighter on dark. The bar is
-// `$safety-bar-width`, the heavy rule, so it is one of the site's rule weights.
+// The caution as ordinary text, set apart by a bar of the safety fill and a heading in the same fill. One red with the
+// Toxic badge, not `$secondary`, which reads lighter on dark. The bar is `$safety-bar-width`, the heavy rule.
 .safety-note {
   padding: space(1) 0 space(1) space(4);
   border-inline-start: $safety-bar-width solid badge-token('safety', 'fill');

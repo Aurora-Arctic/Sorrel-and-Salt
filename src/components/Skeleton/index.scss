@@ -13,10 +13,8 @@
   @include arrived($motion-short);
 }
 
-// A `main` wait in the standard or the forms' frame (MainBody): the frame's
-// centring and window-tall minimum are for a page that fills the window, and a
-// placeholder is drawn from the top. Outranks the primitives' frame rules,
-// the context row's `:has()` one included.
+// A `main` wait in the standard or the forms' frame (MainBody): the frame's centring and window-tall minimum are for a
+// page that fills the window. Outranks the primitives' frame rules, the context row's `:has()` one included.
 .app-shell__main main.page-frame.skeleton-frame {
   justify-content: flex-start;
   min-height: 0;
@@ -32,12 +30,8 @@
   @include skeleton-shape;
 }
 
-// A list page's heading row, laid out by `.page-header` as the page lays its
-// own: the heading bar, and where the page has an Add a button-sized block at
-// the end (the title bar is the page shape's). `.page-header` brings every
-// child but the h1 down 0.25rem for a button; the heading bar sits level.
-// The column's gap spaces the heading from the filter row, so the heading's own bottom margin (the
-// space the page lays out with) would be a second gap on top of it.
+// A list page's heading row, laid out by `.page-header` as the page lays its own. The column's gap spaces the heading
+// from the filter row, so the heading's own bottom margin would be a second gap.
 .skeleton__shapes .skeleton__header {
   margin-bottom: 0;
 }
@@ -57,10 +51,8 @@
   height: $control-height;
 }
 
-// A tabbed page's heading row: the tab track follows the heading, as
-// `.tabbed-page` lays it, and the action is pushed to the end. The track is
-// the pill height of TabbedPage's own, cancelling the header's nudge as its
-// track does.
+// A tabbed page's heading row: the tab track follows the heading and the action is pushed to the end. The track is
+// the pill height of TabbedPage's own, cancelling the header's nudge as its track does.
 .skeleton__header:has(> .skeleton__tabs) {
   justify-content: flex-start;
 
@@ -237,10 +229,8 @@
   justify-self: end;
 }
 
-// The cards variant (a list of ingredient cards): the same grid the real list
-// draws, `$ingredient-card-min` wide at the least, each a card-surface block of
-// a heading bar, a shorter caption bar and a chips bar. Equal in height, as the
-// real cards are.
+// The cards variant: the same grid the real list draws, `$ingredient-card-min` wide at the least, each card equal
+// in height, as the real cards are.
 .skeleton__cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
@@ -483,10 +473,8 @@
   padding-block: calc((#{$icon-size} - 1rem) / 2);
 }
 
-// The way back an ingredient's page shows above its heading (both the
-// Compendium's and a coven's always do): a short bar in the line of its small
-// text (1.3, as the real row's line), lifted by the head's padding as the real
-// row is, then the room that row's bottom margin adds to the head's gap.
+// The way back an ingredient's page shows above its heading: a short bar in the real row's line, lifted by the head's
+// padding, then the room that row's bottom margin adds to the head's gap.
 .skeleton__shapes .skeleton__entry-bar {
   position: relative;
   top: calc(-1 * #{space(4)});
@@ -535,10 +523,8 @@
   }
 }
 
-// An ingredient's page below its head: the entry's own body, section, text
-// and side column (the mixins both share), so the wait has the real page's
-// Details columns, and its forms lined up with their lists. Bare bars, no card
-// surface; the heading bar takes an h2's line box.
+// An ingredient's page below its head: the entry's own body, section, text and side column (the mixins both share).
+// Bare bars, no card surface; the heading bar takes an h2's line box.
 .skeleton__entry-body {
   @include entry-body('.skeleton__entry-details', '.skeleton__entry-side');
 }
@@ -699,10 +685,8 @@
   margin-block-end: space(2);
 }
 
-// A jump-menu page below its head (the coven home's sections, the account's
-// panels): the page's own `.page-frame__section` and `.panel` lay them out;
-// only the bars are drawn here. A section's line is one body line tall, a
-// button is a control tall.
+// A jump-menu page below its head: the page's own `.page-frame__section` and `.panel` lay them out; only the bars
+// are drawn here. A section's line is one body line tall, a button a control tall.
 .skeleton__shapes .skeleton__line-bar {
   width: 70%;
   max-width: $measure;
@@ -773,10 +757,8 @@
   }
 }
 
-// A spell's page, in the recipe's own grid (`.spell-recipe--with-nav`): the head, the Workings
-// menu left of it from a phone's width up, then the main and side columns. Written here as well
-// as in SpellRecipe's stylesheet, since a route loads a component's stylesheet only when it
-// draws the component.
+// A spell's page, in the recipe's own grid (`.spell-recipe--with-nav`). Written here as well as in SpellRecipe's
+// stylesheet, since a route loads a component's stylesheet only when it draws the component.
 .skeleton__recipe {
   @include stack(2);
   @include entry-nav-grid;

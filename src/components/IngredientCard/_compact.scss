@@ -3,10 +3,9 @@
 @use '../../scss/mixins' as *;
 @use 'specimen-card' as *;
 
-// The compact look of the card, a mixin so a page can switch to it from its own selector. No density
-// prop: it must switch before React runs (a pre-paint script sets `data-card-density="regular"` on
-// <html>), and a prop would mismatch on hydration. Every rule is one class deeper than what it overrides.
-// The padding, title, badges and chips are the shared part (_specimen-card.scss); the rest is this card's.
+// The compact look, a mixin so a page can switch to it from its own selector. No density prop: it must switch before
+// React runs (a pre-paint script sets `data-card-density` on <html>), and a prop would mismatch on hydration.
+// Every rule is one class deeper than what it overrides.
 @mixin ingredient-card-compact {
   @include specimen-card-compact(
     '.ingredient-card',

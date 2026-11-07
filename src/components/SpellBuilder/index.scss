@@ -33,10 +33,8 @@
   }
 }
 
-// A step's handle: the grip it is moved by, a button unboxed as the
-// combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
-// by touch moves the step rather than the page. Muted, as a grip is a
-// means to move a step and not the step itself.
+// A step's handle: a button unboxed as the combobox's chip handle is. `touch-action` is dnd-kit's ask, so a drag by
+// touch moves the step rather than the page.
 .spell-step__handle {
   @include button-reset(grab);
 
@@ -64,10 +62,8 @@
   }
 }
 
-// The step being moved is lifted off the list: a deeper shadow and the accent
-// on its edge. The rows it passes are not restyled; dnd-kit slides them aside.
-// Both classes, so that this outranks the card's own border and shadow
-// (`.step-row.step-row--card`); only the colour is set, the row owns the width.
+// The step being moved is lifted off the list: a deeper shadow and the accent on its edge. Both classes, so this
+// outranks the card's own border and shadow (`.step-row.step-row--card`); dnd-kit slides the other rows aside.
 .step-row.spell-step.is-dragging {
   position: relative;
   z-index: 1;
@@ -126,10 +122,8 @@
 .spell-steps__add-step {
   grid-column: 2;
   grid-row: 2;
-  // Its top edge is level with the top of the box's frame, not the label above it, and it stays
-  // there as the filter tray grows the frame downward. The label row is the taller of the label's
-  // pinned line (above) and the hint's ⓘ, so the offset is a known height. Flat: the box beside it
-  // has no shadow.
+  // Its top edge is level with the top of the box's frame, not the label above it, and stays there as the filter tray
+  // grows the frame downward. Flat: the box beside it has no shadow.
   align-self: start;
   margin-block-start: calc(max(#{type-size('small')} * 1.5, #{$icon-size}) + #{space(2)});
   box-shadow: none;
@@ -142,10 +136,8 @@
   @include chip($size: compact);
 }
 
-// A row's category chips may wrap onto a second line rather than be clipped:
-// the one-line clip would cut the pills' tops. The line height gives wrapped lines
-// the room the chips have side to side, and the block padding keeps the first line clear of the
-// name above. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
+// A row's category chips may wrap onto a second line rather than be clipped by the one-line clip, which would cut
+// the pills' tops. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
 .combobox__list .combobox__note--meta:has(.chip) {
   padding-block: space(1);
   line-height: 2;

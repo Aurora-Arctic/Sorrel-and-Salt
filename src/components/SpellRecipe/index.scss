@@ -44,10 +44,8 @@
   min-width: 0;
 }
 
-// With the side column the article is the paragraphs' measure, the gutter and the column, no
-// wider: the body's sections are capped at the measure, so a wider body column would stand
-// empty before the gutter. The head stays over the body, so the Edit
-// pencil ends where the text does, as the entry page's does.
+// With the side column the article is the paragraphs' measure, the gutter and the column, no wider, or the body
+// would stand empty before the gutter. The head stays over the body so the Edit pencil ends where the text does.
 .spell-recipe--with-aside {
   > :where(:not(.page-nav)) {
     max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
@@ -65,11 +63,8 @@
       max-width: $measure;
     }
 
-    // The side column starts level with the facts strip, the lead standing above the columns: the
-    // rest and Workings take the text column. Rows are pinned so Workings closes the text column
-    // under the rest and the side column spans both (the last row takes the slack, so a tall column
-    // never pushes Workings down), whatever their order in the source. The rows carry no gap:
-    // Workings' own margin spaces it from the rest.
+    // The side column starts level with the facts strip; the rest and Workings take the text column. Rows are pinned so
+    // a tall column never pushes Workings down, whatever their order in the source; Workings' own margin spaces it.
     .spell-recipe__columns {
       grid-template-rows: auto 1fr;
       row-gap: 0;
@@ -97,10 +92,8 @@
 .spell-recipe__aside {
   @include entry-side;
 
-  // Heading to content as the entry page's side blocks space it (`.ingredient-entry__block`,
-  // a `stack(2)`): the panels ask for the same gap, but the page's own `section` rule
-  // (_layout.scss) outweighs their class alone and widened it to space(4), and gave them a
-  // margin.
+  // Heading to content as the entry page's side blocks space it (`stack(2)`): the page's `section` rule
+  // (_layout.scss) outweighs the panels' class alone and widened it to space(4).
   > .comparison-panel,
   > .spell-inventory {
     gap: space(2);
@@ -283,10 +276,8 @@
   font-size: type-size('body');
 }
 
-// An ingredient step on a grid rather than the flex row, so its note stops at the name's end
-// and never runs under the badges: the position, the amount, the name and
-// the marks across the first line, and the note beneath in the amount's and name's columns, the
-// marks' column left empty. With no amount the name takes the amount's column too.
+// An ingredient step on a grid rather than the flex row, so its note stops at the name's end and never runs under
+// the badges. With no amount the name takes the amount's column too.
 .spell-recipe__steps .step-row:not(.spell-recipe__instruction) {
   display: grid;
   grid-template-columns: $step-position-width auto minmax(0, 1fr) auto;

@@ -35,10 +35,8 @@
   font-size: type-size('small');
 }
 
-// The three marks, each a different shape so the colour only confirms it: Yes the site's ✦ in the
-// accent, In Part the same ✦ with one half filled and the other an outline, in the warning ochre,
-// No a short dash in the muted ink. Forced colours would paint the fills away, so there each is
-// drawn in the text colour.
+// The three marks, each a different shape so the colour only confirms it: Yes ✦, In Part a half-filled ✦, No a dash.
+// Forced colours would paint the fills away, so there each is drawn in the text colour.
 .access-cards__mark {
   display: inline-grid;
   flex: none;

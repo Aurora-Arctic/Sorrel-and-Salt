@@ -6,10 +6,8 @@
 // locked control and the crown's tips. Each file imports this, so AdminInvitations takes only these
 // rules, not the whole list's stylesheet.
 
-// Approve's unverified-address warning, a step more room than a notice's zero margin. Compounded
-// with `.notice`, whose primitive is `body .notice` in the app (a lone class loses there; the
-// workshop's frame scope hides that). Not nested under `.user-list`, as a modal need not render
-// inside it.
+// Approve's unverified-address warning, a step more room than a notice's zero margin. Compounded with `.notice`,
+// whose primitive is `body .notice` in the app. Not nested under `.user-list`, as a modal need not render inside it.
 .notice.user-list__warning {
   margin-block: space(5);
 }
@@ -27,10 +25,8 @@
   @include tip-anchor;
 }
 
-// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
-// InfoTip's, placed by `useTip` above the mark or button, no wider than
-// `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`,
-// the marks' and logos' centred tip, which takes no pointer: these stay open while hovered.
+// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, placed by `useTip`. Not
+// `.user-list__tip`, which takes no pointer; these stay open while hovered.
 .user-list__control-tip {
   @include tip-above($tip-layer);
 

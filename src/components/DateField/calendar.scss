@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The calendar a day field and a day-range field open: a card with a hairline edge, round day
-// marks, and a range drawn as a band between its two ends. A popover sits in the top layer, placed
-// from its field, so no scrolling body clips it; a browser with no popover leaves it in flow beneath
-// the field (claude-docs/components/date-field.md, "Styling").
+// The calendar a day field and a day-range field open, in the top layer so no scrolling body clips it; a browser
+// with no popover leaves it in flow beneath the field (claude-docs/components/date-field.md, "Styling").
 
 .calendar-panel {
   margin-block-start: space(2);

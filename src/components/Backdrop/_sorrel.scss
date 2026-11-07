@@ -32,10 +32,8 @@
   background-size: 100% 100%;
   background-repeat: no-repeat;
 
-  // Inside the shell or the public frame the sorrel starts below its bars rather than behind them:
-  // the bar (its hairline is inside its height), and where a
-  // context row follows, its height (a control with the lead's air above and below) and its own 1px
-  // hairline. Pages without the shell keep the window's top.
+  // Inside the shell or the public frame the sorrel starts below its bars (and the context row, where one follows)
+  // rather than behind them. Pages without the shell keep the window's top.
   body:has(.app-shell, .public-frame) & {
     top: #{$shell-bar-height};
   }

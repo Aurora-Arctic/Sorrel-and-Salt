@@ -58,10 +58,8 @@ $theme-toggle-icon-arc: 130deg;
   }
 }
 
-// The root layout is session-free, so it cannot know a page has the shell around it and
-// always mounts the corner. The shell has its own disc in the bar, so this hides the corner
-// on any page that holds the shell or the public frame. Written here, with the toggle,
-// rather than in the shell.
+// The root layout is session-free and always mounts the corner, so this hides it on any page that holds the shell or
+// the public frame, which have their own disc in the bar.
 body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
@@ -135,10 +133,8 @@ $theme-toggle-facet: 1.1875rem;
   @include theme-transition(transform);
   transform: rotate(0deg);
 
-  // Raw palette, not the runtime tokens: the knotwork is not themed, so only the
-  // rotate swaps the facets. The 5% box difference balances their visual weight;
-  // a box rather than `scale()` because --out / --pre-enter overwrite `transform`.
-  // claude-docs/components/theme-toggle.md, "Icons".
+  // Raw palette, not the runtime tokens: the knotwork is not themed. A box rather than `scale()` because --out /
+  // --pre-enter overwrite `transform` (claude-docs/components/theme-toggle.md, "Icons").
   &--dark {
     fill: $soot;
     inset: -6% auto auto 6%;
@@ -164,10 +160,8 @@ $theme-toggle-facet: 1.1875rem;
   }
 }
 
-// Settles the visible resting state at first paint, so a light visitor never
-// sees the sun swing in. Included under both light tiers, mirroring globals.scss
-// selector for selector, because the attribute alone covers only a stored
-// choice, not a light system preference.
+// Settles the visible resting state at first paint, so a light visitor never sees the sun swing in. Included under
+// both light tiers, mirroring globals.scss, since the attribute alone covers only a stored choice.
 @mixin theme-toggle-light-facets {
   .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
     transform: rotate(0deg);

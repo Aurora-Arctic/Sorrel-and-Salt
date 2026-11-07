@@ -68,10 +68,8 @@
   min-inline-size: 0;
 }
 
-// Every space in the thread column is one of its own rules, summed to a target, so no default adds to it:
-// facts to the Thread heading is the column gap (4); the Thread heading to the first entry is the
-// section's gap (2); the last entry to the reply's rule is the section's zero bottom margin plus the
-// column gap (4). The global `section` margin and the list's default margin are zeroed, not offset.
+// Every space in the thread column is one of its own rules, summed to a target, so no default adds to it. The global
+// `section` margin and the list's default margin are zeroed, not offset.
 .support-detail__main {
   gap: space(4);
 

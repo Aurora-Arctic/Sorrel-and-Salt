@@ -5,12 +5,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The spell card's hover: parchment smouldering from the bottom-right, one layer (`.spell-card__face`) torn by one SVG filter; layers stack by markup order, no z-index
-// Nothing transforms the card or an ancestor, which would contain the category chips' `position: fixed` tips
-// (claude-docs/components/spell-card.md, "How the burn is built").
-//
-// Baseline: CSS `filter: url()` on an HTML element, `drop-shadow()` and SVG filters are
-// Widely Available. Where the filter does not apply, the burn front is a smooth curve.
+// The spell card's hover: parchment smouldering from the bottom-right, one layer torn by one SVG filter; layers
+// stack by markup order, no z-index, and nothing transforms the card or an ancestor, which would contain the chips'
+// `position: fixed` tips (claude-docs/components/spell-card.md, "The burn filter"). Where `filter: url()` does not apply, the burn front is a smooth curve.
 
 // The burn's colours and lengths are tokens (`$burn-*` in _variables.scss), forwarded so
 // SpellPreview reads the same ones through this partial; `$candle` and `$ember` name its two colours.
@@ -129,10 +126,8 @@ $ember: $burn-ember;
 
 // The resting state: everything hidden, and set to shrink back when it is left.
 @mixin smoulder-base {
-  // The glow on the table: anchored at the corner, behind the face (first in the markup,
-  // so the face, and a later neighbour's face, paints over it). It grows with the
-  // hole at the same pace and runs `$burn-glow-lead` past the ember front, strongest just behind
-  // the front, fading back towards the corner, which burnt out first.
+  // The glow on the table: anchored at the corner behind the face (first in the markup, so faces paint over it), it
+  // grows with the hole and runs `$burn-glow-lead` past the ember front.
   .spell-card__glow {
     position: absolute;
     inset: auto (-$burn-glow-overhang) (-$burn-glow-drop) auto;

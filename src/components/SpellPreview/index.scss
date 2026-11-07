@@ -4,10 +4,8 @@
 @use 'sass:list';
 @use '../SpellCard/smoulder' as card;
 
-// The pane covers the window: the native dialog's top layer, sized to the viewport rather than a box
-// in the middle.
-// The pane's edge space, narrower on a phone, and its foot space: 2.5rem at every width, which no
-// `space()` step equals.
+// The pane covers the window: the native dialog's top layer, sized to the viewport. Its edge space is narrower on a
+// phone; the foot space is 2.5rem at every width, which no `space()` step equals.
 $preview-edge: space(5);
 $preview-edge-phone: space(4);
 $preview-foot: 2.5rem;
@@ -103,11 +101,9 @@ $preview-foot: 2.5rem;
   }
 }
 
-// The background: the page smouldering from its bottom-right corner as a spell card does under the
-// pointer, a hearth glow under the burn, and embers rising from the glow and from the charred edge
-// (claude-docs/components/spell-preview.md, "The background"). The burn is the card's, layer for
-// layer, from its smoulder partial; the ember rim and glow breathe by `opacity` here rather than
-// the card's `box-shadow` and `filter` frames, which repaint every frame on a phone kept awake.
+// The background: the page smouldering from its bottom-right corner as a spell card does, a hearth glow and rising
+// embers (claude-docs/components/spell-preview.md, "The background"). The ember rim and glow breathe by `opacity`,
+// since the card's `box-shadow` and `filter` frames repaint every frame on a phone kept awake.
 
 $preview-ember-opacity: 0.4;
 // The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
@@ -454,10 +450,8 @@ $preview-hearth-duration: 11s;
   animation: spell-preview-embers $preview-embers-duration ease-in-out card.$burn-duration infinite;
 }
 
-// An ember: an irregular fragment placed and timed by the custom properties `embers.ts` sets. The
-// body is the cooled fragment; `::before` is its heat, fading over the rise.
-// The path runs `linear`: an easing applies between each pair of keyframes, so `ease-in` would
-// bring the ember to a stop at every stop on its path and set it off again, as if it had caught.
+// An ember: placed and timed by the custom properties `embers.ts` sets. The path runs `linear`: an easing applies
+// between each pair of keyframes, so `ease-in` would stop the ember at every stop on its path.
 .spell-preview__ember {
   position: absolute;
   inset: auto auto -2% var(--x);
@@ -521,10 +515,8 @@ $preview-hearth-duration: 11s;
   }
 }
 
-// The content is one centred column, laid out as the printed page is (_recipe-columns.scss): the
-// title and lead across the top, then Ingredients in a narrow column beside the steps. Its width is
-// the printed sheet's (`$recipe-sheet-width`), so on a wide window its lines break where the paper's
-// do; under the tablet width the pane stacks, Ingredients above the steps.
+// The content is one centred column, laid out as the printed page is (_recipe-columns.scss), at the printed sheet's
+// width (`$recipe-sheet-width`); under the tablet width the pane stacks.
 .spell-preview__content {
   @include recipe-columns('.spell-preview__title');
 
