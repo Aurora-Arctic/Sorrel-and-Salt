@@ -141,6 +141,7 @@ const PICKED_CATEGORIES = 'categoryIds';
 
 const PICKED_FORM = 'formId';
 
+/** The row a variant keeps, whose repeat is refused as its form's. */
 const KEPT_ROW = 'id';
 
 const PICKED_SUBSTITUTE_FORM = 'substituteVariantId';
@@ -189,6 +190,8 @@ const substituteInputs = (rows: SubstituteListEntry[]) =>
       : { name: value },
   );
 
+/** Each row by its source's id and locator, and each compendium attribute only once one
+ * is chosen: a coven's form chooses none. */
 const referenceInputs = (rows: ReferenceListEntry[]) =>
   rows.map(({ link, locator, nameBasis, supports }) => ({
     referenceId: link.id,
@@ -274,8 +277,10 @@ const formNamed = (link: SubstituteLink, id: string | undefined): string | undef
 export const YOUR_INGREDIENTS = 'Your Ingredients';
 export const COMPENDIUM_HEADING = 'Compendium';
 
+/** The picker's own cupboard group lists first and stays first, whatever a form ranks. */
 const groupOf = ({ heading }: ListOption): number => (heading === YOUR_INGREDIENTS ? 0 : 1);
 
+/** A variant's substitute suggestions, ranked for `form`; every row is kept. */
 export function rankForForm(
   options: readonly ListOption[],
   form: string,
@@ -332,6 +337,8 @@ export function formRows(
 
 type IssuePath = readonly (string | number)[];
 
+/** The field an issue's path names, or undefined for a path naming none the form has,
+ * whose message belongs above the fields. */
 export function fieldNameOf(
   path: IssuePath,
   values: IngredientFormValues,
@@ -340,6 +347,7 @@ export function fieldNameOf(
   if (field !== 'variants')
     return placeIn(path, values, LIST_FIELDS) as FieldPath<IngredientFormValues>;
   if (typeof index !== 'number' || index >= values.variants.length) return undefined;
+  // An issue on a form as a whole is its Form box's: the form is what names it.
   const name = rest.length === 0 ? 'form' : placeIn(rest, values.variants[index], VARIANT_LISTS);
   return name === undefined
     ? undefined
@@ -353,6 +361,7 @@ function placeIn(
 ): string | undefined {
   const [field, index, ...rest] = path;
   const fields = holder as unknown as Record<string, unknown>;
+  // A variant's pick, and the row it keeps, are its Form field's: its box is what made them.
   if ((field === PICKED_FORM || field === KEPT_ROW) && 'formLink' in holder) {
     return index === undefined ? 'form' : undefined;
   }
@@ -645,6 +654,7 @@ function resolverFor(
     } else if (drafts) {
       errors.drafts = drafts;
     }
+    // `toInput` lists the forms always, which the schema's input type leaves optional.
     if (Object.keys(errors).length === 0)
       return result as ResolverResult<IngredientFormValues, IngredientFormInput>;
     return { values: {}, errors: errors as FieldErrors<IngredientFormValues> };
@@ -760,6 +770,7 @@ export function variantsWithErrors(
   shown: ErrorShown,
 ): Map<number, Set<VariantSectionKey>> {
   const found = new Map<number, Set<VariantSectionKey>>();
+  // An array's own error sits on it as `root`, beside the variants' places.
   for (const [key, error] of Object.entries(errors.variants ?? {})) {
     const index = Number(key);
     const sections = variantSectionsWithErrors(error, shown, `variants.${key}.`);

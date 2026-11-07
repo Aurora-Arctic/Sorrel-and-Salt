@@ -1,6 +1,8 @@
 import { BINOMIAL_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
 import type { ModalHeading } from '../Modal/types';
 
+// A plain function with no server-only import, so client code that opens the dialog first can
+// call it.
 export function editHeading(
   {
     name,

@@ -2,6 +2,8 @@ import type { ReactElement } from 'react';
 
 const BRAND = 'Sorrel & Salt';
 
+// `block` is the frame's class, which the stylesheet's `__brand-full` and `__brand-short` hang
+// from.
 export default function BrandName({
   block,
 }: {

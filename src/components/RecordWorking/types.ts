@@ -8,6 +8,9 @@ export interface WorkingStep {
   seed?: string;
   /** A step that names its ingredient by typing it, so no jar is kept for it. */
   oneOff?: boolean;
+  /**
+   * Present only for a role that may edit stock and an ingredient not deleted: the jar opens it.
+   */
   stock?: StockDialogProps | null;
 }
 
@@ -42,9 +45,11 @@ export interface WorkingParticipantValue {
 /** A working the dialog edits instead of recording: what it holds now. */
 export interface EditableWorking {
   id: string;
+  /** `YYYY-MM-DD`. */
   workedOn: string;
   note: string | null;
   visibility: 'private' | 'workspace';
+  /** A complete working's visibility only widens. */
   status: 'draft' | 'complete';
   participants: readonly WorkingParticipantValue[];
 }
@@ -58,6 +63,10 @@ export interface RecordWorkingDialogProps {
   steps: readonly WorkingStep[];
   /** Present: the dialog changes this working (`updateWorking`) rather than recording a new one. Only its recorder may. */
   working?: EditableWorking;
+  /**
+   * Draws Delete Working on an edit; `remove` runs the write and rejects with the server's
+   * refusal.
+   */
   deleteWorking?: { name: string; remove: () => Promise<unknown> };
   onClose: () => void;
   /** Where the focus goes when it closes and the opener is gone. */

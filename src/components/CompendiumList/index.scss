@@ -53,6 +53,7 @@
 
   .shown-switch {
     margin-inline-start: space(2);
+    // An offset, not a flow position: the inline boxes' middles differ by a pixel.
     position: relative;
     inset-block-start: 2px;
   }

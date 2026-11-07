@@ -6,6 +6,10 @@ export type MenuButtonItem = {
   label: string;
   /** Drawn in the destructive colour, as a `.btn--destructive` would be. */
   destructive?: boolean;
+  /**
+   * The menu's one primary action (the green highlight); the menu draws it first wherever it is
+   * given.
+   */
   primary?: boolean;
 } & (
   | {

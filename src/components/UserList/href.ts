@@ -3,6 +3,8 @@ import { listHref } from '../../lib/list-href';
 import type { PagerCursor } from '../../lib/types';
 import type { UserListFilterValue } from './types';
 
+// The pager and filter leave `user` out, closing the modal; `awaiting`, `timed-out`,
+// `paused` are bare flags.
 export const USERS_PATH: Route = '/keepers/users';
 
 /**

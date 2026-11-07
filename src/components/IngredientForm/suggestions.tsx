@@ -180,6 +180,7 @@ const CompendiumSubstitutesDocument = graphql(`
   }
 `);
 
+/** Rows a lookup asks for: enough to choose from, few enough to read. */
 export const SUGGESTION_ROWS = 10;
 
 function usedBy(claimants: Claimant[]): string | undefined {
@@ -193,6 +194,8 @@ function usedBy(claimants: Claimant[]): string | undefined {
 const qualified = (value: string, by: string | null | undefined): string =>
   by ? `${value} (${by})` : value;
 
+/** The rows for `text` once settled, while `active`: the last answer stays on screen while the
+ * next is fetched, and a failed lookup offers nothing. */
 export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
   document: TypedDocumentNode<TResult, TScope & LookupText>,
   scope: TScope,
@@ -223,6 +226,8 @@ const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
     icon: <FormIcon name={node.icon ?? null} />,
+    // A curated row is what a pick links; a form only in use has no row, and a pick of it is
+    // typed text.
     link: node.id
       ? {
           id: node.id,
@@ -260,6 +265,7 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
       [node.matchedName && `Also called ${node.matchedName}`, node.description]
         .filter(Boolean)
         .join(' · ') || undefined,
+    // A curated deity is what a pick links; one only in use has no row, and adds as text.
     link: node.id
       ? { id: node.id, tradition: node.tradition, description: node.description }
       : undefined,
@@ -287,8 +293,11 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
       variants: formsOf(node.variants),
     };
     return {
+      // The label is what a linked entry reads as; the link is what is saved.
       value: name,
       label: qualified(name, canonicalName),
+      // The server lists the cupboard first, then the compendium, so the headings are the two
+      // groups.
       heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
       note: tierOf(link),
       key: node.id,

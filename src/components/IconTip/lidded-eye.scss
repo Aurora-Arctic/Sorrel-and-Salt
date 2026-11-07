@@ -22,6 +22,7 @@
   }
 
   // Setting `d` from CSS is not Baseline (Safari cannot), so it sits in @supports: the lid then
+  // moves. Without it the shapes come from the markup's `d` and change at once.
   @supports (d: path('M0 0')) {
     .lidded-eye__lid,
     .lidded-eye__gap {

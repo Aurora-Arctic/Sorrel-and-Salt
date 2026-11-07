@@ -27,6 +27,7 @@ const ProviderButton = ({
   const Mark = PROVIDER_MARKS[provider.id];
 
   const press = async (): Promise<void> => {
+    // `aria-disabled` lets a press through, unavailable or busy: refused here.
     if (!available || signingIn) return;
     report(undefined);
     report(await onSignIn(provider.id));

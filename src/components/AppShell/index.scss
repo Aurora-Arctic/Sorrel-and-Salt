@@ -110,6 +110,7 @@
   display: inline-flex;
   flex: none;
   align-items: stretch;
+  // One shadow for the pair, cast by the group: each half's own .btn shadow showed on the other.
   border-radius: radius('control');
   box-shadow: $shadow-floating;
 }
@@ -151,6 +152,7 @@
   }
 }
 
+// Where :has() is missing the notice keeps the wide column.
 .app-shell__main:has(.page-with-nav) .app-shell__pause {
   column-gap: space(6);
   @include page-with-nav-grid;

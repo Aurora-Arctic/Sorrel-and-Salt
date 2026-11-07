@@ -43,8 +43,11 @@ export const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 export const BANDS_FULL = 8;
 
+/** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
 const HALF = 6;
 
+/** The most a wave rises above its boundary, in drawing units, plus the 0.6 the top
+ * band's level line sits above its fill. */
 const MAX_RISE = 2.2;
 
 /** The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of that to lie wholly above the fill. */
@@ -96,6 +99,8 @@ function bandPath(height: number, index: number): string {
   return waveForward(top, 0) + closing;
 }
 
+/** A group's colours on a band, for the stylesheet to pick from by theme; React types no
+ * custom property. */
 const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
   ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
 

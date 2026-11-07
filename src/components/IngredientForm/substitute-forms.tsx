@@ -21,6 +21,8 @@ export function SubstituteForms({ name }: SubstituteFormsProps): ReactElement | 
   return (
     <div className="ingredient-form__substitute-forms">
       {choosing.map(({ entry, link, index }) => (
+        // Keyed by the ingredient, which a list holds once: its place moves as entries before it
+        // are taken out.
         <SelectField<IngredientFormValues>
           key={link.id}
           name={`${name}.${index}.variantId`}

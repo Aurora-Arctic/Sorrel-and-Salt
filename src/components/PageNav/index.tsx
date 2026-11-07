@@ -118,6 +118,7 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
     </li>
   );
 
+  // The entries stay one flat list for the observer above; only the drawing nests a group.
   const list = (
     <ul>
       {itemsOf(entries).map((item, at) =>

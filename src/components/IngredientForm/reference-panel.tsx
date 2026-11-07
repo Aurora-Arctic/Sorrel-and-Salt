@@ -134,6 +134,9 @@ const KIND_LABELS: Record<ReferenceKind, string> = {
 
 const KIND_OPTIONS = REFERENCE_KINDS.map((kind) => ({ value: kind, label: KIND_LABELS[kind] }));
 
+// No field carries a hint: how to cite is one How to Cite tip at the panel's head, and a
+// field whose format matters shows an example as its placeholder
+// (claude-docs/components/info-tip.md).
 const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,

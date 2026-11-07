@@ -32,6 +32,8 @@ import {
   RedoIcon,
   UndoIcon,
 } from '.';
+// From its own file, not the index: the design sync's library carries StockBadge's StockIcon
+// under this name.
 import { StockIcon } from './icons';
 
 const meta = {

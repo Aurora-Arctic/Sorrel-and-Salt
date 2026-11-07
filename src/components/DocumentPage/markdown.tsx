@@ -11,6 +11,8 @@ import { slugify } from '../../lib/slugify';
 import type { PageNavEntry } from '../PageNav/types';
 import type { DocumentPlaceholders } from './types';
 
+// Raw HTML in a body becomes text, never an element (there is no rehype-raw); a link is kept
+// only for an address the site opens.
 const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
 
 /**

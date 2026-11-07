@@ -13,6 +13,7 @@ export interface WorkingView {
   id: string;
   status: SpellStatus;
   visibility: SpellVisibility;
+  /** The day it was worked, `YYYY-MM-DD`. */
   workedOn: string;
   note: string | null;
   recordedBy: string | null;

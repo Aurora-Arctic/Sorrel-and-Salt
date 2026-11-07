@@ -41,6 +41,7 @@ export const MINT_TITLE = 'Mint Cards';
 /** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
+/** The day after today in UTC: the service refuses an expiry at or before now. */
 const earliestDay = (): string =>
   new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 

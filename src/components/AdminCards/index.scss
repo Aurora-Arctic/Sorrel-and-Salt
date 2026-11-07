@@ -163,6 +163,6 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 2;
 }

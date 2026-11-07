@@ -4,6 +4,7 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type BatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
 
+/** One batch as the page lists it; no token or hash is in it. */
 export interface BatchEntry {
   batchId: string;
   mintedAt: Date;
@@ -24,6 +25,7 @@ export interface CardAttemptEntry {
   attempts: number;
   firstAttemptedAt: Date;
   lastAttemptedAt: Date;
+  /** From 1; null for an older card. */
   cardPosition: number | null;
   accountId: string | null;
   accountName: string | null;
@@ -73,6 +75,7 @@ export interface AdminArrivalsProps extends Partial<PagerHrefs<Route>> {
   filter?: ArrivalsFilter;
 }
 
+/** Every part text, blank for none: a day is YYYY-MM-DD, a status one of BatchStatus. */
 export interface CardsFilter {
   batch: string;
   status: BatchStatus | '';

@@ -30,6 +30,10 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
+/**
+ * How soon after one modal goes, open and not faded out, another that opens takes its place:
+ * a link in the first one's foot unmounts one and mounts the other in one commit.
+ */
 const HANDOVER_MS = 100;
 
 let handedAt = Number.NEGATIVE_INFINITY;
@@ -39,6 +43,7 @@ const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** By point, not target: a click on the backdrop reports the dialog itself as its target. */
 function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent): boolean {
   const box = dialog.getBoundingClientRect();
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
@@ -106,12 +111,14 @@ const Modal = ({
     if (!dialog) return;
     let cancelled = false;
     let release: (() => void) | undefined;
+    // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     if (!dialog.open) {
       if (!taken.current) {
         taken.current = true;
         const active = document.activeElement;
         opener.current = active === document.body ? null : active;
       }
+      // Measured before showModal(), while the scrollbar it is to replace is still there.
       release = holdPage();
       if (performance.now() - handedAt < HANDOVER_MS) dialog.dataset.handover = '';
       dialog.showModal();
@@ -149,6 +156,7 @@ const Modal = ({
     }
     wasLoading.current = loading;
   }, [loading, focusTitle]);
+  // open, fading, then closed; closed asks the owner once, in an effect, so no render reads a ref.
 
   const [phase, setPhase] = useState<ModalPhase>('open');
   // With no fade to wait on the owner is asked at once, in the event, as it
@@ -254,6 +262,7 @@ const Modal = ({
     </button>
   );
 
+  // The backdrop's click is the pointer's alone; Escape is its keyboard equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
   return (
     <dialog
@@ -272,6 +281,7 @@ const Modal = ({
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
+      // The dialog's own fade, or its backdrop's, which reports here too.
       onTransitionEnd={(event) => {
         if (event.target === event.currentTarget) finish();
       }}

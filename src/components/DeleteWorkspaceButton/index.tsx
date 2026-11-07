@@ -42,6 +42,7 @@ const DeleteWorkspaceButton = ({
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
       // The coven is gone for this user too, so replace the page with the landing and
       // refresh so the shell's switcher stops listing it (a client-side replace does
+      // not re-run the layout).
       onSent={() => {
         navigate(COVEN_LANDING_PATH, { replace: true });
         refresh();

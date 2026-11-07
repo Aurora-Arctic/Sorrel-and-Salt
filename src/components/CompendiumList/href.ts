@@ -19,6 +19,7 @@ export function compendiumHref(
   return COMPENDIUM_PARAMS.href(path, place, {
     after: place.after,
     before: place.before,
+    // The details modal stays under any edit modal, so closing the edit goes back to it.
     entry: place.entry,
     ...dialogParams(dialog),
     // New Entry names itself, so the shell's Add Ingredient can tell `?new` apart.

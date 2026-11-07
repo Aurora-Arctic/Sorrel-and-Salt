@@ -111,6 +111,8 @@ const FilterForm = ({
     };
   }, [pending]);
 
+  // Always offered: the same text again reads the list again, harmless, where a disabled submit
+  // read as dead.
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;

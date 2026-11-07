@@ -51,6 +51,8 @@ export default function RouteModal({
   const heading = content?.heading ?? pressed;
   if (!heading) return null;
   const close = () => {
+    // A close while it loads forgets the press; the navigation back supersedes the one on its way,
+    // which Next then discards.
     opener?.cancel();
     navigate(closeHref, { replace: true, scroll: false });
     refresh();

@@ -22,6 +22,7 @@ const SignOutButton = (): ReactElement => {
     if (pending) return;
     setPending(true);
     report(undefined);
+    // A refusal answers error; a dropped connection throws. Either says so.
     const { error } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
     if (error) {
       setPending(false);

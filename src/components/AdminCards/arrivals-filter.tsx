@@ -6,6 +6,7 @@ import FilterForm from '../FilterForm';
 import { ARRIVALS_PATH, arrivalsHref } from './href';
 import type { ArrivalsFilterProps } from './types';
 
+// Before hydration the form submits natively (query=).
 const ArrivalsFilterForm = ({ filter }: ArrivalsFilterProps): ReactElement => {
   const [query, setQuery] = useState(filter.query);
 

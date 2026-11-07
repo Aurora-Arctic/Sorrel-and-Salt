@@ -127,6 +127,7 @@ const AddIngredientButton = ({
   // Set by a save that opens the new entry's page: the dialog then closes on
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
+  // Set once an autosave creates the ingredient: the dialog stays open as ?new becomes ?edit=.
   const [created, setCreated] = useState<ShellWorkspace | null>(null);
 
   const { all, compendium, covens, defaultCoven, initial } = destinationsOf(
@@ -200,10 +201,13 @@ const AddIngredientButton = ({
       </span>
       {adding && (
         <Modal
+          // Another coven's address is another form.
           key={adding.id}
           destination={adding.name}
           title={LABEL}
           onClose={close}
+          // Focus returns to the bar's main part: the menu item that opened this goes with the
+          // menu.
           returnTo={() => main.current}
         >
           {(done) => (
@@ -211,6 +215,7 @@ const AddIngredientButton = ({
               workspace={adding}
               close={done}
               onCreated={(ingredient) => {
+                // Reloading reopens the ingredient in its own dialog on the coven's list.
                 window.history.replaceState(
                   null,
                   '',
@@ -234,6 +239,7 @@ const AddIngredientButton = ({
   );
 };
 
+/** In a Suspense boundary, as reading the address asks for. */
 const AddIngredientButtonAtAddress = (props: AddIngredientButtonProps): ReactElement => (
   <Suspense fallback={null}>
     <AddIngredientButton {...props} />

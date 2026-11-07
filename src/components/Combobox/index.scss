@@ -699,6 +699,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   height: $glyph-size;
   color: $text-muted;
 
+  // `:where` keeps the held chip's ink, on the accent's wash, above this inverted ink.
   :where(.is-coloured) & {
     color: inherit;
   }
@@ -803,6 +804,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: inherit;
   }
 
+  // The label is a flex row, which drops the space between text and count.
   margin-inline-start: space(1);
   white-space: nowrap;
 

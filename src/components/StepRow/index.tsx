@@ -37,6 +37,8 @@ export const amountOf = (quantity?: string | null, unit?: string | null): ReactN
  */
 function toggleFromFace(event: MouseEvent<HTMLLIElement>, open: boolean, toggle: () => void): void {
   const target = event.target as Element;
+  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not
+  // the face.
   if (!event.currentTarget.contains(target)) return;
   // A target a click just removed (a picked list row) is no longer anywhere in the card.
   if (!target.isConnected) return;

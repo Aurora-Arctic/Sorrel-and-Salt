@@ -10,6 +10,8 @@ export interface SupportPerson {
   name: string;
 }
 
+/** The account that sent a request: named, with the address a keeper replies to; a curator
+ * is given none. */
 export interface SupportSender extends SupportPerson {
   email: string | null;
 }
@@ -20,6 +22,8 @@ export interface SupportRequestEntry {
   subject: string;
   status: SupportStatus;
   sender: SupportSender | null;
+  /** Sent by a signed-out visitor: the sender is a shared stand-in account and `sender.email`
+   * is the visitor's own address. */
   signedOut: boolean;
   anonymised: boolean;
   assignee: SupportPerson | null;
@@ -27,6 +31,8 @@ export interface SupportRequestEntry {
   errorCode: number | null;
   errorReference: string | null;
   createdAt: Date;
+  /** When the sender last wrote on it: their newest message, or the request itself when it
+   * has no follow-up. */
   lastFromSenderAt: Date;
   senderReplied: boolean;
   betaTester: boolean;
@@ -46,11 +52,14 @@ export interface SupportReplyEntry {
 
 export interface SupportTimeoutEntry {
   id: string;
+  /** When the time-out ends by itself; null for one with no end date. */
   until: Date | null;
   note: string;
   liftedAt: Date | null;
   createdAt: Date;
+  /** The keeper who set it; null if no live account holds the id. */
   setBy: SupportPerson | null;
+  /** The keeper who lifted it; null while it stands, or if no live account holds the id. */
   liftedBy: SupportPerson | null;
 }
 
@@ -61,6 +70,7 @@ export interface SupportRequestDetailEntry extends SupportRequestEntry {
   resolvedBy: SupportPerson | null;
   resolvedAt: Date | null;
   replies: SupportReplyEntry[];
+  /** Past and active, newest first; empty for a curator, who is not shown them. */
   timeouts: SupportTimeoutEntry[];
 }
 

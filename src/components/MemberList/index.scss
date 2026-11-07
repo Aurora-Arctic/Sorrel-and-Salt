@@ -42,6 +42,8 @@
   }
 }
 
+// Lives here, not in Modal's sheet: the page builds this heading and shows it at once on a press,
+// before the body's stylesheet loads.
 .member-list__modal-email {
   display: block;
 }

@@ -55,6 +55,8 @@ const AccessPausePanel = ({
   name: string;
   pauses: AccessPauseEntry[];
 }): ReactElement => {
+  // Read once when the panel mounts: a pause that runs out while it is open shows as past on
+  // its next mount.
   const [now] = useState(() => Date.now());
   const standing = pauses.find((pause) => stands(pause, now));
   return (

@@ -9,6 +9,7 @@ import './index.scss';
 // (claude-docs/components/skeleton.md).
 // (claude-docs/components/skeleton.md, "Skeleton fade").
 
+/** Pass null when no wait is on; a new wait mid-fade takes the kept skeleton back at once. */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
   const [kept, setKept] = useState<ReactElement | null>(null);
   const [wasShown, setWasShown] = useState(false);
@@ -68,6 +69,7 @@ export const SkeletonCover = ({
   </div>
 );
 
+/** Out of layout and the accessibility tree: the page carries the heading and landmark now. */
 export const SkeletonOverlay = ({ children }: { children: ReactNode }): ReactElement => (
   <div className="skeleton-fade" aria-hidden="true">
     {children}

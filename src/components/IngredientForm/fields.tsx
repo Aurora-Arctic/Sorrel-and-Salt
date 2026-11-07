@@ -287,6 +287,8 @@ export function ListField({
     revalidate();
   };
 
+  // Text and detail are read from the watched values: the field array's rows are a snapshot
+  // that an entry's own field (a substitute's form, picked beside the list) does not refresh.
   const substitutes = holdsSubstitutes(name);
   const chips = fields.map((row, index) => {
     const entry = listed[index] ?? row;

@@ -41,6 +41,7 @@ const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): 
   );
 };
 
+// The account page is aimed at the shell's body, not this one: see Main Body.
 const STATES: Record<string, ReactNode> = {
   Resting,
   'Loading List': (

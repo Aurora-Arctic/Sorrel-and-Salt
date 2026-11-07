@@ -7,6 +7,7 @@ export interface FacetComboboxProps {
   choices: readonly ComboboxChoice[];
   values: readonly string[];
   onChange: (values: string[]) => void;
+  // A `group` on any choice forces the typing form, the only one that draws group headings.
   typeahead?: boolean;
   placeholder?: string;
   emptyPlaceholder?: string;

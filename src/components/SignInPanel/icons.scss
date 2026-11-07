@@ -4,6 +4,8 @@
 // shown anywhere, the admin user list say, brings its backing with it. The colour is
 // Facebook's, from `$brand-palettes` (_variables.scss).
 
+// Filled white, so the "f", a hole in Facebook's path, shows only where this chip's blue shows
+// through. 1.5rem is the `.provider-mark` circle's size.
 .sign-in-panel__icon-chip {
   display: inline-flex;
   align-items: center;

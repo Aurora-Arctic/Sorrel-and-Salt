@@ -93,6 +93,9 @@ const DocumentEditor = ({
   const [published, setPublished] = useState<number>();
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
+  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from
+  // the editor, not `body`, as the editor writes markdown a little differently from how it was
+  // read.
   const savedRef = useRef<string | null>(null);
   savedRef.current ??= editorValueToMarkdown(editor.children as never);
   // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it

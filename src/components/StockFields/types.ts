@@ -19,6 +19,7 @@ export interface StockOfJar {
 }
 
 export interface StockFieldsProps {
+  /** Where the three sit in the form's values, such as `jars.0`; left out, the top level. */
   prefix?: string;
   form?: string;
   disabled?: boolean;

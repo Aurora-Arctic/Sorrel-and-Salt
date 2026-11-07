@@ -331,6 +331,7 @@ const CATS_CLAW: PossibleDuplicatesQuery['possibleDuplicates']['edges'][number][
 
 const SAVE_DELAY_MS = 2000;
 
+/** Copied from src/db/seed/category-groups.ts, which a component may not import. */
 const CATEGORY_GROUPS = [
   ['Protection & Defense', '#5d8ab1', '#286ba6', ['Testward', 'Fixture Shield']],
   ['Cleansing & Release', '#50a58e', '#1d755d', ['Rinse Trial', 'Mock Release']],
@@ -757,6 +758,7 @@ const CovenView = () => {
         onSaved={onSaved}
       />
       {opens !== null && (
+        // `output` carries the status role itself, so no `role` attribute.
         <output className="story-note">
           Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
         </output>

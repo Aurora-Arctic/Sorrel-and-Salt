@@ -76,6 +76,10 @@
     margin-block-start: space(1);
   }
 
+  // A top-level entry beside a group reads a step above body copy: a size the scale has no step
+  // for.
+  // Entries are not stepped in from the label: an indent read as too much room on a phone and
+  // pushed right-aligned text off the column's edge on a wide screen.
   &--grouped > ul > li > a {
     font-size: $nav-link-size;
   }

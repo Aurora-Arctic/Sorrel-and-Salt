@@ -150,6 +150,8 @@ export const jarsOf = (looked: Looked): SummaryJar[] =>
     threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
   }));
 
+/** The names a Quick Look's head shows before the entry arrives; the formal name's two
+ * fields come together or not at all. */
 type QuickLookNames = Pick<Duplicate, 'name'> &
   (
     | Pick<Duplicate, 'canonicalName' | 'nomenclature'>
@@ -181,6 +183,8 @@ export function DuplicateQuickLook({
   returnTo,
 }: {
   id: string;
+  /** The row's names for the head while the read is out. Without `canonicalName` and
+   * `nomenclature` the head draws a skeleton line. */
   entry: QuickLookNames;
   workspaceId: string;
   /** The entry's page, opened in a new tab so the form stays as it is. */

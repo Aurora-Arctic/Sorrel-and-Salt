@@ -143,6 +143,7 @@ export interface ConfirmQuestionProps {
   /** The safe answer, which the focus lands on: "Cancel" by default, "Back" for a step back. */
   keepLabel?: string;
   busy: boolean;
+  /** The action. A rejection is a refusal, handed to `onRefused` where given. */
   onConfirm: () => Promise<void>;
   also?: {
     label: string;

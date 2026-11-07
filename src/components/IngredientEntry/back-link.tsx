@@ -41,6 +41,7 @@ function previousListHref(listPaths: readonly string[]): string | undefined {
   return listReturnHref(previous?.url, window.location.origin, listPaths);
 }
 
+/** Re-reads history when the entry changes: Next pushes its address only after drawing it. */
 function subscribe(onChange: () => void): () => void {
   // An enhancement past the floor, behind the `in` check: without it nothing changes.
   const navigation = 'navigation' in window ? window.navigation : undefined;

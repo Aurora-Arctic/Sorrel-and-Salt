@@ -97,6 +97,8 @@ const WORDING = {
 /** The dropdown's rows: the first page of the ranked search, never a second. */
 const MATCH_ROWS = 25;
 
+/** Whether `text` is long enough to search, counted in composed code points as the
+ * service counts it. */
 const searchable = (text: string): boolean =>
   Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
 
@@ -165,6 +167,8 @@ const IngredientSearchBox = ({
     throwOnError: false,
   });
   const isFetching = { compendium, cupboard, grimoire }[source.kind].isFetching;
+  // A spell's match holds its id as both `id` and `slug` (it has no slug), for the recipe page a
+  // pick opens; the coven's label stands in for an ingredient's name.
   const answer = useMemo((): { hasNextPage: boolean; rows: IngredientSearchOption[] } | null => {
     if (source.kind === 'grimoire') {
       const page = grimoire.data?.grimoire;

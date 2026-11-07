@@ -27,12 +27,17 @@ import type {
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
+// A type import of a value, which brings nothing into the bundle.
 import type { LIST_FIELDS, SECTION_KEYS, VARIANT_LISTS, VARIANT_SECTION_KEYS } from './values';
 
 interface IngredientFormCallbacks {
   onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
+  /** Called once, when an autosave has created a new ingredient. Not called by Save or Close. */
   onCreated?: (ingredient: SavedIngredient) => void;
+  /** Called when an autosave has written to an existing ingredient. Not called for the
+   * creating autosave, nor by Save or Close. */
   onAutosaved?: (ingredient: SavedIngredient) => void;
+  /** Called after another save changed the ingredient. Left out, the page reloads. */
   onReload?: () => void;
   onDeleted?: () => void;
   duplicateHref: (match: Duplicate) => string;
@@ -45,6 +50,7 @@ interface IngredientFormCallbacks {
 
 export interface ReviewOffer {
   reviewed: boolean;
+  /** When, as an ISO moment, if the page has it; an add has none. */
   reviewedAt?: string | null;
   shown?: boolean;
 }
@@ -173,6 +179,8 @@ export interface FormOption extends ComboboxOption {
   link?: FormLink;
 }
 
+/** The form's own state: every field as typed, a closed set unanswered as `''` or,
+ * holding several, as none chosen. */
 export interface IngredientFormValues {
   name: string;
   nomenclature: NomenclatureKind | '';
@@ -245,6 +253,8 @@ export interface RedirectQuestion {
   input: IngredientFormInput;
 }
 
+/** What the form sends: its values in the shape the shared schema and the mutation take,
+ * unparsed, its forms always listed, as every input type requires them. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput> & {
   variants: NonNullable<z.input<typeof LocalIngredientInput>['variants']>;
 };
@@ -450,6 +460,8 @@ export interface DuplicateWarning {
 export interface NameFieldProps {
   warning: DuplicateWarning;
   hrefOf: (match: Duplicate) => string;
+  /** Puts a compendium match in the cupboard (its +), answering whether it went in; left
+   * out where there is no cupboard (the keeper's). */
   onUse?: (match: Duplicate) => Promise<boolean>;
   workspaceName?: string;
   workspaceId?: string;
@@ -491,6 +503,9 @@ export interface VariantFolds {
   setAll: (open: boolean, count: number) => void;
   openErring: (erring: ReadonlyMap<number, ReadonlySet<VariantSectionKey>>) => void;
   reveal: (index: number, sections: ReadonlySet<VariantSectionKey>) => void;
+  /** Re-keys the folds to a restored list: a kept row keeps its folds, a returned one opens
+   * fully, a gone one is dropped. Rows match by `variantId`, else form. Returns the first
+   * returned place or -1. */
   reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => number;
 }
 

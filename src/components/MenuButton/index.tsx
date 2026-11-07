@@ -20,6 +20,7 @@ import './index.scss';
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
 // cannot clip it; a closing menu stays drawn, inert, until its fade ends.
 
+/** space(2) in pixels: the gap between button and menu. */
 const MENU_GAP_PX = 8;
 
 /** Past the fade's own length (index.scss), for a browser that never reports its end. */
@@ -179,6 +180,8 @@ export default function MenuButton({
         role="menuitem"
         tabIndex={-1}
         className={itemClass(item, chosen === item.key)}
+        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and in
+        // the roving. A press runs nothing and the menu stays open.
         aria-disabled={item.disabled || undefined}
         // The mark joins the name, since the check that draws it is a glyph and says nothing.
         aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}

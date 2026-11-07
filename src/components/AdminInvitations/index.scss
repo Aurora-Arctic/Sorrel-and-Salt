@@ -16,6 +16,7 @@
   color: $text-muted;
 }
 
+// Compounded with .notice: its rule is body .notice, which a lone class loses to.
 .notice.admin-invitations__sent {
   margin: 0;
 }

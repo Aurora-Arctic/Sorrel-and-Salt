@@ -130,6 +130,7 @@ const Options = ({
       await graphqlRequest(LeaveWorkspaceDocument, { workspaceId });
     } catch (error) {
       setSending(false);
+      // Said plainly: the first half happened and stands.
       report(
         `${successor?.name ?? 'They'} is now a steward, but you did not leave. ${readGraphqlFailure(error).alert}`,
       );

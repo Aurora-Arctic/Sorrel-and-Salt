@@ -197,6 +197,7 @@ const DeleteCompendiumIngredientDocument = graphql(`
   }
 `);
 
+// A coven's own entry is deleted from this coven alone: a spell holding it still reaches it.
 const DeleteWorkspaceIngredientDocument = graphql(`
   mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {
     deleteIngredient(id: $id, workspaceId: $workspaceId)
@@ -268,6 +269,7 @@ const IngredientForm = ({
   const { edited, clear: clearEdited } = useEditedFields(methods.subscribe);
   const shown = (path: string) => errorShown({ isSubmitted, touchedFields, edited }, path);
   const form = useRef<HTMLFormElement>(null);
+  // The ref is what a save reads as it starts; the state redraws what hangs on the id.
   const [createdId, setCreatedId] = useState<string | null>(null);
   const savedId = createdId ?? entry?.id ?? null;
   const savedIdRef = useRef<string | null>(entry?.id ?? null);
@@ -344,6 +346,8 @@ const IngredientForm = ({
   // A reference panel's own edits, which `isDirty` never sees: the promotion question counts them as
   // changes to save or discard first.
   const panels = usePanelChanges();
+  // The Reviewed switch lives beside the form's values and is saved on its own once the entry is.
+  // A flip still counts as a change: Save enables, and closing saves it.
   const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
   const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
   const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
@@ -404,6 +408,7 @@ const IngredientForm = ({
       if (list && returned !== -1) return `variants.${returned}.form`;
       if (list && (list.before as unknown[]).length !== (list.after as unknown[]).length)
         return 'drafts.variants';
+      // A list's entries are not inputs: its typing box is where its change shows.
       return listBoxOf(names[0]);
     },
   });
@@ -447,6 +452,7 @@ const IngredientForm = ({
     // The compendium resolver has refused a missing classification, so the
     // input is the compendium's, whose `nomenclature` is required.
     if (id) {
+      // The update takes the whole entry, every field present, which the form's input always is.
       const answer = await graphqlRequest(UpdateCompendiumIngredientDocument, {
         id,
         input: {
@@ -514,6 +520,8 @@ const IngredientForm = ({
   });
 
   const remove = useMutation({
+    // Each tier answers with its own field and nothing reads it: a refusal throws, success is
+    // the entry gone.
     mutationFn: async (id: string): Promise<void> => {
       if (workspaceId === null) await graphqlRequest(DeleteCompendiumIngredientDocument, { id });
       else await graphqlRequest(DeleteWorkspaceIngredientDocument, { id, workspaceId });
@@ -528,6 +536,8 @@ const IngredientForm = ({
         ...(shownField && { shown: shownNow }),
       });
       if (shownField) setShownSaved(shownNow);
+      // The review mark goes after the entry, which a new one has no id before. The entry is
+      // saved either way: a refusal here is said above the fields and leaves the switch changed.
       let reviewRefusal: string | undefined;
       if (reviewChanged) {
         try {
@@ -606,9 +616,11 @@ const IngredientForm = ({
         ingredientId: match.id,
         input,
       });
+      // No Saved notice: the page status region says the add, once (NameField).
       onSaved?.({ id: match.id, name: match.name, slug: match.slug, revision: 0 }, 'another');
       return true;
     } catch (error) {
+      // Nothing sent comes from the name now, so every issue is said at the form's head.
       placeServerIssues(error, setError, () => undefined);
       return false;
     }
@@ -685,6 +697,7 @@ const IngredientForm = ({
     }
     let row: SavedIngredient;
     try {
+      // Only Keep Mine names a revision; every other save writes against the last answer.
       row = await mutation.mutateAsync({
         input: toInput(sent.fields),
         endRedirect: false,
@@ -713,8 +726,10 @@ const IngredientForm = ({
       }
     }
     if (shownField) setShownSaved(sent.shown);
+    // The form now holds what was sent as saved; anything typed meanwhile stays a change.
     reset(sent.fields, { keepValues: true, keepErrors: true });
     methods.clearErrors('root');
+    // Read as the write ran: a flush that queued behind Save's create updates what it made.
     const creating = createdByWrite.current;
     if (creating) {
       setCreatedId(row.id);

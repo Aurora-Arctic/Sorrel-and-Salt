@@ -78,6 +78,8 @@
 .spell-recipe__aside {
   @include entry-side;
 
+  // The page's `section` rule (_layout.scss) outweighs the panels' class alone and widens this to
+  // space(4).
   > .comparison-panel,
   > .spell-inventory {
     gap: space(2);

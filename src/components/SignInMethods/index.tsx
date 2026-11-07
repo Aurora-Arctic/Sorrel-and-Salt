@@ -91,6 +91,8 @@ const SignInMethods = ({
   ): Promise<string | undefined> => {
     setAlert(undefined);
     setPending(account.id);
+    // A refusal answers `error` with a code; a dropped connection throws, and takes the generic
+    // sentence.
     const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
       error: { code: undefined },
     }));
@@ -102,6 +104,7 @@ const SignInMethods = ({
     return undefined;
   };
 
+  // Sign out, then sign in again landing back here, which makes the session fresh.
   const handleSignInAgain = async (): Promise<void> => {
     // `aria-disabled` lets a click through, so a second one is refused here.
     if (signingOut) return;

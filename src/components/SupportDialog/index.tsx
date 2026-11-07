@@ -100,6 +100,7 @@ function Dialog(): ReactElement | null {
   );
 }
 
+/** In a Suspense boundary, as reading the address asks for. */
 const SupportDialog = (): ReactElement => (
   <Suspense fallback={null}>
     <Dialog />

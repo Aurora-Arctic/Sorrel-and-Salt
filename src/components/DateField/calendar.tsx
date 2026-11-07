@@ -18,6 +18,7 @@ export function parseDay(day: string): Date | undefined {
   return date.getMonth() === Number(match[2]) - 1 ? date : undefined;
 }
 
+// The gap between the field and the calendar, and the margin the calendar keeps from the window.
 const GAP = 8;
 const MARGIN = 8;
 
@@ -85,7 +86,9 @@ export function useCalendarPopover({
     if (!open) return undefined;
     const onEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      // An open month or year list takes the key and closes alone.
       if ((event.target as HTMLElement).getAttribute?.('aria-expanded') === 'true') return;
+      // Claimed as well as stopped: a modal dialog round the field closes on any unclaimed Escape.
       event.preventDefault();
       event.stopPropagation();
       close();
@@ -111,6 +114,7 @@ export function CaptionDropdown({ options, value, onChange, 'aria-label': label 
         id={id}
         label={label ?? ''}
         value={String(value)}
+        // day-picker reads `event.target.value` and nothing else from the change.
         onChange={(next) =>
           onChange?.({ target: { value: next } } as ChangeEvent<HTMLSelectElement>)
         }

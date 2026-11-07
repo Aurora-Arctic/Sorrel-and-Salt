@@ -47,6 +47,7 @@ export interface CompendiumCardEntry {
   held?: boolean;
   heldIn?: readonly string[];
   holding?: readonly string[];
+  /** Given to a signed-in member alone. */
   places?: readonly CompendiumCardPlace[];
 }
 

@@ -101,6 +101,7 @@
   transform: translate(-50%, -50%);
 }
 
+// Lexend centres "<" on its lower-case height and has no case-sensitive form; this lifts it.
 .chip-color-field__lt {
   position: relative;
   inset-block-start: -0.09em;
@@ -136,6 +137,7 @@
   transform: translate(-50%, -50%);
 }
 
+// The hex holds its line at every width: its column is the width of "#5d8ab1" whole.
 .chip-color-field__controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto 5.75rem;
@@ -170,6 +172,7 @@
   min-inline-size: 0;
 }
 
+// Ark marks an open tooltip data-state="open" where InfoTip sets is-open; this is that state.
 .chip-color-field__tooltip-positioner {
   z-index: layer('floating');
 }

@@ -219,6 +219,7 @@ const StockDialogForm = ({
   const rows = useWatch({ control, name: 'rows' }) ?? [];
   const discard = useDiscardGuard(isDirty);
   const sent = useRef(false);
+  // Chosen by variant, not index: a row's index moves when an added row before it is removed.
   const [chosenVariant, setChosenVariant] = useState<string | null>(
     openOn ?? getValues('rows')[0]?.variantId ?? null,
   );
@@ -277,6 +278,7 @@ const StockDialogForm = ({
       }
       return;
     }
+    // Once, however the button is pressed: the dialog fades out after `close`.
     if (sent.current) return;
     sent.current = true;
     close();

@@ -195,6 +195,8 @@ const TimeoutPanel = ({
   timeouts: SupportTimeoutEntry[];
   earlierHref?: Route;
 }): ReactElement => {
+  // Read once per render of the panel: a time-out that lapses while it is open shows as past
+  // on the next.
   const [now] = useState(() => Date.now());
   const [folded, setFolded] = useState(false);
   const standing = timeouts.find((timeout) => stands(timeout, now));

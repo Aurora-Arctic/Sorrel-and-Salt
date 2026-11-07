@@ -145,6 +145,10 @@ const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
   SpellBuilderInput
 >;
 
+/**
+ * The unit rule needs the coven's jars, so it is not the schema's: a refused unit is said under
+ * `unit`.
+ */
 const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async (
   values,
   context,
@@ -209,9 +213,13 @@ const SpellBuilder = ({
   deletedHrefOf,
   copiedHrefOf,
 }: SpellBuilderProps): ReactElement => {
+  // The dialog hands over a different `spell` once the first save moves the address to it;
+  // the builder keeps what it opened with and carries the id its save returned.
   const look = covenSlug === undefined ? undefined : { workspaceId, covenSlug };
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  // True while a save the person asked for runs: the resolver then checks a blank new instruction
+  // too.
   const asked = useRef(false);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
     defaultValues: valuesOf(spell),
@@ -390,6 +398,8 @@ const SpellBuilder = ({
    * form, then sent or created. A refusal lands beside its field and is thrown for the autosave to report.
    */
   const persist = async (sent: SpellBuilderValues, context: SaveContext): Promise<SaveResult> => {
+    // The checks run on the form as it is now; the values sent are the ones the autosave handed
+    // over.
     const checked = (await trigger())
       ? SpellInput.safeParse({ ...sent, steps: sent.steps.map(stepInputOf) })
       : null;
@@ -432,6 +442,7 @@ const SpellBuilder = ({
   const [deleting, setDeleting] = useState(false);
   const spellId = createdId ?? opened?.id ?? null;
   const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
+  // `removed` holds the autosave and the save on close once the delete is sent.
   const { remove, pending: removed } = useDeleteSpell({
     workspaceId,
     spellId: spellId ?? '',
@@ -454,6 +465,7 @@ const SpellBuilder = ({
   });
   const { flush } = autosave;
 
+  /** Draws every error: a save the person asked for shows what is wrong, autosave stays quiet. */
   const markSubmitted = () =>
     handleSubmit(
       () => undefined,
@@ -476,6 +488,7 @@ const SpellBuilder = ({
     if (!jarReady) return;
     for (const resume of jarWaiters.current.splice(0)) resume();
   }, [jarReady]);
+  /** Answers whether the server has everything; a refusal keeps the dialog open. */
   const saveForClose = async (): Promise<boolean> => {
     closing.current = true;
     try {
@@ -524,12 +537,15 @@ const SpellBuilder = ({
   const stepsLanded = stepsRead === undefined;
   useEffect(() => {
     if (!stepsLanded || jarReady || !spell) return;
+    // `resetField` skips a field nothing has registered, and the jar's list registers the steps
+    // only once drawn, so what was typed meanwhile is put back after the reset.
     const typedMeanwhile = getValues();
     reset(valuesOf(spell));
     for (const name of [...FIELDS, 'visibility', 'categoryIds'] as const) {
       setValue(name, typedMeanwhile[name]);
     }
     setJarReady(true);
+    // Run when the steps land, never again for a later answer: a save rebases the form itself.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepsLanded]);
   // The failed read is said in the jar, so its shut section opens to show it.
@@ -553,6 +569,7 @@ const SpellBuilder = ({
       return;
     }
     setRecovered(entry);
+    // Only as it opens: a later key is the same spell once created.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const keepRecovered = () => {

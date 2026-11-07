@@ -14,6 +14,8 @@ export interface SentenceParts {
   clauses: ClausePart[];
 }
 
+// `buildSearchSentence` puts a comma before every clause, the search term's too; the closed line
+// has none, so the sentence is taken apart here and the commas kept for the tail only.
 export function sentenceParts(
   fragments: readonly SearchSentenceFragment[],
   query: string,

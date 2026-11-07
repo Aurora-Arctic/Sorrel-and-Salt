@@ -26,6 +26,8 @@
   @include tip-above;
 }
 
+// The ink `$last-edit-ink` holds 4.5:1 on the card and the page in both themes
+// (tests/scss/tokens.test.ts).
 .meta.last-edit {
   margin-block-start: space(5);
   text-align: start;
@@ -47,6 +49,8 @@
 .ingredient-entry__head > .last-edit,
 .modal-dialog__heading > .last-edit {
   margin-block-start: 0;
+  // The placeholder ink is 4.17:1 on the page colour; the muted ink clears 4.5 there in both
+  // themes (tests/scss/tokens.test.ts).
   color: $text-muted;
 }
 

@@ -214,6 +214,7 @@ export function useLiveFacets({
   const compendium = useQuery({
     ...graphqlQuery(
       CompendiumFacetCountsDocument,
+      // Written by the parameter table from the held filter, which the document's variables mirror.
       JSON.parse(settled) as CompendiumFacetCountsQueryVariables,
     ),
     enabled: enabled && workspaceId === undefined,

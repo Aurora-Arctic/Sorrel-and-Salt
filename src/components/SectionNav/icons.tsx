@@ -89,6 +89,7 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M9 12h6M9 15.5h6" />
     </>
   ),
+  // Three dots, each a zero-length stroke the round caps swell into a dot.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,
 };
 

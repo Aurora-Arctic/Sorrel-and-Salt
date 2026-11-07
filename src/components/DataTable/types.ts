@@ -15,6 +15,7 @@ export interface StackColumn<Row> {
 
 export type SortDirection = 'ascending' | 'descending';
 
+/** Ascending is the order a first click gives, whichever way the column reads it. */
 export interface ColumnSort {
   current?: SortDirection;
   href: Record<SortDirection, Route>;
@@ -54,6 +55,7 @@ export interface GroupChipProps {
   icon?: FormGroupIcon | null;
 }
 
+/** Both are null together where the editor's name is withheld. */
 export interface UpdatedStamp {
   updatedBy: string | null;
   updatedAt: Date | null;

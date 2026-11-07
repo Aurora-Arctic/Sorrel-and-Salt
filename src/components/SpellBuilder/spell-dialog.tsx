@@ -94,6 +94,7 @@ export default function SpellDialog({
               }
               onCreated={({ id }) => {
                 setCreated(id);
+                // Replaced, so Back goes to the grimoire and not to an empty New Spell.
                 navigate(withEdit(closeHref, id), { replace: true, scroll: false });
               }}
             />

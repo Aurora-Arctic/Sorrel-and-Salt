@@ -7,6 +7,7 @@
   gap: space(3);
 }
 
+// The QR code is always light modules on $soot, as the printed invitation card is, in either theme.
 .two-factor {
   display: flex;
   flex-direction: column;

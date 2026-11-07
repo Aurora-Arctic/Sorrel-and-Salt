@@ -27,6 +27,7 @@ export interface SpellStepValue {
   form: string | null;
   quantity: string;
   unit: string;
+  /** The unit last saved, which the unit rule leaves alone, as the service does. */
   savedUnit: string | null;
   body: string | null;
   icon: FormGroupIcon | null;

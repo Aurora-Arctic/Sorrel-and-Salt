@@ -32,6 +32,8 @@
   }
 }
 
+// Full strength pulsing to half: at a third of the link's strength the dot was too faint
+// to notice.
 @keyframes link-hint-in {
   to {
     opacity: 1;
@@ -55,6 +57,7 @@
   vertical-align: -0.125em;
   flex: none;
 
+  // Doubled class: out-ranks the `icon-link` mixin's and the entry page's own `svg` rules.
   &.link-icon-hint > svg,
   &.link-icon-hint > .spinner {
     grid-area: 1 / 1;

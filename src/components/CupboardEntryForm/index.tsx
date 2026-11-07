@@ -63,6 +63,8 @@ const AnnotateCupboardEntryDocument = graphql(`
   }
 `);
 
+// A field keeps a tip only for a rule its label does not say (claude-docs/components/info-tip.md,
+// "When a field gets a tip").
 const TEXT: Record<TextField, { label: string; hint?: string; placeholder: string }> = {
   label: {
     label: 'Label',
@@ -164,6 +166,11 @@ const CupboardEntryForm = ({
     else if (placed === 0) setAlert("That didn't work. Please try again.");
   };
 
+  /**
+   * The one save the autosave, Save and Close go through. It writes against the revision the
+   * server last answered with; only Keep My Version names another. A refusal is thrown for the
+   * autosave to report.
+   */
   const persist = async (sent: CupboardChanges, context: SaveContext): Promise<SaveResult> => {
     setAlert(undefined);
     let answer;
@@ -198,6 +205,10 @@ const CupboardEntryForm = ({
     root: form,
   });
 
+  /**
+   * Resolves only once everything typed is on the server, else throws: the pending autosave, then
+   * any text left in a list's box.
+   */
   const saveAll = async (): Promise<void> => {
     await autosave.flush();
     const held = getValues();
@@ -247,6 +258,7 @@ const CupboardEntryForm = ({
     try {
       await saveAll();
       onDone();
+      // Empty on purpose: the refusal is beside its field or in the alert, and the form stays open.
     } catch {}
   };
 

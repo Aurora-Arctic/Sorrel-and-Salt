@@ -164,11 +164,14 @@
   align-items: center;
   gap: space(3);
 
+  // Compounded with `.notice`, whose rule is `body .notice` in the app: a lone class loses to it.
   .notice.user-list__pause-state {
     margin: 0;
   }
 }
 
+// Lives here, not in Modal's sheet: the heading shows at once on a press, before the body's
+// stylesheet loads.
 .user-list__modal-email {
   display: block;
 }

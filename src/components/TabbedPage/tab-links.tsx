@@ -19,6 +19,8 @@ const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
   const { pending, target, go } = useTabSwitch();
   const track = useRef<HTMLUListElement>(null);
   const pill = useRef<HTMLLIElement>(null);
+  // The open tab is `open` when given, else the longest matching address: Drafts lies beneath
+  // Spells, so both match.
   const openHref =
     openTab ??
     tabs
@@ -51,6 +53,8 @@ const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
       }
     };
     place();
+    // Again whenever its tab or the track changes size, as a web font arriving or a phone turned
+    // on its side widens it.
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(place);
     observer.observe(row);

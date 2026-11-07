@@ -52,6 +52,10 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   placeholder?: string;
   multiline?: boolean;
   rows?: number;
+  /**
+   * The input's type for a single line; a `number` takes any decimal and is read back as the text
+   * typed.
+   */
   type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
   disabled?: boolean;
   deps?: FieldPath<V>[];

@@ -9,6 +9,7 @@ export const STORAGE_KEY = 'theme';
 
 export const applyTheme = (theme: 'light' | 'dark'): void => {
   document.documentElement.setAttribute('data-theme', theme);
+  // Storage blocked: the theme applies for this page view and does not persist.
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
   } catch {}
@@ -24,6 +25,7 @@ const resolveCurrentTheme = (): 'light' | 'dark' => {
   return window.matchMedia?.('(prefers-color-scheme: light)').matches === true ? 'light' : 'dark';
 };
 
+// Dark-by-default markup: the moon rests, the sun is parked (--pre-enter).
 const OUT_CLASS = 'theme-toggle__facet--out';
 const PRE_ENTER_CLASS = 'theme-toggle__facet--pre-enter';
 

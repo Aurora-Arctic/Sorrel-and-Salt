@@ -57,6 +57,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
     text-decoration: underline;
   }
 
+  // Line height 1, not 1.25: the name never wraps and the lead's padding sets the air.
   @include heading-face;
   font-size: heading-size(4);
   line-height: 1;

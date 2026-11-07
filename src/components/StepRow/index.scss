@@ -56,6 +56,8 @@
   min-width: 0;
 }
 
+// A step's name takes a paragraph's line height (1.65), which the first-line centring relies
+// on.
 $step-line: type-size('body') * 1.65;
 // Each icon on a step's first line (the handle, the marks, the pencil and Remove) takes the one
 // drop `$step-ink-drop`, so it sits level with the name's lettering.
@@ -272,6 +274,7 @@ $step-line: type-size('body') * 1.65;
     min-width: 0;
   }
 
+  // An instruction starts two lines high and grows as lines are typed, by `field-sizing`, which is not Baseline widely
   // available, so it sits in @supports: without it the box stays two lines and scrolls, and its resize handle still opens it.
   .step-row__instruction .textarea,
   .step-row__field .textarea {

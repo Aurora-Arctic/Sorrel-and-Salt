@@ -2,6 +2,7 @@
 // bodies: the set is closed, typed text stays allowed, and the columns stay free text
 // (claude-docs/db/grimoire.md).
 
+/** Eight phases, then Dark, Waxing and Waning Moon (Wikipedia, "Lunar Phase" and "Dark Moon"). */
 export const MOON_PHASES = [
   'New Moon',
   'Waxing Crescent',
@@ -16,6 +17,7 @@ export const MOON_PHASES = [
   'Waning Moon',
 ] as const;
 
+/** Monday first (Wikipedia, "Names of the days of the week"). */
 export const DAYS_OF_THE_WEEK = [
   'Monday',
   'Tuesday',

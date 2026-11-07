@@ -19,6 +19,10 @@ export type ShownState = {
   edited?: ReadonlySet<string> | null;
 };
 
+/**
+ * An edit is any change event ever made, as `dirtyFields` unsets when the value returns to its
+ * default.
+ */
 export function errorShown(
   { isSubmitted, touchedFields, edited }: ShownState,
   name: string,

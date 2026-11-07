@@ -178,6 +178,7 @@ export default function DateRangeField({
             )}
             <DayPicker
               mode="range"
+              // Focus moves into the calendar on open so the arrow keys work at once.
               // oxlint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               locale={enGB}
@@ -190,6 +191,8 @@ export default function DateRangeField({
               captionLayout="label"
               components={{ Chevron: CalendarChevron }}
               disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
+              // The library's own range rule extends the range it holds; the field's is first
+              // then last.
               onSelect={(_range, day) => pick(day)}
               classNames={CALENDAR_CLASS_NAMES}
             />

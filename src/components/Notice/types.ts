@@ -15,6 +15,7 @@ export interface NoticeProps {
    * `<div>` rather than a `<p>`, with the same look and the same role rules.
    */
   block?: boolean;
+  /** Inside an always-present live region: no role of its own, so nothing is announced twice. */
   inRegion?: boolean;
   id?: string;
   /**

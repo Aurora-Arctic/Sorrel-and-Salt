@@ -103,6 +103,7 @@ export default function DateField({
           <DayPicker
             mode="single"
             required
+            // Focus moves into the calendar on open so the arrow keys work at once.
             // oxlint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             locale={enGB}

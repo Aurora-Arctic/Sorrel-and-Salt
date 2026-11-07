@@ -1,6 +1,8 @@
 import type { IngredientElement as ElementKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CupboardValues } from './types';
 
+// Entries of the list fields are `{ value }` and their typing boxes sit under `drafts.<list>`;
+// everything outside this file speaks `CupboardValues`.
 export interface CupboardFormValues {
   label: string;
   description: string;

@@ -2,6 +2,7 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
+// Compounded with `.notice`, whose rule is `body .notice` in the app: a lone class loses to it.
 .notice.user-list__warning {
   margin-block: space(5);
 }
@@ -16,6 +17,7 @@
   @include tip-anchor;
 }
 
+// Not `.user-list__tip`, which takes no pointer: these tips stay open while hovered.
 .user-list__control-tip {
   @include tip-above($tip-layer);
 

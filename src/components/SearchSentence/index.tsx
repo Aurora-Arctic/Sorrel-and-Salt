@@ -123,6 +123,8 @@ export default function SearchSentence({
   // the render where `pending` rises already draws the new search, which must not show for a frame.
   useLayoutEffect(() => {
     if (pending && !wasPending.current) {
+      // The line to wipe is the one on screen: the settled sentence, or the typed line when a
+      // search starts before the last one has settled.
       const old: Line =
         phase === 'idle'
           ? {

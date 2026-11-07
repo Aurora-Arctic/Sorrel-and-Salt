@@ -74,6 +74,7 @@ export function ComboboxEntry({
     );
   }, 'top-start');
 
+  // The tooltip runs as wide as its words, past chip and control; `useTip` keeps it on screen.
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}

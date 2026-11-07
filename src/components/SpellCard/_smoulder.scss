@@ -114,6 +114,7 @@ $ember: $burn-ember;
 }
 
 @mixin smoulder-base {
+  // First in the markup, so faces paint over it; the burn is last, so it paints over the content.
   .spell-card__glow {
     position: absolute;
     inset: auto (-$burn-glow-overhang) (-$burn-glow-drop) auto;
@@ -230,6 +231,7 @@ $ember: $burn-ember;
     inset: 0;
     border-radius: inherit;
     background: burn-embers-gradient();
+    // Only the mask's alpha counts, so any opaque token does.
     mask-image: linear-gradient(to bottom, $text-primary, transparent $burn-embers-fade);
   }
 

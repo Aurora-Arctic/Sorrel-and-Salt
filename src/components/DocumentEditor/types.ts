@@ -1,5 +1,6 @@
 export interface DocumentEditorProps {
   documentId: string;
+  /** The document's key: `terms` makes a publish ask every account to agree again. */
   documentKey: string;
   title: string;
   lede: string;

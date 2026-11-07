@@ -12,7 +12,9 @@ import Spinner from '../Spinner';
 import type { ShownToggleProps } from './types';
 import './shown-switch.scss';
 
+// Must equal `$fade` in shown-switch.scss.
 const RING_FADE_MS = 150;
+// Must equal `$loading-delay` in _variables.scss.
 const RING_DELAY_MS = 100;
 
 export const SetCompendiumEntryShownDocument = graphql(`

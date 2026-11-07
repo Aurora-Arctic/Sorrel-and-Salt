@@ -10,6 +10,7 @@ import { batchName } from './batches';
 import { saveFile } from './save-file';
 import { CARDS_PER_SHEET } from '../../lib/invitation-cards/limits';
 
+// The tokens live in this component's props alone: nothing stores them, the PDF keeps them.
 export interface MintedBatch {
   batchId: string;
   expiresAt: Date | string;

@@ -299,6 +299,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
+    // The hidden clear's room reads as text: `visibility` passes its press to the indicators.
     if (
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
@@ -534,6 +535,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.heading === null ? (
                 bucket.rows.map(row)
               ) : (
+                // A div with ARIA's `group` inside a presentational li: ARIA allows no `group`
+                // role on an li.
                 // oxlint-disable jsx-a11y/prefer-tag-over-role
                 <li key={bucket.key} role="presentation" className="combobox__group">
                   <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>

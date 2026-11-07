@@ -22,6 +22,7 @@ $theme-toggle-icon-arc: 130deg;
 .theme-toggle--corner {
   position: fixed;
   top: 0;
+  // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
   z-index: layer('toggle');
   display: flex;
@@ -52,6 +53,8 @@ $theme-toggle-icon-arc: 130deg;
   }
 }
 
+// The root layout is session-free and always mounts the corner, so hide it where the shell
+// or public frame has its own disc.
 body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
@@ -159,6 +162,7 @@ $theme-toggle-facet: 1.1875rem;
     opacity: 1;
   }
 
+  // The dark facet carries no --pre-enter class in the markup, so park it directly.
   .theme-toggle__facet--dark {
     transform: rotate(-$theme-toggle-icon-arc);
     opacity: 0;

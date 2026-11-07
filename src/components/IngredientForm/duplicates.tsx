@@ -79,6 +79,7 @@ const EXACT_ROWS = 5;
 
 const DUPLICATE_ROWS = 3;
 
+/** The shortest name the field asks about: one letter resembles half the compendium. */
 const MIN_ASKED = 2;
 
 const lookup = (workspaceId: string | null, name: string) =>
@@ -181,6 +182,7 @@ export function useDuplicateWarning(
     setExact((now) =>
       now.map((match) => (match.id === id ? { ...match, inCupboard: true } : match)),
     );
+    // By the operation's name, the first part of every key graphqlQuery makes.
     await Promise.all(
       ['PossibleDuplicates', 'CompendiumMatches'].map((name) =>
         client.invalidateQueries({ queryKey: [name] }),
@@ -220,6 +222,7 @@ interface Held {
   key: string;
 }
 
+/** The slide's length; keep equal to `$skeleton-fade` in index.scss. */
 const SLIDE_MS = 300;
 
 /** The shapes' delay and fade, the CSS's $skeleton-delay and $skeleton-fade (index.scss), with room to spare: the net for a fade in whose end never came. */
@@ -331,6 +334,8 @@ function useSlidingRows(
   // starts from where the rows last stood; and the answer last slid for.
   const restHeight = useRef<number | null>(null);
   const slidFor = useRef('');
+  // The height is let go only once the rows it slid for are settled, else the list jumps a frame
+  // at its auto height at the very end.
   const sliding = useRef(false);
 
   const letGo = (list: HTMLUListElement) => {
@@ -367,6 +372,7 @@ function useSlidingRows(
     // row is already in the flow.
     const from = midSlide ? now : (restHeight.current ?? now);
     const to = settledHeightOf(list);
+    // Every row leaving: the region closes round the whole notice instead (index.scss).
     if (to === 0) return;
     if (reducedMotion() || Math.abs(from - to) < 0.5) {
       // Nothing to slide: the rows fade on their own, or, reduced, swap at

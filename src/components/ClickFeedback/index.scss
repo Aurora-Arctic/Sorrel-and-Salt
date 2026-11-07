@@ -9,6 +9,7 @@ $dismiss-size: 1.5rem;
 $badge-size: 1.2rem;
 $badge-mark: 0.75rem;
 $badge-reach: calc(#{$dismiss-size} - #{$badge-size});
+// The arrow: a square turned 45°; its point sits ~11.5px under the control (position.ts).
 $arrow-size: 12px;
 $arrow-rise: 7px;
 
@@ -45,6 +46,7 @@ $arrow-rise: 7px;
   z-index: layer('callout');
   box-sizing: border-box;
   inline-size: max-content;
+  // `--click-feedback-room` is set by position.ts: narrower in a box narrower than this.
   max-inline-size: min(20rem, calc(100vw - 2rem), var(--click-feedback-room, 20rem));
   margin: 0;
   padding: space(3) calc(#{space(1)} + #{$dismiss-size} + #{space(2)}) space(3)
@@ -146,6 +148,7 @@ $arrow-rise: 7px;
     @include warning-mark;
   }
 
+  // Forced colours: the disc is CanvasText, the triangle cut out in Canvas; fill and shadow drop.
   @include forced-colors {
     background-color: CanvasText;
     color: Canvas;
@@ -173,6 +176,7 @@ $arrow-rise: 7px;
   }
 }
 
+// Beside a borderless control, held clear of its text by this margin; position.ts touches it.
 .click-feedback__badge--beside {
   margin-left: space(2);
 }

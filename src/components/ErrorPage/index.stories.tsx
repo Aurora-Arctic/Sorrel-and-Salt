@@ -19,6 +19,7 @@ const notFound = (
   </ErrorPage>
 );
 
+// A signed-in visitor: `(shell)/not-found.tsx` re-exports the root page so the shell's bar stays.
 const defaultNode = (
   <>
     <ShellFrame area="none" open="/">

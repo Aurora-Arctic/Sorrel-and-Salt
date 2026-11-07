@@ -34,6 +34,8 @@ const CreateWorkspaceForm = (): ReactElement => {
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
+      // The new coven's home replaces the whole page, not only a coven body: it has its contents
+      // menu.
       navigate(`/coven/${slug}`, {
         target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
       });

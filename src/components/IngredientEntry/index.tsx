@@ -487,6 +487,8 @@ const IngredientEntry = ({
     </article>
   );
 
+  // RouteModalProvider holds a pressed Edit on its way for the link and dialog.
+  // The admin layout has one above its pages; these two routes have none.
   return edit || cupboard || covens ? (
     <RouteModalProvider>
       {page}

@@ -113,6 +113,9 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       return;
     }
     setChanging(true);
+    // Better Auth answers `{ error }` for a refusal and throws for a dropped connection. The
+    // server signs out every other session whatever the request says; asking for it keeps the
+    // request honest.
     const { error } = await changePassword({
       currentPassword: current,
       newPassword: chosen,

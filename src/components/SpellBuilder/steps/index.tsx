@@ -23,6 +23,8 @@ export function SpellSteps({
   const { control } = useFormContext<SpellStepsValues>();
   const { fields, append, remove, move } = useFieldArray({ control, name: 'steps' });
   const steps = useWatch({ control, name: 'steps' });
+  // Each row's key follows its step, not its place: an Undo writes the array back whole, and
+  // react-hook-form would make every id afresh and remount the rows.
   const keys = useMemo(() => fields.map((field) => field.rowKey ?? field.id), [fields]);
   const names = fields.map((field, index) => stepNameOf(steps[index] ?? field));
   const { announce, announcement } = useAnnouncement();
@@ -68,6 +70,7 @@ export function SpellSteps({
       pressed = true;
     };
     const release = () => {
+      // The click follows the release in the same task, so this waits until after it.
       setTimeout(() => {
         pressed = false;
       }, 0);

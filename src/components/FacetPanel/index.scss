@@ -193,6 +193,8 @@ $sheet-slide: 250ms ease-out;
 // The modal sheet below the tablet width: a full-height drawer from the right, its foot stuck to
 // the bottom, with room kept above it so a focused control is not hidden behind it (WCAG 2.4.11).
 .facet-panel:modal {
+  // Fixed, as a modal dialog is by default: an absolute box translated past the right edge widens
+  // the page.
   position: fixed;
   inset: 0;
   display: flex;
@@ -211,7 +213,7 @@ $sheet-slide: 250ms ease-out;
   transform: none;
   transition: transform $sheet-slide;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without sliding in
   @starting-style {
     transform: translateX(100%);
   }
@@ -221,7 +223,7 @@ $sheet-slide: 250ms ease-out;
     opacity: 1;
     transition: opacity $modal-fade;
 
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without fading in
     @starting-style {
       opacity: 0;
     }

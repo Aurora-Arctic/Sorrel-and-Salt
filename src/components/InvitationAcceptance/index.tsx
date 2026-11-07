@@ -80,6 +80,8 @@ const Accept = ({
     }
   }
 
+  // A `div`, not the other states' `p`: the callout is a `div`, and a `div` in a `p` is
+  // invalid HTML.
   return (
     <div className="invitation-acceptance__actions">
       {/* `aria-disabled` rather than `disabled` while it sends: a disabled
@@ -99,6 +101,7 @@ const Accept = ({
   );
 };
 
+// A failure is ignored: the refusal on the page already says all there is to say.
 const RecordRefusal = ({ token }: { token: string }): null => {
   const sent = useRef(false);
   useEffect(() => {

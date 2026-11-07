@@ -15,6 +15,8 @@ import type { ProviderId } from '../../lib/types';
 import type { SignInAttempt, SignInPanelProps } from './types';
 import './index.scss';
 
+// A cookie announces no change, and only a callback, a full navigation away, writes this one:
+// there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
 // The cookie read returns `''` for present-but-empty and `null` for none, and React warns when a

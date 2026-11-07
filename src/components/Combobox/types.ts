@@ -188,6 +188,7 @@ export interface ComboboxSelectProps {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  /** Every choice, in order. A choice whose value is `''` leaves the set unanswered: "None". */
   choices: readonly ComboboxChoice[];
   placeholder?: string;
   /** The box is as wide as its longest choice whichever is shown, rather than its field's width. */

@@ -9,6 +9,7 @@ import type { StepJar, SpellStepValue } from './types';
 
 export type StepSupply =
   | { kind: 'one-off' }
+  // No jar of this form is told apart from an empty one: the entry page draws it dashed, not red.
   | { kind: 'no-jar' }
   | { kind: 'out'; jar: StepJar }
   | { kind: 'short'; held: number; unit: Unit }
@@ -56,6 +57,7 @@ export function supplyOf(
 
 type NeedInput = Pick<SupplyInput, 'quantity' | 'unit'>;
 
+// A numeric column holds three decimals, so a sum is rounded there: 0.1 + 0.2 reads 0.3.
 const rounded = (value: number): number => Math.round(value * 1000) / 1000;
 
 /**

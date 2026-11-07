@@ -26,6 +26,7 @@ export interface SectionNavItem {
   count?: number;
   href: Route;
   icon: SectionIconName;
+  /** Current only at its own address: the coven index is the ancestor of every coven page. */
   exact?: boolean;
   matches?: readonly Route[];
   apart?: boolean;

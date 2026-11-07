@@ -56,6 +56,7 @@
     inset-block-start: calc(1px - #{$drawer-travel});
     block-size: calc(#{$drawer-travel} + #{$drawer-inset});
     transition: inset-block-start $motion-medium ease;
+    // Straight bands, not blurred shadows: a blur piles up in the corners and reads as a curve.
     background:
       linear-gradient(
         0deg,

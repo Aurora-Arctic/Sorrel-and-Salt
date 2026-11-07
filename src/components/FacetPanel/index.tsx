@@ -35,6 +35,7 @@ function sourceOptions(
   ];
 }
 
+// Not In submits as covensNot=1; In submits an empty value, which the address reads as absent.
 const COVENS_NOT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: 'In' },
   { value: '1', label: 'Not In' },

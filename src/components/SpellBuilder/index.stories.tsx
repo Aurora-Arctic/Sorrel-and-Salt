@@ -60,6 +60,7 @@ const BASE: readonly RequestHandler[] = [
   answerQuery(CategoriesDocument, () => CATEGORIES_ANSWER),
   answerQuery(SpellIngredientSuggestionsDocument, () => ({ ingredientSuggestions: { edges: [] } })),
 ];
+// Module-level lists, since `useMockHandlers` needs each to keep its identity.
 const HANDLERS = {
   base: BASE,
   noSteps: [...BASE, answerSteps([])],
@@ -142,6 +143,7 @@ const removeMirrors = () => {
   } catch {}
 };
 
+// Written while rendering, so it is in place before the builder reads it as it mounts.
 function useMirror(restored: boolean): void {
   useState(() => {
     removeMirrors();
@@ -168,6 +170,7 @@ const Page = ({
 }) => {
   useMockHandlers(handlers);
   useMirror(restored);
+  // Long enough between steps for a saved spell's steps to land, which a save waits for.
   useSteps(steps, 300);
   return (
     <ShellFrame area="coven" open="/coven/fixture-coven/grimoire">

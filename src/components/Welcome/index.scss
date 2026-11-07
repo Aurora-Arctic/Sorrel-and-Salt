@@ -1,6 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// Centred and capped by `.page-frame` on the page's `main` (claude-docs/styling.md, "The page
+// frame").
 .welcome {
   @include stack(5);
 }

@@ -24,8 +24,11 @@ import type { TwoFactorSettingsProps } from './types';
 
 export const WRONG_PASSWORD = "That isn't your password.";
 export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+// A lock on password sign-in holds the right password here too; the owner is told the lock is why.
 export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
   'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';
+// Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in
+// method does.
 export const STALE_SESSION =
   'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
 
@@ -188,6 +191,8 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
 
   const entered = code.replace(/\s/g, '');
 
+  // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both
+  // arrive here.
   const run = async <T,>(
     call: () => Promise<{ data: T | null; error: Failure | null }>,
   ): Promise<T | undefined> => {

@@ -15,6 +15,7 @@ const Mark = ({ mark, spoken }: { mark: AccessMark; spoken?: string }): ReactEle
   </span>
 );
 
+// Each card is named by its kind of data alone, not by the marks' hidden text.
 const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
   const id = useId();
   return (

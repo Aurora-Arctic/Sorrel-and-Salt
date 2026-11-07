@@ -10,6 +10,7 @@ import './index.scss';
 // A word above an icon control, "Edit" over a pencil, for a sighted user who cannot tell what the mark does; it is `aria-hidden` decoration,
 // opens after a rest or on focus, and shuts while the control's own menu is open (claude-docs/components/icon-tip.md, "Contracts").
 
+// Matches `$icon-tip-fade` (_variables.scss): how long the closed tip stays for its fade.
 const TIP_FADE_MS = 120;
 
 // No wait to close: the bubble takes no pointer, so there is nothing to cross onto.
@@ -63,6 +64,8 @@ const IconTip = ({
   }, [closing]);
 
   return (
+    // Hover is on the wrapper, not the control, so any control can be the child; focus bubbles
+    // here too.
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the focus and blur handlers hear events bubbling from the control inside; the span adds no control of its own
     <span
       ref={setWrapper}

@@ -26,6 +26,7 @@ const CreateInvitationDocument = graphql(`
   }
 `);
 
+/** The roles on offer, least first. Steward is not one: the schema's enum has no such value. */
 const ROLES: readonly InviteRole[] = ['viewer', 'member'];
 
 const STEWARDSHIP_NOTE =
@@ -57,6 +58,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const address = email.trim();
+    // The same rule the service applies, said before anything is sent.
     const issue = validateEmailAddress(normaliseEmail(address));
     if (issue) return setFailure({ field: { name: 'email', message: issue.message } });
 

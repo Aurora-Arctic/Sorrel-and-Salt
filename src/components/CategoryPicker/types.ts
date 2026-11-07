@@ -36,6 +36,7 @@ export interface CategoryPickerProps {
   value: readonly string[];
   onChange: (ids: string[]) => void;
   invalid?: readonly string[];
+  /** Id of the element error renders; set only while an error shows. */
   errorId?: string;
   error?: ReactNode;
   status?: string;

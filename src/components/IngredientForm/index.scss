@@ -122,6 +122,7 @@ $skeleton-fade: 300ms;
       margin: space(2) 0 space(2) calc(-1 * (#{$notice-mark-size} + #{space(2)}));
       padding: 0 0 0 1.25rem;
       list-style: none;
+      // Positioned: the rows' offsets are measured against the list for its slide.
       position: relative;
     }
 
@@ -461,6 +462,7 @@ $skeleton-fade: 300ms;
   gap: space(2);
 
   > .input {
+    // Off the scale: a locator's own width, room for "pp. 112–118".
     width: 10rem;
     max-width: 100%;
   }
@@ -477,6 +479,7 @@ $panel-head-gap: space(3);
   padding: space(4);
   border: 1px solid $text-muted;
   border-radius: radius('surface');
+  // Scrolled to when asked for again, with its legend, which sits across the top edge, in view.
   scroll-margin-top: space(5);
 
   // An icon button's height, and no gap under it but the panel's padding, so the head's buttons below sit
@@ -522,6 +525,8 @@ $panel-head-gap: space(3);
     }
   }
 
+  // The content width at which the longer legend and the group still have a step of border
+  // between.
   @container (min-width: 18rem) {
     // Absolutely placed against the fieldset, so the head is no box of its
     // own: without a note it would otherwise still take a gap above Kind.
@@ -558,6 +563,7 @@ $panel-head-gap: space(3);
   }
 }
 
+// The rules are spans given list roles, made blocks here, one to a line.
 .ingredient-form__cite-rules {
   @include stack(1);
 }
@@ -712,6 +718,7 @@ $panel-head-gap: space(3);
   max-width: 100%;
 }
 
+// Muted text on the card, the panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
 .entry-summary__name {
   display: flex;
   flex-direction: column;
@@ -728,7 +735,7 @@ $panel-head-gap: space(3);
   margin: 0 0 space(2);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 3;
 }
 
@@ -768,6 +775,7 @@ $panel-head-gap: space(3);
   }
 }
 
+// Not nested in the form: it is drawn in the modal's layer.
 .promote-question__title {
   display: block;
   font-size: type-size('lead');

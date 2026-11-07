@@ -41,6 +41,7 @@ const RoleControl = ({
   const label = 'Change Role';
   const accessibleName = `${label} for ${name}`;
   const openClass = 'btn btn--quiet btn--small';
+  // The primary keeper's own reason comes first: it holds whether or not changes are paused.
   const reason = primaryAdmin
     ? PRIMARY_ADMIN_REFUSAL
     : paused

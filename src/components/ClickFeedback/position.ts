@@ -7,6 +7,7 @@ import type { CSSProperties } from 'react';
 // callout is fixed, so no ancestor cuts it; the badge is absolute, so it scrolls and clips with its
 // control (claude-docs/components/click-feedback.md, "Placement").
 
+/** Control bottom to callout top: room for the arrow, whose tip stands ~11.5px under it. */
 const GAP_PX = 20;
 
 const EDGE_PX = 16;
@@ -17,6 +18,7 @@ const EDGE_PX = 16;
  */
 const ARROW_INSET_PX = 14;
 
+/** The callout's widest, kept equal to its stylesheet's `max-inline-size`: 20rem. */
 const MAX_REM = 20;
 
 /**
@@ -52,6 +54,7 @@ const narrow: Middleware = {
     const viewport = doc.documentElement.clientWidth;
     const { left, right } = box ? box.getBoundingClientRect() : { left: 0, right: viewport };
     const widest = Math.min(MAX_REM * rem, viewport - 2 * EDGE_PX);
+    // From the page, not `rects`: a dialog's containment can make it the fixed callout's block.
     const control = (elements.reference as Element).getBoundingClientRect();
     const room =
       right - left - 2 * EDGE_PX < widest
@@ -137,6 +140,7 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
   };
 }
 
+/** Badge place on a bordered corner; `beside` touches, and the stylesheet margin clears it. */
 export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside: boolean): Placed {
   const { refs, elements, floatingStyles, update, isPositioned } = useFloating({
     open: drawn,

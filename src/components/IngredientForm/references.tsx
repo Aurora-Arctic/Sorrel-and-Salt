@@ -47,6 +47,8 @@ import { draftOf, sourceTierOf } from './values';
 // one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
 // text is a search and never an entry: the last row, "New Reference", opens the panel.
 
+/** Defined before its first use and called bare: codegen reads the documents in order, as
+ * text. */
 graphql(`
   fragment ReferenceRow on Reference {
     id
@@ -147,6 +149,7 @@ export function ReferencesField({
     setOpenRow(fields[opensAt - 1].id);
   }
 
+  // A source already listed is not offered again: listing it twice is refused.
   const found = useReferenceSuggestions(workspaceId, field.value, active);
   // Keyed by the ids as one string, which changes only when the list does.
   const listed = fields.map((row) => row.link.id).join(' ');
@@ -242,6 +245,9 @@ export function ReferencesField({
     setSummons((count) => count + 1);
     revalidate();
   };
+  /** The edited source's new text on every row citing it. Not marked as a change to the
+   * ingredient: the source is saved already, and the links the form sends are as they
+   * were. */
   const rewriteRows = (citation: string, link: ReferenceLink) => {
     const lists: (`variants.${number}.references` | 'references')[] = [
       'references',
@@ -293,6 +299,8 @@ export function ReferencesField({
           onBlur={field.onBlur}
           onPick={pick}
           onCommit={IGNORE_ENTER}
+          // No onRemoveLast: Backspace and Delete in the empty box take no row, unlike the chip
+          // lists; only a row's ×, which asks.
           suggestions={suggestions}
           listAnchor={boxRow}
           action={{ label: 'New Reference', onSelect: openPanel }}
@@ -317,8 +325,10 @@ export function ReferencesField({
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
             const locator = rowValues[index]?.locator.trim() ?? '';
+            // Read through the values, which an edited source rewrites in place.
             const entry = rowValues[index] ?? row;
             const name = shortCitationText(entry.link);
+            // A coven's form edits its own sources; the compendium's are the admins'.
             const editable = workspaceId === null || !entry.link.isGlobal;
             return (
               <li
@@ -476,6 +486,7 @@ export function ReferencesField({
       <FieldError id={errorId} message={message} />
       {panelOpen && (
         <ReferencePanel
+          // A fresh panel for each source edited, and for a new one.
           key={editing?.link.id ?? 'new'}
           workspaceId={workspaceId}
           editing={editing?.link}

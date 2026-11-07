@@ -11,6 +11,10 @@ import { isInstruction } from './steps/values';
 // The Jar section's details above its step list: the Seal Wax field with the jar drawn beside it, then the Jar
 // Description (claude-docs/components/spell-builder.md, "The jar details").
 
+/**
+ * First category in listed order (the ingredient's before its form's) in a known group; else
+ * muted.
+ */
 function groupOf(
   categories: readonly { id: string }[],
   colors: ReadonlyMap<string, GroupColors>,

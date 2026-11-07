@@ -3,6 +3,7 @@ import type { ProviderId } from '../../lib/types';
 export type SignInAttempt = ProviderId | 'passkey';
 
 export interface SignInPanelProps {
+  /** Already run through safeReturnPath; absent, the landing is the account role's. */
   next?: string;
   /** A readable sentence for a failed callback, from signInErrorMessage — never a raw code. */
   error?: string;

@@ -438,6 +438,8 @@ const Skeleton = ({
         {shape === 'line' &&
           Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
+          // Children in the page's order: head, menu, then sections, so the menu stands where the
+          // real one does.
           <div
             className={
               menu

@@ -20,6 +20,7 @@ import './index.scss';
 // pencil. Tip and accessible name are ADD then the entry's name; a client component of its own so the
 // card stays a server component (claude-docs/components/compendium-cards.md, "Contracts").
 
+/** How long the check holds before fading back to the plus: long enough to be seen. */
 export const ADDED_HOLD_MS = 1000;
 
 interface Added {

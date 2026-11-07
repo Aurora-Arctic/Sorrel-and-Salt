@@ -26,6 +26,7 @@ const CreateAdminInvitationDocument = graphql(`
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
+/** Lesser role first and chosen to begin with, so granting the People page is a choice. */
 const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
 
 /**
@@ -125,6 +126,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 
 export const INVITE_TITLE = 'New Invitation';
 
+// Rendered whether or not ?invite is open, so a press shows the dialog at once over a skeleton.
 const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
   <RouteModal
     closeHref={closeHref}

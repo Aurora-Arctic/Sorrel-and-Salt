@@ -10,6 +10,7 @@
   @include smoulder-base;
   @include theme-transition(color);
 
+  // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
   color: $text-primary;
@@ -62,6 +63,8 @@
   pointer-events: none;
 }
 
+// Positioned so they paint over the face and the glow; the badges pass a click through to the
+// overlay.
 .spell-card__title-text {
   position: relative;
 }
@@ -85,7 +88,7 @@
   pointer-events: none;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 3;
 }
 

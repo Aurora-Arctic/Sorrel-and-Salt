@@ -98,6 +98,8 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
   // the pane, and a pane that never got full screen is not closed by an unrelated change.
   const inFullscreen = useRef(false);
+  // Set when this visit pushed the `?preview` entry, so Close steps back over it; a page loaded
+  // with `?preview` has no earlier entry of ours, so Close replaces the address instead.
   const pushed = useRef(false);
 
   const show = (): void => {
@@ -119,6 +121,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
       if (dialog.open) dialog.close();
       return;
     }
+    // Measured before showModal(), while the page's scrollbar is still there to be replaced.
     const release = holdPage();
     if (!dialog.open) dialog.showModal();
     // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError). Past the browser floor

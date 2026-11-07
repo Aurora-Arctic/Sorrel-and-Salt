@@ -82,9 +82,14 @@ export interface ConfirmedActionProps {
   busy: string;
   confirmClass: string;
   withNote?: boolean;
+  /** The write; `note` is the reason as typed, trimmed, or absent. A refusal rejects. */
   send: (note?: string) => Promise<unknown>;
+  /** What follows a success, the confirm still busy; absent, the page is read again. */
   onSent?: () => void;
+  /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
   refusal?: string | ((error: unknown) => string);
+  /** Said in the status region after a success, for a screen reader; absent where success
+   * leaves the page. */
   announcement?: string;
   choices?: ReactNode | ((sending: boolean) => ReactNode);
   closeOnSent?: boolean;
@@ -165,6 +170,7 @@ export interface ProviderLogoProps {
 
 export interface UntilMarkProps {
   standing: string;
+  /** When it ends; null for none. */
   until: Date | null;
 }
 

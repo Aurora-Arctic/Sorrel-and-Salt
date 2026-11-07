@@ -16,6 +16,7 @@
 
   @include list-reset;
 
+  // A long name wraps: the preview has the room, and a cut name hides which step it is.
   .jar-line__name {
     overflow: visible;
     overflow-wrap: anywhere;

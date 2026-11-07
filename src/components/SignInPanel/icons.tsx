@@ -41,6 +41,8 @@ export function DiscordIcon(): ReactElement {
   );
 }
 
+// One path traces the circle and the "f" together, so filled white over the blue chip below
+// shows the blue through the "f".
 export function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">

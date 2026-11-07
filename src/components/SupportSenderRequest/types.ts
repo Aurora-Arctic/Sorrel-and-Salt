@@ -5,6 +5,7 @@ export interface SupportSenderReply {
   id: string;
   body: string;
   createdAt: Date;
+  /** The sender wrote it; otherwise staff did, and no staff name is carried. */
   fromSender: boolean;
 }
 

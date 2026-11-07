@@ -85,6 +85,7 @@ const DRAFT: EditableWorking = {
 };
 const COMPLETE: EditableWorking = { ...DRAFT, status: 'complete', visibility: 'workspace' };
 
+// Module-level lists, since `useMockHandlers` needs each to keep its identity.
 const HANDLERS = {
   plain: [
     recorded,

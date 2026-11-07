@@ -39,6 +39,7 @@ export function ComboboxTypeahead({
   }
 
   const query = selected && text === selected.label ? '' : fold(text);
+  // A qualified row shows its qualifier in brackets; the pick's text and query match the label.
   const suggestions = useMemo(
     () => ({
       options: choices

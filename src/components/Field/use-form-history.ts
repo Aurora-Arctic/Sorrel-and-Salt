@@ -87,6 +87,8 @@ export function useFormHistory<V extends FieldValues>(
   const { subscribe, getValues, setValue, control } = methods;
   const { isSubmitted } = useFormState({ control });
   const [state, dispatch] = useReducer(historyReducer, initialHistory);
+  // The same state, readable between renders: two chords before a render each find the stack the
+  // last one left.
   const stateRef = useRef(state);
   const commit = useCallback((action: HistoryAction) => {
     stateRef.current = historyReducer(stateRef.current, action);
@@ -132,6 +134,7 @@ export function useFormHistory<V extends FieldValues>(
     const noticeBlur = () => {
       blurs.current += 1;
     };
+    // The hold ends on the document, not the form: a drag often leaves the form's box.
     const endHold = () => {
       holding.current = false;
       holdRecorded.current = false;
@@ -193,6 +196,7 @@ export function useFormHistory<V extends FieldValues>(
         }
         sealed.current = false;
         stepBlurs.current = blurs.current;
+        // A change that lands on `click`, after `pointerup`, finds no hold and starts its own step.
         if (holding.current) holdRecorded.current = true;
         tickOpen.current = true;
         if (!tickScheduled.current) {
@@ -295,6 +299,8 @@ export function useFormHistory<V extends FieldValues>(
     const own = fieldNamed(element, name);
     let target: HTMLElement | undefined | null = isFocusable(own) ? own : undefined;
     if (!target) {
+      // A select's box has no `name`, yet the form knows it by its registered ref; `setFocus`
+      // focuses on a timer, too late for the fallback below.
       const registered = (get(control._fields, name) as { _f?: { ref?: unknown } } | undefined)?._f
         ?.ref as { focus?: () => void } | undefined;
       registered?.focus?.();

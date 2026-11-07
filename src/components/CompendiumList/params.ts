@@ -98,6 +98,7 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // a shared address should not spell a coven out. Only the public compendium offers it, and the read
   // proves each id by membership, so a coven the viewer is not in filters nothing.
   covens: textListParam('covens', 'covenIds'),
+  // Not In: entries none of the picked covens hold, or none of the viewer's covens if none picked.
   covensNot: searchParam({
     name: 'covensNot',
     variable: 'covensNot',

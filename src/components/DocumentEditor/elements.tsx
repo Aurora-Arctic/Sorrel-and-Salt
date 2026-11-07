@@ -207,6 +207,7 @@ const PasteMarkdownPlugin = MarkdownPlugin.configure({
       const html = dataTransfer.getData('text/html');
       if (html && !dataTransfer.types.includes('vscode-editor-data') && !isPreformatted(html))
         return false;
+      // A lone address is left to the link plugin, as Plate leaves it.
       return Boolean(dataTransfer.files?.length) || !isUrl(data);
     },
   },

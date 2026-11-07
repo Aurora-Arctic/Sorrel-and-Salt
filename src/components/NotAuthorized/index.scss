@@ -1,6 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// Centred and capped by `.page-frame` on `forbidden.tsx`'s `main` (claude-docs/styling.md, "The
+// page frame").
 .not-authorized {
   @include stack(5);
 }

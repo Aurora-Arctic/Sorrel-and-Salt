@@ -165,6 +165,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
     describe: 'What kind of thing the forms in this group are',
+    // The schema drops the two empty colours a form group does not take, and reads None as null.
     schema: IngredientFormGroupInput.extend({
       icon: z.preprocess(
         (icon) => (icon === '' ? null : icon),
@@ -399,6 +400,8 @@ const GroupForm = ({
 
   const confirming = (target: string | undefined): ReactElement => {
     const destination = others.find((each) => each.id === target);
+    // A refusal is confirmDelete's to place, at the choice or in the alert, so neither question
+    // is told it.
     if (!destination) {
       return (
         <ConfirmQuestion

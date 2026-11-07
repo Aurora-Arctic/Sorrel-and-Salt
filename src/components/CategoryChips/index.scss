@@ -5,6 +5,7 @@
   font-size: type-size('overline');
 }
 
+// The primitives position every chip-row item; this one is left static.
 .category-chips > .category-more-item {
   position: static;
 }
@@ -45,6 +46,7 @@
 // inline; this is its look and its fade.
 .category-more__panel {
   @include modal-surface($shadow-floating);
+  // Above the rows beneath and their Edit pencils; in a card the lift below raises it.
   z-index: layer('floating');
   display: flex;
   flex-wrap: wrap;
@@ -109,6 +111,7 @@
     border-color: $hairline;
     position: relative;
 
+    // The hit area: at least 24px tall and wide around the pill, drawn nothing.
     &::after {
       content: '';
       position: absolute;

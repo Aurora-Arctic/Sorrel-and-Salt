@@ -17,6 +17,7 @@ const {
 export const COVEN_PARAMS = defineSearchParams({
   ...SHARED,
   source: choiceParam('source', INGREDIENT_SOURCES, 'source'),
+  // Written `1`, the value its switch submits natively.
   inStock: searchParam({
     name: 'inStock',
     variable: 'inStock',

@@ -113,6 +113,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
             inputMode={method === 'app' ? 'numeric' : 'text'}
             autoComplete={method === 'app' ? 'one-time-code' : 'off'}
             spellCheck={false}
+            // The step replaces the password form, so the field the person was typing in is gone.
             // oxlint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             value={code}

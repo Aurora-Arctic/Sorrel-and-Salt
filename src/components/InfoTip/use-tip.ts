@@ -58,6 +58,10 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
   return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
 };
 
+/**
+ * `canOpen` is asked as the tip opens, not watched, as a Combobox entry's fit changes with its
+ * width.
+ */
 export function useTip(
   canOpen: () => boolean = ALWAYS,
   placement: Placement = 'top',

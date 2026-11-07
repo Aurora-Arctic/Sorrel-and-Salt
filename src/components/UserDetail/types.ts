@@ -56,11 +56,14 @@ export interface AccessPausePerson {
 
 export interface AccessPauseEntry {
   id: string;
+  /** When it ends by itself; null for a pause with no end date. */
   until: Date | null;
   note: string | null;
   createdAt: Date;
   liftedAt: Date | null;
+  /** The keeper who set it; null if no live account holds the id. */
   setBy: AccessPausePerson | null;
+  /** The keeper who lifted it; null while it stands, or if no live account holds the id. */
   liftedBy: AccessPausePerson | null;
 }
 
@@ -93,6 +96,7 @@ export interface PausePanelCopy {
   notePlaceholder: string;
   messageLabel: string;
   messagePlaceholder: string;
+  /** The question Pause Access asks, given the end chosen; null for no end date. */
   pauseQuestion: (end: Date | null) => ReactNode;
   liftQuestion: (until: Date | null) => ReactNode;
   paused: string;

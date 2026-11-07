@@ -47,6 +47,8 @@ interface Refusal {
   password?: string;
 }
 
+// Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive
+// here.
 function refusal(mode: Mode, failure: Failure): Refusal {
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
   if (field) return { [field.field]: field.message };
@@ -83,6 +85,8 @@ const PasswordForm = ({
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
+  // Every sign-up gets the same answer, held or not, so the page does not reveal which addresses
+  // exist.
   const [signedUp, setSignedUp] = useState<string>();
   const [askingForCode, setAskingForCode] = useState(false);
   const { ref, settle } = useResultFocus<HTMLDivElement>();
@@ -140,6 +144,8 @@ const PasswordForm = ({
       onCodeStep?.(true);
       return;
     }
+    // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
+    // landing, and an unverified one (every new account) to the email page first.
     reportLeaving();
     window.location.assign(signInPath(next));
   };

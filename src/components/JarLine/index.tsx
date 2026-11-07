@@ -29,6 +29,8 @@ export default function JarLine({
       </span>
       <span className="jar-line__title">
         {press && !oneOff ? (
+          // The button is the name, stretched over the jar by its `::after`; the control at the
+          // right and the words' marks are raised above the stretch to keep their own press.
           <StockJarButton {...press} className="jar-line__press">
             {nameText}
           </StockJarButton>

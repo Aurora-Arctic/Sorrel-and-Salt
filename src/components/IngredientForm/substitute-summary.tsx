@@ -50,6 +50,8 @@ const IngredientSummaryDocument = graphql(`
   }
 `);
 
+/** Where a summary links its entry; none by default, the dialogs holding the form pass
+ * the real routes. */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
 /** The ingredient's values beside a form's, which add to them and never take away. */

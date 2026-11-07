@@ -25,6 +25,7 @@ const MESSAGE_HINT = 'Emailed to them, up to 500 characters.';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Null for no end date; undefined while no valid end can be read from the picked day. */
 export function endOf(span: PauseSpan, day: string, now: Date): Date | null | undefined {
   if (span === 'none') return null;
   if (span === 'day') return new Date(now.getTime() + DAY_MS);

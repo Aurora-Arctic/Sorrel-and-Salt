@@ -40,6 +40,7 @@ $bar-height: 0.5rem;
   }
 }
 
+// Forced colours drop the fills: gains in Highlight, losses in CanvasText.
 .sourcing-score__gain {
   background: $accent;
 

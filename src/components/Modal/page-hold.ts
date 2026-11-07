@@ -4,6 +4,9 @@
 
 export const SCROLLBAR_WIDTH = '--scrollbar-width';
 
+// Modals holding the page: a confirmation or second modal opens over the first, when the
+// scrollbar is gone and measures 0, so only the first measures and only the last to close gives
+// the room back.
 let holds = 0;
 
 export function holdPage(): () => void {

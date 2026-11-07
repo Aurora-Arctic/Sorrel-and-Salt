@@ -21,6 +21,7 @@ const subscribe = (onChange: () => void): (() => void) => {
   };
 };
 
+// Compact unless the page says regular, as the CSS reads it.
 const getSnapshot = (): boolean => document.documentElement.getAttribute(ATTRIBUTE) !== 'regular';
 
 // The server cannot know the stored choice, and renders what the CSS shows with nothing stored.

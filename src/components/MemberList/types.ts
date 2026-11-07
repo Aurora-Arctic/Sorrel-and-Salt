@@ -8,7 +8,10 @@ export interface MemberListEntry extends UpdatedStamp {
   name: string;
   role: WorkspaceRole;
   joinedAt: Date;
+  // `updatedBy` and `updatedAt` are the membership's last change: a role change moves them,
+  // joining does not.
   invitedBy: string | null;
+  /** Read for a steward alone. */
   email?: string | null;
   paused?: { until: Date | null } | null;
   openHref?: Route;
@@ -37,6 +40,7 @@ export interface RemoveControlProps {
   name: string;
   /** Asks over the member modal it sits in, rather than in a modal of its own. */
   inModal?: boolean;
+  /** Called once removed, in place of re-reading the page; the member modal closes through it. */
   onSent?: () => void;
 }
 

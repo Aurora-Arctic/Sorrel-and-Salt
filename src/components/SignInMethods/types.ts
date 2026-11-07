@@ -17,6 +17,7 @@ export interface SignInMethodsProps {
   /** Providers this environment has credentials for; the rest cannot be added. */
   configured: readonly ProviderId[];
   error?: SignInMethodError;
+  /** Defaults to true: Better Auth refuses a stale session's removal either way. */
   fresh?: boolean;
 }
 

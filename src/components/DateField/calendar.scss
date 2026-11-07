@@ -62,6 +62,8 @@
   display: flex;
   align-items: center;
   block-size: $day-picker-caption-height;
+  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to
+  // hold both.
   padding-inline-end: $day-picker-nav-room;
 }
 

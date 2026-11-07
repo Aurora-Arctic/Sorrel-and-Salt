@@ -128,6 +128,7 @@
   flex: 1 1 0;
 }
 
+// Before the script has fitted the row, whatever outruns it is clipped rather than scrolled.
 .section-nav:not([data-fit]) .section-nav__list {
   overflow: hidden;
 }
@@ -229,6 +230,7 @@
   content: none;
 }
 
+// The page clears the bar by `$bottom-bar-height` (AppShell's padding).
 @media (max-width: #{$shell-phone-width}) {
   .section-nav {
     position: fixed;

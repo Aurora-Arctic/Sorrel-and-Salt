@@ -20,6 +20,7 @@ export const RouteModalProvider = ({ children }: RouteModalProviderProps): React
   const outer = useContext(RouteModalContext);
   const { pending, navigate } = usePendingNavigation();
   const [opening, setOpening] = useState<{ heading: ModalHeading; place?: string }>();
+  // Kept past the close, which reads it as the modal leaves the page.
   const [opened, setOpened] = useState<Route>();
   const value = outer ?? {
     loading: pending ? opening?.heading : undefined,

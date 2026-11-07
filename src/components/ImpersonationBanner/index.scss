@@ -24,6 +24,7 @@ $impersonation-banner-reach: space(4);
 
 @media (hover: none) {
   :root {
+    // `0px`, not `0`: the fallback is used inside `calc()`, where a unitless zero is invalid.
     --top-inset: var(--impersonation-banner-height, 0px);
   }
 
@@ -43,6 +44,7 @@ $impersonation-banner-reach: space(4);
   .impersonation-banner {
     position: fixed;
     top: 0;
+    // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
     right: var(--scrollbar-width, 0);
     left: 0;
     // Under the corner toggle (`layer('toggle')`), so aiming at the toggle

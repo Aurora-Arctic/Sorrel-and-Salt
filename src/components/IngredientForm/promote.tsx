@@ -54,10 +54,14 @@ export interface PromoteFolkNameQuestionProps {
   displayName: string;
   tier: 'compendium' | 'coven';
   dirty: boolean;
+  /** Saves the form's changes, true if they landed. On false the form has shown why and
+   * closed the question. */
   saveFirst: () => Promise<boolean>;
   discardFirst: () => void;
   onPromoted: (ingredient: PromotedIngredient) => void;
   onKeep: () => void;
+  /** The server refused: its first sentence, for the form's alert; the form closes the
+   * question. */
   onRefused: (message: string) => void;
 }
 
