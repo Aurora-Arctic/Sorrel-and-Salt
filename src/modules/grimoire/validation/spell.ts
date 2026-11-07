@@ -16,10 +16,8 @@ const STATUSES = ['draft', 'complete'] as const satisfies readonly SpellStatus[]
 // Kept apart from the rule below because Zod will not extend a schema that
 // already carries a refinement, and the update input extends this one.
 const SpellFields = z.object({
-  // Optional here, required once the spell is complete (see `titleRule`). A
-  // blank title is no title, as `optionalText` reads it.
+  // Required once the spell is complete (see `titleRule`).
   title: optionalText(),
-  // What the spell is for, and the jar it is made in: free text, member-written (§5).
   intent: optionalText(),
   jarDescription: optionalText(),
   sealWaxColor: optionalText(),
@@ -27,12 +25,9 @@ const SpellFields = z.object({
   dayOfWeek: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
   visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
-  // Left out means the column's default (a draft) on create, and unchanged on
-  // update.
+  // Left out means the column's default on create, and unchanged on update.
   status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
-  // The spell's single free-text note; blank is none.
   note: optionalText(),
-  // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
   // The assigned categories, never the derived ones. The whole set when given; left out, unchanged on update and none on create.
   categoryIds: z.array(z.string().trim()).optional(),
@@ -79,7 +74,6 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
   });
 }
 
-/** Said on the title when a spell with none is marked complete: the schema's and the builder's alike. */
 export const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
 
 // Mirrors the database CHECK `status <> 'complete' OR title IS NOT NULL`, so the

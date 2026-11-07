@@ -10,9 +10,8 @@ import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
 import { CategoryRef, type CategoryRow } from '@/modules/vocabulary';
 
-// The grimoire over the wire: a coven's spells a page at a time, one spell by id, each spell's steps and categories.
-// Fields a list could repeat per spell read through a loader (CLAUDE.md rule 9). The resolvers hold no check and no query;
-// the grimoire service keeps a private spell its author's in SQL (claude-docs/graphql/schema.md, "The grimoire").
+// The resolvers hold no check and no query; the grimoire service keeps a private spell its author's in SQL
+// (claude-docs/graphql/schema.md, "The grimoire").
 
 const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
   description: 'Who reads a spell: its author alone, or every member of its coven.',
@@ -21,17 +20,14 @@ const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
 
 const SpellStatusEnum = builder.enumType('SpellStatus', { values: spellStatus.enumValues });
 
-// How a grimoire page is ordered, an argument rather than a field.
 const GrimoireOrderEnum = builder.enumType('GrimoireOrder', {
   values: GRIMOIRE_ORDERS,
   description:
     'How a grimoire page is ordered: UPDATED_DESC, last edited first (the default); CREATED_DESC, newest first; or TITLE_ASC, by title, untitled spells last.',
 });
 
-/** `numeric` text as Postgres returns it, as a number; null stays null. */
 const amount = (value: string | null) => (value === null ? null : Number(value));
 
-/** The gap between what a spell intends and what its ingredients carry, as categories. */
 type CategoryGaps = { intendedNotPresent: CategoryRow[]; presentNotIntended: CategoryRow[] };
 
 const CategoryComparisonRef = builder.objectRef<CategoryGaps>('CategoryComparison').implement({
@@ -186,9 +182,7 @@ builder.queryField('spell', (t) =>
   }),
 );
 
-// The saves. Each sends the whole recipe as one ordered list, so a
-// step's place is its index; claude-docs/graphql/schema.md, "The grimoire",
-// says how a step is kept, added and removed.
+// Each save sends the whole recipe as one ordered list, so a step's place is its index (claude-docs/graphql/schema.md, "The grimoire").
 
 const SpellStepInputRef = builder.inputType('SpellStepInput', {
   description:

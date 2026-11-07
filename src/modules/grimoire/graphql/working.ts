@@ -22,8 +22,7 @@ import { SpellRef } from './spell';
 import { InventoryUnitEnum } from '@/modules/ingredients';
 import type { WorkingDeductionRow } from '@/db/repository';
 
-// Workings over the wire: a spell's record of being made, who took part, and what it took from the jars. The resolvers hold
-// no check and no query; the working service keeps a private working its recorder's in SQL (claude-docs/graphql/schema.md,
+// The resolvers hold no check and no query; the working service keeps a private working its recorder's in SQL (claude-docs/graphql/schema.md,
 // "The grimoire"). A page's participants and deductions are read together by the service, and the count by a loader.
 
 const WorkingStatusEnum = builder.enumType('WorkingStatus', { values: workingStatus.enumValues });
