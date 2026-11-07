@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { PDFDocument } from 'pdf-lib';
-import type { Page } from '@playwright/test';
+import type { Download, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
@@ -12,6 +12,12 @@ import { signInAs } from './session';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
+
+// The browser runs remotely, so a download is copied here before it is read.
+const saveAndRead = async (download: Download, to: string) => {
+  await download.saveAs(to);
+  return readFile(to);
+};
 
 const PATH = '/keepers/business-cards';
 
@@ -44,7 +50,7 @@ test('a keeper opens Business Cards from the Keepers index and from the Keepers 
 
 test('Generate waits for a name, an email address and a phone number, and builds the sheet without asking the server for anything', async ({
   page,
-}) => {
+}, testInfo) => {
   await signInAs(page, 'a-printer@business-cards.test', ['discord'], 'admin');
   await page.goto(PATH);
   const main = page.getByRole('main');
@@ -78,7 +84,9 @@ test('Generate waits for a name, an email address and a phone number, and builds
   await generate.click();
   const fronts = await frontsOnly;
   expect(fronts.suggestedFilename()).toBe('business-cards-testwort-hollin.pdf');
-  const frontsPdf = await PDFDocument.load(await readFile((await fronts.path())!));
+  const frontsPdf = await PDFDocument.load(
+    await saveAndRead(fronts, testInfo.outputPath('fronts.pdf')),
+  );
   expect(frontsPdf.getPageCount()).toBe(1);
 
   await backs.click();
@@ -86,7 +94,7 @@ test('Generate waits for a name, an email address and a phone number, and builds
   const withBacks = page.waitForEvent('download');
   await generate.click();
   const both = await withBacks;
-  const bothPdf = await PDFDocument.load(await readFile((await both.path())!));
+  const bothPdf = await PDFDocument.load(await saveAndRead(both, testInfo.outputPath('both.pdf')));
   expect(bothPdf.getPageCount()).toBe(2);
 
   expect(requests).toEqual([]);
