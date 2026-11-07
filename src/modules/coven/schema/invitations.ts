@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { MAX_NOTE_LENGTH } from '../../../lib/invitation-cards/limits';
 import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, userRole, users } from '../../identity/schema/users';
@@ -49,6 +49,8 @@ export const invitations = namedWrites(
       batchId: uuid('batch_id'),
       // A card's place in its batch from 1, in the order the PDF lays the fronts out; null on an address row and on a card minted before this was kept.
       position: smallint('position'),
+      // A card minted for beta testers, set on every card of its batch at minting and never changed; false on an address row.
+      beta: boolean('beta').notNull().default(false),
       ...auditColumns,
     },
     (table) => [
@@ -66,6 +68,7 @@ export const invitations = namedWrites(
         'invitations_position_positive',
         sql`${table.position} is null or ${table.position} >= 1`,
       ),
+      check('invitations_beta_card_only', sql`not ${table.beta} or ${table.kind} = 'card'`),
       // Only a card's note is capped; an address row's note has no length limit.
       check(
         'invitations_card_note_length',
