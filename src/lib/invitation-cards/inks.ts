@@ -1,5 +1,5 @@
 import UPNG from '@pdf-lib/upng';
-import { CHALK, LABEL, MUTED, SOOT } from './layout';
+import { CHALK, LABEL, MUTED, SOOT, SORREL_BRIGHT } from './layout';
 
 /** A DeviceCMYK colour, each channel from 0 (no ink) to 1 (solid). */
 export type Cmyk = readonly [number, number, number, number];
@@ -68,7 +68,15 @@ export const LABEL_INK = toCmyk(hexRgb(LABEL), BLACK_REPLACEMENT);
 /** The ink a picture's lightest pixels print in: chalk, in the same black replacement. */
 export const PICTURE_LIGHT_INK = toCmyk(hexRgb(CHALK), BLACK_REPLACEMENT);
 
-const INKS: Record<string, Cmyk> = { [CHALK]: HEADING_INK, [MUTED]: MUTED_INK, [LABEL]: LABEL_INK };
+/** The business card's green rule. */
+export const RULE_INK = toCmyk(hexRgb(SORREL_BRIGHT), BLACK_REPLACEMENT);
+
+const INKS: Record<string, Cmyk> = {
+  [CHALK]: HEADING_INK,
+  [MUTED]: MUTED_INK,
+  [LABEL]: LABEL_INK,
+  [SORREL_BRIGHT]: RULE_INK,
+};
 
 /** The print ink of a colour the card layout draws in; a colour without one is a mistake, so it throws. */
 export function inkOf(colour: string): Cmyk {

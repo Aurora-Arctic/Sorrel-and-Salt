@@ -22,6 +22,8 @@ export const MUTED = '#c0baac';
 export const SOOT = '#14120e';
 /** The sheet label's grey, in the page margin. */
 export const LABEL = '#555555';
+/** The business card's rule: the site's $sorrel-bright. */
+export const SORREL_BRIGHT = '#88b669';
 
 export type FontKey = 'cormorant600' | 'lexend300' | 'lexend400' | 'lexend500';
 export type CardFonts = Record<FontKey, Font>;

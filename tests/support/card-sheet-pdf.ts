@@ -50,6 +50,8 @@ export interface Drawn {
   fills: Box[];
   clips: Box[];
   strokes: { from: [number, number]; to: [number, number] }[];
+  /** The CMYK stroke in force at each line in `strokes`, in the same order. */
+  strokeInks: number[][];
   // up and right are the directions, on the page, of the image's top and of its right-hand side.
   // textsBefore and pathsBefore count the text runs and filled paths drawn before the image.
   images: {
@@ -113,6 +115,7 @@ export function drawn(doc: PDFDocument, pageIndex: number): Drawn {
     fills: [],
     clips: [],
     strokes: [],
+    strokeInks: [],
     images: [],
     textRuns: 0,
     operators: new Set(),
@@ -123,6 +126,8 @@ export function drawn(doc: PDFDocument, pageIndex: number): Drawn {
   };
   let ink: number[] = [];
   const inks: number[][] = [];
+  let strokeInk: number[] = [];
+  const strokeInkStack: number[][] = [];
   let ctm: Matrix = [1, 0, 0, 1, 0, 0];
   const saved: Matrix[] = [];
   let operands: string[] = [];
@@ -136,13 +141,18 @@ export function drawn(doc: PDFDocument, pageIndex: number): Drawn {
         case 'q':
           saved.push(ctm);
           inks.push(ink);
+          strokeInkStack.push(strokeInk);
           break;
         case 'Q':
           ctm = saved.pop() ?? ctm;
           ink = inks.pop() ?? ink;
+          strokeInk = strokeInkStack.pop() ?? strokeInk;
           break;
         case 'k':
           ink = [num(4), num(3), num(2), num(1)];
+          break;
+        case 'K':
+          strokeInk = [num(4), num(3), num(2), num(1)];
           break;
         case 'cm':
           ctm = multiply([num(6), num(5), num(4), num(3), num(2), num(1)], ctm);
@@ -186,7 +196,10 @@ export function drawn(doc: PDFDocument, pageIndex: number): Drawn {
           path = [];
           break;
         case 'S':
-          for (const sub of path) result.strokes.push({ from: sub[0], to: sub[1] });
+          for (const sub of path) {
+            result.strokes.push({ from: sub[0], to: sub[1] });
+            result.strokeInks.push(strokeInk);
+          }
           path = [];
           break;
         case 'Do':
