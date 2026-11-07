@@ -53,13 +53,17 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
 - A summary is corrected in the PR that makes it wrong — "Correcting a doc"
   below.
 
-split-doc and repoint-doc-citations: text moves as is, edits only to links (a ../ on each relative one, intra-doc anchors repointed); the plan gives each section's file and index sentence, ownFile subsections and doc; the citation guard fails a citation named through the index.
+`node scripts/split-doc.mjs` moves a doc's sections into their own files as they are, editing only links (a `../` on each relative one, intra-doc anchors repointed), and `node scripts/repoint-doc-citations.mjs` rewrites citations after a heading moves.
+
+## What a doc holds
+
+A live doc holds only what adding a feature in its area needs, and holds each fact once. The test for every sentence is two questions: would an agent adding a feature here need it, and is it said nowhere else? A no to either cuts it, or turns it into a clause and a citation to the fact's one home. History that informs no future decision (what was tried, who decided, when, which task) leaves the live docs; a decision record keeps the argument behind a choice that would otherwise be re-argued, and the rest goes to `archive/`. A fact is never dropped for being old: a rule that still binds, a constraint's reason, a named exception, a command, a path, an env var, a number with its unit each stay, in one home.
 
 ## One home per fact
 
 A summary stands on its own for the **current shape**, and cites for the
 **argument**. Each fact has one home, and every other mention is a clause and a
-citation, so that a correction is one edit and a read is one page (MB.147):
+citation, so that a correction is one edit and a read is one page:
 
 | Fact                                            | Home                                                            |
 | ----------------------------------------------- | --------------------------------------------------------------- |
@@ -89,18 +93,28 @@ that two or more live docs and skills share, and the pairs sharing most, while
 `node scripts/doc-overlap.mjs <a.md> <b.md>` prints the passages one shares
 with the other. It is a report, not a guard, because a citation's clause
 legitimately repeats a few words of what it cites and no threshold tells that
-from a copy. MB.147's pass took it from 7,536 runs to 3,937, working pair
-by pair from the largest and stopping where a pair shares under about 60.
+from a copy; work pair by pair from the largest and stop where a pair shares
+under about 60.
 
 ## Comments in code
 
-A comment describes the code as it is. It says what this is and, where the
-obvious alternative would be wrong, why it is built this way instead, in one
-present-tense clause. Everything else about the code lives here, under
-`claude-docs/`: when it was built, which task built it, who decided, what was
-tried first, and what will replace it. A reader should get through a file with
-nothing but the code open (`CLAUDE.md`, Conventions; the record is
-`design-decisions/m14.32-comment-guidelines.md`).
+A comment is only what warns the reader of a nuance the code cannot show; the
+detail lives here, under `claude-docs/`. Before writing or keeping one, ask
+whether the reader loses anything without it that the identifier, its type,
+the next line of code or the cited doc does not give back; if not, it goes. A
+comment that survives says what this is and, where the obvious alternative
+would be wrong, why it is built this way instead, in one present-tense clause.
+Everything else about the code lives in the docs: when it was built, which task
+built it, who decided, what was tried first, and what will replace it. A
+reader should get through a file with nothing but the code open (`CLAUDE.md`,
+Conventions; the record is `design-decisions/m14.32-comment-guidelines.md`).
+
+- **Cut** a description that restates the name, the type or the next line; a
+  JSDoc that only names what a function does when the name says it; a story or
+  test comment narrating the steps below it; the "what" half of a what-and-why
+  when the what is the next line; a section divider no tool reads; an
+  `@param` or `@returns` that restates the type; a file header listing the
+  file's exports.
 
 - **History never appears in a comment.** No task id (`M10.5`, `MB.115`,
   `MW.15`), no `Story 14` or `Wave 11`, no "the owner's call", no date, no
@@ -133,28 +147,25 @@ so a private spell never reaches the resolver.` Not "X was added so that",
   or prop; a doc pointer is a citation after the clause it supports, never a
   paragraph restating the section (`.claude/rules/writing.md`).
 - **Review holds this rule**, with no mechanical guard on density or on history
-  markers, by the owner's decision of 2026-10-29: a density guard cannot be
-  written without penalising the comments the third bullet protects, and a
-  marker guard was declined. Citation is held by review too, since MB.224
-  retired its guard with the rest of the agent-only tooling's tests: a
-  `claude-docs/` path resolves and never points into `archive/`, in code, in
-  `CLAUDE.md` and in the markdown under `.claude/`, and a section is cited in
-  the file it lives in, not through a split summary's index —
+  markers: a density guard cannot be written without penalising the comments
+  the "These stay" bullet protects. Citation form is held by review too: a
+  `claude-docs/` path resolves and never points into `archive/`, in
+  code, in `CLAUDE.md` and in the markdown under `.claude/`, and a section is
+  cited in the file it lives in, not through a split summary's index —
   `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db/README.md`'s heading
   for it.
 
 ## Correcting a doc
 
-A doc is corrected in the PR that makes it wrong (MB.31). There is no scheduled
+A doc is corrected in the PR that makes it wrong. There is no scheduled
 compression pass: a statement goes stale in a particular diff, and that diff is
-where it is cheapest to fix and hardest to forget. `MW.15`, the v1 close-out,
-is the one remaining pass over the whole set. Decision records stay live and
-are superseded in place.
+where it is cheapest to fix and hardest to forget. Decision records stay live
+and are superseded in place.
 
-- **The test is "is this statement out of date?", not "is this narrative?"**
-  Two things are never cut for being old: a forward-looking rule that still
-  binds later work, and history that is still true. Trimming a rule because it
-  reads like background is how a rule gets lost.
+- **Two tests, in order: "is this statement out of date?", then "does adding a
+  feature need it?"** A forward-looking rule that still binds later work is
+  never cut for reading like background; that is how a rule gets lost. True
+  history that informs no future decision is cut ("What a doc holds" above).
 - **A summary must stand on its own.** If understanding how the system works
   today means opening a decision record or an archived file, that is a defect
   in the summary, not a research step.
@@ -165,7 +176,7 @@ are superseded in place.
 
 ## `archive/` is never read
 
-`claude-docs/archive/` exists, is closed, and is never read or edited: its files record what was believed when they were written and are allowed to be wrong. A live doc that sends you into it to understand the system is a bug in the live doc; fix the live doc instead. Text that leaves a live doc either moves to another live doc because it still binds, or goes, and git history is the record.
+`claude-docs/archive/` exists, is closed, and is never read: its tarballs record what was believed when they were written and are allowed to be wrong. A live doc that sends you into it to understand the system is a bug in the live doc; fix the live doc instead. Text that leaves a live doc either moves to another live doc because it still binds, or is deleted (git history is the record), or, when it is a whole file of history worth keeping in the repository, is added to a tarball there and listed in `archive/README.md`.
 
 ## Naming
 
