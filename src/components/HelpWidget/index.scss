@@ -26,6 +26,12 @@
   }
 }
 
+.help-widget__explained {
+  margin-block: space(1) 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
 .help-widget__note {
   margin-top: space(3);
 }

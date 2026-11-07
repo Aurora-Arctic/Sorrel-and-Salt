@@ -2,7 +2,6 @@
 
 import { useId, type ReactElement } from 'react';
 import { RETRY_DELAYS_MS, type AutosaveStatus } from '@/lib/autosave';
-import { useHydrated } from '@/lib/hydrated';
 import SaveStatus from '../SaveStatus';
 
 // The spell builder's real save line in each state, beside the retry delays the autosave hook waits on
@@ -18,6 +17,22 @@ export const STATUS_LABELS: Readonly<Record<AutosaveStatus, string>> = {
   conflict: 'Changed Elsewhere',
 };
 
+/** What each state means for the reader, shown beneath its line. */
+const EXPLAINED: Readonly<Record<AutosaveStatus, string>> = {
+  idle: 'Nothing has changed since the spell opened, so the line is empty.',
+  pending:
+    'You have changed something and the save is about to start. The line still shows the last save until it does.',
+  saving: 'The change is on its way to the server.',
+  saved: 'The server has every change, as of the time shown.',
+  failed:
+    'The save did not go through. Your changes are still on the page; press Retry to send them again.',
+  conflict:
+    'Someone else saved the spell after you opened it. Reload Latest shows their version; Keep My Version saves yours over it.',
+};
+
+// Built from local parts, not one instant, so the server and the browser each read it as 2:02 pm in their own zone.
+const SAVED_AT = new Date(2026, 0, 1, 14, 2);
+
 function seconds(delays: readonly number[]): string {
   const words = delays.map((delay) => String(delay / 1000));
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]} seconds`;
@@ -27,8 +42,6 @@ const nothing = (): void => {};
 
 const AutosaveStatusWidget = (): ReactElement => {
   const id = useId();
-  // Null until hydrated, so the clock time is the reader's and the server's render matches the browser's.
-  const now = useHydrated() ? new Date() : null;
   return (
     <figure className="figure help-widget">
       <dl className="help-widget__states">
@@ -38,12 +51,14 @@ const AutosaveStatusWidget = (): ReactElement => {
             <dd aria-labelledby={`${id}-${status}`}>
               <SaveStatus
                 status={status}
-                savedAt={status === 'idle' ? null : now}
+                savedAt={status === 'idle' ? null : SAVED_AT}
                 conflictMessage="Someone else saved this spell since you opened it."
                 onRetry={nothing}
                 onReload={nothing}
                 onKeepMine={nothing}
+                example
               />
+              <p className="help-widget__explained">{EXPLAINED[status]}</p>
             </dd>
           </div>
         ))}

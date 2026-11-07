@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import AutosaveStatusWidget, { STATUS_LABELS } from '@/components/HelpWidget/autosave-status';
 import { RETRY_DELAYS_MS } from '@/lib/autosave';
@@ -33,6 +34,26 @@ describe('AutosaveStatusWidget', () => {
     expect(within(conflict).getByRole('button', { name: 'Reload Latest' })).toBeInTheDocument();
     expect(within(conflict).getByRole('button', { name: 'Keep My Version' })).toBeInTheDocument();
     expect(within(stateNamed(STATUS_LABELS.saved)).queryByRole('button')).toBeNull();
+  });
+
+  it('holds no live region and no alert, as its lines are examples', () => {
+    render(<AutosaveStatusWidget />);
+
+    const figure = screen.getByRole('figure');
+    // Why it could have: it draws the failed and conflict lines, which alert outside an example.
+    expect(within(figure).getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(within(figure).queryAllByRole('alert')).toHaveLength(0);
+    expect(within(figure).queryAllByRole('status')).toHaveLength(0);
+    expect(figure.querySelector('output')).toBeNull();
+  });
+
+  it('draws a fixed saved time on the server and in the browser, so the two agree', () => {
+    expect(renderToString(<AutosaveStatusWidget />)).toMatch(/Saved 2:02/);
+    render(<AutosaveStatusWidget />);
+
+    expect(within(stateNamed(STATUS_LABELS.saved)).getByText(/^Saved 2:02/)).toBeInTheDocument();
+    expect(within(stateNamed(STATUS_LABELS.pending)).getByText(/^Saved 2:02/)).toBeInTheDocument();
+    expect(within(stateNamed(STATUS_LABELS.idle)).queryByText(/Saved/)).toBeNull();
   });
 
   it('names each retry delay the hook waits, in seconds', () => {
