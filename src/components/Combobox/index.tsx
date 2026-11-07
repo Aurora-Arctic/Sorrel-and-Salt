@@ -227,7 +227,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const busy = suggestions?.pending === true;
   // With an empty message the listbox is one part of a popup, and the popup is what is placed.
   const wrapped = message !== undefined;
-  const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
+  // Still followed while a lookup is pending, so the list it closed reopens without measuring the page again.
+  const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor, {
+    follow: wantsOpen && busy,
+  });
 
   // The list opens where the tip would be read, and is what typing is for.
   useEffect(() => {

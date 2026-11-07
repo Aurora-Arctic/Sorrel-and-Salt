@@ -204,14 +204,18 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   (`.section-nav`, phone width only) sits over the foot of the window, which
   Floating UI cannot see. `flip`, `shift` and `size` therefore take a
   `bottom` padding of the edge plus the bar's measured height (its safe
-  area included), read at every placement, so a field near the foot opens its
+  area included), read once per placement by a first middleware and shared
+  by the three after it, so a field near the foot opens its
   list above rather than behind the bar. The bar is found by its class, as
   the shell's own stylesheets already do. Without the padding `size` shrinks
   the list to the sliver left and `flip` then measures that shrunken list,
   which still "fits" below, so it never flips.
-- **Followed while open, and only then.** `autoUpdate` re-places it on a
-  scroll or a resize; a closed list, which Downshift keeps in the page, is
-  not followed.
+- **Followed while open, and through a pending lookup.** `autoUpdate`
+  re-places it on a scroll or a resize. A closed list, which Downshift keeps
+  in the page, is not followed, except while the box still wants its list and
+  a lookup is in flight (the hook's `follow` option): a list that closed only
+  because the new lookup has no rows yet reopens without subscribing again,
+  which would read the page's layout inside the keystroke.
 - **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
   clip it.
 - **Shared with MenuButton.** Its menu is placed by the same hook with three
@@ -226,6 +230,23 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
 happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
 and the list the sizes Floating UI reads, as the sortable tests give the
 chips theirs.
+
+## What a keystroke writes
+
+Every write to the page re-checks its `:has()` style rules, so a key writes
+only what it changes (M15.83;
+[the record](../design-decisions/m15.83-combobox-keystroke-cost.md)):
+
+- **`aria-busy`** changes only when a lookup starts or settles, since React
+  writes an attribute only when its value changes.
+- **The list's `width` and `--combobox-list-room`** are set only when they
+  differ from what the list already holds.
+- **The input's `name` is rewritten by React on every key**, and on every
+  render of the box, by React DOM's own input update code. The field cannot
+  stop that while React renders the input, so it is left alone.
+
+`tests/components/Combobox/keystroke.test.tsx` watches the box and the list
+for these writes.
 
 ## The empty message
 
@@ -938,7 +959,7 @@ The phone's fixed bottom bar takes room from the foot of the window, so a list t
 
 ### Followed only while open
 
-Every box's list is always in the page, as Downshift asks, and a closed one has nothing to follow.
+Every box's list is always in the page, as Downshift asks, and a closed one has nothing to follow. The one exception is a list closed only by a pending lookup, which stays followed so that its reopening does not subscribe again inside a keystroke ("Where the list opens").
 
 ### The popup
 
