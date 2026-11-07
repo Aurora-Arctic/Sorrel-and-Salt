@@ -20,17 +20,14 @@ import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRole } from '../types';
 import { assertMembership } from './membership';
 
-// A steward invites an address into a coven with a role: the workspace tier of `invitations` (claude-docs/db/invitations.md,
-// "Coven invitation service details"). Who may invite is this service's; the token, expiry and workspace are the repository's.
+// Who may invite is this service's; the token, expiry and workspace are the repository's (claude-docs/db/invitations.md, "Coven invitation service details").
 
-/** The roles an invitation may grant: the database's check, said again where it can explain itself. */
 const INVITABLE: readonly WorkspaceRole[] = ['viewer', 'member'];
 
-/** How many coven invitations one account may make in a rolling window: each, and each resend, sends one mail from the site's address. */
+/** Each invitation and each resend sends one mail from the site's address. */
 export const INVITATION_MAIL_LIMIT = 20;
 export const INVITATION_MAIL_WINDOW_MINUTES = 60;
 
-/** Refuses the sender once their recent invitations reach the limit, saying when the oldest one leaves the window. */
 async function assertUnderMailLimit(session: Session): Promise<void> {
   const windowMs = INVITATION_MAIL_WINDOW_MINUTES * 60_000;
   const times = await findRecentCovenInvitationTimes(session, windowMs / 1000);
@@ -50,8 +47,7 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
 }
 
 /**
- * Invites `email` into the coven with `role`: a pending invitation whose token is mailed through `sender` and stored as its hash
- * alone; a second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
+ * A second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
  *
  * @throws {Forbidden} the caller is not a steward of the coven (`member: invite`).
  * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the hourly mail limit.
@@ -85,12 +81,10 @@ export async function createInvitation(
 
   await assertUnderMailLimit(session);
 
-  // The proof was minted from a live membership of it, so the workspace is there.
   const workspace = await findOneById(workspaces, workspaceId);
   if (!workspace) throw new ValidationError([{ path: ['workspaceId'], message: 'No such coven' }]);
 
-  // The waiting invitation to this address is withdrawn in the write that creates the new one. The token stored here is
-  // never told to anyone: the mail's step replaces it with the one it mails.
+  // The token stored here is never told to anyone; the mail's step replaces it with the one it mails.
   const [row] = await withAudit(session, async (write) => {
     await write.revokePendingInvitationsTo(membership, email);
     return write.insertInvitation(membership, { email, role, token: newToken() });
@@ -101,8 +95,7 @@ export async function createInvitation(
 }
 
 /**
- * One page of the coven's pending invitations, newest first, for the members page. Stewards only: the rows carry the addresses of
- * people who have not joined, so the check is `member: invite`, never `member: read`.
+ * Stewards only: the rows carry the addresses of people who have not joined, so the check is `member: invite`, never `member: read`.
  *
  * @throws {Forbidden} the caller is not a steward of the coven.
  */
@@ -116,8 +109,6 @@ export async function listPendingWorkspaceInvitations(
 }
 
 /**
- * How many invitations `listPendingWorkspaceInvitations` pages, and how many come before `start`: "Page X of Y".
- *
  * @throws {Forbidden} the caller is not a steward of the coven.
  */
 export async function countPendingWorkspaceInvitations(
@@ -130,8 +121,6 @@ export async function countPendingWorkspaceInvitations(
 }
 
 /**
- * Withdraws a pending invitation of the coven, stamped as the owner: its link is dead from now on and the row stays for the audit.
- *
  * @throws {Forbidden} the caller is not a steward of the coven.
  * @throws {NotFound} no invitation of this coven has this id, or it is no longer pending.
  * @throws {ValidationError} on `id`: the invitation was accepted, so the person is removed on the members page instead.
@@ -143,7 +132,6 @@ export async function revokeWorkspaceInvitation(
 ): Promise<InvitationRow> {
   const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
   const missing = () => new NotFound('No pending invitation in this coven has this id');
-  // An id that cannot name a row is one that is not there.
   if (!RowId.safeParse(id).success) throw missing();
 
   const invitation = await findInvitationInWorkspace(membership, id);

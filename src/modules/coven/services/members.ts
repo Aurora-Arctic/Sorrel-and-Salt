@@ -8,9 +8,7 @@ import { assertMembership } from './membership';
 import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
- * One page of a coven's live members, in the order they joined: `Workspace.members` and the members page. `query` narrows to
- * names holding the text, in any case. One coven at a time, not batched
- * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
+ * One coven at a time, not batched (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
  *
  * @throws {Forbidden} the caller holds no live seat, or holds one without `member: read`, which an observer lacks.
  */
@@ -26,9 +24,6 @@ export async function listMembers(
 }
 
 /**
- * Every live member of a coven with their role, read to the end through the same check as `listMembers`, for pages that must
- * count or name stewards.
- *
  * @throws {Forbidden} as `listMembers` does.
  */
 export async function memberRoster(
@@ -40,8 +35,7 @@ export async function memberRoster(
 }
 
 /**
- * The address of each of these users who sits in the coven, read off their own user row so a changed address shows at once: the
- * steward's Email column. Users outside the coven are left out, not refused.
+ * Read off the user row so a changed address shows at once. Users outside the coven are left out, not refused.
  *
  * @throws {Forbidden} the caller holds no live seat, or holds one without `member: readEmail`, which only stewards hold.
  */
@@ -55,10 +49,7 @@ export async function memberEmails(
   return rows.map(({ id, email }) => ({ userId: id, address: email }));
 }
 
-/**
- * `memberEmails` for a batch of members across covens, one answer per key: the address, null for someone no longer seated,
- * or the coven's `Forbidden`, so one refused coven leaves another answered.
- */
+/** A refused coven is its `Forbidden` in its own slot, so it leaves another answered. */
 export async function emailsOfMembers(
   session: Session,
   keys: readonly MemberKey[],

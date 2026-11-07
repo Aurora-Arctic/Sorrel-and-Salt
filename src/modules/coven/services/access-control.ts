@@ -3,31 +3,25 @@ import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
 import type { WorkspaceRole } from '../types';
 
-// What each **workspace** role may do; the site role is not read here, as a keeper reaches no workspace. Permission statements
-// rather than a rank comparison, so a role off the observer < practitioner < steward line cannot make an "at least member" check
-// mean something nobody checked (claude-docs/design-decisions/m6.3-permission-statements.md).
+// The site role is not read here, as a keeper reaches no workspace. Permission statements rather than a rank comparison, so a role off the
+// observer < practitioner < steward line cannot make an "at least member" check mean something nobody checked
+// (claude-docs/design-decisions/m6.3-permission-statements.md).
 
-/** The resources a workspace role acts on, one per surface DESIGN.md §9 routes to. */
 const statements = {
-  /** A workspace's own ingredient entries and folk names: what you *have*. Never the compendium, which is curated by site role. */
+  /** Never the compendium, which is curated by site role. */
   ingredient: ['read', 'create', 'update', 'delete'],
-  /** Stock: the jars a coven holds. No `create` or `delete`: adding and throwing out a jar are writes like any change, so all three check `update`. */
+  /** No `create` or `delete`: adding and throwing out a jar are writes like any change, so all three check `update`. */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
-  /** A working: one time a spell was made, with its participants and the stock it took (M13.5). Its own resource so a role can be given one and not the other. */
+  /** Its own resource so a role can be given one and not the other. */
   working: ['read', 'create', 'update', 'delete'],
-  /**
-   * Members and invitations. Stewards and practitioners read the roll (`read`); a member's address (`readEmail`), inviting, changing a
-   * role, removing and pausing a member's access (`pause`) stay with stewards. The address is its own action since a member reads the roll but only a steward needs it to tell two people apart.
-   */
+  /** `readEmail` is its own action since a member reads the roll but only a steward needs it to tell two people apart. */
   member: ['read', 'readEmail', 'invite', 'update', 'remove', 'pause'],
-  /** The coven itself: renaming it, and deleting it. */
   workspace: ['read', 'update', 'delete'],
 } as const;
 
 const ac = createAccessControl(statements);
 
-/** Everything, and nothing else — reads alone (CLAUDE.md: "Observers write nothing"). */
 const viewer = ac.newRole({
   ingredient: ['read'],
   inventory: ['read'],
@@ -36,7 +30,6 @@ const viewer = ac.newRole({
   workspace: ['read'],
 });
 
-/** The observer's reads, plus what a coven is for: its ingredients, stock, grimoire, and who else is in the coven (`member: read`). */
 const member = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
@@ -46,7 +39,6 @@ const member = ac.newRole({
   workspace: ['read'],
 });
 
-/** The member's, plus the membership roll with its addresses and its writes, and the workspace row itself. */
 const owner = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
@@ -56,22 +48,19 @@ const owner = ac.newRole({
   workspace: ['read', 'update', 'delete'],
 });
 
-// `Record<WorkspaceRole, …>` rather than a plain object: a fourth value added
-// to the `workspace_role` enum fails to compile here until someone says what
-// it may do, which is the decision that must not be made by omission.
+// A fourth `workspace_role` value fails to compile here until someone says what it may do; that must not be decided by omission.
 const ROLE_ABILITIES: Record<WorkspaceRole, ReturnType<typeof ac.newRole>> = {
   viewer,
   member,
   owner,
 };
 
-/** What a call is asking to do, e.g. `{ spell: ['create'] }`. An undeclared resource or action is a compile error. */
+/** An undeclared resource or action is a compile error. */
 export type WorkspacePermission = RoleAuthorizeRequest<typeof statements>;
 
-/** The resource/action vocabulary itself, for the tests that pin the policy. */
 export const WORKSPACE_STATEMENTS = statements;
 
-/** Whether `role` may do everything `permission` asks; several resources in one request are ANDed. */
+/** Several resources in one request are ANDed. */
 export function rolePermits(role: WorkspaceRole, permission: WorkspacePermission): boolean {
   return ROLE_ABILITIES[role].authorize(permission).success;
 }

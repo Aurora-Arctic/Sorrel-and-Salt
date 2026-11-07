@@ -9,16 +9,13 @@ import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
 import { assertNotSystemSeat } from './system-seat';
 
-// A steward moves a member between observer, practitioner and steward, either way.
-// It changes an existing member's row and nothing else — a pending invitation
-// is not a member, and ownership never comes through one (DESIGN.md §5).
+// It changes an existing member's row and nothing else; ownership never comes through an invitation (DESIGN.md §5).
 
 const PAUSED_PROMOTION =
   "This member's access is paused; lift the pause first to make them a steward";
 
 /**
- * Sets `userId`'s role in the workspace (`member: update`, stewards only); the person must be a live member. Demoting a
- * steward runs the last-owner guard under a lock. `joinedAt` is untouched.
+ * Demoting a steward runs the last-owner guard under a lock.
  *
  * @throws {Forbidden} not a steward of the workspace, or `userId` is not a live member or is the system user.
  * @throws {LastOwner} the change would leave the workspace without a steward.
@@ -31,7 +28,6 @@ export async function updateMemberRole(
   role: WorkspaceRole,
 ): Promise<MembershipWithWorkspace> {
   const membership = await assertMembership(session, workspaceId, { member: ['update'] });
-  // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
   assertNotSystemSeat(userId);
   // A steward's access is never paused, so a paused member is lifted before being made one.
@@ -45,7 +41,6 @@ export async function updateMemberRole(
     if (!row) throw new Forbidden('That person is not a member of this coven');
     return row;
   });
-  // The proof was minted from a live membership of it, so the workspace is there.
   const workspace = await findOneById(workspaces, workspaceId);
   if (!workspace) throw new Forbidden();
   return { ...updated, workspace };

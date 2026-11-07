@@ -6,8 +6,7 @@ import { afterEach, describe, expect, inject, it } from 'vitest';
 
 import { setup } from '../../scripts/setup';
 
-// The root .env.example names every variable src/ and scripts/ read, and nothing they do not, so it cannot drift from the code
-// (claude-docs/secrets.md, "Every variable"). `npm run setup` copies it, and three other examples, without ever overwriting.
+// .env.example names every variable src/ and scripts/ read and nothing else (claude-docs/secrets.md, "Every variable").
 
 // Set by the tool that runs the code (Next, Vercel, GitHub Actions, a test runner), never by a developer, so a key in .env.example would only shadow it.
 const TOOL_SET = [/^NODE_ENV$/, /^PORT$/, /^CI$/, /^VERCEL_/, /^GITHUB_/];

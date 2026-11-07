@@ -27,7 +27,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-/** A real proof, minted against the seeded cast: there is no other way to get one. */
 const proofFor = (user: typeof A, workspaceId: string = WORKSPACE_W_ID): Promise<Membership> =>
   assertMembership(asUser(user), workspaceId, { spell: ['read'] });
 
@@ -38,13 +37,11 @@ beforeEach(async () => {
 const softDelete = (table: 'ingredients' | 'spells', id: string) =>
   sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
 
-/** Pulls the layer holding `ingredientId` out of the spell, as B. */
 const removeLayer = (spellId: string, ingredientId: string) =>
   sql`
     update spell_steps set deleted_at = now(), deleted_by = ${B.id}
     where spell_id = ${spellId} and ingredient_id = ${ingredientId} and deleted_at is null`;
 
-/** A compendium entry, filed under Protection, with a live and a removed folk name. */
 async function entry(): Promise<string> {
   const id = await insertIngredient(
     sql,
@@ -57,7 +54,6 @@ async function entry(): Promise<string> {
   return id;
 }
 
-/** A coven's own ingredient, filed under Cleansing. */
 const local = (workspaceId: string, author: typeof A) =>
   insertIngredient(
     sql,
@@ -70,7 +66,6 @@ const local = (workspaceId: string, author: typeof A) =>
     author.id,
   );
 
-/** A spell in W holding these ingredients, one layer each, written by `author`. */
 const spellHolding = (
   ingredientIds: string[],
   { author = B, visibility = 'workspace' as 'workspace' | 'private' } = {},
@@ -216,7 +211,6 @@ describe('findManyOfSpellIngredientsIncludingSoftDeleted', () => {
 
     const [protection] = await sql`select id from categories where name = 'Protection'`;
     expect(categories).toEqual([expect.objectContaining({ categoryId: protection.id })]);
-    // The folk name removed before the delete stays removed.
     expect(folkNames.map((row) => row.name)).toEqual(['Test Root']);
   });
 
@@ -266,13 +260,10 @@ describe('findFormsInSpellsIncludingSoftDeleted', () => {
       update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
       where ingredient_id in ${sql([localId, unheldId])}`;
 
-    // The author reads the deleted form: the hatch skips the form's tombstone.
     const forms = await findFormsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]);
     expect(forms).toEqual([expect.objectContaining({ ingredientId: localId })]);
     expect(forms[0].deletedAt).not.toBeNull();
 
-    // And no other filter: not through a spell A may not read, nor for an
-    // ingredient no spell holds.
     await expect(
       findFormsInSpellsIncludingSoftDeleted(await proofFor(A), [localId]),
     ).resolves.toEqual([]);
@@ -282,8 +273,6 @@ describe('findFormsInSpellsIncludingSoftDeleted', () => {
   });
 });
 
-// A layer pulled out of a jar is a tombstone, and every read of the
-// jar lets it go: the ingredient it held is no longer something the spell holds.
 describe('a layer removed from a spell', () => {
   it('is gone from findManyInSpell, beside the layer still in the jar', async () => {
     const entryId = await entry();
@@ -322,7 +311,6 @@ describe('a layer removed from a spell', () => {
     ).resolves.toEqual([]);
   });
 
-  // The removal is the one layer's: another jar holding the same ingredient still does.
   it('leaves the ingredient to another spell that still holds it', async () => {
     const localId = await local(WORKSPACE_W_ID, A);
     const removedFrom = await spellHolding([localId]);

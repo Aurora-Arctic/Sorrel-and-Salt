@@ -7,9 +7,6 @@ import type { CovenMembership, PausedCoven } from '../types';
 import { assertMembership } from './membership';
 
 /**
- * The workspace a `/coven/[slug]` address names, and the caller's proof of membership in it. The slug is the only input. Asks for
- * `workspace: read`; a page that does more asks `assertMembership` itself.
- *
  * @throws {Forbidden} bare, alike for an unknown slug and a non-member, so the answer does not say which miss it was.
  */
 export async function membershipBySlug(session: Session, slug: string): Promise<CovenMembership> {
@@ -20,9 +17,6 @@ export async function membershipBySlug(session: Session, slug: string): Promise<
 }
 
 /**
- * The coven a `/coven/[slug]` address names and the pause standing on the caller's seat in it, for the paused page; `null` when
- * no pause stands, so the page can send them back in.
- *
  * @throws {Forbidden} bare, as `membershipBySlug` throws it: only a member learns the coven is there.
  */
 export async function pausedCovenBySlug(

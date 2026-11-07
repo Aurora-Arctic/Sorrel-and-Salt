@@ -4,17 +4,11 @@ import { Forbidden } from '../../../lib/errors';
 import type { WorkspaceRole } from '../types';
 import type { Membership } from './membership';
 
-// A workspace never loses its last owner. Called inside the transaction of every
-// write that can take the steward role from someone (demotion, removal, leave),
+// Called inside the transaction of every write that can take the steward role from someone (demotion, removal, leave),
 // so the count it reads is the one the write lands on.
 
-/** What the interface can offer instead: promote one of `promotable`, or delete the workspace. */
 export type LastOwnerRemedy = 'promote' | 'delete';
 
-/**
- * Refusal of a change that would leave a workspace with no owner. A `Forbidden` carrying the way out:
- * `promote` (`promotable` lists the user ids) when other members exist, `delete` when the steward is alone.
- */
 export class LastOwner extends Forbidden {
   readonly remedy: LastOwnerRemedy;
   readonly promotable: readonly string[];
@@ -32,9 +26,7 @@ export class LastOwner extends Forbidden {
 }
 
 /**
- * Refuses a change to `userId` that would leave the workspace without an owner.
- * `becomes` is the role they end up with, or `null` when they leave or are
- * removed. The members are read under a lock, so a concurrent steward change is counted.
+ * The members are read under a lock, so a concurrent steward change is counted.
  *
  * @throws {LastOwner} `userId` is the only steward and would stop being one.
  */

@@ -3,11 +3,7 @@ import { describe, expect, inject, it } from 'vitest';
 
 import { REPO_ROOT } from '../support/paths';
 
-// The compendium seed's lanes read in-copyright books from /app/.library/
-// (claude-docs/compendium/compendium-seed/README.md, "The library"). The repo is public, so a book
-// committed even once is published for good. `.gitignore` keeps the folder out; this guard catches
-// a book saved anywhere else, before it is staged, since `repoFiles` holds untracked files git
-// would not ignore as well as the index.
+// The repo is public, so a book committed even once is published for good: `.gitignore` keeps `/app/.library/` out and this catches one saved elsewhere (claude-docs/compendium/compendium-seed/README.md, "The library").
 
 const BOOK = /\.(pdf|epub)$/i;
 
@@ -20,7 +16,6 @@ describe('no book is tracked', () => {
     expect(files).toContain('tests/guards/no-tracked-books.test.ts');
 
     expect(files.filter((file) => BOOK.test(file))).toEqual([]);
-    // Exits 0 only when git ignores the path; throws otherwise.
     expect(() =>
       execFileSync('git', ['-c', 'safe.directory=*', 'check-ignore', '-q', '.library/a-book.pdf'], {
         cwd: REPO_ROOT,

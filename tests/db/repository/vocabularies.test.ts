@@ -38,7 +38,6 @@ function pageOf(args: ConnectionArgs = {}): Promise<Page<IngredientFormValueRow>
   return resolvePage(args, (request) => findIngredientFormValues({}, request));
 }
 
-/** Follows `endCursor` to the end, collecting ids and page sizes. */
 async function walk(first?: number): Promise<{ ids: string[]; sizes: number[] }> {
   const ids: string[] = [];
   const sizes: number[] = [];
@@ -52,7 +51,6 @@ async function walk(first?: number): Promise<{ ids: string[]; sizes: number[] }>
   }
 }
 
-/** The curated forms in the finder's order, from the database's own collation. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select f.id from ingredient_forms f
@@ -132,16 +130,12 @@ describe('findIngredientFormValueCount', () => {
   });
 });
 
-// The celestial bodies and the signs as `celestialBodies` and `zodiacSigns` page them:
-// every live row, in (name, id) order — one tier, so nothing else decides
-// what is curated — narrowed by a name fragment read literally.
 describe('findAstrologyValues', () => {
   afterEach(async () => {
     await sql`delete from celestial_bodies where name like 'Fixture%'`;
     await sql`update celestial_bodies set deleted_at = null, deleted_by = null`;
   });
 
-  /** The live rows of `table` in the finder's order, from the database's own collation. */
   async function expectedAstrology(table: 'celestial_bodies' | 'zodiac_signs'): Promise<string[]> {
     const rows = await sql<{ id: string }[]>`
       select id from ${sql(table)} where deleted_at is null order by name, id`;
@@ -235,7 +229,6 @@ describe('findDeityPage and findDeityCount', () => {
     await sql`update deity_traditions set deleted_at = null, deleted_by = null`;
   });
 
-  /** The curated deities in the finder's order, under its natural collation. */
   async function expectedDeities(): Promise<string[]> {
     const rows = await sql<{ id: string }[]>`
       select d.id from deities d join deity_traditions t on t.id = d.tradition_id
@@ -365,9 +358,6 @@ describe('findDeityPage and findDeityCount', () => {
   });
 });
 
-// A group vocabulary as its admin page lists it, run on the deity
-// traditions, the one page that searches: every live group by name, narrowed
-// by a name fragment the way the values' lists are.
 describe('findGroupPage and findGroupCount', () => {
   afterEach(async () => {
     await sql`delete from deity_traditions where name like 'Fixture%'`;

@@ -9,7 +9,6 @@ import { REPO_ROOT } from '../support/paths';
 const REPOSITORY = 'src/db/repository';
 const INDEX = `${REPOSITORY}/index.ts`;
 
-/** Every exported finder allowed to skip a filter, each saying so in its name. */
 const ESCAPE_HATCHES = [
   'findManyIncludingSoftDeleted',
   'findIngredientsInSpellsIncludingSoftDeleted',
@@ -34,7 +33,6 @@ const INTERNAL_HATCHES: Record<string, string[]> = {
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
-/** Every file in the folder, by repo-relative path. Subdirectories are not the repository's. */
 const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
   .map((entry) => `${REPOSITORY}/${entry.name}`);
@@ -42,7 +40,6 @@ const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
 const declaration = (name: string) =>
   new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
 
-/** The `{` that opens a function's body: past the parenthesised parameters (which may destructure), then the first brace outside the return type's `<...>`. */
 function bodyStart(text: string, from: number): number {
   // Generics come first and may hold parentheses of their own, so the parameter list is the first `(` outside `<...>`.
   let index = from;
@@ -66,7 +63,6 @@ function bodyStart(text: string, from: number): number {
   throw new Error('no function body found');
 }
 
-/** The body of the one top-level `function name(...) { ... }`, by brace matching. */
 function functionBody(name: string): string {
   const files = FILES.filter((file) => declaration(name).test(source(file)));
   expect(files, `${name} is declared as a top-level function in exactly one file`).toHaveLength(1);
@@ -83,7 +79,6 @@ function functionBody(name: string): string {
   throw new Error(`unbalanced braces reading ${name}`);
 }
 
-/** The finders the index re-exports, `type` re-exports left out: the repository's surface. */
 const FINDERS = [...source(INDEX).matchAll(/^export\s*\{([^}]*)\}\s*from\s*['"][^'"]+['"]/gm)]
   .flatMap((match) => match[1].split(','))
   .map((name) => name.trim())

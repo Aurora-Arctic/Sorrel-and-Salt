@@ -7,22 +7,16 @@ import { RowId } from '../../../lib/validation';
 import { type WorkspacePermission, rolePermits } from './access-control';
 import type { WorkspaceRole } from '../types';
 
-// CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
-// and the `Membership` it returns is the proof the check ran. The brand below
-// is the whole mechanism — see claude-docs/db/membership-proof.md, "The Membership proof".
+// The brand below is the whole mechanism (claude-docs/db/membership-proof.md, "The Membership proof").
 
 // Not exported, so no other file can name the property and no object literal satisfies `Membership`.
 declare const brand: unique symbol;
 
-// One lookup per (user, workspace) per server render, whatever permission each caller asks for; the check stays uncached. Keyed by
-// the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
+// Keyed by the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
 // finder (claude-docs/graphql/two-transports.md, "The two transports").
 const workspaceSeat = cache(findWorkspaceSeat);
 
-/**
- * Proof that `assertMembership` admitted this user to this workspace at this role. Finders and `AuditWriter` methods demand one,
- * so forgetting the check is a compile error (DESIGN.md §8).
- */
+/** Finders and `AuditWriter` methods demand one, so forgetting the check is a compile error (DESIGN.md §8). */
 export type Membership = {
   readonly workspaceId: string;
   readonly userId: string;
@@ -31,12 +25,7 @@ export type Membership = {
 };
 
 /**
- * The membership check for every workspace-scoped operation: `permission` is what the call is about to do, checked against the
- * role's statements (`access-control.ts`). A site keeper gets no bypass, so `session.role` is not read.
- *
- * ```ts
- * const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
- * ```
+ * A site keeper gets no bypass, so `session.role` is not read.
  *
  * @throws {Forbidden} the email address is unverified; or no live membership of `workspaceId` (a non-uuid id included) carries `permission`.
  * @throws {AccessPaused} the user's seat in `workspaceId` is paused; carries when the pause ends.
@@ -50,8 +39,7 @@ export async function assertMembership(
 }
 
 /**
- * The caller's own seat in `workspaceId`, for leaving it and nothing else: `assertMembership` for `workspace: read`, except that
- * a paused seat passes. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
+ * The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
  *
  * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.
  */
@@ -62,7 +50,6 @@ export async function assertSeatToLeave(
   return admit(session, workspaceId, { workspace: ['read'] }, true);
 }
 
-/** Both checks above; `pausedMayPass` is true for leaving alone. */
 async function admit(
   session: Session,
   workspaceId: string,
@@ -74,7 +61,6 @@ async function admit(
     throw new Error('assertMembership requires a permission to check');
   }
 
-  // The same rule the pages enforce by redirect: an unverified account reaches the email page and nothing of a coven.
   if (session.emailUnverified) {
     throw new Forbidden(
       'Verify your email address before using a coven. Open the email page from your account to finish.',
@@ -103,14 +89,12 @@ async function admit(
     );
   }
 
-  // The one cast to the brand in the codebase, and the reason the type is
-  // worth anything: it is reachable only past both refusals above.
+  // The one cast to the brand in the codebase: reachable only past both refusals above.
   return { workspaceId, userId: session.userId, role } as Membership;
 }
 
 /**
- * The proofs a read spanning the compendium and, optionally, one coven runs under: the compendium alone without `workspaceId`,
- * else that coven's too, checked for `permission`, so no read can widen its scope by forgetting the check.
+ * No read can widen its scope by forgetting the check.
  *
  * @throws {Forbidden} a coven is named and the caller is signed out, or `assertMembership` refuses them.
  */
