@@ -7,6 +7,8 @@ import { REPO_ROOT } from '../support/paths';
 // The schema builder and the GraphQL engine are the server's: a browser file that imports either at runtime ships both to
 // every page that loads it. The browser loads every file a `'use client'` file imports, followed to the end, so the guard
 // walks that graph through Vite's parser and fails on a runtime import of either package anywhere along it.
+// It also refuses a runtime import of codegen's output, `src/gql/`, whose map holds every document in the app: a caller's
+// document is its own text (`src/lib/graphql-document.ts`), so a page carries only its own.
 // claude-docs/graphql/client-types.md, "No server packages in the browser".
 
 const SERVER_PACKAGES = /^(@pothos\/core|graphql)(\/|$)/;
@@ -93,6 +95,7 @@ describe('no server package reaches the browser', () => {
     expect(entries.length).toBeGreaterThan(50);
     expect(reached).toContain('src/components/CompendiumList/params.ts');
     expect(reached).toContain('src/lib/search-params.ts');
+    expect(reached).toContain('src/lib/graphql-document.ts');
   });
 
   it('finds no runtime import of @pothos/core or graphql in any browser file', () => {
@@ -102,5 +105,11 @@ describe('no server package reaches the browser', () => {
         .map((specifier) => `${chain(graph, file)} imports ${specifier}`),
     );
     expect(leaks).toEqual([]);
+  });
+
+  it('finds no runtime import of the generated documents in any browser file', () => {
+    const generated = join(REPO_ROOT, 'src/gql');
+    const reached = [...graph.keys()].filter((file) => file.startsWith(generated + '/'));
+    expect(reached.map((file) => chain(graph, file))).toEqual([]);
   });
 });

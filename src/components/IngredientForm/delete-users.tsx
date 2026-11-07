@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery } from '../../lib/graphql-client';
 
 const CompendiumEntryUsersDocument = graphql(`

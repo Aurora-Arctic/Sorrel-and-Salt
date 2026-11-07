@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';

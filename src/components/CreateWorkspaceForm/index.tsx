@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';

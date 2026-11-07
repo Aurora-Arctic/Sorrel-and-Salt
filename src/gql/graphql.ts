@@ -1044,8 +1044,6 @@ export type ReferenceQueryVariables = Exact<{
 
 export type ReferenceQuery = { reference: { id: string, kind: ReferenceKind, title: string, authors: string | null, container: string | null, contributors: string | null, edition: string | null, volume: string | null, issue: string | null, series: string | null, place: string | null, publisher: string | null, published: string | null, pages: string | null, host: string | null, url: string | null, modified: string | null, accessed: string | null, note: string | null, scholarly: boolean } };
 
-export type ReferenceRowFragment = { id: string, citation: string, isGlobal: boolean, kind: ReferenceKind, authors: string | null, title: string, container: string | null };
-
 export type ReferenceSuggestionsQueryVariables = Exact<{
   workspaceId?: string | number | null | undefined;
   query?: string | null | undefined;
@@ -1608,17 +1606,7 @@ export class TypedDocumentString<TResult, TVariables>
     return this.value;
   }
 }
-export const ReferenceRowFragmentDoc = new TypedDocumentString(`
-    fragment ReferenceRow on Reference {
-  id
-  citation
-  isGlobal
-  kind
-  authors
-  title
-  container
-}
-    `, {"fragmentName":"ReferenceRow"}) as unknown as TypedDocumentString<ReferenceRowFragment, unknown>;
+
 export const CardArrivalsCsvDocument = new TypedDocumentString(`
     query CardArrivalsCsv($query: String) {
   cardArrivalsCsv(query: $query)
@@ -2310,33 +2298,29 @@ export const DuplicateQuickLookDocument = new TypedDocumentString(`
 export const CreateReferenceDocument = new TypedDocumentString(`
     mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
   createReference(workspaceId: $workspaceId, input: $input) {
-    ...ReferenceRow
+    id
+    citation
+    isGlobal
+    kind
+    authors
+    title
+    container
   }
 }
-    fragment ReferenceRow on Reference {
-  id
-  citation
-  isGlobal
-  kind
-  authors
-  title
-  container
-}`) as unknown as TypedDocumentString<CreateReferenceMutation, CreateReferenceMutationVariables>;
+    `) as unknown as TypedDocumentString<CreateReferenceMutation, CreateReferenceMutationVariables>;
 export const UpdateReferenceDocument = new TypedDocumentString(`
     mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
   updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
-    ...ReferenceRow
+    id
+    citation
+    isGlobal
+    kind
+    authors
+    title
+    container
   }
 }
-    fragment ReferenceRow on Reference {
-  id
-  citation
-  isGlobal
-  kind
-  authors
-  title
-  container
-}`) as unknown as TypedDocumentString<UpdateReferenceMutation, UpdateReferenceMutationVariables>;
+    `) as unknown as TypedDocumentString<UpdateReferenceMutation, UpdateReferenceMutationVariables>;
 export const ReferenceDocument = new TypedDocumentString(`
     query Reference($workspaceId: ID, $id: ID!) {
   reference(workspaceId: $workspaceId, id: $id) {
@@ -2368,20 +2352,18 @@ export const ReferenceSuggestionsDocument = new TypedDocumentString(`
   referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
     edges {
       node {
-        ...ReferenceRow
+        id
+        citation
+        isGlobal
+        kind
+        authors
+        title
+        container
       }
     }
   }
 }
-    fragment ReferenceRow on Reference {
-  id
-  citation
-  isGlobal
-  kind
-  authors
-  title
-  container
-}`) as unknown as TypedDocumentString<ReferenceSuggestionsQuery, ReferenceSuggestionsQueryVariables>;
+    `) as unknown as TypedDocumentString<ReferenceSuggestionsQuery, ReferenceSuggestionsQueryVariables>;
 export const IngredientSummaryDocument = new TypedDocumentString(`
     query IngredientSummary($id: ID!, $workspaceId: ID) {
   ingredient(id: $id, workspaceId: $workspaceId) {

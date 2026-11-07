@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CompendiumFacetCountsQueryVariables,
   CovenFacetCountsQueryVariables,

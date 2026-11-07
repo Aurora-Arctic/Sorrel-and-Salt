@@ -5,7 +5,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import BusyButton from '../BusyButton';
 import Modal from '../Modal';
 import { graphqlRequest } from '../../lib/graphql-client';

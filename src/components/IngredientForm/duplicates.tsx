@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';

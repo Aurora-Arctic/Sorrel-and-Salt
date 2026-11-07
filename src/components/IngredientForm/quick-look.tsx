@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { headingOf } from '../IngredientEntry/details-parts';
