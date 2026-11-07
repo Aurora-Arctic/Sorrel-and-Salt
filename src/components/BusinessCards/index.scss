@@ -1,3 +1,5 @@
+@use '../../scss/variables' as *;
+
 // The shared switch centres its track under its label across the whole form; here the control shrinks to its content and
 // sits at the form's left edge, its track under the label's start.
 .business-cards > .switch {
@@ -5,8 +7,11 @@
   align-self: flex-start;
 }
 
-// The page's heading is centred over the form's centred column; the tabbed page's own header rule starts it at the left.
+// The page's heading starts where the form's centred column starts: the header takes the form's width and centring, so its
+// text lines up with the form's left edge at every width.
 .tabbed-page:has(.business-cards) > .page-header {
-  justify-content: center;
-  text-align: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: $narrow-column;
+  margin-inline: auto;
 }
