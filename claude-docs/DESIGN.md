@@ -354,7 +354,7 @@ Moved to [`design/routes.md`](design/routes.md); the §9 citations in this repos
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13), and their numbers are **not** reused. The v1 stories are 1–34, 47–64 and 70–91: 74 in all.
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13), and their numbers are **not** reused. The v1 stories are 1–34, 47–64 and 70–92: 75 in all.
 
 ### Grimoire
 
@@ -472,6 +472,8 @@ A staff reply or an internal note never changes the status. A resolved request p
 ### Help and FAQ articles
 
 An FAQ, a set of help articles on how the site is used, and a glossary of the site's terms ([`support.md`, "Help and FAQ articles, and a glossary, as rows a keeper edits"](design-decisions/support.md#help-and-faq-articles-and-a-glossary-as-rows-a-keeper-edits)). The pages are built after launch, in Wave 17, and are not part of v1 launch. They are **rows a site keeper edits rather than files in the repo**, so one changes without a deploy. The table is `help_articles` (§5), owned by a module of its own, `help` (`src/modules/help/`), because the articles have no tie to identity or to any other module's tables.
+
+92. As a visitor, signed in or not, I want to read the FAQ, the help articles and their sub pages and the glossary, and search them, so that I can learn how the site works without asking anyone.
 
 **Kinds.**
 

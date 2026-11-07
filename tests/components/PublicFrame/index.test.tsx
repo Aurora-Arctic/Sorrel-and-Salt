@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
+import { hrefs } from '../../support/links';
 import { Navigating } from '../../support/navigating';
 
 const pathname = vi.fn<() => string>();
@@ -101,5 +102,12 @@ describe('PublicFrame', () => {
       expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     }
+  });
+
+  it('links the help pages', () => {
+    pathname.mockReturnValue('/compendium');
+    frame();
+
+    expect(hrefs(screen.getAllByRole('link'))).toContain('/help');
   });
 });

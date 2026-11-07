@@ -24,8 +24,11 @@ const SUPPORT = '/keepers/support';
 const ADMIN_ONLY = ['/keepers/users', '/keepers/invitations'];
 
 const nav = () => screen.getByRole('navigation', { name: 'Keepers' });
-const navHrefs = () => hrefs(within(nav()).getAllByRole('link'));
-const mainHrefs = () => hrefs(within(screen.getByRole('main')).getAllByRole('link'));
+// The staff help pages are linked from here too; the lists below are of the section's own pages, so they leave it out.
+const STAFF_HELP = '/help/staff';
+const ownPages = (list: (string | null)[]) => list.filter((href) => href !== STAFF_HELP);
+const navHrefs = () => ownPages(hrefs(within(nav()).getAllByRole('link')));
+const mainHrefs = () => ownPages(hrefs(within(screen.getByRole('main')).getAllByRole('link')));
 
 beforeEach(() => {
   requireCuratorSession.mockReset();
@@ -96,8 +99,8 @@ describe('the /keepers page', () => {
     const row = within(nav())
       .getAllByRole('link')
       .filter((link) => !link.closest('details'));
-    expect(hrefs(row)).toEqual(expect.arrayContaining([SUPPORT, ...ADMIN_ONLY]));
-    expect(mainHrefs()).toEqual(hrefs(row));
+    expect(ownPages(hrefs(row))).toEqual(expect.arrayContaining([SUPPORT, ...ADMIN_ONLY]));
+    expect(mainHrefs()).toEqual(ownPages(hrefs(row)));
   });
 
   it('links a curator to Support alone', async () => {
@@ -112,5 +115,19 @@ describe('the /keepers page', () => {
     requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(KeepersPage()).rejects.toThrow('forbidden');
+  });
+});
+
+describe('the /keepers section and the staff help pages', () => {
+  it.each([
+    ['a curator', CURATOR],
+    ['a keeper', ADMIN],
+  ])('links %s to the staff help pages', async (_, who) => {
+    requireCuratorSession.mockResolvedValue(who);
+
+    render(await KeepersLayout({ children: await KeepersPage() }));
+
+    expect(requireCuratorSession).toHaveBeenCalled();
+    expect(hrefs(screen.getAllByRole('link'))).toContain(STAFF_HELP);
   });
 });

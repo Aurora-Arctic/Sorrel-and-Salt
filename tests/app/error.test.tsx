@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import ErrorBoundary from '@/app/error';
 import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
+import { hrefs } from '../support/links';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/gone' }));
 window.history.replaceState({}, '', '/gone');
@@ -58,5 +59,11 @@ describe('the not-found page', () => {
 
     expect(home()).toHaveAttribute('href', '/');
     expect(report()).toHaveAttribute('href', '/gone?support=bug&error=404');
+  });
+
+  it('links the help pages', () => {
+    render(<NotFound />);
+
+    expect(hrefs(screen.getAllByRole('link'))).toContain('/help');
   });
 });
