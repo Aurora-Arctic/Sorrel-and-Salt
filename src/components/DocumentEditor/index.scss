@@ -113,3 +113,8 @@
     margin-top: calc(#{space(4)} - #{space(3)} - 0.125rem);
   }
 }
+
+// The loading editor's text area, as tall as the real text box.
+.document-editor__skeleton-text {
+  min-height: 24rem;
+}

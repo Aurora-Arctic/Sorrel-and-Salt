@@ -3,6 +3,7 @@ import { AdminCardsSkeleton, CardArrivalsSkeleton } from '../AdminCards/skeleton
 import { AdminInvitationsSkeleton } from '../AdminInvitations/skeleton';
 import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
 import { CompendiumListSkeleton } from '../CompendiumList/skeleton';
+import { DocumentEditorSkeleton } from '../DocumentEditor/skeleton';
 import { GroupListSkeleton } from '../GroupList/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
 import ActionFace, { ButtonFace } from '../ActionFace';
@@ -13,19 +14,13 @@ import { PrivilegeLedgerSkeleton } from '../PrivilegeLedger/skeleton';
 import { UserListSkeleton } from '../UserList/skeleton';
 import { SupportListSkeleton } from '../SupportRequests/skeleton';
 import PageHeader from '../PageHeader';
-import Skeleton from '../Skeleton';
 import { PanelSkeleton } from '../Skeleton/panel';
 import TabbedPage from '../TabbedPage';
 import type { PageTab } from '../TabbedPage/types';
 import { ADMIN_PAGES } from './sections';
 import type { AdminPage } from './types';
 
-const documentPanel: ReactNode = (
-  <>
-    <Skeleton shape="line" count={2} quiet />
-    <Skeleton shape="block" count={2} quiet />
-  </>
-);
+const documentPanel: ReactNode = <DocumentEditorSkeleton />;
 
 // What each admin tab draws in its panel while it is on its way, by the tab's address: the page's own
 // filter row and table headings, so the list keeps its place when the rows arrive. A function, since the
