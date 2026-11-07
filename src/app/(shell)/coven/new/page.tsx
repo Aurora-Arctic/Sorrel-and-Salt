@@ -38,6 +38,8 @@ export default async function NewCovenPage({
       <PageFrame narrow>
         <div className="page-frame__section panel">
           <PageHeader
+            className="card-page-header"
+            headingClassName="auth-title"
             title="Create Coven"
             lede="Start a coven of your own. You will be its steward."
           />

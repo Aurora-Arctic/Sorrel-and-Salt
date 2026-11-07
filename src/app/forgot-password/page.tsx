@@ -17,6 +17,7 @@ export default function ForgotPasswordPage() {
     <PageFrame narrow>
       <div className="panel">
         <PageHeader
+          className="card-page-header"
           headingClassName="auth-title"
           title="Forgot Your Password?"
           lede={
