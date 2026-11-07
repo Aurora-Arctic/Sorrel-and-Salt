@@ -67,4 +67,10 @@ $switcher-min-width: 12rem;
     min-width: max(#{$panel-min-width}, 100%);
     max-width: max(#{$panel-max-width}, 100%);
   }
+
+  .combobox__option {
+    box-sizing: border-box;
+    justify-content: center;
+    min-height: $panel-row-height;
+  }
 }

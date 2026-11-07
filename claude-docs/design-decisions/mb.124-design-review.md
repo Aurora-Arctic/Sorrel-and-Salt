@@ -16,7 +16,7 @@ Plan: [`m11.9-plan.md`](m11.9-plan.md), Part 3. The owner picked per decision on
 - **empty-count-line.** The count line is hidden while a list is empty and unfiltered.
 - **no-match.** Every no-match state offers a quiet Clear Filters.
 - **shell-add-weight.** No pick; the owner said to leave it with two. The shell's Add Ingredient stays solid beside a page's own solid action. Not built.
-- **panel-width.** The account menu and the switcher list share `$panel-min-width` (15rem) and `$panel-max-width` (18rem). Suggestions stay at the field's width. The owner asked for 45px rows; the build keeps the existing row height.
+- **panel-width.** The account menu and the switcher list share `$panel-min-width` (15rem) and `$panel-max-width` (18rem). Suggestions stay at the field's width. Rows are 45px: one token, `$panel-row-height` (2.8125rem), for the account menu's rows and the switcher's options, measured in the browser at 1280px and 375px.
 - **account-sign-out.** Sign Out is a plain row under a hairline.
 - **card-page-heading.** Card pages set the h1 at the h2 size, centred with the lede (`.card-page-header`); Create Coven joins them.
 - **heading-left-edge.** Three column types are written down in [`styling.md`](../styling.md). The narrow column is `$narrow-column` (28rem, 448px). The code holds no 440px width, so nothing moved.

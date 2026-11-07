@@ -89,13 +89,3 @@ vi.mock('@/lib/jobs/runtime', () => ({
   sleep: async () => undefined,
   start: async () => ({ runId: 'run-stub' }),
 }));
-
-// React marks `document` as listening the first time any root mounts, for its `selectionchange` listener, and a
-// later root whose container is `document` itself (a test rendering a whole `<html>`, as global-error does)
-// then skips attaching its click and input listeners. Clearing the mark after each test gives that root its own.
-afterEach(() => {
-  for (const key of Object.keys(document)) {
-    if (key.startsWith('_reactListening'))
-      delete (document as unknown as Record<string, unknown>)[key];
-  }
-});

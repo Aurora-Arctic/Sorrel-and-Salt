@@ -106,7 +106,7 @@ goes, and the button is a `$control-height` square, since with the name an
 admin's bar ran past the window from 642px up (the owner's finding at MB.7's
 review, 2026-10-12). The panel hangs from the
 button's right edge at `layer('floating')`, on `$surface-card` with a
-hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, between `$panel-min-width` (15rem) and `$panel-max-width` (18rem), or the button's own width if that is greater, through the `floating-panel` mixin that the switcher's list uses too. Rows are a control tall and run edge to edge of the panel, with no padding
+hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, between `$panel-min-width` (15rem) and `$panel-max-width` (18rem), or the button's own width if that is greater, through the `floating-panel` mixin that the switcher's list uses too. Rows are `$panel-row-height` tall (2.8125rem, 45px; the switcher's rows use it too) and run edge to edge of the panel, with no padding
 around them, no gap between them and no rounding; no list markers. Sign Out is a row too, with a 1px hairline above it (`.account-menu__signout`) and no padding around it (`.account-menu__signout-action`; a failure floats beneath it in a callout, its badge on the button's corner). The current link gets a straight accent
 rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one. The account button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 

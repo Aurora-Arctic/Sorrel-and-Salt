@@ -1,13 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import ErrorBoundary from '@/app/error';
 import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/gone' }));
 window.history.replaceState({}, '', '/gone');
+
+// React marks `document` as listening the first time any root mounts, and a later root whose container is
+// `document` itself (GlobalError renders a whole `<html>`) then skips attaching its click listener. Clearing the
+// mark after each test gives that root its own.
+afterEach(() => {
+  for (const key of Object.keys(document)) {
+    if (key.startsWith('_reactListening'))
+      delete (document as unknown as Record<string, unknown>)[key];
+  }
+});
 
 // The screens a failure lands on. Each must offer a way onward and a way to report it, and
 // must not print the error's message or stack, whatever it holds.
