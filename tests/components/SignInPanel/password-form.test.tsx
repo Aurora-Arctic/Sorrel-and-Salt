@@ -171,7 +171,6 @@ describe('SignInPanel, email and password', () => {
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(/someone@password-form\.test/);
     expect(notice).toHaveFocus();
-    // Back at sign-in, the address kept and the password cleared.
     expect(submit('Sign In')).toBeDisabled();
     expect(field('Email Address')).toHaveValue('someone@password-form.test');
     expect(field('Password')).toHaveValue('');

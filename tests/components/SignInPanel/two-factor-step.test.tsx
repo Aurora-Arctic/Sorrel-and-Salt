@@ -52,7 +52,6 @@ async function passPassword() {
 describe('SignInPanel, the two-factor step', () => {
   beforeEach(() => {
     vi.stubGlobal('location', { assign });
-    // The panel opened on its email view, as a link to `?method=email` does.
     setQuery('method=email');
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
   });
