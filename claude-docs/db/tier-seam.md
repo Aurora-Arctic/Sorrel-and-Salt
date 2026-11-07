@@ -15,10 +15,7 @@ declaration it is written in, and a private helper under its own name rather
 than credited to whichever export happens to sit above it. Review holds the
 list; no guard pins it.
 
-The list follows, by file. Nothing checks it, so it states no total that
-could go stale: review compares it with the code. "Compendium" in the last column means
-the read touches the compendium tier alone; "both" means it reads the
-compendium and a coven's rows in one statement.
+Nothing checks the list, so it states no total that could go stale: review compares it with the code. "Compendium" in the last column means the read touches the compendium tier alone; "both" means it reads the compendium and a coven's rows in one statement.
 
 **The predicate and the builders over it.** Every other entry reads the tier
 through one of these.
@@ -72,9 +69,7 @@ through one of these.
 | `cites`                                       | `references.ts`        | A sourced row citing a live compendium reference                                                                                               | compendium |
 | `writerFor`                                   | `write.ts`             | The private builder of `withAudit`'s writer (below)                                                                                            | compendium |
 
-Three kinds of caller are deliberately left off, because they reach the tier
-only through an entry above. That is the rule for a private helper, applied
-the other way round:
+Callers that reach the tier only through an entry above are left off:
 
 - `findCompendiumMatchesByName` reads it through `compendiumNamed`.
 - `citesNothing` (the keeper's to-do filter) and `citesNowhere` in
@@ -89,9 +84,7 @@ the other way round:
 curated form's rename onto the compendium variants picking it
 (`carryFormRename`).
 
-A later task that adds such a function adds its row to the tables above in
-its own PR. The list is then the scope of the extraction task, read from one
-file.
+A task that adds such a function adds its row to the tables above in its own PR; the list is the scope of the extraction, read from one file.
 
 One entry is not the compendium's: `onSiteTier`, `invitations`'
 site tier, `workspace_id IS NULL` spelled for that table alone so that no
