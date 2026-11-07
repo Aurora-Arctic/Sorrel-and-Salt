@@ -8,6 +8,7 @@ paths:
   - 'tests/support/db/**'
   - 'scripts/db-seed.ts'
   - 'scripts/check-destructive-ddl.ts'
+  - 'scripts/db-generate.ts'
   - 'drizzle.config.ts'
 ---
 
@@ -96,6 +97,8 @@ The same shape applies to spell `visibility`, and to the site role: `assertSiteA
 ## Rule 10 — migrations are expand/contract and forward-only
 
 No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an acknowledgement **sidecar beside the migration**: `src/db/migrations/<tag>.ack.md`, carrying a `Destructive DDL acknowledged: <reason>` line (MB.48). The `checks / destructive-ddl` CI leg flags it. An acknowledgement covers only the migration it sits beside: a release PR rescans every migration since the last release, and a PR-body line would be gone on merge and would bless every finding in the diff at once. "DROP" means any object (column, table, type, constraint, index); `DROP NOT NULL` and `DROP DEFAULT` widen and are exempt. Run the check locally with `npm run check:destructive-ddl`, which scans what your branch adds.
+
+**`src/db/migrations/meta/` keeps one snapshot, the newest journal entry's.** Generate a migration with `npm run db:generate`, which runs `drizzle-kit generate` and then deletes every older snapshot, never a bare `drizzle-kit generate`, which leaves them; `tests/guards/migration-snapshots.test.ts` fails a second snapshot. `generate` diffs against the newest alone and `migrate` reads none, so git history keeps the rest (claude-docs/db/migrations-and-scripts.md, "One snapshot").
 
 **A column or index drop is two PRs, each its own task.**
 

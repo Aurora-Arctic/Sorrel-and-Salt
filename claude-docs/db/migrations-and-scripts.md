@@ -1,7 +1,8 @@
 ## Migrations and scripts (M1.3)
 
-- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/modules/*/schema`
-  against `src/db/migrations` and writes a new migration for any change. The
+- **`npm run db:generate`** is `scripts/db-generate.ts`, which runs `drizzle-kit generate` — diffs `src/modules/*/schema`
+  against the newest `meta/` snapshot and writes a new migration for any change — and then
+  deletes every older snapshot (["One snapshot"](#one-snapshot)). Flags after `--` pass through to `drizzle-kit generate`. The
   first migration (`0000_enable-extensions.sql`) was written by hand with
   `drizzle-kit generate --custom`, since enabling an extension isn't
   something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
@@ -45,7 +46,7 @@
   added by hand, for the reason 0000 carries one — the journal already skips an
   applied migration, and the keyword makes re-applying the file a no-op
   independently of it. Hand-editing the SQL is safe here because `db:generate`
-  diffs the `meta/` snapshots rather than the statements, so the keyword
+  diffs the newest `meta/` snapshot rather than the statements, so the keyword
   changes nothing a later generate sees.
 - **`0079_updated-at-skips-no-op.sql`** (MB.106) replaces the body of `set_updated_at()` so an `UPDATE` that changed nothing keeps both `updated_at` and `updated_by`; same name and signature, so no trigger is touched, and nothing is dropped, so no acknowledgement. See [`updated-at.md`](updated-at.md).
 - **`0016_updated-at-trigger.sql`** (M1.18) is the third hand-written one,
@@ -303,6 +304,21 @@ docker-studio` starts it as a profiled compose service (`studio`), the
   same shape as `workshop`; `make docker-all` brings up every long-running
   service, studio included.
 
+### One snapshot
+
+**`src/db/migrations/meta/` holds `_journal.json` and one snapshot, the newest
+journal entry's** (`<NNNN>_snapshot.json`, `NNNN` being the tag's number). `drizzle-kit generate`
+checks the folder's snapshots for format and for two sharing a parent, then
+diffs the schema against the newest alone; `drizzle-kit migrate` reads the
+journal and the `.sql` files and opens no snapshot. The older ones were 80% of
+every line under `src/`, read by nothing, so `npm run db:generate` deletes
+them after each run, and git history keeps every one the entries above name.
+Run `db:generate`, never a bare `drizzle-kit generate`, which leaves the old
+one beside the new: `tests/guards/migration-snapshots.test.ts` fails a folder
+with more than one snapshot, or with one that is not the newest entry's.
+`generate --custom` copies the newest snapshot as before, and the wrapper takes
+the flag through.
+
 ### Migration order
 
 **`db:migrate` applies a migration by its journal `when`, nothing else.**
@@ -337,8 +353,10 @@ that a journal conflict forces will be.
 well, which only `generate` rewrites.
 
 1. Merge the base into the branch.
-2. Delete the migration's `.sql`, its `meta/` snapshot and its
-   `_journal.json` entry, taking the base's journal where they conflict.
+2. Delete the migration's `.sql`, and take the base's `meta/` folder whole
+   (`git checkout <base> -- src/db/migrations/meta`): its journal, and the one
+   snapshot `generate` must diff against, since the branch's own run deleted
+   the base's.
 3. Run `npm run db:generate -- --name <its name>`, the name after the old
    number. It numbers the migration after the base's and stamps a new `when`.
 4. Put back whatever was written into the SQL by hand (a header comment, a
