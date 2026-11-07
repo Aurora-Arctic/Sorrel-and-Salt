@@ -13,6 +13,6 @@
 
 ## What is owed
 
-Rule 10 asks for a column drop in its own PR. **M13.9 drops `spell_steps.note`**, with `layer_order` and `spells.instructions`; it is listed in `PENDING_DROPS` in `tests/db/schema-drift.test.ts`. Until then the deploy before this one may still write the column, and nothing reads it.
+Rule 10 asks for a column drop in its own PR. Migration `0089_drop-spell-steps-old-columns` drops `spell_steps.note`, with `layer_order` and `spells.instructions`. The column is gone from the database and the schema, and `PENDING_DROPS` in `tests/db/schema-drift.test.ts` is empty.
 
 `spells.note`, the spell-level note, is a different field and stays.

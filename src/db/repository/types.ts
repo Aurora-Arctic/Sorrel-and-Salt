@@ -776,7 +776,7 @@ export interface AuditWriter {
   lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
   /**
    * Takes up to `amount` (in the jar's own unit) out of the proof's coven's live jar, never below zero, and returns what it took: the one path that
-   * decrements stock, so a completed working's deduction joins the working's transaction and cannot race another (M13.5). The jar is locked first,
+   * decrements stock, so a completed working's deduction joins the working's transaction and cannot race another. The jar is locked first,
    * so the amount read is the amount written. A jar kept without an amount, or not the coven's, gives `taken: 0`.
    */
   decrementStock(

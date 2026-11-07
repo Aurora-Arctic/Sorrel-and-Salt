@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // A design review's screenshots: every named page at two phone widths in both themes, through the remote
 // browser the e2e runner uses (claude-docs/workshop.md, "Review screenshots").
-// Usage: node scripts/review-screenshots.mjs --out <dir> [--base <url>] [--storage-state <file>] (--pages
-// <file.json> | --pages '<json>')
+// Usage: node scripts/review-screenshots.mjs --out <dir> [--base <url>] [--storage-state <file>] --pages <file|json>
 // Each context is a touch phone, so the page's `(hover: none)` query holds as on a phone.
 
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';

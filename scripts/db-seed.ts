@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // The repo's one database CLI, run through `tsx`; the files that may import the client are pinned by test
 // (claude-docs/db/client-imports.md, "Who may import the client").
-// Usage: npm run db:seed | db:seed:<target> | db:drop | db:reset (claude-docs/commands.md, "Database
-// seeding")
+// Usage: npm run db:seed | db:seed:<target> | db:drop | db:reset
+// (claude-docs/commands.md, "Database seeding")
 
 // Hands a client to seed(), which writes as the bootstrap user rather than
 // through a session.

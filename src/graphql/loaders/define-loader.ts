@@ -8,8 +8,8 @@ import type { Session } from '../../lib/session';
 import type { LoaderFactory } from './types';
 
 /**
- * A loader as the factory that builds it per request; `batch` gets the session first, as the service it calls does. `C` is the cache key for an object-keyed loader.
- * For a service taking `Session | null`; `defineSignedInLoader` and `definePublicLoader` cover the other two.
+ * A loader as the factory that builds it per request; `batch` gets the session first. `C` is the cache key for an
+ * object-keyed loader. For a service taking `Session | null`; the other two services have their own `define*Loader`.
  */
 export function defineLoader<K, V, C = K>(
   batch: (session: Session | null, keys: readonly K[]) => PromiseLike<ArrayLike<V | Error>>,
