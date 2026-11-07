@@ -2,10 +2,8 @@
 @use './mixins' as *;
 @use './recipe-columns' as *;
 
-// The one print stylesheet: the spell recipe page, the only view with print rules. Every rule
-// but the sheet's margin sits behind `:has(.spell-recipe)`, the page's own article, so no other
-// page prints differently; the Quick Look modal draws only the body and has no such article. A
-// browser without `:has()` simply prints the screen layout.
+// The one print stylesheet: the spell recipe page. Every rule but the sheet's margin sits behind
+// `:has(.spell-recipe)`, so no other page prints differently; a browser without `:has()` prints the screen layout.
 
 // Every page's sheet margin, which the recipe's content width is worked out from (_variables.scss).
 // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without `@page` prints with its own default margin, and the article is capped at the same content width either way

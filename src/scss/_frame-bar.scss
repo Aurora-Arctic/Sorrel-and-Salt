@@ -1,13 +1,9 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The parts of the site's top bar that AppShell and PublicFrame draw alike, written once so a
-// change to the bar reaches both. `$block` is the frame's class (`app-shell`, `public-frame`):
-// the bar's inner row, the brand and its initials, and the end group, with the
-// narrow-window media queries that shorten the row and swap the name for its initials. What
-// differs between the two frames stays in each frame's own stylesheet. The site nav is one class,
-// `.app-shell__nav`, in AppShell's sheet, which both frames use (`SiteNav`).
-// claude-docs/components/public-frame.md, "Styling", sets out both lists.
+// The parts of the site's top bar that AppShell and PublicFrame draw alike, written once so a change reaches both.
+// `$block` is the frame's class; what differs stays in each frame's own stylesheet
+// (claude-docs/components/public-frame.md, "Styling").
 @mixin frame-bar($block) {
   // The top edge a sticky row of a page (IngredientSearch’s search row) holds at: just under
   // this bar.

@@ -1,10 +1,8 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Document prose, as a mixin so it can be scoped: `body` in the app,
-// `.workshop-story-frame` in the workshop, where bare element selectors would
-// otherwise land on Storybook's own chrome. Nothing here names a raw hue; a rule
-// needing one adds a token. No print tier outside the spell recipe view.
+// Document prose, as a mixin so it can be scoped: `body` in the app, `.workshop-story-frame` in the workshop, where
+// bare element selectors would land on Storybook's own chrome. Nothing here names a raw hue. No print tier outside the spell recipe view.
 @mixin typography-base {
   font-family: $font-body;
   font-weight: 300;
