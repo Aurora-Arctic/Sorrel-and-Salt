@@ -14,7 +14,7 @@ import {
 import type { Coven } from './stories/coven-ingredients';
 
 // A page's skeleton stands where the page will: every static part the skeleton draws (the header and its
-// action, the tabs, the side menu, the filter row, the list's frame, its first card and the table's
+// action, the tabs, the side menu, the toolbar, the filter row, the list's frame, its first card and the table's
 // headings) is within 2px of the same part on the arrived page, and the site bar and the context row do
 // not move when the skeleton replaces the old page. Text lengths, item counts and a table row's wrapped
 // height are content, and are not compared (claude-docs/loading.md).
@@ -380,6 +380,7 @@ const layoutOf = (page: Page, inSkeleton: boolean) =>
         pageNav: box(find('nav.page-nav')),
         filter: box(find('.filter-row')),
         aside: box(find('aside')),
+        toolbar: box(find('[role="toolbar"]')),
         list: box(list),
         item: item && shown(item) ? box(item) : null,
       },
