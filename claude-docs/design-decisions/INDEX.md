@@ -1,212 +1,214 @@
 # Design decisions
 
-A record is `<id>-<slug>.md`: what was decided, why, and what it rules out. Records stay live and are superseded in place, with a status line at the top naming what replaced them. A plan is `<id>-plan.md`: it sits beside its record until its pull request lands, is not maintained, and is deleted once the pull request has landed and its facts have a home in a record or a live doc. Every decision and constraint a record holds is also written into the live summary that depends on it; if a reader needs a record to understand the system, the summary is missing something and the summary is what to fix. Write a record when a task's choice would otherwise be re-argued later, and link it from the summary that depends on it.
+One record per decision: what was decided, why, and what it rules out. Each line below states the decision.
 
-Each line below reads: record — title — status — live home.
+## Auth
 
-## Auth and identity
+- [m2.9-granting-admin](m2.9-granting-admin.md) — An admin is granted and revoked by an existing admin, with a ledger row.
+- [m5.8-revoking-workspace-creation](m5.8-revoking-workspace-creation.md) — A keeper can revoke workspace creation; coven already made stay, and a ledger records it.
+- [m6.3-permission-statements](m6.3-permission-statements.md) — Permissions are per-role statements, never a role rank.
+- [m9.19-admin-sees-user-covens](m9.19-admin-sees-user-covens.md) — A keeper reads which covens a user belongs to, by name and role only.
+- [m10.26-invited-by](m10.26-invited-by.md) — Membership stores who invited it, copied from the invitation at acceptance.
+- [m10.32-accept-from-the-landing](m10.32-accept-from-the-landing.md) — A coven invitation is accepted by id from the account page too.
+- [m11.20-curator-role](m11.20-curator-role.md) — A third site role, curator, may use every curation screen and nothing on People.
+- [m15.9-demo-coven](m15.9-demo-coven.md) — One demo coven exists on every environment; every sign-in earns an observer seat.
+- [m15.17-invitation-cards](m15.17-invitation-cards.md) — A printed invitation card is a third invitation shape bound to no address.
+- [m15.50-invitation-token-rotation](m15.50-invitation-token-rotation.md) — The invitation mail's job step mints a fresh token on each attempt.
+- [m15.52-site-access-pause](m15.52-site-access-pause.md) — The site access pause closes sign-in for paused accounts and records the pause.
+- [m15.55-coven-access-pause](m15.55-coven-access-pause.md) — The coven access pause refuses a paused member at the service check.
+- [m15.66-member-pause-mail-read](m15.66-member-pause-mail-read.md) — The pause mail step reads a pause without a Membership proof.
+- [m15.77-curator-nav](m15.77-curator-nav.md) — Curator and Keepers get separate navs.
+- [m16.1-first-party-sign-in](m16.1-first-party-sign-in.md) — Password, passkey and second factor are in v1.
+- [m16.4-repository-writes-outside-the-audit](m16.4-repository-writes-outside-the-audit.md) — Two repository files write outside withAudit because their tables have no audit columns.
+- [mb.10-co-member-display-names](mb.10-co-member-display-names.md) — A deleted co-member reads under their last name.
+- [mb.24-rls-role-split](mb.24-rls-role-split.md) — RLS role split with FORCE; superseded by MB.29, which defers RLS.
+- [mb.30-organization-plugin](mb.30-organization-plugin.md) — Better Auth's organization plugin is not used for workspaces and invitations.
+- [mb.54-email-page](mb.54-email-page.md) — The account email is set on its own page and verified before it counts.
+- [mb.57-post-sign-in-landing](mb.57-post-sign-in-landing.md) — The post-sign-in landing lives at a fixed place after sign-in.
+- [mb.61-email-verification-and-delivery](mb.61-email-verification-and-delivery.md) — Email verification is first-party; its signed token is neither hashed nor single-use.
+- [mb.62-pause-ledger](mb.62-pause-ledger.md) — The admin-role-change pause is a ledger, not a settings row.
+- [mb.71-link-a-second-sign-in-method](mb.71-link-a-second-sign-in-method.md) — A provider links to an account only inside a link flow begun under a session.
+- [mb.74-better-auth-plugins](mb.74-better-auth-plugins.md) — Better Auth plugin roster: what lands before launch, what waits.
+- [mb.177-admins-hold-workspace-creation](mb.177-admins-hold-workspace-creation.md) — Every keeper and curator holds canCreateWorkspace, enforced by a CHECK.
+- [mb.194-privilege-ledger-by-trigger](mb.194-privilege-ledger-by-trigger.md) — One privilege ledger, written by a database trigger.
+- [mb.201-two-tier-invitations](mb.201-two-tier-invitations.md) — Workspace and keeper invitations share one two-tier table.
+- [mb.282-graphql-refuses-cross-site](mb.282-graphql-refuses-cross-site.md) — The GraphQL endpoint refuses cross-site writes.
 
-- `m2.9-granting-admin` — Granting and revoking admin — decided — ../auth/README.md
-- `m5.5-admin-compendium` — The admin compendium page: its size, its modal, its lookups — decided — this record
-- `m5.6a-admin-forms` — The admin forms page: the slug, the redirect, the stale pick — decided (history) — this record
-- `m5.6b-admin-groups` — The admin group pages: where a deleted group's rows go — decided — this record
-- `m5.8-revoking-workspace-creation` — Revoking workspace creation, and its ledger — accepted 2026-10-09, on the owner's calls while building M5.8. — this record
-- `m8.17-editing-a-coven-ingredient` — Editing a Coven's Own Ingredient — decided and built. — this record
-- `m9.6-coven-ingredients-page` — The Coven's Ingredients Page — decided and built. — this record
-- `m9.19-admin-sees-user-covens` — A site keeper sees which covens a user belongs to — decided — this record
-- `m10.26-invited-by` — Invited By on the coven members table, scoped — decided and built. — this record
-- `m11.20-curator-role` — A third site role, curator — decided — this record
-- `m14.35-curators-see-hidden-entry-pages` — A curator or keeper still sees the page of a hidden entry — accepted — this record
-- `m15-support-path-keeps-coven` — A support request keeps the coven in its page — decided — this record
-- `m15.9-demo-coven` — One demo coven on every environment — decided — this record
-- `m15.17-invitation-cards` — An invitation card is a third shape of invitations — decided — this record
-- `m15.50-invitation-token-rotation` — the invitation mail mints its token in the job step — decided — this record
-- `m15.52-site-access-pause` — What the site access pause closes, and what it decides along the way — decided — this record
-- `m15.55-coven-access-pause` — How the coven access pause refuses a member, and what it decides along the way — decided — this record
-- `m15.57-terms-of-use-notes` — the terms of use's working notes — decided — /terms
-- `m15.66-member-pause-mail-read` — The coven pause mail step reads a pause without a Membership proof — decided — this record
-- `m15.77-curator-nav` — Split the Curator and Keepers Navs — decided — this record
-- `m16.1-first-party-sign-in` — First-party sign-in comes into v1: a password, a passkey, a second factor — decided — this record
-- `mb.24-rls-role-split` — RLS role split, FORCE, and identity on the read path — superseded by MB.29 — this record
-- `mb.54-email-page` — Set the account's email: prefilled from the provider, editable, verified before it counts — decided and built. — this record
-- `mb.57-post-sign-in-landing` — Where the post-sign-in landing lives — decided — this record
-- `mb.61-email-verification-and-delivery` — First-party email verification and email delivery — decided — this record
-- `mb.62-pause-ledger` — The admin-role-change pause is a ledger, not a settings row — decided — this record
-- `mb.71-link-a-second-sign-in-method` — Link a second sign-in method from the account page — decided and built. — this record
-- `mb.74-better-auth-plugins` — Better Auth's plugin roster: what lands before launch, what waits — decided — this record
-- `mb.91-keeper-curated-vocabularies` — Planet and zodiac as keeper-curated vocabularies (MB.91) — decided and built. — this record
-- `mb.116-design-review-sign-in` — Design review: the sign-in and account pages (absorbing MB.117) — decided and built. — this record
-- `mb.119-design-review-coven` — Design review: the coven and invitations (#576) — decided and built. — this record
-- `mb.132-admin-deities` — The admin deity pages: the slug, the tradition's delete, one form — decided — this record
-- `mb.177-admins-hold-workspace-creation` — Every admin holds canCreateWorkspace — decided — this record
-- `mb.194-privilege-ledger-by-trigger` — One privilege ledger, written by the database — decided — this record
-- `mb.201-two-tier-invitations` — Workspace and admin invitations are one two-tier table — decided — this record
-- `mb.282-graphql-refuses-cross-site` — the GraphQL endpoint refuses cross-site writes — decided (history) — this record
+## Data
 
-## Support, legal and privacy
+- [m1.1-neon-branch-strategy](m1.1-neon-branch-strategy.md) — Staging is a persistent Neon branch; hotfix branches are ephemeral.
+- [m1.21-seed-writes-through-its-handle](m1.21-seed-writes-through-its-handle.md) — The seed writes through the handle it is given, not withAudit.
+- [m3.6-cursor-pagination-helper](m3.6-cursor-pagination-helper.md) — Every list pages through one cursor helper with a hard maximum page size.
+- [m5.3-spells-keep-deleted-ingredients](m5.3-spells-keep-deleted-ingredients.md) — A spell keeps the ingredients it holds, deleted or not.
+- [m6.11-members-without-a-loader](m6.11-members-without-a-loader.md) — A coven's members are read a coven at a time, without a loader.
+- [mb.100-sql-follow-up](mb.100-sql-follow-up.md) — Correlated subqueries go through existsIn, not raw SQL.
+- [mb.105-pager-counts](mb.105-pager-counts.md) — The pager counts, and the typeahead is the first page of a search.
+- [mb.125-delete-names-rows-by-value](mb.125-delete-names-rows-by-value.md) — write.delete names rows by value; join tables stay hard-deleted.
+- [mb.148-reads-on-the-write-transaction](mb.148-reads-on-the-write-transaction.md) — Reads that follow a write run on the write transaction.
+- [mb.171-seed-keys](mb.171-seed-keys.md) — A seeded row keeps the key the seed gave it.
+- [mb.252-table-rename](mb.252-table-rename.md) — A renamed table leaves a view under its old name.
+- [mb.87-repository-split](mb.87-repository-split.md) — The repository is a folder of files behind one index.
+- [mb.206-dry-review](mb.206-dry-review.md) — Shared helpers replace repeated validation and finder code.
+- [postgres-driver-read-mode-and-channel-binding](postgres-driver-read-mode-and-channel-binding.md) — Postgres driver update: new read mode off, channel binding enforced.
+- [mw15-slug-expiry-without-a-job](mw15-slug-expiry-without-a-job.md) — A slug's expiry is a date comparison; timed work is a durable job.
+- [mw15-notes-keep-referential-integrity](mw15-notes-keep-referential-integrity.md) — Notes use real foreign keys and one generic history trigger.
+- [mw15-bulk-add-partial-with-report](mw15-bulk-add-partial-with-report.md) — Bulk add is partial and returns a report.
+- [mb.82-slug-takeover](mb.82-slug-takeover.md) — A taker ends a retired slug's redirect once confirmed.
+- [mb.86-modular-monolith](mb.86-modular-monolith.md) — Domain modules with a guarded boundary.
+- [mb.108-types-in-type-files](mb.108-types-in-type-files.md) — Types live in type-only files.
 
-- `m15-support-review-research` — Support feature: UX, accessibility and process research — decided — this record
-- `m15-support-review` — M15.32 → M15.47 — The support feature, revised after review — decided — this record
-- `m15.1-about` — Support requests: "kind" becomes "about" — decided — this record
-- `m15.1-support-form` — A support form, reviewed by keepers — decided — this record
-- `m15.2-privacy-policy-notes` — the privacy policy's working notes — decided — this record
-- `m15.48-mailed-link` — A signed-out sender reaches their request by a mailed link — decided — this record
-- `m15.50-mail-through-a-retried-job` — mail is sent through a retried job — decided — this record
-- `m15.58-gdpr-scope` — What GDPR Asks of Sorrel & Salt — decided — this record
-- `m15.59-document-editor-scope` — A keeper editor for the site's documents — decided — this record
-- `m15.61-take-your-writing-scope` — A way for people to take their own writing with them — decided — tasks/m18.md
-- `m15.79-agreement-covers-three-documents` — Agreeing to the terms covers the disclaimer and the code of ethics — decided — this record
-- `m15.79-joint-document-mailing` — one joint email about every changed document — decided — this record
-- `m17.2-closed-practice-warning` — the closed-practice warning — decided — this record
-- `m17.3-ethical-ingredient-warnings` — the ethical warnings on ingredients — decided — this record
-- `mb.118-design-review-mail` — Design review: the site's mail (#575) — decided and built. — this record
+## GraphQL
 
-## Database, seed and compendium
+- [m3.5-graphql-codegen](m3.5-graphql-codegen.md) — graphql-codegen types the browser's documents.
+- [m3.8-react-cache-and-the-server-read-path](m3.8-react-cache-and-the-server-read-path.md) — Server components call services in React cache(); the browser uses GraphQL.
+- [m3.10-me-query](m3.10-me-query.md) — me returns the signed-in user; scoped fields throw Forbidden.
+- [m4.8-category-and-folk-name-loaders](m4.8-category-and-folk-name-loaders.md) — Child-row loaders filter by proofed scope in SQL, not after fetch.
+- [m8.5-compendium-queries](m8.5-compendium-queries.md) — Compendium and ingredient queries read through scoped finders and loaders.
+- [m10.31-graphql-request-dropped](m10.31-graphql-request-dropped.md) — A small fetch wrapper replaces graphql-request, holding graphql at 16.
+- [mb.180-graphql-transport-half](mb.180-graphql-transport-half.md) — The GraphQL file holds the transport's half of the work.
+- [mb.80-public-compendium](mb.80-public-compendium.md) — The compendium is public and indexable; nothing workspace-scoped follows it out.
 
-- `m1.1-neon-branch-strategy` — Neon branch strategy: persistent staging vs. ephemeral hotfix branches — decided — this record
-- `m1.9-test-db-isolation` — Test database isolation: per-worker clone vs. rolled-back transaction — decided — this record
-- `m1.11-e2e-reseed-without-seed` — E2E reseeding: recreate from template, not src/db/seed — superseded in part by M1.27 (2026-09-19) — this record
-- `m1.21-seed-writes-through-its-handle` — The seed writes through the handle it is given, not through withAudit — decided; superseded in part by MB.86 (2026-09-27), which removed the users ↔ audit.ts import cycle, so a seed file's import order no longer — this record
-- `m4.8-category-and-folk-name-loaders` — categoriesByIngredient and folkNamesByIngredient loaders — decided and built. — this record
-- `m5.3-spells-keep-deleted-ingredients` — A spell keeps the ingredients it holds, deleted or not — decided — this record
-- `m6.11-members-without-a-loader` — A coven's members are read a coven at a time, without a loader — decided — this record
-- `m6.14-global-sass-not-css-modules` — Component styling is global Sass with BEM names, not CSS Modules — decided — this record
-- `m8.5-compendium-queries` — compendium and ingredient GraphQL queries — decided and built. — this record
-- `m8.16-add-ingredient-modal-scoping` — AddIngredientModal: scoping plan — decided and built. — this record
-- `m9.9-edit-stock-from-the-card` — M9.9 plan: Edit stock from the card — decided and built. — this record
-- `m10.12-spell-builder-modal` — The spell builder is a modal — decided — this record
-- `m10.19-stock-off-the-builder` — stock comes off the spell builder — decided — this record
-- `m12.13-cupboard-names-the-compendium` — a coven's cupboard names the compendium's entry, rather than hiding it — decided and built. — this record
-- `m12.31-click-feedback-outside-forms` — Feedback from a click outside a form — decided and being built: Design F, chosen by the owner on 2026-10-20, replacing ActionFailure everywhere — this record
-- `m13.1-spell-steps` — A spell's recipe is one ordered list of steps — decided — this record
-- `m13.4-spell-workings` — A working is the record of one making, in three tables — decided — this record
-- `m13.17-new-spell-private` — A new spell starts private — decided — this record
-- `m14.4-compendium-markdown-files` — The compendium seed as markdown files, a formal-name rule and curator review — decided — compendium/sources/<handle>.yaml
-- `m14.38-form-categories-in-search` — How search shows and filters on a form's categories — accepted — this record
-- `m16.4-repository-writes-outside-the-audit` — Two repository files that import the database client and write outside withAudit — accepted — this record
-- `mb.10-co-member-display-names` — A deleted co-member reads under their last name — decided — this record
-- `mb.39-job-level-if-and-check-names` — A job-level if: renames the check only on the job that calls a reusable workflow — decided, verified by two probes, adopted in MB.39 — this record
-- `mb.40-custom-spell-ingredients` — A custom, one-off spell ingredient is a row in spell_ingredients, not a table of its own — decided; superseded in part by MB.110 (2026-09-30), which soft-deletes the table and keys it on a surrogate id — this record
-- `mb.80-public-compendium` — The compendium is public and search-indexable — decided — this record
-- `mb.82-slug-takeover` — A taker ends a retired slug's redirect, once confirmed — decided — this record
-- `mb.86-modular-monolith` — Domain modules with a guarded boundary — decided — this record
-- `mb.87-repository-split` — Split src/db/repository.ts into src/db/repository/ (MB.87) — decided and built. — this record
-- `mb.108-types-in-type-files` — Types live in type-only files — decided — this record
-- `mb.115-variant-substitutes-name-a-form` — A form's linked substitute names a form — decided — this record
-- `mb.120-design-review-public-compendium` — Design review: the public compendium and shared ingredient components (#577) — decided and built. — this record
-- `mb.121-workspace-ingredients-review` — Design review of the workspace ingredients page — decided — this record
-- `mb.123-design-review-the-grimoire` — Design review: the grimoire — decided and built; the owner has run no full test suite yet (Q0) and runs /design-sync at the end — this record
-- `mb.125-delete-names-rows-by-value` — write.delete names its rows by value, and the join tables stay hard-deleted — decided — this record
-- `mb.126-categories-on-the-combobox` — Categories are picked from the lists' box, not a wall of chips — decided — this record
-- `mb.151-references` — A reference is one source, kept once, rendered in Chicago form — decided — this record
-- `mb.154-reference-form-field` — IngredientForm — References field — decided and built. — this record
-- `mb.161-unknown-may-carry-a-formal-name` — An unknown classification may carry a formal name — decided. — claude-docs/db/identity-model.md
-- `mb.162-compendium-holds-curated-values` — The compendium holds curated values alone — decided — this record
-- `mb.165-record-the-picked-vocabulary-row` — A picked form or deity is recorded beside its text — decided — this record
-- `mb.171-seed-keys` — A seeded row keeps the key the seed gave it — decided — this record
-- `mb.215-ingredient-variants` — An ingredient and its forms — decided — this record
-- `mb.251-celestial-bodies` — The planets are Celestial Bodies wherever a person reads them — decided — this record
-- `mb.252-table-rename` — A renamed table leaves a view under its old name — decided — this record
-- `postgres-driver-read-mode-and-channel-binding` — Take the new version (PR #1542): turn off the new read mode, and enforce channel binding — decided (history) — this record
-- `pr1308-repeat-forms` — PR #1308: a spell may lay one form in several steps — decided (history) — this record
-- `pr1308-step-note-retired` — The step note is retired (PR #1308) — decided (history) — this record
+## Ingredients
 
-- `mw15-bulk-add-partial-with-report` — Bulk add completes the rows it can and reports the rest — decided — this record
-- `mw15-formal-name-in-the-compendium-only` — A formal name is required in the compendium only — decided — this record
-- `mw15-no-external-taxonomic-identifiers` — No external taxonomic identifiers (POWO, IPNI, GBIF, CAS, IMA) — decided — this record
-- `mw15-slug-expiry-without-a-job` — A slug's expiry is a date comparison; work that must happen on time is a durable job — decided — this record
+- [m5.5-admin-compendium](m5.5-admin-compendium.md) — The admin compendium page: its size, modal and lookups.
+- [m5.6-admin-categories](m5.6-admin-categories.md) — Admin categories page: delete, list read and modal.
+- [m5.6a-admin-forms](m5.6a-admin-forms.md) — Admin forms page: the slug, the redirect, the stale pick.
+- [m5.6b-admin-groups](m5.6b-admin-groups.md) — Admin group pages: where a deleted group's rows go.
+- [m8.16-add-ingredient-modal-scoping](m8.16-add-ingredient-modal-scoping.md) — Add Ingredient uses a native Coven select and plain onTouched validation.
+- [m8.17-editing-a-coven-ingredient](m8.17-editing-a-coven-ingredient.md) — Stewards and practitioners edit and Link their coven's own entries.
+- [m9.3-create-stock-refuses-held-form](m9.3-create-stock-refuses-held-form.md) — Starting a jar of a form the coven already holds is refused.
+- [m9.6-coven-ingredients-page](m9.6-coven-ingredients-page.md) — The coven's Ingredients page lists its own entries and named compendium entries.
+- [m9.9-edit-stock-from-the-card](m9.9-edit-stock-from-the-card.md) — Stock is edited from the ingredient card.
+- [m10.19-stock-off-the-builder](m10.19-stock-off-the-builder.md) — Stock is taken off the spell builder.
+- [m11.22-search-facets](m11.22-search-facets.md) — Search facets take lists and a toxic setting.
+- [m12.4-filter-layout](m12.4-filter-layout.md) — Search filters sit together in one layout.
+- [m12.13-cupboard-names-the-compendium](m12.13-cupboard-names-the-compendium.md) — A coven's cupboard names the compendium entry rather than hiding it.
+- [m12.24-retired-entry-stays-readable](m12.24-retired-entry-stays-readable.md) — A retired entry stays readable to the covens that use it.
+- [m12.42-linking-goes-one-way](m12.42-linking-goes-one-way.md) — A coven annotates a compendium entry or makes it its own; linking goes one way.
+- [m12.52-facet-sort-order](m12.52-facet-sort-order.md) — Each search facet sorts its values by its own rule.
+- [m14.2-physical-uses](m14.2-physical-uses.md) — How an ingredient records its physical uses.
+- [m14.4-compendium-markdown-files](m14.4-compendium-markdown-files.md) — Compendium seed is markdown files with a formal-name rule and curator review.
+- [m14.24-plan](m14.24-plan.md) — Open plan: the sourcing score, its facts, weights and data.
+- [m14.29-no-endangered-species](m14.29-no-endangered-species.md) — No endangered species in the compendium.
+- [m14.35-curators-see-hidden-entry-pages](m14.35-curators-see-hidden-entry-pages.md) — A curator or keeper still sees a hidden entry's page.
+- [m14.38-form-categories-in-search](m14.38-form-categories-in-search.md) — Search shows and filters on a form's categories.
+- [m17.1-subscription-billing-scope](m17.1-subscription-billing-scope.md) — Subscription billing research scope.
+- [m17.2-closed-practice-warning](m17.2-closed-practice-warning.md) — The closed-practice warning on ingredients.
+- [m17.2-no-controlled-substances](m17.2-no-controlled-substances.md) — No controlled substances in the compendium.
+- [m17.3-ethical-ingredient-warnings](m17.3-ethical-ingredient-warnings.md) — Ethical warnings on ingredients.
+- [mb.91-keeper-curated-vocabularies](mb.91-keeper-curated-vocabularies.md) — Celestial body and zodiac are keeper-curated vocabularies.
+- [mb.115-variant-substitutes-name-a-form](mb.115-variant-substitutes-name-a-form.md) — A form's linked substitute names a form.
+- [mb.126-categories-on-the-combobox](mb.126-categories-on-the-combobox.md) — Categories are picked from the lists' combobox, not a wall of chips.
+- [mb.131-closed-sets-on-the-combobox](mb.131-closed-sets-on-the-combobox.md) — A closed set wears the combobox.
+- [mb.132-admin-deities](mb.132-admin-deities.md) — Admin deity pages: the slug, the tradition's delete, one form.
+- [mb.138-substitute-links](mb.138-substitute-links.md) — A substitute is a row that links an ingredient or names one.
+- [mb.151-references](mb.151-references.md) — A reference is one source, kept once, rendered in Chicago form.
+- [mb.154-reference-form-field](mb.154-reference-form-field.md) — The References field in IngredientForm.
+- [mb.155-notes-and-bibliography](mb.155-notes-and-bibliography.md) — Pages cite in notes and a bibliography.
+- [mb.161-unknown-may-carry-a-formal-name](mb.161-unknown-may-carry-a-formal-name.md) — An unknown classification may carry a formal name.
+- [mb.162-compendium-holds-curated-values](mb.162-compendium-holds-curated-values.md) — The compendium holds curated values alone.
+- [mb.165-record-the-picked-vocabulary-row](mb.165-record-the-picked-vocabulary-row.md) — A picked form or deity is recorded beside its text.
+- [mb.167-read-and-write-the-pick](mb.167-read-and-write-the-pick.md) — Reading and writing the picked form and deities.
+- [mb.174-no-repeat-list-entries](mb.174-no-repeat-list-entries.md) — One rule decides what counts as a repeat list entry.
+- [mb.215-ingredient-variants](mb.215-ingredient-variants.md) — An ingredient's identity is its formal name; each form is a variant beneath it.
+- [mb.240-compendium-seed](mb.240-compendium-seed.md) — The compendium seed is researched and sourced.
+- [mb.251-celestial-bodies](mb.251-celestial-bodies.md) — Planets read as Celestial Bodies everywhere a person sees them.
+- [mw15-formal-name-in-the-compendium-only](mw15-formal-name-in-the-compendium-only.md) — A formal name is required in the compendium only.
+- [mw15-no-external-taxonomic-identifiers](mw15-no-external-taxonomic-identifiers.md) — No external taxonomic identifiers are stored.
 
-## GraphQL and services
+## Grimoire
 
-- `m3.5-graphql-codegen` — graphql-codegen types the browser's documents — decided. — claude-docs/graphql/client-types.md
-- `m3.6-cursor-pagination-helper` — Cursor pagination helper with a hard maximum page size — decided and built. — this record
-- `m3.8-react-cache-and-the-server-read-path` — React cache() wrapper and the server read path — decided and built. — this record
-- `m3.10-me-query` — me query, User type and field-level auth scope — decided and built. — this record
-- `mb.105-pager-counts` — The pager counts, and the typeahead is the first page of a search — decided. — claude-docs/graphql/pagination.md
-- `mb.180-graphql-transport-half` — The GraphQL file holds the transport's half — decided — this record
+- [m10.12-spell-builder-modal](m10.12-spell-builder-modal.md) — The spell builder is a modal.
+- [m10.20-draft-visibility](m10.20-draft-visibility.md) — A draft's visibility moves either way; a complete spell's only widens.
+- [m13.1-spell-steps](m13.1-spell-steps.md) — A spell's recipe is one ordered list of steps.
+- [m13.4-spell-workings](m13.4-spell-workings.md) — A working records one making, in three tables.
+- [m13.14-autosave](m13.14-autosave.md) — Long forms autosave, and edits of one row can conflict.
+- [m13.17-new-spell-private](m13.17-new-spell-private.md) — A new spell starts private.
+- [mb.40-custom-spell-ingredients](mb.40-custom-spell-ingredients.md) — A one-off spell ingredient is a row in spell_ingredients.
+- [mb.121-workspace-ingredients-review](mb.121-workspace-ingredients-review.md) — Design review of the workspace ingredients page.
+- [mb.123-design-review-the-grimoire](mb.123-design-review-the-grimoire.md) — Design review of the grimoire.
+- [pr1308-repeat-forms](pr1308-repeat-forms.md) — A spell may lay one form in several steps.
+- [pr1308-step-note-retired](pr1308-step-note-retired.md) — The step note is retired.
+- [wave-13-review-record](wave-13-review-record.md) — Wave 13 review: workings, editing and deleting spells.
 
-## Interface and components
+## Support
 
-- `m9.1-stories-are-browser-flows` — Stories are browser flows — decided — this record
-- `m9.18-modals-open-with-a-pending-state` — Admin modals open at once, with a loading state — decided and built. — this record
-- `m10.24-browser-floor` — the browser floor — decided — this record
-- `m11.22-search-facets` — Search facets take lists and a toxic setting — decided — this record
-- `m12.4-filter-layout` — How the search filters sit together — signed off by the owner from the workshop stories — this record
-- `m12.6-form-icons` — Form icons: on the group, with a generic — decided — this record
-- `m12.9-undo-and-redo` — M12.9 and M12.10 — undo and redo in the forms: the approved plan — decided and built. — this record
-- `m12.33-loading-standard` — One Loading Standard for the Site — decided — this record
-- `m12.43-fewer-tooltips` — Fewer, quieter tooltips — decided and built. — this record
-- `m12.52-facet-sort-order` — How each search facet sorts its values — decided by the owner from the workshop stories — this record
-- `m12.53-storybook` — The component workshop moves from Ladle to Storybook — decided — this record
-- `m13.14-autosave` — M13.14–M13.19 — Long forms autosave, and edits of one row can conflict — decided — this record
-- `m14.32-comment-guidelines` — Comments say how the code works, and nothing else — decided — .claude/rules/writing.md
-- `mb.7-navigation` — The navigation shell is a slim bar, a context row and a bottom bar on a phone — decided — canCreateWorkspace
-- `mb.84-page-metadata` — Robots, sitemap, page metadata and structured data — decided — this record
-- `mb.174-no-repeat-list-entries` — Stop the list fields offering or adding a repeat — decided and built. — this record
-- `mb.224-test-suite-cut` — cut the test suite to functional requirements (MB.224–MB.230, seven lanes) — decided and built. — this record
+- [m15-support-path-keeps-coven](m15-support-path-keeps-coven.md) — A support request keeps the coven in its page.
+- [m15-support-review](m15-support-review.md) — The support feature as revised after review.
+- [m15-support-review-research](m15-support-review-research.md) — Support feature UX, accessibility and process research.
+- [m15.1-about](m15.1-about.md) — Support requests: kind becomes about.
+- [m15.1-plan](m15.1-plan.md) — Open plan: scope a support form reviewed by keepers.
+- [m15.1-support-form](m15.1-support-form.md) — A support form reviewed by keepers.
+- [m15.2-privacy-policy-notes](m15.2-privacy-policy-notes.md) — Working notes behind the privacy policy.
+- [m15.3-disclaimer-notes](m15.3-disclaimer-notes.md) — Working notes behind the disclaimer.
+- [m15.4-code-of-ethics-notes](m15.4-code-of-ethics-notes.md) — Working notes behind the code of ethics.
+- [m15.46-daily-jobs-from-vercel-cron](m15.46-daily-jobs-from-vercel-cron.md) — Daily jobs start from Vercel Cron, and no job sleeps waiting.
+- [m15.46-resolved-requests-close-and-anonymise](m15.46-resolved-requests-close-and-anonymise.md) — A resolved request closes on its own and a closed one is anonymised.
+- [m15.48-mailed-link](m15.48-mailed-link.md) — A signed-out sender reaches their request by a mailed link.
+- [m15.48-plan](m15.48-plan.md) — Open plan: a signed-out sender keeps a provisional session.
+- [m15.49-job-mechanism](m15.49-job-mechanism.md) — The site has a durable job mechanism.
+- [m15.50-mail-through-a-retried-job](m15.50-mail-through-a-retried-job.md) — Mail is sent through a retried job.
+- [m15.57-terms-of-use-notes](m15.57-terms-of-use-notes.md) — Working notes behind the terms of use.
+- [m15.58-gdpr-scope](m15.58-gdpr-scope.md) — What GDPR asks of Sorrel & Salt.
+- [m15.58-plan](m15.58-plan.md) — Open plan for the GDPR scope.
+- [m15.59-document-editor-scope](m15.59-document-editor-scope.md) — A keeper editor for the site's documents.
+- [m15.59-plan](m15.59-plan.md) — Open plan for the document editor.
+- [m15.61-plan](m15.61-plan.md) — Open plan for taking your own writing.
+- [m15.61-take-your-writing-scope](m15.61-take-your-writing-scope.md) — People can take their own writing with them.
+- [m15.79-agreement-covers-three-documents](m15.79-agreement-covers-three-documents.md) — Agreeing to the terms covers the disclaimer and the code of ethics.
+- [m15.79-joint-document-mailing](m15.79-joint-document-mailing.md) — One joint email covers every changed document.
+- [m17.2-plan](m17.2-plan.md) — Open plan for the controlled-substances rule.
+- [m17.3-plan](m17.3-plan.md) — Open plan for the ethical warnings.
+- [mb.175-help-articles](mb.175-help-articles.md) — Help articles and a glossary are rows a keeper edits.
+- [mb.175-plan](mb.175-plan.md) — Open plan for help articles.
 
-## Testing, CI and tooling
+## CI
 
-- `m9.17-specs-tag-their-stories` — E2E specs tag the stories they walk, and the checklist shows them — decided and built. — this record
-- `m10.30-dependency-audit` — Dependency audit, 2026-10-12: what can move, and the work to move it — decided and built. — this record
-- `m11.18-faster-playwright-runs` — Faster Playwright runs on the same CPU and RAM — decided and built. — globalSetup
-- `m11.23-pre-commit-changed-files` — commit on changed files only — decided and built. — this record
-- `m11.25-component-tests-run-on-happy-dom` — The component tests run on happy-dom — decided and built. — this record
-- `m12.35-token-efficiency` — cut per-turn cost, write token-efficiency rules, make test output useful — decided and built. — this record
-- `m14.27-test-audit` — Test-suite audit, 2026-10-27 — decided — this record
-- `mb.89-tracker-on-github` — Move task tracking from Asana to GitHub Issues and Projects (MB.89) — decided and built. — this record
-- `mb.96-ci-vitest-job` — Bring the CI Vitest job under a minute — decided and built. — this record
-- `mb.100-sql-follow-up` — Raw SQL: a follow-up task, and two assessments — decided and built. — this record
-- `mb.112-server-per-worker` — Each Playwright worker slot gets a server, not just a database — decided — this record
-- `mb.142-doc-split-and-token-cost` — Cut the tokens a task costs — decided and built. — this record
-- `mb.191-coverage-provider` — The coverage provider, chosen by measurement — decided — this record
-- `mb.206-dry-review` — Backend DRY review — plan (MB.206–MB.214) — decided and built. — this record
-- `mb.235-test-reduction-lanes` — MB.235 to MB.238 — the approved plan — decided and built. — this record
-- `mb.275-oxlint-warnings` — clear the 142 oxlint warnings and stop new ones landing — decided and built. — this record
+- [m1.9-test-db-isolation](m1.9-test-db-isolation.md) — Each test worker gets its own cloned database.
+- [m1.11-e2e-reseed-without-seed](m1.11-e2e-reseed-without-seed.md) — E2E reseeding recreates from a template, not from the seed.
+- [m1.27-template-at-setup-not-in-image](m1.27-template-at-setup-not-in-image.md) — The seeded test template is built at test-run setup, not baked in.
+- [m9.1-stories-are-browser-flows](m9.1-stories-are-browser-flows.md) — A story is proved by a browser flow.
+- [m9.17-specs-tag-their-stories](m9.17-specs-tag-their-stories.md) — Playwright specs tag the stories they walk.
+- [m11.18-faster-playwright-runs](m11.18-faster-playwright-runs.md) — Faster Playwright levers need measurement; several are ruled out.
+- [m11.23-pre-commit-changed-files](m11.23-pre-commit-changed-files.md) — Pre-commit runs lint-staged on changed files only.
+- [m11.25-component-tests-run-on-happy-dom](m11.25-component-tests-run-on-happy-dom.md) — Component tests run on happy-dom.
+- [m14.27-test-audit](m14.27-test-audit.md) — Test-suite audit findings.
+- [mb.39-job-level-if-and-check-names](mb.39-job-level-if-and-check-names.md) — A job-level if renames the check only on the calling job.
+- [mb.42-no-source-layer](mb.42-no-source-layer.md) — CI images carry no source layer.
+- [mb.96-ci-vitest-job](mb.96-ci-vitest-job.md) — The CI Vitest job: DOM only where needed, on GitHub's runner.
+- [mb.112-server-per-worker](mb.112-server-per-worker.md) — Each Playwright worker slot gets a server as well as a database.
+- [mb.191-coverage-provider](mb.191-coverage-provider.md) — The coverage provider was chosen by measurement.
+- [mb.224-test-suite-cut](mb.224-test-suite-cut.md) — The test suite is cut to functional requirements.
+- [mb.235-test-reduction-lanes](mb.235-test-reduction-lanes.md) — Gate-time reductions not taken.
+- [mb.275-oxlint-warnings](mb.275-oxlint-warnings.md) — Selected Oxlint rules are errors.
 
-## Other
+## UI
 
-- `m6.3-permission-statements` — Permission statements over a role rank — decided — this record
-- `m10.20-draft-visibility` — A draft's visibility moves either way; a complete spell's only widens — decided — this record
-- `m10.32-accept-from-the-landing` — A coven invitation is accepted from the account page as well as from the mail — decided — this record
-- `m12.24-retired-entry-stays-readable` — A retired entry stays readable to the covens that use it — decided — this record
-- `m12.42-linking-goes-one-way` — Linking Goes One Way — decided — this record
-- `m14.2-physical-uses` — How an ingredient records its physical uses — accepted by the owner and moved to v2, 2026-10-23 (DESIGN.md §13, "Physical uses") — this record
-- `m14.4-plan` — Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review — decided — this record
-- `m14.24-plan` — The sourcing score: facts, weights and the data they need — decided — this record
-- `m14.29-no-endangered-species` — no endangered species in the compendium — decided — this record
-- `m14.32-plan` — M14.32 plan — Comment guidelines and the cleanup that applies them — decided — Story N
-- `m15.1-plan` — Scope a support form reviewed by keepers (plan) — decided — this record
-- `m15.3-disclaimer-notes` — the disclaimer's working notes — decided — this record
-- `m15.4-code-of-ethics-notes` — the code of ethics' working notes — decided — this record
-- `m15.9-plan` — The demo coven: every account is seated as an observer at sign-up — decided — this record
-- `m15.46-daily-jobs-from-vercel-cron` — daily jobs start from Vercel Cron, and no job sleeps waiting — decided — this record
-- `m15.46-resolved-requests-close-and-anonymise` — a resolved request closes on its own, and a closed one is anonymised — decided — this record
-- `m15.48-plan` — M15.48 plan: a signed-out sender keeps a provisional session — decided — this record
-- `m15.49-job-mechanism` — the site has a durable job mechanism — decided — this record
-- `m15.58-plan` — M15.58 GDPR: mint the build tasks now, build nothing — decided — this record
-- `m15.59-plan` — Scope a Keeper Editor for the Site's Documents (#1458) — decided — this record
-- `m15.61-plan` — Scope a Way for People to Take Their Own Writing With Them (#1463) — decided — this record
-- `m17.1-subscription-billing-scope` — Subscription Billing Scope — decided — this record
-- `m17.2-no-controlled-substances` — no controlled substances in the compendium — decided — this record
-- `m17.2-plan` — Scope the Closed-Practice Warning — decided — this record
-- `m17.3-plan` — Scope the ethical warnings on ingredients — decided — this record
-- `mb.30-organization-plugin` — Better Auth's organization plugin for workspaces and invitations — decided — **not adopted** — this record
-- `mb.131-closed-sets-on-the-combobox` — A closed set wears the combobox — decided — this record
-- `mb.138-substitute-links` — A substitute is a row that links an ingredient or names one — decided — this record
-- `mb.148-reads-on-the-write-transaction` — Reads on the write transaction — decided — this record
-- `mb.155-notes-and-bibliography` — The page cites in notes and a bibliography — decided — this record
-- `mb.167-read-and-write-the-pick` — Reading and writing the picked form and deities — decided — this record
-- `mb.175-help-articles` — Help and FAQ articles, and a glossary, as rows a keeper edits — decided — this record
-- `mb.175-plan` — Scope Help and FAQ Articles (plan) — decided — this record
-- `wave-13-review-record` — Wave 13 review — plan — decided and built. — this record
-- `mw15-notes-keep-referential-integrity` — Notes keep referential integrity: no polymorphic subject, no shadow history tables — decided — this record
-- `mw15-rejected-stack-choices` — Stack choices rejected (Gatsby, Vite SPA, Supabase, Render Postgres, SQLite for tests, Neon branches for CI, Netlify, Apollo Client, server functions, trunk-based, Better Auth anonymous plugin) — decided — this record
-- `m5.6-admin-categories` — The admin categories page: the delete, the list query, the modal — decided — this record
-- `m9.3-create-stock-refuses-held-form` — Starting a jar of a form the coven holds is refused — decided — this record
-- `mb.240-compendium-seed` — A researched, sourced compendium seed — decided — this record
-- `m10.31-graphql-request-dropped` — graphql-request dropped for a fetch wrapper — decided — this record
-- `m1.27-template-at-setup-not-in-image` — The seeded test template is built at test-run setup, not baked into the Postgres image — decided — this record
-- `mb.42-no-source-layer` — The CI images carry no source layer — decided — this record
+- [m6.14-global-sass-not-css-modules](m6.14-global-sass-not-css-modules.md) — Component styling is global Sass with BEM names.
+- [m10.24-browser-floor](m10.24-browser-floor.md) — The browser floor is Baseline Widely Available.
+- [m12.6-form-icons](m12.6-form-icons.md) — Form icons sit on the group, with a generic one.
+- [m12.9-undo-and-redo](m12.9-undo-and-redo.md) — Forms get undo and redo.
+- [m12.31-click-feedback-outside-forms](m12.31-click-feedback-outside-forms.md) — Feedback from a click outside a form.
+- [m12.33-loading-standard](m12.33-loading-standard.md) — One loading standard for the whole site.
+- [m12.43-fewer-tooltips](m12.43-fewer-tooltips.md) — Fewer, quieter tooltips.
+- [m12.53-storybook](m12.53-storybook.md) — The component workshop moves from Ladle to Storybook.
+- [m9.18-modals-open-with-a-pending-state](m9.18-modals-open-with-a-pending-state.md) — Admin modals open at once and show a loading state.
+- [mb.7-navigation](mb.7-navigation.md) — A slim bar, a context row and a bottom bar on a phone.
+- [mb.84-page-metadata](mb.84-page-metadata.md) — Robots, sitemap, page metadata and structured data.
+- [mb.116-design-review-sign-in](mb.116-design-review-sign-in.md) — Design review of the sign-in and account pages.
+- [mb.118-design-review-mail](mb.118-design-review-mail.md) — Mail design review sign-off.
+- [mb.119-design-review-coven](mb.119-design-review-coven.md) — Design review of the coven and invitations.
+- [mb.120-design-review-public-compendium](mb.120-design-review-public-compendium.md) — Design review of the public compendium and shared ingredient components.
 
-Superseded records are in `archive/design-decisions-history.tar.gz`. List it with `tar -tzf`; git history holds the plain text.
+## Process
+
+- [m10.30-dependency-audit](m10.30-dependency-audit.md) — Dependency moves are separate tasks recorded in dependencies.md.
+- [m12.35-token-efficiency](m12.35-token-efficiency.md) — Short token-saving rules in CLAUDE.md; the long form is a doc.
+- [m14.32-comment-guidelines](m14.32-comment-guidelines.md) — Comments say how the code works and nothing else.
+- [m14.32-plan](m14.32-plan.md) — Open plan: comment guidelines and the cleanup.
+- [m14.4-plan](m14.4-plan.md) — Open plan: compendium seed as markdown files.
+- [m15.9-plan](m15.9-plan.md) — Plan: the demo coven seating.
+- [mb.89-tracker-on-github](mb.89-tracker-on-github.md) — Task tracking is on public GitHub Issues and Projects.
+- [mb.142-doc-split-and-token-cost](mb.142-doc-split-and-token-cost.md) — Docs are split so a task loads only what it touches.
+- [mw15-plan](mw15-plan.md) — Open plan: the v1 docs close-out.
+- [mw15-rejected-stack-choices](mw15-rejected-stack-choices.md) — Stack choices weighed and rejected.
