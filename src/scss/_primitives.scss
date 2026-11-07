@@ -1221,15 +1221,11 @@
     --notice-bar: #{$accent-hover};
   }
 
-  // The word a help callout is named by (Note, Tip, Take Care), so the kind never rests on colour alone.
+  // The word a help callout is named by (Note, Tip, Take Care), so the kind never rests on colour alone. It is an
+  // .eyebrow too, which draws it; this stands it on its own line, after typography so its margin wins.
   .notice__label {
     display: block;
     margin-block-end: space(1);
-    font-size: type-size('overline');
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: $text-muted;
   }
 
   // In the notice's padding rather than a flex row, so a link in the text stays inline.

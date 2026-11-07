@@ -176,7 +176,7 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
         {
           type: 'element',
           tagName: 'span',
-          properties: { className: ['notice__label'], ariaHidden: 'true' },
+          properties: { className: ['eyebrow', 'notice__label'], ariaHidden: 'true' },
           children: [text(name)],
         },
         ...rest,
