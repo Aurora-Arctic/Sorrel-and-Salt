@@ -1,17 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page bar: a thin strip along the bottom edge of the global bar,
-// with a segment sweeping across it while a navigation is on its way. The
-// component (navigation-bar.tsx) decides when it shows; this only draws it.
-// It is `hidden` until then, and the 100ms hold-back is the component's timer,
-// so no `animation-delay` is set here.
-//
-// It sits at the top of the window, and on the bottom edge of the site bar only on a
-// page that draws one: `/` shows the site name alone, with no bar, and a bar placed at
-// the site bar's height there floated part way down the page. The lowering is the
-// `:has()` rule below, so a browser without it keeps the bar at the top, which is right
-// for `/` and only a little high elsewhere.
+// The page bar: a thin strip along the global bar's bottom edge with a segment sweeping across while a navigation
+// is on its way. The component decides when it shows (its timer is the 100ms hold-back), so no `animation-delay` here.
+// It sits at the window's top, lowered by the `:has()` rule below on a page that draws a site bar; a browser without `:has()` keeps it at the top.
 .navigation-bar {
   position: fixed;
   top: 0;
