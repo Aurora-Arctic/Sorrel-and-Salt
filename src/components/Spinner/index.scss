@@ -1,8 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A save in flight, for every Save button: a ring open on one side so its turn reads, hidden for `$loading-delay`
-// first. Under reduced motion the turn becomes the shared slow pulse (`loading-motion`).
+// Hidden for `$loading-delay` first; under reduced motion the turn becomes the shared slow pulse (`loading-motion`).
 .spinner {
   @include loading-motion(spinner-turn $spin-duration linear infinite, $loading-delay);
 

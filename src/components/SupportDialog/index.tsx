@@ -27,8 +27,7 @@ import { emailPagePath } from '../../lib/account-email';
 import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
 
-// The Support dialog, open while the address carries `?support=<about>`. Drawn once by the root layout, which reads
-// nothing for it: the dialog asks what the visitor may do when it opens (claude-docs/components/support-form.md).
+// Drawn once by the root layout, which reads nothing for it (claude-docs/components/support-form.md).
 
 const SupportDialogStateDocument = graphql(`
   query SupportDialogState {
@@ -101,7 +100,6 @@ function Dialog(): ReactElement | null {
   );
 }
 
-/** In a Suspense boundary, as reading the address asks for. */
 const SupportDialog = (): ReactElement => (
   <Suspense fallback={null}>
     <Dialog />

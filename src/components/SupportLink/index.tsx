@@ -7,9 +7,7 @@ import { Suspense, type ReactElement } from 'react';
 import { SUPPORT_PARAM, SUPPORT_PATH, supportHref } from '../../lib/support-path';
 import type { SupportLinkProps } from './types';
 
-// A link that opens the Support dialog over the page it is on. Before the address is known it goes to the
-// support page instead (claude-docs/components/support-form.md). Both are `nofollow`: each is a copy of
-// a page with the dialog asked for, and robots.txt blocks the home page's copy, `/?support=`.
+// Both are `nofollow`: each copies a page with the dialog asked for, and robots.txt blocks the home page's copy, `/?support=`.
 
 function Opening({ children, about, ...rest }: SupportLinkProps): ReactElement {
   const pathname = usePathname();

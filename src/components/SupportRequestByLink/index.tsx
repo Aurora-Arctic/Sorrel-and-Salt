@@ -15,8 +15,7 @@ import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
 import type { LinkedRequest, LinkState } from './types';
 
-// The page a signed-out sender's mail links to. The token is in the URL fragment, which the browser never sends, so
-// this reads it in the browser, keeps it in this tab's sessionStorage and drops the fragment from the address bar.
+// The token is in the URL fragment, which the browser never sends: it is read here, kept in sessionStorage and dropped from the address bar.
 
 const SupportRequestByViewTokenDocument = graphql(`
   query SupportRequestByViewToken($token: String!) {
@@ -111,8 +110,7 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
-  // A newer link pasted into the open tab changes the hash without remounting the page; an empty hash (the one this
-  // page leaves behind) is ignored.
+  // A newer link pasted into the open tab changes the hash without remounting; an empty hash is ignored.
   useEffect(() => {
     let current = true;
     const onHashChange = () => {
@@ -173,7 +171,6 @@ const SupportRequestByLink = (): ReactElement => {
   );
 };
 
-/** The `extensions.code` of a failed request, if it carries one. */
 function readGraphqlFailureCode(error: unknown): string | undefined {
   const errors = (error as { errors?: readonly { extensions?: { code?: string } }[] }).errors;
   return errors?.[0]?.extensions?.code;

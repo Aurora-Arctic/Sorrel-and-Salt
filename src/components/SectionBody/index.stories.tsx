@@ -6,9 +6,6 @@ import type { NavigationTarget } from '../../lib/navigation';
 import SectionBody from '.';
 import { route } from '../../../.storybook/route';
 
-// Render-only; behaviour is asserted in tests/components/SectionBody. At rest it
-// shows its page; the skeleton shows only while a navigation aimed at the section
-// is on its way. The Loading stories open with a link pressed (it never arrives).
 const meta = {
   title: 'Shell / Section Body',
 } satisfies Meta;
@@ -24,8 +21,6 @@ const Resting = (
   </SectionBody>
 );
 
-// Each region has its own frame class, as its layout gives it: the coven's
-// `coven-layout`, the admin area's `page-column`.
 const FRAME = { coven: 'coven-layout', admin: 'page-column' } as const;
 
 const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): ReactElement => {
@@ -46,8 +41,6 @@ const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): 
   );
 };
 
-// Resting is the page itself. The rest are a wait, each in the skeleton of the destination it names. The account page
-// is aimed at the shell's body, not this one: see Main Body.
 const STATES: Record<string, ReactNode> = {
   Resting,
   'Loading List': (

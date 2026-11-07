@@ -2,8 +2,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import './index.scss';
 
-// The one line under an entry's safety notes, drawn whether or not there are any. A `note`, so a screen reader hears
-// it as an aside to the section (claude-docs/components/document-page.md).
+// A `note`, so a screen reader hears it as an aside (claude-docs/components/document-page.md).
 const DisclaimerNotice = (): ReactElement => (
   <p className="disclaimer-notice" role="note">
     Safety notes do not list every risk. If an ingredient has no safety note, that does not mean it

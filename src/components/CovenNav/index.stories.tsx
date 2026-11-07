@@ -3,8 +3,6 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 import CovenNav from '.';
 
-// Render-only; behaviour is asserted in tests/components/CovenNav. The
-// workshop's `usePathname` stub answers whatever the wrapping provider says.
 const meta = {
   title: 'Coven / Nav',
 } satisfies Meta;
@@ -17,8 +15,6 @@ const at = (path: string, canReadMembers = false) => (
   </WorkshopPathname.Provider>
 );
 
-// A member sees Overview, Ingredients and Members; a viewer's role may not read the
-// members, so no Members. The shapes the nav takes by width are SectionNav's stories.
 export const States: Story = {
   render: () => (
     <StatesGrid

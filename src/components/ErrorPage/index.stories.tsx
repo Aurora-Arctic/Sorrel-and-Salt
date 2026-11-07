@@ -5,8 +5,6 @@ import { ShellFrame } from '../../../.storybook/shell-frame';
 import Backdrop from '../Backdrop';
 import ErrorPage from '.';
 
-// Render-only; behaviour is asserted in tests/components/ErrorPage. Each story
-// carries its own `main.page-frame`, as the component does.
 const meta = {
   title: 'Pages / Error Page',
 } satisfies Meta;
@@ -21,7 +19,6 @@ const notFound = (
   </ErrorPage>
 );
 
-// A signed-in visitor: `(shell)/not-found.tsx` re-exports the root page so the shell's bar stays.
 const defaultNode = (
   <>
     <ShellFrame area="none" open="/">

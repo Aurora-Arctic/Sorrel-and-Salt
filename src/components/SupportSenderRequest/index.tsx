@@ -10,9 +10,7 @@ import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
 import '../SupportRequests/index.scss';
 
-// The body of the sender's dialog over `/account/support` (claude-docs/components/support-sender-request.md). Staff
-// replies are named for the site and tagged "Staff", never by the staff member's name. The mailed-link page passes its
-// own `reply` form, which needs no session.
+// Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).
 
 const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): ReactElement => (
   <div className="support-detail support-detail--single">

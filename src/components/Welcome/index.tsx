@@ -4,8 +4,7 @@ import PageHeader from '../PageHeader';
 import type { WelcomeProps } from './types';
 import './index.scss';
 
-// The public front door at `/`. The session changes exactly one thing, the way in, so a signed-in visitor is never
-// asked to sign in again (claude-docs/components/welcome.md).
+// The session changes exactly one thing, the way in (claude-docs/components/welcome.md).
 
 const Welcome = ({ landing }: WelcomeProps): ReactElement => (
   <div className="welcome">
