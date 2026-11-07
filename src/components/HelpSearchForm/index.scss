@@ -44,3 +44,11 @@
     }
   }
 }
+
+// The page title beneath the box (the h1, search, h2 header), or the staff index's first section, which holds its
+// heading: a step clear of the box, as a sub page's parent link stands. The box's own bottom margin collapses into
+// this one; a section is a flex stack, so the step is the section's margin, not its heading's.
+.help-search + h2,
+.help-search + section {
+  margin-block-start: space(6);
+}
