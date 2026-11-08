@@ -82,9 +82,11 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
       <span>
         Position {guide.place} of {guide.of}
       </span>
-      <span>
-        {guide.order.length} {guide.order.length === 1 ? 'Sub Page' : 'Sub Pages'}
-      </span>
+      {guide.order.length > 0 && (
+        <span>
+          {guide.order.length} {guide.order.length === 1 ? 'Sub Page' : 'Sub Pages'}
+        </span>
+      )}
       {guide.shown ? (
         <PendingLink href={guide.address as Route}>{guide.address}</PendingLink>
       ) : (
@@ -208,7 +210,7 @@ const filterKey = (filter: HelpOutlineFilter): string =>
 const HelpOutline = ({ filter, guides, others, pane }: HelpOutlineProps): ReactElement => {
   const choices = [
     ...guides.map((guide) => ({
-      label: `${guide.position ?? ''}. ${guide.title} · ${guide.subPages} ${guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}`,
+      label: `${guide.position ?? ''}. ${guide.title}${guide.subPages > 0 ? ` · ${guide.subPages} ${guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}` : ''}`,
       href: guide.href,
     })),
     ...others.map((other) => ({ label: `${other.label} · ${other.count}`, href: other.href })),
@@ -237,7 +239,9 @@ const HelpOutline = ({ filter, guides, others, pane }: HelpOutlineProps): ReactE
                             <AudienceBadge audience={guide.audience} />{' '}
                             <HiddenBadge shown={guide.shown} />
                           </span>
-                          <span className="help-outline__count">{guide.subPages}</span>
+                          {guide.subPages > 0 && (
+                            <span className="help-outline__count">{guide.subPages}</span>
+                          )}
                         </PendingLink>
                       </li>
                     ))}

@@ -14,7 +14,7 @@
 
 SQL narrows every list through `listKeeperHelpArticles` (`claude-docs/design-decisions/support.md`, "Showing and hiding, and a parent's children"); the page only groups sub pages under their guides.
 
-- **Guides** are the top-level articles (`topLevel`) in position order, each with its count of sub pages the filter admits. A guide is numbered by its place among every live guide, whatever the filter, so the numbers do not move as the filter changes.
+- **Guides** are the top-level articles (`topLevel`) in position order, each with its count of sub pages the filter admits. A guide with none shows no number: none in the Guides list, the phone's Guide select or the chosen guide's facts line. A guide is numbered by its place among every live guide, whatever the filter, so the numbers do not move as the filter changes.
 - **The FAQ** is in position order and **the Glossary** A to Z, each with its count.
 - **The chosen guide** is read with `readKeeperHelpArticle`, so its table lists its sub pages in the guide's order. The table shows only those the filter admits, but `order` holds every live sub page's id, hidden and filtered out included.
 
