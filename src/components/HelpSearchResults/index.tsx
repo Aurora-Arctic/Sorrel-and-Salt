@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink } from '../../lib/navigation';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
@@ -10,7 +11,7 @@ import './index.scss';
 const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
 
 // The search box holding the words, a count, then the results in the order handed (the search's rank), each a card
-// with its title, then a chip saying what kind of page it opens and, for a row only staff read, a Staff chip, with the searched words
+// with its title, then a chip saying what kind of page it opens and, for a row not public, a chip naming its audience (Staff or Keeper), with the searched words
 // marked. No results draws no list; an unmatched query says so in the site's No Matches status
 // (claude-docs/components/help-pages.md).
 const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
@@ -33,7 +34,9 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
                 <p className="help-results__labels">
                   <span className="help-results__kind">{KIND[result.kind]}</span>
                   {result.audience !== 'public' && (
-                    <span className="help-results__audience">Staff</span>
+                    <span className="help-results__audience">
+                      {HELP_AUDIENCE_LABELS[result.audience]}
+                    </span>
                   )}
                 </p>
               </div>

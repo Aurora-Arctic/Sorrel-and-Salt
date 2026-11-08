@@ -4,13 +4,13 @@ import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import { HelpListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
+import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { emptyList } from '../../lib/text';
 import type { HelpListProps } from './types';
 
 // The keepers' help rows as a table and pager; render-only. Each Edit is an address, so Back closes its modal.
 
 const KIND_LABELS = { faq: 'FAQ', article: 'Article', term: 'Term' } as const;
-const AUDIENCE_LABELS = { public: 'Public', staff: 'Staff', keeper: 'Keeper' } as const;
 
 const HelpList = ({ articles, previousHref, nextHref }: HelpListProps): ReactElement => (
   <ListFrame>
@@ -21,7 +21,8 @@ const HelpList = ({ articles, previousHref, nextHref }: HelpListProps): ReactEle
           { heading: 'Kind', cell: (article) => KIND_LABELS[article.kind] },
           {
             heading: 'Audience',
-            cell: (article) => (article.kind === 'term' ? '' : AUDIENCE_LABELS[article.audience]),
+            cell: (article) =>
+              article.kind === 'term' ? '' : HELP_AUDIENCE_LABELS[article.audience],
           },
           { heading: 'Position', cell: (article) => article.position ?? '' },
           {

@@ -9,21 +9,21 @@ import { hrefs } from '../../support/links';
 const RESULTS = [
   {
     kind: 'article' as const,
-    audience: 'public',
+    audience: 'public' as const,
     title: 'Testwort Stock Levels',
     summary: 'How stock is counted.',
     href: '/help/ingredients/stock-levels',
   },
   {
     kind: 'term' as const,
-    audience: 'public',
+    audience: 'public' as const,
     title: 'Stock',
     summary: null,
     href: '/help/glossary#stock',
   },
   {
     kind: 'faq' as const,
-    audience: 'public',
+    audience: 'public' as const,
     title: 'Where Is My Stock?',
     summary: null,
     href: '/help#where-is-my-stock',
@@ -32,10 +32,18 @@ const RESULTS = [
 
 const STAFF_RESULT = {
   kind: 'article' as const,
-  audience: 'staff',
+  audience: 'staff' as const,
   title: 'Testwort Curation Stock',
   summary: null,
   href: '/help/staff/curation/stock',
+};
+
+const KEEPER_RESULT = {
+  kind: 'article' as const,
+  audience: 'keeper' as const,
+  title: 'Testwort Sender Time Out',
+  summary: null,
+  href: '/help/staff/queue/time-out',
 };
 
 const itemOf = (name: RegExp) => screen.getByRole('link', { name }).closest('li')!;
@@ -97,11 +105,14 @@ describe('HelpSearchResults', () => {
   });
 
   // The staff search returns rows a signed-out reader never sees; each one says so.
-  it('marks a staff row Staff, and a public row not', () => {
-    render(<HelpSearchResults query="stock" results={[...RESULTS, STAFF_RESULT]} />);
+  it('marks a staff row Staff, a keeper row Keeper, and a public row neither', () => {
+    render(<HelpSearchResults query="stock" results={[...RESULTS, STAFF_RESULT, KEEPER_RESULT]} />);
 
     expect(within(itemOf(/Testwort Curation Stock/)).getByText('Staff')).toBeInTheDocument();
+    expect(within(itemOf(/Testwort Sender Time Out/)).getByText('Keeper')).toBeInTheDocument();
+    expect(within(itemOf(/Testwort Sender Time Out/)).queryByText('Staff')).toBeNull();
     expect(within(itemOf(/Testwort Stock Levels/)).queryByText('Staff')).toBeNull();
+    expect(within(itemOf(/Testwort Stock Levels/)).queryByText('Keeper')).toBeNull();
   });
 
   it('draws no result link when a query finds nothing', () => {
