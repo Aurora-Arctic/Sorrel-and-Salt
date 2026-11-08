@@ -6,8 +6,9 @@ import type { Session } from '@/lib/session';
 import { hrefs } from '../../../support/links';
 
 // The public help pages read the public finders, which take no session, filter `audience = 'public'` in SQL and are
-// cached (tests/modules/help/services/help-reads.test.ts). Search alone reads the session, since its results follow
-// the reader's audience. A sub page has one address, under its parent's: asked for at /help/[slug] it answers 308,
+// cached (tests/modules/help/services/help-reads.test.ts). Search reads the session, since its results follow the
+// reader's audience; the front page and an article read it beside the cached text only for the Staff Help and Edit
+// links (tests/lib/help-viewer.test.ts). A sub page has one address, under its parent's: asked for at /help/[slug] it answers 308,
 // and asked for under another parent it is a 404 (DESIGN.md §10; support.md, "The parent article").
 
 const notFound = vi.fn(() => {
@@ -125,6 +126,8 @@ describe('/help', () => {
     const index = [row('testwort-getting-started'), row('testwort-your-coven')];
     readHelpFaq.mockResolvedValue(entries(faq));
     readHelpArticleIndex.mockResolvedValue(entries(index));
+    readHelpArticle.mockRejectedValue(new NotFound());
+    readHelpGlossary.mockResolvedValue(entries([]));
     const { default: Page } = await load();
 
     render((await Page()) as React.ReactElement);
@@ -140,8 +143,8 @@ describe('/help', () => {
       expect.arrayContaining(['/help/testwort-getting-started', '/help/testwort-your-coven']),
     );
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
-    // The public reads take no session.
-    expect(getSession).not.toHaveBeenCalled();
+    // A signed-out reader is offered no Staff Help link.
+    expect(linkHrefs()).not.toContain('/help/staff');
   });
 
   it('has a title, a description and its canonical address, and is indexable', async () => {
@@ -215,7 +218,8 @@ describe('/help/[slug]', () => {
       ]),
     );
     expect(screen.getByRole('search')).toBeInTheDocument();
-    expect(getSession).not.toHaveBeenCalled();
+    // A signed-out reader is offered no edit.
+    expect(linkHrefs().filter((href) => href?.startsWith('/keepers/'))).toEqual([]);
   });
 
   it('answers a sub page asked for at its own slug with a 308 to its nested address', async () => {

@@ -27,6 +27,7 @@ describe('help_articles schema', () => {
         'body',
         'position',
         'seed_key',
+        'shown',
         'parent_id',
         'search_vector',
         ...AUDIT_COLUMNS,

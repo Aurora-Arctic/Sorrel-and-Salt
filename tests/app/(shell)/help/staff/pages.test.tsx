@@ -29,18 +29,24 @@ vi.mock('next/navigation', () => ({
 const requireCuratorSession = vi.fn<() => Promise<Session>>();
 const requireAdminSession = vi.fn();
 const requireSession = vi.fn();
+const getSession = vi.fn<() => Promise<Session | null>>();
+const sessionIsVerified = vi.fn(async () => true);
 vi.mock('@/lib/request-session', () => ({
   requireCuratorSession,
   requireAdminSession,
   requireSession,
+  getSession,
+  sessionIsVerified,
 }));
 
 const listStaffHelpArticles = vi.fn();
 const readStaffHelpArticle = vi.fn();
 const readHelpArticle = vi.fn();
 const searchHelp = vi.fn();
+const readHelpGlossary = vi.fn();
 vi.mock('@/modules/help', () => ({
   listStaffHelpArticles,
+  readHelpGlossary,
   readStaffHelpArticle,
   readHelpArticle,
   searchHelp,
@@ -121,6 +127,8 @@ const linkHrefs = () => hrefs(screen.queryAllByRole('link'));
 beforeEach(() => {
   vi.clearAllMocks();
   requireCuratorSession.mockResolvedValue(CURATOR);
+  readHelpGlossary.mockResolvedValue([]);
+  getSession.mockResolvedValue(CURATOR);
   requireAdminSession.mockRejectedValue(new Error('not the curation guard'));
   requireSession.mockRejectedValue(new Error('not the curation guard'));
 });

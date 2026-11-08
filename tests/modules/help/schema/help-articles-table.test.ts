@@ -62,6 +62,7 @@ describe('the help_articles table', () => {
           'body',
           'position',
           'seed_key',
+          'shown',
           'parent_id',
           'search_vector',
           ...AUDIT_COLUMNS,
@@ -80,6 +81,7 @@ describe('the help_articles table', () => {
         body: { type: 'text', nullable: false },
         position: { type: 'integer', nullable: true },
         seed_key: { type: 'text', nullable: true },
+        shown: { type: 'boolean', nullable: false },
         parent_id: { type: 'uuid', nullable: true },
       });
     });

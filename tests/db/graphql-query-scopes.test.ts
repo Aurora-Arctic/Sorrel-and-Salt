@@ -119,6 +119,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ keeperHelpArticles(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  helpRenameEffects: {
+    source: `{ helpRenameEffects(id: "${NOWHERE}", title: "Testwort") { oldPath } }`,
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
