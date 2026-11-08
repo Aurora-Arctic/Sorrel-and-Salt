@@ -113,18 +113,18 @@
 
 // The invitation refusals widget (claude-docs/components/help-pages.md, "Widgets").
 .help-widget__finder {
-  margin-bottom: space(3);
+  margin-bottom: space(5);
 }
 
 .help-widget__answer {
-  margin-bottom: space(3);
+  margin-bottom: space(5);
 }
 
 .help-widget__facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: space(1) space(4);
-  margin: space(3) 0 0;
+  gap: space(2) space(4);
+  margin: space(4) 0 0;
 
   > div {
     display: contents;
@@ -145,7 +145,7 @@
   flex-wrap: wrap;
   gap: space(2) space(3);
   align-items: center;
-  margin: space(3) 0 0;
+  margin: space(4) 0 0;
 
   .help-widget__explained {
     margin: 0;
@@ -233,7 +233,7 @@
 
   > li {
     margin: 0;
-    padding: space(2) 0;
+    padding: space(3) 0;
     border-top: 1px solid $hairline;
 
     &::before {
@@ -248,7 +248,7 @@
 
 .help-widget__fix {
   display: block;
-  margin-top: space(1);
+  margin-top: space(2);
   color: $text-muted;
   font-size: type-size('small');
 
