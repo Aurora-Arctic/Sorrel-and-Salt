@@ -516,7 +516,7 @@
 
   @keyframes target-arrive {
     from {
-      background-color: color-mix(in srgb, $accent 28%, $surface-card);
+      background-color: $fill-highlight-field;
     }
   }
 

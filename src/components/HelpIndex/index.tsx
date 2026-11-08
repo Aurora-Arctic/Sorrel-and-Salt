@@ -4,6 +4,7 @@ import { helpTerms } from '../../lib/help-marks';
 import { HELP_GLOSSARY_CARD as GLOSSARY } from '../../lib/help-pages';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
+import HashTarget from '../HashTarget';
 import HelpSearchForm from '../HelpSearchForm';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
@@ -100,6 +101,7 @@ const HelpIndex = ({
             <BackChevron direction="up" />
             Back to Top
           </a>
+          <HashTarget />
         </section>
       )}
     </div>

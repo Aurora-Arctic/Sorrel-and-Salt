@@ -32,7 +32,7 @@
   }
 }
 
-// The row an address names (CSS `:target`): a tint behind it with an accent bar at its start, so not by colour alone,
+// The row an address names (CSS `:target`): a faint tint behind it with a hairline accent edge at its start,
 // reaching a step past the column each side so the text and the rules stay put. The tint arrives stronger and settles
 // (`target-arrive`, in the primitives); under reduced motion it is the settled tint at once. `$block-end` reaches the
 // tint past the row's bottom edge, for a row spaced by its margin rather than its padding.
@@ -47,9 +47,9 @@
       z-index: -1;
       inset: 0 calc(-1 * #{space(3)});
       inset-block-end: $block-end;
-      border-inline-start: $rule-heavy solid $accent;
-      background-color: $fill-highlight-field;
-      animation: target-arrive calc(#{$motion-long} * 3) $motion-easing;
+      border-inline-start: 1px solid $edge-highlight;
+      background-color: color-mix(in srgb, $accent 5%, $surface-card);
+      animation: target-arrive $motion-long $motion-easing;
 
       @include reduced-motion {
         animation: none;

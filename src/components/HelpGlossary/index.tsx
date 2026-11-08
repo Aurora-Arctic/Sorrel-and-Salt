@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
+import HashTarget from '../HashTarget';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import type { HelpGlossaryProps } from './types';
@@ -39,6 +40,7 @@ const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
           </div>
         ))}
       </dl>
+      <HashTarget />
     </div>
   );
 };
