@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import CompendiumCardMore from '@/components/CompendiumCards/card-more';
 import type {
   CompendiumCardMoreProps,
@@ -9,6 +9,7 @@ import type {
 } from '@/components/CompendiumCards/types';
 import type { StockData, StockJar } from '@/components/StockDialog/types';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { covenChoiceModule } from '@/components/IngredientEntry/lazy-coven-choice';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -82,6 +83,11 @@ function choose(item: string): void {
   fireEvent.click(more());
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: item }));
 }
+
+// The coven choice loads apart from the dialogs; it has arrived by the time a person opens one.
+beforeAll(async () => {
+  await covenChoiceModule.load();
+});
 
 describe('CompendiumCardMore', () => {
   beforeEach(() => {

@@ -151,9 +151,10 @@ export const RecordButton = ({
 export const MoreMenu = ({
   name,
   ref,
+  preload,
   ...choices
 }: MenuButtonChoices &
-  Pick<MenuButtonProps, 'busy' | 'busyLabel'> & {
+  Pick<MenuButtonProps, 'busy' | 'busyLabel' | 'preload'> & {
     name: string;
     ref?: Ref<HTMLButtonElement>;
   }): ReactElement => (
@@ -163,6 +164,7 @@ export const MoreMenu = ({
       label={`More for ${name}`}
       className="icon-tip__edit icon-tip__more"
       icon={<DotsIcon />}
+      preload={preload}
       {...choices}
     />
   </IconTip>

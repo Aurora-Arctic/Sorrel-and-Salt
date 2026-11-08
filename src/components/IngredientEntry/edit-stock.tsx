@@ -4,7 +4,7 @@ import { type ReactElement, useState } from 'react';
 import Modal from '../Modal';
 import { StockDialogModal } from '../StockDialog';
 import type { StockData } from '../StockDialog/types';
-import CovenChoice from './coven-choice';
+import CovenChoice from './lazy-coven-choice';
 
 // Edit Stock from a compendium entry's three dots: the coven card's own dialog, opened at once for
 // one coven that may update stock and after asking which for two or more
