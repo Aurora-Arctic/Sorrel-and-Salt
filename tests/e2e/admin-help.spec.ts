@@ -98,10 +98,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
     .getByRole('navigation', { name: 'Help Outline' })
     .getByRole('link', { name: PARENT })
     .click();
-  await page
-    .getByRole('main')
-    .getByRole('link', { name: `Add Sub Page to ${PARENT}` })
-    .click();
+  await page.getByRole('main').getByRole('link', { name: 'Add Sub Page' }).click();
   await expect(page.getByRole('main').getByRole('combobox', { name: /^Parent/ })).toHaveText(
     new RegExp(PARENT),
   );

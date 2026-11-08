@@ -122,7 +122,7 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
     />
     <p className="help-outline__add">
       <PendingLink className="btn" href={guide.addSubPageHref}>
-        Add Sub Page to {guide.title}
+        Add Sub Page
       </PendingLink>
     </p>
   </>
