@@ -82,7 +82,8 @@ export async function seedHelpEntries(
     if (touched(existing)) continue;
     await tx
       .update(helpArticles)
-      .set(applyAudit('update', { ...values, deletedAt: null, deletedBy: null }, BOOTSTRAP_SESSION))
+      // The deletion stamps sit outside applyAudit, which drops every audit field from its payload.
+      .set({ ...applyAudit('update', values, BOOTSTRAP_SESSION), deletedAt: null, deletedBy: null })
       .where(eq(helpArticles.id, existing.id));
   }
   return lines;
