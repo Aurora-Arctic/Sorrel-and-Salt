@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
+import { STAFF_HELP } from '../../lib/help-paths';
 import { HELP_GLOSSARY_CARD as GLOSSARY } from '../../lib/help-pages';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
@@ -30,6 +31,7 @@ const HelpIndex = ({
   quickLinks = [],
   terms = [],
   back,
+  staffHelp = false,
 }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
   const reserved = [GUIDES_ID, FAQ_ID, ...faq.map((entry) => entry.slug)];
@@ -64,6 +66,14 @@ const HelpIndex = ({
                 </li>
               ))}
             </ul>
+          )}
+          {staffHelp && (
+            <p>
+              <PendingLink className="back-link back-link--forward" href={STAFF_HELP as Route}>
+                Staff Help
+                <BackChevron direction="forward" />
+              </PendingLink>
+            </p>
           )}
         </div>
       ) : (

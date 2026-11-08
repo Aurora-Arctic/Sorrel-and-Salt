@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { readGlossaryTerms } from '@/lib/help-glossary';
 import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
-import { helpPath } from '@/lib/help-paths';
+import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
+import { helpViewerOffers } from '@/lib/help-viewer';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
@@ -31,6 +32,7 @@ export default async function Page({
       body={found.body}
       subpages={found.children.map(linkTo)}
       parent={linkTo(parent)}
+      editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}
       steps={guideSteps(linkTo(parent), parent.children.map(linkTo), helpPath(found))}
     />
   );

@@ -25,6 +25,7 @@ const HelpArticleView = ({
   heading = 'Help',
   terms = [],
   steps = {},
+  editHref,
 }: HelpArticleViewProps): ReactElement => {
   const { content, entries } = renderMarkdown(
     body,
@@ -44,7 +45,16 @@ const HelpArticleView = ({
       className={withMenu ? 'help-page help-article page-with-nav' : 'help-page help-article'}
     >
       <div className="help-article__head">
-        <PageHeader title={heading} />
+        <PageHeader
+          title={heading}
+          action={
+            editHref && (
+              <PendingLink className="btn btn--quiet" href={editHref as Route}>
+                Edit Article
+              </PendingLink>
+            )
+          }
+        />
         <HelpSearchForm />
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
         <h2>{title}</h2>

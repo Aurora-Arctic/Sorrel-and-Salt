@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
-import { helpPath } from '@/lib/help-paths';
+import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
+import { helpViewerOffers } from '@/lib/help-viewer';
 import { readGlossaryTerms } from '@/lib/help-glossary';
 import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
 import { siteUrl } from '@/lib/site';
@@ -40,6 +41,7 @@ export default async function Page({ params }: Props) {
       body={found.body}
       subpages={found.children.map(linkTo)}
       parent={linkTo(parent)}
+      editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}
       steps={guideSteps(linkTo(parent), parent.children.map(linkTo), helpPath(found))}
     />
   );

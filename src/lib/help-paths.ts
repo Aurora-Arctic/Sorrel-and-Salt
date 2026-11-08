@@ -12,6 +12,9 @@ export const STAFF_HELP = '/help/staff';
 export const publicGuidePath = (slug: string): string =>
   helpPath({ kind: 'article', audience: 'public', slug, parentSlug: null });
 
+/** A help row's edit page under Keepers › Help. */
+export const keeperHelpEditPath = (id: string): string => `/keepers/help/${id}`;
+
 export function helpPath({ kind, audience, slug, parentSlug }: HelpAddressed): string {
   if (kind === 'term') return `/help/glossary#${slug}`;
   const base = audience === 'public' ? '/help' : STAFF_HELP;
