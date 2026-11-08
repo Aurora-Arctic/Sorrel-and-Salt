@@ -14,7 +14,8 @@ export type SectionIconName =
   | 'invitations'
   | 'support'
   | 'documents'
-  | 'businessCards';
+  | 'businessCards'
+  | 'help';
 
 // The icon is a name, not an element, so the list can cross to the client part as plain data.
 export interface SectionNavItem {

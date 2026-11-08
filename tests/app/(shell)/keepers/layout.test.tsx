@@ -24,7 +24,7 @@ const SUPPORT = '/keepers/support';
 const ADMIN_ONLY = ['/keepers/users', '/keepers/invitations'];
 
 const nav = () => screen.getByRole('navigation', { name: 'Keepers' });
-// The staff help pages are linked from here too; the lists below are of the section's own pages, so they leave it out.
+// The staff help pages are linked from the nav too; the lists below are of the section's own pages, so they leave it out.
 const STAFF_HELP = '/help/staff';
 const ownPages = (list: (string | null)[]) => list.filter((href) => href !== STAFF_HELP);
 const navHrefs = () => ownPages(hrefs(within(nav()).getAllByRole('link')));
@@ -128,6 +128,8 @@ describe('the /keepers section and the staff help pages', () => {
     render(await KeepersLayout({ children: await KeepersPage() }));
 
     expect(requireCuratorSession).toHaveBeenCalled();
-    expect(hrefs(screen.getAllByRole('link'))).toContain(STAFF_HELP);
+    expect(
+      hrefs(within(screen.getByRole('navigation', { name: 'Keepers' })).getAllByRole('link')),
+    ).toContain(STAFF_HELP);
   });
 });

@@ -17,6 +17,7 @@ const CURATION = [
   ['Forms', '/curator/forms'],
   ['Deities', '/curator/deities'],
   ['Astrology', '/curator/celestial-bodies'],
+  ['Staff Help', '/help/staff'],
 ];
 
 test('an admin sees the curator area and its nav at /curator, and the keepers area and its nav at /keepers', async ({
@@ -46,6 +47,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['Invitations', '/keepers/invitations'],
     ['Documents', '/keepers/documents/terms'],
     ['Business Cards', '/keepers/business-cards'],
+    ['Staff Help', '/help/staff'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   for (const [name, href] of pages) {

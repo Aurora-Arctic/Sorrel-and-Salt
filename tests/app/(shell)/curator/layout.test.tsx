@@ -26,7 +26,7 @@ const CURATION = [
 ];
 
 const nav = () => screen.getByRole('navigation', { name: 'Curator' });
-// The staff help pages are linked from here too; the lists below are of the section's own pages, so they leave it out.
+// The staff help pages are linked from the nav too; the lists below are of the section's own pages, so they leave it out.
 const STAFF_HELP = '/help/staff';
 const ownPages = (list: (string | null)[]) => list.filter((href) => href !== STAFF_HELP);
 const navHrefs = () => ownPages(hrefs(within(nav()).getAllByRole('link')));
@@ -109,6 +109,6 @@ describe('the /curator section and the staff help pages', () => {
     render(await CuratorLayout({ children: await CuratorPage() }));
 
     expect(requireCuratorSession).toHaveBeenCalled();
-    expect(hrefs(screen.getAllByRole('link'))).toContain(STAFF_HELP);
+    expect(hrefs(within(nav()).getAllByRole('link'))).toContain(STAFF_HELP);
   });
 });

@@ -149,7 +149,11 @@ test.describe('the staff help pages', () => {
     await signInAs(page, 'f@help-pages-flow.test', ['discord'], 'curator');
 
     await page.goto('/curator');
-    await page.locator('a[href="/help/staff"]').first().click();
+    await page
+      .getByRole('navigation', { name: 'Curator' })
+      .getByRole('link', { name: 'Staff Help' })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/help\/staff$/);
     await expect(page.getByRole('link', { name: new RegExp(HELP.curation.title) })).toHaveAttribute(
       'href',

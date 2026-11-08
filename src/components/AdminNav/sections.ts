@@ -118,7 +118,17 @@ export const ADMIN_PAGES = {
       'A Letter sheet of ten business cards with your name, email and phone, ready to print.',
     tabs: [{ href: '/keepers/business-cards', label: 'Business Cards' }],
   },
+  staffHelp: {
+    label: 'Staff Help',
+    icon: 'help',
+    description:
+      'The guides for curators and keepers: how to curate the Compendium and run the site.',
+    tabs: [{ href: '/help/staff', label: 'Staff Help' }],
+  },
 } as const satisfies Record<string, AdminPage>;
+
+// The guides every curator and keeper reads, set apart at the end of both navs.
+const GUIDES: AdminSection = { name: 'Guides', pages: [ADMIN_PAGES.staffHelp] };
 
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
@@ -131,6 +141,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
+  GUIDES,
 ];
 
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
@@ -148,6 +159,7 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
     name: 'Print',
     pages: [ADMIN_PAGES.businessCards],
   },
+  GUIDES,
 ];
 
 // Only what the nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md, "The curator guard").

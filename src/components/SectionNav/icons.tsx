@@ -92,6 +92,13 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M6 9.5h7M6 11.5h4.5M6 14.5h6M6 16h4" />
     </>
   ),
+  help: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.73 9.48a2.28 2.28 0 1 1 3.18 2.08c-.71.39-.91.72-.91 1.43" />
+      <path strokeWidth="2.2" d="M12 16h.01" />
+    </>
+  ),
   // Three zero-length strokes the round caps swell into dots.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,
 };

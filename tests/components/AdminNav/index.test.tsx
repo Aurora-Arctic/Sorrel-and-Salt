@@ -30,6 +30,7 @@ const SUPPORT = '/keepers/support';
 const DOCUMENTS = '/keepers/documents/terms';
 const BUSINESS_CARDS = '/keepers/business-cards';
 const HELP = '/keepers/help';
+const STAFF_HELP = '/help/staff';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
 
@@ -38,10 +39,10 @@ describe('CuratorNav', () => {
     pathname.mockReturnValue('/curator');
   });
 
-  it('links every curation page in a row, in its sections’ order, and nothing under /keepers', () => {
+  it('links every curation page in a row, in its sections’ order, then Staff Help, and nothing under /keepers', () => {
     render(<CuratorNav />);
 
-    expect(hrefs(linksIn(curatorNav()))).toEqual(CURATION);
+    expect(hrefs(linksIn(curatorNav()))).toEqual([...CURATION, STAFF_HELP]);
   });
 
   it.each([
@@ -63,12 +64,12 @@ describe('AdminNav, the Keepers nav', () => {
     pathname.mockReturnValue('/keepers');
   });
 
-  it('links a keeper to Support, People, Invitations, Documents, Help and Business Cards, and to no curation page', () => {
+  it('links a keeper to Support, People, Invitations, Documents, Help, Business Cards and Staff Help, and to no curation page', () => {
     render(<AdminNav managesPeople />);
 
     const links = hrefs(linksIn(keepersNav()));
     expect(sorted(links)).toEqual(
-      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, HELP, BUSINESS_CARDS]),
+      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, HELP, BUSINESS_CARDS, STAFF_HELP]),
     );
     expect(within(keepersNav()).getByRole('link', { name: 'People' })).toHaveAttribute(
       'href',
@@ -82,13 +83,17 @@ describe('AdminNav, the Keepers nav', () => {
       'href',
       BUSINESS_CARDS,
     );
+    expect(within(keepersNav()).getByRole('link', { name: 'Staff Help' })).toHaveAttribute(
+      'href',
+      STAFF_HELP,
+    );
   });
 
   // Why the curator's list could have held more: the same nav with `managesPeople` lists both people pages.
-  it('links a curator to Support alone, which every other keepers page refuses them anyway', () => {
+  it('links a curator to Support and Staff Help alone, as every other keepers page refuses them anyway', () => {
     render(<AdminNav managesPeople={false} />);
 
-    expect(hrefs(linksIn(keepersNav()))).toEqual([SUPPORT]);
+    expect(hrefs(linksIn(keepersNav()))).toEqual([SUPPORT, STAFF_HELP]);
   });
 
   it.each([
