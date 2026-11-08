@@ -18,6 +18,13 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 
 // The left pane, drawn as the site's side menu draws its entries (PageNav): muted links, the current one in body ink
 // with the accent bar on the edge toward the pane.
+.help-outline__side {
+  @media (min-width: $-two-panes) {
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+}
+
 .help-outline__nav {
   --help-outline-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
 
@@ -25,8 +32,6 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 
   @media (min-width: $-two-panes) {
     display: block;
-    position: sticky;
-    top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
   ul {

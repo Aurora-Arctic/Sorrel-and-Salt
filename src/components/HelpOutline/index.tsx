@@ -219,52 +219,56 @@ const HelpOutline = ({ filter, guides, others, pane }: HelpOutlineProps): ReactE
       <HelpOutlineFilterRow key={filterKey(filter)} filter={filter} />
       <ListBody skeleton={<HelpOutlineBodySkeleton />}>
         <div className="help-outline">
-          <nav className="help-outline__nav" aria-label="Help Outline">
-            {guides.length > 0 && (
-              <>
-                <p className="help-outline__group">Guides</p>
-                <ul>
-                  {guides.map((guide) => (
-                    <li key={guide.id}>
-                      <PendingLink
-                        href={guide.href}
-                        aria-current={guide.current ? 'page' : undefined}
-                        className={guide.shown ? undefined : 'is-hidden'}
-                      >
-                        <span className="help-outline__label">
-                          {guide.position ?? ''}. {guide.title}{' '}
-                          <AudienceBadge audience={guide.audience} />{' '}
-                          <HiddenBadge shown={guide.shown} />
-                        </span>
-                        <span className="help-outline__count">{guide.subPages}</span>
-                      </PendingLink>
-                    </li>
-                  ))}
-                </ul>
-              </>
+          <div className="help-outline__side">
+            <nav className="help-outline__nav" aria-label="Help Outline">
+              {guides.length > 0 && (
+                <>
+                  <p className="help-outline__group">Guides</p>
+                  <ul>
+                    {guides.map((guide) => (
+                      <li key={guide.id}>
+                        <PendingLink
+                          href={guide.href}
+                          aria-current={guide.current ? 'page' : undefined}
+                          className={guide.shown ? undefined : 'is-hidden'}
+                        >
+                          <span className="help-outline__label">
+                            {guide.position ?? ''}. {guide.title}{' '}
+                            <AudienceBadge audience={guide.audience} />{' '}
+                            <HiddenBadge shown={guide.shown} />
+                          </span>
+                          <span className="help-outline__count">{guide.subPages}</span>
+                        </PendingLink>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {others.length > 0 && (
+                <>
+                  <p className="help-outline__group">Other Kinds</p>
+                  <ul>
+                    {others.map((other) => (
+                      <li key={other.label}>
+                        <PendingLink
+                          href={other.href}
+                          aria-current={other.current ? 'page' : undefined}
+                        >
+                          <span className="help-outline__label">{other.label}</span>
+                          <span className="help-outline__count">{other.count}</span>
+                        </PendingLink>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </nav>
+            {pane.kind !== 'search' && choices.length > 0 && (
+              <div className="help-outline__select">
+                <HelpGuideSelect choices={choices} current={current} />
+              </div>
             )}
-            {others.length > 0 && (
-              <>
-                <p className="help-outline__group">Other Kinds</p>
-                <ul>
-                  {others.map((other) => (
-                    <li key={other.label}>
-                      <PendingLink
-                        href={other.href}
-                        aria-current={other.current ? 'page' : undefined}
-                      >
-                        <span className="help-outline__label">{other.label}</span>
-                        <span className="help-outline__count">{other.count}</span>
-                      </PendingLink>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </nav>
-          {pane.kind !== 'search' && choices.length > 0 && (
-            <HelpGuideSelect choices={choices} current={current} />
-          )}
+          </div>
           <section className="help-outline__pane" aria-labelledby="help-outline-pane">
             {pane.kind === 'guide' && <GuidePane guide={pane.guide} />}
             {pane.kind === 'faq' && <RowsPane heading="FAQ" rows={pane.rows} positioned />}

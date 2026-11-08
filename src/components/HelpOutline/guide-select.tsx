@@ -18,7 +18,7 @@ const HelpGuideSelect = ({
   const field = fieldDescription({ id: useId() });
   const apply = useApplyFilter();
   return (
-    <FieldShell label="Guide" className="help-outline__select" {...field}>
+    <FieldShell label="Guide" {...field}>
       <ComboboxSelect
         id={field.controlId}
         label="Guide"
