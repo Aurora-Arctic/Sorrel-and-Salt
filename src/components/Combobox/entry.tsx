@@ -1,6 +1,5 @@
 'use client';
 
-import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useId, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { GripIcon, LinkIcon } from './icons';
@@ -11,6 +10,12 @@ import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
 // An entry a list holds, inside the control: its text and the x that takes it out, with the whole text in a tooltip when cut off or when it has a detail
 // (claude-docs/components/combobox.md, "An entry"; "A sortable list"; "A linked entry's summary").
+
+/** dnd-kit's own translate string, written here so the chip does not pull in @dnd-kit/utilities. */
+const translateOf = (transform: { x: number; y: number } | null): string | undefined =>
+  transform
+    ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
+    : undefined;
 
 /** A sortable entry's handle: a real button, so it is in the tab order with its focus ring, holding the grip and the text. */
 function EntryHandle({
@@ -113,7 +118,7 @@ export function ComboboxEntry({
       style={{
         ...(colors && chipColors(colors)),
         ...(sortable && {
-          transform: CSS.Translate.toString(sortable.transform),
+          transform: translateOf(sortable.transform),
           transition: sortable.transition,
         }),
       }}

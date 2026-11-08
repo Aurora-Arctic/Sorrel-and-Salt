@@ -11,6 +11,7 @@ const IconLink = ({
   name,
   heading,
   ref,
+  preload,
   verb,
   icon,
   place,
@@ -24,7 +25,7 @@ const IconLink = ({
   const onClick = useOpenModalClick(href, heading, place);
   return (
     <IconTip tip={verb}>
-      <ModalLink ref={ref} className={className} href={href} onClick={onClick}>
+      <ModalLink ref={ref} className={className} href={href} onClick={onClick} {...preload}>
         {icon}
         <span className="visually-hidden">
           {verb} {name}
