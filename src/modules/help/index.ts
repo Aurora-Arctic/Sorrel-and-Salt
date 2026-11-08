@@ -1,12 +1,19 @@
 // The help module's behaviour surface. Its table is reached at `@/modules/help/schema/*`.
-export { createHelpArticle, deleteHelpArticle, updateHelpArticle } from './services/help-writes';
+export {
+  createHelpArticle,
+  deleteHelpArticle,
+  setHelpArticleShown,
+  updateHelpArticle,
+} from './services/help-writes';
 export {
   listHelpArticlePaths,
+  listKeeperHelpArticles,
   listStaffHelpArticles,
   readHelpArticle,
   readHelpArticleIndex,
   readHelpFaq,
   readHelpGlossary,
+  readKeeperHelpArticle,
   readStaffHelpArticle,
   searchHelp,
 } from './services/help-reads';
@@ -19,4 +26,6 @@ export type {
   HelpArticleWithChildren,
   HelpAudience,
   HelpArticleKind,
+  HelpKeeperFilter,
+  HelpListing,
 } from './types';

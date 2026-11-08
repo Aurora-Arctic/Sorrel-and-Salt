@@ -84,6 +84,7 @@ interface HelpRow {
   position: number | null;
   parent_key: string | null;
   parent_id: string | null;
+  shown: boolean;
   created_by: string;
   updated_by: string;
   updated_at: string;
@@ -95,7 +96,7 @@ interface HelpRow {
 async function rows(): Promise<HelpRow[]> {
   const found = await sql<HelpRow[]>`
     select a.id, a.seed_key, a.kind::text as kind, a.audience::text as audience, a.title, a.slug, a.summary, a.body,
-           a.position, p.seed_key as parent_key, a.parent_id, a.created_by, a.updated_by,
+           a.position, p.seed_key as parent_key, a.parent_id, a.shown, a.created_by, a.updated_by,
            a.updated_at::text as updated_at, a.deleted_at::text as deleted_at, a.deleted_by
     from help_articles a left join help_articles p on p.id = a.parent_id`;
   // Sorted by code point here, since a collation may ignore the hyphens that tell the keys apart.
@@ -186,6 +187,27 @@ describe('seedHelp', () => {
 
     expect(await rowOf(GUIDE.seedKey)).toEqual(edited);
     expect(await rowOf(QUESTION.seedKey)).toMatchObject(written(revisedQuestion));
+  });
+
+  it('leaves a row a keeper hid hidden, and a sub page a keeper moved to the top level where the keeper put it', async () => {
+    await seedHelp(db, { articles: [GUIDE, DETAIL, QUESTION] });
+    // As setHelpArticleShown and a parent's childIds save write them: the flag or the place, stamped as the keeper.
+    await sql`
+      update help_articles set shown = false, updated_by = ${E.id}
+      where seed_key = ${QUESTION.seedKey}`;
+    await sql`
+      update help_articles set parent_id = null, position = 9, updated_by = ${E.id}
+      where seed_key = ${DETAIL.seedKey}`;
+    const hidden = await rowOf(QUESTION.seedKey);
+    const moved = await rowOf(DETAIL.seedKey);
+    // Preconditions: the seed's list still says shown and still puts the sub page under the guide.
+    expect(hidden.shown).toBe(false);
+    expect(moved.parent_id).toBeNull();
+
+    await seedHelp(db, { articles: [GUIDE, DETAIL, QUESTION] });
+
+    expect(await rowOf(QUESTION.seedKey)).toEqual(hidden);
+    expect(await rowOf(DETAIL.seedKey)).toEqual(moved);
   });
 
   it('leaves a row a keeper deleted deleted, and writes no second row for its key', async () => {

@@ -18,6 +18,8 @@ export interface HelpArticleFormValue {
 export interface HelpParentChoice {
   id: string;
   title: string;
+  /** The parent's address segment, which a child's address begins with. */
+  slug: string;
   audience: HelpFormAudience;
 }
 
@@ -32,7 +34,6 @@ export interface HelpArticleFormProps {
 export interface HelpFormValues {
   kind: HelpFormKind;
   title: string;
-  slug: string;
   summary: string;
   body: string;
   audience: HelpFormAudience;

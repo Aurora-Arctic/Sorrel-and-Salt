@@ -14,6 +14,7 @@ export interface HelpArticleSeed {
   position?: number | null;
   seed_key?: string | null;
   parent_id?: string | null;
+  shown?: boolean;
   deleted_at?: Date | null;
 }
 
@@ -32,6 +33,7 @@ export function helpArticleRow(seed: HelpArticleSeed, author: string) {
     position: null,
     seed_key: null,
     parent_id: null,
+    shown: true,
     ...rest,
     deleted_at,
     deleted_by: deleted_at ? author : null,

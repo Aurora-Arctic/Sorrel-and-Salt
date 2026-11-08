@@ -501,6 +501,9 @@ type HelpArticle {
   kind: HelpArticleKind!
   parentId: ID
   position: Int
+
+  """Whether readers see the row; a hidden parent hides its children too."""
+  shown: Boolean!
   slug: String!
   summary: String
   title: String!
@@ -509,12 +512,16 @@ type HelpArticle {
 input HelpArticleInput {
   audience: HelpAudience
   body: String!
+
+  """
+  The articles this one holds, in order, each placed by its place in the list.
+  """
+  childIds: [ID!]
   kind: HelpArticleKind!
   parentId: ID
-  position: Int
 
-  """Derived from the title when not given."""
-  slug: String
+  """A whole number, 0 or more."""
+  position: Int
   summary: String
   title: String!
 }
@@ -527,14 +534,16 @@ enum HelpArticleKind {
 }
 
 """
-Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title leaves the slug where it is.
+Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.
 """
 input HelpArticlePatch {
   audience: HelpAudience
   body: String
+  childIds: [ID!]
   parentId: ID
+
+  """A whole number, 0 or more."""
   position: Int
-  slug: String
   summary: String
   title: String
 }
@@ -546,6 +555,15 @@ enum HelpAudience {
   keeper
   public
   staff
+}
+
+"""
+Which rows the keeper’s list holds: the shown ones, the hidden ones, or both.
+"""
+enum HelpListing {
+  all
+  hidden
+  shown
 }
 
 """
@@ -1413,6 +1431,11 @@ type Mutation {
   """
   setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
+
+  """
+  Shows or hides a row; a hidden row reaches no reader, and a hidden parent hides its children.
+  """
+  setHelpArticleShown(id: ID!, shown: Boolean!): HelpArticle!
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!
 
@@ -1900,6 +1923,11 @@ type Query {
     mintedTo: LocalDate
     status: InvitationCardBatchStatus
   ): QueryInvitationCardBatchesConnection!
+
+  """
+  Every live row of every kind and audience, shown and hidden, that the filters admit, A to Z: the keeper’s list.
+  """
+  keeperHelpArticles(after: String, audience: HelpAudience, before: String, first: Int, kind: HelpArticleKind, last: Int, listing: HelpListing, query: String): QueryKeeperHelpArticlesConnection!
   me: User!
 
   """One of the signed-in account’s own support requests."""
@@ -2356,6 +2384,16 @@ type QueryInvitationCardBatchesConnection {
 type QueryInvitationCardBatchesConnectionEdge {
   cursor: String!
   node: InvitationCardBatch!
+}
+
+type QueryKeeperHelpArticlesConnection {
+  edges: [QueryKeeperHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryKeeperHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
 }
 
 type QueryMySupportRequestsConnection {

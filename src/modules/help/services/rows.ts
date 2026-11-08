@@ -15,6 +15,7 @@ export function toHelpArticle(row: HelpArticleRow, parentSlug: string | null): H
     body: row.body,
     position: row.position,
     parentId: row.parentId,
+    shown: row.shown,
     parentSlug,
   };
 }

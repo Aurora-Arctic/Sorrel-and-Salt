@@ -35,16 +35,19 @@ interface UpdateVariables {
 const PUBLIC_PARENT: HelpParentChoice = {
   id: '6f1c2a3b-4d5e-4f60-8a71-9b0c1d2e3f40',
   title: 'Fixture Public Guide',
+  slug: 'fixture-public-guide',
   audience: 'public',
 };
 const STAFF_PARENT: HelpParentChoice = {
   id: '7a2d3b4c-5e6f-4a71-9b82-0c1d2e3f4a51',
   title: 'Fixture Staff Guide',
+  slug: 'fixture-staff-guide',
   audience: 'staff',
 };
 const KEEPER_PARENT: HelpParentChoice = {
   id: '8b3e4c5d-6f7a-4b82-8c93-1d2e3f4a5b62',
   title: 'Fixture Keeper Guide',
+  slug: 'fixture-keeper-guide',
   audience: 'keeper',
 };
 const PARENTS = [PUBLIC_PARENT, STAFF_PARENT, KEEPER_PARENT];
@@ -336,15 +339,24 @@ describe('HelpArticleForm, its audience picker', () => {
 // Each rule the service holds is pathed to its field (claude-docs/design/graphql.md, "Help articles"), and lands beside it.
 describe("HelpArticleForm, the service's refusals", () => {
   it.each([
-    { path: 'slug', label: 'Slug', message: '“glossary” is a page of its own', box: textbox },
-    { path: 'slug', label: 'Slug', message: 'Another article holds that slug', box: textbox },
+    {
+      path: 'title',
+      label: 'Title',
+      message: 'Another article has a title that makes the same address',
+      box: textbox,
+    },
     {
       path: 'parentId',
       label: 'Parent',
       message: 'A child cannot be a parent: help nests one level',
       box: combobox,
     },
-    { path: 'position', label: 'Position', message: 'Give a whole number', box: textbox },
+    {
+      path: 'position',
+      label: 'Position',
+      message: 'Give the position as 0 or more',
+      box: textbox,
+    },
     {
       path: 'audience',
       label: 'Audience',
@@ -370,47 +382,98 @@ describe("HelpArticleForm, the service's refusals", () => {
     },
   );
 
-  it("lands a new row's slug refusal beside Slug", async () => {
+  it("lands a new row's reserved-address refusal beside Title", async () => {
     mockGraphQLError('CreateHelpArticle', {
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['slug'], message: '“glossary” is a page of its own' }],
+      fieldErrors: [
+        {
+          path: ['title'],
+          message: 'That title makes the address “glossary”, which is a page of its own',
+        },
+      ],
     });
     const onDone = renderForm();
 
     fillArticle();
-    type('Slug', 'glossary');
+    type('Title', 'Glossary');
     press('Save Article');
 
-    await waitFor(() => expect(textbox('Slug')).toHaveAttribute('aria-invalid', 'true'));
-    expect(textbox('Slug')).toHaveAccessibleDescription(/\S/);
+    await waitFor(() => expect(textbox('Title')).toHaveAttribute('aria-invalid', 'true'));
+    expect(textbox('Title')).toHaveAccessibleDescription(/\S/);
     expect(onDone).not.toHaveBeenCalled();
   });
 });
 
-describe('HelpArticleForm, its slug', () => {
-  it('leaves an edited row its slug when the title changes', async () => {
+describe('HelpArticleForm, its address', () => {
+  it('has no slug field, and sends no slug on create or on edit', async () => {
+    const created = captureCreate();
+    const onDone = renderForm();
+
+    expect(queryTextbox('Slug')).toBeNull();
+    fillArticle();
+    press('Save Article');
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(created[0]?.input).not.toHaveProperty('slug');
+  });
+
+  it('sends a renamed row its new title and no slug', async () => {
     const calls = captureUpdate();
     const onDone = renderForm({ article: ARTICLE });
 
     type('Title', 'Fixture Renamed Guide');
-    expect(textbox('Slug')).toHaveValue(ARTICLE.slug);
     press('Save Article');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls[0]?.input.title).toBe('Fixture Renamed Guide');
-    expect(calls[0]?.input.slug ?? ARTICLE.slug).toBe(ARTICLE.slug);
+    expect(calls[0]?.input).not.toHaveProperty('slug');
   });
 
-  it('sends a slug a keeper writes', async () => {
+  it('describes the title with the address it makes, as the title is typed, beneath the chosen parent', () => {
+    renderForm();
+
+    type('Title', 'Accept an Invitation');
+    expect(textbox('Title')).toHaveAccessibleDescription(/\/help\/accept-an-invitation\b/);
+
+    choose('Parent', STAFF_PARENT.title);
+    expect(textbox('Title')).toHaveAccessibleDescription(
+      /\/help\/staff\/fixture-staff-guide\/accept-an-invitation\b/,
+    );
+  });
+
+  it('describes no address for a title that makes none', () => {
+    renderForm();
+
+    type('Title', '!!!');
+    expect(textbox('Title')).not.toHaveAccessibleDescription(/\/help/);
+  });
+});
+
+describe('HelpArticleForm, its position', () => {
+  it.each(['-1', '1.5', 'two'])('refuses %s before asking the server', async (typed) => {
     const calls = captureCreate();
     const onDone = renderForm();
 
     fillArticle();
-    type('Slug', 'fixture-chosen-address');
+    type('Position', typed);
+    press('Save Article');
+
+    await waitFor(() => expect(textbox('Position')).toHaveAttribute('aria-invalid', 'true'));
+    expect(textbox('Position')).toHaveAccessibleDescription(/\S/);
+    expect(calls).toHaveLength(0);
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('sends 0 as a whole number, and asks for the numeric keyboard', async () => {
+    const calls = captureCreate();
+    const onDone = renderForm();
+
+    expect(textbox('Position')).toHaveAttribute('inputmode', 'numeric');
+    fillArticle();
+    type('Position', '0');
     press('Save Article');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-    expect(calls[0]?.input.slug).toBe('fixture-chosen-address');
+    expect(calls[0]?.input.position).toBe(0);
   });
 });
 
@@ -478,7 +541,7 @@ describe('HelpArticleForm, saving', () => {
     const calls = captureCreate();
     const onDone = renderForm();
 
-    type('Slug', 'fixture-blank');
+    type('Summary', 'Fixture summary');
     press('Save Article');
 
     await waitFor(() => expect(textbox('Title')).toHaveAttribute('aria-invalid', 'true'));

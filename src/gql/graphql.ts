@@ -135,11 +135,12 @@ export type FormGroupIcon =
 export type HelpArticleInput = {
   audience?: HelpAudience | null | undefined;
   body: string;
+  /** The articles this one holds, in order, each placed by its place in the list. */
+  childIds?: Array<string | number> | null | undefined;
   kind: HelpArticleKind;
   parentId?: string | number | null | undefined;
+  /** A whole number, 0 or more. */
   position?: number | null | undefined;
-  /** Derived from the title when not given. */
-  slug?: string | null | undefined;
   summary?: string | null | undefined;
   title: string;
 };
@@ -150,13 +151,14 @@ export type HelpArticleKind =
   | 'faq'
   | 'term';
 
-/** Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title leaves the slug where it is. */
+/** Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level. */
 export type HelpArticlePatch = {
   audience?: HelpAudience | null | undefined;
   body?: string | null | undefined;
+  childIds?: Array<string | number> | null | undefined;
   parentId?: string | number | null | undefined;
+  /** A whole number, 0 or more. */
   position?: number | null | undefined;
-  slug?: string | null | undefined;
   summary?: string | null | undefined;
   title?: string | null | undefined;
 };

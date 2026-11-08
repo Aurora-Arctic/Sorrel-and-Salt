@@ -57,6 +57,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
    * typed.
    */
   type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
+  /** The on-screen keyboard: `numeric` for a whole number, which a `number` type would take as any decimal. */
+  inputMode?: 'numeric';
   disabled?: boolean;
   deps?: FieldPath<V>[];
   describedBy?: string;

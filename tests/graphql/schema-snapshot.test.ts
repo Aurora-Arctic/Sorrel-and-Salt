@@ -27,10 +27,16 @@ describe('the GraphQL SDL', () => {
         'helpSearch',
         'staffHelpArticle',
         'staffHelpArticles',
+        'keeperHelpArticles',
       ]),
     );
     expect(mutations).toEqual(
-      expect.arrayContaining(['createHelpArticle', 'updateHelpArticle', 'deleteHelpArticle']),
+      expect.arrayContaining([
+        'createHelpArticle',
+        'updateHelpArticle',
+        'deleteHelpArticle',
+        'setHelpArticleShown',
+      ]),
     );
     for (const name of [
       'HelpArticle',
@@ -38,6 +44,7 @@ describe('the GraphQL SDL', () => {
       'HelpAudience',
       'HelpArticleInput',
       'HelpArticlePatch',
+      'HelpListing',
     ]) {
       expect(committed.getType(name), name).toBeDefined();
     }

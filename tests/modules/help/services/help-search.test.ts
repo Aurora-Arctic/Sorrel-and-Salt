@@ -190,3 +190,67 @@ describe('paging a search by its cursor', () => {
     expect(new Set(walked).size).toBe(5);
   });
 });
+
+describe('a hidden row is never found', () => {
+  beforeEach(async () => {
+    const parent = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Hushwillow Guide', slug: 'testwort-hushwillow-guide', shown: false },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Duskthorn Page',
+        slug: 'testwort-duskthorn-page',
+        parent_id: parent,
+      },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Embercress Notes',
+        slug: 'testwort-embercress-notes',
+        audience: 'keeper',
+        shown: false,
+      },
+      E.id,
+    );
+  });
+
+  it('never answers a hidden row’s words, to a keeper either, by full text or a likeness', async () => {
+    // Precondition: the rows are live, so the flag alone keeps them out.
+    const [row] =
+      await sql`select count(*)::int as count from help_articles where shown = false and deleted_at is null`;
+    expect(row.count).toBe(2);
+
+    for (const session of [null, asUser(B), asUser(F), asUser(E)]) {
+      expect(await slugsFor(session, 'hushwillow')).toEqual([]);
+      expect(await slugsFor(session, 'hushwilow')).toEqual([]);
+    }
+    expect(await slugsFor(asUser(E), 'embercress')).toEqual([]);
+    expect(await slugsFor(asUser(E), 'embrcress')).toEqual([]);
+  });
+
+  it('never answers a shown child of a hidden parent', async () => {
+    expect(await slugsFor(null, 'duskthorn')).toEqual([]);
+    expect(await slugsFor(asUser(E), 'duskthorn')).toEqual([]);
+
+    // Precondition: once the parent is shown, the child's words find it.
+    await sql`update help_articles set shown = true where slug = 'testwort-hushwillow-guide'`;
+    expect(await slugsFor(null, 'duskthorn')).toEqual(['testwort-duskthorn-page']);
+  });
+
+  it('lets a hidden row’s words not stop the likeness fallback for a shown row', async () => {
+    // The hidden row matches the words in full; the shown one only by likeness, so the fallback must still answer it.
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Saltmarrow', slug: 'testwort-saltmarrow', shown: false },
+      E.id,
+    );
+    await insertHelpArticle(sql, { title: 'Testwort Saltmarow', slug: 'testwort-saltmarow' }, E.id);
+
+    expect(await slugsFor(null, 'saltmarrow')).toEqual(['testwort-saltmarow']);
+  });
+});

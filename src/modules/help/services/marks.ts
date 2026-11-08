@@ -19,7 +19,11 @@ export async function assertMarksExist(
 ): Promise<void> {
   const marked = marksInMarkdown(body);
   if (marked.length === 0) return;
-  const entries = await findHelpGlossaryPage({ limit: TERMS_LIMIT, inverted: false });
+  // A hidden term still counts, so hiding one never makes a body that marks it unsaveable; a reader sees such a mark as plain text.
+  const entries = await findHelpGlossaryPage(
+    { limit: TERMS_LIMIT, inverted: false },
+    { hidden: true },
+  );
   const sources = entries.map(({ node }) => ({ slug: node.slug, title: node.title, body: '' }));
   if (own.kind === 'term') sources.push({ slug: own.slug, title: own.title, body: '' });
   const terms = helpTerms(sources);

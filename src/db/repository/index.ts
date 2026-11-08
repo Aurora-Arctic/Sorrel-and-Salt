@@ -205,10 +205,12 @@ export {
   findHelpArticleSlugsByIds,
   findHelpArticleHoldingSlug,
   findHelpArticleIndexPage,
+  findHelpArticleKeeperPage,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
   findHelpFaqPage,
   findHelpGlossaryPage,
+  findLastTopLevelHelpPosition,
 } from './help';
 export type { HelpArticleRow } from './help';
 export {

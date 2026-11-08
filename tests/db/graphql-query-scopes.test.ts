@@ -115,6 +115,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ staffHelpArticles(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  keeperHelpArticles: {
+    source: '{ keeperHelpArticles(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -448,6 +452,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { updateHelpArticle(id: "${NOWHERE}", input: { title: "Fixture" }) { id } }`,
   ),
   deleteHelpArticle: write(`mutation { deleteHelpArticle(id: "${NOWHERE}") }`),
+  setHelpArticleShown: write(
+    `mutation { setHelpArticleShown(id: "${NOWHERE}", shown: false) { id } }`,
+  ),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   agreeToTerms: write(
     'mutation { agreeToTerms(version: { terms: 1, disclaimer: 1, ethics: 1 }) { id } }',
@@ -727,6 +734,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   createHelpArticle: { governs: 'help' },
   updateHelpArticle: { governs: 'help' },
   deleteHelpArticle: { governs: 'help' },
+  setHelpArticleShown: { governs: 'help' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -896,6 +904,7 @@ describe('a curator at every keeper write, and at the people page’s reads', ()
         'createHelpArticle',
         'updateHelpArticle',
         'deleteHelpArticle',
+        'setHelpArticleShown',
       ]),
     );
   });

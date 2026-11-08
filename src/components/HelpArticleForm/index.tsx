@@ -6,6 +6,8 @@ import { type ReactElement, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
+import { helpPath } from '../../lib/help-paths';
+import { slugify } from '../../lib/slugify';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { FormActions, SelectField, TextField } from '../Field';
@@ -41,7 +43,10 @@ const DeleteHelpArticleDocument = graphql(`
   }
 `);
 
-const FIELDS = ['kind', 'title', 'slug', 'summary', 'body', 'audience', 'parentId', 'position'];
+const FIELDS = ['kind', 'title', 'summary', 'body', 'audience', 'parentId', 'position'];
+
+// A whole number, 0 or more, as the service takes it; a blank field clears the position.
+const WHOLE_NUMBER = /^\d+$/;
 
 const NOUNS: Record<HelpFormKind, string> = { faq: 'FAQ Entry', article: 'Article', term: 'Term' };
 
@@ -69,7 +74,6 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
     defaultValues: {
       kind: article?.kind ?? 'article',
       title: article?.title ?? '',
-      slug: article?.slug ?? '',
       summary: article?.summary ?? '',
       body: article?.body ?? '',
       audience: article?.audience ?? 'public',
@@ -89,6 +93,8 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
   const kind = useWatch({ control, name: 'kind' });
   const parentId = useWatch({ control, name: 'parentId' });
   const body = useWatch({ control, name: 'body' });
+  const title = useWatch({ control, name: 'title' });
+  const audience = useWatch({ control, name: 'audience' });
   const discard = useDiscardGuard(isDirty);
   const [asking, setAsking] = useState(false);
   const [alert, setAlert] = useState<string>();
@@ -99,28 +105,24 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
       const position = values.position.trim() === '' ? null : Number(values.position);
       const parent = values.parentId || null;
       if (!article) {
-        const slug = values.slug.trim();
         await graphqlRequest(CreateHelpArticleDocument, {
           input: {
             kind: values.kind,
             title: values.title,
             body: values.body,
             summary,
-            ...(slug && { slug }),
             ...(values.kind !== 'term' && { audience: values.audience, position }),
             ...(values.kind === 'article' && { parentId: parent }),
           },
         });
         return;
       }
-      const slug = values.slug.trim();
       await graphqlRequest(UpdateHelpArticleDocument, {
         id: article.id,
         input: {
           title: values.title,
           body: values.body,
           summary,
-          ...(slug && slug !== article.slug && { slug }),
           ...(article.kind !== 'term' && { audience: values.audience, position }),
           ...(article.kind === 'article' && { parentId: parent }),
         },
@@ -137,8 +139,8 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
   const send = async (values: HelpFormValues): Promise<void> => {
     setAlert(undefined);
     const position = values.position.trim();
-    if (values.kind !== 'term' && position !== '' && !Number.isInteger(Number(position))) {
-      setError('position', { type: 'client', message: 'Give a whole number' });
+    if (values.kind !== 'term' && position !== '' && !WHOLE_NUMBER.test(position)) {
+      setError('position', { type: 'client', message: 'Give a whole number, 0 or more' });
       return;
     }
     try {
@@ -181,6 +183,15 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
       })),
   ];
   const noun = NOUNS[article?.kind ?? kind];
+  const slug = slugify(title);
+  const address = slug
+    ? helpPath({
+        kind: article?.kind ?? kind,
+        audience: kind === 'term' ? 'public' : audience,
+        slug,
+        parentSlug: kind === 'article' ? (parent?.slug ?? null) : null,
+      })
+    : undefined;
   const rootError = errors.root?.message ?? alert;
   const { content } = renderMarkdown(body);
 
@@ -198,8 +209,13 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
             if (value === 'term') setValue('audience', 'public');
           }}
         />
-        <TextField<HelpFormValues> name="title" label="Title" placeholder="Add a title" required />
-        <TextField<HelpFormValues> name="slug" label="Slug" placeholder="Add a slug" />
+        <TextField<HelpFormValues>
+          name="title"
+          label="Title"
+          placeholder="Add a title"
+          required
+          note={address && `Address: ${address}`}
+        />
         <TextField<HelpFormValues> name="summary" label="Summary" placeholder="Add a summary" />
         <TextField<HelpFormValues>
           name="body"
@@ -235,6 +251,7 @@ const HelpArticleForm = ({ article, parents, onDone }: HelpArticleFormProps): Re
             label="Position"
             placeholder="Add a number"
             type="text"
+            inputMode="numeric"
           />
         )}
         <FormActions

@@ -11,6 +11,7 @@ import {
   readHelpFaq,
   readStaffHelpArticle,
   searchHelp,
+  setHelpArticleShown,
   updateHelpArticle,
 } from '@/modules/help';
 import { E, F, asUser } from '../../../support/as-user';
@@ -159,6 +160,36 @@ describe('the reads that turn on the reader are never cached', () => {
 
     expect((await searchHelp(null, 'quillfeather', PAGE)).map((entry) => entry.node.slug)).toEqual([
       'testwort-quillfeather',
+    ]);
+  });
+});
+
+describe('showing and hiding expires the help tag', () => {
+  it('takes a hidden FAQ entry out of a reader’s cached list, and puts it back once shown', async () => {
+    expect(await faqTitles()).toEqual(['Testwort First Question']);
+
+    await setHelpArticleShown(asUser(E), faqId, false);
+
+    expect(revalidateTag).toHaveBeenCalledWith(HELP_TAG, expect.anything());
+    expect(await faqTitles()).toEqual([]);
+
+    vi.mocked(revalidateTag).mockClear();
+    await setHelpArticleShown(asUser(E), faqId, true);
+
+    expect(revalidateTag).toHaveBeenCalledWith(HELP_TAG, expect.anything());
+    expect(await faqTitles()).toEqual(['Testwort First Question']);
+  });
+
+  it('expires the tag when a parent’s children change', async () => {
+    const guideId = (await readHelpArticle('testwort-guide')).id;
+    const pageId = await insertHelpArticle(sql, { title: 'Testwort Loose Page' }, E.id);
+    expect((await readHelpArticle('testwort-guide')).children).toEqual([]);
+
+    await updateHelpArticle(asUser(E), guideId, { childIds: [pageId] });
+
+    expect(revalidateTag).toHaveBeenCalledWith(HELP_TAG, expect.anything());
+    expect((await readHelpArticle('testwort-guide')).children.map((child) => child.id)).toEqual([
+      pageId,
     ]);
   });
 });

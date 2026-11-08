@@ -2,15 +2,17 @@ import 'server-only';
 import {
   findAllHelpArticleChildren,
   findHelpArticleHoldingSlug,
+  findLastTopLevelHelpPosition,
+  findManyByIds,
   findOneById,
   withAudit,
 } from '@/db/repository';
-import type { HelpArticleRow } from '@/db/repository';
+import type { AuditWriter, HelpArticleRow } from '@/db/repository';
 import { expireHelp } from '@/lib/help-cache';
 import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { parseInput } from '@/lib/validation';
+import { RowId, parseInput } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type {
@@ -29,7 +31,7 @@ import { toHelpArticles } from './rows';
 
 // The keeper's writing of the help centre. Every call is a keeper's alone: a curator reads staff help and writes none of it.
 
-// Slugs the routes beneath /help take for themselves.
+// A slug is always slugify(title), never typed: a title change moves the address. Slugs the routes beneath /help take for themselves.
 const RESERVED_SLUGS = ['glossary', 'staff', 'search'];
 
 const WIDTH: Record<HelpAudience, number> = { public: 0, staff: 1, keeper: 2 };
@@ -40,6 +42,8 @@ interface Merged {
   slug: string;
   position: number | null;
   parentId: string | null;
+  /** The children the save sets, in order; undefined leaves them as they are. */
+  childIds: readonly string[] | undefined;
 }
 
 const KIND_NAMES: Record<HelpArticleKind, string> = {
@@ -54,11 +58,18 @@ async function checkSlug(
   selfId: string | null,
 ): Promise<void> {
   if (slug === '')
-    throw fieldRefusal('slug', 'Give the article a slug that holds a letter or a number');
-  if (RESERVED_SLUGS.includes(slug)) throw fieldRefusal('slug', `“${slug}” is a page of its own`);
+    throw fieldRefusal('title', 'Give a title with a letter or a number, so it makes an address');
+  if (RESERVED_SLUGS.includes(slug))
+    throw fieldRefusal(
+      'title',
+      `That title makes the address “${slug}”, which is a page of its own`,
+    );
   const holder = await findHelpArticleHoldingSlug(kind, slug);
   if (holder && holder.id !== selfId)
-    throw fieldRefusal('slug', `Another ${KIND_NAMES[kind]} holds that slug`);
+    throw fieldRefusal(
+      'title',
+      `Another ${KIND_NAMES[kind]} has a title that makes the same address`,
+    );
 }
 
 /** The structure rules, on the row as it would stand after the write. SQL scopes the audience of a read; these rules hold the shape of a write. */
@@ -85,16 +96,74 @@ async function checkStructure(row: Merged, selfId: string | null): Promise<void>
   if (parent && WIDTH[row.audience] < WIDTH[parent.audience])
     throw fieldRefusal('audience', 'A child is as wide as its parent or narrower, never wider');
 
-  if (selfId !== null) {
+  // A save that names its children is checked on those; the ones it leaves out are released, so their width no longer binds.
+  if (selfId !== null && row.childIds === undefined) {
     const children = await findAllHelpArticleChildren(selfId);
     if (children.some((child) => WIDTH[child.audience] < WIDTH[row.audience]))
       throw fieldRefusal('audience', 'A parent cannot be narrower than a child it holds');
   }
 }
 
+/** The rows a save's `childIds` names, in list order, once each is checked as a child this row may take. */
+async function checkChildren(row: Merged, selfId: string | null): Promise<HelpArticleRow[]> {
+  const ids = row.childIds ?? [];
+  if (ids.length === 0) return [];
+  if (row.kind !== 'article') throw fieldRefusal('childIds', 'Only an article holds children');
+  if (row.parentId !== null)
+    throw fieldRefusal('childIds', 'A child cannot hold children: help nests one level');
+  if (selfId !== null && ids.includes(selfId))
+    throw fieldRefusal('childIds', 'An article cannot be its own child');
+
+  const found = new Map(
+    (await findManyByIds(helpArticles, [...ids])).map((child) => [child.id, child]),
+  );
+  const children = ids.map((id) => found.get(id));
+  if (children.some((child) => child === undefined))
+    throw fieldRefusal('childIds', 'Choose live articles as the children');
+  const rows = children as HelpArticleRow[];
+  if (rows.some((child) => child.kind !== 'article'))
+    throw fieldRefusal('childIds', 'Choose articles as the children, not FAQ entries or terms');
+  if (rows.some((child) => WIDTH[child.audience] < WIDTH[row.audience]))
+    throw fieldRefusal('childIds', 'A child is as wide as its parent or narrower, never wider');
+  for (const child of rows) {
+    if ((await findAllHelpArticleChildren(child.id)).length > 0)
+      throw fieldRefusal(
+        'childIds',
+        `“${child.title}” holds children of its own, and help nests one level`,
+      );
+  }
+  return rows;
+}
+
+/**
+ * Sets the parent's children to `childIds`, in order, inside the save's transaction: each listed one is placed 1, 2, 3…
+ * beneath it, moved from any other parent; each live child left out goes to the top level, after the last top-level article.
+ */
+async function placeChildren(
+  write: AuditWriter,
+  parentId: string,
+  childIds: readonly string[],
+  released: readonly HelpArticleRow[],
+): Promise<void> {
+  for (const [index, childId] of childIds.entries())
+    await write.updateById(helpArticles, childId, { parentId, position: index + 1 });
+  if (released.length === 0) return;
+  const last = await findLastTopLevelHelpPosition();
+  for (const [index, child] of released.entries())
+    await write.updateById(helpArticles, child.id, { parentId: null, position: last + index + 1 });
+}
+
+async function releasedBy(
+  parentId: string,
+  childIds: readonly string[],
+): Promise<HelpArticleRow[]> {
+  const kept = new Set(childIds);
+  return (await findAllHelpArticleChildren(parentId)).filter((child) => !kept.has(child.id));
+}
+
 /**
  * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} refused at `slug`, `parentId`, `position`, `audience` or `body` (a mark naming a term the glossary lacks), or invalid input.
+ * @throws {ValidationError} refused at `title` (it makes no address, a reserved one or a taken one), `parentId`, `position`, `audience`, `childIds` or `body` (a mark naming a term the glossary lacks), or invalid input.
  */
 export async function createHelpArticle(
   session: Session,
@@ -102,21 +171,23 @@ export async function createHelpArticle(
 ): Promise<HelpArticle> {
   assertSiteAdmin(session);
   const values = parseInput(InputSchema, input);
-  const slug = slugify(values.slug ?? values.title);
+  const slug = slugify(values.title);
   const merged: Merged = {
     kind: values.kind,
     audience: values.audience ?? 'public',
     slug,
     position: values.position ?? null,
     parentId: values.parentId ?? null,
+    childIds: values.childIds ?? undefined,
   };
   await checkSlug(merged.kind, slug, null);
   await checkStructure(merged, null);
+  await checkChildren(merged, null);
   assertWidgetsKnown(values.body);
   await assertMarksExist(values.body, { kind: merged.kind, title: values.title, slug });
 
-  const [row] = await withAudit(session, (write) =>
-    write.insert(helpArticles, {
+  const row = await withAudit(session, async (write) => {
+    const [inserted] = await write.insert(helpArticles, {
       kind: merged.kind,
       audience: merged.audience,
       title: values.title,
@@ -125,14 +196,16 @@ export async function createHelpArticle(
       body: values.body,
       position: merged.position,
       parentId: merged.parentId,
-    }),
-  );
+    });
+    if (merged.childIds) await placeChildren(write, inserted.id, merged.childIds, []);
+    return inserted;
+  });
   expireHelp();
   return (await toHelpArticles([row], 'keeper'))[0];
 }
 
 /**
- * A title change leaves the slug where it is, since a link may hold it; only a slug in the patch moves it. A null `summary`, `position` or `parentId` clears it.
+ * A title change moves the slug with it. A null `summary`, `position` or `parentId` clears it; `childIds` left out leaves the children as they are.
  *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no live row holds the id.
@@ -148,16 +221,19 @@ export async function updateHelpArticle(
   const current = await findOneById(helpArticles, id);
   if (!current) throw new NotFound('Help article not found');
 
-  const slug = values.slug == null ? current.slug : slugify(values.slug);
+  const slug = values.title == null ? current.slug : slugify(values.title);
   const merged: Merged = {
     kind: current.kind,
     audience: values.audience ?? current.audience,
     slug,
     position: values.position === undefined ? current.position : values.position,
     parentId: values.parentId === undefined ? current.parentId : values.parentId,
+    childIds: values.childIds ?? undefined,
   };
   if (slug !== current.slug) await checkSlug(current.kind, slug, id);
   await checkStructure(merged, id);
+  await checkChildren(merged, id);
+  const released = merged.childIds ? await releasedBy(id, merged.childIds) : [];
   if (values.body != null && values.body !== current.body) {
     assertWidgetsKnown(values.body);
     await assertMarksExist(values.body, {
@@ -167,8 +243,8 @@ export async function updateHelpArticle(
     });
   }
 
-  const [row] = await withAudit(session, (write) =>
-    write.updateById(helpArticles, id, {
+  const row = await withAudit(session, async (write) => {
+    const [updated] = await write.updateById(helpArticles, id, {
       title: values.title ?? current.title,
       body: values.body ?? current.body,
       summary: values.summary === undefined ? current.summary : values.summary,
@@ -176,8 +252,10 @@ export async function updateHelpArticle(
       audience: merged.audience,
       position: merged.position,
       parentId: merged.parentId,
-    }),
-  );
+    });
+    if (updated && merged.childIds) await placeChildren(write, id, merged.childIds, released);
+    return updated;
+  });
   if (!row) throw new NotFound('Help article not found');
   expireHelp();
   return (await toHelpArticles([row], 'keeper'))[0];
@@ -201,4 +279,23 @@ export async function deleteHelpArticle(session: Session, id: string): Promise<s
   if (!row) throw new NotFound('Help article not found');
   expireHelp();
   return row.id;
+}
+
+/**
+ * Shows or hides one live row. A hidden row stays the keepers' to edit and reaches no reader; a hidden parent hides its children with it, whose own flags stay as they were.
+ *
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {NotFound} no live row holds the id.
+ */
+export async function setHelpArticleShown(
+  session: Session,
+  id: string,
+  shown: boolean,
+): Promise<HelpArticle> {
+  assertSiteAdmin(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('Help article not found');
+  const [row] = await withAudit(session, (write) => write.updateById(helpArticles, id, { shown }));
+  if (!row) throw new NotFound('Help article not found');
+  expireHelp();
+  return (await toHelpArticles([row], 'keeper'))[0];
 }

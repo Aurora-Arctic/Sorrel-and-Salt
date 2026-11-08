@@ -9,8 +9,9 @@ type HelpAudience = (typeof helpAudience.enumValues)[number];
 type HelpReach = HelpAudience;
 type HelpArticleKind = (typeof helpArticleKind.enumValues)[number];
 import type { PageEntry, PageRequest } from '../../lib/types';
+import type { HelpKeeperFilter } from '@/modules/help';
 import { findPage } from './finders';
-import { foldedWordMatch, notSoftDeleted } from './predicates';
+import { containsText, foldedWordMatch, notSoftDeleted } from './predicates';
 import { selectFrom, selectOne } from './select';
 import type { ListOrder, SortPart } from './types';
 
@@ -25,6 +26,20 @@ const ADMITTED: Record<HelpReach, HelpAudience[]> = {
 
 const admits = (reach: HelpReach, column: AnyPgColumn = helpArticles.audience): SQL =>
   inArray(column, ADMITTED[reach]);
+
+// The columns the reader scope reads, so it applies to the table or to an alias of it.
+type HelpTable = Record<'audience' | 'shown' | 'parentId', AnyPgColumn>;
+const parentRow = alias(helpArticles, 'help_parent');
+
+/**
+ * What a reader of `reach` may see of `table`: a row its audience admits that is shown and, for a child, whose live parent is
+ * shown too. A hidden parent hides its children without changing their own flags. Every reader finder holds it; the keeper's
+ * list and the writes do not, since a keeper edits hidden rows.
+ */
+const readable = (reach: HelpReach, table: HelpTable = helpArticles): SQL =>
+  sql`${admits(reach, table.audience)} and ${table.shown} and (${table.parentId} is null or exists (
+    select 1 from ${helpArticles} as ${parentRow}
+    where ${parentRow.id} = ${table.parentId} and ${isNull(parentRow.deletedAt)} and ${parentRow.shown}))`;
 
 // A null position sorts last: the largest `integer`, since a null sort part drops the row from every page.
 const LAST = 2147483647;
@@ -45,7 +60,7 @@ export function findHelpFaqPage(page: PageRequest): Promise<PageEntry<HelpArticl
     helpArticles,
     BY_POSITION,
     page,
-    and(eq(helpArticles.kind, 'faq'), admits('public')),
+    and(eq(helpArticles.kind, 'faq'), readable('public')),
   );
 }
 
@@ -55,21 +70,49 @@ export function findHelpArticleIndexPage(page: PageRequest): Promise<PageEntry<H
     helpArticles,
     BY_POSITION,
     page,
-    and(eq(helpArticles.kind, 'article'), isNull(helpArticles.parentId), admits('public')),
+    and(eq(helpArticles.kind, 'article'), isNull(helpArticles.parentId), readable('public')),
   );
 }
 
-/** One page of the public glossary terms, A to Z. */
-export function findHelpGlossaryPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
-  return findPage(helpArticles, A_TO_Z, page, and(eq(helpArticles.kind, 'term'), admits('public')));
+/** One page of the public glossary terms, A to Z; with `hidden`, the hidden ones too, as a write checks a body's marks against them. */
+export function findHelpGlossaryPage(
+  page: PageRequest,
+  { hidden = false }: { hidden?: boolean } = {},
+): Promise<PageEntry<HelpArticleRow>[]> {
+  return findPage(
+    helpArticles,
+    A_TO_Z,
+    page,
+    and(eq(helpArticles.kind, 'term'), hidden ? admits('public') : readable('public')),
+  );
 }
 
-/** One page of every kind of live row `reach` admits, A to Z: the staff list. */
+/** One page of every kind of live row a reader of `reach` sees, A to Z: the staff help index. */
 export function findHelpArticleStaffPage(
   reach: HelpReach,
   page: PageRequest,
 ): Promise<PageEntry<HelpArticleRow>[]> {
-  return findPage(helpArticles, A_TO_Z, page, admits(reach));
+  return findPage(helpArticles, A_TO_Z, page, readable(reach));
+}
+
+/** One page of the live rows of every kind and audience, shown and hidden, that `filter` admits, A to Z: the keeper's list. */
+export function findHelpArticleKeeperPage(
+  filter: HelpKeeperFilter,
+  page: PageRequest,
+): Promise<PageEntry<HelpArticleRow>[]> {
+  const listing = filter.listing ?? 'all';
+  const query = filter.query?.trim() ?? '';
+  return findPage(
+    helpArticles,
+    A_TO_Z,
+    page,
+    and(
+      listing === 'all' ? undefined : eq(helpArticles.shown, listing === 'shown'),
+      filter.kind ? eq(helpArticles.kind, filter.kind) : undefined,
+      filter.audience ? eq(helpArticles.audience, filter.audience) : undefined,
+      query === '' ? undefined : containsText(helpArticles.title, query),
+    ),
+  );
 }
 
 /** The live article under `slug` among the audiences `reach` admits, or `undefined`; a slug is unique within a kind, so a page lookup names the kind. */
@@ -83,12 +126,12 @@ export function findHelpArticleBySlug(
       notSoftDeleted(helpArticles),
       eq(helpArticles.kind, 'article'),
       eq(helpArticles.slug, slug),
-      admits(reach),
+      readable(reach),
     ),
   );
 }
 
-/** The live children of these parents among the audiences `reach` admits, in position order. */
+/** The children a reader of `reach` sees beneath these parents, in position order. */
 export async function findHelpArticleChildren(
   reach: HelpReach,
   parentIds: readonly string[],
@@ -99,7 +142,7 @@ export async function findHelpArticleChildren(
     and(
       notSoftDeleted(helpArticles),
       inArray(helpArticles.parentId, [...parentIds]),
-      admits(reach),
+      readable(reach),
     ),
   );
   const rank = (row: HelpArticleRow) => row.position ?? LAST;
@@ -119,22 +162,37 @@ export async function findHelpArticleSlugsByIds(
   return new Map(rows.map((row) => [row.id, row.slug]));
 }
 
-/** One page of the live public articles of any depth, A to Z: what the sitemap lists. */
+/** One page of the public articles of any depth a reader sees, A to Z: what the sitemap lists. */
 export function findHelpArticlePathPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
   return findPage(
     helpArticles,
     A_TO_Z,
     page,
-    and(eq(helpArticles.kind, 'article'), admits('public')),
+    and(eq(helpArticles.kind, 'article'), readable('public')),
   );
 }
 
-/** Every live child of one parent, whatever its audience: how a write checks the structure rules. */
-export function findAllHelpArticleChildren(parentId: string): Promise<HelpArticleRow[]> {
-  return selectFrom(
+/** Every live child of one parent, whatever its audience or flag, in position order: how a write checks the structure rules and a keeper edits. */
+export async function findAllHelpArticleChildren(parentId: string): Promise<HelpArticleRow[]> {
+  const rows = await selectFrom(
     helpArticles,
     and(notSoftDeleted(helpArticles), eq(helpArticles.parentId, parentId)),
   );
+  const rank = (row: HelpArticleRow) => row.position ?? LAST;
+  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+}
+
+/** The highest position among the live top-level articles, shown or hidden, or 0 when none has one: where a released child goes after. */
+export async function findLastTopLevelHelpPosition(): Promise<number> {
+  const rows = await selectFrom(
+    helpArticles,
+    and(
+      notSoftDeleted(helpArticles),
+      eq(helpArticles.kind, 'article'),
+      isNull(helpArticles.parentId),
+    ),
+  );
+  return Math.max(0, ...rows.map((row) => row.position ?? 0));
 }
 
 /** The live row holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. */
@@ -155,7 +213,8 @@ export interface HelpScore {
 /**
  * One page of the live rows `reach` admits that `query` finds, best first, each carrying its score. A full-text match
  * (`websearch_to_tsquery`, ranked by `ts_rank` over the weighted `search_vector`) answers when any row matches; when none
- * does, a word-similarity match on the title answers instead, so a typo still finds its page. Both arms hold the same audience scope.
+ * does, a word-similarity match on the title answers instead, so a typo still finds its page. Both arms hold the same reader scope,
+ * so a hidden row's words neither answer nor stop the fallback.
  */
 export function findHelpArticleSearchPage(
   reach: HelpReach,
@@ -166,7 +225,7 @@ export function findHelpArticleSearchPage(
   const fullText = sql`${helpArticles.searchVector} @@ ${tsquery}`;
   const other = alias(helpArticles, 'full_text_match');
   const anyFullText = sql`exists (select 1 from ${helpArticles} as ${other}
-    where ${isNull(other.deletedAt)} and ${admits(reach, other.audience)}
+    where ${isNull(other.deletedAt)} and ${readable(reach, other)}
       and ${other.searchVector} @@ ${tsquery})`;
   const word = foldedWordMatch(query);
 
@@ -182,7 +241,7 @@ export function findHelpArticleSearchPage(
     order,
     page,
     and(
-      admits(reach),
+      readable(reach),
       sql`(${fullText} or (not ${anyFullText} and ${word.matches(helpArticles.title)}))`,
     ),
   );

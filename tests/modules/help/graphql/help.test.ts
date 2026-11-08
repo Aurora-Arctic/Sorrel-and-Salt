@@ -422,7 +422,7 @@ describe('the help writes', () => {
     });
   });
 
-  it('answers VALIDATION with the slug field for a reserved slug', async () => {
+  it('answers VALIDATION on the title for a title that makes a reserved address', async () => {
     const result = await run(asUser(E), CREATE, {
       input: { kind: 'article', title: 'Glossary', body: 'Fixture.' },
     });
@@ -430,7 +430,21 @@ describe('the help writes', () => {
     expect(codeOf(result)).toBe('VALIDATION');
     const extensions = result.errors?.[0]?.extensions as
       { fieldErrors?: { path: string[] }[] } | undefined;
-    expect(extensions?.fieldErrors?.map((error) => error.path)).toContainEqual(['slug']);
+    expect(extensions?.fieldErrors?.map((error) => error.path)).toContainEqual(['title']);
+  });
+
+  it('refuses a slug in the input, since the address is derived from the title alone', async () => {
+    const result = await run(asUser(E), CREATE, {
+      input: { kind: 'article', title: 'Testwort Typed', slug: 'testwort-typed', body: 'Fixture.' },
+    });
+
+    // The schema holds no slug field, so the variables fail before any resolver runs.
+    expect(result.errors?.[0]?.message).toContain('slug');
+    expect(result.data ?? null).toBeNull();
+    const created = await run<{ createHelpArticle: { slug: string } }>(asUser(E), CREATE, {
+      input: { kind: 'article', title: 'Testwort Typed', body: 'Fixture.' },
+    });
+    expect(created.data?.createHelpArticle.slug).toBe('testwort-typed');
   });
 
   it('updates and deletes a row by id', async () => {
@@ -468,5 +482,134 @@ describe('the help writes', () => {
     expect(codeOf(await run(asUser(E), UPDATE, { id: staffId, input: { title: 'Fixture' } }))).toBe(
       'NOT_FOUND',
     );
+  });
+});
+
+const SET_SHOWN = /* GraphQL */ `
+  mutation ($id: ID!, $shown: Boolean!) {
+    setHelpArticleShown(id: $id, shown: $shown) {
+      id
+      shown
+    }
+  }
+`;
+
+const KEEPER_LIST = /* GraphQL */ `
+  query (
+    $first: Int
+    $listing: HelpListing
+    $query: String
+    $kind: HelpArticleKind
+    $audience: HelpAudience
+  ) {
+    keeperHelpArticles(
+      first: $first
+      listing: $listing
+      query: $query
+      kind: $kind
+      audience: $audience
+    ) {
+      edges {
+        node {
+          title
+          shown
+        }
+      }
+      pageInfo {
+        hasNextPage
+      }
+    }
+  }
+`;
+
+const CHILDREN = /* GraphQL */ `
+  mutation ($id: ID!, $childIds: [ID!]) {
+    updateHelpArticle(id: $id, input: { childIds: $childIds }) {
+      id
+    }
+  }
+`;
+
+describe('showing and hiding help rows', () => {
+  let shyId: string;
+
+  beforeEach(async () => {
+    shyId = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Guide', slug: 'testwort-shy-guide', shown: false },
+      E.id,
+    );
+  });
+
+  it.each([
+    ['signed out', null],
+    ['a practitioner', asUser(B)],
+  ])(
+    'answers NOT_FOUND for a hidden public article asked for by its slug, %s',
+    async (_who, session) => {
+      // Preconditions: the row is live and public, and once shown the same reader is answered it.
+      const [row] = await sql`select audience, deleted_at from help_articles where id = ${shyId}`;
+      expect(row).toEqual({ audience: 'public', deleted_at: null });
+
+      expect(codeOf(await run(session, ARTICLE, { slug: 'testwort-shy-guide' }))).toBe('NOT_FOUND');
+
+      await sql`update help_articles set shown = true where id = ${shyId}`;
+      const shown = await run<{ helpArticle: { id: string } }>(session, ARTICLE, {
+        slug: 'testwort-shy-guide',
+      });
+      expect(shown.errors).toBeUndefined();
+      expect(shown.data?.helpArticle.id).toBe(shyId);
+    },
+  );
+
+  it('answers NOT_FOUND to a curator asking for a hidden staff article by its slug', async () => {
+    await sql`update help_articles set audience = 'staff' where id = ${shyId}`;
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+    expect(codeOf(await run(asUser(F), STAFF_ARTICLE, { slug: 'testwort-shy-guide' }))).toBe(
+      'NOT_FOUND',
+    );
+  });
+
+  it('shows a row as a keeper, answering its flag', async () => {
+    const result = await run<{ setHelpArticleShown: { id: string; shown: boolean } }>(
+      asUser(E),
+      SET_SHOWN,
+      { id: shyId, shown: true },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.setHelpArticleShown).toEqual({ id: shyId, shown: true });
+  });
+
+  it('answers FORBIDDEN to a curator showing a row by id, and leaves it hidden', async () => {
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+    expect(codeOf(await run(asUser(F), SET_SHOWN, { id: shyId, shown: true }))).toBe('FORBIDDEN');
+    const [row] = await sql`select shown from help_articles where id = ${shyId}`;
+    expect(row.shown).toBe(false);
+  });
+
+  it('lists the hidden rows to a keeper by the listing filter, and refuses a curator', async () => {
+    const result = await run<{
+      keeperHelpArticles: { edges: { node: { title: string; shown: boolean } }[] };
+    }>(asUser(E), KEEPER_LIST, { first: 25, listing: 'hidden' });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.keeperHelpArticles.edges.map(({ node }) => node)).toEqual([
+      { title: 'Testwort Shy Guide', shown: false },
+    ]);
+    expect(codeOf(await run(asUser(F), KEEPER_LIST, { first: 25 }))).toBe('FORBIDDEN');
+  });
+
+  it('answers VALIDATION naming childIds for a child the parent may not take', async () => {
+    const faqId = await insertHelpArticle(sql, { kind: 'faq', title: 'Testwort Question' }, E.id);
+
+    const result = await run(asUser(E), CHILDREN, { id: shyId, childIds: [faqId] });
+
+    expect(codeOf(result)).toBe('VALIDATION');
+    const extensions = result.errors?.[0]?.extensions as
+      { fieldErrors?: { path: string[] }[] } | undefined;
+    expect(extensions?.fieldErrors?.map((error) => error.path)).toContainEqual(['childIds']);
   });
 });

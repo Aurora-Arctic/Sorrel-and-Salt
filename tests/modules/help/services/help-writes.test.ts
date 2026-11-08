@@ -6,7 +6,10 @@ import type { PageRequest } from '@/lib/types';
 import {
   createHelpArticle,
   deleteHelpArticle,
+  listKeeperHelpArticles,
   listStaffHelpArticles,
+  readKeeperHelpArticle,
+  setHelpArticleShown,
   updateHelpArticle,
 } from '@/modules/help';
 import { assertCurator } from '@/modules/identity';
@@ -55,7 +58,7 @@ async function expectExplained(promise: Promise<unknown>) {
 
 const rowOf = async (id: string) => {
   const [row] = await sql`
-    select kind, audience, title, slug, position, parent_id, deleted_at, created_by, updated_by
+    select kind, audience, title, slug, position, parent_id, shown, deleted_at, created_by, updated_by
     from help_articles where id = ${id}`;
   return row;
 };
@@ -140,48 +143,80 @@ describe('the slug', () => {
     expect((await rowOf(created.id)).slug).toBe(slugify(title));
   });
 
-  it('runs a slug the keeper gives through slugify too', async () => {
+  it('takes no typed slug, on create or on update: the address comes from the title alone', async () => {
+    // The input types hold no slug; a caller that sends one anyway has it dropped by the parse, never stored.
     const created = await createHelpArticle(asUser(E), {
       ...article,
-      title: 'Testwort Hidden Title',
-      slug: '  Testwort Custom Address! ',
-    });
+      title: 'Testwort Plain Title',
+      slug: 'testwort-typed-address',
+    } as never);
+    expect((await rowOf((created as { id: string }).id)).slug).toBe('testwort-plain-title');
 
-    expect(created.slug).toBe(slugify('  Testwort Custom Address! '));
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Standing', slug: 'testwort-standing' },
+      E.id,
+    );
+    await updateHelpArticle(asUser(E), id, { slug: 'testwort-typed-address' } as never);
+    expect((await rowOf(id)).slug).toBe('testwort-standing');
+  });
+
+  it('re-derives the slug from every title change, and keeps it through a save that leaves the title alone', async () => {
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Old Name', slug: 'testwort-old-name' },
+      E.id,
+    );
+
+    await updateHelpArticle(asUser(E), id, { body: 'A new body.' });
+    expect((await rowOf(id)).slug).toBe('testwort-old-name');
+
+    const renamed = await updateHelpArticle(asUser(E), id, { title: 'Testwort New Name' });
+    expect(renamed.slug).toBe('testwort-new-name');
+    expect((await rowOf(id)).slug).toBe('testwort-new-name');
+  });
+
+  it('refuses a title that makes no address, on the title, on create and on rename', async () => {
+    await expectRefusedAt(createHelpArticle(asUser(E), { ...article, title: '!!!' }), 'title');
+    expect(await liveCount()).toBe(0);
+
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Renamable', slug: 'testwort-renamable' },
+      E.id,
+    );
+    await expectRefusedAt(updateHelpArticle(asUser(E), id, { title: '???' }), 'title');
+    expect(await rowOf(id)).toMatchObject({
+      title: 'Testwort Renamable',
+      slug: 'testwort-renamable',
+    });
   });
 
   it.each(['glossary', 'staff', 'search'])(
-    'refuses the reserved slug %s on create, from the title or given',
+    'refuses a title that makes the reserved address %s, on the title, on create and on rename',
     async (word) => {
       const title = word[0].toUpperCase() + word.slice(1);
       // Precondition: the title derives the reserved word, and nothing else holds it.
       expect(slugify(title)).toBe(word);
       expect(await liveCount()).toBe(0);
 
-      await expectRefusedAt(createHelpArticle(asUser(E), { ...article, title }), 'slug');
-      await expectRefusedAt(
-        createHelpArticle(asUser(E), { ...article, title: 'Testwort Elsewhere', slug: title }),
-        'slug',
-      );
+      await expectRefusedAt(createHelpArticle(asUser(E), { ...article, title }), 'title');
       expect(await liveCount()).toBe(0);
-    },
-  );
 
-  it.each(['glossary', 'staff', 'search'])(
-    'refuses the reserved slug %s on rename',
-    async (word) => {
       const id = await insertHelpArticle(
         sql,
         { title: 'Testwort Renamable', slug: 'testwort-renamable' },
         E.id,
       );
-
-      await expectRefusedAt(updateHelpArticle(asUser(E), id, { slug: word }), 'slug');
-      expect((await rowOf(id)).slug).toBe('testwort-renamable');
+      await expectRefusedAt(updateHelpArticle(asUser(E), id, { title }), 'title');
+      expect(await rowOf(id)).toMatchObject({
+        title: 'Testwort Renamable',
+        slug: 'testwort-renamable',
+      });
     },
   );
 
-  it('refuses a slug a live row of the same kind holds, on create and on rename, and frees it once that row is deleted', async () => {
+  it('refuses, on the title, a title whose address a live row of the same kind holds, on create and on rename, and frees it once that row is deleted', async () => {
     const twin = await insertHelpArticle(
       sql,
       { title: 'Testwort Twin', slug: 'testwort-twin' },
@@ -195,17 +230,33 @@ describe('the slug', () => {
 
     await expectRefusedAt(
       createHelpArticle(asUser(E), { ...article, title: 'Testwort Twin' }),
-      'slug',
+      'title',
     );
-    await expectRefusedAt(updateHelpArticle(asUser(E), other, { slug: 'testwort-twin' }), 'slug');
-    expect((await rowOf(other)).slug).toBe('testwort-other');
+    // A title that differs only in case and punctuation makes the same address.
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), other, { title: 'testwort: twin!' }),
+      'title',
+    );
+    expect(await rowOf(other)).toMatchObject({ title: 'Testwort Other', slug: 'testwort-other' });
 
     await sql`update help_articles set deleted_at = now(), deleted_by = ${E.id} where id = ${twin}`;
     const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Twin' });
     expect(created.slug).toBe('testwort-twin');
   });
 
-  it('refuses a second term under a live term’s slug', async () => {
+  it('lets a row keep its own address through a title change that makes the same one', async () => {
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Steady', slug: 'testwort-steady' },
+      E.id,
+    );
+
+    await expect(
+      updateHelpArticle(asUser(E), id, { title: 'Testwort steady!' }),
+    ).resolves.toMatchObject({ title: 'Testwort steady!', slug: 'testwort-steady' });
+  });
+
+  it('refuses a second term under a live term’s title, on the title', async () => {
     await insertHelpArticle(
       sql,
       { kind: 'term', title: 'Testwort Twin', slug: 'testwort-twin' },
@@ -214,7 +265,7 @@ describe('the slug', () => {
 
     await expectRefusedAt(
       createHelpArticle(asUser(E), { kind: 'term', title: 'Testwort Twin', body: 'Twice.' }),
-      'slug',
+      'title',
     );
   });
 
@@ -222,7 +273,7 @@ describe('the slug', () => {
     ['a term', { kind: 'term' as const }],
     ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
   ])(
-    'creates %s under a live article’s slug, since a slug is unique within its kind',
+    'creates %s under a live article’s address, since an address is unique within its kind',
     async (_kind, shape) => {
       const twin = await insertHelpArticle(
         sql,
@@ -244,7 +295,7 @@ describe('the slug', () => {
     },
   );
 
-  it('creates an article under a live term’s slug', async () => {
+  it('creates an article under a live term’s address', async () => {
     await insertHelpArticle(
       sql,
       { kind: 'term', title: 'Testwort Twin', slug: 'testwort-twin' },
@@ -256,7 +307,7 @@ describe('the slug', () => {
     expect(created.slug).toBe('testwort-twin');
   });
 
-  it('renames a term to a live article’s slug', async () => {
+  it('renames a term to a live article’s title', async () => {
     await insertHelpArticle(sql, { title: 'Testwort Twin', slug: 'testwort-twin' }, E.id);
     const term = await insertHelpArticle(
       sql,
@@ -264,7 +315,7 @@ describe('the slug', () => {
       E.id,
     );
 
-    const renamed = await updateHelpArticle(asUser(E), term, { slug: 'testwort-twin' });
+    const renamed = await updateHelpArticle(asUser(E), term, { title: 'Testwort Twin' });
 
     expect(renamed.slug).toBe('testwort-twin');
     expect((await rowOf(term)).slug).toBe('testwort-twin');
@@ -273,11 +324,11 @@ describe('the slug', () => {
   it.each([
     ['a term', { kind: 'term' as const }],
     ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
-  ])('refuses %s a reserved slug on create', async (_kind, shape) => {
+  ])('refuses %s a title that makes a reserved address, on the title', async (_kind, shape) => {
     for (const title of ['Glossary', 'Staff', 'Search']) {
       await expectRefusedAt(
         createHelpArticle(asUser(E), { ...shape, title, body: 'Reserved.' }),
-        'slug',
+        'title',
       );
     }
     expect(await liveCount()).toBe(0);
@@ -690,5 +741,471 @@ describe('the widget tags in a body', () => {
     });
 
     expect(created.body).toContain('::widget[testwort-gadget]');
+  });
+});
+
+describe('the position', () => {
+  it.each([
+    ['a negative number', -1],
+    ['a fraction', 1.5],
+  ])('refuses %s, on create and on update', async (_what, position) => {
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Ordered', slug: 'testwort-ordered', position: 2 },
+      E.id,
+    );
+
+    await expectRefusedAt(
+      createHelpArticle(asUser(E), { ...article, title: 'Testwort Misplaced', position }),
+      'position',
+    );
+    await expectRefusedAt(updateHelpArticle(asUser(E), id, { position }), 'position');
+    expect((await rowOf(id)).position).toBe(2);
+    expect(await liveCount()).toBe(1);
+
+    // Precondition: zero, the lowest whole number, is taken.
+    await expect(updateHelpArticle(asUser(E), id, { position: 0 })).resolves.toMatchObject({
+      position: 0,
+    });
+  });
+});
+
+describe('showing and hiding a row', () => {
+  let id: string;
+
+  beforeEach(async () => {
+    // Written by the curator, so a keeper's change shows in `updated_by`.
+    id = await insertHelpArticle(sql, { title: 'Testwort Shy', slug: 'testwort-shy' }, F.id);
+  });
+
+  it('hides and shows a row as a keeper, through the audited writer', async () => {
+    expect(await rowOf(id)).toMatchObject({ shown: true, updated_by: F.id });
+
+    await expect(setHelpArticleShown(asUser(E), id, false)).resolves.toMatchObject({
+      id,
+      shown: false,
+    });
+    // A flag change is a person's edit: `updated_by` moves, so the seed leaves the row (src/db/seed/bootstrap-admin.ts, `touched`).
+    expect(await rowOf(id)).toMatchObject({
+      shown: false,
+      updated_by: E.id,
+      title: 'Testwort Shy',
+      deleted_at: null,
+    });
+
+    await setHelpArticleShown(asUser(E), id, true);
+    expect((await rowOf(id)).shown).toBe(true);
+  });
+
+  it.each([
+    ['the curator', F],
+    ['a practitioner', B],
+  ])('refuses %s by direct id, leaving the row shown', async (_who, user) => {
+    // Preconditions: F passes the curator check, so the refusal is the keeper line, and the row is live and shown.
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+    expect(user.role).not.toBe('admin');
+    expect(await rowOf(id)).toMatchObject({ shown: true, deleted_at: null });
+
+    await expect(setHelpArticleShown(asUser(user), id, false)).rejects.toThrow(Forbidden);
+    expect(await rowOf(id)).toMatchObject({ shown: true, updated_by: F.id });
+
+    // Precondition: the id was right, as the keeper's same call takes it.
+    await setHelpArticleShown(asUser(E), id, false);
+    expect((await rowOf(id)).shown).toBe(false);
+  });
+
+  it('answers NotFound for a deleted row, an id no row holds and an id that is no id', async () => {
+    const gone = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Gone', deleted_at: new Date() },
+      E.id,
+    );
+
+    await expect(setHelpArticleShown(asUser(E), gone, false)).rejects.toThrow(NotFound);
+    expect((await rowOf(gone)).shown).toBe(true);
+    await expect(setHelpArticleShown(asUser(E), NOWHERE, false)).rejects.toThrow(NotFound);
+    await expect(setHelpArticleShown(asUser(E), 'not-an-id', false)).rejects.toThrow(NotFound);
+  });
+
+  it('hides a parent and leaves each child’s own flag as it was', async () => {
+    const child = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Child', parent_id: id },
+      E.id,
+    );
+
+    await setHelpArticleShown(asUser(E), id, false);
+
+    expect((await rowOf(id)).shown).toBe(false);
+    expect((await rowOf(child)).shown).toBe(true);
+  });
+});
+
+describe('the keeper list', () => {
+  const titlesOf = async (filter: Parameters<typeof listKeeperHelpArticles>[1]) =>
+    (await listKeeperHelpArticles(asUser(E), filter, PAGE)).map((entry) => entry.node.title);
+
+  beforeEach(async () => {
+    const guide = await insertHelpArticle(sql, { title: 'Testwort Almanac Guide' }, E.id);
+    await insertHelpArticle(sql, { title: 'Testwort Hidden Guide', shown: false }, E.id);
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Keeper Guide', audience: 'keeper', shown: false },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Almanac Page', audience: 'staff', parent_id: guide },
+      E.id,
+    );
+    await insertHelpArticle(sql, { kind: 'faq', title: 'Testwort Almanac Question' }, E.id);
+    await insertHelpArticle(sql, { kind: 'term', title: 'Testwort Bramble' }, E.id);
+    await insertHelpArticle(sql, { title: 'Testwort Gone Guide', deleted_at: new Date() }, E.id);
+  });
+
+  it('lists every live row of every kind and audience, shown and hidden, A to Z, by default', async () => {
+    expect(await titlesOf({})).toEqual([
+      'Testwort Almanac Guide',
+      'Testwort Almanac Page',
+      'Testwort Almanac Question',
+      'Testwort Bramble',
+      'Testwort Hidden Guide',
+      'Testwort Keeper Guide',
+    ]);
+    expect(await titlesOf({ listing: 'all' })).toEqual(await titlesOf({}));
+  });
+
+  it('lists the shown rows or the hidden rows alone', async () => {
+    expect(await titlesOf({ listing: 'hidden' })).toEqual([
+      'Testwort Hidden Guide',
+      'Testwort Keeper Guide',
+    ]);
+    expect(await titlesOf({ listing: 'shown' })).toEqual([
+      'Testwort Almanac Guide',
+      'Testwort Almanac Page',
+      'Testwort Almanac Question',
+      'Testwort Bramble',
+    ]);
+  });
+
+  it('narrows by kind, by audience and by words in the title, each with the others', async () => {
+    expect(await titlesOf({ kind: 'faq' })).toEqual(['Testwort Almanac Question']);
+    expect(await titlesOf({ audience: 'keeper' })).toEqual(['Testwort Keeper Guide']);
+    expect(await titlesOf({ query: 'almanac' })).toEqual([
+      'Testwort Almanac Guide',
+      'Testwort Almanac Page',
+      'Testwort Almanac Question',
+    ]);
+    expect(await titlesOf({ query: 'almanac', kind: 'article', audience: 'staff' })).toEqual([
+      'Testwort Almanac Page',
+    ]);
+    expect(await titlesOf({ query: 'guide', listing: 'hidden', audience: 'public' })).toEqual([
+      'Testwort Hidden Guide',
+    ]);
+  });
+
+  it('pages through the cursor helper, two rows at a time, to the list read whole', async () => {
+    const whole = await titlesOf({});
+    const walked: string[] = [];
+    let after: PageRequest['after'];
+    for (let pages = 0; pages < 10; pages += 1) {
+      const entries = await listKeeperHelpArticles(
+        asUser(E),
+        {},
+        { limit: 2, inverted: false, after },
+      );
+      if (entries.length === 0) break;
+      walked.push(...entries.map((entry) => entry.node.title));
+      after = entries[entries.length - 1].cursor;
+    }
+
+    expect(walked).toEqual(whole);
+  });
+
+  it.each([
+    ['the curator', F],
+    ['a practitioner', B],
+  ])('refuses %s', async (_who, user) => {
+    // Precondition: F passes the curator check, so the refusal is the keeper line.
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+    await expect(listKeeperHelpArticles(asUser(user), {}, PAGE)).rejects.toThrow(Forbidden);
+    await expect(listKeeperHelpArticles(asUser(user), { listing: 'hidden' }, PAGE)).rejects.toThrow(
+      Forbidden,
+    );
+  });
+});
+
+describe('a parent choosing its children', () => {
+  let parentId: string;
+
+  const childrenOf = async (id: string) =>
+    (await readKeeperHelpArticle(asUser(E), id)).children.map((child) => child.id);
+
+  const top = (title: string, seed: Parameters<typeof insertHelpArticle>[1] = {}) =>
+    insertHelpArticle(sql, { title, ...seed }, E.id);
+
+  beforeEach(async () => {
+    parentId = await top('Testwort Parent', { slug: 'testwort-parent', position: 3 });
+  });
+
+  it('makes the listed articles its children, each positioned by its place in the list', async () => {
+    const first = await top('Testwort First');
+    const second = await top('Testwort Second');
+
+    await updateHelpArticle(asUser(E), parentId, { childIds: [second, first] });
+
+    expect(await rowOf(second)).toMatchObject({
+      parent_id: parentId,
+      position: 1,
+      updated_by: E.id,
+    });
+    expect(await rowOf(first)).toMatchObject({ parent_id: parentId, position: 2 });
+    expect(await childrenOf(parentId)).toEqual([second, first]);
+  });
+
+  it('takes its children on create too', async () => {
+    const first = await top('Testwort First');
+
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort New Parent',
+      childIds: [first],
+    });
+
+    expect(await rowOf(first)).toMatchObject({ parent_id: created.id, position: 1 });
+  });
+
+  it('reorders its children by the list, and reads them back in that order for the editor', async () => {
+    const one = await top('Testwort One', { parent_id: parentId, position: 1 });
+    const two = await top('Testwort Two', { parent_id: parentId, position: 2 });
+    const three = await top('Testwort Three', { parent_id: parentId, position: 3 });
+    expect(await childrenOf(parentId)).toEqual([one, two, three]);
+
+    await updateHelpArticle(asUser(E), parentId, { childIds: [three, one, two] });
+
+    expect(await childrenOf(parentId)).toEqual([three, one, two]);
+    expect((await rowOf(three)).position).toBe(1);
+    expect((await rowOf(one)).position).toBe(2);
+    expect((await rowOf(two)).position).toBe(3);
+  });
+
+  it('releases a live child left out of the list to the top level, after the last top-level article', async () => {
+    await top('Testwort Last Top', { position: 7 });
+    const kept = await top('Testwort Kept', { parent_id: parentId, position: 1 });
+    const released = await top('Testwort Released', { parent_id: parentId, position: 2 });
+
+    await updateHelpArticle(asUser(E), parentId, { childIds: [kept] });
+
+    expect(await rowOf(released)).toMatchObject({ parent_id: null, position: 8, updated_by: E.id });
+    expect(await rowOf(kept)).toMatchObject({ parent_id: parentId, position: 1 });
+    expect(await childrenOf(parentId)).toEqual([kept]);
+  });
+
+  it('releases every child for an empty list, and leaves the children alone when childIds is left out', async () => {
+    const child = await top('Testwort Child', { parent_id: parentId, position: 1 });
+
+    await updateHelpArticle(asUser(E), parentId, { title: 'Testwort Parent Renamed' });
+    expect((await rowOf(child)).parent_id).toBe(parentId);
+
+    await updateHelpArticle(asUser(E), parentId, { childIds: [] });
+    expect((await rowOf(child)).parent_id).toBeNull();
+    expect(await childrenOf(parentId)).toEqual([]);
+  });
+
+  it('moves an article another parent holds, leaving that parent its other children', async () => {
+    const otherParent = await top('Testwort Other Parent');
+    const moved = await top('Testwort Moved', { parent_id: otherParent, position: 1 });
+    const stays = await top('Testwort Stays', { parent_id: otherParent, position: 2 });
+
+    await updateHelpArticle(asUser(E), parentId, { childIds: [moved] });
+
+    expect(await rowOf(moved)).toMatchObject({ parent_id: parentId, position: 1 });
+    expect(await childrenOf(otherParent)).toEqual([stays]);
+  });
+
+  it('lets a parent narrow its audience in the save that releases its wider child', async () => {
+    const wide = await top('Testwort Wide Child', { parent_id: parentId, position: 1 });
+    // Precondition: with the child still beneath it, the parent may not narrow.
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { audience: 'staff' }),
+      'audience',
+    );
+
+    await updateHelpArticle(asUser(E), parentId, { audience: 'staff', childIds: [] });
+
+    expect(await rowOf(parentId)).toMatchObject({ audience: 'staff' });
+    expect((await rowOf(wide)).parent_id).toBeNull();
+  });
+
+  it.each([
+    ['an FAQ entry', { kind: 'faq' as const }],
+    ['a glossary term', { kind: 'term' as const }],
+    ['a deleted article', { deleted_at: new Date() }],
+  ])('refuses %s as a child', async (_what, seed) => {
+    const notChild = await insertHelpArticle(sql, seed, E.id);
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { childIds: [notChild] }),
+      'childIds',
+    );
+    expect((await rowOf(notChild)).parent_id).toBeNull();
+  });
+
+  it('refuses an id no row holds, the article itself and an id listed twice', async () => {
+    const child = await top('Testwort Child');
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { childIds: [NOWHERE] }),
+      'childIds',
+    );
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { childIds: [parentId] }),
+      'childIds',
+    );
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { childIds: [child, child] }),
+      'childIds',
+    );
+    expect(await rowOf(parentId)).toMatchObject({ parent_id: null });
+    expect((await rowOf(child)).parent_id).toBeNull();
+  });
+
+  it('refuses an article with live children of its own, since help nests one level', async () => {
+    const holder = await top('Testwort Holder');
+    await top('Testwort Held', { parent_id: holder });
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, { childIds: [holder] }),
+      'childIds',
+    );
+    expect((await rowOf(holder)).parent_id).toBeNull();
+  });
+
+  it('refuses a child wider than the parent', async () => {
+    const staffParent = await top('Testwort Staff Parent', { audience: 'staff' });
+    const publicChild = await top('Testwort Public Child');
+    const keeperChild = await top('Testwort Keeper Child', { audience: 'keeper' });
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), staffParent, { childIds: [publicChild] }),
+      'childIds',
+    );
+    expect((await rowOf(publicChild)).parent_id).toBeNull();
+
+    // Precondition: a narrower child is taken.
+    await updateHelpArticle(asUser(E), staffParent, { childIds: [keeperChild] });
+    expect((await rowOf(keeperChild)).parent_id).toBe(staffParent);
+  });
+
+  it('refuses children on an article that has a parent, and on a row that is not an article', async () => {
+    const child = await top('Testwort Child', { parent_id: parentId });
+    const free = await top('Testwort Free');
+    const faq = await insertHelpArticle(sql, { kind: 'faq', title: 'Testwort Question' }, E.id);
+
+    await expectRefusedAt(updateHelpArticle(asUser(E), child, { childIds: [free] }), 'childIds');
+    await expectRefusedAt(
+      createHelpArticle(asUser(E), {
+        ...article,
+        title: 'Testwort New Child',
+        parentId,
+        childIds: [free],
+      }),
+      'childIds',
+    );
+    await expectRefusedAt(updateHelpArticle(asUser(E), faq, { childIds: [free] }), 'childIds');
+    expect((await rowOf(free)).parent_id).toBeNull();
+  });
+
+  it('refuses a parent with live children taking a parent of its own', async () => {
+    await top('Testwort Child', { parent_id: parentId });
+    const other = await top('Testwort Other');
+
+    await expectRefusedAt(updateHelpArticle(asUser(E), parentId, { parentId: other }), 'parentId');
+    expect((await rowOf(parentId)).parent_id).toBeNull();
+  });
+
+  it('writes nothing of a save it refuses: not the parent’s own fields, nor any child’s place', async () => {
+    const one = await top('Testwort One', { parent_id: parentId, position: 1 });
+    const two = await top('Testwort Two', { parent_id: parentId, position: 2 });
+    const free = await top('Testwort Free');
+    const faq = await insertHelpArticle(sql, { kind: 'faq', title: 'Testwort Question' }, E.id);
+    const before = await Promise.all([parentId, one, two, free, faq].map(rowOf));
+
+    // The refused id is last, so a write that ran child by child would have moved the others first.
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), parentId, {
+        title: 'Testwort Parent Renamed',
+        childIds: [free, two, faq],
+      }),
+      'childIds',
+    );
+
+    expect(await Promise.all([parentId, one, two, free, faq].map(rowOf))).toEqual(before);
+  });
+
+  it.each([
+    ['the curator', F],
+    ['a practitioner', B],
+  ])(
+    'refuses %s a save of children by direct id, leaving every child where it was',
+    async (_who, user) => {
+      const child = await top('Testwort Child', { parent_id: parentId, position: 1 });
+      const free = await top('Testwort Free');
+      // Precondition: F passes the curator check, so the refusal is the keeper line.
+      expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+      await expect(updateHelpArticle(asUser(user), parentId, { childIds: [free] })).rejects.toThrow(
+        Forbidden,
+      );
+      await expect(readKeeperHelpArticle(asUser(user), parentId)).rejects.toThrow(Forbidden);
+      expect((await rowOf(child)).parent_id).toBe(parentId);
+      expect((await rowOf(free)).parent_id).toBeNull();
+
+      // Precondition: the keeper's same call is taken.
+      await updateHelpArticle(asUser(E), parentId, { childIds: [free] });
+      expect((await rowOf(free)).parent_id).toBe(parentId);
+    },
+  );
+});
+
+describe('the keeper’s read of one row for editing', () => {
+  it('answers a hidden row with every live child, of every audience and hidden too, in position order', async () => {
+    const parentId = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Hidden Parent', shown: false },
+      E.id,
+    );
+    const second = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Keeper Page', audience: 'keeper', parent_id: parentId, position: 2 },
+      E.id,
+    );
+    const first = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Hidden Page', shown: false, parent_id: parentId, position: 1 },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Gone Page', parent_id: parentId, position: 0, deleted_at: new Date() },
+      E.id,
+    );
+
+    const read = await readKeeperHelpArticle(asUser(E), parentId);
+
+    expect(read).toMatchObject({ id: parentId, shown: false });
+    expect(read.children.map((child) => child.id)).toEqual([first, second]);
+  });
+
+  it('answers NotFound for a deleted row and an id that is no id', async () => {
+    const gone = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Gone', deleted_at: new Date() },
+      E.id,
+    );
+
+    await expect(readKeeperHelpArticle(asUser(E), gone)).rejects.toThrow(NotFound);
+    await expect(readKeeperHelpArticle(asUser(E), 'not-an-id')).rejects.toThrow(NotFound);
   });
 });

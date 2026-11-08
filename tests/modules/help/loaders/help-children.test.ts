@@ -109,3 +109,26 @@ describe('helpChildrenByParent', () => {
     expect(signedOut.flat().some((title) => title.endsWith('Keeper'))).toBe(false);
   });
 });
+
+describe('helpChildrenByParent and hidden rows', () => {
+  it('answers no hidden child, to a keeper either, and no child of a hidden parent', async () => {
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort one Hidden', parent_id: parents[0], position: 5, shown: false },
+      E.id,
+    );
+    await sql`update help_articles set shown = false where id = ${parents[1]}`;
+
+    const titles = await loadAll(asUser(E));
+
+    expect(titles[0]).not.toContain('Testwort one Hidden');
+    expect(titles[1]).toEqual([]);
+    // Precondition: the shown parent's shown children are answered as before.
+    expect(titles[2]).toEqual([
+      'Testwort three Public A',
+      'Testwort three Public B',
+      'Testwort three Staff',
+      'Testwort three Keeper',
+    ]);
+  });
+});

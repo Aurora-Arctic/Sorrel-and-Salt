@@ -10,7 +10,7 @@ import { readPageCursors } from '../../../../lib/numbered-page';
 import { requireAdminSession } from '../../../../lib/request-session';
 import type { Session } from '../../../../lib/session';
 import { single } from '../../../../lib/search-params';
-import { listStaffHelpArticles } from '@/modules/help';
+import { listKeeperHelpArticles } from '@/modules/help';
 import AddAction from '../../curator/add-action';
 import HelpDialog from './dialog';
 
@@ -21,15 +21,15 @@ export const metadata: Metadata = {
 const { label } = ADMIN_PAGES.help;
 const PATH = '/keepers/help';
 
-// Every row once, so the parent choices and an edit lookup reach rows off the shown page. A keeper writes few of them.
+// Every row once, shown and hidden, so the parent choices and an edit lookup reach rows off the shown page. A keeper writes few of them.
 const readAll = cache((session: Session) =>
-  allPages((request) => listStaffHelpArticles(session, request)),
+  allPages((request) => listKeeperHelpArticles(session, {}, request)),
 );
 
 const readPage = cache((session: Session, after: string | undefined, before: string | undefined) =>
   resolvePage(
     after === undefined && before !== undefined ? { last: 25, before } : { first: 25, after },
-    (request) => listStaffHelpArticles(session, request),
+    (request) => listKeeperHelpArticles(session, {}, request),
   ),
 );
 
@@ -58,7 +58,7 @@ export default async function KeepersHelpPage({
   }));
   const parents = all
     .filter(({ kind, parentId }) => kind === 'article' && parentId === null)
-    .map(({ id, title, audience }) => ({ id, title, audience }));
+    .map(({ id, title, slug, audience }) => ({ id, title, slug, audience }));
   const edited = editId ? all.find(({ id }) => id === editId) : undefined;
   const closeHref = listHref(PATH, here);
 

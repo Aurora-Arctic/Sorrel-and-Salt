@@ -1,7 +1,13 @@
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
-import { createHelpArticle, deleteHelpArticle, updateHelpArticle } from '../services/help-writes';
 import {
+  createHelpArticle,
+  deleteHelpArticle,
+  setHelpArticleShown,
+  updateHelpArticle,
+} from '../services/help-writes';
+import {
+  listKeeperHelpArticles,
   listStaffHelpArticles,
   readHelpArticle,
   readHelpArticleIndex,
@@ -23,6 +29,11 @@ const HelpAudienceEnum = builder.enumType('HelpAudience', {
   values: ['public', 'staff', 'keeper'] as const,
 });
 
+const HelpListingEnum = builder.enumType('HelpListing', {
+  description: 'Which rows the keeper’s list holds: the shown ones, the hidden ones, or both.',
+  values: ['shown', 'hidden', 'all'] as const,
+});
+
 const HelpArticleRef = builder.objectRef<HelpArticle>('HelpArticle');
 
 HelpArticleRef.implement({
@@ -37,6 +48,9 @@ HelpArticleRef.implement({
     body: t.exposeString('body'),
     position: t.exposeInt('position', { nullable: true }),
     parentId: t.exposeID('parentId', { nullable: true }),
+    shown: t.exposeBoolean('shown', {
+      description: 'Whether readers see the row; a hidden parent hides its children too.',
+    }),
     // Bounded: help nests one level, beneath an article a keeper writes by hand.
     children: t.field({
       type: [HelpArticleRef],
@@ -52,24 +66,26 @@ const HelpArticleInputRef = builder.inputType('HelpArticleInput', {
     title: t.string({ required: true }),
     body: t.string({ required: true }),
     audience: t.field({ type: HelpAudienceEnum }),
-    slug: t.string({ description: 'Derived from the title when not given.' }),
     summary: t.string(),
-    position: t.int(),
+    position: t.int({ description: 'A whole number, 0 or more.' }),
     parentId: t.id(),
+    childIds: t.idList({
+      description: 'The articles this one holds, in order, each placed by its place in the list.',
+    }),
   }),
 });
 
 const HelpArticlePatchRef = builder.inputType('HelpArticlePatch', {
   description:
-    'Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title leaves the slug where it is.',
+    'Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.',
   fields: (t) => ({
     title: t.string(),
     body: t.string(),
     audience: t.field({ type: HelpAudienceEnum }),
-    slug: t.string(),
     summary: t.string(),
-    position: t.int(),
+    position: t.int({ description: 'A whole number, 0 or more.' }),
     parentId: t.id(),
+    childIds: t.idList(),
   }),
 });
 
@@ -135,6 +151,23 @@ builder.queryField('staffHelpArticles', (t) =>
   }),
 );
 
+builder.queryField('keeperHelpArticles', (t) =>
+  t.pagedConnection({
+    type: HelpArticleRef,
+    description:
+      'Every live row of every kind and audience, shown and hidden, that the filters admit, A to Z: the keeper’s list.',
+    args: {
+      listing: t.arg({ type: HelpListingEnum }),
+      query: t.arg.string(),
+      kind: t.arg({ type: HelpArticleKindEnum }),
+      audience: t.arg({ type: HelpAudienceEnum }),
+    },
+    authScopes: { admin: true },
+    resolve: (_query, { listing, query, kind, audience }, page, context) =>
+      listKeeperHelpArticles(sessionOf(context), { listing, query, kind, audience }, page),
+  }),
+);
+
 builder.mutationField('createHelpArticle', (t) =>
   t.field({
     type: HelpArticleRef,
@@ -163,5 +196,16 @@ builder.mutationField('deleteHelpArticle', (t) =>
     args: { id: t.arg.id({ required: true }) },
     authScopes: { admin: true },
     resolve: (_root, { id }, context) => deleteHelpArticle(sessionOf(context), id),
+  }),
+);
+
+builder.mutationField('setHelpArticleShown', (t) =>
+  t.field({
+    type: HelpArticleRef,
+    description:
+      'Shows or hides a row; a hidden row reaches no reader, and a hidden parent hides its children.',
+    args: { id: t.arg.id({ required: true }), shown: t.arg.boolean({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { id, shown }, context) => setHelpArticleShown(sessionOf(context), id, shown),
   }),
 );

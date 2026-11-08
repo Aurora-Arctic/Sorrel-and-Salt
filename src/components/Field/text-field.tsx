@@ -18,6 +18,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   multiline,
   rows,
   type,
+  inputMode,
   disabled,
   deps,
   describedBy,
@@ -46,6 +47,7 @@ export function TextField<V extends FieldValues = FieldValues>({
     disabled,
     placeholder,
     autoComplete,
+    inputMode,
     // Any decimal: the browser's default step is whole numbers, which would flag 2.5 as invalid.
     step: type === 'number' ? 'any' : undefined,
     'aria-required': required || undefined,

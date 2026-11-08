@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { PageEntry, PageRequest } from '@/lib/types';
 import {
+  listHelpArticlePaths,
   listStaffHelpArticles,
   readHelpArticle,
   readHelpArticleIndex,
@@ -380,4 +381,166 @@ describe('a page read takes articles only, since a slug is unique within its kin
       await expect(readStaffHelpArticle(asUser(E), slug)).rejects.toThrow(NotFound);
     },
   );
+});
+
+describe('a hidden row reaches no reader', () => {
+  const PUBLIC_SLUG = 'testwort-shy-guide';
+  const STAFF_SLUG = 'testwort-shy-staff-guide';
+  const KEEPER_SLUG = 'testwort-shy-keeper-guide';
+
+  const show = async (slug: string) => {
+    await sql`update help_articles set shown = true where slug = ${slug}`;
+    clearDataCache();
+  };
+
+  const stateOf = async (slug: string) => {
+    const [row] =
+      await sql`select audience, shown, deleted_at from help_articles where slug = ${slug}`;
+    return row;
+  };
+
+  beforeEach(async () => {
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Guide', slug: PUBLIC_SLUG, position: 4, shown: false },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Staff Guide', slug: STAFF_SLUG, audience: 'staff', shown: false },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Keeper Guide', slug: KEEPER_SLUG, audience: 'keeper', shown: false },
+      E.id,
+    );
+  });
+
+  it('answers NotFound to a signed-out reader for a hidden public article by slug, and the article once shown', async () => {
+    // Preconditions: the row is there, live and public, so only the flag stands between it and the reader.
+    expect(await stateOf(PUBLIC_SLUG)).toEqual({
+      audience: 'public',
+      shown: false,
+      deleted_at: null,
+    });
+
+    await expect(readHelpArticle(PUBLIC_SLUG)).rejects.toThrow(NotFound);
+
+    await show(PUBLIC_SLUG);
+    expect((await readHelpArticle(PUBLIC_SLUG)).title).toBe('Testwort Shy Guide');
+  });
+
+  it('answers NotFound to a curator for a hidden staff article by slug, and the article once shown', async () => {
+    // Preconditions: F is a curator, the row is staff, so the curator's reach covers it.
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+    expect(await stateOf(STAFF_SLUG)).toEqual({
+      audience: 'staff',
+      shown: false,
+      deleted_at: null,
+    });
+
+    await expect(readStaffHelpArticle(asUser(F), STAFF_SLUG)).rejects.toThrow(NotFound);
+    // The hidden public row is no nearer by the staff path.
+    await expect(readStaffHelpArticle(asUser(F), PUBLIC_SLUG)).rejects.toThrow(NotFound);
+
+    await show(STAFF_SLUG);
+    expect((await readStaffHelpArticle(asUser(F), STAFF_SLUG)).title).toBe(
+      'Testwort Shy Staff Guide',
+    );
+  });
+
+  it('answers NotFound to a keeper reading a hidden keeper article as a page, and the article once shown', async () => {
+    expect(await stateOf(KEEPER_SLUG)).toEqual({
+      audience: 'keeper',
+      shown: false,
+      deleted_at: null,
+    });
+
+    await expect(readStaffHelpArticle(asUser(E), KEEPER_SLUG)).rejects.toThrow(NotFound);
+
+    await show(KEEPER_SLUG);
+    expect((await readStaffHelpArticle(asUser(E), KEEPER_SLUG)).title).toBe(
+      'Testwort Shy Keeper Guide',
+    );
+  });
+
+  it('hides a shown child with its hidden parent, by the child’s own slug and in every list, and keeps the child’s flag', async () => {
+    const [{ id: parentId }] = await sql`select id from help_articles where slug = ${PUBLIC_SLUG}`;
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Shy Page', slug: 'testwort-shy-page', parent_id: parentId as string },
+      E.id,
+    );
+    // Precondition: the child itself is shown and public.
+    expect(await stateOf('testwort-shy-page')).toEqual({
+      audience: 'public',
+      shown: true,
+      deleted_at: null,
+    });
+
+    await expect(readHelpArticle('testwort-shy-page')).rejects.toThrow(NotFound);
+    await expect(readStaffHelpArticle(asUser(E), 'testwort-shy-page')).rejects.toThrow(NotFound);
+    expect(await listHelpArticlePaths()).not.toContain(
+      '/help/testwort-shy-guide/testwort-shy-page',
+    );
+    const staffList = (await listStaffHelpArticles(asUser(E), PAGE)).map(
+      (entry) => entry.node.slug,
+    );
+    expect(staffList).not.toContain('testwort-shy-page');
+
+    await show(PUBLIC_SLUG);
+    expect((await readHelpArticle('testwort-shy-page')).title).toBe('Testwort Shy Page');
+    expect(await listHelpArticlePaths()).toContain('/help/testwort-shy-guide/testwort-shy-page');
+  });
+
+  it('leaves a hidden child out of its shown parent’s children, and out of the sitemap', async () => {
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Guide Shy Page',
+        slug: 'testwort-guide-shy-page',
+        parent_id: guideId,
+        shown: false,
+      },
+      E.id,
+    );
+
+    const children = (await readHelpArticle('testwort-guide')).children.map((child) => child.title);
+    expect(children).toEqual(['Testwort Guide Page One', 'Testwort Guide Page Two']);
+    expect(
+      (await readStaffHelpArticle(asUser(E), 'testwort-guide')).children.map((c) => c.title),
+    ).not.toContain('Testwort Guide Shy Page');
+    expect(await listHelpArticlePaths()).not.toContain(
+      '/help/testwort-guide/testwort-guide-shy-page',
+    );
+  });
+
+  it('leaves hidden rows out of the FAQ, the index, the glossary, the staff list and the sitemap', async () => {
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Shy Question', position: 4, shown: false },
+      E.id,
+    );
+    await insertHelpArticle(sql, { kind: 'term', title: 'Testwort Shy Term', shown: false }, E.id);
+
+    expect(titles(await readHelpFaq(PAGE))).not.toContain('Testwort Shy Question');
+    expect(titles(await readHelpArticleIndex(PAGE))).not.toContain('Testwort Shy Guide');
+    // A mark naming a hidden term finds no term, so it draws as its text with no link (tests/components/DocumentPage/help-marks.test.tsx).
+    expect(titles(await readHelpGlossary(PAGE))).not.toContain('Testwort Shy Term');
+    const staff = titles(await listStaffHelpArticles(asUser(E), PAGE));
+    for (const title of [
+      'Testwort Shy Guide',
+      'Testwort Shy Staff Guide',
+      'Testwort Shy Keeper Guide',
+      'Testwort Shy Question',
+      'Testwort Shy Term',
+    ])
+      expect(staff).not.toContain(title);
+    expect(await listHelpArticlePaths()).not.toContain(`/help/${PUBLIC_SLUG}`);
+
+    // Precondition: the lists answer shown rows of the same kinds.
+    expect(titles(await readHelpFaq(PAGE))).toContain('Testwort Question One');
+    expect(staff).toContain('Testwort Staff Guide');
+  });
 });

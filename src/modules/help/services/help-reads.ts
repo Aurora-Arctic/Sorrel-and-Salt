@@ -1,25 +1,31 @@
 import 'server-only';
 import {
+  findAllHelpArticleChildren,
   findHelpArticleBySlug,
   findHelpArticleChildren,
   findHelpArticlePathPage,
   findHelpArticleIndexPage,
+  findHelpArticleKeeperPage,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
   findHelpFaqPage,
   findHelpGlossaryPage,
+  findOneById,
 } from '@/db/repository';
 import type { HelpArticleRow } from '@/db/repository';
 import { cachedHelpRead } from '@/lib/help-cache';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import type { PageEntry, PageRequest } from '@/lib/types';
-import { assertCurator } from '@/modules/identity';
-import type { HelpArticle, HelpArticleWithChildren, HelpReach } from '../types';
+import { RowId } from '@/lib/validation';
+import { assertCurator, assertSiteAdmin } from '@/modules/identity';
+import { helpArticles } from '../schema/help-articles';
+import type { HelpArticle, HelpArticleWithChildren, HelpKeeperFilter, HelpReach } from '../types';
 import { reachOf } from './reach';
 import { toHelpArticles } from './rows';
 
-// The public reads take no session: a signed-out reader sees what any reader sees, and a staff or keeper row, a draft or a deleted one is never answered.
+// The public reads take no session: a signed-out reader sees what any reader sees, and a staff or keeper row, a hidden or a deleted one is never answered.
+// Every read but the keeper's two answers shown rows alone, a keeper's included: a keeper sees a hidden row only in the list and the editor.
 // The staff reads and the search are never cached, since what they answer depends on who asks.
 
 async function mapPage(
@@ -139,4 +145,36 @@ export async function searchHelp(
     reach,
   );
   return entries.map(({ cursor, score }, index) => ({ node: nodes[index], cursor, score }));
+}
+
+/**
+ * Every live row the filter admits, of every kind and audience, shown and hidden, A to Z: the keeper's list.
+ *
+ * @throws {Forbidden} the session is not a site keeper.
+ */
+export async function listKeeperHelpArticles(
+  session: Session,
+  filter: HelpKeeperFilter,
+  page: PageRequest,
+): Promise<PageEntry<HelpArticle>[]> {
+  assertSiteAdmin(session);
+  return mapPage(await findHelpArticleKeeperPage(filter, page), 'keeper');
+}
+
+/**
+ * One live row, shown or hidden, with every live child in position order: what the editor opens.
+ *
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {NotFound} no live row holds the id.
+ */
+export async function readKeeperHelpArticle(
+  session: Session,
+  id: string,
+): Promise<HelpArticleWithChildren> {
+  assertSiteAdmin(session);
+  const row = RowId.safeParse(id).success ? await findOneById(helpArticles, id) : undefined;
+  if (!row) throw new NotFound('Help article not found');
+  const children = await findAllHelpArticleChildren(row.id);
+  const [article, ...answered] = await toHelpArticles([row, ...children], 'keeper');
+  return { ...article, children: answered };
 }
