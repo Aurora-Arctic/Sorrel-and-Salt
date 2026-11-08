@@ -56,7 +56,7 @@ export const HelpArticleSkeleton = ({
       <p>
         <SkeletonWords count={24} />
       </p>
-      <h3>
+      <h3 className="help-article__pending-heading">
         <SkeletonWords count={3} />
       </h3>
       <p>

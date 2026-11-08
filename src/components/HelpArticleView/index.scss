@@ -25,6 +25,11 @@
     }
   }
 
+  // A heading still to come is a bar already; a hairline under the bar reads as an underline.
+  .help-article__pending-heading::after {
+    content: none;
+  }
+
   h4 {
     margin-block: space(6) space(2);
   }
