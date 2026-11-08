@@ -355,7 +355,6 @@ const HelpArticleForm = ({
           {position || '–'} of{' '}
           {parent.id === savedParent?.id ? parent.subPages : parent.subPages + 1} in {parent.title}
         </p>
-        <p className="field__hint">Set by the guide’s Sub Pages order, not here.</p>
         {article && parent.id === article.parentId && (
           <PendingLink
             className="help-article-form__reorder"
