@@ -207,6 +207,22 @@ export async function findLastTopLevelHelpPosition(): Promise<number> {
   return Math.max(0, ...rows.map((row) => row.position ?? 0));
 }
 
+/** Every live row a keeper orders as one list, whatever its audience or flag, in position order: the top-level guides, or the FAQ entries. */
+export async function findAllHelpOrdered(list: 'guides' | 'faq'): Promise<HelpArticleRow[]> {
+  const rows = await selectFrom(
+    helpArticles,
+    list === 'guides'
+      ? and(
+          notSoftDeleted(helpArticles),
+          eq(helpArticles.kind, 'article'),
+          isNull(helpArticles.parentId),
+        )
+      : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq')),
+  );
+  const rank = (row: HelpArticleRow) => row.position ?? LAST;
+  return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
+}
+
 /** The live row holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. */
 export function findHelpArticleHoldingSlug(
   kind: HelpArticleKind,

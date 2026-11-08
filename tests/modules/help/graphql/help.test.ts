@@ -613,3 +613,53 @@ describe('showing and hiding help rows', () => {
     expect(extensions?.fieldErrors?.map((error) => error.path)).toContainEqual(['childIds']);
   });
 });
+
+const ORDER_GUIDES = /* GraphQL */ `
+  mutation ($ids: [ID!]!) {
+    orderHelpGuides(ids: $ids) {
+      id
+      position
+    }
+  }
+`;
+
+describe('ordering the guides', () => {
+  const guideIds = async () =>
+    (
+      await sql`
+        select id from help_articles
+        where kind = 'article' and parent_id is null and deleted_at is null
+        order by position nulls last, title`
+    ).map((row) => row.id as string);
+
+  it('places every top-level guide as a keeper, answering the new positions', async () => {
+    const ids = (await guideIds()).reverse();
+    expect(ids.length).toBe(3);
+
+    const result = await run<{ orderHelpGuides: { id: string; position: number }[] }>(
+      asUser(E),
+      ORDER_GUIDES,
+      { ids },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.orderHelpGuides).toEqual(
+      ids.map((id, index) => ({ id, position: index + 1 })),
+    );
+  });
+
+  it('answers FORBIDDEN to a curator ordering the guides by their ids, and moves nothing', async () => {
+    const before = await guideIds();
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+    expect(codeOf(await run(asUser(F), ORDER_GUIDES, { ids: [...before].reverse() }))).toBe(
+      'FORBIDDEN',
+    );
+    expect(await guideIds()).toEqual(before);
+  });
+
+  it('answers VALIDATION to a list missing a guide', async () => {
+    const [, ...some] = await guideIds();
+    expect(codeOf(await run(asUser(E), ORDER_GUIDES, { ids: some }))).toBe('VALIDATION');
+  });
+});

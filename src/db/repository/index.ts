@@ -212,6 +212,7 @@ export {
   findHelpFaqPage,
   findHelpGlossaryPage,
   findLastTopLevelHelpPosition,
+  findAllHelpOrdered,
 } from './help';
 export type { HelpArticleRow } from './help';
 export {

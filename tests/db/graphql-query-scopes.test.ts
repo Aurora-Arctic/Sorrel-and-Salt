@@ -459,6 +459,8 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setHelpArticleShown: write(
     `mutation { setHelpArticleShown(id: "${NOWHERE}", shown: false) { id } }`,
   ),
+  orderHelpGuides: write(`mutation { orderHelpGuides(ids: ["${NOWHERE}"]) { id } }`),
+  orderHelpFaq: write(`mutation { orderHelpFaq(ids: ["${NOWHERE}"]) { id } }`),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   agreeToTerms: write(
     'mutation { agreeToTerms(version: { terms: 1, disclaimer: 1, ethics: 1 }) { id } }',
@@ -739,6 +741,8 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   updateHelpArticle: { governs: 'help' },
   deleteHelpArticle: { governs: 'help' },
   setHelpArticleShown: { governs: 'help' },
+  orderHelpGuides: { governs: 'help' },
+  orderHelpFaq: { governs: 'help' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -909,6 +913,8 @@ describe('a curator at every keeper write, and at the people page’s reads', ()
         'updateHelpArticle',
         'deleteHelpArticle',
         'setHelpArticleShown',
+        'orderHelpGuides',
+        'orderHelpFaq',
       ]),
     );
   });

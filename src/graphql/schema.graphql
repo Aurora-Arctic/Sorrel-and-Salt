@@ -1306,6 +1306,16 @@ type Mutation {
   liftUserAccessPause(userId: ID!): UserAccessPause!
 
   """
+  Places every live FAQ entry, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpFaq(ids: [ID!]!): [HelpArticle!]!
+
+  """
+  Places every live top-level guide, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpGuides(ids: [ID!]!): [HelpArticle!]!
+
+  """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!

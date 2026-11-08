@@ -3,6 +3,8 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import {
   createHelpArticle,
   deleteHelpArticle,
+  orderHelpFaq,
+  orderHelpGuides,
   setHelpArticleShown,
   updateHelpArticle,
 } from '../services/help-writes';
@@ -239,5 +241,27 @@ builder.mutationField('setHelpArticleShown', (t) =>
     args: { id: t.arg.id({ required: true }), shown: t.arg.boolean({ required: true }) },
     authScopes: { admin: true },
     resolve: (_root, { id, shown }, context) => setHelpArticleShown(sessionOf(context), id, shown),
+  }),
+);
+
+builder.mutationField('orderHelpGuides', (t) =>
+  t.field({
+    type: [HelpArticleRef],
+    description:
+      'Places every live top-level guide, hidden ones included, in the order given; refused unless the ids are exactly that set.',
+    args: { ids: t.arg.idList({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { ids }, context) => orderHelpGuides(sessionOf(context), ids.map(String)),
+  }),
+);
+
+builder.mutationField('orderHelpFaq', (t) =>
+  t.field({
+    type: [HelpArticleRef],
+    description:
+      'Places every live FAQ entry, hidden ones included, in the order given; refused unless the ids are exactly that set.',
+    args: { ids: t.arg.idList({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { ids }, context) => orderHelpFaq(sessionOf(context), ids.map(String)),
   }),
 );

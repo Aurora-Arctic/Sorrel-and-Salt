@@ -7,6 +7,7 @@ import type { PageRequest } from '@/lib/types';
 import {
   createHelpArticle,
   deleteHelpArticle,
+  orderHelpFaq,
   readHelpArticle,
   readHelpFaq,
   readStaffHelpArticle,
@@ -116,6 +117,25 @@ describe('every help write expires the help tag', () => {
 
     expect(revalidateTag).toHaveBeenCalledWith(HELP_TAG, expect.anything());
     expect(await faqTitles()).toEqual(['Testwort Edited Question']);
+  });
+
+  it('shows a reader the FAQ in its new order', async () => {
+    const secondId = await insertHelpArticle(
+      sql,
+      {
+        kind: 'faq',
+        title: 'Testwort Second Question',
+        slug: 'testwort-second-question',
+        position: 2,
+      },
+      E.id,
+    );
+    expect(await faqTitles()).toEqual(['Testwort First Question', 'Testwort Second Question']);
+
+    await orderHelpFaq(asUser(E), [secondId, faqId]);
+
+    expect(revalidateTag).toHaveBeenCalledWith(HELP_TAG, expect.anything());
+    expect(await faqTitles()).toEqual(['Testwort Second Question', 'Testwort First Question']);
   });
 
   it('shows a reader a deleted FAQ entry gone', async () => {

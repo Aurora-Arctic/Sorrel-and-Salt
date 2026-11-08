@@ -2,6 +2,8 @@
 export {
   createHelpArticle,
   deleteHelpArticle,
+  orderHelpFaq,
+  orderHelpGuides,
   setHelpArticleShown,
   updateHelpArticle,
 } from './services/help-writes';

@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   findAllHelpArticleChildren,
+  findAllHelpOrdered,
   findHelpArticleHoldingSlug,
   findLastTopLevelHelpPosition,
   findManyByIds,
@@ -309,4 +310,55 @@ export async function setHelpArticleShown(
   if (!row) throw new NotFound('Help article not found');
   expireHelp();
   return (await toHelpArticles([row], 'keeper'))[0];
+}
+
+const ORDERED_NAMES = { guides: 'guide', faq: 'FAQ entry' } as const;
+
+async function placeAll(
+  session: Session,
+  list: 'guides' | 'faq',
+  ids: readonly string[],
+): Promise<HelpArticle[]> {
+  assertSiteAdmin(session);
+  const name = ORDERED_NAMES[list];
+  const live = await findAllHelpOrdered(list);
+  const liveIds = new Set(live.map((row) => row.id));
+  const exact =
+    ids.length === liveIds.size &&
+    new Set(ids).size === ids.length &&
+    ids.every((id) => liveIds.has(id));
+  if (!exact) {
+    const message = `List every ${name} once, and nothing else; the list has changed since it was read`;
+    throw new ValidationError([{ path: ['ids'], message }], message);
+  }
+  const rows = await withAudit(session, async (write) => {
+    const placed: HelpArticleRow[] = [];
+    for (const [index, id] of ids.entries()) {
+      const [row] = await write.updateById(helpArticles, id, { position: index + 1 });
+      placed.push(row);
+    }
+    return placed;
+  });
+  expireHelp();
+  return toHelpArticles(rows, 'keeper');
+}
+
+/**
+ * Places every live top-level guide, hidden ones included, 1, 2, 3… in the order given, in one write.
+ *
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {ValidationError} refused at `ids`: the list is not every live top-level guide exactly once.
+ */
+export function orderHelpGuides(session: Session, ids: readonly string[]): Promise<HelpArticle[]> {
+  return placeAll(session, 'guides', ids);
+}
+
+/**
+ * Places every live FAQ entry, hidden ones included, 1, 2, 3… in the order given, in one write.
+ *
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {ValidationError} refused at `ids`: the list is not every live FAQ entry exactly once.
+ */
+export function orderHelpFaq(session: Session, ids: readonly string[]): Promise<HelpArticle[]> {
+  return placeAll(session, 'faq', ids);
 }
