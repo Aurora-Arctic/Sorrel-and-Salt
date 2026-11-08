@@ -85,6 +85,20 @@
   border: 1px solid $hairline;
   border-radius: radius('control');
   background-color: $surface-page;
+
+  // The sample is the line's one frame: a failed or conflicting line's notice keeps its icon and text, not its bar
+  // and tint, which would draw a second box inside it.
+  .notice {
+    padding-block: 0;
+    padding-inline: calc(#{$notice-mark-size} + #{space(2)}) 0;
+    border-inline-start: 0;
+    background-color: transparent;
+
+    &::before {
+      inset-block-start: $notice-mark-drop;
+      inset-inline-start: 0;
+    }
+  }
 }
 
 .help-widget__explained {
