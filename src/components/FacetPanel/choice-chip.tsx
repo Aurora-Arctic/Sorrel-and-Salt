@@ -66,6 +66,8 @@ export interface ChoiceChipProps<T extends string> {
   note?: ReactNode;
   /** A message under the chip that describes the group and marks it and its radios invalid. */
   error?: string;
+  /** False where no labelled field sits beside the chip, such as in a stacked column, so no empty line stands above it. */
+  spacer?: boolean;
 }
 
 export function ChoiceChip<T extends string>({
@@ -79,6 +81,7 @@ export function ChoiceChip<T extends string>({
   chipHint,
   note,
   error,
+  spacer = true,
 }: ChoiceChipProps<T>): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
@@ -190,9 +193,11 @@ export function ChoiceChip<T extends string>({
     // A `.field` so its top lines up with the labelled fields beside it: the spacer stands
     // where their label does.
     <div className="field facet-chip">
-      <span className="field__label facet-chip__spacer" aria-hidden="true">
-        &#8203;
-      </span>
+      {spacer && (
+        <span className="field__label facet-chip__spacer" aria-hidden="true">
+          &#8203;
+        </span>
+      )}
       <div
         ref={tip.anchor}
         className="facet-chip__bar"

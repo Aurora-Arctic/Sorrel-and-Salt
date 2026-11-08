@@ -85,3 +85,20 @@ describe('ChoiceChip as a form field', () => {
     expect(group()).toHaveAttribute('aria-invalid', 'true');
   });
 });
+
+describe('ChoiceChip without a spacer', () => {
+  // The spacer is an empty line that stands in for a neighbouring field's label.
+  const SPACER = '​';
+
+  it('draws the spacer line by default, so the chip starts level with a labelled field beside it', () => {
+    renderChip();
+    expect(screen.getByText(SPACER)).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('leaves the spacer out when asked, and the group keeps its name and its choices', () => {
+    const onChange = renderChip({ spacer: false });
+    expect(screen.queryByText(SPACER)).not.toBeInTheDocument();
+    fireEvent.click(radio('Narrow'));
+    expect(onChange).toHaveBeenLastCalledWith('narrow');
+  });
+});

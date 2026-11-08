@@ -436,6 +436,7 @@ const HelpArticleForm = ({
           <ChoiceChip<HelpFormKind>
             legend="Kind"
             name="kind"
+            spacer={false}
             options={KINDS}
             value={kind}
             disabled={Boolean(article)}
@@ -488,6 +489,7 @@ const HelpArticleForm = ({
             <ChoiceChip<HelpFormAudience>
               legend="Audience"
               name="audience"
+              spacer={false}
               options={audienceOptions}
               value={audience}
               note={audienceNote}

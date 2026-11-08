@@ -72,7 +72,6 @@ const Chip = ({
   );
   return (
     <div className="field facet-chip">
-      <span className="field__label facet-chip__spacer">&#8203;</span>
       <div className="facet-chip__bar">
         {held ? (
           <button type="button" className="facet-chip__summary" disabled>
