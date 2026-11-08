@@ -143,6 +143,7 @@ Quick Look (the entry details) and Add Ingredient keep their contents out of the
 - They share `useLazyModule` (`src/lib/use-lazy-module.ts`), which runs a dynamic `import()` and holds the loaded module in state.
 - The frame draws at once with its accessible name and a `status` (`ModalLoading`) in the body, and the contents replace the status when the code arrives. A route modal gives the frame through `RouteModalContent`'s `loading` field.
 - Focus, Escape and the close button belong to the frame, so they work while the contents are on their way.
+- A dialog's own fields can load apart too: the calendar, the sortable list and the add-to-coven choice start loading when the page is idle and when their opener is pointed at, focused or pressed, so opening shows no loading state (`usePreloadWhenIdle`, `preloadOnIntent`; [`../design-decisions/graphql.md`](../design-decisions/graphql.md), "The date field, the sortable list and the coven choice load apart").
 
 ## RouteModal
 
