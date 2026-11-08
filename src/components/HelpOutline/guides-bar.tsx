@@ -139,6 +139,24 @@ const HelpGuidesBar = ({
     setReordering(false);
     announce('Reordering cancelled. The order is as it was.');
   };
+  // Escape leaves the mode as Cancel does, since on a phone the mode is a sheet; not mid-drag, where Escape puts the
+  // guide back, nor while a save runs or the leave question is open.
+  const cancelRef = useRef(cancel);
+  useEffect(() => {
+    cancelRef.current = cancel;
+  });
+  const asking = guard.asking;
+  useEffect(() => {
+    if (!reordering || saving || asking) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (modeRef.current?.querySelector('.is-dragging')) return;
+      cancelRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [reordering, saving, asking]);
+
   const save = async () => {
     setSaving(true);
     setFailed(false);

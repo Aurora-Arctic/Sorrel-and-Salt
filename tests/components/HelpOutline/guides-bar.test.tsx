@@ -274,6 +274,38 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     expect(saveOrder()).toBeDisabled();
   });
 
+  it('leaves the mode on Escape as Cancel does, putting the saved order back', async () => {
+    layOutBarRows();
+    bar();
+    reorder();
+    await moveByKeyboard(grips()[0], 'ArrowDown');
+    expect(gripNames()[1]).toBe('Move Testwort Basics');
+
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+    expect(nav().queryByRole('button', { name: /^Move / })).toBeNull();
+    expect(nav().getByRole('link', { name: 'Testwort Basics' })).toBeTruthy();
+    reorder();
+    expect(gripNames()[0]).toBe('Move Testwort Basics');
+    expect(saveOrder()).toBeDisabled();
+  });
+
+  it('keeps the mode when Escape puts down a guide mid-drag', async () => {
+    layOutBarRows();
+    bar();
+    reorder();
+    const grip = grips()[0];
+    grip.focus();
+    await act(async () => {
+      fireEvent.keyDown(grip, { key: ' ', code: 'Space' });
+    });
+    await act(async () => {
+      fireEvent.keyDown(document.activeElement ?? grip, { key: 'Escape', code: 'Escape' });
+    });
+
+    expect(grips()).toHaveLength(4);
+  });
+
   it('keeps the keeper’s order on a failed save, and sends it again on Try Again', async () => {
     layOutBarRows();
     mockGraphQLError('OrderHelpGuides', { code: 'VALIDATION', message: 'The list has changed' });
