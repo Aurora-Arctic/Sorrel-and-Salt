@@ -7,9 +7,56 @@
   gap: space(3);
 }
 
+// The answer, the figure's one large element, under a hairline.
 .help-widget__result {
   display: block;
+  margin-top: space(4);
+  padding-top: space(3);
+  border-top: 1px solid $hairline;
+}
+
+.help-widget__equation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 space(2);
+  align-items: baseline;
+  font-size: heading-size(4);
+  font-weight: 500;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.help-widget__side {
+  white-space: nowrap;
+}
+
+.help-widget__equals,
+.help-widget__none {
+  color: $text-muted;
+}
+
+.help-widget__equals {
+  font-weight: 300;
+}
+
+// A refusal's notice: the warning edge and the lead, then the app's sentence word for word.
+.help-widget__refusal {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  align-items: flex-start;
   margin-top: space(3);
+  padding: space(2) space(3);
+  border-inline-start: 3px solid $warning;
+  border-start-end-radius: radius('control');
+  border-end-end-radius: radius('control');
+  background: $surface-card;
+  font-size: type-size('small');
+
+  strong {
+    color: $warning;
+    font-weight: 500;
+  }
 }
 
 .help-widget__heading {
