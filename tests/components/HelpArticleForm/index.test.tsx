@@ -330,8 +330,10 @@ describe('HelpArticleForm, its kinds', () => {
     const calls = captureUpdate();
     renderForm({ article: FAQ });
 
-    for (const kind of ['Article', 'FAQ', 'Term']) expect(radio(kind)).toBeDisabled();
-    expect(radio('FAQ')).toBeChecked();
+    // The held chip reads its kind and offers no choice: it draws no menu of radios.
+    const kindChip = within(group('Kind'));
+    expect(kindChip.getByRole('button', { name: /^Kind: ?FAQ$/ })).toBeDisabled();
+    expect(kindChip.queryAllByRole('radio')).toHaveLength(0);
 
     type('Summary', 'A changed summary');
     press('Save FAQ Entry');

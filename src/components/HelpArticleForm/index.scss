@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../IngredientEntry/switch-size' as *;
 
 // The text on the left at the measure, the details card on the right, sticky as the body scrolls. The card is before
 // the Save row in the page's order, so the grid places the row back under the text (claude-docs/components/help-article-form.md).
@@ -88,4 +89,21 @@ $-two-columns: calc(#{$shell-tablet-width} + 0.01rem);
 
 .help-article-form__effects {
   margin-block: space(3) 0;
+}
+
+// The skeleton's stand-in for the Shown switch, the track's own size so the hint beneath stands where the real one will.
+.help-article-form__pending-switch {
+  @include skeleton-shape;
+
+  inline-size: $track-width;
+  height: $track-height;
+  border-radius: radius('pill');
+}
+
+// The edit page's pending title: a bar as tall as the title's own line, so the form stands where it will.
+.help-article-form__pending-head h1 .skeleton__line {
+  // The borders add to the height, so the whole bar is one line.
+  block-size: 0.7lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
 }

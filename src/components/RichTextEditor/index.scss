@@ -77,7 +77,8 @@
   line-height: inherit;
 }
 
-// The loading editor's text area, as tall as the real text box.
+// The loading editor's text area, as tall as the real text box, its padding included.
 .rich-text-editor__skeleton-text {
   min-height: 24rem;
+  padding-block: space(2);
 }

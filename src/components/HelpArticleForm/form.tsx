@@ -21,6 +21,7 @@ import {
 } from '../Field';
 import HelpShownSwitch, { SetHelpArticleShownDocument } from '../HelpOutline/shown-switch';
 import { keepersHelpHref } from '../HelpOutline/href';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -440,14 +441,13 @@ const HelpArticleForm = ({
           <h2 id={detailsId} className="help-article-form__details-heading">
             Details
           </h2>
-          <RadioGroupField<HelpFormKind>
+          <ChoiceChip<HelpFormKind>
             legend="Kind"
             name="kind"
-            layout="segmented"
             options={KINDS}
             value={kind}
             disabled={Boolean(article)}
-            note={article ? 'A row keeps its kind once saved.' : undefined}
+            hint={article ? 'A row keeps its kind once saved.' : undefined}
             onChange={(value) => {
               setValue('kind', value, { shouldDirty: true });
               if (value !== 'article') {
