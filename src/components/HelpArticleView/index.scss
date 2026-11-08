@@ -98,29 +98,48 @@
 
 // The previous and next pages of the guide, at the foot: the back link's look and motion, each label above its
 // page's title, Next held to the end of the row even alone; on a narrow phone Next drops beneath Previous.
+// Two halves, so a long title wraps inside its own half; on a phone each step takes the full width, Next still at the end.
 .help-article__steps {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: space(4);
   max-width: $measure;
   margin-block-start: space(7);
   padding-block-start: space(4);
   border-block-start: 1px solid $hairline;
+
+  @media (max-width: #{$shell-phone-width}) {
+    grid-template-columns: 1fr;
+  }
 }
 
+// The chevron sits on the label's line rather than the middle of a wrapped title: its box is that line's height, and
+// the drawing stays 1em, centred in it.
 .help-article__step {
-  max-width: 100%;
+  align-items: flex-start;
+  min-width: 0;
+
+  > svg {
+    block-size: 1lh;
+  }
 
   > span {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
-// Above `.back-link--forward`’s own margins, which would otherwise undo the push to the end.
+// Above `.back-link--forward`’s own margins, which would otherwise undo the hang past the end.
 .help-article__steps > .help-article__step--next {
-  margin-inline-start: auto;
+  grid-column: 2;
+  justify-content: flex-end;
   text-align: end;
+
+  @media (max-width: #{$shell-phone-width}) {
+    grid-column: 1;
+  }
 }
 
 .help-article__step-title {
