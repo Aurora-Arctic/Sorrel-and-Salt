@@ -1,6 +1,29 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The title and a keeper's Edit Article pencil share one row at every width; when the title wraps, the pencil stays
+// beside its first line rather than dropping below, and sits centred on that line.
+.help-article__title {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) auto;
+  column-gap: space(2);
+  align-items: start;
+  margin-block-end: space(4);
+
+  > h2 {
+    margin: 0;
+  }
+
+  > :not(h2) {
+    margin-block-start: max(0px, calc((#{heading-size(2)} * 1.15 - #{$icon-size-large}) / 2));
+  }
+}
+
+// The step clear of the search box that a bare title takes (HelpSearchForm/index.scss).
+.help-search + .help-article__title {
+  margin-block-start: space(6);
+}
+
 .help-article__body {
   margin-block-start: space(6);
 

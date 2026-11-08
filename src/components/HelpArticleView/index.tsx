@@ -5,6 +5,7 @@ import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
+import { EditLink } from '../IconTip';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
@@ -45,19 +46,13 @@ const HelpArticleView = ({
       className={withMenu ? 'help-page help-article page-with-nav' : 'help-page help-article'}
     >
       <div className="help-article__head">
-        <PageHeader
-          title={heading}
-          action={
-            editHref && (
-              <PendingLink className="btn btn--quiet" href={editHref as Route}>
-                Edit Article
-              </PendingLink>
-            )
-          }
-        />
+        <PageHeader title={heading} />
         <HelpSearchForm />
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
-        <h2>{title}</h2>
+        <div className="help-article__title">
+          <h2>{title}</h2>
+          {editHref && <EditLink href={editHref as Route} name="Article" />}
+        </div>
       </div>
       {withMenu && <PageNav label="On This Page" entries={entries} collapsible />}
       <div className="help-article__body">{content}</div>

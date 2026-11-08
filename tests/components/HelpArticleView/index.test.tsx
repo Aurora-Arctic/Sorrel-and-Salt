@@ -156,6 +156,30 @@ describe('HelpArticleView', () => {
     // Why the absence means something: both sections rendered.
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
   });
+  it('hands a keeper Edit Article after the article title, not in the Help header', () => {
+    render(
+      <HelpArticleView
+        title="Testwort Guide"
+        body="Body."
+        subpages={[]}
+        editHref="/keepers/help/fixture-id"
+      />,
+    );
+
+    const edit = screen.getByRole('link', { name: 'Edit Article' });
+    expect(edit).toHaveAttribute('href', '/keepers/help/fixture-id');
+    const title = screen.getByRole('heading', { level: 2, name: 'Testwort Guide' });
+    expect(title.compareDocumentPosition(edit)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByRole('search').compareDocumentPosition(edit)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('draws no Edit Article for a reader who is not a keeper', () => {
+    view('Body.');
+
+    expect(screen.queryByRole('link', { name: 'Edit Article' })).not.toBeInTheDocument();
+  });
 });
 
 describe('HelpArticleView glossary marks', () => {

@@ -22,6 +22,6 @@ export interface HelpArticleViewProps {
   parent?: HelpGuideStep;
   /** The pages either side of this one in its guide (`guideSteps`), linked at the page's foot. */
   steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };
-  /** The article's edit page, handed only to a keeper (`helpViewerOffers`), drawn as Edit Article beside the heading. */
+  /** The article's edit page, handed only to a keeper (`helpViewerOffers`), drawn as the Edit Article pencil beside the article title. */
   editHref?: string;
 }
