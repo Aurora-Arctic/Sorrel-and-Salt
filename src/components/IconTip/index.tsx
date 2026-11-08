@@ -37,6 +37,7 @@ export {
   PersonClockIcon,
   FlagIcon,
   ArchiveBoxIcon,
+  ArrowIcon,
   StockIcon,
   UndoIcon,
   Heading2Icon,

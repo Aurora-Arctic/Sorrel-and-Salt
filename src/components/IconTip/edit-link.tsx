@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { PendingLink } from '../../lib/navigation';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
@@ -22,14 +23,16 @@ const IconLink = ({
   className?: string;
 }): ReactElement => {
   const onClick = useOpenModalClick(href, heading, place);
+  // A page of its own scrolls to its top, as any page does; a modal leaves the list where it is.
+  const Link = heading ? ModalLink : PendingLink;
   return (
     <IconTip tip={verb}>
-      <ModalLink ref={ref} className={className} href={href} onClick={onClick}>
+      <Link ref={ref} className={className} href={href} onClick={onClick}>
         {icon}
         <span className="visually-hidden">
           {verb} {name}
         </span>
-      </ModalLink>
+      </Link>
     </IconTip>
   );
 };

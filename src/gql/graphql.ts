@@ -923,6 +923,14 @@ export type DeleteHelpArticleMutationVariables = Exact<{
 
 export type DeleteHelpArticleMutation = { deleteHelpArticle: string };
 
+export type OrderHelpSubPagesMutationVariables = Exact<{
+  id: string | number;
+  input: HelpArticlePatch;
+}>;
+
+
+export type OrderHelpSubPagesMutation = { updateHelpArticle: { id: string } };
+
 export type SetHelpArticleShownMutationVariables = Exact<{
   id: string | number;
   shown: boolean;
@@ -2115,6 +2123,13 @@ export const DeleteHelpArticleDocument = new TypedDocumentString(`
   deleteHelpArticle(id: $id)
 }
     `) as unknown as TypedDocumentString<DeleteHelpArticleMutation, DeleteHelpArticleMutationVariables>;
+export const OrderHelpSubPagesDocument = new TypedDocumentString(`
+    mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {
+  updateHelpArticle(id: $id, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpSubPagesMutation, OrderHelpSubPagesMutationVariables>;
 export const SetHelpArticleShownDocument = new TypedDocumentString(`
     mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {
   setHelpArticleShown(id: $id, shown: $shown) {

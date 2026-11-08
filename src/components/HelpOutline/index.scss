@@ -1,0 +1,163 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Two panes from a tablet up: the outline of guides, then the chosen one. Below it the outline gives way to the
+// Guide select (claude-docs/components/help-outline.md). Tokens only, before the section's design review.
+$-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
+
+.help-outline {
+  display: grid;
+  gap: space(5) space(7);
+  align-items: start;
+  margin-block-start: space(5);
+
+  @media (min-width: $-two-panes) {
+    grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+  }
+}
+
+// The left pane, drawn as the site's side menu draws its entries (PageNav): muted links, the current one in body ink
+// with the accent bar on the edge toward the pane.
+.help-outline__nav {
+  --help-outline-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
+
+  display: none;
+
+  @media (min-width: $-two-panes) {
+    display: block;
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  ul {
+    @include list-reset;
+    margin-block-end: space(5);
+  }
+
+  a {
+    display: flex;
+    gap: space(3);
+    align-items: baseline;
+    justify-content: space-between;
+    padding: space(1) space(4) space(1) space(3);
+    color: $text-muted;
+    text-decoration: none;
+    box-shadow: inset (-$rule-heavy) 0 0 0 transparent;
+    @include state-fade(background-color, color);
+
+    &:hover {
+      background: $fill-quiet;
+      color: $text-primary;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-current='page'] {
+      color: $text-primary;
+      box-shadow: inset (-$rule-heavy) 0 0 0 var(--help-outline-bar);
+    }
+
+    @include forced-colors {
+      border-inline-end: $rule-heavy solid Canvas;
+      padding-inline-end: calc(#{space(4)} - #{$rule-heavy});
+
+      &[aria-current='page'] {
+        border-inline-end-color: CanvasText;
+      }
+    }
+  }
+
+  .badge {
+    margin-inline-start: space(1);
+  }
+}
+
+.help-outline__group {
+  margin-block: 0 space(1);
+  padding-inline-start: space(3);
+  color: $text-primary;
+  font-size: type-size('overline');
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.help-outline__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.help-outline__select {
+  @media (min-width: $-two-panes) {
+    display: none;
+  }
+}
+
+.help-outline__pane {
+  min-width: 0;
+}
+
+.help-outline__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3) space(5);
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.help-outline__head-actions {
+  display: inline-flex;
+  gap: space(4);
+  align-items: center;
+}
+
+.help-outline__facts {
+  @include dotted-row('*');
+  margin-block: space(2) space(5);
+  color: $text-muted;
+}
+
+// A hidden row's muted title, beside the lidded eye of its switch and its dashed badge.
+.help-outline__title.is-hidden,
+.help-outline__nav a.is-hidden {
+  color: $text-muted;
+}
+
+.help-outline__hidden {
+  border-style: dashed;
+}
+
+.help-outline__in {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.help-outline__number {
+  font-variant-numeric: tabular-nums;
+}
+
+.help-outline__move {
+  display: inline-flex;
+  gap: space(1);
+  align-items: center;
+}
+
+.help-outline__corner {
+  white-space: nowrap;
+
+  .shown-switch {
+    margin-inline-start: space(2);
+    position: relative;
+    inset-block-start: 2px;
+  }
+}
+
+.help-outline__add {
+  margin-block-start: space(5);
+}

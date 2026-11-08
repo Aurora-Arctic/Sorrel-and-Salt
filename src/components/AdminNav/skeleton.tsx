@@ -5,7 +5,7 @@ import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
 import { CompendiumListSkeleton } from '../CompendiumList/skeleton';
 import { DocumentEditorSkeleton } from '../DocumentEditor/skeleton';
 import { GroupListSkeleton } from '../GroupList/skeleton';
-import { HelpListSkeleton } from '../HelpList/skeleton';
+import { HelpOutlineSkeleton } from '../HelpOutline/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
 import ActionFace, { ButtonFace } from '../ActionFace';
 import { impersonationEnabled } from '../../lib/impersonation';
@@ -48,7 +48,7 @@ const panels = (): Record<string, ReactNode> => ({
   '/keepers/documents/code-of-ethics': documentPanel,
   '/keepers/documents/privacy': documentPanel,
   '/keepers/documents': <PanelSkeleton fields={2} />,
-  '/keepers/help': <HelpListSkeleton />,
+  '/keepers/help': <HelpOutlineSkeleton />,
 });
 
 // The header action each tab carries, drawn with nothing to press: the Add of the curator tabs, and the

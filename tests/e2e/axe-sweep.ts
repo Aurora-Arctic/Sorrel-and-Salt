@@ -603,10 +603,6 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
     await page.getByRole('button', { name: 'Link', exact: true }).click();
     return dialogNamed(page, 'Add Link');
   },
-  'help-article': async (page) => {
-    await visit(page, '/keepers/help?new');
-    return dialogNamed(page, 'Add Help Article');
-  },
 };
 
 /** The entry page of the coven's compendium entry, with its More menu open. */
