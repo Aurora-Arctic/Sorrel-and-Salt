@@ -58,13 +58,12 @@
   }
 }
 
-// A numbered frame of the pages beneath this one, each number in the heading face.
+// A numbered list of the pages beneath this one, each number in the heading face, on the article column's edges with no
+// frame: it stands a body section's step below the text, and the steps' rule stands as far below its last entry as
+// below a body with no list.
 .help-article__subpages {
   max-width: $measure;
   margin-block-start: space(8);
-  padding: space(4) space(5);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
 
   .eyebrow {
     margin-block-end: space(3);
@@ -97,6 +96,10 @@
 
   li + li {
     border-block-start: 1px solid $hairline;
+  }
+
+  li:last-child {
+    padding-block-end: 0;
   }
 
   // A page's link, or its skeleton's stand-in title.

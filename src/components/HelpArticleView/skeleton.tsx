@@ -27,7 +27,7 @@ const Step = ({ next = false }: { next?: boolean }) => (
 );
 
 // An article with its text still to come, in the page's own frame: the heading, the search box, the way back (to the
-// help index on a guide, to a guide still to come on a sub page), the title, paragraphs under a section heading, the In This Guide frame a guide draws (a sub
+// help index on a guide, to a guide still to come on a sub page), the title, paragraphs under a section heading, the In This Guide list a guide draws (a sub
 // page has none beneath it), and the guide's steps at the foot. Words still to come are bars of about their length.
 export const HelpArticleSkeleton = ({
   heading = 'Help',
