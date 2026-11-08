@@ -89,13 +89,177 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   text-transform: uppercase;
 }
 
-.help-outline__count {
+// An audience's run sits under a quieter heading than "Guides", and the FAQ and the glossary under a hairline.
+.help-outline__group--sub {
+  color: $text-muted;
+  font-weight: 400;
+}
+
+.help-outline__heading {
+  display: flex;
+  gap: space(3);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: space(2);
+
+  .help-outline__group {
+    margin-block-end: 0;
+  }
+}
+
+.help-outline__nav ul.help-outline__others {
+  margin-block-start: space(2);
+  padding-block-start: space(2);
+  border-block-start: 1px solid $hairline;
+}
+
+// A row's marks, the Hidden eye then the audience badge, sit at its far end.
+.help-outline__marks {
+  display: inline-flex;
+  flex: none;
+  gap: space(2);
+  align-items: center;
+  margin-inline-start: auto;
+
+  .badge {
+    margin-inline-start: 0;
+  }
+}
+
+.help-outline__eye {
+  display: inline-flex;
+  color: $text-muted;
+
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+}
+
+// Reorder Mode: every live guide in one flat list, each row a grip, its place, its title and its marks.
+.help-outline__nav ul.help-outline__reorder {
+  margin-block-end: space(3);
+
+  &[aria-busy='true'] {
+    @include busy-faded;
+  }
+}
+
+.help-outline__reorder-row {
+  display: flex;
+  gap: space(2);
+  align-items: center;
+  padding: space(1) space(3);
+  background: $surface-card;
+
+  &.is-dragging {
+    position: relative;
+    z-index: 1;
+    box-shadow: $shadow-lifted;
+  }
+
+  .help-outline__label.is-hidden {
+    color: $text-muted;
+  }
+}
+
+.help-outline__place {
+  flex: none;
+  min-width: 2ch;
+  color: $text-muted;
   font-variant-numeric: tabular-nums;
 }
 
+// A grip, unboxed as the spell steps' handle is, with its hit area grown to the control floor; `touch-action` is
+// dnd-kit's ask, so a drag by touch moves the row rather than the page.
+.help-outline__grip {
+  @include button-reset(grab);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: radius('sharp');
+  color: $text-muted;
+  touch-action: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: -14px;
+    inset-inline: -8px;
+  }
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  .is-dragging & {
+    cursor: grabbing;
+  }
+}
+
+.help-outline__unsaved {
+  margin-block: 0 space(3);
+  padding-inline-start: space(3);
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.help-outline__mode .notice {
+  margin-block-end: space(3);
+}
+
+.help-outline__mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  padding-inline-start: space(3);
+}
+
+// Below two panes the Guide select stands for the bar, with its own Reorder beside it; there Reorder Mode opens the
+// bar as a sheet over the page's foot.
 .help-outline__select {
+  display: flex;
+  gap: space(3);
+  align-items: end;
+
+  > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
   @media (min-width: $-two-panes) {
     display: none;
+  }
+}
+
+.help-outline__reorder-open--phone {
+  flex: none;
+}
+
+@media (max-width: $shell-tablet-width) {
+  .help-outline__side.is-reordering .help-outline__nav {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: layer('dialog');
+    display: block;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-block: space(4);
+    border-start-start-radius: radius('surface');
+    border-start-end-radius: radius('surface');
+    background: $surface-card;
+    box-shadow: $shadow-elevated;
   }
 }
 
@@ -127,14 +291,10 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   color: $text-muted;
 }
 
-// A hidden row's muted title, beside the lidded eye of its switch and its dashed badge.
+// A hidden row's muted title, beside its shut eye and, in a table, the lidded eye of its switch.
 .help-outline__title.is-hidden,
 .help-outline__nav a.is-hidden {
   color: $text-muted;
-}
-
-.help-outline__hidden {
-  border-style: dashed;
 }
 
 .help-outline__in {
@@ -151,6 +311,16 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   display: inline-flex;
   gap: space(1);
   align-items: center;
+}
+
+// The corner's two controls and the order column take only the room they need, rather than a share of the table;
+// above the stacking width only, as a card is full width.
+@container data-table (width > #{$table-stack-width}) {
+  .help-outline .help-outline__corner,
+  .help-outline .help-outline__order {
+    width: 1%;
+    white-space: nowrap;
+  }
 }
 
 .help-outline__corner {
