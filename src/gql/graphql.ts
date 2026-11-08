@@ -923,6 +923,14 @@ export type DeleteHelpArticleMutationVariables = Exact<{
 
 export type DeleteHelpArticleMutation = { deleteHelpArticle: string };
 
+export type SetHelpArticleShownMutationVariables = Exact<{
+  id: string | number;
+  shown: boolean;
+}>;
+
+
+export type SetHelpArticleShownMutation = { setHelpArticleShown: { id: string } };
+
 export type AddCupboardEntryMutationVariables = Exact<{
   workspaceId: string | number;
   ingredientId: string | number;
@@ -2107,6 +2115,13 @@ export const DeleteHelpArticleDocument = new TypedDocumentString(`
   deleteHelpArticle(id: $id)
 }
     `) as unknown as TypedDocumentString<DeleteHelpArticleMutation, DeleteHelpArticleMutationVariables>;
+export const SetHelpArticleShownDocument = new TypedDocumentString(`
+    mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {
+  setHelpArticleShown(id: $id, shown: $shown) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<SetHelpArticleShownMutation, SetHelpArticleShownMutationVariables>;
 export const AddCupboardEntryDocument = new TypedDocumentString(`
     mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
   addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {

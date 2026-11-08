@@ -1,12 +1,12 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
-@use 'switch-size' as *;
+@use '../IngredientEntry/switch-size' as *;
 
-// The switch for "shown in the public compendium": a native checkbox drawn as a 2.772 x 1.584rem track
-// with a 1.188rem thumb, and the lidded eye in the thumb, shut when the entry is hidden.
+// The switch for "shown to readers" (the compendium, help): a native checkbox drawn as a 2.772 x 1.584rem track
+// with a 1.188rem thumb, and the lidded eye in the thumb, shut when the row is hidden.
 // Taller than `.switch` so the eye can be read. Tokens only, before the section's design review.
 .shown-switch {
-  // Cross-fade between thumb and ring; `RING_FADE_MS` in shown-toggle.tsx waits for it, keep
+  // Cross-fade between thumb and ring; `RING_FADE_MS` in ShownSwitch/index.tsx waits for it, keep
   // in step.
   $fade: 150ms ease-out;
 
