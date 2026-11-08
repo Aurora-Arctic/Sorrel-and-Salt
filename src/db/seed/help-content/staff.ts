@@ -189,13 +189,12 @@ const writingHelpPages = [
     `The form has these fields:
 
 - "Kind": FAQ, Article or Term. You choose it when adding. It cannot be changed afterwards, so the field is disabled when editing.
-- "Title": required.
-- "Slug": the last part of the entry's address. Leave it empty and it comes from the title. See Slugs and Addresses.
+- "Title": required. The address the title makes is shown beneath it as you type. See Slugs and Addresses.
 - "Summary": a short line. Articles show it beside their link.
 - "Body": required, written in Markdown. A region named "Preview" under it shows the body as it will read, and raw HTML in a body appears as plain text.
 - "Parent": an article only. See Audiences, Parents and Sub Pages.
 - "Audience": every kind except a term. Public, Staff or [[Keeper]].
-- "Position": every kind except a term. A whole number, which sets the entry's place in the public FAQ and in the list of articles. Entries with no position come last.
+- "Position": every kind except a term. A whole number, 0 or more, which sets the entry's place in the public FAQ and in the list of articles. Entries with no position come last.
 
 To give a word a tooltip that explains it, mark it in the body as \`[[Term]]\`, or as \`[[Term|shown text]]\` to show other words, such as a plural. The part before the bar must be the title or address of a glossary term, in any case. Readers see the shown text as a link to the glossary with a tooltip. Marks do nothing in a heading, a link or code, and the preview shows them as typed. A save that marks a term the glossary does not hold is refused on "Body", naming the term, so add the term first.
 
@@ -218,12 +217,14 @@ A sub page's audience is its parent's or narrower, in the order Public, Staff, K
     writingHelp,
     3,
     'Slugs and Addresses',
-    'How an entry gets its address, and which slugs are taken.',
-    `An entry's slug is the last part of its address. If you leave "Slug" empty when adding, the slug is made from the title. A slug you type is run through the same process, so it is lower case, with words joined by hyphens and other punctuation dropped. When you change a title, the slug stays as it was, because a link may hold it; only a slug you change in the form moves it.
+    'How an entry gets its address, and which titles are refused.',
+    `An entry's slug is the last part of its address, and it is always made from the title: lower case, with words joined by hyphens and other punctuation dropped. There is no slug to type. The form shows the address beneath "Title" as you type it.
 
-A slug must hold a letter or a number. It must also be unique within its kind: no two FAQ questions share one, no two terms share one, and no two articles share one, a sub page included. An FAQ question and an article may share a slug. The form shows "Another article holds that slug" and its like on the Slug field.
+When you change a title, the slug changes with it, so the entry's address moves. The old address then answers "not found", and nothing redirects it. A link to the old address in another entry's body, and a \`[[Term]]\` mark that names a renamed term by its old title or address, stop working until you correct them: the link answers "not found", and the mark reads as plain text.
 
-The names glossary, staff and search are reserved, since each is a page beneath /help. The form refuses them on the Slug field.
+A title must make an address that holds a letter or a number. The address must also be unique within its kind: no two FAQ questions share one, no two terms share one, and no two articles share one, a sub page included. An FAQ question and an article may share one. A title whose address another entry of the same kind holds is refused on "Title", saying "Another article has a title that makes the same address" or its like.
+
+The addresses glossary, staff and search are reserved, since each is a page beneath /help. A title that makes one of them is refused on "Title".
 
 The address comes from the kind, the audience and the parent:
 

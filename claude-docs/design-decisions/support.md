@@ -3326,9 +3326,11 @@ describes; none of the help text is that.
 
 One table, `help_articles`, with a `kind` of `faq`, `article` or `term`. Three
 tables would repeat the same columns, the same admin page and the same
-public finders. `position` orders the FAQ and is unused by a term. The slug is
-unique across all three kinds among live rows, so an article's address and a
-term's anchor never clash. Columns are in `DESIGN.md` §5.
+public finders. `position`, a whole number 0 or more, orders the FAQ and the
+articles and is unused by a term. The slug is always `slugify(title)` and unique
+within its kind among live rows ("The parent article"). `shown` hides a row from
+readers ("Showing and hiding, and a parent's children"). Columns are in
+`DESIGN.md` §5.
 
 ### Audiences, staff routes and search
 
@@ -3346,7 +3348,7 @@ Decided by the owner on 2026-11-07. These decisions amend the sections around th
 - A signed-out visitor is sent to sign in. A signed-in user who is neither keeper nor curator gets the styled not-authorized page, as `/curator` does. A curator asking for a `keeper` row gets 404. A public article is never served under `/help/staff/…`, and a staff article is never served under `/help/[slug]` (404). A staff child requested at `/help/staff/[slug]` is answered like the public rule: 308 to the nested address.
 - The pages are dynamic, uncached and `noindex`, and are kept out of `PUBLIC_ROUTES` and the sitemap. `/curator` and `/keepers` link to `/help/staff`.
 - The staff reads take the session, run the check and filter by audience in SQL. They are never cached, because their result depends on the viewer (CLAUDE.md rule 6). Only the public finder is cached, under the tag `help`.
-- The slugs `glossary`, `staff` and `search` are reserved for every kind, refused on create and rename: `staff` and `search` would collide with `/help/[slug]`.
+- The slugs `glossary`, `staff` and `search` are reserved for every kind. A title that makes one is refused on `title`, on create and on rename: `staff` and `search` would collide with `/help/[slug]`.
 
 **Search.**
 
@@ -3397,11 +3399,58 @@ one general page and one per practice.
   reads kind `article` only. A child's page is identified by its own slug and
   its parent's, and `/help/[slug]` for a child's slug answers 308 to the nested
   address, so the child has one canonical address.
+- **The slug is derived, never typed** (owner, 2026-11-08). It is
+  `slugify(title)` on create and on every title change, and the input, the
+  patch and the form hold no slug; the form shows the address the title makes,
+  read-only, beneath the title. A title that makes no address, a reserved one or
+  one a live row of its kind holds is refused on `title`, naming the title.
+  Renaming moves the address and nothing redirects the old one: a body link to
+  it answers 404, and a `[[Term]]` mark naming a renamed term by its old title
+  or address reads as plain text. The seed's `seed_key` is its own and does not
+  move, and a renamed row is `touched()`, so a re-seed leaves it.
 - **A parent with live children cannot be deleted** until they are moved or
   deleted, and the error says so.
 - **A child's audience** is equal to its parent's or narrower, and the
   parent's page lists only the children the reader may see ("Audiences, staff
   routes and search").
+
+### Showing and hiding, and a parent's children
+
+Decided by the owner on 2026-11-08.
+
+- **`shown`** is a boolean, not null, default `true`. A hidden row is kept,
+  never deleted, and reaches no reader, a keeper reading the help pages
+  included: every reader finder holds one predicate (`readable` in
+  `src/db/repository/help.ts`) that admits the audience, `shown`, and for a
+  child a live, shown parent. So a hidden parent hides its children without
+  writing their flags, and showing it again brings back each child that was
+  shown. A hidden row asked for by its slug answers 404, publicly and on the
+  staff routes alike. The search's two arms hold the same predicate, so a
+  hidden row's words neither answer nor stop the likeness fallback.
+- **The keeper sees hidden rows in two places only:** `keeperHelpArticles`,
+  every live row of every kind and audience, A to Z, narrowed by a listing
+  (`shown`, `hidden` or `all`, the default, by each row's own flag), words in
+  the title, a kind and an audience; and `readKeeperHelpArticle`, one row with
+  every live child in position order, for the editor. Both run under
+  `assertSiteAdmin`. `setHelpArticleShown` writes the flag through
+  `withAudit` and revalidates `help`, so a re-seed leaves a row a keeper hid.
+- **A hidden term's marks** read as plain text, since the glossary read drops
+  the term. A save's mark check still counts hidden terms, so hiding a term
+  never makes a body that marks it unsaveable. A body link to a hidden article
+  answers 404, and nothing checks for one; a warning at save or in the keeper's
+  list is the remedy if it is wanted, not a refusal.
+- **A parent chooses its children** through `childIds` on the article's input
+  and patch, applied in the parent's own `withAudit` transaction. Each listed
+  article becomes a child, positioned 1, 2, 3… in list order, moved from any
+  other parent. Each live child left out goes to the top level, positioned after
+  the last top-level article, so the order stays explicit; a null position
+  already sorts last. Left out, `childIds` leaves the children alone. Refused on
+  `childIds`: a non-article, a missing or deleted row, the article itself, an id
+  listed twice, an article with live children (one level), a child wider than
+  the parent, and `childIds` on a row that has a parent or is not an article. A
+  save that names its children is checked on those, so it may narrow the parent
+  in the save that releases a wider child. A child still takes its parent
+  through `parentId` the other way.
 
 ### The help seed
 
