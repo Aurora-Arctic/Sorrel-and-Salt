@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import HelpArticleForm from '../../../../../components/HelpArticleForm';
 import { helpFormHeading } from '../../../../../components/HelpArticleForm/heading';
+import HelpViewLink from '../../../../../components/HelpArticleForm/view-link';
 import BackLink from '../../../../../components/IngredientEntry/back-link';
 import PageHeader from '../../../../../components/PageHeader';
 import { NotFound } from '../../../../../lib/errors';
@@ -38,6 +39,8 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
     readArticle(session, id),
     readHelpFormChoices(session),
   ]);
+  // A sub page's address and whether it opens both hang on its guide.
+  const parent = article.parentId ? await readArticle(session, article.parentId) : null;
   const guideTitle = article.title;
   const returnHref = helpFormReturn(article.kind, article.parentId ?? article.id);
   return (
@@ -45,7 +48,11 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
       <div className="back-bar help-article-form__bar">
         <BackLink href={returnHref} label="Help" />
       </div>
-      <PageHeader eyebrow={helpFormHeading(article.kind, true)} title={article.title} />
+      <PageHeader
+        eyebrow={helpFormHeading(article.kind, true)}
+        title={article.title}
+        action={<HelpViewLink article={article} parent={parent} />}
+      />
       <HelpArticleForm
         article={{
           id: article.id,

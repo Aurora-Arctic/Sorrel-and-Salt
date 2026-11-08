@@ -6,6 +6,7 @@
 
 - **Two columns from tablet width up.** The text (Title, Summary, Body) sits on the left at the measure. A Details card on the right holds Kind, Shown, Parent, Sub Pages, Audience and Position, sticky under the shell bar as the body scrolls. Save and Cancel sit under the text. On a phone the card follows the text and the buttons follow the card. `index.scss` holds the grid.
 - **Heading.** An edit's page header is the row's title under the eyebrow `Edit Article`, `Edit FAQ Entry` or `Edit Term` (`helpFormHeading`, `heading.ts`). A new row's `h1` is drawn by the form, `Add Article`, `Add FAQ Entry` or `Add Term`, since it follows the Kind chosen. So the new page loads it through `NewHelpArticleForm`, whose loading face draws the heading too.
+- **View.** An edit's page header ends in an eye link, `ViewLink` named and tipped View, to the row's reader page (`HelpViewLink`, `view-link.tsx`, through `helpPath`). It is drawn only for a shown article whose guide, if it has one, is shown too: a hidden row's address is a 404 to a keeper as well, and an FAQ entry or a term is an anchor on a list, not a page. The skeleton draws no place for it.
 - **Loading.** `index.tsx` loads `form.tsx` through `next/dynamic`, because the body's editor is large and only these two pages need it. `HelpArticleFormSkeleton` stands in at the form's size, and the `/keepers/help/new` and `/keepers/help/[id]` skeletons in `src/app/skeletons.ts` use it.
 - **Back link.** `Help`, to `returnHref`, raised into the page top as on an ingredient page.
 

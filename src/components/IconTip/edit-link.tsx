@@ -5,6 +5,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
+import { LiddedEyeIcon } from './lidded-eye';
 import type { EditLinkProps } from './types';
 
 const IconLink = ({
@@ -29,9 +30,7 @@ const IconLink = ({
     <IconTip tip={verb}>
       <Link ref={ref} className={className} href={href} onClick={onClick}>
         {icon}
-        <span className="visually-hidden">
-          {verb} {name}
-        </span>
+        <span className="visually-hidden">{name ? `${verb} ${name}` : verb}</span>
       </Link>
     </IconTip>
   );
@@ -62,4 +61,12 @@ export const AnnotateLink = ({
 
 export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
   <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
+);
+
+/** A reader page of the row being edited, named and tipped View alone: the page is the one the editor is about. */
+export const ViewLink = ({
+  className = 'icon-tip__look',
+  ...props
+}: Omit<EditLinkProps, 'name'> & { className?: string }): ReactElement => (
+  <IconLink {...props} name="" className={className} verb="View" icon={<LiddedEyeIcon open />} />
 );

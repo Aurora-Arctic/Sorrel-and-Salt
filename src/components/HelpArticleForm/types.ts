@@ -65,3 +65,10 @@ export interface HelpFormValues {
   childIds: string[];
   shown: boolean;
 }
+
+/** What the edit page's View link reads of a row and of its guide to find, or rule out, the row's reader page. */
+export interface HelpViewLinkProps {
+  article: { kind: string; audience: string; slug: string; shown: boolean };
+  /** The row's guide, or null at the top level. */
+  parent: { slug: string; shown: boolean } | null;
+}
