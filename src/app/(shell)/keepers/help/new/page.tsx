@@ -23,7 +23,7 @@ export default async function NewHelpArticlePage({
   const preset = guides.find(({ id }) => id === single(params.parent));
   const returnHref = helpFormReturn('article', preset?.id);
   return (
-    <main>
+    <main className="help-article-page">
       <div className="back-bar help-article-form__bar">
         <BackLink href={returnHref} label="Help" />
       </div>

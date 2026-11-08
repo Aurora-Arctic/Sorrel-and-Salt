@@ -41,7 +41,7 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
   const guideTitle = article.title;
   const returnHref = helpFormReturn(article.kind, article.parentId ?? article.id);
   return (
-    <main>
+    <main className="help-article-page">
       <div className="back-bar help-article-form__bar">
         <BackLink href={returnHref} label="Help" />
       </div>

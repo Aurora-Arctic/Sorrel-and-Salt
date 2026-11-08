@@ -6,6 +6,16 @@
 // the Save row in the page's order, so the grid places the row back under the text (claude-docs/components/help-article-form.md).
 // Tokens only, before the section's design review.
 $-two-columns: calc(#{$shell-tablet-width} + 0.01rem);
+$-details-width: 22rem;
+
+// The page is centred as one column the form's own width, so the back link and the heading start at the text's edge, as
+// the documents' editor column does. Its width is the two tracks and the gap between them, in the form's own font.
+.help-article-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(#{$measure} + #{space(7)} + #{$-details-width});
+  margin-inline: auto;
+}
 
 // Doubled to outweigh the shared `.form` column, which compiles as `body .form`.
 // The back link raised into the page top, as on an ingredient page, so the eyebrow below it has room.
@@ -25,7 +35,7 @@ $-two-columns: calc(#{$shell-tablet-width} + 0.01rem);
   @media (min-width: $-two-columns) {
     grid-template:
       'main details' auto
-      'actions details' 1fr / minmax(0, $measure) minmax(16rem, 22rem);
+      'actions details' 1fr / minmax(0, $measure) minmax(16rem, $-details-width);
     column-gap: space(7);
   }
 }

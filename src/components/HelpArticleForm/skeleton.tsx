@@ -159,7 +159,7 @@ export const HelpArticleFormSkeleton = ({ heading }: { heading?: string }): Reac
 
 /** The whole page while it is on its way: the back link, the heading, and the form. An edited row's title is not known yet. */
 export const HelpArticlePageSkeleton = ({ editing }: { editing: boolean }): ReactElement => (
-  <div>
+  <div className="help-article-page">
     <div className="back-bar help-article-form__bar">
       <span className="back-link" aria-hidden="true">
         <BackChevron />
