@@ -717,19 +717,3 @@ export function FootnoteIcon(): ReactElement {
     </svg>
   );
 }
-
-/** An arrow pointing up, or down with `down`: Move Up and Move Down in a list a keeper orders by pressing. */
-export function ArrowIcon({ down = false }: { down?: boolean }): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path
-        d={down ? 'M8 3v10M4 9l4 4 4-4' : 'M8 13V3M4 7l4-4 4 4'}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

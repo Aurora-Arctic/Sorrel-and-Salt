@@ -196,7 +196,16 @@ export default async function KeepersHelpPage({
         ...pagerHrefs(page.pageInfo, (cursor) => keepersHelpHref(filter, undefined, cursor)),
       };
     }
-    if (view === 'faq') return { kind: 'faq', rows: faq.map(toRow) };
+    if (view === 'faq') {
+      // Every live entry, whatever the filter, is what a drop writes back whole.
+      const order = (await readAll(session, 'faq', '', 'all', false)).map(({ id }) => id);
+      const at = new Map(order.map((id, index) => [id, index]));
+      return {
+        kind: 'faq',
+        order,
+        rows: faq.map((entry) => ({ ...toRow(entry), index: at.get(entry.id) ?? 0 })),
+      };
+    }
     if (view === 'glossary') return { kind: 'glossary', rows: terms.map(toRow) };
     if (!chosenId) return { kind: 'empty' };
     // The guide's whole order, hidden sub pages and those the filter leaves out among them, is what a move writes back.

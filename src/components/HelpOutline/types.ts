@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { ReactNode } from 'react';
 
 export type HelpOutlineKind = 'faq' | 'article' | 'term';
 export type HelpOutlineAudience = 'public' | 'staff' | 'keeper';
@@ -56,7 +57,7 @@ export interface HelpOutlineOther {
   current: boolean;
 }
 
-/** A sub page in the chosen guide's table, with the guide's whole order for Move Up and Move Down. */
+/** A row of a sortable table, a sub page or an FAQ entry, with its place in the whole order. */
 export interface HelpOutlineSubPage extends HelpOutlineRow {
   /** Its place in the guide's whole order, 0-based, hidden and filtered-out sub pages counted. */
   index: number;
@@ -81,7 +82,7 @@ export interface HelpOutlineHit extends HelpOutlineRow {
 
 export type HelpOutlinePane =
   | { kind: 'guide'; guide: HelpOutlineChosen }
-  | { kind: 'faq'; rows: readonly HelpOutlineRow[] }
+  | { kind: 'faq'; rows: readonly HelpOutlineSubPage[]; order: readonly string[] }
   | { kind: 'glossary'; rows: readonly HelpOutlineRow[] }
   | {
       kind: 'search';
@@ -97,4 +98,26 @@ export interface HelpOutlineProps {
   others: readonly HelpOutlineOther[];
   order: readonly HelpOutlineOrderGuide[];
   pane: HelpOutlinePane;
+}
+
+/** The list a sortable table writes: a guide's sub pages, through the guide's `childIds`, or the FAQ. */
+export type HelpOrderList = { kind: 'subPages'; guideId: string } | { kind: 'faq' };
+
+/** A sortable table's column after its Order and Position columns, its cells drawn by the server. */
+export interface HelpOrderColumn {
+  heading: string;
+  hiddenHeading?: boolean;
+  className?: string;
+  /** Stands at the card's top right at phone width, as a StackTable corner action does. */
+  corner?: boolean;
+  /** Names the row, as a StackTable's first column does. */
+  rowHeader?: boolean;
+}
+
+/** A sortable table's row: its place in the whole order, 0-based, and a cell for each column. */
+export interface HelpOrderRow {
+  id: string;
+  title: string;
+  index: number;
+  cells: readonly ReactNode[];
 }

@@ -11,19 +11,22 @@ import Pager from '../Pager';
 import HelpOutlineFilterRow from './filter';
 import HiddenEye from './eye';
 import HelpGuidesBar from './guides-bar';
-import HelpMoveButtons from './move-buttons';
+import HelpOrderTable from './order-table';
 import { HelpOutlineBodySkeleton } from './skeleton';
 import type {
   HelpOutlineChosen,
   HelpOutlineFilter,
   HelpOutlineHit,
+  HelpOrderColumn,
+  HelpOrderRow,
   HelpOutlineProps,
   HelpOutlineRow,
+  HelpOutlineSubPage,
 } from './types';
 import './index.scss';
 
 // The keepers' help list as an outline: the Guides bar on the left, the chosen guide's sub pages on the right
-// (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the moves and the
+// (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the sortable tables and the
 // shown switches.
 
 const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', term: 'Term' } as const;
@@ -46,6 +49,13 @@ const Title = ({ row, children }: { row: HelpOutlineRow; children?: ReactNode })
   </span>
 );
 
+const cornerCell = (row: HelpOutlineRow): ReactElement => (
+  <>
+    <EditLink href={row.editHref} name={row.title} />
+    <HelpShownSwitch id={row.id} title={row.title} shown={row.shown} />
+  </>
+);
+
 function corner<Row extends HelpOutlineRow>(): StackColumn<Row> {
   return {
     heading: 'Edit',
@@ -53,18 +63,31 @@ function corner<Row extends HelpOutlineRow>(): StackColumn<Row> {
     action: 'corner',
     className: 'help-outline__corner',
     headingClassName: 'help-outline__corner',
-    cell: (row) => (
-      <>
-        <EditLink href={row.editHref} name={row.title} />
-        <HelpShownSwitch id={row.id} title={row.title} shown={row.shown} />
-      </>
-    ),
+    cell: cornerCell,
   };
 }
 
+const audienceCell = (row: HelpOutlineRow): ReactNode =>
+  row.audience === 'public' ? 'Public' : <AudienceBadge audience={row.audience} />;
+
+/** A sortable table's columns after Order and Position: the row's title, its audience and its corner. */
+const orderColumns = (title: string): HelpOrderColumn[] => [
+  { heading: title, rowHeader: true },
+  { heading: 'Audience' },
+  { heading: 'Edit', hiddenHeading: true, corner: true, className: 'help-outline__corner' },
+];
+
+const orderRows = (rows: readonly HelpOutlineSubPage[]): HelpOrderRow[] =>
+  rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    index: row.index,
+    cells: [<Title key="title" row={row} />, audienceCell(row), cornerCell(row)],
+  }));
+
 const audienceColumn = <Row extends HelpOutlineRow>(): StackColumn<Row> => ({
   heading: 'Audience',
-  cell: (row) => (row.audience === 'public' ? 'Public' : <AudienceBadge audience={row.audience} />),
+  cell: audienceCell,
 });
 
 const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
@@ -96,34 +119,17 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
         <span>{guide.address}</span>
       )}
     </p>
-    <StackTable
+    <HelpOrderTable
       aria-label={`Sub Pages of ${guide.title}`}
-      columns={[
-        { heading: 'Position', cell: (row) => row.index + 1, className: 'help-outline__number' },
-        { heading: 'Sub Page', cell: (row) => <Title row={row} /> },
-        audienceColumn(),
-        {
-          heading: 'Order',
-          className: 'help-outline__order',
-          cell: (row) => (
-            <HelpMoveButtons
-              guideId={guide.id}
-              order={guide.order}
-              index={row.index}
-              title={row.title}
-            />
-          ),
-        },
-        corner(),
-      ]}
-      rows={guide.subPages}
-      rowKey={(row) => row.id}
+      list={{ kind: 'subPages', guideId: guide.id }}
+      order={guide.order}
+      columns={orderColumns('Sub Page')}
+      rows={orderRows(guide.subPages)}
       empty={
         guide.order.length === 0
           ? `${guide.title} has no sub pages.`
           : 'No sub page of this guide matches the filter.'
       }
-      emptyQuiet
     />
     <p className="help-outline__add">
       <PendingLink className="btn" href={guide.addSubPageHref}>
@@ -133,31 +139,36 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
   </>
 );
 
-const RowsPane = ({
-  heading,
+const FaqPane = ({
   rows,
-  positioned,
+  order,
 }: {
-  heading: string;
-  rows: readonly HelpOutlineRow[];
-  positioned: boolean;
+  rows: readonly HelpOutlineSubPage[];
+  order: readonly string[];
 }): ReactElement => (
   <>
     <div className="help-outline__head">
-      <h2 id="help-outline-pane">{heading}</h2>
+      <h2 id="help-outline-pane">FAQ</h2>
+    </div>
+    <HelpOrderTable
+      aria-label="FAQ"
+      list={{ kind: 'faq' }}
+      order={order}
+      columns={orderColumns('Question')}
+      rows={orderRows(rows)}
+      empty="Nothing here matches the filter."
+    />
+  </>
+);
+
+const GlossaryPane = ({ rows }: { rows: readonly HelpOutlineRow[] }): ReactElement => (
+  <>
+    <div className="help-outline__head">
+      <h2 id="help-outline-pane">Glossary</h2>
     </div>
     <StackTable
-      aria-label={heading}
-      columns={[
-        positioned && {
-          heading: 'Position',
-          cell: (row: HelpOutlineRow) => row.position ?? '',
-          className: 'help-outline__number',
-        },
-        { heading: positioned ? 'Question' : 'Term', cell: (row) => <Title row={row} /> },
-        positioned && audienceColumn(),
-        corner(),
-      ]}
+      aria-label="Glossary"
+      columns={[{ heading: 'Term', cell: (row: HelpOutlineRow) => <Title row={row} /> }, corner()]}
       rows={rows}
       rowKey={(row) => row.id}
       empty="Nothing here matches the filter."
@@ -223,10 +234,8 @@ const HelpOutline = ({ filter, guides, others, order, pane }: HelpOutlineProps):
         />
         <section className="help-outline__pane" aria-labelledby="help-outline-pane">
           {pane.kind === 'guide' && <GuidePane guide={pane.guide} />}
-          {pane.kind === 'faq' && <RowsPane heading="FAQ" rows={pane.rows} positioned />}
-          {pane.kind === 'glossary' && (
-            <RowsPane heading="Glossary" rows={pane.rows} positioned={false} />
-          )}
+          {pane.kind === 'faq' && <FaqPane rows={pane.rows} order={pane.order} />}
+          {pane.kind === 'glossary' && <GlossaryPane rows={pane.rows} />}
           {pane.kind === 'search' && (
             <SearchPane
               rows={pane.rows}

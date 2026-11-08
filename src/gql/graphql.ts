@@ -946,6 +946,13 @@ export type OrderHelpSubPagesMutationVariables = Exact<{
 
 export type OrderHelpSubPagesMutation = { updateHelpArticle: { id: string } };
 
+export type OrderHelpFaqMutationVariables = Exact<{
+  ids: Array<string | number> | string | number;
+}>;
+
+
+export type OrderHelpFaqMutation = { orderHelpFaq: Array<{ id: string }> };
+
 export type SetHelpArticleShownMutationVariables = Exact<{
   id: string | number;
   shown: boolean;
@@ -2165,6 +2172,13 @@ export const OrderHelpSubPagesDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<OrderHelpSubPagesMutation, OrderHelpSubPagesMutationVariables>;
+export const OrderHelpFaqDocument = new TypedDocumentString(`
+    mutation OrderHelpFaq($ids: [ID!]!) {
+  orderHelpFaq(ids: $ids) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpFaqMutation, OrderHelpFaqMutationVariables>;
 export const SetHelpArticleShownDocument = new TypedDocumentString(`
     mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {
   setHelpArticleShown(id: $id, shown: $shown) {

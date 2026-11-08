@@ -307,17 +307,20 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   font-variant-numeric: tabular-nums;
 }
 
-.help-outline__move {
-  display: inline-flex;
-  gap: space(1);
-  align-items: center;
+// A sortable table's dragged row, lifted over its neighbours.
+.help-outline__order-row.is-dragging {
+  position: relative;
+  z-index: 1;
+  background: $surface-card;
+  box-shadow: $shadow-lifted;
 }
 
-// The corner's two controls and the order column take only the room they need, rather than a share of the table;
-// above the stacking width only, as a card is full width.
+// The corner's two controls, the grip and the position take only the room they need, rather than a share of the
+// table; above the stacking width only, as a card is full width.
 @container data-table (width > #{$table-stack-width}) {
   .help-outline .help-outline__corner,
-  .help-outline .help-outline__order {
+  .help-outline .help-outline__grip-cell,
+  .help-outline .help-outline__number {
     width: 1%;
     white-space: nowrap;
   }

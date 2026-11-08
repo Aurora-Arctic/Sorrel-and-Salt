@@ -111,6 +111,7 @@ Users: "See All Results" ends the ingredient search's dropdown when there is ano
 
 - **It is Downshift's `useSelect`**, ARIA 1.2's select-only combobox: the control itself is the `role="combobox"` element, a `div` in the tab order, labelled through `aria-labelledby`. Without `labelId`, `label` is its `aria-label`.
 - **A choice with value `''`** clears the set ("None"). `placeholder` shows while the value is none of the choices and is never in the list.
+- **A choice's `group`** sets it under a heading: each run of consecutive choices with the same `group` is a `role="group"` named by its heading, on a `div` inside a presentational `li`, as the typed box's buckets are. A choice with none sits outside every group. The flat order is still Downshift's, so the arrows run straight through the headings (the keepers' help guide select, grouped by audience).
 - **A disabled choice** is listed where it stands, stepped over by the arrows and refused a press, its `note` on a second line (the coven picker's coven that already holds the entry).
 - **`disabled` on the box** is `aria-disabled="true"`, out of the tab order, deaf to the pointer and keys (Downshift leaves its handlers off). It is not the attribute, because Downshift would write `disabled` onto the `div`, where it means nothing.
 - **Ctrl or Cmd keydown on the closed box** sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo ([`field.md`](field.md#undo-and-redo)), is not read as a letter that opens the list.

@@ -27,6 +27,14 @@ SQL narrows every list through `listKeeperHelpArticles` (`claude-docs/design-dec
 - **`orderHelpGuides(ids)`** (keeper only) places every live top-level guide 1, 2, 3… in one write. It refuses a list that is not every live guide exactly once, and one that interleaves audiences rather than listing Public, then Staff, then Keeper. `orderHelpFaq(ids)` does the same for every live FAQ entry.
 - **The right pane's header** gives the chosen guide's title, its address, its place ("Position 1 of 3") and Add Sub Page, which links `/keepers/help/new?parent=<id>`.
 - **Each row** has its Edit link and a shown switch (`shown-switch.tsx`, the help wrapper of [`ShownSwitch`](help-article-form.md#shownswitch) around `SetHelpArticleShown`) in its corner. An audience other than Public shows as a badge. A hidden row has three marks: a muted title, the shut eye after it, and the switch's own shut lid.
-- **Move Up and Move Down** (`move-buttons.tsx`) on each sub page write the guide's whole order back through `UpdateHelpArticle`'s `childIds`. `moved(order, index, by)` swaps the pair. The order is the guide's `order`, never the filtered table, because `childIds` releases to the top level any sub page it leaves out. A move announces itself and refreshes. A refusal shows under the buttons. Move Up is off on the first row and Move Down on the last.
+- **The Glossary** is A to Z and has no order to set, so it is a plain `StackTable`.
+
+## Ordering
+
+`order-table.tsx` (`HelpOrderTable`) draws the chosen guide's sub pages and the FAQ as a stacking table with a grip on every row, always on: the first column, under a visually hidden "Order" heading, then Position. It writes `StackTable`'s markup itself, because `StackTable` takes cell functions from the server and a grip is a client hook. One sortable (`sortable.tsx`) wraps the whole table frame, since dnd-kit draws its instructions in a `div`, which a table may not hold.
+
+- **A drop saves at once**, with no Save step: the sub pages through `UpdateHelpArticle`'s `childIds`, the FAQ through `OrderHelpFaq`. The write is the whole order (`order`), never the filtered table, because `childIds` releases to the top level any sub page it leaves out; a drop among the visible rows is placed within it.
+- **While it saves**, the moved row's Position cell is `aria-busy` with a spinner and every grip is off. A save announces "Moved Testwort Basics to position 2." and refreshes.
+- **A failure** springs the row back and shows an alert, "Could not move Testwort Basics. It is back where it was.", with Try Again, which sends the same move again.
 
 `skeleton.tsx` is the page's loading face, at the outline's size.
