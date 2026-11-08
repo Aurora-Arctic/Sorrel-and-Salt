@@ -13,6 +13,7 @@ import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
 import { RowId, parseInput } from '@/lib/validation';
+import type { z } from 'zod';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type {
@@ -165,12 +166,22 @@ async function releasedBy(
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {ValidationError} refused at `title` (it makes no address, a reserved one or a taken one), `parentId`, `position`, `audience`, `childIds` or `body` (a mark naming a term the glossary lacks), or invalid input.
  */
+/** parseInput, with the first issue's sentence as the message, since the help form shows a refusal's message as well as its field. */
+function parseSaying<Schema extends z.ZodType>(schema: Schema, input: unknown): z.output<Schema> {
+  try {
+    return parseInput(schema, input);
+  } catch (error) {
+    if (!(error instanceof ValidationError) || error.issues.length === 0) throw error;
+    throw new ValidationError(error.issues, error.issues[0].message);
+  }
+}
+
 export async function createHelpArticle(
   session: Session,
   input: HelpArticleInput,
 ): Promise<HelpArticle> {
   assertSiteAdmin(session);
-  const values = parseInput(InputSchema, input);
+  const values = parseSaying(InputSchema, input);
   const slug = slugify(values.title);
   const merged: Merged = {
     kind: values.kind,
@@ -217,7 +228,7 @@ export async function updateHelpArticle(
   patch: HelpArticlePatch,
 ): Promise<HelpArticle> {
   assertSiteAdmin(session);
-  const values = parseInput(PatchSchema, patch);
+  const values = parseSaying(PatchSchema, patch);
   const current = await findOneById(helpArticles, id);
   if (!current) throw new NotFound('Help article not found');
 
