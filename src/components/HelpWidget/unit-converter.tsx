@@ -3,8 +3,12 @@
 import { useId, useState, type ReactElement } from 'react';
 import { UNITS, type Unit } from '@/modules/ingredients/schema/units';
 import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
+import { ComboboxSelect } from '../Combobox';
 import { unitLabel } from '../StockFields/units';
 import { CONVERSION_REFUSALS } from './conversion-refusals';
+
+// Every unit, with no None: a conversion needs both sides.
+const UNIT_CHOICES = UNITS.map((unit) => ({ value: unit, label: unitLabel(unit) }));
 
 // The help pages' converter: every answer is `unitConvert`'s, so it converts within a dimension and refuses
 // every other pair exactly as the app does (claude-docs/components/help-pages.md, "Widgets").
@@ -23,11 +27,6 @@ const UnitConverter = (): ReactElement => {
   const [amount, setAmount] = useState('1');
   const [from, setFrom] = useState<Unit>('tbsp');
   const [to, setTo] = useState<Unit>('tsp');
-  const options = UNITS.map((unit) => (
-    <option key={unit} value={unit}>
-      {unitLabel(unit)}
-    </option>
-  ));
   return (
     <figure className="figure help-widget">
       <div className="help-widget__fields">
@@ -47,30 +46,32 @@ const UnitConverter = (): ReactElement => {
           />
         </div>
         <div className="field">
-          <label className="field__label" htmlFor={`${id}-from`}>
+          <label className="field__label" id={`${id}-from-label`} htmlFor={`${id}-from`}>
             From
           </label>
-          <select
+          <ComboboxSelect
             id={`${id}-from`}
-            className="input"
+            label="From"
+            labelId={`${id}-from-label`}
             value={from}
-            onChange={(event) => setFrom(event.target.value as Unit)}
-          >
-            {options}
-          </select>
+            onChange={(value) => setFrom(value as Unit)}
+            choices={UNIT_CHOICES}
+            fit
+          />
         </div>
         <div className="field">
-          <label className="field__label" htmlFor={`${id}-to`}>
+          <label className="field__label" id={`${id}-to-label`} htmlFor={`${id}-to`}>
             To
           </label>
-          <select
+          <ComboboxSelect
             id={`${id}-to`}
-            className="input"
+            label="To"
+            labelId={`${id}-to-label`}
             value={to}
-            onChange={(event) => setTo(event.target.value as Unit)}
-          >
-            {options}
-          </select>
+            onChange={(value) => setTo(value as Unit)}
+            choices={UNIT_CHOICES}
+            fit
+          />
         </div>
       </div>
       <output className="help-widget__result" aria-label="Result" role="status">

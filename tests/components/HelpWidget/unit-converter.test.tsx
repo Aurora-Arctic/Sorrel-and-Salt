@@ -4,17 +4,20 @@ import UnitConverter from '@/components/HelpWidget/unit-converter';
 import { CONVERSION_REFUSALS } from '@/components/HelpWidget/conversion-refusals';
 import { UNITS } from '@/modules/ingredients/schema/units';
 import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
+import { unitLabel } from '@/components/StockFields/units';
+import type { Unit } from '@/modules/ingredients/schema/units';
+import { choose } from '../../support/interact';
 
 // The help pages' converter: the answer is the app's own `unitConvert`, so a cross-dimension or count pair shows
 // the app's refusal, never a blank, a NaN or a guess.
 
-function convert(amount: string, from: string, to: string): HTMLElement {
+function convert(amount: string, from: Unit, to: Unit): HTMLElement {
   render(<UnitConverter />);
   fireEvent.change(screen.getByRole('spinbutton', { name: 'Amount' }), {
     target: { value: amount },
   });
-  fireEvent.change(screen.getByRole('combobox', { name: 'From' }), { target: { value: from } });
-  fireEvent.change(screen.getByRole('combobox', { name: 'To' }), { target: { value: to } });
+  choose('From', unitLabel(from));
+  choose('To', unitLabel(to));
   return screen.getByRole('status', { name: 'Result' });
 }
 
@@ -61,9 +64,15 @@ describe('UnitConverter', () => {
   it('offers every unit the app knows on both sides', () => {
     render(<UnitConverter />);
 
-    const from = screen.getByRole('combobox', { name: 'From' });
-    const to = screen.getByRole('combobox', { name: 'To' });
-    expect(within(from).getAllByRole('option')).toHaveLength(UNITS.length);
-    expect(within(to).getAllByRole('option')).toHaveLength(UNITS.length);
+    for (const side of ['From', 'To']) {
+      fireEvent.click(screen.getByRole('combobox', { name: side }));
+      const list = screen.getByRole('listbox', { name: `${side} choices` });
+      expect(
+        within(list)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(UNITS.map(unitLabel));
+      fireEvent.keyDown(screen.getByRole('combobox', { name: side }), { key: 'Escape' });
+    }
   });
 });
