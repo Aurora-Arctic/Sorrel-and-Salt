@@ -237,3 +237,18 @@ export interface AgreedColumns {
   agreedDisclaimerVersion: number | null;
   agreedEthicsVersion: number | null;
 }
+
+/** A module kept out of the page's first-load scripts, imported at most once however many callers ask (src/lib/use-lazy-module.ts). */
+export interface LazyModule<M> {
+  /** Starts the import on the first call and gives every later call the same promise; a failed import is forgotten, so the next call tries again. */
+  load: () => Promise<M>;
+  /** The module once it has arrived, else null. */
+  loaded: () => M | null;
+}
+
+/** Spread on the control that opens a lazy module's dialog or menu: the pointer reaching it, the focus reaching it or a press beginning on it starts the load. */
+export interface PreloadHandlers {
+  onPointerEnter: () => void;
+  onFocus: () => void;
+  onPointerDown: () => void;
+}
