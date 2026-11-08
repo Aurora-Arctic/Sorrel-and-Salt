@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The board's calls in one file, each a `gh` argument list, never a shell string; it never adds an item
 // (claude-docs/task-tracking.md, "Status").
-// Usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> ...
+// Usage: node scripts/task-board.mjs <find|status|estimate|comment|sync|list|reorder|move|milestone|retire> ...
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
@@ -456,6 +456,94 @@ function printReorderPlan(plan) {
   for (const move of plan.moves) console.log(`  ${move.id} → after ${move.after}`);
 }
 
+// Milestone and placement — `milestone`, `retire` and `move` (claude-docs/task-tracking.md, "scripts/task-board.mjs").
+
+export const RETIRED_MILESTONE = 'Retired — not done';
+
+/** The one milestone titled exactly `title`, open unless `open` is false; zero or several is a refusal. */
+export function findMilestone(title, milestones, { open = true } = {}) {
+  const named = milestones.filter((candidate) => candidate.title === title);
+  const matches = open ? named.filter((candidate) => candidate.state === 'open') : named;
+  if (matches.length === 1) return matches[0];
+  if (matches.length === 0) {
+    const closed = named.length ? ` (#${named[0].number} is closed)` : '';
+    throw new BoardError(`No open milestone is titled "${title}" in ${REPO}${closed}.`);
+  }
+  const list = matches.map((candidate) => `#${candidate.number}`).join(', ');
+  throw new BoardError(`${matches.length} milestones are titled "${title}": ${list}.`);
+}
+
+/** A REST edit of the issue; a number goes as `-F`, since `-f` would send the milestone as a string. */
+export const issueEditArgs = (issue, fields) => [
+  'api',
+  '-X',
+  'PATCH',
+  `repos/${REPO}/issues/${issue.number}`,
+  ...Object.entries(fields).flatMap(([key, value]) => [
+    typeof value === 'number' ? '-F' : '-f',
+    `${key}=${value}`,
+  ]),
+];
+
+export function parseMoveArgs(args) {
+  const [id, flag, other, ...rest] = args;
+  if (!id || id.startsWith('--') || rest.length) throw new BoardError(USAGE);
+  if (flag === '--last' && other === undefined) return { id, last: true };
+  if (flag === '--after' && other && !other.startsWith('--')) return { id, after: other };
+  throw new BoardError(USAGE);
+}
+
+/**
+ * The one move that puts `id` directly after `after`, or after the last item on its own milestone for `last`; `move` is null when it already sits there.
+ * Both tasks must share a milestone, so the command places a task within one and never across.
+ */
+export function planPlacement({ issues, listing, id, after, last }) {
+  const issue = findIssue(id, issues);
+  if (!issue.milestone)
+    throw new BoardError(`${idOf(issue.title)} (#${issue.number}) has no milestone.`);
+  const byNumber = new Map(issues.map((candidate) => [candidate.number, candidate]));
+  const positions = new Map(
+    listing.items.map((item, position) => [item.number, { item, position }]),
+  );
+  const onBoard = (candidate) => {
+    const found = positions.get(candidate.number);
+    if (found) return found;
+    throw new BoardError(`${idOf(candidate.title)} (#${candidate.number}) is not on the Project.`);
+  };
+  const task = onBoard(issue);
+  let anchor;
+  if (last) {
+    const others = listing.items.filter(
+      (item) =>
+        item.number !== issue.number && byNumber.get(item.number)?.milestone === issue.milestone,
+    );
+    if (others.length === 0) {
+      throw new BoardError(`${idOf(issue.title)} is the only item on "${issue.milestone}".`);
+    }
+    anchor = byNumber.get(others.at(-1).number);
+  } else {
+    anchor = findIssue(after, issues);
+    if (anchor.number === issue.number)
+      throw new BoardError(`${idOf(issue.title)} cannot follow itself.`);
+    if (anchor.milestone !== issue.milestone) {
+      throw new BoardError(
+        `${idOf(anchor.title)} sits on "${anchor.milestone ?? 'no milestone'}", not "${issue.milestone}".`,
+      );
+    }
+  }
+  const target = onBoard(anchor);
+  const inPlace = last ? task.position > target.position : task.position === target.position + 1;
+  const move = inPlace
+    ? null
+    : {
+        id: idOf(issue.title),
+        itemId: task.item.id,
+        after: idOf(anchor.title),
+        afterId: target.item.id,
+      };
+  return { projectId: listing.projectId, move };
+}
+
 // A comment is public and indexed before anyone reads it, so a comment is
 // refused when it looks like it carries a value rather than a name. The rule
 // is names, never values; these are the shapes a pasted value tends to take.
@@ -579,7 +667,11 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   sync <ID> [<ID> …]         bring each issue's title, body and Estimate to its entry
   list                       every tracked issue, as a JSON array
   reorder [--apply] [--limit N]
-                             the moves that put the open waves in execution order; --apply makes them`;
+                             the moves that put the open waves in execution order; --apply makes them
+  move <ID> --after <ID> | --last
+                             place the task within its milestone: after the named task, or last
+  milestone <ID> "<title>"   move the issue to the open milestone titled exactly so
+  retire <ID>                close the issue as not planned, on "${RETIRED_MILESTONE}"`;
 
 const COMMANDS = {
   find([id]) {
@@ -652,6 +744,56 @@ const COMMANDS = {
     }
     console.log(`${made} move(s) made. Reading the order again…\n`);
     printReorderPlan(readReorderPlan());
+  },
+  move(args) {
+    const { id, after, last } = parseMoveArgs(args);
+    const { projectId, move } = planPlacement({
+      issues: listTracked(),
+      listing: listItems(),
+      id,
+      after,
+      last,
+    });
+    if (!move) {
+      console.log(`${id.toUpperCase()}: already in place`);
+      return;
+    }
+    gh(reorderMutationArgs(projectId, move));
+    console.log(`${move.id} → after ${move.after}`);
+  },
+  milestone([id, title, ...rest]) {
+    if (!id || !title || rest.length) throw new BoardError(USAGE);
+    const issue = findIssue(id);
+    const target = findMilestone(title, listMilestones());
+    if (issue.milestone === target.title) {
+      console.log(`${id.toUpperCase()}: already on "${target.title}"`);
+      return;
+    }
+    gh(issueEditArgs(issue, { milestone: target.number }));
+    console.log(`${id.toUpperCase()}: ${issue.milestone ?? '(none)'} → ${target.title}`);
+  },
+  retire([id, ...rest]) {
+    if (!id || rest.length) throw new BoardError(USAGE);
+    const issue = findIssue(id);
+    if (issue.state === 'CLOSED' && issue.stateReason === 'COMPLETED') {
+      throw new BoardError(
+        `#${issue.number} is closed as completed; retire is for a task not done.`,
+      );
+    }
+    // The retired milestone may be closed, so a closed one matches too.
+    const target = findMilestone(RETIRED_MILESTONE, listMilestones(), { open: false });
+    if (issue.state === 'CLOSED' && issue.milestone === target.title) {
+      console.log(`${id.toUpperCase()}: already retired`);
+      return;
+    }
+    gh(
+      issueEditArgs(issue, {
+        milestone: target.number,
+        state: 'closed',
+        state_reason: 'not_planned',
+      }),
+    );
+    console.log(`${id.toUpperCase()}: closed as not planned, on "${target.title}"`);
   },
 };
 

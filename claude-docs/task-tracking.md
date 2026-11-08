@@ -134,6 +134,13 @@ not needed at the board's size, and an `Order` field sorted by the view would
 have been a write per item rather than per move, and the end of dragging an
 item where it belongs.
 
+**A milestone with no wave row is placed by hand, one task at a time.**
+`reorder` orders only the milestones the wave table names, so a task on
+`Z. Bugfixes`, `Z. Deferred` or `Z. Outside the Website` is placed with
+`node scripts/task-board.mjs move <ID> --after <ID>` or `--last`. It makes
+the same `updateProjectV2ItemPosition` mutation, once, with no dry run, and
+places a task only among its own milestone's items.
+
 ## Comments
 
 `node scripts/task-board.mjs comment <ID> "<text>"` posts to the issue, under
@@ -157,15 +164,18 @@ Node built-ins only, every call an `execFileSync('gh', [...])` with an
 argument list — a title or a comment is text a shell string would interpret.
 A `gh` failure prints gh's own stderr on one line, never a stack.
 
-| Command                         | Does                                                                                                                                                              |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `find <ID>`                     | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it.    |
-| `status <ID> "<Status>"`        | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.        |
-| `estimate <ID> <hours>`         | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                            |
-| `comment <ID> "<text>"`         | Posts the comment, after the secret scan.                                                                                                                         |
-| `sync <ID> [<ID> …]`            | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.       |
-| `list`                          | Every tracked issue, open and closed, as a JSON array.                                                                                                            |
-| `reorder [--apply] [--limit N]` | The moves that put the open waves' items in execution order, as a dry run; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**). |
+| Command                                        | Does                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `find <ID>`                                    | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it.                                                                                                                       |
+| `status <ID> "<Status>"`                       | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.                                                                                                                           |
+| `estimate <ID> <hours>`                        | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                                                                                                                                               |
+| `comment <ID> "<text>"`                        | Posts the comment, after the secret scan.                                                                                                                                                                                                                                            |
+| `sync <ID> [<ID> …]`                           | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.                                                                                                                          |
+| `list`                                         | Every tracked issue, open and closed, as a JSON array.                                                                                                                                                                                                                               |
+| `reorder [--apply] [--limit N]`                | The moves that put the open waves' items in execution order, as a dry run; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**).                                                                                                                    |
+| `move <ID> --after <ID>` or `move <ID> --last` | Places the task directly after the named task, which must share its milestone, or with `--last` places it after the last item, open or closed, on its own milestone. One move, a no-op when it already sits there (**Order**).                                                       |
+| `milestone <ID> "<title>"`                     | Moves the issue to the open milestone titled exactly so, such as `Z. Bugfixes`; a refusal when no open milestone, or several, carry the title.                                                                                                                                       |
+| `retire <ID>`                                  | Closes the issue as not planned on the closed `Retired — not done` milestone, in one edit; a refusal for an issue closed as completed. The `[RETIRED]` heading stays a hand edit, synced to the issue with `sync` before `retire` closes it, since `sync` never runs on a closed id. |
 
 The Project's node id, its field ids and its option ids are read on each run
 rather than hardcoded — an option recreated in the Project's settings gets a
@@ -182,7 +192,9 @@ budget, pull requests filtered out since the endpoint lists them among issues
 — and the Project read costs one GraphQL point. `find` and `comment` make
 one small query at most; `status` and `estimate` make that query and one
 mutation; `reorder` makes the three reads under **Order** and one mutation
-per move. The previous shape — `gh issue list`, a GraphQL query carrying every
+per move; `move` makes the issue list, the item listing and one mutation;
+`milestone` and `retire` make the issue list, one milestones page and one
+REST edit of the issue. The previous shape — `gh issue list`, a GraphQL query carrying every
 issue's labels, then `gh project item-list` over every item to find one —
 was a burst that tripped GitHub's _secondary_ rate limit twice in one sitting
 with the hourly budget almost untouched. The refusal reads

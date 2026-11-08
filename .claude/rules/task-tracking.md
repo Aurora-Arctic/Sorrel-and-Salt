@@ -31,8 +31,8 @@ The objects (repo, Project, fields, milestones, issue types, labels, sub-issues)
 - **Every issue has a milestone**; a retired task sits in the closed `Retired — not done` one.
 - **A bug is a failure that reached a PR, staging or production; new work, a refactor, a doc or a sweep is a `Task` whatever its id.** The id prefix decides nothing: an `MB.*` id is new work as often as a fix. The `hotfix` label marks a bug that ships straight to `main`, and the label, not the type, decides the branch skill; `start-task` asks when the issue is ambiguous.
 - **Every tracked issue carries the `tracked` label**, the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
-- **The board is kept in execution order**, `TASKS.md`'s wave table read wave by wave: `node scripts/task-board.mjs reorder` prints the moves that restore it and `--apply` makes them (claude-docs/task-tracking.md, "Order").
-- **A retired task is closed as `not planned`**, its title reading `<ID> — [RETIRED] <title>`; a done task is closed as `completed`.
+- **The board is kept in execution order**, `TASKS.md`'s wave table read wave by wave: `node scripts/task-board.mjs reorder` prints the moves that restore it and `--apply` makes them; a task on a milestone with no wave row is placed with `move <ID> --after <ID>` or `move <ID> --last`, and moved to another milestone with `milestone <ID> "<title>"` (claude-docs/task-tracking.md, "Order").
+- **A retired task is closed as `not planned`**, its title reading `<ID> — [RETIRED] <title>`; a done task is closed as `completed`. `node scripts/task-board.mjs retire <ID>` closes it and moves it to that milestone; the `[RETIRED]` heading is a hand edit, synced before `retire` runs.
 
 ## Status
 
