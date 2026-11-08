@@ -108,6 +108,8 @@ export const ROUTE_SCANS = [
   { route: '/keepers/documents', as: ['keeper'] },
   { route: '/keepers/documents/[key]', as: ['keeper'] },
   { route: '/keepers/help', as: ['keeper'] },
+  { route: '/keepers/help/new', as: ['keeper'] },
+  { route: '/keepers/help/[id]', as: ['keeper'] },
 
   // Staff help, which curators and keepers read.
   { route: '/help/staff', as: ['curator', 'keeper'] },

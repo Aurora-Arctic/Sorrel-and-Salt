@@ -904,6 +904,46 @@ describe('the keeper list', () => {
     ]);
   });
 
+  it('matches words in the body as well as the title', async () => {
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Quiet Page', body: 'Mentions the Marshlight once.' },
+      E.id,
+    );
+
+    // Precondition: no title holds the word, so a match can only come from the body.
+    expect((await titlesOf({})).filter((title) => /marshlight/i.test(title))).toEqual([]);
+    expect(await titlesOf({ query: 'marshlight' })).toEqual(['Testwort Quiet Page']);
+  });
+
+  it('lists the top-level rows alone, with no sub page among them', async () => {
+    // Precondition: the unfiltered list holds a sub page.
+    expect(await titlesOf({})).toContain('Testwort Almanac Page');
+
+    expect(await titlesOf({ kind: 'article', topLevel: true })).toEqual([
+      'Testwort Almanac Guide',
+      'Testwort Hidden Guide',
+      'Testwort Keeper Guide',
+    ]);
+  });
+
+  it('orders by position, a row with none last, as readers meet them', async () => {
+    await sql`update help_articles set position = 2 where title = 'Testwort Keeper Guide'`;
+    await sql`update help_articles set position = 1 where title = 'Testwort Hidden Guide'`;
+
+    // Precondition: A to Z puts them another way.
+    expect(await titlesOf({ kind: 'article', topLevel: true })).toEqual([
+      'Testwort Almanac Guide',
+      'Testwort Hidden Guide',
+      'Testwort Keeper Guide',
+    ]);
+    expect(await titlesOf({ kind: 'article', topLevel: true, order: 'position' })).toEqual([
+      'Testwort Hidden Guide',
+      'Testwort Keeper Guide',
+      'Testwort Almanac Guide',
+    ]);
+  });
+
   it('pages through the cursor helper, two rows at a time, to the list read whole', async () => {
     const whole = await titlesOf({});
     const walked: string[] = [];

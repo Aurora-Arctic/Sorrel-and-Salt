@@ -36,6 +36,8 @@ export interface World {
   local: { name: string; ingredientId: string };
   spell: { id: string; title: string };
   draftId: string;
+  /** A shipped help guide, which the keeper's edit page opens. */
+  helpArticleId: string;
   /** Who the test signs in as, made by `signIn`. */
   userId?: string;
   email?: string;
@@ -97,6 +99,10 @@ export async function seedWorld(page: Page): Promise<World> {
       'draft',
     );
 
+    const [guide] = await sql<{ id: string }[]>`
+      select id from help_articles
+      where kind = 'article' and slug = 'getting-started' and deleted_at is null`;
+
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${steward}, true)`;
       await tx`
@@ -122,6 +128,7 @@ export async function seedWorld(page: Page): Promise<World> {
       local: { name: 'Fixture Axewort', ingredientId: local.ingredientId },
       spell: { id: spellId, title: 'Fixture Working' },
       draftId,
+      helpArticleId: guide.id,
       tokens: {
         invite: randomBytes(32).toString('base64url'),
         card: randomBytes(32).toString('base64url'),
@@ -327,6 +334,8 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/keepers/documents': () => '/keepers/documents',
   '/keepers/documents/[key]': () => '/keepers/documents/terms',
   '/keepers/help': () => '/keepers/help',
+  '/keepers/help/new': () => '/keepers/help/new',
+  '/keepers/help/[id]': (w) => `/keepers/help/${w.helpArticleId}`,
 };
 
 const dialogNamed = (page: Page, name: string | RegExp) => page.getByRole('dialog', { name });
