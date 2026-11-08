@@ -3,6 +3,7 @@ import { HELP_GLOSSARY_CARD } from '../../lib/help-pages';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
 import HelpSearchForm from '../HelpSearchForm';
 import { BackChevron } from '../IngredientEntry/back-chevron';
+import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import { SkeletonWords } from '../Skeleton/text';
@@ -32,11 +33,14 @@ export const HelpIndexSkeleton = ({
   heading = 'Help',
   lede,
   menu,
+  back,
 }: {
   heading?: string;
   lede?: string;
   /** The jump menu and the questions it leads to: the page draws both when it has questions, which the public index always does. */
   menu?: boolean;
+  /** The title of the index the page links back to, drawn as the page draws it. */
+  back?: string;
 }): ReactElement => (
   <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
     <PageHeader title={heading} />
@@ -55,6 +59,7 @@ export const HelpIndexSkeleton = ({
     ) : (
       <HelpSearchForm />
     )}
+    {back && <HelpBackLinkSkeleton>Back to {back}</HelpBackLinkSkeleton>}
     {menu && (
       <PageNav
         label="On This Page"

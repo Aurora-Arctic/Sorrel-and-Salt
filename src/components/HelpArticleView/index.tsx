@@ -8,6 +8,7 @@ import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
+import { HelpBackLink } from './back-link';
 import type { HelpArticleViewProps } from './types';
 import './index.scss';
 
@@ -45,14 +46,7 @@ const HelpArticleView = ({
       <div className="help-article__head">
         <PageHeader title={heading} />
         <HelpSearchForm />
-        {parent && (
-          <p className="help-article__parent">
-            <PendingLink className="back-link" href={parent.href as Route}>
-              <BackChevron />
-              Back to {parent.title}
-            </PendingLink>
-          </p>
-        )}
+        {parent && <HelpBackLink href={parent.href} title={parent.title} />}
         <h2>{title}</h2>
       </div>
       {withMenu && <PageNav label="On This Page" entries={entries} collapsible />}

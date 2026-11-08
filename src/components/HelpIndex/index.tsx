@@ -7,6 +7,7 @@ import { renderMarkdown } from '../DocumentPage/markdown';
 import HashTarget from '../HashTarget';
 import HelpSearchForm from '../HelpSearchForm';
 import { BackChevron } from '../IngredientEntry/back-chevron';
+import { HelpBackLink } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
@@ -28,6 +29,7 @@ const HelpIndex = ({
   lede,
   quickLinks = [],
   terms = [],
+  back,
 }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
   const reserved = [GUIDES_ID, FAQ_ID, ...faq.map((entry) => entry.slug)];
@@ -67,6 +69,7 @@ const HelpIndex = ({
       ) : (
         <HelpSearchForm />
       )}
+      {back && <HelpBackLink href={back.href} title={back.title} />}
       {menu.length > 0 && <PageNav label="On This Page" entries={menu} />}
       <section id={GUIDES_ID} className="help-index__section" aria-label="Guides">
         <h2>Guides</h2>

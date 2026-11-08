@@ -5,7 +5,7 @@ import PageFrame from '@/components/PageFrame';
 // The staff help pages share their layout's frame, so their skeletons sit beside it.
 export const StaffHelpSkeleton = () => (
   <PageFrame as="div">
-    <HelpIndexSkeleton heading="Staff Help" />
+    <HelpIndexSkeleton heading="Staff Help" back="Help" />
   </PageFrame>
 );
 export const StaffHelpArticleSkeleton = () => (

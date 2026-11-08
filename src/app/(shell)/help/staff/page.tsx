@@ -19,6 +19,7 @@ export default async function Page() {
     <HelpIndex
       terms={terms}
       heading="Staff Help"
+      back={{ href: '/help', title: 'Help' }}
       faq={staff.filter((row) => row.kind === 'faq')}
       articles={staff.filter((row) => row.kind === 'article' && !row.parentSlug).map(linkTo)}
     />

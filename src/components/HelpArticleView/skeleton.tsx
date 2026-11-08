@@ -3,6 +3,7 @@ import HelpSearchForm from '../HelpSearchForm';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
+import { HelpBackLinkSkeleton } from './back-link';
 import './index.scss';
 
 /** A guide's step at the foot, its label real and its page's title to come; a span, as a skeleton links nowhere. */
@@ -39,12 +40,9 @@ export const HelpArticleSkeleton = ({
     <div className="help-article__head">
       <PageHeader title={heading} />
       <HelpSearchForm />
-      <p className="help-article__parent">
-        <span className="back-link">
-          <BackChevron />
-          {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
-        </span>
-      </p>
+      <HelpBackLinkSkeleton>
+        {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
+      </HelpBackLinkSkeleton>
       <h2>
         <SkeletonWords count={3} />
       </h2>

@@ -19,4 +19,6 @@ export interface HelpIndexProps {
   quickLinks?: HelpSubpageLink[];
   /** The glossary, which the answers' `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */
   terms?: HelpTermSource[];
+  /** The index above this one, linked under the search box as a guide links back: the staff index's way to Help. */
+  back?: { href: string; title: string };
 }

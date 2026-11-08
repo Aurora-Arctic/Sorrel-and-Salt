@@ -21,6 +21,12 @@
     margin-block-start: space(6);
   }
 
+  // Under a back link the link's own bottom margin is the step to Guides, as it is to a guide's title: a section is a
+  // flex stack, so its heading's top margin would add to it.
+  .help-article__parent + &__section > h2:first-child {
+    margin-block-start: 0;
+  }
+
   // The lede, the search box and the quick links, on the page itself.
   &__band {
     max-width: $measure;
