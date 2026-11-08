@@ -49,3 +49,149 @@
 .help-widget__note {
   margin-top: space(3);
 }
+
+// The invitation refusals widget (claude-docs/components/help-pages.md, "Widgets").
+.help-widget__finder {
+  margin-bottom: space(3);
+}
+
+.help-widget__answer {
+  margin-bottom: space(3);
+}
+
+.help-widget__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(1) space(4);
+  margin: space(3) 0 0;
+
+  > div {
+    display: contents;
+  }
+
+  dt {
+    color: $text-muted;
+    font-size: type-size('small');
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.help-widget__action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(3);
+  align-items: center;
+  margin: space(3) 0 0;
+
+  .help-widget__explained {
+    margin: 0;
+  }
+}
+
+// An outline in the tone's ink on the card, so four tones never read as the site's filled status badges.
+.help-widget__who {
+  display: inline-flex;
+  align-items: center;
+  @include badge-padding('default');
+  border: 1px solid currentcolor;
+  border-radius: radius('sharp');
+  font-size: type-size('caption');
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+.help-widget__who--you {
+  color: $accent;
+}
+
+.help-widget__who--sender {
+  color: $warning;
+}
+
+.help-widget__who--keeper {
+  color: $secondary;
+}
+
+.help-widget__who--none {
+  border-color: $hairline;
+  color: $text-muted;
+}
+
+.badge.help-widget__card {
+  border-style: dashed;
+  vertical-align: 1px;
+}
+
+.help-widget__disclosure {
+  margin-top: space(3);
+
+  > summary {
+    @include field-box;
+    display: flex;
+    gap: space(2);
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover {
+      border-color: $text-primary;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &[open] > summary {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+}
+
+.help-widget__chevron {
+  @include disclosure-chevron('.help-widget__disclosure[open]');
+}
+
+.help-widget__disclosure > .help-widget__every {
+  margin: 0;
+  padding: space(2) space(3);
+  border: 1px solid $text-muted;
+  border-top: 0;
+  border-radius: 0 0 radius('control') radius('control');
+  list-style: none;
+
+  > li {
+    margin: 0;
+    padding: space(2) 0;
+    border-top: 1px solid $hairline;
+
+    &::before {
+      content: none;
+    }
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+}
+
+.help-widget__fix {
+  display: block;
+  margin-top: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+
+  .help-widget__who {
+    margin-inline-end: space(1);
+  }
+}

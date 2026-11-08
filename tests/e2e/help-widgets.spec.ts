@@ -66,14 +66,23 @@ test('the unit converter converts within a dimension and shows the refusal acros
   await assertNoSidewaysScroll(page);
 });
 
-test('the invitation refusals list both kinds of refusal', async ({ page }) => {
+test('the invitation refusals find a half-remembered message and open the full list', async ({
+  page,
+}) => {
   await page.goto(`/help/${ARTICLES['invitation-refusals']}`);
 
   await expect(page.getByText('::widget[invitation-refusals]')).toHaveCount(0);
-  for (const list of await page.locator('ul[aria-labelledby]').all()) {
-    await expect(list.getByRole('listitem').first()).toBeVisible();
-  }
-  await expect(page.locator('ul[aria-labelledby]')).toHaveCount(2);
+  const picker = page.getByRole('combobox', { name: 'The Message You Saw' });
+  await picker.fill('withdrawn card');
+  // The component tests hold which message ranks first; here the pick has to reach the answer.
+  const best = page.getByRole('option').first();
+  const message = (await best.textContent()) ?? '';
+  await best.click();
+  await expect(page.getByRole('status', { name: 'What It Means' })).toContainText(message);
+
+  await page.getByText('Every Message the Page Can Give').click();
+  const every = page.getByRole('list', { name: 'Every Message the Page Can Give' });
+  await expect(every.getByRole('listitem').first()).toBeVisible();
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
