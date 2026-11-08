@@ -50,8 +50,23 @@ export type HelpListing = 'shown' | 'hidden' | 'all';
 export interface HelpKeeperFilter {
   /** Shown rows, hidden rows, or both, by each row's own flag: a shown child of a hidden parent lists as shown. */
   listing?: HelpListing | null;
-  /** Words the title contains, in any case. */
+  /** Words the title or the body contains, in any case. */
   query?: string | null;
   kind?: HelpArticleKind | null;
   audience?: HelpAudience | null;
+  /** Top-level rows alone: the guides, with no sub page among them. */
+  topLevel?: boolean | null;
+  /** A to Z by title, the default, or in position order, as readers meet them. */
+  order?: 'title' | 'position' | null;
+}
+
+/** What a title change would leave pointing at the old address, read before the save is committed. */
+export interface HelpRenameEffects {
+  /** The address the row holds now, and the one the new title gives it; the same when the slug does not move. */
+  oldPath: string;
+  newPath: string;
+  /** Every other live row whose body holds the old address or, for a term, marks the old title. */
+  articles: HelpArticle[];
+  /** The front page's quick link titles that read the old slug, which drop out once it moves. */
+  quickLinks: string[];
 }

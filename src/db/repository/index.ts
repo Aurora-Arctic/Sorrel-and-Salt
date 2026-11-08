@@ -206,6 +206,7 @@ export {
   findHelpArticleHoldingSlug,
   findHelpArticleIndexPage,
   findHelpArticleKeeperPage,
+  findHelpArticlesWhoseBodyHolds,
   findHelpArticleSearchPage,
   findHelpArticleStaffPage,
   findHelpFaqPage,

@@ -567,6 +567,21 @@ enum HelpListing {
 }
 
 """
+What a title change would leave pointing at a help row’s old address; nothing redirects one.
+"""
+type HelpRenameEffects {
+  """
+  Every other live row whose body holds the old address or, for a term, marks the old title.
+  """
+  articles: [HelpArticle!]!
+  newPath: String!
+  oldPath: String!
+
+  """The help front page’s quick link titles that read the old slug."""
+  quickLinks: [String!]!
+}
+
+"""
 A curated deity or category, by id, and how many entries it would list.
 """
 type IdFacetCount {
@@ -1862,6 +1877,11 @@ type Query {
 
   """The public glossary terms, A to Z."""
   helpGlossary(after: String, before: String, first: Int, last: Int): QueryHelpGlossaryConnection!
+
+  """
+  What saving `title` on the row would leave pointing at its old address, read before the save.
+  """
+  helpRenameEffects(id: ID!, title: String!): HelpRenameEffects!
 
   """
   The rows the reader’s audience reaches that `query` finds, best first; a blank query finds none.

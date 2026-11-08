@@ -17,6 +17,7 @@ export {
   readStaffHelpArticle,
   searchHelp,
 } from './services/help-reads';
+export { readHelpRenameEffects } from './services/help-rename';
 export { helpChildrenByParent } from './loaders/help-children';
 export * from './graphql/help';
 export type {
@@ -28,4 +29,5 @@ export type {
   HelpArticleKind,
   HelpKeeperFilter,
   HelpListing,
+  HelpRenameEffects,
 } from './types';

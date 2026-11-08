@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   helpArticleKind,
@@ -95,7 +95,7 @@ export function findHelpArticleStaffPage(
   return findPage(helpArticles, A_TO_Z, page, readable(reach));
 }
 
-/** One page of the live rows of every kind and audience, shown and hidden, that `filter` admits, A to Z: the keeper's list. */
+/** One page of the live rows of every kind and audience, shown and hidden, that `filter` admits, A to Z or in position order: the keeper's list. */
 export function findHelpArticleKeeperPage(
   filter: HelpKeeperFilter,
   page: PageRequest,
@@ -104,15 +104,27 @@ export function findHelpArticleKeeperPage(
   const query = filter.query?.trim() ?? '';
   return findPage(
     helpArticles,
-    A_TO_Z,
+    filter.order === 'position' ? BY_POSITION : A_TO_Z,
     page,
     and(
       listing === 'all' ? undefined : eq(helpArticles.shown, listing === 'shown'),
       filter.kind ? eq(helpArticles.kind, filter.kind) : undefined,
       filter.audience ? eq(helpArticles.audience, filter.audience) : undefined,
-      query === '' ? undefined : containsText(helpArticles.title, query),
+      filter.topLevel ? isNull(helpArticles.parentId) : undefined,
+      query === ''
+        ? undefined
+        : or(containsText(helpArticles.title, query), containsText(helpArticles.body, query)),
     ),
   );
+}
+
+/** Every live row of any kind, audience or flag whose body contains `text`, in any case, A to Z: what a rename would leave pointing at an old address. */
+export async function findHelpArticlesWhoseBodyHolds(text: string): Promise<HelpArticleRow[]> {
+  const rows = await selectFrom(
+    helpArticles,
+    and(notSoftDeleted(helpArticles), containsText(helpArticles.body, text)),
+  );
+  return rows.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 /** The live article under `slug` among the audiences `reach` admits, or `undefined`; a slug is unique within a kind, so a page lookup names the kind. */

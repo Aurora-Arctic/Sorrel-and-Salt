@@ -16,7 +16,8 @@ import {
   readStaffHelpArticle,
   searchHelp,
 } from '../services/help-reads';
-import type { HelpArticle } from '../types';
+import { readHelpRenameEffects } from '../services/help-rename';
+import type { HelpArticle, HelpRenameEffects } from '../types';
 
 const HelpArticleKindEnum = builder.enumType('HelpArticleKind', {
   description: 'A question and answer, a guide, or a glossary term.',
@@ -56,6 +57,25 @@ HelpArticleRef.implement({
       type: [HelpArticleRef],
       description: 'The live children the reader’s audience reaches, in position order.',
       resolve: (article, _args, context) => context.loaders.helpChildrenByParent.load(article.id),
+    }),
+  }),
+});
+
+const HelpRenameEffectsRef = builder.objectRef<HelpRenameEffects>('HelpRenameEffects').implement({
+  description:
+    'What a title change would leave pointing at a help row’s old address; nothing redirects one.',
+  fields: (t) => ({
+    oldPath: t.exposeString('oldPath'),
+    newPath: t.exposeString('newPath'),
+    // Bounded by the help rows, which keepers write by hand.
+    articles: t.field({
+      type: [HelpArticleRef],
+      description:
+        'Every other live row whose body holds the old address or, for a term, marks the old title.',
+      resolve: (effects) => effects.articles,
+    }),
+    quickLinks: t.exposeStringList('quickLinks', {
+      description: 'The help front page’s quick link titles that read the old slug.',
     }),
   }),
 });
@@ -165,6 +185,18 @@ builder.queryField('keeperHelpArticles', (t) =>
     authScopes: { admin: true },
     resolve: (_query, { listing, query, kind, audience }, page, context) =>
       listKeeperHelpArticles(sessionOf(context), { listing, query, kind, audience }, page),
+  }),
+);
+
+builder.queryField('helpRenameEffects', (t) =>
+  t.field({
+    type: HelpRenameEffectsRef,
+    description:
+      'What saving `title` on the row would leave pointing at its old address, read before the save.',
+    args: { id: t.arg.id({ required: true }), title: t.arg.string({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { id, title }, context) =>
+      readHelpRenameEffects(sessionOf(context), id, title),
   }),
 );
 
