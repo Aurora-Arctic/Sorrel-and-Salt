@@ -55,12 +55,16 @@ test('the unit converter converts within a dimension and shows the refusal acros
   await expect(page.getByText('::widget[unit-converter]')).toHaveCount(0);
 
   await page.getByLabel('Amount', { exact: true }).fill('2');
-  await page.getByLabel('From', { exact: true }).selectOption('kg');
-  await page.getByLabel('To', { exact: true }).selectOption('g');
+  await page.getByRole('combobox', { name: 'From', exact: true }).click();
+  await page.getByRole('option', { name: 'kg', exact: true }).click();
+  await page.getByRole('combobox', { name: 'To', exact: true }).click();
+  await page.getByRole('option', { name: 'g', exact: true }).click();
   await expect(result).toContainText('2000');
 
-  await page.getByLabel('To', { exact: true }).selectOption('ml');
-  await expect(result).toHaveText(CONVERSION_REFUSALS.dimension);
+  await page.getByRole('combobox', { name: 'To', exact: true }).click();
+  await page.getByRole('option', { name: 'ml', exact: true }).click();
+  await expect(result).toContainText(CONVERSION_REFUSALS.dimension);
+  await expect(result).not.toContainText('NaN');
 
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
