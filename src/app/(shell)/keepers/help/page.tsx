@@ -14,6 +14,7 @@ import type {
 } from '../../../../components/HelpOutline/types';
 import PageHeader from '../../../../components/PageHeader';
 import { helpPath, keeperHelpEditPath } from '../../../../lib/help-paths';
+import { byAudience } from '../../../../lib/help-audience';
 import { listHref, pagerHrefs } from '../../../../lib/list-href';
 import { readPageCursors } from '../../../../lib/numbered-page';
 import { allPages, resolvePage } from '../../../../lib/pagination';
@@ -124,13 +125,16 @@ export default async function KeepersHelpPage({
   const wants = (kind: HelpArticle['kind']) => filter.kind === '' || filter.kind === kind;
 
   // Every guide, whatever the filter, numbers the guides, names a search hit's guide and is what Reorder Mode moves.
-  const [everyGuide, guides, articles, faq, terms] = await Promise.all([
+  const [allGuides, someGuides, articles, faq, terms] = await Promise.all([
     readAll(session, 'article', '', 'all', true),
     wants('article') ? readAll(session, 'article', audience, shown, true) : [],
     wants('article') ? readAll(session, 'article', audience, shown, false) : [],
     wants('faq') ? readAll(session, 'faq', audience, shown, false) : [],
     wants('term') ? readAll(session, 'term', audience, shown, false) : [],
   ]);
+  // The bar lists the guides by audience, then by position, as a reorder places them.
+  const everyGuide = byAudience(allGuides);
+  const guides = byAudience(someGuides);
   const place = new Map(everyGuide.map((guide, at) => [guide.id, at + 1]));
   const guideTitle = new Map(everyGuide.map((guide) => [guide.id, guide.title]));
   const subPageCount = new Map<string, number>();

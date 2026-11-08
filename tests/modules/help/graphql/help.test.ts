@@ -629,11 +629,11 @@ describe('ordering the guides', () => {
       await sql`
         select id from help_articles
         where kind = 'article' and parent_id is null and deleted_at is null
-        order by position nulls last, title`
+        order by audience, position nulls last, title`
     ).map((row) => row.id as string);
 
-  it('places every top-level guide as a keeper, answering the new positions', async () => {
-    const ids = (await guideIds()).reverse();
+  it('places every top-level guide as a keeper, by audience, answering the new positions', async () => {
+    const ids = await guideIds();
     expect(ids.length).toBe(3);
 
     const result = await run<{ orderHelpGuides: { id: string; position: number }[] }>(
@@ -652,9 +652,7 @@ describe('ordering the guides', () => {
     const before = await guideIds();
     expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
 
-    expect(codeOf(await run(asUser(F), ORDER_GUIDES, { ids: [...before].reverse() }))).toBe(
-      'FORBIDDEN',
-    );
+    expect(codeOf(await run(asUser(F), ORDER_GUIDES, { ids: before }))).toBe('FORBIDDEN');
     expect(await guideIds()).toEqual(before);
   });
 

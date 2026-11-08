@@ -12,8 +12,9 @@ import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../suppor
 import { server } from '../../support/msw/server';
 import { moveByKeyboard } from '../../support/sortable';
 
-// The keepers' Guides bar: the guides at rest under their audience's run, and Reorder Mode, where every live guide
-// is a row to move and Save Order writes the whole order once (claude-docs/components/help-outline.md).
+// The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each, and Reorder
+// Mode, where every live guide is a row to move among its own audience's and Save Order writes the whole order once
+// (claude-docs/components/help-outline.md).
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -31,13 +32,13 @@ const entry = (
   shown = true,
 ): HelpOutlineOrderGuide => ({ id, title, audience, shown });
 
-// Every live guide in order: a public one, a hidden public one the filter leaves out of the bar, a staff one, and a
-// public one after it, so the bar's runs read Public, Staff, Public.
+// Every live guide in order: three public ones, the middle one hidden and left out of the bar by the filter, then a
+// staff one.
 const ORDER = [
   entry('g1', 'Testwort Basics', 'public'),
   entry('g2', 'Testwort Shy Guide', 'public', false),
-  entry('g3', 'Testwort Queue Notes', 'staff'),
-  entry('g4', 'Testwort Roots', 'public'),
+  entry('g3', 'Testwort Roots', 'public'),
+  entry('g4', 'Testwort Queue Notes', 'staff'),
 ];
 
 const guide = (at: number): HelpOutlineGuide => ({
@@ -82,22 +83,49 @@ const grips = () => nav().getAllByRole('button', { name: /^Move / });
 const gripNames = () => grips().map((grip) => grip.getAttribute('aria-label'));
 const reorder = () => fireEvent.click(nav().getByRole('button', { name: 'Reorder' }));
 const saveOrder = () => nav().getByRole('button', { name: /Save Order|Saving Order/ });
+const audienceLists = () => nav().getAllByRole('list', { name: /^(Public|Staff|Keeper)$/ });
+const gripsIn = (list: HTMLElement) =>
+  within(list)
+    .getAllByRole('button', { name: /^Move / })
+    .map((grip) => grip.getAttribute('aria-label'));
 
 describe('HelpGuidesBar at rest', () => {
-  it('lists the guides in order under a heading for each run of one audience', () => {
+  it('lists the guides in order under a heading for each audience', () => {
     bar();
 
-    const runs = nav().getAllByRole('list', { name: /^(Public|Staff|Keeper)$/ });
-    expect(runs).toHaveLength(3);
+    const runs = audienceLists();
+    expect(runs).toHaveLength(2);
     expect(runs[0]).toHaveAccessibleName('Public');
     expect(runs[1]).toHaveAccessibleName('Staff');
-    expect(runs[2]).toHaveAccessibleName('Public');
     const titles = runs.map((run) =>
       within(run)
         .getAllByRole('link')
         .map((link) => link.textContent),
     );
-    expect(titles).toEqual([['Testwort Basics'], ['Testwort Queue Notes'], ['Testwort Roots']]);
+    expect(titles).toEqual([['Testwort Basics', 'Testwort Roots'], ['Testwort Queue Notes']]);
+  });
+
+  it('names each audience once, Public, then Staff, then Keeper, whatever order the guides come in', () => {
+    const keeper: HelpOutlineGuide = {
+      ...guide(0),
+      id: 'k1',
+      title: 'Testwort Ledger',
+      audience: 'keeper',
+      current: false,
+    };
+    bar(
+      [keeper, guide(3), guide(0)],
+      [ORDER[0], ORDER[3], entry('k1', 'Testwort Ledger', 'keeper')],
+    );
+
+    const runs = audienceLists();
+    expect(runs).toHaveLength(3);
+    expect(runs.map((run) => within(run).getByRole('link').textContent)).toEqual([
+      'Testwort Basics',
+      'Testwort Queue Notes',
+      'Testwort Ledger',
+    ]);
+    expect(runs[2]).toHaveAccessibleName('Keeper');
   });
 
   it('carries no position, count or audience badge on a guide’s link', () => {
@@ -138,31 +166,50 @@ describe('HelpGuidesBar at rest', () => {
 });
 
 describe('HelpGuidesBar in Reorder Mode', () => {
-  it('lists every live guide to move, the ones the filter leaves out among them, with no links', () => {
+  it('lists every live guide to move under its audience, the ones the filter leaves out among them, with no links', () => {
     bar();
 
     reorder();
 
-    expect(gripNames()).toEqual([
+    const [publicGuides, staffGuides] = audienceLists();
+    expect(publicGuides).toHaveAccessibleName('Public');
+    expect(gripsIn(publicGuides)).toEqual([
       'Move Testwort Basics',
       'Move Testwort Shy Guide',
-      'Move Testwort Queue Notes',
       'Move Testwort Roots',
     ]);
+    expect(staffGuides).toHaveAccessibleName('Staff');
+    expect(gripsIn(staffGuides)).toEqual(['Move Testwort Queue Notes']);
     expect(nav().queryByRole('link', { name: /Testwort/ })).toBeNull();
     expect(nav().queryByRole('link', { name: 'FAQ' })).toBeNull();
     expect(saveOrder()).toBeDisabled();
     expect(document.activeElement).toBe(grips()[0]);
   });
 
-  it('shows each row’s place and audience in the mode', () => {
+  it('shows each row’s place in the whole order in the mode', () => {
     bar();
     reorder();
 
-    const row = grips()[2].closest('li');
-    expect(row).not.toBeNull();
-    expect(row).toHaveTextContent(/^3\./);
-    expect(row?.querySelector('.badge')).not.toBeNull();
+    expect(grips()[2].closest('li')).toHaveTextContent(/^3\./);
+    expect(grips()[3].closest('li')).toHaveTextContent(/^4\./);
+  });
+
+  it('moves a guide by keyboard only among its own audience’s guides', async () => {
+    layOutBarRows();
+    bar();
+    reorder();
+
+    await moveByKeyboard(grips()[2], 'ArrowDown');
+    expect(gripsIn(audienceLists()[0])[2]).toBe('Move Testwort Roots');
+    expect(saveOrder()).toBeDisabled();
+
+    await moveByKeyboard(grips()[0], 'End');
+    expect(gripsIn(audienceLists()[0])).toEqual([
+      'Move Testwort Shy Guide',
+      'Move Testwort Roots',
+      'Move Testwort Basics',
+    ]);
+    expect(gripsIn(audienceLists()[1])).toEqual(['Move Testwort Queue Notes']);
   });
 
   it('saves the moved order in one write, then leaves the mode and refreshes', async () => {
@@ -208,7 +255,7 @@ describe('HelpGuidesBar in Reorder Mode', () => {
 
     expect(saveOrder()).toHaveAttribute('aria-busy', 'true');
     expect(saveOrder()).toHaveAccessibleName('Saving Order');
-    expect(nav().getByRole('list', { name: 'Guides' })).toHaveAttribute('aria-busy', 'true');
+    for (const list of audienceLists()) expect(list).toHaveAttribute('aria-busy', 'true');
     for (const grip of grips()) expect(grip).toBeDisabled();
     await act(async () => finish());
   });

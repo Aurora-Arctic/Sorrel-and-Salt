@@ -35,7 +35,7 @@ async function expectRefused(promise: Promise<unknown>) {
   expect((error as ValidationError).message).not.toBe(new ValidationError([]).message);
 }
 
-/** Three live top-level guides, the middle one hidden, placed 1, 2, 3, written by B so a keeper's write shows in updated_by. */
+/** Three live top-level guides, two public (the second hidden) and a keeper one, placed 1, 2, 3, written by B so a keeper's write shows in updated_by. */
 async function threeGuides() {
   const first = await insertHelpArticle(sql, { position: 1 }, B.id);
   const hidden = await insertHelpArticle(sql, { position: 2, shown: false }, B.id);
@@ -54,14 +54,14 @@ describe('orderHelpGuides', () => {
   it('places every live top-level guide 1, 2, 3 in the order given, hidden ones included, as the keeper', async () => {
     const { first, hidden, last } = await threeGuides();
 
-    const placed = await orderHelpGuides(asUser(E), [last, first, hidden]);
+    const placed = await orderHelpGuides(asUser(E), [hidden, first, last]);
 
-    expect(placed.map((guide) => guide.id)).toEqual([last, first, hidden]);
+    expect(placed.map((guide) => guide.id)).toEqual([hidden, first, last]);
     const places = await placesOf([first, hidden, last]);
-    expect(places.get(last)?.position).toBe(1);
+    expect(places.get(hidden)?.position).toBe(1);
     expect(places.get(first)?.position).toBe(2);
-    expect(places.get(hidden)?.position).toBe(3);
-    for (const id of [first, hidden, last]) expect(places.get(id)?.updated_by).toBe(E.id);
+    expect(places.get(last)?.position).toBe(3);
+    for (const id of [first, hidden]) expect(places.get(id)?.updated_by).toBe(E.id);
   });
 
   it('leaves sub pages, FAQ entries and soft-deleted guides where they were', async () => {
@@ -70,7 +70,7 @@ describe('orderHelpGuides', () => {
     const faq = await insertHelpArticle(sql, { kind: 'faq', position: 1 }, B.id);
     const gone = await insertHelpArticle(sql, { position: 4, deleted_at: new Date() }, B.id);
 
-    await orderHelpGuides(asUser(E), [hidden, last, first]);
+    await orderHelpGuides(asUser(E), [hidden, first, last]);
 
     const places = await placesOf([child, faq, gone]);
     for (const id of [child, faq, gone]) expect(places.get(id)?.updated_by).toBe(B.id);
@@ -112,6 +112,17 @@ describe('orderHelpGuides', () => {
       await expectRefused(orderHelpGuides(asUser(E), [first, hidden, 'not-an-id']));
     });
 
+    it('when it moves a guide out of its audience: Public, then Staff, then Keeper', async () => {
+      const { first, hidden, last } = await threeGuides();
+      const staff = await insertHelpArticle(sql, { position: 4, audience: 'staff' }, B.id);
+      await expectRefused(orderHelpGuides(asUser(E), [first, last, hidden, staff]));
+      await expectRefused(orderHelpGuides(asUser(E), [first, hidden, last, staff]));
+      const places = await placesOf([first, hidden, last, staff]);
+      expect([first, hidden, last, staff].map((id) => places.get(id)?.position)).toEqual([
+        1, 2, 3, 4,
+      ]);
+    });
+
     it('and writes nothing when refused', async () => {
       const { first, hidden, last } = await threeGuides();
       await orderHelpGuides(asUser(E), [first, hidden]).catch(() => undefined);
@@ -126,7 +137,7 @@ describe('orderHelpGuides', () => {
       expect(F.role).not.toBe('admin');
       expect(() => assertCurator(asUser(F))).not.toThrow();
 
-      await expect(orderHelpGuides(asUser(F), [last, hidden, first])).rejects.toThrow(Forbidden);
+      await expect(orderHelpGuides(asUser(F), [hidden, first, last])).rejects.toThrow(Forbidden);
       const places = await placesOf([first, hidden, last]);
       expect([first, hidden, last].map((id) => places.get(id)?.position)).toEqual([1, 2, 3]);
     });
@@ -135,7 +146,7 @@ describe('orderHelpGuides', () => {
       const { first, hidden, last } = await threeGuides();
       for (const user of [B, D]) {
         expect(user.role).not.toBe('admin');
-        await expect(orderHelpGuides(asUser(user), [last, hidden, first])).rejects.toThrow(
+        await expect(orderHelpGuides(asUser(user), [hidden, first, last])).rejects.toThrow(
           Forbidden,
         );
       }

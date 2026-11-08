@@ -9,6 +9,7 @@ import {
   withAudit,
 } from '@/db/repository';
 import type { AuditWriter, HelpArticleRow } from '@/db/repository';
+import { HELP_AUDIENCE_RANK } from '@/lib/help-audience';
 import { expireHelp } from '@/lib/help-cache';
 import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
 import type { Session } from '@/lib/session';
@@ -331,6 +332,15 @@ async function placeAll(
     const message = `List every ${name} once, and nothing else; the list has changed since it was read`;
     throw new ValidationError([{ path: ['ids'], message }], message);
   }
+  if (list === 'guides') {
+    const rankOf = new Map(live.map((row) => [row.id, HELP_AUDIENCE_RANK[row.audience]]));
+    const grouped = ids.every((id, at) => at === 0 || rankOf.get(ids[at - 1])! <= rankOf.get(id)!);
+    if (!grouped) {
+      const message =
+        'List the guides by audience, Public, then Staff, then Keeper; a guide moves only among guides of its own audience';
+      throw new ValidationError([{ path: ['ids'], message }], message);
+    }
+  }
   const rows = await withAudit(session, async (write) => {
     const placed: HelpArticleRow[] = [];
     for (const [index, id] of ids.entries()) {
@@ -344,10 +354,12 @@ async function placeAll(
 }
 
 /**
- * Places every live top-level guide, hidden ones included, 1, 2, 3… in the order given, in one write.
+ * Places every live top-level guide, hidden ones included, 1, 2, 3… in the order given, in one write, the list grouped
+ * by audience.
  *
  * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} refused at `ids`: the list is not every live top-level guide exactly once.
+ * @throws {ValidationError} refused at `ids`: the list is not every live top-level guide exactly once, or it
+ *   interleaves audiences rather than listing Public, then Staff, then Keeper.
  */
 export function orderHelpGuides(session: Session, ids: readonly string[]): Promise<HelpArticle[]> {
   return placeAll(session, 'guides', ids);

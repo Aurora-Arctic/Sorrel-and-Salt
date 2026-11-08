@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
+import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import { useAnnounce } from '../ClickFeedback/status-region';
@@ -14,11 +14,11 @@ import Notice from '../Notice';
 import HiddenEye from './eye';
 import HelpGuideSelect from './guide-select';
 import { HelpSortable, useHelpSortableRow } from './sortable';
-import type { HelpGuidesBarProps, HelpOutlineGuide, HelpOutlineOrderGuide } from './types';
+import type { HelpGuidesBarProps, HelpOutlineAudience, HelpOutlineOrderGuide } from './types';
 
-// The keepers' Guides bar: at rest the guides the filter admits, under a heading for each run of one audience; in
-// Reorder Mode every live guide, flat, to move by its grip, saved whole by Save Order
-// (claude-docs/components/help-outline.md, "The Guides bar").
+// The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each. At rest it
+// lists those the filter admits; in Reorder Mode every live guide, each moved by its grip among its own audience's
+// alone, saved whole by Save Order (claude-docs/components/help-outline.md, "The Guides bar").
 
 export const OrderHelpGuidesDocument = graphql(`
   mutation OrderHelpGuides($ids: [ID!]!) {
@@ -30,16 +30,14 @@ export const OrderHelpGuidesDocument = graphql(`
 
 const FAILED = 'Could not save the order. Your order is still here; try again or cancel.';
 
-/** Consecutive guides of one audience: a guide moved out of its audience's run starts a run of its own. */
-function runsOf(guides: readonly HelpOutlineGuide[]): HelpOutlineGuide[][] {
-  const runs: HelpOutlineGuide[][] = [];
-  for (const guide of guides) {
-    const last = runs[runs.length - 1];
-    if (last && last[0].audience === guide.audience) last.push(guide);
-    else runs.push([guide]);
-  }
-  return runs;
-}
+const AUDIENCES: readonly HelpOutlineAudience[] = ['public', 'staff', 'keeper'];
+
+/** The entries of each audience that has any, in the order given, Public first. */
+const byGroup = <Entry extends { audience: HelpOutlineAudience }>(entries: readonly Entry[]) =>
+  AUDIENCES.map((audience) => ({
+    audience,
+    entries: entries.filter((entry) => entry.audience === audience),
+  })).filter((group) => group.entries.length > 0);
 
 const ReorderRow = ({
   entry,
@@ -62,10 +60,11 @@ const ReorderRow = ({
       <span className={entry.shown ? 'help-outline__label' : 'help-outline__label is-hidden'}>
         {entry.title}
       </span>
-      <span className="help-outline__marks">
-        {!entry.shown && <HiddenEye />}
-        <span className="badge badge--muted">{HELP_AUDIENCE_LABELS[entry.audience]}</span>
-      </span>
+      {!entry.shown && (
+        <span className="help-outline__marks">
+          <HiddenEye />
+        </span>
+      )}
     </li>
   );
 };
@@ -82,14 +81,15 @@ const HelpGuidesBar = ({
   const id = useId();
   const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  const orderKey = order.map((entry) => entry.id).join(' ');
+  const grouped = byAudience(order).map((entry) => entry.id);
+  const orderKey = grouped.join(' ');
 
   // The order last saved: the page's until a save, then the saved one until the page's catches up.
-  const [base, setBase] = useState(() => order.map((entry) => entry.id));
+  const [base, setBase] = useState(grouped);
   const [seenKey, setSeenKey] = useState(orderKey);
   if (seenKey !== orderKey) {
     setSeenKey(orderKey);
-    setBase(order.map((entry) => entry.id));
+    setBase(grouped);
   }
   const [ids, setIds] = useState<string[]>(base);
   const [reordering, setReordering] = useState(false);
@@ -98,18 +98,33 @@ const HelpGuidesBar = ({
   const dirty = reordering && ids.join(' ') !== base.join(' ');
   const guard = useDiscardGuard(dirty);
 
-  const listRef = useRef<HTMLUListElement>(null);
+  const modeRef = useRef<HTMLDivElement>(null);
   const barButton = useRef<HTMLButtonElement>(null);
   const phoneButton = useRef<HTMLButtonElement>(null);
   const [focusBack, setFocusBack] = useState<'bar' | 'phone' | null>(null);
 
   useEffect(() => {
-    if (reordering) listRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    if (reordering)
+      modeRef.current?.querySelector<HTMLButtonElement>('.help-outline__grip')?.focus();
     else if (focusBack) (focusBack === 'phone' ? phoneButton : barButton).current?.focus();
   }, [reordering, focusBack]);
 
   const byId = new Map(order.map((entry) => [entry.id, entry]));
   const rows = ids.flatMap((key) => byId.get(key) ?? []);
+  const placeOf = new Map(ids.map((key, at) => [key, at + 1]));
+  /** Moves a guide within its audience's run of the whole order, leaving every other audience's as it is. */
+  const moveWithin = (audience: HelpOutlineAudience, from: number, to: number) =>
+    setIds((now) => {
+      const audienceOf = (key: string) => byId.get(key)?.audience;
+      const moved = arrayMove(
+        now.filter((key) => audienceOf(key) === audience),
+        from,
+        to,
+      );
+      return AUDIENCES.flatMap((each) =>
+        each === audience ? moved : now.filter((key) => audienceOf(key) === each),
+      );
+    });
 
   const open = (from: 'bar' | 'phone') => {
     setIds(base);
@@ -153,11 +168,13 @@ const HelpGuidesBar = ({
   const canReorder = order.length > 1;
 
   const choices = [
-    ...guides.map((guide) => ({
-      label: guide.title,
-      href: guide.href,
-      group: HELP_AUDIENCE_LABELS[guide.audience],
-    })),
+    ...byGroup(guides)
+      .flatMap(({ entries }) => entries)
+      .map((guide) => ({
+        label: guide.title,
+        href: guide.href,
+        group: HELP_AUDIENCE_LABELS[guide.audience],
+      })),
     ...others.map((other) => ({ label: other.label, href: other.href })),
   ];
   const current = [...guides, ...others].find((entry) => entry.current)?.href;
@@ -166,26 +183,41 @@ const HelpGuidesBar = ({
     <div className={reordering ? 'help-outline__side is-reordering' : 'help-outline__side'}>
       <nav className="help-outline__nav" aria-label="Help Outline">
         {reordering ? (
-          <div className="help-outline__mode">
+          <div className="help-outline__mode" ref={modeRef}>
             <div className="help-outline__heading">
               <p className="help-outline__group">Guides</p>
             </div>
-            <HelpSortable
-              ids={ids}
-              names={rows.map((entry) => entry.title)}
-              onMove={(from, to) => setIds((now) => arrayMove(now, from, to))}
-            >
-              <ul
-                ref={listRef}
-                className="help-outline__reorder"
-                aria-label="Guides"
-                aria-busy={saving || undefined}
-              >
-                {rows.map((entry, at) => (
-                  <ReorderRow key={entry.id} entry={entry} place={at + 1} disabled={saving} />
-                ))}
-              </ul>
-            </HelpSortable>
+            {byGroup(rows).map(({ audience, entries }) => (
+              <div key={audience} className="help-outline__run">
+                <p
+                  id={`${id}-mode-${audience}`}
+                  className="help-outline__group help-outline__group--sub"
+                >
+                  {HELP_AUDIENCE_LABELS[audience]}
+                </p>
+                {/* One sortable per audience, so neither a pointer nor a key carries a guide out of its own. */}
+                <HelpSortable
+                  ids={entries.map((entry) => entry.id)}
+                  names={entries.map((entry) => entry.title)}
+                  onMove={(from, to) => moveWithin(audience, from, to)}
+                >
+                  <ul
+                    className="help-outline__reorder"
+                    aria-labelledby={`${id}-mode-${audience}`}
+                    aria-busy={saving || undefined}
+                  >
+                    {entries.map((entry) => (
+                      <ReorderRow
+                        key={entry.id}
+                        entry={entry}
+                        place={placeOf.get(entry.id) ?? 0}
+                        disabled={saving}
+                      />
+                    ))}
+                  </ul>
+                </HelpSortable>
+              </div>
+            ))}
             {dirty && !failed && (
               <p className="help-outline__unsaved">The order is not saved yet.</p>
             )}
@@ -220,13 +252,16 @@ const HelpGuidesBar = ({
                 {canReorder && reorderButton('bar')}
               </div>
             )}
-            {runsOf(guides).map((run, at) => (
-              <div key={run[0].id} className="help-outline__run">
-                <p id={`${id}-run-${at}`} className="help-outline__group help-outline__group--sub">
-                  {HELP_AUDIENCE_LABELS[run[0].audience]}
+            {byGroup(guides).map(({ audience, entries }) => (
+              <div key={audience} className="help-outline__run">
+                <p
+                  id={`${id}-run-${audience}`}
+                  className="help-outline__group help-outline__group--sub"
+                >
+                  {HELP_AUDIENCE_LABELS[audience]}
                 </p>
-                <ul aria-labelledby={`${id}-run-${at}`}>
-                  {run.map((guide) => (
+                <ul aria-labelledby={`${id}-run-${audience}`}>
+                  {entries.map((guide) => (
                     <li key={guide.id}>
                       <PendingLink
                         href={guide.href as Route}
