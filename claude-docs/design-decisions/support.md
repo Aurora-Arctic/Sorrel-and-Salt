@@ -3428,9 +3428,10 @@ Decided by the owner on 2026-11-08.
   staff routes alike. The search's two arms hold the same predicate, so a
   hidden row's words neither answer nor stop the likeness fallback.
 - **The keeper sees hidden rows in two places only:** `keeperHelpArticles`,
-  every live row of every kind and audience, A to Z, narrowed by a listing
-  (`shown`, `hidden` or `all`, the default, by each row's own flag), words in
-  the title, a kind and an audience; and `readKeeperHelpArticle`, one row with
+  every live row of every kind and audience, A to Z or in position order,
+  narrowed by a listing (`shown`, `hidden` or `all`, the default, by each
+  row's own flag), words in the title or the body, a kind, an audience and
+  top-level rows alone; and `readKeeperHelpArticle`, one row with
   every live child in position order, for the editor. Both run under
   `assertSiteAdmin`. `setHelpArticleShown` writes the flag through
   `withAudit` and revalidates `help`, so a re-seed leaves a row a keeper hid.
@@ -3451,6 +3452,25 @@ Decided by the owner on 2026-11-08.
   save that names its children is checked on those, so it may narrow the parent
   in the save that releases a wider child. A child still takes its parent
   through `parentId` the other way.
+
+### Renaming a help row
+
+- **Nothing redirects an old help address.** A slug comes from the title, so
+  a new title moves the row's address, and every link to the old one answers 404.
+- **So the editor asks first.** Before a save whose title makes a new slug,
+  `readHelpRenameEffects(session, id, title)` (`assertSiteAdmin`) answers the old
+  and new address and what would still point at the old one:
+  - every other live row, shown or hidden, whose body holds the old address
+    as a whole address, not as the start of a longer slug;
+  - for a term, every body that marks it by its old title, in any case, or by
+    its slug;
+  - for a public article, the front page's quick links
+    (`HELP_QUICK_LINKS`) that read the old slug, which drop out once it moves.
+- **When anything is named**, the form lists it and saves only on Rename; the
+  keeper then fixes the links by hand. When nothing is, it saves at once.
+- **A parent move is not covered.** Moving a sub page to another guide, or
+  out of one, also moves its address, and the form does not ask before that
+  save.
 
 ### The help seed
 

@@ -489,7 +489,7 @@ An FAQ, a set of help articles on how the site is used, and a glossary of the si
 
 **Writing and reading.**
 
-- A keeper writes the rows at `/keepers/help` under `assertSiteAdmin` alone (a curator cannot), through `withAudit`, with a live preview of the Markdown (§9).
+- A keeper writes the rows at `/keepers/help` under `assertSiteAdmin` alone (a curator cannot), through `withAudit`, on a page of their own (`/keepers/help/new`, `/keepers/help/[id]`) whose body is the shared rich-text editor (§9).
 - Anyone reads the `public` rows, signed in or not, at `/help`, `/help/glossary`, `/help/[slug]` and `/help/[slug]/[child]`: public and indexable on the compendium's frame (MB.83), carrying no workspace data. The public finder takes no session, filters `audience = 'public'` in SQL and is cached under the tag `help`.
 - Site keepers and curators read the `staff` rows, and keepers alone the `keeper` rows, at `/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]`, under `src/app/(shell)/help/staff/`. These pages are dynamic, uncached and `noindex`, are not in `PUBLIC_ROUTES` or the sitemap, send a signed-out visitor to sign in, show a signed-in user who is neither the styled not-authorized page, and answer a curator asking for a `keeper` row with 404.
 - Search is `/help/search?q=…`, dynamic, uncached and `noindex`, over the `tsvector` column (§5), with a title trigram fallback for typos; a search box sits on `/help` and on every article page. It scopes by audience in SQL by the same rules. The Markdown goes through the standard sanitising renderer. The reads, their cache and their pagination are in (claude-docs/design/graphql.md, "Help articles").
