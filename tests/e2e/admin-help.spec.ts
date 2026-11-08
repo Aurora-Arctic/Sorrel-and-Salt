@@ -49,11 +49,12 @@ async function writeBody(page: Page, text: string): Promise<void> {
   await page.keyboard.type(text);
 }
 
+// The chip's radios are in its menu, out of the accessibility tree while it is shut, so the hidden ones are counted too.
 const audience = (page: Page, name: string) =>
   page
     .getByRole('main')
     .getByRole('group', { name: /^Audience/ })
-    .getByRole('radio', { name });
+    .getByRole('radio', { name, includeHidden: true });
 
 /** Leaves the form for the outline it returns to. */
 const expectBackAtOutline = (page: Page) => expect(page).toHaveURL(/\/keepers\/help(\?|$)/);
@@ -104,7 +105,12 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   );
   await title(page).fill(CHILD);
   await writeBody(page, 'A sub page the test writes.');
-  // The segment's native radio is drawn invisible, so its label is pressed, as a keeper presses it.
+  // The chip opens its menu, and the menu's native radio is drawn invisible, so its label is pressed, as a keeper presses it.
+  await page
+    .getByRole('main')
+    .getByRole('group', { name: /^Audience/ })
+    .locator('summary')
+    .click();
   await audience(page, 'Staff').locator('xpath=ancestor::label[1]').click();
   await expect(audience(page, 'Staff')).toBeChecked();
   await page.getByRole('button', { name: 'Save Article' }).click();
