@@ -511,7 +511,8 @@ const HelpArticleForm = ({
             noun={noun}
             dirty={isDirty}
             submitting={isSubmitting || save.isPending}
-            onCancel={() => guard.request(() => navigate(returnHref))}
+            // The navigation provider's leave guard asks this form's question; asking here as well would ask again after Discard Changes.
+            onCancel={() => navigate(returnHref)}
             onDelete={
               article
                 ? () => {

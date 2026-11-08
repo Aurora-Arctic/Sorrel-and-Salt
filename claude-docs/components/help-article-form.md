@@ -30,7 +30,7 @@
   - Choosing its own guide again puts a sub page back at its saved place.
   - Leaving a guide makes the row the last guide (the guide count plus one).
 - **Sub Pages** (`sub-pages-field.tsx`) are chips in their order, with an Add Sub Page combobox over `candidates`. It leaves out the pages already chosen and those wider than the row's audience. A pick that sits in another guide says, under the chips, that it leaves that guide and which place it takes here when the form is saved. A save sends `childIds`, the chips in order, and the service moves and releases sub pages in the same transaction (`claude-docs/design-decisions/support.md`, "Showing and hiding, and a parent's children").
-- **Audience** offers Public, Staff and Keeper. An option is held when it is wider than the parent's, or narrower than the narrowest chosen sub page's.
+- **Audience** offers Public, Staff and Keeper. An option is held when it is wider than the parent's, or narrower than the widest chosen sub page's, as a sub page is as wide as its guide or narrower.
 - **Position.**
   - A guide or an FAQ entry has a text field with the numeric keyboard. It takes a whole number, 0 or more; anything else is refused in the form, before a request. Its note says where a guide stands, such as "1 of 3 guides".
   - A sub page has no field, as its place is the guide's to set. It shows "2 of 4 in Guide", with a Reorder in the Guide link to the outline when the guide is its saved one.

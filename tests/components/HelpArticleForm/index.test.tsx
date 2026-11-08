@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import type { ChangeEvent } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -208,7 +208,7 @@ const queryTextbox = (label: string) => screen.queryByLabelText(new RegExp(`^${l
 const combobox = (label: string) => byLabel(label, '[role="combobox"]');
 const queryCombobox = (label: string) =>
   screen.queryByRole('combobox', { name: new RegExp(`^${label}\\b`) });
-const group = (name: string) => screen.getByRole('group', { name });
+const group = (name: string | RegExp) => screen.getByRole('group', { name });
 const queryGroup = (name: string) => screen.queryByRole('group', { name });
 const wentBack = () => router.push.mock.calls.some(([href]) => href === RETURN);
 const left = () => expect(wentBack()).toBe(true);
@@ -546,17 +546,21 @@ describe('HelpArticleForm, its sub pages', () => {
     expect(narrow).not.toContain(LONE_PUBLIC.title);
   });
 
-  it("holds every audience wider than its narrowest sub page's", () => {
+  it("holds every audience narrower than its widest sub page's", () => {
     renderForm();
 
     // Precondition: every audience is open to a row with no sub pages.
     for (const audience of ['Public', 'Staff', 'Keeper']) expect(radio(audience)).toBeEnabled();
 
+    // A keeper sub page sits under a parent of any audience, as a child is as wide as its parent or narrower.
     pickSubPage(LONE_KEEPER);
+    for (const audience of ['Public', 'Staff', 'Keeper']) expect(radio(audience)).toBeEnabled();
 
-    expect(radio('Public')).toBeDisabled();
-    expect(radio('Staff')).toBeDisabled();
-    expect(radio('Keeper')).toBeEnabled();
+    pickSubPage(STAFF_SUB);
+
+    expect(radio('Public')).toBeEnabled();
+    expect(radio('Staff')).toBeEnabled();
+    expect(radio('Keeper')).toBeDisabled();
   });
 
   it('holds Parent at No Parent once a sub page is chosen', () => {
@@ -717,7 +721,8 @@ describe('HelpArticleForm, renaming', () => {
     press('Save Article');
     await screen.findByText(LONE_PUBLIC.title, { selector: 'li' });
 
-    press(answer('Cancel'));
+    // On a page the form stays live behind the question, so its own Cancel is pressable too: the question's is the one meant.
+    press(within(group(/^Renaming moves this page/)).getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByText(LONE_PUBLIC.title, { selector: 'li' })).toBeNull();
     expect(textbox('Title')).toHaveValue('Fixture Renamed Guide');
@@ -832,15 +837,16 @@ describe('HelpArticleForm, saving and leaving', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('goes back to the outline on Cancel with nothing changed', () => {
+  it('goes back to the outline on Cancel with nothing changed', async () => {
     renderForm({ article: FAQ });
 
-    press('Cancel');
+    // The press starts a navigation that suspends, so it is awaited inside act.
+    await act(async () => press('Cancel'));
 
     left();
   });
 
-  it('asks before Cancel discards a change, and goes back on Discard Changes', () => {
+  it('asks before Cancel discards a change, and goes back on Discard Changes', async () => {
     renderForm({ article: FAQ });
 
     type('Summary', 'A changed summary');
@@ -851,7 +857,7 @@ describe('HelpArticleForm, saving and leaving', () => {
     expect(textbox('Summary')).toHaveValue('A changed summary');
 
     press('Cancel');
-    press(answer('Discard Changes'));
+    await act(async () => press(answer('Discard Changes')));
     left();
   });
 
