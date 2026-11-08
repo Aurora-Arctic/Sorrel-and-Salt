@@ -20,7 +20,7 @@ SQL narrows every list through `listKeeperHelpArticles` (`claude-docs/design-dec
 
 ## The parts
 
-- **The filter** (`filter.tsx`) is the shared [`FilterForm`](filter-form.md). Kind is a `ChoiceChip` group (`src/components/FacetPanel/choice-chip.tsx`, a `fieldset facet-chip__group`), and Kind, Audience and Shown apply as they change. The search applies on the magnifier or Enter. Each change opens the first guide again, as a filter opens a list at its first page.
+- **The filter** (`filter.tsx`) is the shared [`FilterForm`](filter-form.md). Kind, Audience and Shown are each a `ChoiceChip` group (`src/components/FacetPanel/choice-chip.tsx`, a `fieldset facet-chip__group`), and apply as they change. Each chip's first choice is its default and leaves its parameter out of the address: All for Kind and Audience, Shown for Shown. The search applies on the magnifier or Enter. Each change opens the first guide again, as a filter opens a list at its first page.
 - **The left pane** lists the guides and the other kinds as links, the current one marked. On a phone, `guide-select.tsx` replaces it with one select whose every choice is an address.
 - **The right pane's header** gives the chosen guide's title, its address, its place ("Position 1 of 3") and Add Sub Page, which links `/keepers/help/new?parent=<id>`.
 - **Each row** has its Edit link and a shown switch (`shown-switch.tsx`, the help wrapper of [`ShownSwitch`](help-article-form.md#shownswitch) around `SetHelpArticleShown`) in its corner. An audience other than Public shows as a badge. A hidden row has three marks: the lidded eye, a muted title and a Hidden badge.

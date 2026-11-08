@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { FilterSelectField, SearchField } from '../Field';
+import { SearchField } from '../Field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { KEEPERS_HELP, keepersHelpHref } from './href';
@@ -22,17 +22,20 @@ const KIND_OPTIONS: readonly { value: HelpOutlineKind | ''; label: string }[] = 
   { value: 'term', label: 'Terms' },
 ];
 
-const AUDIENCE_OPTIONS: readonly { value: HelpOutlineAudience; label: string }[] = [
+const AUDIENCE_OPTIONS: readonly { value: HelpOutlineAudience | ''; label: string }[] = [
+  { value: '', label: 'All' },
   { value: 'public', label: 'Public' },
   { value: 'staff', label: 'Staff' },
   { value: 'keeper', label: 'Keeper' },
 ];
 
 // Shown is the default, so it is the empty choice and leaves the address bare.
-const SHOWN_OPTIONS: readonly { value: Exclude<HelpOutlineShown, 'shown'>; label: string }[] = [
-  { value: 'hidden', label: 'Hidden' },
-  { value: 'all', label: 'All' },
-];
+const SHOWN_OPTIONS: readonly { value: Exclude<HelpOutlineShown, 'shown'> | ''; label: string }[] =
+  [
+    { value: '', label: 'Shown' },
+    { value: 'hidden', label: 'Hidden' },
+    { value: 'all', label: 'All' },
+  ];
 
 const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactElement => {
   const [query, setQuery] = useState(filter.query);
@@ -66,23 +69,19 @@ const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactE
         value={filter.kind}
         onChange={(kind) => apply(next({ kind }))}
       />
-      <FilterSelectField
-        label="Audience"
+      <ChoiceChip
+        legend="Audience"
         name="audience"
-        all="All"
         options={AUDIENCE_OPTIONS}
-        defaultValue={filter.audience}
-        fit
-        onChange={(audience) => apply(next({ audience: audience as HelpOutlineAudience | '' }))}
+        value={filter.audience}
+        onChange={(audience) => apply(next({ audience }))}
       />
-      <FilterSelectField
-        label="Shown"
+      <ChoiceChip
+        legend="Shown"
         name="shown"
-        all="Shown"
         options={SHOWN_OPTIONS}
-        defaultValue={filter.shown === 'shown' ? '' : filter.shown}
-        fit
-        onChange={(shown) => apply(next({ shown: (shown || 'shown') as HelpOutlineShown }))}
+        value={filter.shown === 'shown' ? '' : filter.shown}
+        onChange={(shown) => apply(next({ shown: shown || 'shown' }))}
       />
     </FilterForm>
   );
