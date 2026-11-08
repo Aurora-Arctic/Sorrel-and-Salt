@@ -104,10 +104,10 @@ export const ADMIN_PAGES = {
   },
   help: {
     label: 'Help',
-    icon: 'support',
+    icon: 'help',
     adminOnly: true,
     description:
-      'The help articles, FAQ entries and glossary terms the site shows, written in Markdown with a preview.',
+      'The help articles, FAQ entries and glossary terms the site shows, and how they are ordered.',
     tabs: [{ href: '/keepers/help', label: 'Help' }],
   },
   businessCards: {
