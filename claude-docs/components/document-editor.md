@@ -1,6 +1,6 @@
 # DocumentEditor
 
-`src/components/DocumentEditor/` — the keeper's editor for one site document, at `/keepers/documents/[key]`. The text is drawn as the public page draws it (`DocumentPage`'s `document-page__body` styles), and a keeper edits it in place as rich text. Admin only: the route calls `requireAdminSession()`, and the GraphQL mutations end at the same service, which is the guard.
+`src/components/DocumentEditor/` — the keeper's editor for one site document, at `/keepers/documents/[key]`. The text is drawn as the public page draws it (`DocumentPage`'s `document-page__body` styles), and a keeper edits it in place in the shared [RichTextEditor](rich-text-editor.md), which holds the markdown conversion, the toolbar and the paste and keyboard rules. Admin only: the route calls `requireAdminSession()`, and the GraphQL mutations end at the same service, which is the guard.
 
 ## Contracts
 
@@ -10,53 +10,9 @@
 - **Restore Published Version** sits beside Save Draft and Publish: a quiet button labelled Restore (its accessible name is the full Restore Published Version) that opens a confirmation whose own button, named Restore Published Version, is red. It is available only when a draft is open or there is unsaved text. Confirming with a draft open soft-deletes the draft at the revision the editor holds (`discardDocumentDraft`); with none open it sends nothing. Either way the editor shows `publishedBody` again, with nothing unsaved and no autosave pending. Readers see no change.
 - A save, a publish and a restore send the draft's `revision`. A second keeper's save in between makes the next one fail with an explaining message rather than overwrite it.
 
-## The text is markdown
-
-The stored text is markdown, the same text `DocumentPage` renders, so the editor and the page cannot drift apart. `markdown.ts` turns markdown into the editor's value and back (`markdownToEditorValue`, `editorValueToMarkdown`) with Plate's markdown package, `remark-gfm` for tables, strikethrough and footnotes, and fixed output styles (`-` bullets, `_` emphasis, `*` strong, `-` rules). Opening a document and saving it without a change writes back the text it read, so a seeded document is written in those styles; `tests/components/DocumentEditor/markdown.test.ts` proves the round trip for each seeded document. A URL is written bare, not as a `<…>` autolink, because the round trip does not keep the angle brackets.
-
-`markdown.ts` uses only Plate's base (headless) plugins, so it also runs under Vitest with no DOM. `elements.tsx` holds the React plugins that draw each node (headings `h2` to `h6`, quote, rule, marks, link, lists, tables, footnotes). A list is drawn by a `belowNodes` wrapper around each paragraph the list plugin marks as a list item, since Plate's list plugin is indent based and draws nothing itself.
-
-## The toolbar
-
-`toolbar.tsx` is a `role="toolbar"` above the text box, of quiet icon buttons ([`icons.tsx`](icon-tip.md), "The icons") tipped through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. Each button is a Plate transform, not a hand-written edit:
-
-| Button                       | What it calls                                                                                                                                                | Pressed when                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Heading 2, Heading 3         | `editor.tf.toggleBlock`                                                                                                                                      | the block holding the selection is that heading |
-| Bold, Italic                 | `editor.tf.toggleMark`                                                                                                                                       | `editor.api.hasMark`                            |
-| Link                         | opens an "Add Link" dialog (`Modal`) asking for an Address, then `upsertLink` on the selection kept when it opened                                           | never                                           |
-| Bulleted List, Numbered List | `toggleList` (`disc`, `decimal`)                                                                                                                             | `someList`                                      |
-| Table                        | `insertTable`, two columns and two rows with a header row, after the top-level block holding the caret                                                       | never                                           |
-| Footnote                     | `editor.tf.insert.footnote`: the next unused number's reference at the caret and its definition, the caret going to the definition                           | never                                           |
-| Undo, Redo                   | `editor.tf.undo`, `editor.tf.redo`, from Plate's built-in history; the keys do the same: Ctrl+Z, and Ctrl+Y or Ctrl+Shift+Z (Cmd+Z and Cmd+Shift+Z on a Mac) | never                                           |
-
-- **A press keeps the selection.** Each button cancels `mousedown`, so the focus stays in the text and the button acts on what was selected.
-- **The row sticks** (`position: sticky` at `var(--sticky-top)`) while the text box is on screen. No ancestor may set `overflow`, which would stop it.
-- **Undo and Redo say when they have nothing to do.** With an empty history stack, the button carries `aria-disabled="true"` and a press does nothing. It is not `disabled`, which would drop it from the arrow-key order.
-- **One tab stop,** per the WAI-ARIA toolbar pattern.
-- **A link needs a full web address.** `upsertLink` refuses an address the link plugin cannot validate, and the dialog says so and stays open.
-
-## Pasting
-
-A paste is read as markdown or as HTML, by `PasteMarkdownPlugin` in `elements.tsx`:
-
-- **Plain text alone is read as markdown**, as Plate reads it, so a pasted `## Heading` becomes a heading and a `[^1]` a footnote. A lone web address is left to the link plugin.
-- **A copy from a code editor is read as markdown too.** A code editor also puts its highlighted rendering of the text on the clipboard as HTML, and Plate would read that HTML and show the markdown's marks as literal text. The paste is taken as a code editor's when the clipboard holds VS Code's own `vscode-editor-data` type, or when its HTML is a single pre-formatted block (a `<pre>`, or an element styled `white-space: pre`), which is how a code editor draws its text.
-- **Any other HTML is read as HTML**, so rich text copied from a web page keeps its headings, bold and links, and its plain text is not used.
-
-Plate sets its markdown paste rule in a function extension, so the editor replaces it with one too: a plain-object `parser` is merged beneath Plate's and has no effect.
-
-## Empty cells and notes
-
-An empty table cell or footnote definition is serialised by the markdown package as a lone zero-width space. `editorValueToMarkdown` removes it, so a table or note the toolbar adds and nobody fills in saves as `|  |` and `[^2]:`.
-
 ## Loading
 
-`index.tsx` loads `editor.tsx` with `next/dynamic`, so the editor's code is fetched only on this page and never reaches a public page's bundle.
-
-## Leaving the text box with the keyboard
-
-The indent plugin takes Shift+Tab on a block with no indent and does nothing with it, which would trap a keyboard user in the text. `TabEscapePlugin` in `elements.tsx` lets that key through, so focus returns to the toolbar. A block that is indented, or inside a quote, still outdents or lifts as before.
+`index.tsx` loads `editor.tsx` with `next/dynamic`, so the editor's code is fetched only on this page and never reaches a public page's bundle. While it loads, `skeleton.tsx` draws the title, the lede, `RichTextEditorSkeleton` and the buttons.
 
 ## Not here
 

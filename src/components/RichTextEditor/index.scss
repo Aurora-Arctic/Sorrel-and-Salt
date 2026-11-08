@@ -1,0 +1,83 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The editor's box: a bordered field holding the toolbar and the text, on the page's own background so a table's banded rows
+// show. The text's focus ring is drawn on the box, as the text has no border of its own.
+.rich-text-editor {
+  @include field-box;
+
+  padding: 0;
+  background-color: transparent;
+
+  &:has([role='textbox']:focus-visible) {
+    @include focus-ring;
+  }
+}
+
+.rich-text-editor [role='textbox'] {
+  min-height: 24rem;
+  padding: space(2) 1.125rem;
+  font-size: type-size('body');
+  outline: none;
+}
+
+.rich-text-editor__group {
+  display: flex;
+  gap: space(1);
+
+  & + & {
+    padding-inline-start: space(2);
+    border-inline-start: 1px solid $hairline;
+  }
+}
+
+// The row of formatting buttons above the text box, in the same column. It sticks just under the site bar while the text box
+// is on screen, on the page's own fill so the text scrolls under it.
+.rich-text-editor__toolbar {
+  position: sticky;
+  // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+  top: var(--sticky-top, 0px);
+  z-index: layer('sticky-row');
+  padding: space(2);
+  // An opaque raised ground, so the text scrolls under it, with a line in the body ink beneath: white in dark, as white would vanish on parchment.
+  border-bottom: 1px solid $text-primary;
+  // The box's top corners, so the ground stays inside the box's rounded border.
+  border-start-start-radius: radius('control');
+  border-start-end-radius: radius('control');
+  background-color: $surface-card;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: space(2);
+
+  .btn--icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    min-height: 2.25rem;
+  }
+
+  .btn--quiet[aria-pressed='true'] {
+    border-color: $edge-highlight;
+    background-color: $fill-highlight-field;
+  }
+}
+
+.rich-text-editor .document-page__marks span {
+  padding-inline: space(1);
+  color: $text-primary;
+  @include faded-underline;
+}
+
+// The editor holds a cell's text in a paragraph, where the public page has the text in the cell, so the paragraph takes the cell's own spacing and type.
+.rich-text-editor .data-table p {
+  max-width: none;
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+}
+
+// The loading editor's text area, as tall as the real text box.
+.rich-text-editor__skeleton-text {
+  min-height: 24rem;
+}

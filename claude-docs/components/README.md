@@ -37,6 +37,7 @@ design is in [`ui.md`, "The navigation shell is a slim bar, a context row and a 
 - [`disclaimer-notice.md`](document-page.md#disclaimer-notice) — The line under an ingredient's safety notes saying they are not complete, linking the disclaimer.
 - [`document-page.md`](document-page.md) — The page a public document is read on: title, when it last changed, then its sections.
 - [`document-editor.md`](document-editor.md) — The admin editor for one site document: edit as rich text, save a draft, publish a new version.
+- [`rich-text-editor.md`](rich-text-editor.md) — Markdown edited as rich text under a formatting toolbar; the document editor is built on it.
 - [`access-cards.md`](access-cards.md) — The privacy policy's who-can-see-what: one card per kind of data, a mark per role, full wording inside.
 
 ## Lists

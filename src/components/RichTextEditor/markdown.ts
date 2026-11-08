@@ -12,7 +12,7 @@ import {
 import { createSlateEditor, type Value } from 'platejs';
 import remarkGfm from 'remark-gfm';
 
-export const documentPlugins = [
+export const markdownPlugins = [
   BaseBasicBlocksPlugin,
   BaseBasicMarksPlugin,
   BaseLinkPlugin,
@@ -36,7 +36,7 @@ const stringifyOptions = {
 } as const;
 
 function markdownEditor() {
-  return createSlateEditor({ plugins: documentPlugins });
+  return createSlateEditor({ plugins: markdownPlugins });
 }
 
 export function markdownToEditorValue(markdown: string): Value {
@@ -46,6 +46,10 @@ export function markdownToEditorValue(markdown: string): Value {
 // The serialiser writes an empty table cell or footnote definition as a lone zero-width space.
 const emptyCell = /(\| )\u200B(?= \|)/g;
 const emptyDefinition = /^(\[\^[^\]]+\]:) \u200B$/gm;
+// The serialiser escapes a "[" that might open a link. A help body's `[[Term]]` mark and `::widget[name]` tag are checked on save
+// against the raw text (src/modules/help/services/marks.ts), so they keep their brackets; with no link definition neither is a link.
+const escapedMark = /\\\[\\\[/g;
+const escapedWidget = /::widget\\\[/g;
 
 export function editorValueToMarkdown(value: Value): string {
   const editor = markdownEditor();
@@ -54,5 +58,7 @@ export function editorValueToMarkdown(value: Value): string {
     .markdown.serialize({ value, remarkStringifyOptions: stringifyOptions })
     .replace(emptyCell, '$1')
     .replace(emptyDefinition, '$1')
+    .replace(escapedMark, '[[')
+    .replace(escapedWidget, '::widget[')
     .trimEnd();
 }

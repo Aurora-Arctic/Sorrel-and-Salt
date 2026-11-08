@@ -209,7 +209,7 @@ export const MODAL_SCANS = [
   { id: 'mint-cards', source: 'src/components/AdminCards/mint-form.tsx', as: 'keeper' },
   { id: 'card-attempts', source: 'src/components/AdminCards/attempts.tsx', as: 'keeper' },
   { id: 'date-range-field', source: 'src/components/DateRangeField/index.tsx', as: 'keeper' },
-  { id: 'document-link', source: 'src/components/DocumentEditor/link-dialog.tsx', as: 'keeper' },
+  { id: 'document-link', source: 'src/components/RichTextEditor/link-dialog.tsx', as: 'keeper' },
   { id: 'help-article', source: 'src/app/(shell)/keepers/help/dialog.tsx', as: 'keeper' },
 ] as const satisfies readonly ModalScan[];
 

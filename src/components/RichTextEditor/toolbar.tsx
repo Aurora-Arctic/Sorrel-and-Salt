@@ -137,7 +137,8 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
 
 const BUTTONS = GROUPS.flatMap((group) => group.buttons);
 
-const Toolbar = (): ReactElement => {
+/** `label` names the text the toolbar formats; the toolbar is "<label> Formatting". */
+const Toolbar = ({ label }: { label: string }): ReactElement => {
   const editor = useEditorRef();
   // Read so the pressed and available states follow the selection and every edit.
   useEditorSelection();
@@ -187,8 +188,8 @@ const Toolbar = (): ReactElement => {
   return (
     <div
       role="toolbar"
-      aria-label="Document Text Formatting"
-      className="document-editor__toolbar"
+      aria-label={`${label} Formatting`}
+      className="rich-text-editor__toolbar"
       // Focusable by script only: the arrow-key handler sits here, and the buttons hold the one tab stop.
       tabIndex={-1}
       onKeyDown={move}
@@ -198,7 +199,7 @@ const Toolbar = (): ReactElement => {
           key={group.label}
           role="group"
           aria-label={group.label}
-          className="document-editor__group"
+          className="rich-text-editor__group"
         >
           {group.buttons.map((button) => {
             const index = BUTTONS.indexOf(button);
