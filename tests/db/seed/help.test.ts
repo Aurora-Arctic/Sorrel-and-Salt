@@ -88,6 +88,7 @@ interface HelpRow {
   updated_by: string;
   updated_at: string;
   deleted_at: string | null;
+  deleted_by: string | null;
 }
 
 /** Every row, live or deleted, with its parent's `seed_key`, in key order. */
@@ -95,7 +96,7 @@ async function rows(): Promise<HelpRow[]> {
   const found = await sql<HelpRow[]>`
     select a.id, a.seed_key, a.kind::text as kind, a.audience::text as audience, a.title, a.slug, a.summary, a.body,
            a.position, p.seed_key as parent_key, a.parent_id, a.created_by, a.updated_by,
-           a.updated_at::text as updated_at, a.deleted_at::text as deleted_at
+           a.updated_at::text as updated_at, a.deleted_at::text as deleted_at, a.deleted_by
     from help_articles a left join help_articles p on p.id = a.parent_id`;
   // Sorted by code point here, since a collation may ignore the hyphens that tell the keys apart.
   const key = (row: HelpRow) => row.seed_key ?? '';
@@ -218,5 +219,135 @@ describe('seedHelp', () => {
       // A slug is unique within its kind, so an article and a term may share one; a term's is its anchor on /help/glossary.
       expect(row.slug, row.title).toBe(slugify(row.title));
     }
+  });
+});
+
+// An entry dropped from the list is retired: soft-deleted by the seed when only the seed ever wrote it, and kept, with the
+// reason printed, when a person edited it or a live sub page still hangs beneath it.
+describe('seedHelp retiring entries the list no longer holds', () => {
+  /** Asserts the row is the seed's own: written and last changed by the bootstrap user, and live. */
+  async function expectSeedOnly(seedKey: string): Promise<HelpRow> {
+    const row = await rowOf(seedKey);
+    expect(row).toMatchObject({
+      created_by: BOOTSTRAP_USER_ID,
+      updated_by: BOOTSTRAP_USER_ID,
+      deleted_at: null,
+    });
+    return row;
+  }
+
+  it('soft-deletes a seed-only row dropped from the list, stamped as the bootstrap user', async () => {
+    await seedHelp(db, { articles: [GUIDE, QUESTION] });
+    const before = await expectSeedOnly(QUESTION.seedKey);
+
+    await seedHelp(db, { articles: [GUIDE] });
+
+    const after = await rowOf(QUESTION.seedKey);
+    expect(after.id).toBe(before.id);
+    expect(after.deleted_at).not.toBeNull();
+    expect(after.deleted_by).toBe(BOOTSTRAP_USER_ID);
+    expect((await rowOf(GUIDE.seedKey)).deleted_at).toBeNull();
+  });
+
+  it('prints a RETIRED line for each row it retires and none for an entry still in the list', async () => {
+    await seedHelp(db, { articles: [GUIDE, QUESTION, TERM] });
+    await expectSeedOnly(QUESTION.seedKey);
+    await expectSeedOnly(TERM.seedKey);
+
+    const lines = await seedHelp(db, { articles: [GUIDE] });
+
+    expect([...lines].sort()).toEqual([`RETIRED ${QUESTION.seedKey}`, `RETIRED ${TERM.seedKey}`]);
+  });
+
+  it('keeps a row a keeper edited when the list drops it, and prints why', async () => {
+    await seedHelp(db, { articles: [GUIDE, QUESTION] });
+    await sql`
+      update help_articles set body = 'The keeper’s own Testwort answer.', updated_by = ${E.id}
+      where seed_key = ${QUESTION.seedKey}`;
+    const edited = await rowOf(QUESTION.seedKey);
+    // Precondition: the edit landed as the keeper's, so the row reads as a person's work.
+    expect(edited).toMatchObject({ updated_by: E.id, deleted_at: null });
+
+    const lines = await seedHelp(db, { articles: [GUIDE] });
+
+    expect(await rowOf(QUESTION.seedKey)).toEqual(edited);
+    expect(lines).toEqual([`KEPT ${QUESTION.seedKey}: edited by a person`]);
+  });
+
+  it('keeps a seed-only parent the list drops while a sub page still in the list hangs beneath it, and prints why', async () => {
+    await seedHelp(db, { articles: [GUIDE, DETAIL] });
+    const parent = await expectSeedOnly(GUIDE.seedKey);
+    // Precondition: the sub page is live and linked to the parent, so retiring the parent would orphan it.
+    expect(await rowOf(DETAIL.seedKey)).toMatchObject({ parent_id: parent.id, deleted_at: null });
+
+    const lines = await seedHelp(db, { articles: [DETAIL] });
+
+    expect((await rowOf(GUIDE.seedKey)).deleted_at).toBeNull();
+    expect((await rowOf(DETAIL.seedKey)).deleted_at).toBeNull();
+    expect(lines).toEqual([`KEPT ${GUIDE.seedKey}: has live sub pages`]);
+  });
+
+  it('retires a dropped parent together with its dropped sub page, the sub page first', async () => {
+    await seedHelp(db, { articles: [GUIDE, DETAIL, QUESTION] });
+    const parent = await expectSeedOnly(GUIDE.seedKey);
+    await expectSeedOnly(DETAIL.seedKey);
+    expect((await rowOf(DETAIL.seedKey)).parent_id).toBe(parent.id);
+
+    const lines = await seedHelp(db, { articles: [QUESTION] });
+
+    expect((await rowOf(GUIDE.seedKey)).deleted_at).not.toBeNull();
+    expect((await rowOf(DETAIL.seedKey)).deleted_at).not.toBeNull();
+    expect(lines).toEqual([`RETIRED ${DETAIL.seedKey}`, `RETIRED ${GUIDE.seedKey}`]);
+  });
+
+  it('revives a row the seed retired when its entry comes back into the list, with the list’s text', async () => {
+    await seedHelp(db, { articles: [GUIDE, QUESTION] });
+    await seedHelp(db, { articles: [GUIDE] });
+    const retired = await rowOf(QUESTION.seedKey);
+    // Precondition: the seed itself retired the row, so no person chose to delete it.
+    expect(retired.deleted_at).not.toBeNull();
+    expect(retired.deleted_by).toBe(BOOTSTRAP_USER_ID);
+
+    const returning: SeedHelpArticle = { ...QUESTION, body: 'The seed’s returning answer.' };
+    await seedHelp(db, { articles: [GUIDE, returning] });
+
+    expect(await rowOf(QUESTION.seedKey)).toMatchObject({
+      ...written(returning),
+      id: retired.id,
+      deleted_at: null,
+      deleted_by: null,
+    });
+    expect(await rows()).toHaveLength(2);
+  });
+
+  it('on a dry run prints the same lines and writes nothing', async () => {
+    await seedHelp(db, { articles: [GUIDE, QUESTION, TERM] });
+    await sql`
+      update help_articles set body = 'The keeper’s own Testwort word.', updated_by = ${E.id}
+      where seed_key = ${TERM.seedKey}`;
+    await expectSeedOnly(QUESTION.seedKey);
+    const before = await rows();
+
+    const lines = await seedHelp(db, { articles: [GUIDE], dryRun: true });
+
+    expect([...lines].sort()).toEqual([
+      `KEPT ${TERM.seedKey}: edited by a person`,
+      `RETIRED ${QUESTION.seedKey}`,
+    ]);
+    expect(await rows()).toEqual(before);
+  });
+
+  it('lets an entry moved to a new seed_key under the same title take the retired row’s slug', async () => {
+    await seedHelp(db, { articles: [GUIDE] });
+    const old = await expectSeedOnly(GUIDE.seedKey);
+    const moved: SeedHelpArticle = { ...GUIDE, seedKey: 'fixture-guide-moved' };
+    // Precondition: the new entry wants the very slug the old row holds, so inserting first would collide.
+    expect(slugify(moved.title)).toBe(old.slug);
+
+    const lines = await seedHelp(db, { articles: [moved] });
+
+    expect((await rowOf(GUIDE.seedKey)).deleted_at).not.toBeNull();
+    expect(await rowOf(moved.seedKey)).toMatchObject({ ...written(moved), deleted_at: null });
+    expect(lines).toEqual([`RETIRED ${GUIDE.seedKey}`]);
   });
 });

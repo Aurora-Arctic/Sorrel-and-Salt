@@ -77,7 +77,8 @@ try {
     }
     done("the vocabularies' sources and their links");
   } else if (target === 'help') {
-    await seedHelp(db, { dryRun });
+    // An entry the list dropped prints a RETIRED line, or a KEPT line saying why it stays.
+    for (const line of await seedHelp(db, { dryRun })) console.log(line);
     done('the help articles, the FAQ and the glossary');
   } else if (target === 'documents') {
     await seedDocuments(db, { dryRun });

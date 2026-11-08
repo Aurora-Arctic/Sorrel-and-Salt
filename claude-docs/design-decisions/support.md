@@ -3403,6 +3403,31 @@ one general page and one per practice.
   parent's page lists only the children the reader may see ("Audiences, staff
   routes and search").
 
+### The help seed
+
+`src/db/seed/help.ts` writes the entries listed under
+`src/db/seed/help-content/`, finding each row by its `seed_key`, deleted rows
+included, in one transaction.
+
+- **A listed entry** is inserted when no row has its key, and restated to the
+  list's text while only the seed has written the row (`touched()` is false).
+  A row a person edited is left as they wrote it. A row a person deleted is
+  never written again.
+- **An entry the list no longer holds** is retired: its row is soft-deleted,
+  stamped as the bootstrap user, and the run prints `RETIRED <seed_key>`,
+  which `migrate.yml` copies into the job summary. Retiring runs before any
+  insert, so an entry moved to a new key under the same title can take the old
+  row's slug.
+- **A dropped row stays live** when a person edited it, printing
+  `KEPT <seed_key>: edited by a person`, or when a live sub page that is not
+  itself retired hangs beneath it, printing
+  `KEPT <seed_key>: has live sub pages`. Sub pages are retired before their
+  parents, so a dropped guide and its dropped sub pages go together.
+- **A row the seed retired comes back** when its entry returns to the list: it
+  is revived and restated. Only a row a person deleted (`deleted_by` not the
+  bootstrap user) stays deleted.
+- **`--dry-run`** runs all of this, prints the same lines and rolls back.
+
 ### The module: `help`
 
 The table gets a module of its own, `src/modules/help/`, rather than a place
