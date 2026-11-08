@@ -49,15 +49,17 @@ const AutosaveStatusWidget = (): ReactElement => {
           <div key={status} className="help-widget__state">
             <dt id={`${id}-${status}`}>{STATUS_LABELS[status]}</dt>
             <dd aria-labelledby={`${id}-${status}`}>
-              <SaveStatus
-                status={status}
-                savedAt={status === 'idle' ? null : SAVED_AT}
-                conflictMessage="Someone else saved this spell since you opened it."
-                onRetry={nothing}
-                onReload={nothing}
-                onKeepMine={nothing}
-                example
-              />
+              <div className="help-widget__sample">
+                <SaveStatus
+                  status={status}
+                  savedAt={status === 'idle' ? null : SAVED_AT}
+                  conflictMessage="Someone else saved this spell since you opened it."
+                  onRetry={nothing}
+                  onReload={nothing}
+                  onKeepMine={nothing}
+                  example
+                />
+              </div>
               <p className="help-widget__explained">{EXPLAINED[status]}</p>
             </dd>
           </div>

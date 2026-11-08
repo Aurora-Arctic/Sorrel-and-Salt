@@ -16,18 +16,32 @@
   margin: space(3) 0 space(2);
 }
 
+// Each state name sits closer to its own sample than to the state above: space(2) beneath it, space(5) between states.
 .help-widget__states {
   display: grid;
-  gap: space(3);
+  gap: space(5);
   margin: 0;
 
   dd {
-    margin: 0;
+    margin: space(2) 0 0;
   }
 }
 
+// A live save line set apart from the article text, in the field box's edge and radius on the page fill, a control's
+// height even for the empty Nothing to Save line.
+.help-widget__sample {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: $control-height;
+  padding: space(2) space(3);
+  border: 1px solid $hairline;
+  border-radius: radius('control');
+  background-color: $surface-page;
+}
+
 .help-widget__explained {
-  margin-block: space(1) 0;
+  margin-block: space(2) 0;
   color: $text-muted;
   font-size: type-size('small');
 }
