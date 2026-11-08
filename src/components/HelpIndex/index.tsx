@@ -53,7 +53,17 @@ const HelpIndex = ({
     <div
       className={menu.length > 0 ? 'help-page help-index page-with-nav' : 'help-page help-index'}
     >
-      <PageHeader title={heading} />
+      <PageHeader
+        title={heading}
+        action={
+          staffHelp && (
+            <PendingLink className="back-link back-link--forward" href={STAFF_HELP as Route}>
+              Staff Help
+              <BackChevron direction="forward" />
+            </PendingLink>
+          )
+        }
+      />
       {lede || quickLinks.length > 0 ? (
         <div className="help-index__band">
           {lede && <p className="lede">{lede}</p>}
@@ -66,14 +76,6 @@ const HelpIndex = ({
                 </li>
               ))}
             </ul>
-          )}
-          {staffHelp && (
-            <p>
-              <PendingLink className="back-link back-link--forward" href={STAFF_HELP as Route}>
-                Staff Help
-                <BackChevron direction="forward" />
-              </PendingLink>
-            </p>
           )}
         </div>
       ) : (

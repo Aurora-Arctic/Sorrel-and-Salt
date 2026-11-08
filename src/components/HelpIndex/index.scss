@@ -2,6 +2,12 @@
 @use '../../scss/mixins' as *;
 
 .help-index {
+  // The Staff Help link ends the title row at every width: the h1 is one short word, so the site rule that drops a
+  // header action under a narrow title would leave the link on a line of its own.
+  > .page-header > h1 {
+    flex-basis: auto;
+  }
+
   h2 {
     margin-block: space(8) space(3);
   }
