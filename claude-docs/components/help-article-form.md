@@ -22,7 +22,7 @@
 
 ## The Details card
 
-- **Kind** is a radio group (Article, FAQ, Term). It is held on an edit, as a row's kind is fixed once it exists.
+- **Kind** is a choice chip (Article, FAQ, Term). It is held on an edit, as a row's kind is fixed once it exists, and its tip says so.
 - **Shown** is a [`ShownSwitch`](#shownswitch) in form-field mode. A new row is created shown and, when the switch is off, hidden by `SetHelpArticleShown` once it exists. An edit sends `SetHelpArticleShown` only when the switch changed.
 - **Fields by kind.** A term has no Audience, Parent, Sub Pages or Position. An FAQ entry has no Parent or Sub Pages. An article has all four, with two exceptions, as help is one level deep: a sub page has no Sub Pages, and a guide holding sub pages has its Parent held at No Parent.
 - **Parent** offers No Parent and every guide but the row itself.
@@ -30,7 +30,7 @@
   - Choosing its own guide again puts a sub page back at its saved place.
   - Leaving a guide makes the row the last guide (the guide count plus one).
 - **Sub Pages** (`sub-pages-field.tsx`) are chips in their order, with an Add Sub Page combobox over `candidates`. It leaves out the pages already chosen and those wider than the row's audience. A pick that sits in another guide says, under the chips, that it leaves that guide and which place it takes here when the form is saved. A save sends `childIds`, the chips in order, and the service moves and releases sub pages in the same transaction (`claude-docs/design-decisions/support.md`, "Showing and hiding, and a parent's children").
-- **Audience** offers Public, Staff and Keeper. An option is held when it is wider than the parent's, or narrower than the widest chosen sub page's, as a sub page is as wide as its guide or narrower.
+- **Audience** is a choice chip offering Public, Staff and Keeper. An option is held when it is wider than the parent's, or narrower than the widest chosen sub page's, as a sub page is as wide as its guide or narrower.
 - **Position.**
   - A guide or an FAQ entry has a text field with the numeric keyboard. It takes a whole number, 0 or more; anything else is refused in the form, before a request. Its note says where a guide stands, such as "1 of 3 guides".
   - A sub page has no field, as its place is the guide's to set. It shows "2 of 4 in Guide", with a Reorder in the Guide link to the outline when the guide is its saved one.

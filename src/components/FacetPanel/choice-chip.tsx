@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { pressFeedback } from '../../lib/press-feedback';
+import { FieldError } from '../Field/shell';
 import InfoTip from '../InfoTip';
 import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
@@ -46,6 +47,8 @@ export interface ChoiceChipOption<T extends string> {
   display?: ReactNode;
   count?: number;
   icon?: ReactNode;
+  /** Shown in the menu but cannot be chosen. */
+  disabled?: boolean;
 }
 
 export interface ChoiceChipProps<T extends string> {
@@ -59,6 +62,10 @@ export interface ChoiceChipProps<T extends string> {
   hint?: string;
   /** What the choice means, in a tip bubble on pointer or (while enabled) focus, with no icon; hidden while the menu is open. */
   chipHint?: string;
+  /** A line under the chip, always visible, that describes the group. */
+  note?: ReactNode;
+  /** A message under the chip that describes the group and marks it and its radios invalid. */
+  error?: string;
 }
 
 export function ChoiceChip<T extends string>({
@@ -70,10 +77,14 @@ export function ChoiceChip<T extends string>({
   disabled,
   hint,
   chipHint,
+  note,
+  error,
 }: ChoiceChipProps<T>): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
   const chipHintId = `${id}-chip-hint`;
+  const noteId = `${id}-note`;
+  const errorId = `${id}-error`;
   const tip = useTip();
   const hydrated = useHydrated();
   const root = useRef<HTMLDetailsElement>(null);
@@ -157,7 +168,10 @@ export function ChoiceChip<T extends string>({
     }
   };
 
-  const describedBy = chipHint ? chipHintId : hint ? hintId : undefined;
+  const describedBy =
+    [chipHint ? chipHintId : hint && hintId, note && noteId, error && errorId]
+      .filter(Boolean)
+      .join(' ') || undefined;
 
   const face = (
     <>
@@ -190,6 +204,7 @@ export function ChoiceChip<T extends string>({
           className="fieldset facet-chip__group"
           disabled={disabled}
           aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
         >
           <legend className="visually-hidden">{legend}</legend>
           {disabled ? (
@@ -237,6 +252,8 @@ export function ChoiceChip<T extends string>({
                       name={name}
                       value={option.value}
                       checked={option.value === value}
+                      disabled={option.disabled}
+                      aria-invalid={error ? true : undefined}
                       onChange={() => {
                         onChange(option.value);
                         if (hydrated) close(true);
@@ -273,6 +290,12 @@ export function ChoiceChip<T extends string>({
           </InfoTip>
         )}
       </div>
+      {note && (
+        <p id={noteId} className="field__hint">
+          {note}
+        </p>
+      )}
+      <FieldError id={errorId} message={error} />
     </div>
   );
 }

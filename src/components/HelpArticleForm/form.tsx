@@ -11,14 +11,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { slugify } from '../../lib/slugify';
-import {
-  FieldError,
-  FormActions,
-  RadioGroupField,
-  Required,
-  SelectField,
-  TextField,
-} from '../Field';
+import { FieldError, FormActions, Required, SelectField, TextField } from '../Field';
 import HelpShownSwitch, { SetHelpArticleShownDocument } from '../HelpOutline/shown-switch';
 import { keepersHelpHref } from '../HelpOutline/href';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
@@ -493,10 +486,9 @@ const HelpArticleForm = ({
             />
           )}
           {kind !== 'term' && (
-            <RadioGroupField<HelpFormAudience>
+            <ChoiceChip<HelpFormAudience>
               legend="Audience"
               name="audience"
-              layout="segmented"
               options={audienceOptions}
               value={audience}
               note={audienceNote}

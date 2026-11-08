@@ -51,50 +51,41 @@ const Caret = (): ReactElement => (
   </svg>
 );
 
-/** The Kind chip at rest, as ChoiceChip draws its face: shut and dashed once the row is saved, as its kind is held. */
-const KindChip = ({ held }: { held: boolean }): ReactElement => (
-  <div className="field facet-chip">
-    <span className="field__label facet-chip__spacer">&#8203;</span>
-    <div className="facet-chip__bar">
-      {held ? (
-        <button type="button" className="facet-chip__summary" disabled>
-          <span className="facet-chip__name">Kind:</span>
-          <span className="facet-chip__value">Article</span>
-          <Caret />
-        </button>
-      ) : (
-        <span className="facet-chip__summary">
-          <span className="facet-chip__name">Kind:</span>
-          <span className="facet-chip__value">Article</span>
-          <Caret />
-        </span>
-      )}
-    </div>
-  </div>
-);
-
-/** A segmented choice, as RadioGroupField draws one in text. */
-const Segments = ({
+/** A choice chip at rest, as ChoiceChip draws its face: shut and dashed when held, its note beneath. */
+const Chip = ({
   legend,
-  options,
+  value,
+  held = false,
   note,
 }: {
   legend: string;
-  options: readonly string[];
-  note: string;
-}): ReactElement => (
-  <fieldset className="fieldset radio-group radio-group--segmented" disabled>
-    <legend className="fieldset__legend">{legend}</legend>
-    <div className="radio-strip radio-strip--text">
-      {options.map((option) => (
-        <span key={option} className="radio radio--segment radio--text">
-          {option}
-        </span>
-      ))}
+  value: string;
+  held?: boolean;
+  note?: string;
+}): ReactElement => {
+  const face = (
+    <>
+      <span className="facet-chip__name">{legend}:</span>
+      <span className="facet-chip__value">{value}</span>
+      <Caret />
+    </>
+  );
+  return (
+    <div className="field facet-chip">
+      <span className="field__label facet-chip__spacer">&#8203;</span>
+      <div className="facet-chip__bar">
+        {held ? (
+          <button type="button" className="facet-chip__summary" disabled>
+            {face}
+          </button>
+        ) : (
+          <span className="facet-chip__summary">{face}</span>
+        )}
+      </div>
+      {note && <Hint>{note}</Hint>}
     </div>
-    <Hint>{note}</Hint>
-  </fieldset>
-);
+  );
+};
 
 const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement => (
   <div className="form help-article-form">
@@ -120,7 +111,7 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
     </div>
     <div className="help-article-form__details" aria-hidden="true">
       <h2 className="help-article-form__details-heading">Details</h2>
-      <KindChip held={editing} />
+      <Chip legend="Kind" value="Article" held={editing} />
       <div className="field">
         <Label>Shown to Readers</Label>
         <span className="icon-tip">
@@ -139,9 +130,9 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
         <Skeleton shape="block" quiet />
         <Hint>Adding one makes this a guide and fixes Parent at No Parent.</Hint>
       </fieldset>
-      <Segments
+      <Chip
         legend="Audience"
-        options={['Public', 'Staff', 'Keeper']}
+        value="Public"
         note="Who reads it. A sub page is as wide as this or narrower."
       />
       <Field label="Position" note="1 of 21 guides. Whole numbers only." />

@@ -13,6 +13,12 @@
   margin: 0;
 }
 
+// Refused by a save: the face takes the invalid edge every field box does.
+.facet-chip__group[aria-invalid='true'] .facet-chip__summary {
+  border-color: $secondary;
+  box-shadow: inset 0 0 0 1px $secondary;
+}
+
 // The spacer stands where a neighbour's label does, so a chip beside a field starts level
 // with its box. Stacked (below the tablet width) there is no neighbour, so it is only
 // an empty line and a gap above the chip.
