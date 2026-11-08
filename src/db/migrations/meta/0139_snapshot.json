@@ -1,6 +1,6 @@
 {
-  "id": "5bd1941f-8cf1-468e-b0fb-0288d93ce7aa",
-  "prevId": "12f15f0e-80b5-45c3-abbf-03ef9b8fac10",
+  "id": "c8b4ab03-b432-49f3-9328-9581a7d998bf",
+  "prevId": "5bd1941f-8cf1-468e-b0fb-0288d93ce7aa",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2782,6 +2782,13 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "shown": {
+          "name": "shown",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "search_vector": {
           "name": "search_vector",

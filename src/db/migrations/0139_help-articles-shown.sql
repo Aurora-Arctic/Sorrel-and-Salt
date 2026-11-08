@@ -1,0 +1,1 @@
+ALTER TABLE "help_articles" ADD COLUMN "shown" boolean DEFAULT true NOT NULL;

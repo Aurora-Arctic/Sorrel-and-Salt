@@ -974,6 +974,13 @@
       "when": 1794076295679,
       "tag": "0138_help-articles",
       "breakpoints": true
+    },
+    {
+      "idx": 139,
+      "version": "7",
+      "when": 1794101141737,
+      "tag": "0139_help-articles-shown",
+      "breakpoints": true
     }
   ]
 }

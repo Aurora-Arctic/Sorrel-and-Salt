@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
+  boolean,
   check,
   customType,
   index,
@@ -34,6 +35,8 @@ export const helpArticles = pgTable(
     position: integer('position'),
     seedKey: seedKeyColumn(),
     parentId: uuid('parent_id').references((): AnyPgColumn => helpArticles.id),
+    // Whether readers see the row. A hidden row is kept for the keepers, never deleted; a hidden parent hides its children too.
+    shown: boolean('shown').notNull().default(true),
     searchVector: tsvector('search_vector').generatedAlwaysAs(
       (): ReturnType<typeof sql> =>
         sql`setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', coalesce(summary, '')), 'B') || setweight(to_tsvector('english', body), 'C')`,
