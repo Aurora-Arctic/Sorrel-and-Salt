@@ -931,6 +931,13 @@ export type HelpRenameEffectsQueryVariables = Exact<{
 
 export type HelpRenameEffectsQuery = { helpRenameEffects: { oldPath: string, newPath: string, quickLinks: Array<string>, articles: Array<{ id: string, title: string }> } };
 
+export type OrderHelpGuidesMutationVariables = Exact<{
+  ids: Array<string | number> | string | number;
+}>;
+
+
+export type OrderHelpGuidesMutation = { orderHelpGuides: Array<{ id: string }> };
+
 export type OrderHelpSubPagesMutationVariables = Exact<{
   id: string | number;
   input: HelpArticlePatch;
@@ -2144,6 +2151,13 @@ export const HelpRenameEffectsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<HelpRenameEffectsQuery, HelpRenameEffectsQueryVariables>;
+export const OrderHelpGuidesDocument = new TypedDocumentString(`
+    mutation OrderHelpGuides($ids: [ID!]!) {
+  orderHelpGuides(ids: $ids) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpGuidesMutation, OrderHelpGuidesMutationVariables>;
 export const OrderHelpSubPagesDocument = new TypedDocumentString(`
     mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {
   updateHelpArticle(id: $id, input: $input) {

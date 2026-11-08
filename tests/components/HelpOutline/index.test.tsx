@@ -4,9 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import HelpOutline from '@/components/HelpOutline';
 import type { HelpOutlineChosen, HelpOutlineGuide } from '@/components/HelpOutline/types';
 
-// The keeper help outline's guides: each guide's count of sub pages beside it in the Guides list, in the phone's
-// Guide select and in the chosen guide's facts, and none at all for a guide that holds none
-// (claude-docs/components/help-outline.md).
+// The keeper help outline's guides: the count of a guide's sub pages in the chosen guide's facts, and none at all for a
+// guide that holds none; the Guides bar and the phone's Guide select carry no count (claude-docs/components/help-outline.md).
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
@@ -50,6 +49,7 @@ const outline = () =>
       filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
       guides={GUIDES}
       others={[]}
+      order={GUIDES.map(({ id, title, audience, shown }) => ({ id, title, audience, shown }))}
       pane={{ kind: 'guide', guide: CHOSEN }}
     />,
   );
@@ -60,22 +60,22 @@ const guideLink = (title: string) =>
   });
 
 describe('HelpOutline sub page counts', () => {
-  it('shows a guide’s count in the Guides list, and no number for a guide with none', () => {
+  it('carries no count or position on a guide’s link in the Guides list', () => {
     outline();
 
-    expect(guideLink('Testwort Roots')).toHaveTextContent(/3$/);
-    expect(guideLink('Testwort Basics')).not.toHaveTextContent(/\d$/);
-    expect(guideLink('Testwort Basics')).not.toHaveTextContent('0');
+    expect(guideLink('Testwort Roots')).not.toHaveTextContent(/\d/);
+    expect(guideLink('Testwort Basics')).not.toHaveTextContent(/\d/);
   });
 
-  it('counts sub pages in the phone’s Guide choices only for a guide that has some', () => {
+  it('lists the phone’s Guide choices by title under their audience, with no count', () => {
     outline();
 
     fireEvent.click(screen.getByRole('combobox', { name: 'Guide' }));
     const choices = within(screen.getByRole('listbox', { name: 'Guide choices' }));
 
-    expect(choices.getByRole('option', { name: '2. Testwort Roots · 3 Sub Pages' })).toBeTruthy();
-    expect(choices.getByRole('option', { name: '1. Testwort Basics' })).toBeTruthy();
+    const publicGuides = within(choices.getByRole('group', { name: 'Public' }));
+    expect(publicGuides.getByRole('option', { name: 'Testwort Roots' })).toBeTruthy();
+    expect(publicGuides.getByRole('option', { name: 'Testwort Basics' })).toBeTruthy();
   });
 
   it('leaves the count out of an empty guide’s facts', () => {

@@ -123,7 +123,7 @@ export default async function KeepersHelpPage({
   const { audience, shown } = filter;
   const wants = (kind: HelpArticle['kind']) => filter.kind === '' || filter.kind === kind;
 
-  // Every guide, whatever the filter, numbers the guides and names a search hit's guide.
+  // Every guide, whatever the filter, numbers the guides, names a search hit's guide and is what Reorder Mode moves.
   const [everyGuide, guides, articles, faq, terms] = await Promise.all([
     readAll(session, 'article', '', 'all', true),
     wants('article') ? readAll(session, 'article', audience, shown, true) : [],
@@ -221,7 +221,18 @@ export default async function KeepersHelpPage({
         title={label}
         action={<AddAction href={NEW_PATH as Route}>Add Help Article</AddAction>}
       />
-      <HelpOutline filter={filter} guides={outlineGuides} others={others} pane={await readPane()} />
+      <HelpOutline
+        filter={filter}
+        guides={outlineGuides}
+        others={others}
+        order={everyGuide.map((guide) => ({
+          id: guide.id,
+          title: guide.title,
+          audience: guide.audience,
+          shown: guide.shown,
+        }))}
+        pane={await readPane()}
+      />
     </main>
   );
 }

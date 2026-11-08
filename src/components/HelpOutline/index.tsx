@@ -9,7 +9,8 @@ import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import HelpOutlineFilterRow from './filter';
-import HelpGuideSelect from './guide-select';
+import HiddenEye from './eye';
+import HelpGuidesBar from './guides-bar';
 import HelpMoveButtons from './move-buttons';
 import { HelpOutlineBodySkeleton } from './skeleton';
 import type {
@@ -21,9 +22,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// The keepers' help list as an outline: the guides in order on the left, the chosen one's sub pages on the right,
-// ordered by pressing Move Up and Move Down (claude-docs/components/help-outline.md). Render-only but for its
-// islands: the filter, the phone's guide select, the moves and the shown switches.
+// The keepers' help list as an outline: the Guides bar on the left, the chosen guide's sub pages on the right
+// (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the moves and the
+// shown switches.
 
 const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', term: 'Term' } as const;
 
@@ -33,13 +34,15 @@ export const AudienceBadge = ({ audience }: Pick<HelpOutlineRow, 'audience'>): R
     <span className="badge badge--muted">{HELP_AUDIENCE_LABELS[audience]}</span>
   );
 
-/** The third of a hidden row's three marks, beside its lidded eye and its muted title. */
-export const HiddenBadge = ({ shown }: Pick<HelpOutlineRow, 'shown'>): ReactNode =>
-  shown ? null : <span className="badge badge--muted help-outline__hidden">Hidden</span>;
-
 const Title = ({ row, children }: { row: HelpOutlineRow; children?: ReactNode }): ReactElement => (
   <span className={row.shown ? 'help-outline__title' : 'help-outline__title is-hidden'}>
-    {children ?? row.title} <HiddenBadge shown={row.shown} />
+    {children ?? row.title}
+    {!row.shown && (
+      <>
+        {' '}
+        <HiddenEye />
+      </>
+    )}
   </span>
 );
 
@@ -207,98 +210,42 @@ const SearchPane = ({
 const filterKey = (filter: HelpOutlineFilter): string =>
   [filter.query, filter.kind, filter.audience, filter.shown].join('\n');
 
-const HelpOutline = ({ filter, guides, others, pane }: HelpOutlineProps): ReactElement => {
-  const choices = [
-    ...guides.map((guide) => ({
-      label: `${guide.position ?? ''}. ${guide.title}${guide.subPages > 0 ? ` · ${guide.subPages} ${guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}` : ''}`,
-      href: guide.href,
-    })),
-    ...others.map((other) => ({ label: `${other.label} · ${other.count}`, href: other.href })),
-  ];
-  const current = [...guides, ...others].find((entry) => entry.current)?.href;
-  return (
-    <ListFrame>
-      <HelpOutlineFilterRow key={filterKey(filter)} filter={filter} />
-      <ListBody skeleton={<HelpOutlineBodySkeleton />}>
-        <div className="help-outline">
-          <div className="help-outline__side">
-            <nav className="help-outline__nav" aria-label="Help Outline">
-              {guides.length > 0 && (
-                <>
-                  <p className="help-outline__group">Guides</p>
-                  <ul>
-                    {guides.map((guide) => (
-                      <li key={guide.id}>
-                        <PendingLink
-                          href={guide.href}
-                          aria-current={guide.current ? 'page' : undefined}
-                          className={guide.shown ? undefined : 'is-hidden'}
-                        >
-                          <span className="help-outline__label">
-                            {guide.position ?? ''}. {guide.title}{' '}
-                            <AudienceBadge audience={guide.audience} />{' '}
-                            <HiddenBadge shown={guide.shown} />
-                          </span>
-                          {guide.subPages > 0 && (
-                            <span className="help-outline__count">{guide.subPages}</span>
-                          )}
-                        </PendingLink>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {others.length > 0 && (
-                <>
-                  <p className="help-outline__group">Other Kinds</p>
-                  <ul>
-                    {others.map((other) => (
-                      <li key={other.label}>
-                        <PendingLink
-                          href={other.href}
-                          aria-current={other.current ? 'page' : undefined}
-                        >
-                          <span className="help-outline__label">{other.label}</span>
-                          <span className="help-outline__count">{other.count}</span>
-                        </PendingLink>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </nav>
-            {pane.kind !== 'search' && choices.length > 0 && (
-              <div className="help-outline__select">
-                <HelpGuideSelect choices={choices} current={current} />
+const HelpOutline = ({ filter, guides, others, order, pane }: HelpOutlineProps): ReactElement => (
+  <ListFrame>
+    <HelpOutlineFilterRow key={filterKey(filter)} filter={filter} />
+    <ListBody skeleton={<HelpOutlineBodySkeleton />}>
+      <div className="help-outline">
+        <HelpGuidesBar
+          guides={guides}
+          order={order}
+          others={others}
+          select={pane.kind !== 'search'}
+        />
+        <section className="help-outline__pane" aria-labelledby="help-outline-pane">
+          {pane.kind === 'guide' && <GuidePane guide={pane.guide} />}
+          {pane.kind === 'faq' && <RowsPane heading="FAQ" rows={pane.rows} positioned />}
+          {pane.kind === 'glossary' && (
+            <RowsPane heading="Glossary" rows={pane.rows} positioned={false} />
+          )}
+          {pane.kind === 'search' && (
+            <SearchPane
+              rows={pane.rows}
+              previousHref={pane.previousHref}
+              nextHref={pane.nextHref}
+            />
+          )}
+          {pane.kind === 'empty' && (
+            <>
+              <div className="help-outline__head">
+                <h2 id="help-outline-pane">No Matches</h2>
               </div>
-            )}
-          </div>
-          <section className="help-outline__pane" aria-labelledby="help-outline-pane">
-            {pane.kind === 'guide' && <GuidePane guide={pane.guide} />}
-            {pane.kind === 'faq' && <RowsPane heading="FAQ" rows={pane.rows} positioned />}
-            {pane.kind === 'glossary' && (
-              <RowsPane heading="Glossary" rows={pane.rows} positioned={false} />
-            )}
-            {pane.kind === 'search' && (
-              <SearchPane
-                rows={pane.rows}
-                previousHref={pane.previousHref}
-                nextHref={pane.nextHref}
-              />
-            )}
-            {pane.kind === 'empty' && (
-              <>
-                <div className="help-outline__head">
-                  <h2 id="help-outline-pane">No Matches</h2>
-                </div>
-                <p>No help row matches the filter. Add one with Add Help Article.</p>
-              </>
-            )}
-          </section>
-        </div>
-      </ListBody>
-    </ListFrame>
-  );
-};
+              <p>No help row matches the filter. Add one with Add Help Article.</p>
+            </>
+          )}
+        </section>
+      </div>
+    </ListBody>
+  </ListFrame>
+);
 
 export default HelpOutline;

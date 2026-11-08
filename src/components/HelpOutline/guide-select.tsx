@@ -7,12 +7,12 @@ import { fieldDescription } from '../Field/description';
 import { FieldShell } from '../Field/shell';
 import { useApplyFilter } from '../FilterForm';
 
-/** The phone's stand-in for the left pane: one select of the guides and the other kinds, each choice an address. */
+/** The phone's stand-in for the left pane: one select of the guides under their audiences and the other kinds, each choice an address. */
 const HelpGuideSelect = ({
   choices,
   current,
 }: {
-  choices: readonly { label: string; href: Route }[];
+  choices: readonly { label: string; href: Route; group?: string }[];
   current: Route | undefined;
 }): ReactElement => {
   const field = fieldDescription({ id: useId() });
@@ -27,7 +27,7 @@ const HelpGuideSelect = ({
         onChange={(href) => {
           if (href !== current) apply(href as Route);
         }}
-        choices={choices.map(({ label, href }) => ({ value: href, label }))}
+        choices={choices.map(({ label, href, group }) => ({ value: href, label, group }))}
         placeholder="Choose a Guide"
       />
     </FieldShell>

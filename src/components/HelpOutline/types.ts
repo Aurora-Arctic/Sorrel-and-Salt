@@ -33,6 +33,22 @@ export interface HelpOutlineGuide extends HelpOutlineRow {
   current: boolean;
 }
 
+/** A top-level guide as Reorder Mode lists it: every live one, whatever the filter, in order. */
+export interface HelpOutlineOrderGuide {
+  id: string;
+  title: string;
+  audience: HelpOutlineAudience;
+  shown: boolean;
+}
+
+export interface HelpGuidesBarProps {
+  /** The guides the filter admits, in order: the bar at rest. */
+  guides: readonly HelpOutlineGuide[];
+  /** Every live top-level guide in order, hidden ones and those the filter leaves out among them: what Save Order writes. */
+  order: readonly HelpOutlineOrderGuide[];
+  others: readonly HelpOutlineOther[];
+}
+
 export interface HelpOutlineOther {
   label: string;
   count: number;
@@ -79,5 +95,6 @@ export interface HelpOutlineProps {
   filter: HelpOutlineFilter;
   guides: readonly HelpOutlineGuide[];
   others: readonly HelpOutlineOther[];
+  order: readonly HelpOutlineOrderGuide[];
   pane: HelpOutlinePane;
 }
