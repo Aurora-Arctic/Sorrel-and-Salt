@@ -27,11 +27,18 @@ const RichTextEditor = ({
   editor,
   label,
   onMarkdownChange,
+  required,
+  invalid,
+  describedBy,
 }: {
   editor: RichTextEditorInstance;
   /** The text box's accessible name; the toolbar is "<label> Formatting". */
   label: string;
   onMarkdownChange: (markdown: string) => void;
+  required?: boolean;
+  invalid?: boolean;
+  /** The ids of the lines that describe the text box: its error, for a form's field. */
+  describedBy?: string;
 }): ReactElement => (
   <div className="document-page__body rich-text-editor">
     <Plate
@@ -39,7 +46,12 @@ const RichTextEditor = ({
       onValueChange={({ value }) => onMarkdownChange(editorValueToMarkdown(value as never))}
     >
       <Toolbar label={label} />
-      <PlateContent aria-label={label} />
+      <PlateContent
+        aria-label={label}
+        aria-required={required || undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy || undefined}
+      />
     </Plate>
   </div>
 );

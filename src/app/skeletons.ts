@@ -64,6 +64,8 @@ import {
   KeepersDocumentSkeleton,
   KeepersEmailUpdatesSkeleton,
   KeepersHelpSkeleton,
+  KeepersHelpNewSkeleton,
+  KeepersHelpEditSkeleton,
   KeepersInvitationsSkeleton,
   KeepersSkeleton,
   KeepersSupportSkeleton,
@@ -128,4 +130,6 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/keepers/documents': { host: 'admin', Skeleton: KeepersEmailUpdatesSkeleton },
   '/keepers/documents/[key]': { host: 'admin', Skeleton: KeepersDocumentSkeleton },
   '/keepers/help': { host: 'admin', Skeleton: KeepersHelpSkeleton },
+  '/keepers/help/new': { host: 'admin', Skeleton: KeepersHelpNewSkeleton },
+  '/keepers/help/[id]': { host: 'admin', Skeleton: KeepersHelpEditSkeleton },
 };

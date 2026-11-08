@@ -59,6 +59,7 @@ type Documents = {
     "\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateHelpArticleDocument,
     "\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateHelpArticleDocument,
     "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n": typeof types.DeleteHelpArticleDocument,
+    "\n  query HelpRenameEffects($id: ID!, $title: String!) {\n    helpRenameEffects(id: $id, title: $title) {\n      oldPath\n      newPath\n      articles {\n        id\n        title\n      }\n      quickLinks\n    }\n  }\n": typeof types.HelpRenameEffectsDocument,
     "\n  mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.OrderHelpSubPagesDocument,
     "\n  mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {\n    setHelpArticleShown(id: $id, shown: $shown) {\n      id\n    }\n  }\n": typeof types.SetHelpArticleShownDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": typeof types.AddCupboardEntryDocument,
@@ -196,6 +197,7 @@ const documents: Documents = {
     "\n  mutation CreateHelpArticle($input: HelpArticleInput!) {\n    createHelpArticle(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateHelpArticleDocument,
     "\n  mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateHelpArticleDocument,
     "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n": types.DeleteHelpArticleDocument,
+    "\n  query HelpRenameEffects($id: ID!, $title: String!) {\n    helpRenameEffects(id: $id, title: $title) {\n      oldPath\n      newPath\n      articles {\n        id\n        title\n      }\n      quickLinks\n    }\n  }\n": types.HelpRenameEffectsDocument,
     "\n  mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {\n    updateHelpArticle(id: $id, input: $input) {\n      id\n    }\n  }\n": types.OrderHelpSubPagesDocument,
     "\n  mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {\n    setHelpArticleShown(id: $id, shown: $shown) {\n      id\n    }\n  }\n": types.SetHelpArticleShownDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": types.AddCupboardEntryDocument,
@@ -465,6 +467,10 @@ export function graphql(source: "\n  mutation UpdateHelpArticle($id: ID!, $input
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteHelpArticle($id: ID!) {\n    deleteHelpArticle(id: $id)\n  }\n"): typeof import('./graphql').DeleteHelpArticleDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query HelpRenameEffects($id: ID!, $title: String!) {\n    helpRenameEffects(id: $id, title: $title) {\n      oldPath\n      newPath\n      articles {\n        id\n        title\n      }\n      quickLinks\n    }\n  }\n"): typeof import('./graphql').HelpRenameEffectsDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -1,0 +1,91 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The text on the left at the measure, the details card on the right, sticky as the body scrolls. The card is before
+// the Save row in the page's order, so the grid places the row back under the text (claude-docs/components/help-article-form.md).
+// Tokens only, before the section's design review.
+$-two-columns: calc(#{$shell-tablet-width} + 0.01rem);
+
+// Doubled to outweigh the shared `.form` column, which compiles as `body .form`.
+// The back link raised into the page top, as on an ingredient page, so the eyebrow below it has room.
+.help-article-form__bar {
+  position: relative;
+  top: calc(-1 * #{space(4)});
+  margin-block-end: space(3);
+}
+
+.form.help-article-form {
+  display: grid;
+  margin-block-start: space(5);
+  grid-template-areas: 'main' 'details' 'actions';
+  gap: space(6);
+  align-items: start;
+
+  @media (min-width: $-two-columns) {
+    grid-template:
+      'main details' auto
+      'actions details' 1fr / minmax(0, $measure) minmax(16rem, 22rem);
+    column-gap: space(7);
+  }
+}
+
+.help-article-form__main {
+  @include stack(5);
+
+  grid-area: main;
+  min-width: 0;
+
+  // The editor borrows the document body, whose top margin would part it from its label.
+  .rich-text-editor {
+    margin-block-start: 0;
+  }
+}
+
+.help-article-form__details {
+  @include stack(5);
+
+  grid-area: details;
+  padding: space(5);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  // The stack's gap alone spaces the fields, not a radio group's own margins (named, to outweigh `body .fieldset.radio-group`).
+  > .fieldset.radio-group {
+    margin-block: 0;
+  }
+
+  @media (min-width: $-two-columns) {
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+}
+
+.help-article-form__details-heading {
+  margin: 0;
+  font-size: type-size('overline');
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.help-article-form__actions {
+  grid-area: actions;
+}
+
+.help-article-form__address code {
+  overflow-wrap: anywhere;
+}
+
+.help-article-form__fact {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.help-article-form__warning {
+  color: $text-primary;
+}
+
+.help-article-form__effects {
+  margin-block: space(3) 0;
+}
