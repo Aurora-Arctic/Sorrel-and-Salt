@@ -56,7 +56,9 @@
     ".storybook/**/*.ts",
     ".storybook/**/*.tsx",
     ".next-view/types/**/*.ts",
-    ".next-view/dev/types/**/*.ts"
+    ".next-view/dev/types/**/*.ts",
+    ".next-assess/types/**/*.ts",
+    ".next-assess/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

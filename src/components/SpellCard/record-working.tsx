@@ -6,6 +6,8 @@ import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingSetupQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import { dayPickerModule } from '../DateField/lazy-day-picker';
+import { preloadOnIntent, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import { RecordButton } from '../IconTip';
 import Modal from '../Modal';
 import Notice from '../Notice';
@@ -93,9 +95,15 @@ export default function CardRecordWorking({
 }: SpellCardRecordWorkingProps): ReactElement {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  usePreloadWhenIdle(dayPickerModule);
   return (
     <>
-      <RecordButton name={spellName} ref={trigger} onClick={() => setOpen(true)} />
+      <RecordButton
+        name={spellName}
+        ref={trigger}
+        preload={preloadOnIntent(dayPickerModule)}
+        onClick={() => setOpen(true)}
+      />
       {open && (
         <CardRecordWorkingDialog
           {...props}

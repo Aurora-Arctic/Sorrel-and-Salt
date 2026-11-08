@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement, Ref } from 'react';
+import type { PreloadHandlers } from '../../lib/types';
 import MenuButton from '../MenuButton';
 import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
@@ -130,14 +131,17 @@ export const PreviewButton = ({
 export const RecordButton = ({
   name,
   onClick,
+  preload,
   ref,
 }: {
   name: string;
   onClick: () => void;
+  /** Starts the dialog's late-loading parts when the pointer, focus or a press reaches the button. */
+  preload?: PreloadHandlers;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Record a Working">
-    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick} {...preload}>
       <CauldronIcon />
       <span className="visually-hidden">Record a Working of {name}</span>
     </button>
