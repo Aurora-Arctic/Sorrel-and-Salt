@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import StockDialog, { StockDialogModal, StockJarButton } from '@/components/StockDialog';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { SaveStockMutation, SaveStockMutationVariables } from '@/gql/graphql';
 import { choose, press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
 
 // The service is the guard and is tested there; this proves what the dialog sends (only what changed) when it lets Save through, and where a refusal lands.
 
@@ -97,6 +98,11 @@ async function sent(calls: SaveStockMutationVariables[]) {
   await waitFor(() => expect(calls).toHaveLength(1));
   return calls[0]!;
 }
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+});
 
 describe('StockDialog', () => {
   // Opened from a page that is not a coven's, the dialog names the coven it writes to in

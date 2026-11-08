@@ -7,13 +7,11 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
-import {
-  CharacterCount,
-  FieldShell,
-  FormActions,
-  RadioGroupField,
-  fieldDescription,
-} from '../Field';
+import { CharacterCount } from '../Field/character-count';
+import { FieldShell } from '../Field/shell';
+import { FormActions } from '../Field/form-actions';
+import { RadioGroupField } from '../Field/radio-group-field';
+import { fieldDescription } from '../Field/description';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';

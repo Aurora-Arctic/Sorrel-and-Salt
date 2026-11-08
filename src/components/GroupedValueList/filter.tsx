@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
-import { FilterSelectField, SearchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';

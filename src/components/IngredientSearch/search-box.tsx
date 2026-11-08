@@ -3,12 +3,12 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
-import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
 import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { UNTITLED_SPELL } from '../SpellCard/untitled';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';

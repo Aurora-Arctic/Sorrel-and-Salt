@@ -4,7 +4,8 @@ import { type ReactElement, useId } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox/select';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell } from '../Field/shell';
+import { fieldDescription } from '../Field/description';
 import type { SortSelectProps } from './types';
 
 /**

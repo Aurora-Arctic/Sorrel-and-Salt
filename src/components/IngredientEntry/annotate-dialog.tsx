@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import CupboardEntryForm from '../CupboardEntryForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import { LazyCupboardEntryForm } from './lazy-forms';
 import AnnotateMore from './annotate-more';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { AnnotateDialogProps } from './types';
@@ -24,7 +24,7 @@ export default function AnnotateDialog({
         opened && {
           heading: ANNOTATE_HEADING,
           body: (done) => (
-            <CupboardEntryForm
+            <LazyCupboardEntryForm
               {...opened}
               onDone={done}
               aside={

@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField, SwitchField } from '../Field';
+import { SearchField } from '../Field/search-field';
+import { SwitchField } from '../Field/switch-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { INVITATIONS_PATH, invitationsHref } from './href';
 import type { AdminInvitationsFilterProps } from './types';

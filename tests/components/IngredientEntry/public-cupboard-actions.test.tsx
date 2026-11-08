@@ -10,6 +10,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { covenChoiceModule } from '@/components/IngredientEntry/lazy-coven-choice';
 import { press } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
+import { cupboardEntryFormModule } from '@/components/IngredientEntry/lazy-forms';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -124,6 +126,12 @@ function mockWrite<T extends AddCupboardEntryMutation | RemoveCupboardEntryMutat
 // The coven choice loads apart from the dialogs; it has arrived by the time a person opens one.
 beforeAll(async () => {
   await covenChoiceModule.load();
+});
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+  await cupboardEntryFormModule.load();
 });
 
 describe('CupboardActions on the public page', () => {
