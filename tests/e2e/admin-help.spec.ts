@@ -1,11 +1,11 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 
-// The keepers' help page: every help row at every audience, written by a keeper alone
+// The keepers' help outline and its full-page form: every help row at every audience, written by a keeper alone
 // (claude-docs/design-decisions/support.md, "Audiences, staff routes and search"; claude-docs/design/graphql.md, "Help articles").
 
 test.beforeAll(async () => {
@@ -25,58 +25,43 @@ const addLink = (page: Page) =>
 const editLink = (page: Page, title: string) =>
   page.getByRole('main').getByRole('link', { name: `Edit ${title}`, exact: true });
 
-/**
- * Opens the list at the page holding the row, walking Next from the first page, and says whether any page holds it.
- * The shipped help rows fill the first pages, so a row the test writes can land on any of them.
- */
+/** Searches the outline for the row and says whether a result is it. */
 async function findRow(page: Page, title: string): Promise<boolean> {
-  await page.goto(PATH);
-  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
-  for (;;) {
-    if ((await editLink(page, title).count()) > 0) return true;
-    const next = page
-      .getByRole('navigation', { name: 'Pages' })
-      .getByRole('link', { name: /Next/ });
-    if ((await next.count()) === 0 || (await next.getAttribute('aria-disabled')) === 'true')
-      return false;
-    const before = page.url();
-    await next.click();
-    await expect(page).not.toHaveURL(before);
-  }
+  await page.goto(`${PATH}?q=${encodeURIComponent(title)}&shown=all`);
+  // A search with no hit draws a sentence in place of the table, so the pane's heading says the search is done.
+  await expect(
+    page.getByRole('main').getByRole('heading', { level: 2, name: 'Search Results' }),
+  ).toBeVisible();
+  return (await editLink(page, title).count()) > 0;
 }
 
 const expectListed = async (page: Page, title: string) =>
-  expect(await findRow(page, title), `${title} is on a page of the list`).toBe(true);
+  expect(await findRow(page, title), `${title} is found in the outline`).toBe(true);
 
 const expectNotListed = async (page: Page, title: string) =>
-  expect(await findRow(page, title), `${title} is on no page of the list`).toBe(false);
+  expect(await findRow(page, title), `${title} is not found in the outline`).toBe(false);
 
-/** The choices a picker in the dialog offers, by opening its list. */
-async function openChoices(page: Page, dialog: Locator, label: string): Promise<Locator> {
-  await dialog.getByRole('combobox', { name: new RegExp(`^${label}`) }).click();
-  const list = page.getByRole('listbox', { name: `${label} choices` });
-  await expect(list.getByRole('option').first()).toBeVisible();
-  return list.getByRole('option');
+const title = (page: Page) => page.getByRole('main').getByRole('textbox', { name: /^Title/ });
+
+/** The body's editor takes typed text, as a keeper writes it. */
+async function writeBody(page: Page, text: string): Promise<void> {
+  await page.getByRole('main').getByRole('textbox', { name: 'Body', exact: true }).click();
+  await page.keyboard.type(text);
 }
 
-async function choose(page: Page, dialog: Locator, label: string, option: string): Promise<void> {
-  const options = await openChoices(page, dialog, label);
-  await options.filter({ hasText: new RegExp(`^${option}$`) }).click();
-}
+const audience = (page: Page, name: string) =>
+  page
+    .getByRole('main')
+    .getByRole('group', { name: /^Audience/ })
+    .getByRole('radio', { name });
 
-async function openAdd(page: Page): Promise<Locator> {
-  await addLink(page).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('textbox', { name: /^Title/ })).toBeVisible();
-  return dialog;
-}
+/** Leaves the form for the outline it returns to. */
+const expectBackAtOutline = (page: Page) => expect(page).toHaveURL(/\/keepers\/help(\?|$)/);
 
-async function openEdit(page: Page, title: string): Promise<Locator> {
-  await expectListed(page, title);
-  await editLink(page, title).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('textbox', { name: /^Title/ })).toHaveValue(title);
-  return dialog;
+async function openEdit(page: Page, name: string): Promise<void> {
+  await expectListed(page, name);
+  await editLink(page, name).click();
+  await expect(title(page)).toHaveValue(name);
 }
 
 test('a keeper writes a parent and a narrower sub page, meets a refusal at its field, and deletes both', async ({
@@ -87,97 +72,92 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   const response = await page.goto(PATH);
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
-  // Precondition: no page lists the rows yet, so each row below is one this test wrote.
+  // Precondition: no search finds the rows yet, so each row below is one this test wrote.
   await expectNotListed(page, PARENT);
   await expectNotListed(page, CHILD);
+  await page.goto(PATH);
   await assertNoAccessibilityViolations(page);
 
-  // The parent: a public article, its body previewed through the renderer as it is typed.
-  let dialog = await openAdd(page);
-  await dialog.getByRole('textbox', { name: /^Title/ }).fill(PARENT);
-  await dialog.getByRole('textbox', { name: /^Summary/ }).fill('A guide the test writes.');
-  await dialog
-    .getByRole('textbox', { name: /^Body/ })
-    .fill('## Fixturewort Heading\n\nA paragraph the test writes.');
+  // The parent: a public guide, written on the form's own page.
+  await addLink(page).click();
+  await expect(page).toHaveURL(`${PATH}/new`);
+  await title(page).fill(PARENT);
+  await page
+    .getByRole('main')
+    .getByRole('textbox', { name: /^Summary/ })
+    .fill('A guide the test writes.');
+  await writeBody(page, 'A paragraph the test writes.');
+  await assertNoAccessibilityViolations(page);
+  await page.getByRole('button', { name: 'Save Article' }).click();
+  await expectBackAtOutline(page);
+  await expectListed(page, PARENT);
+
+  // The sub page: added from the guide's pane, so it starts under the guide, at the narrower staff audience.
+  await page.goto(PATH);
+  await page
+    .getByRole('navigation', { name: 'Help Outline' })
+    .getByRole('link', { name: PARENT })
+    .click();
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: `Add Sub Page to ${PARENT}` })
+    .click();
+  await expect(page.getByRole('main').getByRole('combobox', { name: /^Parent/ })).toHaveText(
+    new RegExp(PARENT),
+  );
+  await title(page).fill(CHILD);
+  await writeBody(page, 'A sub page the test writes.');
+  // The segment's native radio is drawn invisible, so its label is pressed, as a keeper presses it.
+  await audience(page, 'Staff').locator('xpath=ancestor::label[1]').click();
+  await expect(audience(page, 'Staff')).toBeChecked();
+  await page.getByRole('button', { name: 'Save Article' }).click();
+  await expectBackAtOutline(page);
   await expect(
-    dialog.getByRole('region', { name: 'Preview' }).getByRole('heading', {
-      name: 'Fixturewort Heading',
+    page.getByRole('table', { name: `Sub Pages of ${PARENT}` }).getByRole('link', {
+      name: `Edit ${CHILD}`,
+      exact: true,
     }),
   ).toBeVisible();
+
+  // A title that makes a reserved address is refused beside Title, and the form stays.
+  await page.goto(`${PATH}/new`);
+  await title(page).fill('Glossary');
+  await writeBody(page, 'A row the service refuses.');
+  await page.getByRole('button', { name: 'Save Article' }).click();
+  await expect(title(page)).toHaveAttribute('aria-invalid', 'true');
+  await expect(page).toHaveURL(`${PATH}/new`);
   await assertNoAccessibilityViolations(page);
-  await dialog.getByRole('button', { name: 'Save Article' }).click();
-  await expect(dialog).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard Changes' }).click();
+  await expectBackAtOutline(page);
+
+  // The parent cannot be made narrower than its staff sub page: Keeper is held.
+  await openEdit(page, PARENT);
+  await expect(audience(page, 'Keeper')).toBeDisabled();
+  await expect(audience(page, 'Staff')).toBeEnabled();
+
+  // A parent with a live sub page is not deleted: the refusal says why, and the form stays.
+  await page.getByRole('button', { name: 'Delete Article' }).click();
+  await assertNoAccessibilityViolations(page);
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
+  await expect(title(page)).toHaveValue(PARENT);
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expectBackAtOutline(page);
   await expectListed(page, PARENT);
 
-  // The sub page: under the public parent, at the narrower staff audience.
-  dialog = await openAdd(page);
-  await dialog.getByRole('textbox', { name: /^Title/ }).fill(CHILD);
-  await dialog.getByRole('textbox', { name: /^Body/ }).fill('A sub page the test writes.');
-  await choose(page, dialog, 'Parent', PARENT);
-  await choose(page, dialog, 'Audience', 'Staff');
-  await dialog.getByRole('textbox', { name: /^Position/ }).fill('1');
-  await dialog.getByRole('button', { name: 'Save Article' }).click();
-  await expect(dialog).toHaveCount(0);
-  await expectListed(page, CHILD);
-  // Both rows are listed, the staff one beside the public one.
-  await expectListed(page, PARENT);
-
-  // A new row offers the parent, never the sub page, which is itself a child.
-  dialog = await openAdd(page);
-  const parents = await openChoices(page, dialog, 'Parent');
-  await expect(parents.filter({ hasText: new RegExp(`^${PARENT}$`) })).toHaveCount(1);
-  await expect(parents.filter({ hasText: new RegExp(`^${CHILD}$`) })).toHaveCount(0);
-  await page.keyboard.press('Escape');
-
-  // A reserved slug is refused beside Slug, and the dialog stays open.
-  await dialog.getByRole('textbox', { name: /^Title/ }).fill('Fixturewort Reserved');
-  await dialog.getByRole('textbox', { name: /^Body/ }).fill('A row the service refuses.');
-  const slug = dialog.getByRole('textbox', { name: /^Slug/ });
-  await slug.fill('glossary');
-  await dialog.getByRole('button', { name: 'Save Article' }).click();
-  await expect(slug).toHaveAttribute('aria-invalid', 'true');
-  await expect(dialog).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
-  await dialog.getByRole('button', { name: 'Discard Changes' }).click();
-  await expect(dialog).toHaveCount(0);
-  await expectNotListed(page, 'Fixturewort Reserved');
-
-  // A parent made narrower than its staff child is refused beside Audience.
-  dialog = await openEdit(page, PARENT);
-  await choose(page, dialog, 'Audience', 'Keeper');
-  await dialog.getByRole('button', { name: 'Save Article' }).click();
-  const audience = dialog.getByRole('combobox', { name: /^Audience/ });
-  await expect(audience).toHaveAttribute('aria-invalid', 'true');
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
-  await dialog.getByRole('button', { name: 'Discard Changes' }).click();
-  await expect(dialog).toHaveCount(0);
-
-  // A parent with a live child is not deleted: the refusal says why, and the row stays.
-  dialog = await openEdit(page, PARENT);
-  await dialog.getByRole('button', { name: 'Delete Article' }).click();
-  await assertNoAccessibilityViolations(page);
-  await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(dialog.getByRole('alert')).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
-  await expect(dialog).toHaveCount(0);
-  await expectListed(page, PARENT);
-
-  // The child, then the parent, each after its confirmation.
-  dialog = await openEdit(page, CHILD);
-  await dialog.getByRole('button', { name: 'Delete Article' }).click();
-  await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+  // The sub page, then the parent, each after its confirmation.
+  await openEdit(page, CHILD);
+  await page.getByRole('button', { name: 'Delete Article' }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expectBackAtOutline(page);
   await expectNotListed(page, CHILD);
 
-  dialog = await openEdit(page, PARENT);
-  await dialog.getByRole('button', { name: 'Delete Article' }).click();
-  await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+  await openEdit(page, PARENT);
+  await page.getByRole('button', { name: 'Delete Article' }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expectBackAtOutline(page);
   await expectNotListed(page, PARENT);
-
-  await expectNotListed(page, CHILD);
 });
 
 // Why each could have reached it: the curator opens Support under the same Keepers layout, the practitioner opens

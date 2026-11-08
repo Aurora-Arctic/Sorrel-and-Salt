@@ -171,7 +171,8 @@ test.describe('the staff help pages', () => {
     await expect(page.getByRole('heading', { level: 2, name: HELP.curation.title })).toBeVisible();
     await assertNoAccessibilityViolations(page);
 
-    await page.getByRole('link', { name: new RegExp(HELP.curationForms.title) }).click();
+    // The sub page list's link, not the guide's Next link to the same page.
+    await page.getByRole('link', { name: HELP.curationForms.title, exact: true }).click();
     await expect(page).toHaveURL(
       new RegExp(`/help/staff/${HELP.curation.slug}/${HELP.curationForms.slug}$`),
     );

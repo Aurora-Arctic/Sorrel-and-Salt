@@ -53,6 +53,8 @@ export const PAGE_PATTERNS: readonly string[] = [
   '/keepers/documents',
   '/keepers/documents/[key]',
   '/keepers/help',
+  '/keepers/help/[id]',
+  '/keepers/help/new',
   '/keepers/invitation-cards',
   '/keepers/invitations',
   '/keepers/privilege-changes',
