@@ -22,6 +22,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       heading="Staff Help"
       title={found.title}
       body={found.body}
+      parent={{ title: 'Staff Help', href: '/help/staff' }}
       subpages={found.children.map(linkTo)}
       steps={guideSteps(linkTo(found), found.children.map(linkTo), helpPath(found))}
     />

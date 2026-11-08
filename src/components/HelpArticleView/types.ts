@@ -18,7 +18,7 @@ export interface HelpArticleViewProps {
   subpages: HelpSubpageLink[];
   /** The glossary, which the body's `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */
   terms?: HelpTermSource[];
-  /** On a sub page, the guide above it, linked between the search box and the title. */
+  /** The page above this one, linked between the search box and the title: a sub page's guide, or a guide's help index. */
   parent?: HelpGuideStep;
   /** The pages either side of this one in its guide (`guideSteps`), linked at the page's foot. */
   steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };

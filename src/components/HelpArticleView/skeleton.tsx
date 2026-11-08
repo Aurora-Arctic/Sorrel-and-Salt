@@ -25,8 +25,8 @@ const Step = ({ next = false }: { next?: boolean }) => (
   </span>
 );
 
-// An article with its text still to come, in the page's own frame: the heading, the search box, the way back to a
-// parent on a sub page, the title, paragraphs under a section heading, the In This Guide frame a guide draws (a sub
+// An article with its text still to come, in the page's own frame: the heading, the search box, the way back (to the
+// help index on a guide, to a guide still to come on a sub page), the title, paragraphs under a section heading, the In This Guide frame a guide draws (a sub
 // page has none beneath it), and the guide's steps at the foot. Words still to come are bars of about their length.
 export const HelpArticleSkeleton = ({
   heading = 'Help',
@@ -39,14 +39,12 @@ export const HelpArticleSkeleton = ({
     <div className="help-article__head">
       <PageHeader title={heading} />
       <HelpSearchForm />
-      {parent && (
-        <p className="help-article__parent">
-          <span className="back-link">
-            <BackChevron />
-            <SkeletonWords count={3} />
-          </span>
-        </p>
-      )}
+      <p className="help-article__parent">
+        <span className="back-link">
+          <BackChevron />
+          {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
+        </span>
+      </p>
       <h2>
         <SkeletonWords count={3} />
       </h2>

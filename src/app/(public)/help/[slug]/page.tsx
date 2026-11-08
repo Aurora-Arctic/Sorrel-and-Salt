@@ -35,6 +35,7 @@ export default async function Page({ params }: Props) {
       terms={await readGlossaryTerms()}
       title={found.title}
       body={found.body}
+      parent={{ title: 'Help', href: '/help' }}
       subpages={found.children.map(linkTo)}
       steps={guideSteps(linkTo(found), found.children.map(linkTo), helpPath(found))}
     />
