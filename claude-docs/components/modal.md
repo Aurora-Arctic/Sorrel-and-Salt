@@ -36,6 +36,8 @@ A closing modal returns the focus to what opened it. The browser does this only 
 3. Otherwise it asks the owner's `returnTo`. `RouteModal` looks for a link to its address (taken from the gone link, or from the provider, which notes it on a press so WebKit, where a click focuses no link, works); if that link sits in a closed `MenuButton` it focuses the menu's button.
 4. Otherwise it focuses the page's `<h1>` (`pageHeading()`, `tabindex="-1"`). This covers a row removed by its own confirmation and a modal reached by a pasted address or a reload.
 
+Whichever element it picks is focused with `preventScroll` when it is already in the window, since the page held still while the modal was open. A plain `focus()` scrolls to a link in the sticky bar, because the root's `scroll-padding-top` counts the bar as covering it, and the page jumped on every close. An element outside the window is scrolled to as usual. `tests/components/Modal/give-focus-back.test.tsx` holds both cases, and `tests/e2e/sign-in-dialog.spec.ts` proves the page stays put in a browser.
+
 A confirmation asked over a modal's form never reaches step 4: the overlay returns the focus inside the open modal. A modal that left the focus on a page it navigated to is left alone, and a steward never calls `.focus()` itself. The lint rule `sorrel/modal-focus-return-through-modal` (`lint/source-sweeps.js`) fails a file that draws a dialog and does otherwise, bar three exceptions: `FacetPanel`, the confirm overlay, and the confirm a `ConfirmedAction` focuses as it opens. Back closes a route modal too, with the same return. `tests/e2e/route-modal-focus.spec.ts` walks both closes.
 
 ## Unsaved changes

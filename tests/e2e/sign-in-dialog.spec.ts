@@ -62,12 +62,24 @@ const field = (dialog: Locator, label: string) => dialog.getByLabel(new RegExp(`
 /** Reads where the page is scrolled, to prove a closed dialog left it there. */
 const scrolled = (page: Page) => page.evaluate(() => window.scrollY);
 
+/**
+ * Clicks where the element is, as a person does. A locator's click first scrolls it into view, and for a link in the
+ * sticky bar that scroll moves the page (the root's `scroll-padding-top` counts the bar as hidden), so the page would
+ * already have moved before the dialog opened.
+ */
+const clickInPlace = async (page: Page, target: Locator) => {
+  const box = (await target.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+};
+
 test.describe('the sign-in dialog', () => {
   test('opens over a public page from the bar, passes axe in both themes, and Close, Escape and a click outside each leave the page as it was, and a new email account stays on it, told to check its inbox', async ({
     page,
   }) => {
     await page.goto('/help/glossary?x=1');
     await page.mouse.wheel(0, 400);
+    // The wheel scrolls in a later frame; a reading before it would compare 0 with 0 and prove nothing.
+    await page.waitForFunction(() => window.scrollY > 0);
     const at = await scrolled(page);
     const signIn = page.getByRole('banner').getByRole('link', { name: 'Sign In' });
     const dialog = page.getByRole('dialog', { name: 'Sign In' });
@@ -78,7 +90,7 @@ test.describe('the sign-in dialog', () => {
       ['a click outside', () => page.mouse.click(4, 4)],
     ];
     for (const [how, close] of closers) {
-      await signIn.click();
+      await clickInPlace(page, signIn);
       await expect(dialog, how).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
       if (how === 'Close') {

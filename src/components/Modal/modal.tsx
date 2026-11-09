@@ -61,7 +61,12 @@ export function giveFocusBack(opener: Element | null, returnTo: ModalProps['retu
     opener instanceof HTMLElement && opener.isConnected && !opener.closest('[hidden], [inert]')
       ? opener
       : (returnTo?.(opener) ?? pageHeading());
-  target?.focus();
+  if (!target) return;
+  // One already in the window is focused where it is: a plain focus() would scroll to a link in the sticky bar,
+  // which the root's `scroll-padding-top` counts as hidden under the bar.
+  const { top, bottom, left, right } = target.getBoundingClientRect();
+  const inWindow = bottom > 0 && top < window.innerHeight && right > 0 && left < window.innerWidth;
+  target.focus(inWindow ? { preventScroll: true } : undefined);
 }
 
 const Modal = ({
