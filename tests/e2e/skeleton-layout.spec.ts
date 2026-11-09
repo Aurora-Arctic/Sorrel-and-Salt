@@ -120,6 +120,7 @@ interface Navigation {
   inAccountMenu?: boolean;
 }
 
+// A move between two tabs of one admin page is not listed: the tab row stays mounted and swaps its own panel skeleton, so no cover is drawn (skeletonFor).
 const navigations: Navigation[] = [
   { name: 'compendium', as: 'steward', from: () => '/account', to: () => '/compendium' },
   {
@@ -221,63 +222,21 @@ const navigations: Navigation[] = [
     from: () => '/curator',
     to: () => '/curator/categories',
   },
-  {
-    name: 'curator-category-groups',
-    as: 'keeper',
-    from: () => '/curator/categories',
-    to: () => '/curator/category-groups',
-  },
   { name: 'curator-forms', as: 'keeper', from: () => '/curator', to: () => '/curator/forms' },
-  {
-    name: 'curator-form-groups',
-    as: 'keeper',
-    from: () => '/curator/forms',
-    to: () => '/curator/form-groups',
-  },
   { name: 'curator-deities', as: 'keeper', from: () => '/curator', to: () => '/curator/deities' },
-  {
-    name: 'curator-deity-traditions',
-    as: 'keeper',
-    from: () => '/curator/deities',
-    to: () => '/curator/deity-traditions',
-  },
   {
     name: 'curator-celestial-bodies',
     as: 'keeper',
     from: () => '/curator',
     to: () => '/curator/celestial-bodies',
   },
-  {
-    name: 'curator-zodiac-signs',
-    as: 'keeper',
-    from: () => '/curator/celestial-bodies',
-    to: () => '/curator/zodiac-signs',
-  },
   { name: 'keepers', as: 'keeper', from: () => '/curator', to: () => '/keepers' },
   { name: 'keepers-users', as: 'keeper', from: () => '/keepers', to: () => '/keepers/users' },
-  {
-    name: 'keepers-privilege-changes',
-    as: 'keeper',
-    from: () => '/keepers/users',
-    to: () => '/keepers/privilege-changes',
-  },
   {
     name: 'keepers-invitations',
     as: 'keeper',
     from: () => '/keepers',
     to: () => '/keepers/invitations',
-  },
-  {
-    name: 'keepers-invitation-cards',
-    as: 'keeper',
-    from: () => '/keepers/invitations',
-    to: () => '/keepers/invitation-cards',
-  },
-  {
-    name: 'keepers-card-sign-ups',
-    as: 'keeper',
-    from: () => '/keepers/invitations',
-    to: () => '/keepers/card-sign-ups',
   },
   { name: 'keepers-support', as: 'keeper', from: () => '/keepers', to: () => '/keepers/support' },
   {
@@ -285,18 +244,6 @@ const navigations: Navigation[] = [
     as: 'keeper',
     from: () => '/keepers',
     to: () => '/keepers/business-cards',
-  },
-  {
-    name: 'keepers-documents',
-    as: 'keeper',
-    from: () => '/keepers/documents/terms',
-    to: () => '/keepers/documents',
-  },
-  {
-    name: 'keepers-document',
-    as: 'keeper',
-    from: () => '/keepers/documents',
-    to: () => /^\/keepers\/documents\/[a-z-]+$/,
   },
   { name: 'keepers-help', as: 'keeper', from: () => '/keepers', to: () => '/keepers/help' },
   {
