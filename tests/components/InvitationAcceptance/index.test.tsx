@@ -202,16 +202,11 @@ describe('InvitationAcceptance', () => {
     expect(assign).toHaveBeenCalledWith('/invite/abc');
   });
 
-  it('tells a new, unverified account where its message went, with the way to the email page and home, and no Accept', () => {
+  it('tells a new, unverified account to confirm its address, with the way to the email page and home, and no Accept', () => {
     render(
-      <InvitationAcceptance
-        status="unverified"
-        email="someone@invitation.test"
-        emailHref="/account/email?next=%2Finvite%2Fabc"
-      />,
+      <InvitationAcceptance status="unverified" emailHref="/account/email?next=%2Finvite%2Fabc" />,
     );
 
-    expect(screen.getByText('someone@invitation.test')).toBeVisible();
     expect(screen.getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
       'href',
       '/account/email?next=%2Finvite%2Fabc',

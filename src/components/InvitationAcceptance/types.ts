@@ -5,7 +5,7 @@ export type InvitationAcceptanceProps =
   /** No session: nothing of the invitation is read until one holds it. `next` is the link itself; `card` for the short card link. */
   | { status: 'signed-out'; next: string; configured: readonly ProviderId[]; card?: boolean }
   /** Signed in with an address not yet verified: the message went to `email`, and its link comes back here. */
-  | { status: 'unverified'; email: string; emailHref: string }
+  | { status: 'unverified'; emailHref: string }
   | {
       status: 'refused';
       message: string;

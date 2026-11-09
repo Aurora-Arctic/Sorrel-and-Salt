@@ -47,9 +47,7 @@ const signedOutCardNode = (
   <Page status="signed-out" next="/i/workshop" configured={PROVIDERS} card />
 );
 
-const checkYourInboxNode = (
-  <Page status="unverified" email="someone@workshop.test" emailHref={EMAIL_PAGE} />
-);
+const checkYourInboxNode = <Page status="unverified" emailHref={EMAIL_PAGE} />;
 
 export const SignedOut: Story = { render: SignedOutView };
 

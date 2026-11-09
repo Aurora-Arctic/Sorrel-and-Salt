@@ -51,7 +51,7 @@ export default async function InvitationPanel({
         ? (await getMe(session)).email
         : undefined;
     if (unverifiedEmail !== undefined && !isPlaceholderEmail(unverifiedEmail)) {
-      panel = { status: 'unverified', email: unverifiedEmail, emailHref: emailPagePath(here) };
+      panel = { status: 'unverified', emailHref: emailPagePath(here) };
     } else if (!standing.acceptable) {
       panel = {
         status: 'refused',

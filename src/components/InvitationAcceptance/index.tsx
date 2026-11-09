@@ -52,19 +52,16 @@ const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 const CARD_SIGNED_OUT_GRANT =
   "You've been given a card to join Sorrel & Salt. Create an account or sign in with any you have. You can accept once its email address is verified.";
 
+/** To every unverified account that matched the address, new or not: a resend is the same press either way. */
+const UNVERIFIED_GRANT =
+  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
+
 /** What the heading says over a refusal. */
 const REFUSED_GRANT = "This invitation can't be used, and the reason is below.";
 
 /** The sentence under the heading; a refusal says why in its alert below, and here only that it was refused. */
 function grantOf(props: InvitationAcceptanceProps): ReactNode {
-  if (props.status === 'unverified')
-    return (
-      <>
-        Your account is made. Check your inbox: we&apos;ve sent a message to{' '}
-        <strong>{props.email}</strong>. The link in it confirms your address and brings you back
-        here to accept this invitation.
-      </>
-    );
+  if (props.status === 'unverified') return UNVERIFIED_GRANT;
   if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
   if (props.status === 'refused') return REFUSED_GRANT;
   if (props.status !== 'acceptable') return undefined;

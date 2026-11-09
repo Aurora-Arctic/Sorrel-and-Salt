@@ -78,7 +78,7 @@ describe('the invitation panel page', () => {
   });
 
   // The address matched before the verification check, so the account is the invitee's, waiting on its message.
-  it('tells an unverified account to check the inbox of its own address, with the way to the email page back here', async () => {
+  it('tells an unverified account to check its inbox, with the way to the email page back here', async () => {
     getSession.mockResolvedValue({ userId: 'u', role: 'user' });
     invitationStanding.mockResolvedValue({
       acceptable: false,
@@ -91,7 +91,6 @@ describe('the invitation panel page', () => {
 
     expect(shown[0]).toEqual({
       status: 'unverified',
-      email: 'someone@invitation.test',
       emailHref: '/account/email?next=%2Finvite%2Fabc',
     });
     expect(recorded).toEqual([]);

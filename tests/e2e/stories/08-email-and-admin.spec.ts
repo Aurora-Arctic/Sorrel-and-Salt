@@ -745,7 +745,6 @@ test(
     await rename(invitee, 'Invited Fixturewort');
     // The invitee's own account, not yet verified: told to check its inbox, not refused.
     expect((await visit(page, path)).status()).toBe(200);
-    await expect(page.getByRole('main')).toContainText(invited);
     await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     expect(different).not.toContain(invited);
@@ -758,8 +757,8 @@ test(
     await page.getByRole('button', { name: 'Send Confirmation' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(invited);
     const link = await mailedPath(invited, VERIFY_LINK);
+    // A link from an invitation lands on the invitation itself.
     await visit(page, link);
-    await page.getByRole('link', { name: 'Continue', exact: true }).click();
     await expect(page).toHaveURL(path);
 
     const accept = page.getByRole('button', { name: 'Accept Invitation' });

@@ -131,7 +131,6 @@ test.describe('the sign-in dialog', () => {
 
     // Back on the invitation, unverified: told to check the inbox, with nothing to accept yet.
     await expect(page).toHaveURL(INVITATION);
-    await expect(main).toContainText(INVITED);
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     await scanBothThemes(page);
