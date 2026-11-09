@@ -9,6 +9,7 @@ import type { PageHeaderProps } from '../../../components/PageHeader/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { isSiteInvitationMarker } from '../../../lib/invitation-link';
 import { getSession } from '../../../lib/request-session';
+import type { UserRole } from '../../../lib/session';
 import { ADMIN_LANDING, CURATOR_LANDING } from '../../../lib/sign-in';
 // Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
 // oxlint-disable-next-line no-restricted-imports
@@ -22,6 +23,13 @@ const standingOf = cache(invitationStanding);
 const route = <T extends string>(href: Route<T>): Route => href as Route;
 
 const CARD_LANDING = '/coven/new' satisfies Route;
+
+// Where each site role signs in to; `user` was given coven creation alone, so it lands on starting one.
+const SITE_LANDINGS: Record<UserRole, Route> = {
+  user: CARD_LANDING,
+  curator: CURATOR_LANDING,
+  admin: ADMIN_LANDING,
+};
 
 // The same page with the marker that makes it say what the card gave. A cast, as the built routes know no query.
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
@@ -89,7 +97,7 @@ export default async function InvitationPanel({
         token,
         tier: 'site',
         siteRole: standing.siteRole,
-        landing: standing.siteRole === 'admin' ? ADMIN_LANDING : CURATOR_LANDING,
+        landing: SITE_LANDINGS[standing.siteRole],
       };
     } else if (standing.tier === 'card') {
       panel = { status: 'acceptable', token, tier: 'card', landing: CARD_ACCEPTED_LANDING };

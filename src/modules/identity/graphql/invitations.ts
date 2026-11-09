@@ -11,12 +11,17 @@ import {
 
 // The admin invitation and the one accept. No field carries the token or a link: the token exists only in the mail and the
 // row holds its hash (claude-docs/auth/admin-users.md, "Inviting a keeper"). The workspace tier's `workspace` and `role`
-// are added from `coven`. "Admin invitation" also covers a curator invite: `siteRole` says which.
+// are added from `coven`. "Admin invitation" also covers a curator invite and one to create a coven: `siteRole` says which.
 
-const INVITABLE_SITE_ROLES = ['curator', 'admin'] as const satisfies readonly InvitableSiteRole[];
+const INVITABLE_SITE_ROLES = [
+  'user',
+  'curator',
+  'admin',
+] as const satisfies readonly InvitableSiteRole[];
 
 const InvitableSiteRoleEnum = builder.enumType('InvitableSiteRole', {
-  description: 'A site role an invitation may grant: never `user`, which every account holds.',
+  description:
+    'What a site invitation grants: `user` turns on coven creation alone and changes no role; `curator` or `admin` grants that role.',
   values: INVITABLE_SITE_ROLES,
 });
 
@@ -35,7 +40,7 @@ export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').impl
       type: InvitableSiteRoleEnum,
       nullable: true,
       description: 'The site role a site invitation grants; none on a coven invitation.',
-      // A CHECK holds the column to these two (invitations_site_role_invitable).
+      // A CHECK holds the column to these (invitations_site_role_invitable).
       resolve: (row) => row.siteRole as InvitableSiteRole | null,
     }),
     expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
@@ -55,7 +60,7 @@ builder.mutationField('createAdminInvitation', (t) =>
   t.field({
     type: InvitationRef,
     description:
-      'Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.',
+      'Invites an address to become a curator or an admin, or, as `user`, to create covens with no role change, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, or for `user` already able to create a coven, and while admin changes are paused, but to the primary admin.',
     args: {
       email: t.arg.string({ required: true }),
       siteRole: t.arg({ type: InvitableSiteRoleEnum, required: true }),

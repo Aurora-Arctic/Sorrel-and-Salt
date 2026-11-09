@@ -6,7 +6,7 @@ import type { Message } from './types';
 // Where an invitation's token becomes a link and a mail, built by the secret-link job's step once it has minted the token.
 
 export type InvitationMailFacts = { to: string; inviterName: string } & (
-  { siteRole: 'curator' | 'admin' } | { covenName: string; role: 'viewer' | 'member' }
+  { siteRole: 'user' | 'curator' | 'admin' } | { covenName: string; role: 'viewer' | 'member' }
 );
 
 export function invitationLinkMessage(

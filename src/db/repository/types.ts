@@ -1167,7 +1167,8 @@ export interface ReceivedInvitationInviter {
   name: string;
 }
 
-export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 'user'>;
+/** `user` grants coven creation alone; `curator` and `admin` grant the role, and coven creation with it. */
+export type InvitableSiteRole = NonNullable<InvitationRow['siteRole']>;
 
 /**
  * A site-tier invitation, which grants the site role it names: the workspace and the coven role both null, as the `invitations_tier` CHECK makes them

@@ -714,8 +714,10 @@ make more keepers.
 - **A keeper can invite a curator as well as a keeper** (the owner's ask,
   2026-10-16, folded into this task). A site-tier invitation names the role
   it grants in a new column, `invitations.site_role`, `curator` or `admin`
-  and never `user` (migration 0075, its CHECKs comparing the column as text
-  for the reason 0074's does). The invite form offers both, Curator chosen to
+  (migration 0075, its CHECKs comparing the column as text for the reason
+  0074's does). Migration 0143 widened the CHECK to `user`, which grants
+  coven creation alone and changes no role
+  ([`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper"). The invite form offers both, Curator chosen to
   begin with, so that granting the People page is a choice; the mail, the
   Accept page and the pending list name the role. The mutation, the services
   and the mail keep their "admin invitation" names: a keeper is who sends

@@ -33,6 +33,7 @@ const RecordCardAttemptDocument = graphql(`
 `);
 
 const SITE_GRANTS = {
+  user: "You've been invited to Sorrel & Salt to start a coven of your own.",
   curator: "You've been invited to be a curator of Sorrel & Salt.",
   admin: "You've been invited to be a keeper of Sorrel & Salt.",
 } as const;

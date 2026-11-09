@@ -211,8 +211,9 @@ describe('the invitation panel page', () => {
     expect(landings).toEqual(['/coven/new?card=accepted']);
   });
 
-  // A site invitation grants the role it names, so its invitee lands where that role signs in to.
+  // A site invitation grants the role it names, so its invitee lands where that role signs in to; `user` grants coven creation alone.
   it.each([
+    ['user', '/coven/new'],
     ['curator', '/curator'],
     ['admin', '/keepers'],
   ])('lands an accepted site invitation to the %s role on %s', async (siteRole, landing) => {

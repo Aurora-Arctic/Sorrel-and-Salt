@@ -38,6 +38,13 @@ const INVITATIONS = [
     note: null,
     expiresAt: new Date('2026-10-16T09:00:00Z'),
   },
+  {
+    id: 'i3',
+    email: 'cass@example.test',
+    siteRole: 'user' as const,
+    note: null,
+    expiresAt: new Date('2026-10-15T09:00:00Z'),
+  },
 ];
 
 beforeEach(() => {
@@ -48,17 +55,18 @@ beforeEach(() => {
 
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
-const roleRadio = (role: 'Curator' | 'Keeper') =>
+const roleRadio = (role: 'Coven Creator' | 'Curator' | 'Keeper') =>
   within(dialog()).getByRole('radio', { name: new RegExp(`^${role}`) });
 
 describe('AdminInvitations', () => {
   it('lists each pending invitation with its address, role, reason and expiry', () => {
     render(<AdminInvitations invitations={INVITATIONS} />);
 
-    const [, first, second] = screen.getAllByRole('row');
+    const [, first, second, third] = screen.getAllByRole('row');
     expect(within(first).getByText('ada@example.test')).toBeInTheDocument();
     expect(within(first).getByText('Curator')).toBeInTheDocument();
     expect(within(second).getByText('Keeper')).toBeInTheDocument();
+    expect(within(third).getByText('Coven Creator')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
     expect(
       within(first).getByText(/^\d{1,2} October \d{4}, \d{1,2}:\d{2} (am|pm)$/),
@@ -81,7 +89,7 @@ describe('AdminInvitations', () => {
     );
   });
 
-  it('sends an invitation to the curator role with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
+  it('sends an invitation to create a coven, the user role chosen to begin with, with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
     const calls: CreateAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
       'CreateAdminInvitation',
@@ -95,7 +103,7 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
-    expect(roleRadio('Curator')).toBeChecked();
+    expect(roleRadio('Coven Creator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
     });
@@ -114,7 +122,7 @@ describe('AdminInvitations', () => {
       ).toHaveLength(1),
     );
     expect(calls).toEqual([
-      { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
+      { email: 'cass@example.test', siteRole: 'user', note: 'Knows the celestial bodies' },
     ]);
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false }),
@@ -131,7 +139,10 @@ describe('AdminInvitations', () => {
     ).toHaveLength(1);
   });
 
-  it('sends the admin role when it is chosen', async () => {
+  it.each([
+    ['Curator', 'curator'],
+    ['Keeper', 'admin'],
+  ] as const)('sends the %s role when it is chosen', async (label, siteRole) => {
     const calls: CreateAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
       'CreateAdminInvitation',
@@ -145,11 +156,11 @@ describe('AdminInvitations', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: 'cass@example.test' },
     });
-    fireEvent.click(roleRadio('Keeper'));
+    fireEvent.click(roleRadio(label));
     fireEvent.click(send());
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(calls).toEqual([{ email: 'cass@example.test', siteRole: 'admin' }]);
+    expect(calls).toEqual([{ email: 'cass@example.test', siteRole }]);
   });
 
   // Every way out asks first while the form has anything typed; the guard's shape is tests/components/Modal's.

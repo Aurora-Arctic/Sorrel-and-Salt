@@ -678,6 +678,7 @@ test(
     await expect(send).toBeDisabled();
     await email.fill(invited);
     await dialog.getByRole('textbox', { name: 'Reason' }).fill('Curates the resins');
+    await dialog.getByRole('radio', { name: /^Curator\b/ }).check();
     await expect(send).toBeEnabled();
     await assertNoAccessibilityViolations(page);
     await send.click();

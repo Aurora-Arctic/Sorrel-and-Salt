@@ -8,7 +8,6 @@ import { emptyList, noMatchText } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
-import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import { AdminInvitationsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
@@ -16,7 +15,7 @@ import Notice from '../Notice';
 import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
 import { invitationsHref } from './href';
-import InviteForm, { INVITE_TITLE } from './invite-form';
+import InviteForm, { INVITE_TITLE, invitationRoleLabel } from './invite-form';
 import type {
   RevokeInvitationProps,
   AdminInvitationsFilter as Filter,
@@ -138,7 +137,7 @@ const AdminInvitations = ({
           <StackTable
             columns={[
               { heading: 'Email', cell: (invitation) => invitation.email },
-              { heading: 'Role', cell: (invitation) => roleLabel(invitation.siteRole) },
+              { heading: 'Role', cell: (invitation) => invitationRoleLabel(invitation.siteRole) },
               {
                 heading: 'Reason',
                 cell: (invitation) =>

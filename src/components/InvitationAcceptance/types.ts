@@ -33,7 +33,7 @@ export type InvitationAcceptanceProps =
       status: 'acceptable';
       token: string;
       tier: 'site';
-      siteRole: 'curator' | 'admin';
+      siteRole: 'user' | 'curator' | 'admin';
       landing: Route;
     }
   | {
