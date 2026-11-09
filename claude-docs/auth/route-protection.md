@@ -14,7 +14,7 @@ answer.
 | `requireAdminSession()`, `/keepers` people pages                     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`                                              | The redirect, or a 403 page for a non-keeper (["The admin guard"](admin-guard.md)) |
 
 - **An address nothing answers is a 404, not a sign-in.** The proxy redirects only an address that matches a page pattern or a `public/` file in `src/lib/page-routes.ts` (generated from `src/app` by `npm run generate:routes`, `scripts/page-routes.ts`; `tests/guards/page-routes.test.ts` fails when it is stale), plus `/workshop/*` and any path with `//`. Anything else passes to the `(unmatched)` catch-all, which draws the 404 in the public frame for a signed-out visitor and in the shell for a signed-in one ([`mb.124-signed-out-404-route-list.md`](../design-decisions/mb.124-signed-out-404-route-list.md)).
-- **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of the
+- **Deny by default.** `PUBLIC_ROUTES` in `src/lib/public-routes.ts` (which `src/proxy.ts` and Sign Out read) is a plain list of the
   pages a signed-out visitor may reach: `/`, the general entry page;
   `/sign-in`; `/forgot-password` and `/reset-password`, since a person who has
   forgotten their password has no session ([`passwords.md`](passwords.md));

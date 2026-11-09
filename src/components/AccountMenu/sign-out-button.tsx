@@ -6,13 +6,12 @@ import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { reportLeaving } from '../../lib/navigation';
+import { signOutDestination } from '../../lib/public-routes';
 
 // Sign Out: Better Auth's own sign-out at `/api/auth/*`, the one path outside GraphQL, carrying the
 // session and no application data (claude-docs/auth/config.md, "The one exception to the
-// GraphQL-only rule"). A success is a full load of `/`; a failure is a callout under the button
+// GraphQL-only rule"). A success is a full load of `/`, or of the public page the visitor is on; a failure is a callout under the button
 // (claude-docs/components/account-menu.md).
-
-const LANDING = '/';
 
 const SignOutButton = (): ReactElement => {
   const [pending, setPending] = useState(false);
@@ -31,7 +30,9 @@ const SignOutButton = (): ReactElement => {
       return;
     }
     reportLeaving();
-    window.location.assign(LANDING);
+    const { pathname, search } = window.location;
+    const destination = signOutDestination(pathname);
+    window.location.assign(destination === pathname ? `${pathname}${search}` : destination);
   }
 
   return (

@@ -427,3 +427,31 @@ for (const [who, label, path] of [
     expect(tucked).toBeGreaterThan(0);
   });
 }
+
+test('Sign Out on the public compendium loads it again signed out', async ({ page }) => {
+  await signInAgainAs(page, users.member.id);
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/compendium');
+
+  const banner = page.getByRole('banner');
+  await banner.getByRole('button', { name: 'Fixture Person' }).click();
+  await banner.getByRole('button', { name: 'Sign Out', exact: true }).click();
+
+  // The signed-out bar first, so the URL is read after the full load and not before it starts.
+  await expect(banner.getByRole('link', { name: 'Sign In' }).first()).toBeVisible();
+  await expect(banner.getByRole('button', { name: 'Fixture Person' })).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === '/compendium');
+});
+
+test('Sign Out on a coven page loads the landing page', async ({ page }) => {
+  await signInAgainAs(page, users.member.id);
+  await page.setViewportSize(DESKTOP);
+  await page.goto(`/coven/${ALPHA.slug}`);
+
+  const banner = page.getByRole('banner');
+  await banner.getByRole('button', { name: 'Fixture Person' }).click();
+  await banner.getByRole('button', { name: 'Sign Out', exact: true }).click();
+
+  await expect(page).toHaveURL((url) => url.pathname === '/');
+  await expect(banner.getByRole('button', { name: 'Fixture Person' })).toHaveCount(0);
+});
