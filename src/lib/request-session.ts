@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -196,7 +197,7 @@ export async function requireCovenMembership(slug: string): Promise<CovenMembers
     // First, since AccessPaused is a Forbidden too.
     if (error instanceof AccessPaused) redirect(covenPausedPath(slug));
     if (error instanceof CovenMoved)
-      redirect(movedCovenPath((await forwardedReturnPath()) ?? '', error.slug));
+      redirect(movedCovenPath((await forwardedReturnPath()) ?? '', error.slug) as Route);
     if (error instanceof Forbidden) notFound();
     throw error;
   }

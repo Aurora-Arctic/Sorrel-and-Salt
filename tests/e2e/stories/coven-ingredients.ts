@@ -53,6 +53,9 @@ export async function seedCoven(
         insert into workspaces (name, slug, created_by, updated_by)
         values (${name}, ${slug}, ${creator}, ${creator})
         returning id`;
+      await tx`
+        insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
+        values (${workspace.id}, ${slug}, ${creator}, ${creator})`;
       for (const [key, role] of Object.entries(roles)) {
         await tx`
           insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)

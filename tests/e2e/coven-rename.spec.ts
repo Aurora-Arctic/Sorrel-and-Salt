@@ -9,14 +9,12 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// `seedCoven` writes the coven row alone; a renamed coven holds its old and current addresses.
+// `seedCoven` writes the coven's first address; a renamed coven holds that one and its new one.
 async function renameByHand(coven: Coven, name: string, slug: string): Promise<void> {
   await withSql(async (sql) => {
     await sql`
       insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
-      values
-        (${coven.id}, ${coven.slug}, ${coven.users.A}, ${coven.users.A}),
-        (${coven.id}, ${slug}, ${coven.users.A}, ${coven.users.A})`;
+      values (${coven.id}, ${slug}, ${coven.users.A}, ${coven.users.A})`;
     await sql`update workspaces set name = ${name}, slug = ${slug} where id = ${coven.id}`;
   });
 }
