@@ -137,7 +137,9 @@ describe('the spell builder’s step text', () => {
     expect(instructions()).toHaveLength(1);
     expect(instructions()[0]).toHaveFocus();
     expect(announced()).toContain('at position 1 of 1.');
-    expect(within(rows()[0] as HTMLElement).queryByRole('spinbutton')).toBeNull();
+    expect(
+      within(rows()[0] as HTMLElement).queryByRole('textbox', { name: /^Quantity/ }),
+    ).toBeNull();
   });
 
   it('sends an instruction-only step as its text alone, in order with the others', async () => {
@@ -180,7 +182,9 @@ describe('the spell builder’s step text', () => {
     fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
-    expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
+    expect(
+      within(rows()[1] as HTMLElement).getByRole('textbox', { name: /^Quantity/ }),
+    ).toBeInTheDocument();
     openStep('Light the candle');
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);

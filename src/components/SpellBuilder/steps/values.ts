@@ -1,3 +1,4 @@
+import { parseQuantity } from '@/lib/formats';
 import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -177,10 +178,9 @@ function present<T extends object>(value: T): Partial<T> {
  * form, which the ingredient gives; a one-off by its name and form.
  */
 export function stepInputOf(step: SpellStepValue): SpellStepSend {
-  const quantity = step.quantity.trim();
   const shared = {
     id: step.stepId,
-    quantity: quantity === '' ? null : Number(quantity),
+    quantity: parseQuantity(step.quantity),
     unit: (step.unit || null) as Unit | null,
     body: step.body,
   };

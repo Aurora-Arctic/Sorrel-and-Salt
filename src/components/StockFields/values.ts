@@ -1,3 +1,4 @@
+import { parseQuantity } from '@/lib/formats';
 import { type Unit, isUnit } from '@/modules/ingredients/schema/units';
 import type { StockAmounts, StockFormValues, StockOfJar } from './types';
 
@@ -13,10 +14,8 @@ export function stockFormValues({ quantity, unit, threshold }: StockOfJar): Stoc
 }
 
 const amountOf = (text: string): number | null => {
-  const trimmed = text.trim();
-  if (trimmed === '') return null;
-  const amount = Number(trimmed);
-  return Number.isFinite(amount) ? amount : null;
+  const amount = parseQuantity(text);
+  return amount === null || !Number.isFinite(amount) ? null : amount;
 };
 
 /**

@@ -44,12 +44,11 @@ beforeEach(() => {
 const trigger = () => screen.getByRole('button', { name: 'Edit Stock, Testwort' });
 const dialog = () => screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
 const inDialog = () => within(dialog());
-const quantity = (form: string) =>
-  inDialog().getByRole('spinbutton', { name: `Quantity, ${form}` });
+const quantity = (form: string) => inDialog().getByRole('textbox', { name: `Quantity, ${form}` });
 const noQuantity = (form: string) =>
-  inDialog().queryByRole('spinbutton', { name: `Quantity, ${form}` });
+  inDialog().queryByRole('textbox', { name: `Quantity, ${form}` });
 const threshold = (form: string) =>
-  inDialog().getByRole('spinbutton', { name: `Low Stock At, ${form}` });
+  inDialog().getByRole('textbox', { name: `Low Stock At, ${form}` });
 const unit = (form: string) => inDialog().getByRole('combobox', { name: `Unit, ${form}` });
 const save = () => inDialog().getByRole('button', { name: /^Sav(e|ing) Stock$/ });
 const removeButton = (form: string) => inDialog().getByRole('button', { name: `Remove ${form}` });
@@ -136,9 +135,9 @@ describe('StockDialog', () => {
     expect(pick('Oil')).not.toHaveAttribute('aria-current');
     expect(queryPick('Resin')).toBeNull();
 
-    expect(quantity('Flower')).toHaveValue(250);
+    expect(quantity('Flower')).toHaveValue('250');
     expect(unit('Flower')).toHaveTextContent('g');
-    expect(threshold('Flower')).toHaveValue(30);
+    expect(threshold('Flower')).toHaveValue('30');
     expect(noQuantity('Oil')).toBeNull();
   });
 
@@ -146,7 +145,7 @@ describe('StockDialog', () => {
     open({ jars: [...PROPS.jars].reverse() });
 
     expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
-    expect(quantity('Flower')).toHaveValue(250);
+    expect(quantity('Flower')).toHaveValue('250');
     const listed = inDialog().getAllByRole('button', { name: /^(Flower|Oil)\b/ });
     expect(listed).toEqual([pick('Flower'), pick('Oil')]);
   });
@@ -159,13 +158,13 @@ describe('StockDialog', () => {
 
     expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Oil')).toHaveValue(50);
+    expect(quantity('Oil')).toHaveValue('50');
     expect(unit('Oil')).toHaveTextContent('ml');
-    expect(threshold('Oil')).toHaveValue(10);
+    expect(threshold('Oil')).toHaveValue('10');
     expect(noQuantity('Flower')).toBeNull();
 
     chooseJar('Flower');
-    expect(quantity('Flower')).toHaveValue(200);
+    expect(quantity('Flower')).toHaveValue('200');
   });
 
   it('marks a form Edited while its amounts differ from when the dialog opened', () => {
@@ -215,6 +214,30 @@ describe('StockDialog', () => {
     });
   });
 
+  it('refuses an unreadable amount at its field, sends nothing, and chooses the form that holds it', async () => {
+    const calls = mockSaving();
+    open();
+
+    chooseJar('Oil');
+    typeIn(quantity('Oil'), 'a lot');
+    chooseJar('Flower');
+    typeIn(quantity('Flower'), '251');
+    press(save());
+
+    await waitFor(() => expect(pick('Oil')).toHaveAttribute('aria-current', 'true'));
+    expect(quantity('Oil')).toHaveAccessibleDescription(/Enter an amount as a number, like 2.5/);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('sends a comma amount as the number it means', async () => {
+    const calls = mockSaving();
+    open();
+
+    typeIn(quantity('Flower'), '2,5');
+
+    expect((await sent(calls)).input.update?.[0]?.input.quantityOnHand).toBe(2.5);
+  });
+
   it('offers only the forms with no jar, with Add off until one is picked', () => {
     open();
 
@@ -239,7 +262,7 @@ describe('StockDialog', () => {
     expect(pick('Resin')).toHaveAccessibleName(/Edited/);
     expect(save()).toBeEnabled();
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
-    expect(quantity('Resin')).toHaveValue(null);
+    expect(quantity('Resin')).toHaveValue('');
 
     typeIn(quantity('Resin'), '12');
     choose('Unit, Resin', 'g');
@@ -289,7 +312,7 @@ describe('StockDialog', () => {
     expect(save()).toBeEnabled();
 
     press(undo('Flower'));
-    expect(quantity('Flower')).toHaveValue(5);
+    expect(quantity('Flower')).toHaveValue('5');
     expect(flower().getByRole('button', { name: 'Low Stock' })).toBeInTheDocument();
     expect(save()).toBeDisabled();
 
@@ -405,7 +428,7 @@ describe('StockDialog', () => {
     expect(undo('Flower')).toBeInTheDocument();
     expect(pick('Oil')).not.toHaveAccessibleName(/Needs a Fix/);
     chooseJar('Oil');
-    expect(quantity('Oil')).toHaveValue(40);
+    expect(quantity('Oil')).toHaveValue('40');
     expect(router.refresh).not.toHaveBeenCalled();
     expect(save()).toBeEnabled();
   });
@@ -493,8 +516,8 @@ describe('StockDialog', () => {
     expect(inDialog().queryByRole('list')).toBeNull();
     const blank = inDialog().getByRole('group', { name: 'No Form Chosen' });
     expect(blank).toHaveAccessibleDescription('Add a form to enter its stock.');
-    expect(within(blank).getByRole('spinbutton', { name: 'Quantity' })).toBeDisabled();
-    expect(within(blank).getByRole('spinbutton', { name: 'Low Stock At' })).toBeDisabled();
+    expect(within(blank).getByRole('textbox', { name: 'Quantity' })).toBeDisabled();
+    expect(within(blank).getByRole('textbox', { name: 'Low Stock At' })).toBeDisabled();
     expect(within(blank).getByRole('combobox', { name: 'Unit' })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -514,7 +537,7 @@ describe('StockDialog', () => {
     addJar('Oil');
 
     expect(inDialog().queryByRole('group', { name: 'No Form Chosen' })).toBeNull();
-    expect(inDialog().queryByRole('spinbutton', { name: 'Quantity' })).toBeNull();
+    expect(inDialog().queryByRole('textbox', { name: 'Quantity' })).toBeNull();
     expect(quantity('Oil')).toBeEnabled();
     expect(unit('Oil')).not.toHaveAttribute('aria-disabled');
     expect(removeButton('Oil')).toBeInTheDocument();
@@ -527,7 +550,7 @@ describe('StockDialog openOn', () => {
 
     expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Oil')).toHaveValue(50);
+    expect(quantity('Oil')).toHaveValue('50');
     expect(queryPick('Resin')).toBeNull();
     expect(save()).toBeDisabled();
   });
@@ -538,7 +561,7 @@ describe('StockDialog openOn', () => {
 
     expect(pick('Resin')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Resin')).toHaveValue(null);
+    expect(quantity('Resin')).toHaveValue('');
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
     // The one new row, not two, and the form is no longer on offer under Add Form.
     expect(inDialog().getAllByRole('button', { name: /^Resin\b/ })).toHaveLength(1);

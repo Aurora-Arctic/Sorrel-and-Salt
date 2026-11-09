@@ -7,6 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { GripIcon } from '../../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
+import { formatQuantity } from '@/lib/formats';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
@@ -219,9 +220,12 @@ export function BuilderStepRow({
           name={`steps.${index}.quantity`}
           label="Quantity"
           labelSuffix={name}
-          type="number"
-          placeholder="Amount"
+          inputMode="decimal"
+          format={formatQuantity}
+          hint="A number, like 2.5"
           autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="next"
         />
       }
       unitField={
