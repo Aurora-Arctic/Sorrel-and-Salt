@@ -12,7 +12,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 | Id    | Title                                                                                                                                                        | Severity | Area          | Copies | Hours | Status                                          |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- | -----: | ----: | ----------------------------------------------- |
-| D-1   | Two helpers for numbered pagination in the curator pages, and the keepers help page hand-builds a third                                                      | high     | Pages and lib |      8 |     2 | Not yet fixed                                   |
+| D-1   | Two helpers for numbered pagination in the curator pages, and the keepers help page hand-builds a third                                                      | high     | Pages and lib |      8 |     2 | Fixed                                           |
 | D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Not yet fixed                                   |
 | D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Fixed                                           |
 | D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
@@ -26,8 +26,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Not yet fixed                                   |
 | D-13  | The "reduced motion" media-query check is copied into eight places                                                                                           | high     | Components    |     26 |  4.75 | Not yet fixed                                   |
 | D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Fixed in part                                   |
-| D-15  | Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`                                                                 | high     | Pages and lib |     16 |     4 | Not yet fixed                                   |
-| D-16  | Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)                                                                           | high     | Pages and lib |     15 |     3 | Not yet fixed                                   |
+| D-15  | Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`                                                                 | high     | Pages and lib |     16 |     4 | Fixed                                           |
+| D-16  | Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)                                                                           | high     | Pages and lib |     15 |     3 | Fixed                                           |
 | D-17  | Help kind and audience lists typed out in GraphQL, the repository and the components                                                                         | high     | Server        |     14 |   2.5 | Fixed                                           |
 | D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Fixed in part                                   |
 | D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Fixed in part                                   |
@@ -39,11 +39,11 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
 | D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Fixed                                           |
 | D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Fixed                                           |
-| D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Not yet fixed                                   |
+| D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Fixed                                           |
 | D-29  | GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted                                                         | high     | Components    |      4 |     8 | Fixed                                           |
 | D-30  | Viewer's live covens list built three times, one copy drifted                                                                                                | high     | Server        |      3 |     2 | Fixed                                           |
 | D-31  | `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`                                                                                   | high     | Server        |      3 |     1 | Fixed                                           |
-| D-32  | Two different `covenSlugOf` functions with the same name                                                                                                     | high     | Pages and lib |      3 |     1 | Not yet fixed                                   |
+| D-32  | Two different `covenSlugOf` functions with the same name                                                                                                     | high     | Pages and lib |      3 |     1 | Fixed                                           |
 | D-33  | Coven create and rename repeat the name schema, the slug-race retry and the index names                                                                      | high     | Server        |      2 |   1.5 | Fixed                                           |
 | D-34  | Visibility and status lists written three times, one copy without its drift check                                                                            | high     | Server        |      2 |   0.5 | Fixed                                           |
 | D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Fixed                                           |
@@ -254,7 +254,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/lib/numbered-page.test.ts`, `tests/lib/pagination.test.ts`, curator group/value e2e specs, keepers help e2e spec.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-2: Quantity formatting has drifted across three components
 
@@ -596,7 +596,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 - **Owner's call:** Every public page uses `publicPageMetadata`; signed-in pages get a smaller shared helper that sets the title only.
 - **Estimate:** 4 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-16: Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)
 
@@ -627,7 +627,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - `src/app/(public)/_documents.tsx` has a private `orNotFound` (a copy of the one in `src/lib/help-pages.ts`) and a `versionDocumentMetadata` `NotFound -> {}`.
 
 - **Estimate:** 3 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-17: Help kind and audience lists typed out in GraphQL, the repository and the components
 
@@ -925,7 +925,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/app/(public)/compendium/*`, `tests/app/compendium-reads.test.ts`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-29: GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted
 
@@ -998,7 +998,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/lib/coven-path.test.ts`, `tests/lib/access-paused.test.ts`, `tests/lib/graphql-client.test.ts` (check names with `ls tests/lib`).
 
 - **Estimate:** 1 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-33: Coven create and rename repeat the name schema, the slug-race retry and the index names
 
