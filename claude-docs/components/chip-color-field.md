@@ -5,6 +5,7 @@
 ## Contracts
 
 - **The hex box is the field.** It is the control the label names (`id`) and the one a refusal describes. The picker is a second way to set it: a drag, a hue, or a channel typed and committed with Enter or by leaving it writes the colour's lower-cased hex into the box. A hex typed is kept as typed; the schema lower-cases it on save.
+- **The hex is tidied when the box is left.** `hexColour` (`src/lib/contrast.ts`) turns a loose hex, such as ` 4E8BC2` or `abc`, into `#4e8bc2` or `#aabbcc`; text it cannot read stays as typed for the schema to refuse. The box stays a raw `<input>` because `PlainTextField` draws a label and an error of its own and takes neither this `id`, `ref` nor the ratio's description. The same function runs in the server schema.
 - **A drag is one undo step.** The picker writes the hex on every pointer move; the form's history joins them while the pointer is held ([`field.md`](field.md#undo-and-redo)).
 - **The picker keeps its own colour.** It re-reads the hex only when the hex is whole and differs from its own, so half a hex leaves it be, and a drag through the grey edge of the area keeps its hue rather than snapping to the red a hex would give a grey.
 - **The parts sit inside `ColorPicker.Content`.** Inline, the content is always open, and the picker finds its channel inputs there to keep them in step with its value; outside it, they would show the colour they started with.
