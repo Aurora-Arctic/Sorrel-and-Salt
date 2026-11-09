@@ -24,13 +24,11 @@ export async function membershipBySlug(session: Session, slug: string): Promise<
   return { workspace, membership };
 }
 
-/** Whether a live coven other than `exceptWorkspaceId` holds the address, as its current one or an old one. */
+/** Whether a live coven other than `exceptWorkspaceId` has the address as its current one. */
 export async function slugHeldByAnotherCoven(
   slug: string,
   exceptWorkspaceId?: string,
 ): Promise<boolean> {
-  const held = await findWorkspaceHoldingSlug(slug);
-  if (held) return held.workspace.id !== exceptWorkspaceId;
   const current = await findOneBySlug(workspaces, slug);
   return Boolean(current && current.id !== exceptWorkspaceId);
 }

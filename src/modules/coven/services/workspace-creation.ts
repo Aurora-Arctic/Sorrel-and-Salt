@@ -50,9 +50,9 @@ export async function createWorkspace(
       });
     } catch (error) {
       // Someone took the slug between the read and the write: look again.
-      if (violatedUniqueIndex(error) !== 'workspaces_slug_unique' || attempt >= SLUG_ATTEMPTS) {
-        throw error;
-      }
+      const index = violatedUniqueIndex(error);
+      const raced = index === 'workspaces_slug_unique' || index === 'workspace_slugs_slug_unique';
+      if (!raced || attempt >= SLUG_ATTEMPTS) throw error;
     }
   }
 }

@@ -527,12 +527,14 @@ export interface AuditWriter {
   softDeleteWorkspace(membership: Membership): Promise<(typeof workspaces.$inferSelect)[]>;
   /**
    * Record an address for a coven named by id, stamped from the session: the writer for a coven being made, whose proof does not exist
-   * yet. The unique index refuses an address another live coven holds.
+   * yet. It first soft-deletes any other coven's live old-address row for that address, without that coven's proof; another coven's
+   * current address is left, so the unique index refuses the claim.
    */
   insertWorkspaceSlug(workspaceId: string, slug: string): Promise<WorkspaceSlugRow[]>;
   /**
-   * Set the proof's coven's name and address, and record the previous and the new address in `workspace_slugs` unless the coven already
-   * holds a live row for one. An empty result means the coven is deleted. The caller has checked `workspace: update`.
+   * Set the proof's coven's name and address. It claims the new address as `insertWorkspaceSlug` does, records the previous one, and
+   * soft-deletes the coven's other live rows, so the previous address is its one old address. An empty result means the coven is deleted.
+   * The caller has checked `workspace: update`.
    */
   updateWorkspaceName(
     membership: Membership,
