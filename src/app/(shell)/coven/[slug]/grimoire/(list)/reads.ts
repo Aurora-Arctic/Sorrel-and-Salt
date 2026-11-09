@@ -1,3 +1,4 @@
+import { orMissing } from '@/lib/or-not-found';
 import 'server-only';
 import type { Route } from 'next';
 import { cache } from 'react';
@@ -93,7 +94,7 @@ export async function readEditedSpell(
   id: string,
 ): Promise<SpellDialogSpell | undefined> {
   const session = await requireSession();
-  try {
+  return orMissing(async () => {
     const spell = await readSpell(session, workspaceId, id);
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
@@ -117,10 +118,7 @@ export async function readEditedSpell(
       status,
       categoryIds: assigned.map((category) => category.id),
     };
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  }, Forbidden);
 }
 
 export const readGrimoireCategoryCounts = cache(

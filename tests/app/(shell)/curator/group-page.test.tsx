@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NotFound } from '@/lib/errors';
+import { InvalidCursor, NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
@@ -147,6 +147,17 @@ describe('a group page, on the category groups', () => {
     await renderPage({ after });
     const read = listCategoryGroups.mock.calls.map(([request]) => request as PageRequest);
     expect(read.some((request) => request.after?.id === MENDING.id)).toBe(true);
+  });
+
+  it('shows the first page when the cursor in the address is readable but this list will not cast it', async () => {
+    listCategoryGroups.mockImplementation(async (request: PageRequest) => {
+      if (request.after) throw new InvalidCursor();
+      return [entry(MENDING), entry(WARDS)];
+    });
+
+    await renderPage({ after: encodeCursor({ key: ['1'], id: MENDING.id }) });
+
+    expect(screen.getByRole('rowheader', { name: 'Fixture Wards' })).toBeInTheDocument();
   });
 
   it('opens the empty modal on ?new', async () => {

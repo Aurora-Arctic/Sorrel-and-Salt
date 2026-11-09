@@ -1,15 +1,11 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import ForgotPasswordForm from '../../components/ForgotPasswordForm';
 import PageHeader from '../../components/PageHeader';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
 
-export const metadata: Metadata = {
-  title: 'Forgot Password',
-  // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
-  // fetches the page anyway is told not to list it.
-  robots: { index: false },
-};
+export const metadata: Metadata = noIndexMetadata('Forgot Password');
 
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is reachable while signed out.
 export default function ForgotPasswordPage() {

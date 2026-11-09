@@ -1,8 +1,9 @@
+import { orMissing } from '@/lib/or-not-found';
 import 'server-only';
 import { cache } from 'react';
 import { readCardCategoriesOf, readFormIcons } from '../../../../compendium-reads';
 import type { SafetyVariant } from '../../../../../components/SafetyNote/types';
-import { Forbidden, NotFound } from '../../../../../lib/errors';
+import { Forbidden } from '../../../../../lib/errors';
 import { readNumberedPage } from '../../../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
@@ -101,26 +102,19 @@ export const readCovenFacets = cache(async (workspaceId: string, variables: stri
 
 export async function readEditedEntry(workspaceId: string, id: string) {
   const session = await requireSession();
-  let entry: Awaited<ReturnType<typeof getIngredient>>;
-  try {
-    entry = await getIngredient(session, id, workspaceId);
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  const entry = await orMissing(() => getIngredient(session, id, workspaceId), Forbidden);
+  if (!entry) return undefined;
   if (entry.workspaceId !== workspaceId) return undefined;
   return { entry, values: await entryValues(entry, session) };
 }
 
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();
-  let entry: Awaited<ReturnType<typeof getIngredient>>;
-  try {
-    entry = await getIngredient(session, id, membership.workspaceId);
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  const entry = await orMissing(
+    () => getIngredient(session, id, membership.workspaceId),
+    Forbidden,
+  );
+  if (!entry) return undefined;
   // A retired entry is read in the coven, whose cupboard entry is its proof.
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../components/PageHeader';
 import SupportLink from '../../components/SupportLink';
@@ -9,12 +10,7 @@ import { getMySupportTimeout } from '../../modules/support';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
 
-export const metadata: Metadata = {
-  title: 'Access Paused',
-  // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
-  // fetches the page anyway is told not to list it.
-  robots: { index: false },
-};
+export const metadata: Metadata = noIndexMetadata('Access Paused');
 
 // Where a paused account's pages send it (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). It reads the
 // viewer's own pause, so the address says nothing. No AppShell, since the shell would draw the notice that links here.

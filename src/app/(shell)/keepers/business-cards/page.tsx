@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import BusinessCards from '../../../../components/BusinessCards';
 import { ADMIN_PAGES } from '../../../../components/AdminNav/sections';
 import TabbedPage from '../../../../components/TabbedPage';
 import { requireAdminSession } from '../../../../lib/request-session';
 
-export const metadata: Metadata = {
-  title: 'Business Cards',
-};
+export const metadata: Metadata = pageTitle('Business Cards');
 
 const { label, tabs } = ADMIN_PAGES.businessCards;
 

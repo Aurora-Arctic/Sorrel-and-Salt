@@ -34,12 +34,31 @@ function social(title: string, description: string, url: string): Metadata {
   };
 }
 
-export function publicPageMetadata(title: string, description: string, path: string): Metadata {
+/** Absolute when the page names the site itself, so the layout's template does not add the name twice. */
+export function publicPageMetadata(
+  title: string,
+  description: string,
+  path: string,
+  { absolute = false }: { absolute?: boolean } = {},
+): Metadata {
   const url = siteUrl(path);
   return {
-    title,
+    title: absolute ? { absolute: title } : title,
     description,
     alternates: { canonical: url },
-    ...social(titleTemplate().replace('%s', title), description, url),
+    ...social(absolute ? title : titleTemplate().replace('%s', title), description, url),
   };
+}
+
+/**
+ * A page no crawler should list. robots.txt leaves its path out of the allow list, and this is the second
+ * guard for a crawler that fetches the page anyway. `follow` is left unset unless the page decides it.
+ */
+export function noIndexMetadata(title: string, follow?: boolean): Metadata {
+  return { title, robots: follow === undefined ? { index: false } : { index: false, follow } };
+}
+
+/** A signed-in page: the title alone, as the layout's template adds the rest and nothing there is shared. */
+export function pageTitle(title: string): Metadata {
+  return { title };
 }

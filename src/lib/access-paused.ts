@@ -31,8 +31,3 @@ export function pausedCovenSlugOf(pathname: string): string | undefined {
   const match = /^\/coven-paused\/([^/]+)/.exec(pathname);
   return match ? decodeURIComponent(match[1]) : undefined;
 }
-
-export function covenSlugOf(pathname: string): string | undefined {
-  const match = /^\/coven\/([^/]+)/.exec(pathname);
-  return match ? decodeURIComponent(match[1]) : undefined;
-}

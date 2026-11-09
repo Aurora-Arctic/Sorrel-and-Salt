@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { pageTitle } from '@/lib/page-metadata';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
@@ -9,10 +9,10 @@ import { SoleStewardNotice } from '../sole-steward-notice';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
-import { resolvePage } from '../../../../../../lib/pagination';
+import { orNotFound } from '../../../../../../lib/or-not-found';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
-import { readPageCursors } from '../../../../../../lib/numbered-page';
+import { readCursorPage, readPageCursors } from '../../../../../../lib/numbered-page';
 import { single } from '../../../../../../lib/search-params';
 import type { PagerCursor } from '../../../../../../lib/types';
 import { displayNamesOf } from '@/modules/identity';
@@ -28,9 +28,7 @@ import MemberDialog from './member-dialog';
 import { memberHeading } from './member-heading';
 import type { MembersPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Members',
-};
+export const metadata: Metadata = pageTitle('Members');
 
 // Who is in the coven; a name opens the member's modal. An observer gets the stranger's 404. An address is a steward's
 // alone, asked only when the role holds `member: readEmail` and checked again by `memberEmails`.
@@ -45,16 +43,10 @@ export default async function MembersPage({
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
 
-  let page;
-  try {
-    page = await resolvePage(
-      after === undefined && before !== undefined ? { last: 25, before } : { first: 25, after },
-      (request) => listMembers(session, workspace, request),
-    );
-  } catch (error) {
-    if (error instanceof Forbidden) notFound();
-    throw error;
-  }
+  const page = await orNotFound(
+    () => readCursorPage({ after, before }, (request) => listMembers(session, workspace, request)),
+    Forbidden,
+  );
 
   // Read to the end, since one page of the list cannot say how many stewards there are.
   const soleOwner =

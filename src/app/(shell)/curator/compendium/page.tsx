@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import CompendiumList from '../../../../components/CompendiumList';
@@ -39,15 +40,14 @@ import {
 import { readCardCategories } from '../../../compendium-reads';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
-import { readEditPlace, readListPlace, readOrMissing } from '../list-page';
+import { orMissing } from '../../../../lib/or-not-found';
+import { readEditPlace, readListPlace } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
-export const metadata: Metadata = {
-  title: 'Compendium',
-};
+export const metadata: Metadata = pageTitle('Compendium');
 
 const ADD_TITLE = 'Add Ingredient';
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
@@ -79,7 +79,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
-    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
+    entrySlug ? orMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
   ]);
   const list = { ...filter, after, before };
   const here = { ...list, entry: shown ? entrySlug : undefined };
@@ -89,19 +89,17 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     redirect(compendiumHref({ ...list, entry: shown.slug }, dialog));
   }
   const detailed = shown?.kind === 'entry' ? shown.entry : undefined;
-  const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
+  const summary = detailed && (await orMissing(() => ingredientDetailOf(session, detailed)));
   const covens = summary ? await covensHolding(detailed.id) : [];
   // The entry's review mark, the admin's own read: the compendium's cached reads leave it out.
   const review = summary
-    ? await readOrMissing(() => readCompendiumReview(session, detailed.id))
+    ? await orMissing(() => readCompendiumReview(session, detailed.id))
     : undefined;
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const editReview = editing
-    ? await readOrMissing(() => readCompendiumReview(session, editing.id))
+    ? await orMissing(() => readCompendiumReview(session, editing.id))
     : undefined;
-  const editShown = editing
-    ? await readOrMissing(() => getIngredient(session, editing.id))
-    : undefined;
+  const editShown = editing ? await orMissing(() => getIngredient(session, editing.id)) : undefined;
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
   const form: ListDialog | undefined = adding
     ? 'new'

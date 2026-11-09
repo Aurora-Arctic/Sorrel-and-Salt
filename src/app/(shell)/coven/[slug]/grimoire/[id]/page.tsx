@@ -1,3 +1,4 @@
+import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -16,7 +17,7 @@ import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
-import { Forbidden, NotFound } from '@/lib/errors';
+import { Forbidden } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
 import { rolePermits } from '@/modules/coven';
@@ -41,12 +42,8 @@ const spellOf = cache(async (slug: string, id: string) => {
   if (!RowId.safeParse(id).success) notFound();
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
-  try {
-    return { workspace, membership, session, spell: await readSpell(session, workspace.id, id) };
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) notFound();
-    throw error;
-  }
+  const spell = await orNotFound(() => readSpell(session, workspace.id, id), Forbidden);
+  return { workspace, membership, session, spell };
 });
 
 export async function generateMetadata({ params }: SpellRecipeParams): Promise<Metadata> {

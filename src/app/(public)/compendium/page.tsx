@@ -14,7 +14,7 @@ import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import IngredientSummary from '../../../components/IngredientEntry/summary';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { Forbidden } from '../../../lib/errors';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
 import { entryRecency } from '../../../lib/entry-recency';
@@ -26,11 +26,7 @@ import PageHeader from '../../../components/PageHeader';
 import ReviewMark from '../../../components/IngredientEntry/review-mark';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import {
-  getIngredient,
-  heldCompendiumEntryIdsIn,
-  readCompendiumReview,
-} from '../../../modules/ingredients';
+import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/curator/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
@@ -48,6 +44,7 @@ import {
   readFacets,
   readFacetsHeldIn,
   readFormIcons,
+  readEntryReview,
 } from '../../compendium-reads';
 import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './types';
 
@@ -168,20 +165,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const editing = edited?.kind === 'entry' ? edited : undefined;
   // The review switch's read, for a curator or keeper only: per viewer, never inside the cached
   // reads, so no review date reaches anyone else from here. The entry's own badge is in the cached read.
-  const reviewOf = async (id: string | undefined) => {
-    if (!canEdit || !id) return undefined;
-    const curator = await getSession();
-    if (!curator) return undefined;
-    try {
-      const review = await readCompendiumReview(curator, id);
-      // A curator reads a hidden entry too, so the form's shown switch starts from the row's own flag.
-      const row = await getIngredient(curator, id);
-      return { reviewedAt: review?.reviewedAt.toISOString() ?? null, shown: row.shown };
-    } catch (error) {
-      if (error instanceof Forbidden || error instanceof NotFound) return undefined;
-      throw error;
-    }
-  };
+  const reviewOf = (id: string | undefined) => (id ? readEntryReview(editor, id) : undefined);
   const [detailsReview, editReview] =
     canEdit && (detailed || editing)
       ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])

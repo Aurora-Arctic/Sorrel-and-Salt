@@ -6,7 +6,7 @@ import GroupedValueList from '../../../components/GroupedValueList';
 import { groupedValuesHref } from '../../../components/GroupedValueList/href';
 import { KINDS } from '../../../components/GroupedValueList/kinds';
 import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
-import { resolveNumberedPage } from '../../../lib/pagination';
+import { readNumberedPage } from '../../../lib/numbered-page';
 import { requireCuratorSession } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
 import { editorStamps } from './editors';
@@ -32,7 +32,7 @@ const readValues = cache(
   ) => {
     const { list, count } = VALUE_KINDS[kind];
     const filter = { query: query || undefined, groupId };
-    return resolveNumberedPage(
+    return readNumberedPage(
       { after, before },
       (request) => list(filter, request),
       (start) => count(filter, start),

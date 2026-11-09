@@ -9,7 +9,8 @@ import { signedInLanding } from '../../lib/landing';
 import { looksLikeCardToken } from '../../lib/invitation-token';
 import { getSession, sessionIsVerified } from '../../lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
-import { siteUrl } from '../../lib/site';
+import { publicPageMetadata } from '../../lib/page-metadata';
+import { SITE_NAME } from '../../lib/site';
 // Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
@@ -23,8 +24,7 @@ import PageFrame from '@/components/PageFrame';
 export async function generateMetadata({ searchParams }: SignInPageProps): Promise<Metadata> {
   const { next, error } = await searchParams;
   return {
-    title: 'Sign In',
-    alternates: { canonical: siteUrl('/sign-in') },
+    ...publicPageMetadata('Sign In', `Sign in to ${SITE_NAME}.`, '/sign-in'),
     ...((next !== undefined || error !== undefined) && { robots: { index: false, follow: true } }),
   };
 }

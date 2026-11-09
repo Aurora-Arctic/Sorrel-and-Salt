@@ -1,15 +1,11 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import ResetPasswordForm from '../../components/ResetPasswordForm';
 import PageHeader from '../../components/PageHeader';
 import type { ResetPasswordPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 
-export const metadata: Metadata = {
-  title: 'Choose a New Password',
-  // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
-  // fetches the page anyway is told not to list it.
-  robots: { index: false },
-};
+export const metadata: Metadata = noIndexMetadata('Choose a New Password');
 
 // Better Auth's mailed link checks its token and opens this page with `?token=`, or with
 // `?error=INVALID_TOKEN` for one spent or expired; the form offers a new link for any page without a usable

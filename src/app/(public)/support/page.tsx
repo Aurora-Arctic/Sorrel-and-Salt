@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../../components/PageHeader';
 import SupportPanel from '../../../components/SupportPanel';
@@ -19,10 +20,7 @@ import PageWithNav from '@/components/PageWithNav';
 
 // Crawlable, so a search engine reads this and drops the bare address it would otherwise list from
 // links; the page holds nothing worth a result.
-export const metadata: Metadata = {
-  title: 'Support',
-  robots: { index: false, follow: true },
-};
+export const metadata: Metadata = noIndexMetadata('Support', true);
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);

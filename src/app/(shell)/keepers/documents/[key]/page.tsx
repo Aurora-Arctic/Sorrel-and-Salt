@@ -1,22 +1,17 @@
+import { orNotFound } from '@/lib/or-not-found';
+import { pageTitle } from '@/lib/page-metadata';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import DocumentEditor from '@/components/DocumentEditor';
-import { NotFound } from '@/lib/errors';
 import { requireAdminSession } from '@/lib/request-session';
 import { readDocumentForEditing } from '@/modules/documents';
 
-export const metadata: Metadata = {
-  title: 'Edit Document',
-};
+export const metadata: Metadata = pageTitle('Edit Document');
 
 // The editor opens on the admin's own draft, else the published text. The page and GraphQL end at the same service.
 export default async function AdminDocumentPage({ params }: { params: Promise<{ key: string }> }) {
   const session = await requireAdminSession();
   const { key } = await params;
-  const document = await readDocumentForEditing(session, key).catch((error: unknown) => {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  });
+  const document = await orNotFound(() => readDocumentForEditing(session, key));
   const { draft, published } = document;
   return (
     <DocumentEditor

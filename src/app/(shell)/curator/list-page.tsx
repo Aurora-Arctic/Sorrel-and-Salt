@@ -1,5 +1,5 @@
 import 'server-only';
-import { NotFound } from '../../../lib/errors';
+import { orMissing } from '../../../lib/or-not-found';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { single, trimmed } from '../../../lib/search-params';
 import type { ListPlace, ListSearchParams } from './types';
@@ -24,20 +24,11 @@ export function readListPlace(params: ListSearchParams, own?: string): ListPlace
   };
 }
 
-export async function readOrMissing<T>(read: () => Promise<T>): Promise<T | undefined> {
-  try {
-    return await read();
-  } catch (error) {
-    if (error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
-
 export async function readEditPlace<T>(
   { adding, editSlug }: Pick<ListPlace, 'adding' | 'editSlug'>,
   read: (slug: string) => Promise<T>,
 ): Promise<{ edited: T | undefined; missing: boolean }> {
   if (adding || !editSlug) return { edited: undefined, missing: false };
-  const edited = await readOrMissing(() => read(editSlug));
+  const edited = await orMissing(() => read(editSlug));
   return { edited, missing: edited === undefined };
 }

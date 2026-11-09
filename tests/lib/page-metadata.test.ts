@@ -3,6 +3,8 @@ import {
   DESCRIPTION_LENGTH,
   describe as describeText,
   entryDescription,
+  noIndexMetadata,
+  pageTitle,
   publicPageMetadata,
 } from '@/lib/page-metadata';
 
@@ -40,5 +42,26 @@ describe('page metadata', () => {
     // An `images` key here would replace the image the segment's `opengraph-image` file names.
     expect(meta.openGraph).not.toHaveProperty('images');
     expect(meta.twitter).not.toHaveProperty('images');
+  });
+
+  it('gives the front page the site name alone, with the same social tags as any public page', () => {
+    const meta = publicPageMetadata('Sorrel & Salt', 'About it.', '/', { absolute: true });
+    expect(meta.title).toEqual({ absolute: 'Sorrel & Salt' });
+    expect(meta.openGraph).toMatchObject({
+      title: 'Sorrel & Salt',
+      url: 'https://sorrelandsalt.com/',
+    });
+    expect(meta.twitter).toMatchObject({ title: 'Sorrel & Salt' });
+  });
+
+  it('keeps a noindex page out of search, and follows its links only when the page says', () => {
+    expect(noIndexMetadata('Testwort').robots).toEqual({ index: false });
+    expect(noIndexMetadata('Testwort', true).robots).toEqual({ index: false, follow: true });
+    expect(noIndexMetadata('Testwort', false).robots).toEqual({ index: false, follow: false });
+    expect(noIndexMetadata('Testwort')).not.toHaveProperty('alternates');
+  });
+
+  it('gives a signed-in page its title and nothing a crawler or a preview would use', () => {
+    expect(pageTitle('Testwort')).toEqual({ title: 'Testwort' });
   });
 });

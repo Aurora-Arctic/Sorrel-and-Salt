@@ -1,25 +1,19 @@
+import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import HelpArticleForm from '../../../../../components/HelpArticleForm';
 import { helpFormHeading } from '../../../../../components/HelpArticleForm/heading';
 import HelpViewLink from '../../../../../components/HelpArticleForm/view-link';
 import BackLink from '../../../../../components/IngredientEntry/back-link';
 import PageHeader from '../../../../../components/PageHeader';
-import { NotFound } from '../../../../../lib/errors';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import type { Session } from '../../../../../lib/session';
 import { readKeeperHelpArticle } from '@/modules/help';
 import { helpFormReturn, readHelpFormChoices } from '../form-choices';
 
-const readArticle = cache(async (session: Session, id: string) => {
-  try {
-    return await readKeeperHelpArticle(session, id);
-  } catch (error) {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  }
-});
+const readArticle = cache((session: Session, id: string) =>
+  orNotFound(() => readKeeperHelpArticle(session, id)),
+);
 
 export async function generateMetadata({
   params,

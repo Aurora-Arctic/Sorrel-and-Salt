@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import type { ReactElement } from 'react';
 import { SupportIcon } from '../../../components/IconTip/icons';
@@ -10,9 +11,7 @@ import type { InvitePageProps } from '../../invite/[token]/types';
 import PageFrame from '@/components/PageFrame';
 import { liveCardOf } from '@/modules/identity';
 
-export const metadata: Metadata = {
-  title: 'Your Invitation',
-};
+export const metadata: Metadata = pageTitle('Your Invitation');
 
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).
 const liveCard = cache(liveCardOf);

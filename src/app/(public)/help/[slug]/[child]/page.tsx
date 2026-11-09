@@ -4,8 +4,10 @@ import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
-import { siteUrl } from '@/lib/site';
+import { guideSteps, linkTo } from '@/lib/help-pages';
+import { orNotFound } from '@/lib/or-not-found';
+import { publicPageMetadata } from '@/lib/page-metadata';
+import { SITE_NAME } from '@/lib/site';
 import { readHelpArticle } from '@/modules/help';
 
 type Props = { params: Promise<{ slug: string; child: string }> };
@@ -22,11 +24,11 @@ async function subPage(parent: string, slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, child } = await params;
   const found = await subPage(slug, child);
-  return {
-    title: found.title,
-    description: linkTo(found).summary ?? undefined,
-    alternates: { canonical: siteUrl(helpPath(found)) },
-  };
+  return publicPageMetadata(
+    found.title,
+    linkTo(found).summary ?? `${found.title}, a help article on ${SITE_NAME}.`,
+    helpPath(found),
+  );
 }
 
 export default async function Page({ params }: Props) {
