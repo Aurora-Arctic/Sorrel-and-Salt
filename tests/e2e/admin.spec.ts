@@ -1,7 +1,6 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import postgres from 'postgres';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
@@ -168,8 +167,7 @@ test('an admin narrows the users to those timed out of support, and to those who
   const timed = await signInAs(page, 'timed-out@admin-filters.test');
   const paused = await signInAs(page, 'paused@admin-filters.test');
   await signInAs(page, 'neither@admin-filters.test');
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`
       insert into support_timeouts (user_id, until, note, created_by, updated_by)
       values (${timed.userId}, now() + interval '2 days', 'Testnote', ${timed.userId}, ${timed.userId})
@@ -178,9 +176,7 @@ test('an admin narrows the users to those timed out of support, and to those who
       insert into user_access_pauses (user_id, note, created_by, updated_by)
       values (${paused.userId}, 'Testnote', ${paused.userId}, ${paused.userId})
     `;
-  } finally {
-    await sql.end();
-  }
+  });
   await signInAs(page, 'an-admin@admin-filters.test', ['discord'], 'admin');
 
   await page.goto('/keepers/users?query=admin-filters.test');
@@ -307,9 +303,8 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
     'curator',
   );
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  let name: string;
-  try {
+  let name!: string;
+  await withE2eSql(async (sql) => {
     [{ name }] = await sql`select name from users where id = ${userId}`;
     // Stamps alone: the trigger keeps them unless the write declares itself a touch.
     let entries = 0;
@@ -327,9 +322,7 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
     // Without rows the pages name no editor, so the case would prove nothing.
     expect(entries).toBeGreaterThan(0);
     expect(forms).toBeGreaterThan(0);
-  } finally {
-    await sql.end();
-  }
+  });
 
   for (const path of ['/curator/compendium', '/curator/forms']) {
     const response = await page.goto(path);

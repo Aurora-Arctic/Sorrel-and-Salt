@@ -1,4 +1,4 @@
-import type { Locator, Page, Route } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
@@ -15,6 +15,8 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // Every loading wait looks the same (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
@@ -39,53 +41,24 @@ test.beforeAll(async ({ browser, slot }) => {
     viewer = hollow.users.A;
     admin = (await signInAs(setup, 'admin@navigation-wait.test', ['discord'], 'admin')).userId;
     const willowId = await withSql(async (sql) => {
-      const [workspace] = await sql<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${WILLOW}, ${slugify(WILLOW)}, ${viewer}, ${viewer})
-        returning id`;
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${workspace.id}, ${viewer}, 'owner', ${viewer}, ${viewer})`;
+      const workspaceId = await insertWorkspace(sql, WILLOW, [[viewer, 'owner']], {
+        slug: slugify(WILLOW),
+        author: viewer,
+      });
       // The switcher offers Create Coven only to a holder of the right.
       await sql.begin(async (tx) => {
         await tx`select set_config('app.privilege_route', 'manual', true)`;
         await tx`update users set can_create_workspace = true where id = ${viewer}`;
       });
       await localIngredient(sql, hollow.id, viewer, { name: HOLLOW_ENTRY });
-      await localIngredient(sql, workspace.id, viewer, { name: WILLOW_ENTRY });
-      return workspace.id;
+      await localIngredient(sql, workspaceId, viewer, { name: WILLOW_ENTRY });
+      return workspaceId;
     });
     willow = { id: willowId, slug: slugify(WILLOW), users: { A: viewer } };
   } finally {
     await setup.close();
   }
 });
-
-/** Holds back every React Server Components answer, prefetches included; `navigations` counts only a navigation's requests. */
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  let navigations = 0;
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    const headers = request.headers();
-    const rsc = headers.rsc === '1' || new URL(request.url()).searchParams.has('_rsc');
-    if (!holding || !rsc) return route.fallback();
-    if (headers['next-router-prefetch'] !== '1') navigations += 1;
-    held.push(route);
-  });
-  return {
-    hold() {
-      holding = true;
-      navigations = 0;
-    },
-    navigations: () => navigations,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 const switcher = (page: Page): Locator =>
   page.getByRole('combobox', { name: 'Coven', exact: true });
@@ -135,7 +108,7 @@ test('a coven switch takes the old coven away at once, marks the switcher busy, 
   page,
 }) => {
   await openIngredients(page, hollow, HOLLOW_ENTRY);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
   // Why the switch could go: A is a member of both, and the switcher is idle.
   await expect(switcher(page)).toHaveText(HOLLOW);
   await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
@@ -166,7 +139,7 @@ test("a section link takes the coven's page away at once and puts one status in 
   page,
 }) => {
   await openIngredients(page, hollow, HOLLOW_ENTRY);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await covenNav(page).getByRole('link', { name: 'Members', exact: true }).click();
@@ -186,7 +159,7 @@ test("a site link takes the shell's page away at once and puts one status in its
   page,
 }) => {
   await openIngredients(page, hollow, HOLLOW_ENTRY);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
@@ -215,7 +188,7 @@ test('a site link from a tabbed page shows nothing of the held page through the 
   await expect(
     page.getByRole('main').getByRole('link', { name: 'Members', exact: true }),
   ).toHaveAttribute('aria-current', 'page');
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
@@ -254,7 +227,7 @@ test("a curator nav link keeps the curator page's wait until the server answers,
     .getByRole('link', { name: 'Forms', exact: true });
   const href = await link.getAttribute('href');
   expect(href).toMatch(/^\/curator\//);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await link.click();
@@ -283,7 +256,7 @@ test("a Contents link on the coven home keeps the coven's wait until the server 
   await page.goto(`/coven/${hollow.slug}`);
   const contents = page.getByRole('heading', { name: 'Contents', exact: true });
   await expect(contents).toBeVisible();
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await page.getByRole('main').getByRole('link', { name: 'Ingredients', exact: true }).click();
@@ -304,7 +277,7 @@ test("Create Coven in the switcher keeps the shell's wait until the server answe
   page,
 }) => {
   await openIngredients(page, hollow, HOLLOW_ENTRY);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await switcher(page).click();
@@ -326,7 +299,7 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   page,
 }) => {
   await openIngredients(page, hollow, HOLLOW_ENTRY);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   // With motion allowed, the same wait moves with marks of other keyframes.
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -405,7 +378,7 @@ test("signed out, the Compendium link takes an entry's page away at once and put
   const name = await title.innerText();
   // Why a wait has something to take away: the entry's own heading is the page's.
   expect(name).not.toBe('Loading');
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
@@ -432,7 +405,7 @@ test("signed out, a card takes the Compendium away at once and puts an entry's p
   expect(response?.status()).toBe(200);
   await expectSignedOut(page);
   const { href, name } = await firstEntry(page);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
 
   server.hold();
   await compendiumList(page).locator(`a[href="${href}"]`).click();
@@ -457,7 +430,7 @@ test("signed out under reduced motion, the public frame's wait pulses with the o
   const { href } = await firstEntry(page);
   await page.goto(href);
   await expectSignedOut(page);
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
   const press = () => siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
 
   // With motion allowed, the same wait's skeleton moves with the shimmer's keyframes.

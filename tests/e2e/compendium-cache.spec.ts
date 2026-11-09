@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
+import { COMPENDIUM_CACHE_DATABASE, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // The compendium read answered from Next's data cache, not Postgres, until a keeper's write expires it. Runs
@@ -9,14 +9,8 @@ import { signInAs } from './session';
 // no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"); serial, since the second test reads what the first warmed.
 test.describe.configure({ mode: 'serial' });
 
-async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(COMPENDIUM_CACHE_DATABASE), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
+const inDatabase = <T>(work: (sql: postgres.Sql) => Promise<T>) =>
+  withE2eSql(work, COMPENDIUM_CACHE_DATABASE);
 
 const run = randomBytes(4).toString('hex');
 const asAdmin = { database: COMPENDIUM_CACHE_DATABASE };

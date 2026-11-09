@@ -5,7 +5,7 @@ import { ingredientSlug } from '@/lib/slugify';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { accessibilityFindings, type AxeFinding } from './axe';
 import type { Persona, ScannedModal, ScannedRoute } from './axe-scans';
-import { signInAgainAs, signInAs } from './session';
+import { PASSWORD, signInAgainAs, signInAs } from './session';
 import {
   compendiumVariant,
   insertSpell,
@@ -636,8 +636,6 @@ async function openEntryMenu(page: Page, w: World): Promise<void> {
     .first()
     .click();
 }
-
-const PASSWORD = 'lantern moss under the north window';
 
 /** A password account part-way through turning two-factor on, at the question a Turn On without saved codes asks. */
 async function openTwoFactorWarning(page: Page): Promise<Locator> {

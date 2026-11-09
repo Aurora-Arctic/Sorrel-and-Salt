@@ -1,45 +1,17 @@
 import type { Locator, Page, Request, Route as PlaywrightRoute } from '@playwright/test';
-import postgres from 'postgres';
 import { deitySlug, formSlug, slugify } from '@/lib/slugify';
 import { insertDeityLink, insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
+import { recreateE2eDatabase, withE2eSql } from '../database';
 import { test, expect } from '../fixtures';
 import { holdSaves } from './ingredient-dialogs';
 import { signInAgainAs, signInAs } from '../session';
+import { makeCoven } from './accounts-setup';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-type Role = 'owner' | 'member' | 'viewer';
-
-async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await fn(sql);
-  } finally {
-    await sql.end();
-  }
-}
-
-async function makeCoven(name: string, members: [userId: string, role: Role][]): Promise<string> {
-  const slug = slugify(name);
-  const [creator] = members[0];
-  await withSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${name}, ${slug}, ${creator}, ${creator})
-      returning id`;
-    for (const [userId, role] of members) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${userId}, ${role}, ${creator}, ${creator})`;
-    }
-  });
-  return slug;
-}
 
 async function expectNotAuthorized(page: Page, path: string) {
   const response = await page.goto(path);
@@ -92,7 +64,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
 
       // The highest seat a coven has, so nothing but the site role is left to refuse it.
       const { userId } = await signInAs(page, 'owner@story-17.test');
-      const slug = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
+      const { slug } = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
@@ -122,7 +94,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
       // Unlike every name this flow adds, so its own adds meet no possible-duplicate prompt.
       const name = 'Fixture Bramble Guarded';
       const slug = slugify(name);
-      await withSql((sql) =>
+      await withE2eSql((sql) =>
         insertIngredient(
           sql,
           makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
@@ -136,7 +108,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
       await expect(editing.getByRole('button', { name: 'Delete Ingredient' })).toBeVisible();
 
       const { userId } = await signInAs(page, 'holder@story-17.test');
-      const coven = await makeCoven('Fixture Guarded Coven', [[userId, 'owner']]);
+      const { slug: coven } = await makeCoven('Fixture Guarded Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${coven}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
@@ -217,7 +189,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
       async ({ page }) => {
         const tag = slugify(visitor);
         const { userId: ownerId } = await signInAs(page, `owner-${tag}@story-19.test`);
-        const slug = await makeCoven(`${W} ${tag}`, [[ownerId, 'owner']]);
+        const { slug } = await makeCoven(`${W} ${tag}`, [[ownerId, 'owner']]);
         // Why a refusal below is the guard's: W's owner opens every one of them.
         for (const path of covenPages(slug)) {
           expect((await page.goto(path))?.status(), path).toBe(200);
@@ -226,7 +198,9 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
 
         if (visitor === 'a member of another coven') {
           const { userId } = await signInAs(page, `visitor-${tag}@story-19.test`);
-          const other = await makeCoven(`Fixture Elsewhere Coven ${tag}`, [[userId, 'member']]);
+          const { slug: other } = await makeCoven(`Fixture Elsewhere Coven ${tag}`, [
+            [userId, 'member'],
+          ]);
           // A live seat of their own, so the 404 is W's alone.
           expect((await page.goto(`/coven/${other}`))?.status()).toBe(200);
         } else {
@@ -587,7 +561,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await bulwarks.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(bulwarks).toHaveCount(0);
 
-      await withSql(
+      await withE2eSql(
         (sql) => sql`
           insert into categories (name, slug, description, group_id, created_by, updated_by)
           select 'Aaa Hearthcraft Moved', 'aaa-hearthcraft-moved', 'Filed under the group', id,
@@ -788,7 +762,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const row = rowOf(page, 'Form Groups', 'Aaa Fixture Matter');
       await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
 
-      await withSql(
+      await withE2eSql(
         (sql) => sql`
           insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
           select 'Aaa Fixture Grit', ${formSlug('Aaa Fixture Grit', 'Aaa Fixture Matter')},
@@ -925,7 +899,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const row = rowOf(page, 'Deity Traditions', 'Aaa Fixtural');
       await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
 
-      await withSql(
+      await withE2eSql(
         (sql) => sql`
           insert into deities (name, slug, description, tradition_id, created_by, updated_by)
           select 'Aaa Testra', ${deitySlug('Aaa Testra', 'Aaa Fixtural')},
@@ -1024,7 +998,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Deities', 'Aaa Testris')).toHaveCount(0);
 
       const entry = 'Aaa Testwort Hallowed';
-      await withSql(async (sql) => {
+      await withE2eSql(async (sql) => {
         // Linked to the curated form's row: the compendium saves a picked form
         // and no other, and the admin saves this entry below.
         const [herb] = await sql<{ id: string }[]>`
@@ -1094,7 +1068,7 @@ test.describe('story 18: a keeper adds, edits and soft-deletes what the compendi
       const { userId } = await signInAs(page, 'shown@story-18.test', ['discord'], 'curator');
       const name = 'Fixture Hidewort';
       const slug = slugify(name);
-      await withSql((sql) =>
+      await withE2eSql((sql) =>
         insertIngredient(
           sql,
           makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),

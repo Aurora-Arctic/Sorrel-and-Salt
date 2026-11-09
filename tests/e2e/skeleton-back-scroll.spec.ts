@@ -1,7 +1,8 @@
-import type { Locator, Page, Route } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { holdServerAnswers } from './hold-server-answers';
 
 // The skeleton scrolls the window to the top when it shows, yet Back still lands where the reader left: on the
 // origin's own scroll position, with the link they pressed in view. Checked from a long public list and a long
@@ -10,31 +11,6 @@ import { signInAs } from './session';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-/** Holds back every React Server Components answer once `hold()` is called, until `release()`; prefetches never land. */
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    const headers = request.headers();
-    if (headers['next-router-prefetch'] || headers['next-router-segment-prefetch'])
-      return route.abort();
-    const rsc = headers.rsc === '1' || new URL(request.url()).searchParams.has('_rsc');
-    if (!holding || !rsc) return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold() {
-      holding = true;
-    },
-    held: () => held.length,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 /** Waits until React has hydrated the element, so a click is the app's navigation and not a full page load. */
 const hydrated = (page: Page, selector: string) =>

@@ -1,7 +1,6 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // What no story walks: the six views are links in the shared tab row, the open one marked as the current page,
@@ -15,15 +14,12 @@ const VIEWS = ['Needs Staff', 'Mine', 'Unassigned', 'Waiting on Sender', 'Resolv
 
 test('the views are links that open each view, and every view is accessible', async ({ page }) => {
   const { userId } = await signInAs(page, 'admin@support-views.test', ['discord'], 'admin');
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`
       insert into support_requests (about, subject, message, path, created_by, updated_by)
       values ('bug', 'Wobbling Cauldron', 'A message.', '', ${userId}, ${userId})
     `;
-  } finally {
-    await sql.end();
-  }
+  });
 
   await page.goto('/keepers/support');
   const views = page.getByRole('navigation', { name: 'Support', exact: true }).getByRole('link');

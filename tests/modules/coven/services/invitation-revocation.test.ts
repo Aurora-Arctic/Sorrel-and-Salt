@@ -10,7 +10,7 @@ import {
 } from '@/modules/coven';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 import type { CovenInvitationStateRow } from './types';
 
 // An accepted invitation is a member to remove, so it is refused in words that say so (claude-docs/db/invitations.md).
@@ -22,22 +22,6 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@coven-invitation-revocation.test';
 const FIRST_PAGE = { limit: 26, inverted: false };
-
-async function insertCoven(name: string): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of [
-    [A.id, 'owner'],
-    [B.id, 'member'],
-    [C.id, 'viewer'],
-  ]) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
 
 type State = 'pending' | 'accepted' | 'revoked' | 'expired' | 'declined';
 
@@ -72,8 +56,18 @@ const declinedAtOf = async (id: string) =>
 let coven: string;
 beforeEach(async () => {
   await sql`truncate card_invitation_attempts, invitations`;
-  coven = await insertCoven(`Fixture Coven ${Math.random().toString(36).slice(2)}`);
+  coven = await insertWorkspace(
+    sql,
+    `Fixture Coven ${Math.random().toString(36).slice(2)}`,
+    MEMBERS,
+  );
 });
+
+const MEMBERS = [
+  [A.id, 'owner'],
+  [B.id, 'member'],
+  [C.id, 'viewer'],
+] as const;
 
 describe('revokeWorkspaceInvitation', () => {
   it('stamps revoked_at as the owner and keeps the row', async () => {
@@ -121,7 +115,11 @@ describe('revokeWorkspaceInvitation', () => {
   });
 
   it("does not reach another coven's invitation through one's own coven", async () => {
-    const other = await insertCoven(`Fixture Coven Other ${Math.random().toString(36).slice(2)}`);
+    const other = await insertWorkspace(
+      sql,
+      `Fixture Coven Other ${Math.random().toString(36).slice(2)}`,
+      MEMBERS,
+    );
     const id = await insertInvitation(other, 'elsewhere');
 
     await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).rejects.toThrow(NotFound);
@@ -178,7 +176,11 @@ describe('a declined invitation', () => {
   });
 
   it('is not reached through another coven', async () => {
-    const other = await insertCoven(`Fixture Coven Other ${Math.random().toString(36).slice(2)}`);
+    const other = await insertWorkspace(
+      sql,
+      `Fixture Coven Other ${Math.random().toString(36).slice(2)}`,
+      MEMBERS,
+    );
     const id = await insertInvitation(other, 'declined', 'declined');
 
     await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).rejects.toThrow(NotFound);
@@ -203,7 +205,11 @@ describe('listPendingWorkspaceInvitations and countPendingWorkspaceInvitations',
     await insertInvitation(coven, 'joined', 'accepted');
     await insertInvitation(coven, 'lapsed', 'expired');
     await insertInvitation(
-      await insertCoven(`Fixture Coven Other ${Math.random().toString(36).slice(2)}`),
+      await insertWorkspace(
+        sql,
+        `Fixture Coven Other ${Math.random().toString(36).slice(2)}`,
+        MEMBERS,
+      ),
       'elsewhere',
     );
 

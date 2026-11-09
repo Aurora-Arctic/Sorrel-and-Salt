@@ -1,9 +1,10 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs, signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
 
 // At phone width a table's rows are cards, and a table on its way draws each row as one block in the
 // card's frame, as tall as that list's real stacked row (claude-docs/loading.md).
@@ -60,30 +61,6 @@ test.beforeAll(async ({ browser }) => {
     await setup.close();
   }
 });
-
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const headers = route.request().headers();
-    const rsc =
-      headers.rsc === '1' ||
-      new URL(route.request().url()).searchParams.has('_rsc') ||
-      route.request().url().endsWith('/api/graphql');
-    if (!holding || !rsc || headers['next-router-prefetch'] === '1') return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold: () => {
-      holding = true;
-    },
-    held: () => held.length,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 const REAL = 'table.data-table--stack:not(.data-table--pending) > tbody > tr';
 const PLACEHOLDER = 'table.data-table--pending > tbody > tr';
@@ -147,7 +124,7 @@ for (const theme of ['light', 'dark'] as const) {
     test.setTimeout(240_000);
     await page.setViewportSize({ width: 375, height: 900 });
     await page.emulateMedia({ colorScheme: theme });
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'pass', alsoGraphql: true });
     const report: Record<string, { real: number | null; placeholder: number | null }> = {};
     for (const list of lists()) {
       await signInAgainAs(

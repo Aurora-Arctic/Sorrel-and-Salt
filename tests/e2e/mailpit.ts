@@ -51,3 +51,6 @@ export async function latestMessageTo(
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 }
+
+/** The address-verification link in a mailed message. */
+export const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;

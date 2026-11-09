@@ -5,6 +5,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { totpCode } from '../../support/two-factor';
 import { agreedInForceSql } from '../../support/db/agreement-in-force';
+import { PASSWORD, field } from '../session';
 import { withSql } from './accounts-setup';
 
 // Two-factor for password sign-ins (claude-docs/auth/two-factor.md). The code is computed from the key the account
@@ -12,11 +13,6 @@ import { withSql } from './accounts-setup';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-const PASSWORD = 'lantern moss under the north window';
-
-const field = (scope: ReturnType<Page['getByRole']>, label: string) =>
-  scope.getByLabel(new RegExp(`^${label}`));
 
 async function signInWithPassword(page: Page, email: string) {
   await page.goto('/sign-in?method=email');

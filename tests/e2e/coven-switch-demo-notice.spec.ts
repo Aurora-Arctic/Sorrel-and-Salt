@@ -1,8 +1,9 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { type Coven, seedCoven, withSql } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
 
 // The demo coven's warning belongs to the demo coven: once a switch to another coven starts, it is gone while
 // that coven loads, and switching into the demo coven shows no warning until the demo coven arrives.
@@ -13,32 +14,6 @@ const DEMO_NAME = 'Sorrel & Salt Demo';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-/** Holds back every server-component answer from `hold()` until `release()`. */
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  let navigations = 0;
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    const headers = request.headers();
-    const rsc = headers.rsc === '1' || new URL(request.url()).searchParams.has('_rsc');
-    if (!holding || !rsc) return route.fallback();
-    if (headers['next-router-prefetch'] !== '1') navigations += 1;
-    held.push(route);
-  });
-  return {
-    hold() {
-      holding = true;
-      navigations = 0;
-    },
-    navigations: () => navigations,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 const demoNotice = (page: Page) => page.getByRole('region', { name: 'Demo Coven' });
 
@@ -62,7 +37,7 @@ test('the demo warning leaves when a switch to another coven starts, and is not 
   // Why the warning could stay: the demo coven shows it at rest.
   await expect(demoNotice(page)).toHaveCount(1);
 
-  const server = await holdServerAnswers(page);
+  const server = await holdServerAnswers(page, { prefetch: 'hold' });
   server.hold();
   await switcher.click();
   await page.getByRole('option', { name: 'Fixture Coven Demo Switch', exact: true }).click();

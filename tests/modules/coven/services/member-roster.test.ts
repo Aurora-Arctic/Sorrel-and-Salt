@@ -3,34 +3,27 @@ import { Forbidden } from '@/lib/errors';
 import { memberRoster, removeMember, type WorkspaceRow } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-async function insertCoven(
+async function covenRow(
   name: string,
   members: [string, 'owner' | 'member' | 'viewer'][],
 ): Promise<WorkspaceRow> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
+  const id = await insertWorkspace(sql, name, members);
   const [coven] = await sql<WorkspaceRow[]>`
     select id, name, slug,
       created_at as "createdAt", created_by as "createdBy",
       updated_at as "updatedAt", updated_by as "updatedBy",
       deleted_at as "deletedAt", deleted_by as "deletedBy"
-    from workspaces where id = ${row.id}`;
+    from workspaces where id = ${id}`;
   return coven;
 }
 
 describe('memberRoster', () => {
   it('lists every live member with their role, and not one who has been removed', async () => {
-    const coven = await insertCoven('Fixture Roster Coven', [
+    const coven = await covenRow('Fixture Roster Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -48,7 +41,7 @@ describe('memberRoster', () => {
   });
 
   it('refuses a viewer, who holds a seat but not member: read, and a stranger', async () => {
-    const coven = await insertCoven('Fixture Roster Refusal Coven', [
+    const coven = await covenRow('Fixture Roster Refusal Coven', [
       [A.id, 'owner'],
       [C.id, 'viewer'],
     ]);

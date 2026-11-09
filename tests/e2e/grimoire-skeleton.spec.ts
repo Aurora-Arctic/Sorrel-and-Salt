@@ -1,9 +1,10 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
 
 // The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder card is as tall as a
 // real spell card and the grid has as many columns, at desktop and phone width, and at Compact. The wait on a spell page
@@ -44,27 +45,6 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const headers = route.request().headers();
-    const rsc = headers.rsc === '1' || new URL(route.request().url()).searchParams.has('_rsc');
-    if (!holding || !rsc || headers['next-router-prefetch'] === '1') return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold: () => {
-      holding = true;
-    },
-    held: () => held.length,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
-
 const cardGrid = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     const root = inSkeleton
@@ -88,7 +68,7 @@ for (const width of [1280, 375]) {
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
     const waitingGrid = async () => {
       await expect.poll(server.held).toBeGreaterThan(0);
       await expect(page.getByRole('main').getByRole('status')).toHaveCount(1);
@@ -154,7 +134,7 @@ for (const width of [1280, 375]) {
       await expect.poll(async () => (await cardGrid(page, false))!.height).toBe(loaded.height);
       return { loaded, regular };
     };
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
     const waitingAt = async (tab: string) => {
       server.hold();
       await page.getByRole('link', { name: tab, exact: true }).click();
@@ -231,7 +211,7 @@ for (const width of [1280, 375]) {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
     const link = page.getByRole('heading', { name: SPELL_TITLE }).getByRole('link');
     await expect(link).toBeVisible();
     await pageBars(page, 'rest');

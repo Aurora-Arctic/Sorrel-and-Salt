@@ -1,7 +1,6 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 
 // A document's earlier published versions each have a page of their own, `/<document>/versions/<number>`; a draft, or a number
 // never published, is a 404 (claude-docs/design-decisions/support.md, "History"). The seed publishes each
@@ -55,8 +54,7 @@ test('a draft is a 404 by its number, and its text is not on the document page',
   page,
   request,
 }) => {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const [document] =
       await sql`select id from documents where key = 'privacy' and deleted_at is null`;
     // Precondition: the seeded document is there for the draft to belong to.
@@ -71,9 +69,7 @@ test('a draft is a 404 by its number, and its text is not on the document page',
         created_by: BOOTSTRAP_USER_ID,
         updated_by: BOOTSTRAP_USER_ID,
       })}`;
-  } finally {
-    await sql.end();
-  }
+  });
 
   expect((await request.get('/privacy/versions/2')).status()).toBe(404);
   await page.goto('/privacy');

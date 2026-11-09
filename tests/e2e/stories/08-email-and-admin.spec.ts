@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { Browser, Page, Response } from '@playwright/test';
-import postgres from 'postgres';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
-import { latestMessageTo } from '../mailpit';
+import { recreateE2eDatabase, withE2eSql } from '../database';
+import { VERIFY_LINK, latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
 // claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/auth.md, "First-party email verification and email delivery".
@@ -15,18 +14,9 @@ test.beforeAll(async () => {
 /** A fresh address per call, so a retry or another worker never reads this run's mail. */
 const address = (local: string) => `${local}-${randomUUID()}@email-and-admin.test`;
 
-async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
-
 /** Names an account apart from the others, which `signInAs` all call Fixture Person. A name is no privilege, so the trigger on `users` asks no route. */
 async function rename(userId: string, name: string): Promise<void> {
-  await withSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
+  await withE2eSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
 }
 
 async function visit(page: Page, path: string): Promise<Response> {
@@ -44,7 +34,6 @@ async function visit(page: Page, path: string): Promise<Response> {
   throw new Error(`more than five redirects from ${path}`);
 }
 
-const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
 const INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+/;
 const SITE_INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+\?for=site/;
 
@@ -123,7 +112,7 @@ async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
 
 /** The primary keeper's id: the account an earlier test signed in at the address, or one made now (the email index admits it once). */
 async function primaryAdminId(page: Page): Promise<string> {
-  const [row] = await withSql(
+  const [row] = await withE2eSql(
     (sql) => sql`select id from users where email = ${PRIMARY_ADMIN_EMAIL}`,
   );
   if (row) return row.id as string;
@@ -478,7 +467,7 @@ test.describe('the primary admin', () => {
       const loneEmail = address('last-admin');
       const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
       // Every other keeper demoted as a `psql` fix would, so this one is the last.
-      const demoted = await withSql((sql) =>
+      const demoted = await withE2eSql((sql) =>
         sql.begin(async (tx) => {
           await tx`select set_config('app.privilege_route', 'manual', true)`;
           return tx`
@@ -543,7 +532,7 @@ test(
     await expect(granting).toHaveCount(0);
     await expect(roleCell(row)).toHaveText(/^Keeper/);
 
-    await withSql((sql) =>
+    await withE2eSql((sql) =>
       sql.begin(async (tx) => {
         await tx`select set_config('app.privilege_route', 'manual', true),
                         set_config('app.privilege_note', 'Restored after the audit', true)`;
@@ -916,7 +905,7 @@ test(
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     await expectAdminArea(page, false);
 
-    await withSql(
+    await withE2eSql(
       (sql) => sql`
         update invitations set expires_at = now() - interval '1 second'
         where email = ${lapsedEmail} and accepted_at is null and revoked_at is null

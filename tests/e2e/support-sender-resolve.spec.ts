@@ -1,7 +1,6 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // What no story walks: a sender resolves a request waiting on them, the account menu's dot and count go out with it, and an
@@ -17,15 +16,12 @@ test('a sender resolves a waiting request, the menu count goes out and the admin
 }) => {
   const { userId } = await signInAs(page, 'sender@support-resolve.test');
   const subject = 'A waiting request';
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`
       insert into support_requests (about, subject, message, path, status, created_by, updated_by)
       values ('question', ${subject}, 'A message.', '', 'waiting_on_sender', ${userId}, ${userId})
     `;
-  } finally {
-    await sql.end();
-  }
+  });
 
   await page.goto('/account/support');
   const menu = page.getByRole('button', { name: /^.*1 request waiting on you$/ });

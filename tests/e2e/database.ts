@@ -1,3 +1,4 @@
+import postgres from 'postgres';
 import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../support/seeded-database';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
@@ -58,4 +59,21 @@ export async function recreateE2eDatabase(): Promise<void> {
 
 export async function dropE2eTemplate(): Promise<void> {
   await dropDatabase(E2E_TEMPLATE);
+}
+
+/**
+ * Runs `use` with a raw client on a worker's e2e database and ends the client after. Setup rows go in through
+ * it so that setup does not depend on the code a spec proves (CLAUDE.md, Testing). `database` names another
+ * database than the worker's own.
+ */
+export async function withE2eSql<T>(
+  use: (sql: postgres.Sql) => Promise<T>,
+  database?: string,
+): Promise<T> {
+  const sql = postgres(e2eDatabaseUrl(database), { onnotice: () => {} });
+  try {
+    return await use(sql);
+  } finally {
+    await sql.end();
+  }
 }

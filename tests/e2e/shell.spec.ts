@@ -1,10 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // What a component test cannot prove: where the browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
 
@@ -40,39 +40,28 @@ async function seedFixtures(page: Page): Promise<void> {
     };
   }
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;
       await tx`update users set can_create_workspace = true where id = ${users.multi.id}`;
     });
     const owner = users.multi.id;
     for (const coven of [ALPHA, BETA]) {
-      const [row] = await sql`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${coven.name}, ${coven.slug}, ${owner}, ${owner})
-        returning id`;
-      const members =
+      const members: [string, 'owner' | 'member'][] =
         coven === ALPHA
           ? [
               [owner, 'owner'],
               [users.member.id, 'member'],
             ]
           : [[owner, 'owner']];
-      for (const [userId, role] of members) {
-        await sql`
-          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-          values (${row.id}, ${userId}, ${role}, ${owner}, ${owner})`;
-      }
+      await insertWorkspace(sql, coven.name, members, { slug: coven.slug, author: owner });
     }
     const rows = await sql`
       select count(*)::int as n from workspace_members m
       join workspaces w on w.id = m.workspace_id
       where m.deleted_at is null and w.slug in ${sql([ALPHA.slug, BETA.slug])}`;
     expect(rows[0].n).toBe(3);
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 async function toggleTheme(page: Page): Promise<void> {
