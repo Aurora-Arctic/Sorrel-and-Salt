@@ -159,6 +159,39 @@ describe('the document editor’s toolbar', () => {
     );
   });
 
+  it('Link tidies a bare host to https:// on leaving the field, and links to it', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    const address = within(dialog).getByRole('textbox', { name: 'Address' });
+    fireEvent.change(address, { target: { value: ' example.test/fixturewort ' } });
+    fireEvent.blur(address);
+    await waitFor(() => expect(address).toHaveValue('https://example.test/fixturewort'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Link' })).toBeNull());
+
+    expect(await saveDraft(saved)).toBe(
+      '[Fixturewort](https://example.test/fixturewort) grows here.',
+    );
+  });
+
+  it('Link refuses an address the page would not open, and keeps the dialog', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Address' }), {
+      target: { value: 'javascript:alert(1)' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+
+    expect(await within(dialog).findByRole('textbox', { name: 'Address' })).toBeInvalid();
+    expect(screen.getByRole('dialog', { name: 'Add Link' })).toBeInTheDocument();
+  });
+
   it('Table inserts a table the markdown writes with a header row', async () => {
     const { saved, text } = await renderEditor('Fixturewort grows here.');
     await select(text, 'here', { caret: true });

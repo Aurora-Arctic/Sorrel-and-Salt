@@ -1,6 +1,8 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useState } from 'react';
+import { linkAddressProblem, tidyLinkAddress } from '../../lib/link-address';
+import { PlainTextField } from '../Field/plain-text-field';
 import Modal from '../Modal';
 
 export default function LinkDialog({
@@ -13,43 +15,45 @@ export default function LinkDialog({
   returnTo: () => HTMLElement | null;
 }) {
   const [url, setUrl] = useState('');
-  const [failed, setFailed] = useState(false);
-  const inputId = useId();
-  const errorId = useId();
+  const [error, setError] = useState<string>();
 
   function add() {
-    if (onAdd(url.trim())) onClose();
-    else setFailed(true);
+    const address = tidyLinkAddress(url);
+    setUrl(address);
+    const problem = linkAddressProblem(address);
+    if (problem) setError(problem);
+    else if (onAdd(address)) onClose();
+    else setError(linkAddressProblem('') as string);
   }
 
   return (
     <Modal title="Add Link" onClose={onClose} returnTo={returnTo}>
-      <div className="field">
-        <label className="field__label" htmlFor={inputId}>
-          Address
-        </label>
-        <input
-          id={inputId}
-          className="input"
+      {/* A div, not a form: the dialog can sit inside the document's own form. */}
+      <div
+        role="presentation"
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          add();
+        }}
+      >
+        <PlainTextField
+          name="address"
+          label="Address"
           type="url"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="done"
+          placeholder="https://example.com"
+          format={tidyLinkAddress}
           value={url}
-          aria-invalid={failed || undefined}
-          aria-describedby={failed ? errorId : undefined}
-          onChange={(event) => {
-            setUrl(event.target.value);
-            setFailed(false);
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            event.preventDefault();
-            add();
+          error={error}
+          onChange={(next) => {
+            setUrl(next);
+            setError(undefined);
           }}
         />
-        {failed && (
-          <p id={errorId} role="alert">
-            Enter a full web address, such as https://example.com.
-          </p>
-        )}
       </div>
       <div className="form__actions">
         <button type="button" className="btn btn--solid" onClick={add}>
