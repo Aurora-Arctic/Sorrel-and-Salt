@@ -74,7 +74,7 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
   who ? { id: who.id, name: who.name ?? 'Unknown' } : null;
 
 const copyFor = (name: string): PausePanelCopy => ({
-  noteHint: "Seen by the coven's stewards only, up to 500 characters.",
+  noteHint: "Seen by the coven's stewards only.",
   notePlaceholder: 'Why, for stewards',
   messageLabel: 'Message to Member',
   messagePlaceholder: 'For them',
