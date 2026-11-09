@@ -114,7 +114,6 @@ export const ADMIN_PAGES = {
 
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
-    name: 'Compendium',
     pages: [
       ADMIN_PAGES.compendium,
       ADMIN_PAGES.categories,

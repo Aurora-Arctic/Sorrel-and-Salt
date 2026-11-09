@@ -10,7 +10,8 @@ export interface AdminPage {
 }
 
 export interface AdminSection {
-  name: string;
+  /** The group heading on the index; a lone group has none. */
+  name?: string;
   pages: readonly AdminPage[];
 }
 

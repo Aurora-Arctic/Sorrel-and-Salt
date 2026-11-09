@@ -1,6 +1,6 @@
 # AdminNav
 
-`src/components/AdminNav/` is the nav of the two site areas. `CuratorNav` is the `/curator` layout's, a `<nav>` labelled "Curator" with the one Compendium section. The default export, `AdminNav`, is the `/keepers` layout's, labelled "Keepers", with the one People & Support section, Documents at its end. Each sits in the context row beside its lead link and, on a phone, along the foot of the window. They are thin wrappers: the tabs, the bar and the More button are [`SectionNav`](section-nav.md)'s. The same sections are each area's index table of contents, which this component also draws (`CuratorContents` and `AdminContents`). Every page but the compendium is in tabs, each tab at its own address, and the nav links a page at its first tab ([`tabbed-page.md`](tabbed-page.md)).
+`src/components/AdminNav/` is the nav of the two site areas. `CuratorNav` is the `/curator` layout's, a `<nav>` labelled "Curator" with its one unnamed section. The default export, `AdminNav`, is the `/keepers` layout's, labelled "Keepers", with the one People & Support section, Documents at its end. Each sits in the context row beside its lead link and, on a phone, along the foot of the window. They are thin wrappers: the tabs, the bar and the More button are [`SectionNav`](section-nav.md)'s. The same sections are each area's index table of contents, which this component also draws (`CuratorContents` and `AdminContents`). Every page but the compendium is in tabs, each tab at its own address, and the nav links a page at its first tab ([`tabbed-page.md`](tabbed-page.md)).
 
 | Area    | Page        | Tabs: label and route                                                                                                                                                                   |
 | ------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -35,7 +35,7 @@ A link carries only its address. Each admin page has a `skeleton.tsx` beside it 
 
 ## The index
 
-`AdminContents`, exported beside the nav, is each area's index table of contents: a `section` per section of the area, each with its name as an `h2` and a list of its pages. Each page is a link to its first tab with its one line beneath it, which is the link's `aria-describedby` too.
+`AdminContents`, exported beside the nav, is each area's index table of contents: a `section` per section of the area, each with its name as an `h2` and a list of its pages. A section with no `name` draws no heading, as the curator's lone section does. Each page is a link to its first tab with its one line beneath it, which is the link's `aria-describedby` too.
 
 - `src/app/(shell)/keepers/page.tsx` renders it under the heading and a lede, a `<p class="lede">` saying what the area is for. `tests/e2e/admin.spec.ts` measures that paragraph against the reading measure, so the lede stays a `<p>` in `main`.
 - **The page is centred** by `.admin-index` (`src/scss/_primitives.scss`) on the `/keepers` page's `<main>`. Its skeleton (`AdminNav/skeleton.tsx`) carries the same class, so the swap is in place; the other admin pages' waits keep the wide column.
