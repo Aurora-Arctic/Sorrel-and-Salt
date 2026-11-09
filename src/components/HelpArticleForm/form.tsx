@@ -335,13 +335,11 @@ const HelpArticleForm = ({
       (holdsSubPages && NARROWNESS[value] > narrowestChild),
   }));
   const audienceNote =
-    kind === 'faq'
+    kind === 'faq' || !parent
       ? undefined
-      : parent
-        ? parent.audience === 'keeper'
-          ? `Its guide, ${parent.title}, is Keeper, so this page is Keeper too.`
-          : `Its guide, ${parent.title}, is ${AUDIENCE_LABELS[parent.audience]}, so this page is ${AUDIENCE_LABELS[parent.audience]} or narrower.`
-        : 'Who reads it. A sub page is as wide as this or narrower.';
+      : parent.audience === 'keeper'
+        ? `Its guide, ${parent.title}, is Keeper, so this page is Keeper too.`
+        : `Its guide, ${parent.title}, is ${AUDIENCE_LABELS[parent.audience]}, so this page is ${AUDIENCE_LABELS[parent.audience]} or narrower.`;
 
   const positionField: ReactNode =
     kind === 'article' && parent ? (
@@ -454,10 +452,6 @@ const HelpArticleForm = ({
               label="Shown"
               onChange={(next) => setValue('shown', next, { shouldDirty: true })}
             />
-            <p className="field__hint">
-              Hidden, it leaves every reader page and the search, and stays listed under Keepers ›
-              Help.
-            </p>
           </div>
           {kind === 'article' && (
             <SelectField<HelpFormValues>

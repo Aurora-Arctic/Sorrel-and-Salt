@@ -119,9 +119,6 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
             <span className="help-article-form__pending-switch" />
           </span>
         </span>
-        <Hint>
-          Hidden, it leaves every reader page and the search, and stays listed under Keepers › Help.
-        </Hint>
       </div>
       <Field label="Parent" />
       <fieldset className="fieldset help-article-form__sub-pages" disabled>
@@ -129,11 +126,7 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
         <Skeleton shape="block" quiet />
         <Hint>Adding one makes this a guide and fixes Parent at No Parent.</Hint>
       </fieldset>
-      <Chip
-        legend="Audience"
-        value="Public"
-        note="Who reads it. A sub page is as wide as this or narrower."
-      />
+      <Chip legend="Audience" value="Public" />
     </div>
     <div className="help-article-form__actions" aria-hidden="true">
       <div className="form__actions">

@@ -32,6 +32,8 @@ export function HelpSubPagesField({
   const legendId = `${id}-legend`;
   const noteId = `${id}-note`;
   const errorId = `${id}-error`;
+  const empty = value.length === 0;
+  const describedBy = [empty && noteId, error && errorId].filter(Boolean).join(' ') || undefined;
   const [text, setText] = useState('');
   const [announcement, setAnnouncement] = useState('');
   const byId = useMemo(
@@ -84,7 +86,7 @@ export function HelpSubPagesField({
     <fieldset
       className="fieldset help-article-form__sub-pages"
       aria-labelledby={legendId}
-      aria-describedby={[noteId, error && errorId].filter(Boolean).join(' ')}
+      aria-describedby={describedBy}
       disabled={disabled}
     >
       <legend className="fieldset__legend">
@@ -129,18 +131,19 @@ export function HelpSubPagesField({
           )
         }
         aria-invalid={error ? true : undefined}
-        aria-describedby={[noteId, error && errorId].filter(Boolean).join(' ')}
+        aria-describedby={describedBy}
       />
       {moves.map((line) => (
         <p key={line} className="field__hint help-article-form__warning">
           {line}
         </p>
       ))}
-      <p id={noteId} className="field__hint">
-        {value.length > 0
-          ? 'The order here is the order readers see. Drag a chip by its grip, or focus it and press the arrow keys.'
-          : 'Adding one makes this a guide and fixes Parent at No Parent.'}
-      </p>
+      {/* The grip's own instructions tell a screen reader how to move a chip, so a note is drawn only while there is none. */}
+      {empty && (
+        <p id={noteId} className="field__hint">
+          Adding one makes this a guide and fixes Parent at No Parent.
+        </p>
+      )}
       <FieldError id={errorId} message={error} />
       {/* Labelled, so that it is told from the box's own status region. */}
       <output className="visually-hidden" aria-label="Sub Pages changes">
