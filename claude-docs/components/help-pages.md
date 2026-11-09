@@ -124,7 +124,7 @@ scripts/with-lock.sh /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
 
 ## Links to help
 
-`Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The Curator and Keepers navs each end with a "Staff Help" entry linking `/help/staff` ([`admin-nav.md`](admin-nav.md)).
+The footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The Curator and Keepers navs each end with a "Staff Help" entry linking `/help/staff` ([`admin-nav.md`](admin-nav.md)).
 
 Every link from a help page to another page, the term marks and their "See in Glossary" link among them, is a `PendingLink`, so a press shows the destination's skeleton at once. A link to an anchor on the same page (the front page's "Back to Top", a glossary term's own "#") stays an `<a>`, since it loads nothing.
 

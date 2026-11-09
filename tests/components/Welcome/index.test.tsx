@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import type { Route } from 'next';
 import { describe, expect, it } from 'vitest';
 import Welcome from '@/components/Welcome';
-import { hrefs } from '../../support/links';
 
 // claude-docs/components/welcome.md
 
@@ -30,15 +28,5 @@ describe('Welcome', () => {
       'href',
       '/compendium',
     );
-  });
-
-  // The help pages are public, so the front door reaches them for everyone.
-  it.each<[string, Route | undefined]>([
-    ['a signed-out visitor', undefined],
-    ['a signed-in visitor', '/coven'],
-  ])('links %s to the help pages', (_, landing) => {
-    render(<Welcome landing={landing} />);
-
-    expect(hrefs(screen.getAllByRole('link'))).toContain('/help');
   });
 });
