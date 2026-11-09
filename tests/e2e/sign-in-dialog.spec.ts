@@ -139,10 +139,7 @@ test.describe('the sign-in dialog', () => {
     const message = await latestMessageTo(INVITED);
     const link = new URL(message.text.match(VERIFY_LINK)![0]);
     await page.goto(`${link.pathname}${link.search}`);
-    await page.getByRole('link', { name: 'Continue', exact: true }).click();
-    // A new account has not agreed to the terms, so the invitation waits behind the acceptance page.
-    await expect(page).toHaveURL(`/account/terms?next=${encodeURIComponent(INVITATION)}`);
-    await page.getByRole('button', { name: 'Agree & Continue' }).click();
+    // The link from an invitation lands on the invitation itself, with no confirmed view to continue from.
     await expect(page).toHaveURL(INVITATION);
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toBeVisible();
 
@@ -169,8 +166,13 @@ test.describe('the sign-in dialog', () => {
       );
     expect(await seats()).toHaveLength(0);
     await accept.click();
-    await expect(page).toHaveURL(`/coven/${COVEN_SLUG}`);
+    // The invitation page is open to a new account; the coven is not until it agrees to the terms.
+    await expect(page).toHaveURL(
+      `/account/terms?next=${encodeURIComponent(`/coven/${COVEN_SLUG}`)}`,
+    );
     expect(await seats()).toHaveLength(1);
+    await page.getByRole('button', { name: 'Agree & Continue' }).click();
+    await expect(page).toHaveURL(`/coven/${COVEN_SLUG}`);
   });
 
   test('stacks the two choices on a phone', async ({ page }) => {
