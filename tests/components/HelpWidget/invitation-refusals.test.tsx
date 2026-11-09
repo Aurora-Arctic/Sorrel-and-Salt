@@ -98,6 +98,18 @@ describe('InvitationRefusals', () => {
     expect(facts()).toEqual([REFUSAL_FIXES.paused.link.who, REFUSAL_FIXES.paused.link.now]);
   });
 
+  it('draws the error with nothing in it the accept page’s error lacks, the printed card mark outside it', () => {
+    render(<InvitationRefusals />);
+
+    type('withdrawn card');
+    fireEvent.click(screen.getByRole('option', { name: CARD.revoked }));
+
+    // getByText matches an element whose whole text is the message, so a badge inside the error would fail it.
+    const error = within(answer()).getByText(CARD.revoked as string);
+    expect(error).not.toHaveTextContent('Printed Card');
+    expect(answer()).toHaveTextContent('Printed Card');
+  });
+
   it('offers the accept page’s own button where it shows one', () => {
     render(<InvitationRefusals />);
 

@@ -51,9 +51,13 @@ const RefusalFinder = ({ entries }: { entries: readonly RefusalEntry[] }): React
         />
       </div>
       <div className="help-widget__answer" role="status" aria-label="What It Means">
+        {/* Widget furniture, not part of the error, which the accept page draws as the message alone. */}
+        {entry.card && (
+          <p className="help-widget__kind">
+            <PrintedCardMark />
+          </p>
+        )}
         <Notice kind="error" inRegion>
-          {entry.card && <PrintedCardMark />}
-          {entry.card && ' '}
           {entry.message}
         </Notice>
         <dl className="help-widget__facts">
