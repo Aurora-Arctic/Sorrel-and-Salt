@@ -64,7 +64,7 @@ export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
   description: { label: 'Description', one: 'description', many: 'description' },
   safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
-  elements: { label: 'Element', one: 'element', many: 'elements' },
+  elements: { label: 'Elements', one: 'element', many: 'elements' },
   celestialBodies: { label: 'Celestial Bodies', one: 'celestial body', many: 'celestial bodies' },
   zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
   colors: { label: 'Colours', one: 'colour', many: 'colours' },

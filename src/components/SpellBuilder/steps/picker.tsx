@@ -8,7 +8,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
 import { compareJar } from '../comparison-panel';
-import { useCategoryIndex } from '../category-index';
+import { useCategoryIndex } from '../../CategoryPicker/categories';
 import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';

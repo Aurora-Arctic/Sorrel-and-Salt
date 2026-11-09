@@ -2,8 +2,6 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { SpellBuilderStepsQuery } from '../../gql/graphql';
 import type { FieldProps } from '../Field/types';
-import type { PickerCategory } from '../CategoryPicker/types';
-import type { GroupColors } from '../../lib/types';
 import type { SpellStepSend, SpellStepValue } from './steps/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
@@ -111,12 +109,4 @@ export interface SpellVisibilityFieldProps {
   /** The spell is saved, so its visibility is the saved one's: a draft's moves either way, a complete one's only widens. */
   created: boolean;
   flush: () => Promise<void>;
-}
-
-export interface CategoryIndex {
-  categories: PickerCategory[];
-  names: ReadonlyMap<string, string>;
-  colors: ReadonlyMap<string, GroupColors>;
-  isPending: boolean;
-  isError: boolean;
 }

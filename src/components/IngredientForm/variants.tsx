@@ -492,7 +492,7 @@ function VariantFieldset({
           >
             <MultiSelectField
               name={`${at}.elements`}
-              label="Element"
+              label="Elements"
               placeholder="Add an element"
               options={ELEMENT_OPTIONS}
               action={<CopyFromIngredient at={at} field="elements" />}

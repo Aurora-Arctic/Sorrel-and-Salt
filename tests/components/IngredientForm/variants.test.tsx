@@ -309,7 +309,7 @@ describe('IngredientForm’s variants', () => {
       }
 
       for (const field of [
-        'Element',
+        'Elements',
         'Celestial Bodies',
         'Zodiac Signs',
         'Colours',

@@ -149,7 +149,7 @@ The Jar section is one column at every width (the default dialog is 32rem of con
 
 ## The categories, read once
 
-`useCategoryIndex()` (`category-index.ts`) is the builder's one read of the `categories` query (the picker's filter list, each id's name and group colours, and the pending and failed states). Every caller shares one request through the query cache.
+`useCategoryIndex()` (`CategoryPicker/categories.ts`, shared with the ingredient form) is the builder's one read of the `categories` query (the picker's filter list, each id's name and group colours, and the pending and failed states). Every caller shares one request through the query cache.
 
 ## Reordering
 
