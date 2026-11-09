@@ -47,7 +47,7 @@ describe('help_articles schema', () => {
 
   it('declares the kinds and the audiences as enums', () => {
     expect(helpArticleKind.enumName).toBe('help_article_kind');
-    expect(helpArticleKind.enumValues).toEqual(['faq', 'article', 'term']);
+    expect(helpArticleKind.enumValues).toEqual(['faq', 'article', 'guide', 'term']);
     expect(helpAudience.enumName).toBe('help_audience');
     expect(helpAudience.enumValues).toEqual(['public', 'staff', 'keeper']);
   });

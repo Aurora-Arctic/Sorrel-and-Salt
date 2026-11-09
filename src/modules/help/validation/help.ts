@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RowId, optionalText, requiredText } from '@/lib/validation';
 
-const Kind = z.enum(['faq', 'article', 'term']);
+const Kind = z.enum(['faq', 'article', 'guide', 'term']);
 const Audience = z.enum(['public', 'staff', 'keeper']);
 const Position = z
   .number()
@@ -25,8 +25,9 @@ export const HelpArticleInput = z.object({
   childIds: ChildIds,
 });
 
-// `kind` is not here: an article keeps its kind, so a term never becomes an article beneath a parent.
+// Every kind parses, so a save restating its own kind passes; the service refuses any change but article and guide.
 export const HelpArticlePatch = z.object({
+  kind: Kind.nullish(),
   title: requiredText('Give the article a title').nullish(),
   body: requiredText('Give the article a body').nullish(),
   audience: Audience.nullish(),

@@ -14,7 +14,7 @@ import {
 import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
 import { auditColumns } from '../../identity/schema/users';
 
-export const helpArticleKind = pgEnum('help_article_kind', ['faq', 'article', 'term']);
+export const helpArticleKind = pgEnum('help_article_kind', ['faq', 'article', 'guide', 'term']);
 // Who may read a row: anyone, site keepers and curators, or site keepers alone.
 export const helpAudience = pgEnum('help_audience', ['public', 'staff', 'keeper']);
 

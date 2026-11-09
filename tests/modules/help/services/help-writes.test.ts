@@ -341,12 +341,12 @@ describe('the structure rules', () => {
   beforeEach(async () => {
     parentId = await insertHelpArticle(
       sql,
-      { title: 'Testwort Parent', slug: 'testwort-parent' },
+      { kind: 'guide', title: 'Testwort Parent', slug: 'testwort-parent' },
       E.id,
     );
   });
 
-  it('accepts a child of a live top-level article', async () => {
+  it('accepts a child of a live guide', async () => {
     const child = await createHelpArticle(asUser(E), {
       ...article,
       title: 'Testwort Child',
@@ -398,7 +398,7 @@ describe('the structure rules', () => {
       createHelpArticle(asUser(E), { ...article, title: 'Testwort Grandchild', parentId: childId }),
       'parentId',
     );
-    // The parent has a child, so placing it under another would make a second level.
+    // The parent is a guide, which takes no parent of its own.
     await expectRefusedAt(
       updateHelpArticle(asUser(E), parentId, { parentId: otherTop }),
       'parentId',
@@ -485,7 +485,12 @@ describe('the audience order: public, then staff, then keeper', () => {
   it('gives a child its parent’s audience or a narrower one, never a wider', async () => {
     const staffParent = await insertHelpArticle(
       sql,
-      { title: 'Testwort Staff Parent', slug: 'testwort-staff-parent', audience: 'staff' },
+      {
+        kind: 'guide',
+        title: 'Testwort Staff Parent',
+        slug: 'testwort-staff-parent',
+        audience: 'staff',
+      },
       E.id,
     );
 
@@ -525,7 +530,12 @@ describe('the audience order: public, then staff, then keeper', () => {
   it('refuses moving a public article under a staff parent', async () => {
     const staffParent = await insertHelpArticle(
       sql,
-      { title: 'Testwort Staff Parent', slug: 'testwort-staff-parent', audience: 'staff' },
+      {
+        kind: 'guide',
+        title: 'Testwort Staff Parent',
+        slug: 'testwort-staff-parent',
+        audience: 'staff',
+      },
       E.id,
     );
     const open = await insertHelpArticle(
@@ -544,7 +554,7 @@ describe('the audience order: public, then staff, then keeper', () => {
   it('refuses making a parent narrower than a live child, with no cascade', async () => {
     const parentId = await insertHelpArticle(
       sql,
-      { title: 'Testwort Parent', slug: 'testwort-parent' },
+      { kind: 'guide', title: 'Testwort Parent', slug: 'testwort-parent' },
       E.id,
     );
     const staffChild = await insertHelpArticle(
@@ -573,7 +583,7 @@ describe('the audience order: public, then staff, then keeper', () => {
   it('lets a deleted child not hold its parent back', async () => {
     const parentId = await insertHelpArticle(
       sql,
-      { title: 'Testwort Parent', slug: 'testwort-parent' },
+      { kind: 'guide', title: 'Testwort Parent', slug: 'testwort-parent' },
       E.id,
     );
     await insertHelpArticle(
@@ -1091,7 +1101,11 @@ describe('a parent choosing its children', () => {
     insertHelpArticle(sql, { title, ...seed }, E.id);
 
   beforeEach(async () => {
-    parentId = await top('Testwort Parent', { slug: 'testwort-parent', position: 3 });
+    parentId = await top('Testwort Parent', {
+      kind: 'guide',
+      slug: 'testwort-parent',
+      position: 3,
+    });
   });
 
   it('makes the listed articles its children, each positioned by its place in the list', async () => {
@@ -1114,6 +1128,7 @@ describe('a parent choosing its children', () => {
 
     const created = await createHelpArticle(asUser(E), {
       ...article,
+      kind: 'guide',
       title: 'Testwort New Parent',
       childIds: [first],
     });
@@ -1159,7 +1174,7 @@ describe('a parent choosing its children', () => {
   });
 
   it('moves an article another parent holds, leaving that parent its other children', async () => {
-    const otherParent = await top('Testwort Other Parent');
+    const otherParent = await top('Testwort Other Parent', { kind: 'guide' });
     const moved = await top('Testwort Moved', { parent_id: otherParent, position: 1 });
     const stays = await top('Testwort Stays', { parent_id: otherParent, position: 2 });
 
@@ -1228,7 +1243,7 @@ describe('a parent choosing its children', () => {
   });
 
   it('refuses a child wider than the parent', async () => {
-    const staffParent = await top('Testwort Staff Parent', { audience: 'staff' });
+    const staffParent = await top('Testwort Staff Parent', { kind: 'guide', audience: 'staff' });
     const publicChild = await top('Testwort Public Child');
     const keeperChild = await top('Testwort Keeper Child', { audience: 'keeper' });
 

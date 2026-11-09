@@ -52,8 +52,18 @@ interface Merged {
 const KIND_NAMES: Record<HelpArticleKind, string> = {
   faq: 'FAQ entry',
   article: 'article',
+  guide: 'guide',
   term: 'term',
 };
+
+const A_KIND: Record<HelpArticleKind, string> = {
+  faq: 'An FAQ entry',
+  article: 'An article',
+  guide: 'A guide',
+  term: 'A term',
+};
+
+const isPage = (kind: HelpArticleKind): boolean => kind === 'article' || kind === 'guide';
 
 async function checkSlug(
   kind: HelpArticleKind,
@@ -71,17 +81,19 @@ async function checkSlug(
   if (holder && holder.id !== selfId)
     throw fieldRefusal(
       'title',
-      `Another ${KIND_NAMES[kind]} has a title that makes the same address`,
+      isPage(kind)
+        ? 'Another article or guide has a title that makes the same address'
+        : `Another ${KIND_NAMES[kind]} has a title that makes the same address`,
     );
 }
 
 /** A top-level page given no place goes after every guide, so last in its audience's group in the Guides bar. */
 const lastGuidePlace = async (): Promise<number> => (await findLastTopLevelHelpPosition()) + 1;
 
-/** Only an article carries a summary; the check reads the value sent, so a row saved before the rule still saves. */
+/** Only a guide or an article carries a summary; the check reads the value sent, so a row saved before the rule still saves. */
 function checkSummary(kind: HelpArticleKind, summary: string | null | undefined): void {
-  if (kind !== 'article' && summary != null)
-    throw fieldRefusal('summary', `An ${kind === 'faq' ? 'FAQ entry' : 'term'} has no summary`);
+  if (!isPage(kind) && summary != null)
+    throw fieldRefusal('summary', `${A_KIND[kind]} has no summary`);
 }
 
 /** The structure rules, on the row as it would stand after the write. SQL scopes the audience of a read; these rules hold the shape of a write. */
@@ -92,11 +104,19 @@ async function checkStructure(row: Merged, selfId: string | null): Promise<void>
     if (row.audience !== 'public') throw fieldRefusal('audience', 'A term is public');
   }
 
+  if (row.kind !== 'article' && row.parentId !== null)
+    throw fieldRefusal(
+      'parentId',
+      row.kind === 'guide'
+        ? 'A guide has no parent: it is a top-level page'
+        : `${A_KIND[row.kind]} has no parent: only an article is a sub page`,
+    );
+
   let parent: HelpArticleRow | undefined;
   if (row.parentId !== null) {
     parent = await findOneById(helpArticles, row.parentId);
-    if (!parent || parent.kind !== 'article')
-      throw fieldRefusal('parentId', 'Choose an article as the parent');
+    if (!parent || parent.kind !== 'guide')
+      throw fieldRefusal('parentId', 'Choose a guide as the parent');
     if (parent.parentId !== null)
       throw fieldRefusal('parentId', 'A child cannot be a parent: help nests one level');
     if (selfId !== null && parent.id === selfId)
@@ -120,7 +140,7 @@ async function checkStructure(row: Merged, selfId: string | null): Promise<void>
 async function checkChildren(row: Merged, selfId: string | null): Promise<HelpArticleRow[]> {
   const ids = row.childIds ?? [];
   if (ids.length === 0) return [];
-  if (row.kind !== 'article') throw fieldRefusal('childIds', 'Only an article holds children');
+  if (row.kind !== 'guide') throw fieldRefusal('childIds', 'Only a guide holds sub pages');
   if (row.parentId !== null)
     throw fieldRefusal('childIds', 'A child cannot hold children: help nests one level');
   if (selfId !== null && ids.includes(selfId))
@@ -134,7 +154,10 @@ async function checkChildren(row: Merged, selfId: string | null): Promise<HelpAr
     throw fieldRefusal('childIds', 'Choose live articles as the children');
   const rows = children as HelpArticleRow[];
   if (rows.some((child) => child.kind !== 'article'))
-    throw fieldRefusal('childIds', 'Choose articles as the children, not FAQ entries or terms');
+    throw fieldRefusal(
+      'childIds',
+      'Choose articles as the sub pages, not guides, FAQ entries or terms',
+    );
   if (rows.some((child) => WIDTH[child.audience] < WIDTH[row.audience]))
     throw fieldRefusal('childIds', 'A child is as wide as its parent or narrower, never wider');
   for (const child of rows) {
@@ -145,6 +168,32 @@ async function checkChildren(row: Merged, selfId: string | null): Promise<HelpAr
       );
   }
   return rows;
+}
+
+/**
+ * A kind changes only between article and guide, on the row as it would stand after the save: an article becomes a guide
+ * only at the top level, and a guide an article only once it holds no live sub page.
+ */
+async function checkKindChange(from: HelpArticleKind, row: Merged, selfId: string): Promise<void> {
+  if (row.kind === from) return;
+  if (from === 'article' && row.kind === 'guide') {
+    if (row.parentId !== null)
+      throw fieldRefusal('kind', 'A sub page cannot be a guide: choose No Parent first');
+    return;
+  }
+  if (from === 'guide' && row.kind === 'article') {
+    const held = row.childIds ?? (await findAllHelpArticleChildren(selfId));
+    if (held.length > 0)
+      throw fieldRefusal(
+        'kind',
+        'A guide holding sub pages cannot be an article: move or delete its sub pages first',
+      );
+    return;
+  }
+  throw fieldRefusal(
+    'kind',
+    `${A_KIND[from]} keeps its kind: only an article and a guide change kind`,
+  );
 }
 
 /**
@@ -200,7 +249,7 @@ export async function createHelpArticle(
     slug,
     position:
       values.position ??
-      (values.kind === 'article' && values.parentId == null ? await lastGuidePlace() : null),
+      (isPage(values.kind) && values.parentId == null ? await lastGuidePlace() : null),
     parentId: values.parentId ?? null,
     childIds: values.childIds ?? undefined,
   };
@@ -248,7 +297,7 @@ export async function updateHelpArticle(
 
   const slug = values.title == null ? current.slug : slugify(values.title);
   const merged: Merged = {
-    kind: current.kind,
+    kind: values.kind ?? current.kind,
     audience: values.audience ?? current.audience,
     slug,
     position:
@@ -260,15 +309,16 @@ export async function updateHelpArticle(
     parentId: values.parentId === undefined ? current.parentId : values.parentId,
     childIds: values.childIds ?? undefined,
   };
-  checkSummary(current.kind, values.summary);
-  if (slug !== current.slug) await checkSlug(current.kind, slug, id);
+  await checkKindChange(current.kind, merged, id);
+  checkSummary(merged.kind, values.summary);
+  if (slug !== current.slug) await checkSlug(merged.kind, slug, id);
   await checkStructure(merged, id);
   await checkChildren(merged, id);
   const released = merged.childIds ? await releasedBy(id, merged.childIds) : [];
   if (values.body != null && values.body !== current.body) {
     assertWidgetsKnown(values.body);
     await assertMarksExist(values.body, {
-      kind: current.kind,
+      kind: merged.kind,
       title: values.title ?? current.title,
       slug,
     });
@@ -276,6 +326,7 @@ export async function updateHelpArticle(
 
   const row = await withAudit(session, async (write) => {
     const [updated] = await write.updateById(helpArticles, id, {
+      kind: merged.kind,
       title: values.title ?? current.title,
       body: values.body ?? current.body,
       summary: values.summary === undefined ? current.summary : values.summary,

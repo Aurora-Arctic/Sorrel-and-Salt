@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
-export type HelpOutlineKind = 'faq' | 'article' | 'term';
+export type HelpOutlineKind = 'faq' | 'article' | 'guide' | 'term';
 export type HelpOutlineAudience = 'public' | 'staff' | 'keeper';
 export type HelpOutlineShown = 'shown' | 'hidden' | 'all';
 

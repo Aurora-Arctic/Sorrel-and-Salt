@@ -43,7 +43,10 @@ async function withChildren(
   row: HelpArticleRow,
   reach: HelpReach,
 ): Promise<HelpArticleWithChildren> {
-  const children = row.kind === 'article' ? await findHelpArticleChildren(reach, [row.id]) : [];
+  const children =
+    row.kind === 'guide' || row.kind === 'article'
+      ? await findHelpArticleChildren(reach, [row.id])
+      : [];
   const [article, ...answered] = await toHelpArticles([row, ...children], reach);
   return { ...article, children: answered };
 }

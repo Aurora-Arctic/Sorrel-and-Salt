@@ -981,6 +981,13 @@
       "when": 1794101141737,
       "tag": "0139_help-articles-shown",
       "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1794194484491,
+      "tag": "0140_help-guide-kind",
+      "breakpoints": true
     }
   ]
 }

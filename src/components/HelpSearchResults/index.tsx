@@ -8,7 +8,7 @@ import { emphasise } from './emphasis';
 import type { HelpSearchResultsProps } from './types';
 import './index.scss';
 
-const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
+const KIND = { faq: 'Question', article: 'Guide', guide: 'Guide', term: 'Term' } as const;
 
 // The search box holding the words, a count, then the results in the order handed (the search's rank), each a card
 // with its title, then a chip saying what kind of page it opens and, for a row not public, a chip naming its audience (Staff or Keeper), with the searched words

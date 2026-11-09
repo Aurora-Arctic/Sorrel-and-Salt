@@ -10,7 +10,7 @@ import { A } from '../../../support/as-user';
 // rather than the schema file. The schema file's declaration is help-articles-schema.test.ts's.
 
 const TABLE = 'help_articles';
-const KINDS = ['faq', 'article', 'term'];
+const KINDS = ['faq', 'article', 'guide', 'term'];
 const AUDIENCES = ['public', 'staff', 'keeper'];
 
 const SLUG_UNIQUE = 'help_articles_slug_unique';
@@ -86,14 +86,14 @@ describe('the help_articles table', () => {
       });
     });
 
-    it('holds a kind of faq, article or term, and refuses any other', async () => {
+    it('holds a kind of faq, article, guide or term, and refuses any other', async () => {
       const [{ values }] = await sql<{ values: string[] }[]>`
         select enum_range(null::help_article_kind)::text[] as values
       `;
       expect(values).toEqual(KINDS);
 
       const error = await failureOf(
-        sql`insert into help_articles ${sql({ ...helpArticleRow({}, AUTHOR), kind: 'guide' } as never)}`,
+        sql`insert into help_articles ${sql({ ...helpArticleRow({}, AUTHOR), kind: 'chapter' } as never)}`,
       );
       expect(error.code).toBe('22P02');
     });
@@ -239,7 +239,7 @@ describe('the help_articles table', () => {
       expect(row.count).toBe(2);
     });
 
-    it.each(['faq', 'article', 'term'] as const)(
+    it.each(['faq', 'article', 'guide', 'term'] as const)(
       'refuse a second live %s under one slug, and take it once the first is deleted',
       async (kind) => {
         const first = await insert({ kind, slug: 'testwort' });

@@ -1,6 +1,6 @@
 import type postgres from 'postgres';
 
-export type HelpArticleKind = 'faq' | 'article' | 'term';
+export type HelpArticleKind = 'faq' | 'article' | 'guide' | 'term';
 export type HelpAudience = 'public' | 'staff' | 'keeper';
 
 export interface HelpArticleSeed {

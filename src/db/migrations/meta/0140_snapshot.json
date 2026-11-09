@@ -1,6 +1,6 @@
 {
-  "id": "c8b4ab03-b432-49f3-9328-9581a7d998bf",
-  "prevId": "5bd1941f-8cf1-468e-b0fb-0288d93ce7aa",
+  "id": "bdb3c9f5-5003-4376-a319-cb49f3be8511",
+  "prevId": "c8b4ab03-b432-49f3-9328-9581a7d998bf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -9282,7 +9282,7 @@
     "public.help_article_kind": {
       "name": "help_article_kind",
       "schema": "public",
-      "values": ["faq", "article", "term"]
+      "values": ["faq", "article", "guide", "term"]
     },
     "public.help_audience": {
       "name": "help_audience",

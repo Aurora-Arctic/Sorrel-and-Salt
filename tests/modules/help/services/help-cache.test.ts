@@ -45,7 +45,7 @@ beforeEach(async () => {
   );
   await insertHelpArticle(
     sql,
-    { title: 'Testwort Guide', slug: 'testwort-guide', position: 1 },
+    { kind: 'guide', title: 'Testwort Guide', slug: 'testwort-guide', position: 1 },
     E.id,
   );
 });
