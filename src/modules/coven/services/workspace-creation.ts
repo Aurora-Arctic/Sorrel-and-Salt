@@ -7,17 +7,16 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { parseInput, requiredText } from '../../../lib/validation';
 import { users } from '../../identity/schema/users';
 import { workspaces } from '../schema/workspaces';
+import { COVEN_NAME_LIMIT } from '../validation/workspace-name';
 import type { WorkspaceRow } from '../types';
 import { freeCovenSlug } from './coven-slug';
 
 // The right is `users.can_create_workspace` alone (every keeper holds it), so `role` is never read
 // (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
-const NAME_LIMIT = 80;
-
 const CreateWorkspaceInput = z.object({
-  name: requiredText('Give the coven a name').max(NAME_LIMIT, {
-    error: `Keep the name to ${NAME_LIMIT} characters`,
+  name: requiredText('Give the coven a name').max(COVEN_NAME_LIMIT, {
+    error: `Keep the name to ${COVEN_NAME_LIMIT} characters`,
   }),
 });
 

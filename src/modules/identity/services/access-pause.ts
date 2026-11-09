@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
-import { parseRequiredPauseMessage } from '../../../lib/pause-message';
+import { PAUSE_NOTE_MAX_LENGTH, parseRequiredPauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -26,9 +26,8 @@ const REFUSAL = 'Only a site keeper may pause or lift a user’s access';
 const PRIMARY_REFUSAL = 'The primary keeper’s access cannot be paused';
 const SELF_REFUSAL = 'You cannot pause your own access';
 const STAND_IN_REFUSAL = 'This account is not a person, so its access cannot be paused';
-const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
-const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
+const LONG_NOTE = `Keep the note to ${PAUSE_NOTE_MAX_LENGTH} characters`;
 const NO_NOTE = 'Write a note saying why';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
@@ -57,7 +56,7 @@ export async function pauseUserAccess(
     throw fieldRefusal('until', PAST_END);
   }
   if (!trimmed) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > NOTE_MAX_LENGTH) {
+  if (trimmed.length > PAUSE_NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
   const toUser = parseRequiredPauseMessage(message);

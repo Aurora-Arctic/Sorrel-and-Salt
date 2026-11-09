@@ -2,6 +2,9 @@ import { fieldRefusal } from './errors';
 
 export const MESSAGE_MAX_LENGTH = 500;
 
+/** The most characters a pause's note holds, once trimmed: the three pause services and the pause forms state it from here. */
+export const PAUSE_NOTE_MAX_LENGTH = 500;
+
 const LONG_MESSAGE = `Keep the message to ${MESSAGE_MAX_LENGTH} characters`;
 
 /**

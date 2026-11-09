@@ -80,6 +80,17 @@ describe('ConfirmedAction', () => {
     expect(send).toHaveBeenLastCalledWith(undefined);
   });
 
+  it('keeps the confirm off while the reason is over 500 characters, and sends nothing', () => {
+    const send = vi.fn();
+    render(<ConfirmedAction {...props({ send, withNote: true })} />);
+
+    fireEvent.click(opener());
+    fireEvent.change(within(asking()).getByRole('textbox'), { target: { value: 'x'.repeat(501) } });
+    expect(confirmButton()).toBeDisabled();
+    fireEvent.change(within(asking()).getByRole('textbox'), { target: { value: 'x'.repeat(500) } });
+    expect(confirmButton()).toBeEnabled();
+  });
+
   it('says its announcement once sent, and reads the page again, the modal still open and busy', async () => {
     render(
       <ConfirmedAction {...props({ announcement: 'Testwort Fixture may now create a coven' })} />,

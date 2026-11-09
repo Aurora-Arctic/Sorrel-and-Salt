@@ -6,6 +6,7 @@ import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { parseInput, requiredText } from '../../../lib/validation';
 import { workspaces } from '../schema/workspaces';
+import { COVEN_NAME_LIMIT } from '../validation/workspace-name';
 import type { WorkspaceRow } from '../types';
 import { freeCovenSlug } from './coven-slug';
 import { assertMembership } from './membership';
@@ -13,11 +14,9 @@ import { assertMembership } from './membership';
 // A steward renames a coven. Its address follows the name, and the previous address stays on `workspace_slugs` as its one old
 // address so links to it still arrive (claude-docs/db/identity-model.md, "Coven addresses").
 
-const NAME_LIMIT = 80;
-
 const RenameWorkspaceInput = z.object({
-  name: requiredText('Give the coven a name').max(NAME_LIMIT, {
-    error: `Keep the name to ${NAME_LIMIT} characters`,
+  name: requiredText('Give the coven a name').max(COVEN_NAME_LIMIT, {
+    error: `Keep the name to ${COVEN_NAME_LIMIT} characters`,
   }),
 });
 

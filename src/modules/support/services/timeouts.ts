@@ -2,7 +2,7 @@ import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { parseRequiredPauseMessage } from '../../../lib/pause-message';
+import { PAUSE_NOTE_MAX_LENGTH, parseRequiredPauseMessage } from '../../../lib/pause-message';
 import { addressCountKey } from '../../../lib/send-count-key';
 import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -17,10 +17,9 @@ const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
 const NO_ADDRESS_REFUSAL =
   'This request was not sent without an account, so it has no address to time out';
-const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
 const NO_NOTE = 'Write a note saying why';
-const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
+const LONG_NOTE = `Keep the note to ${PAUSE_NOTE_MAX_LENGTH} characters`;
 
 /** Checks a time-out's end and note, and returns the note trimmed. */
 function checkedNote(until: Date | null | undefined, note: string): string {
@@ -32,7 +31,7 @@ function checkedNote(until: Date | null | undefined, note: string): string {
     throw fieldRefusal('until', PAST_END);
   }
   if (!trimmed) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
+  if (trimmed.length > PAUSE_NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
   return trimmed;
 }
 

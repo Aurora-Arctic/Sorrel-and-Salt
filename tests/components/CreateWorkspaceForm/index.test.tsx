@@ -41,6 +41,25 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
+  it('tidies the name when the field is left, so the person sees what is sent', () => {
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: '  Fixture    Coven ' } });
+    fireEvent.blur(nameField());
+
+    expect(nameField()).toHaveValue('Fixture Coven');
+  });
+
+  it('counts a name past the limit without cutting it', () => {
+    renderForm();
+    const long = 'x'.repeat(83);
+
+    fireEvent.change(nameField(), { target: { value: long } });
+
+    expect(nameField()).toHaveValue(long);
+    expect(nameField()).toHaveAccessibleDescription('3 characters over');
+  });
+
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
