@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
@@ -11,6 +12,7 @@ export const HelpSearchSkeleton = (): ReactElement => (
   <div className="help-page help-results">
     <PageHeader title="Help" />
     <HelpSearchForm />
+    <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
     <h2>Search Help</h2>
     <span className="help-results__count">
       <SkeletonWords count={4} />

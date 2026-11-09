@@ -67,6 +67,12 @@ describe('HelpSearchResults', () => {
     );
   });
 
+  it('links back to the main help page', () => {
+    render(<HelpSearchResults query="stock" results={RESULTS} />);
+
+    expect(screen.getByRole('link', { name: /^Back to Help$/ })).toHaveAttribute('href', '/help');
+  });
+
   it('links each result, best first, as handed', () => {
     render(<HelpSearchResults query="stock" results={RESULTS} />);
 
@@ -136,7 +142,8 @@ describe('HelpSearchResults', () => {
   it('offers no such links for an empty query', () => {
     render(<HelpSearchResults query="" results={[]} />);
 
-    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Browse the Guides' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Read the Glossary' })).toBeNull();
   });
 });
 
