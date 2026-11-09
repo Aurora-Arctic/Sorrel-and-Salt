@@ -8,7 +8,8 @@ const notFound = vi.fn(() => {
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 
 const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+const sessionIsVerified = vi.fn();
+vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
 
 const readDocument = vi.fn();
 const readDocumentVersion = vi.fn();
@@ -126,7 +127,29 @@ describe.each(Object.keys(PAGES))('/%s', (key) => {
       { number: 2, publishedAt: SECOND, href: `/${key}/versions/2` },
       { number: 1, publishedAt: FIRST, href: `/${key}/versions/1` },
     ]);
-    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  // The page draws the editor link for a verified keeper only; the editor refuses anyone else on its own.
+  describe.each([
+    ['a signed-out visitor', null, true, undefined],
+    ['a member', { userId: 'u1', role: 'user' }, true, undefined],
+    ['a curator', { userId: 'u2', role: 'curator' }, true, undefined],
+    ['an unverified keeper', { userId: 'u3', role: 'admin' }, false, undefined],
+    ['a verified keeper', { userId: 'u3', role: 'admin' }, true, `/keepers/documents/${key}`],
+  ])('for %s', (_who, session, verified, expected) => {
+    it(`hands DocumentPage ${expected ? 'the editor address' : 'no edit target'}`, async () => {
+      getSession.mockResolvedValue(session);
+      sessionIsVerified.mockResolvedValue(verified);
+      readDocument.mockResolvedValue(version(key, 1, FIRST));
+      listDocumentVersions.mockResolvedValue([]);
+      const Page = await PAGES[key]!.page();
+
+      const props = documentPageProps(await Page());
+
+      // Every case reads the session, so the keeper case differs from the others only by role and verification.
+      expect(getSession).toHaveBeenCalled();
+      expect(props.editHref).toBe(expected);
+    });
   });
 
   it('shows one published version on its own page, dated by its own publish', async () => {
@@ -245,4 +268,60 @@ describe('/privacy hands DocumentPage the access cards', () => {
 
     expectTheAccessData(accessCardsProps(documentPageProps(await Page(params('1')))));
   });
+});
+
+// The About Us page draws two rows of cards from code, so its markdown holds `{aboutPillars}` and `{aboutRoles}` paragraphs and the
+// page hands DocumentPage the cards for them. Only /about asks for its own typography; the other documents hand DocumentPage no
+// variant, so they render as before. About is not versioned in public: the page shows no version number and links no earlier ones.
+describe('/about hands DocumentPage its card rows and its typography', () => {
+  let pillars: unknown;
+  let roles: unknown;
+  beforeAll(async () => {
+    pillars = (await import('@/components/AboutPillars')).default;
+    roles = (await import('@/components/AboutRoles')).default;
+  });
+
+  async function aboutProps(): Promise<Record<string, unknown>> {
+    readDocument.mockResolvedValue(version('about', 2, SECOND));
+    listDocumentVersions.mockResolvedValue(
+      [
+        { number: 2, publishedAt: SECOND },
+        { number: 1, publishedAt: FIRST },
+      ].map((node) => ({ node, cursor: String(node.number) })),
+    );
+    const Page = (await import('@/app/(public)/about/page')).default as unknown as Page;
+    return documentPageProps(await Page());
+  }
+
+  it('hands over the cards and its typography', async () => {
+    const props = await aboutProps();
+    const placeholders = props.placeholders as Record<string, { type?: unknown }> | undefined;
+    expect(placeholders?.aboutPillars?.type).toBe(pillars);
+    expect(placeholders?.aboutRoles?.type).toBe(roles);
+    expect(props.variant).toBe('about');
+  });
+
+  it('shows no date, no lede, no version number and links no earlier versions', async () => {
+    const props = await aboutProps();
+
+    expect(props.number).toBeUndefined();
+    expect(props.history).toBeUndefined();
+    expect(props.updatedOn).toBeUndefined();
+    expect(props.lede).toBeUndefined();
+  });
+
+  it.each(['disclaimer', 'terms', 'code-of-ethics', 'privacy'])(
+    'is not asked for by /%s',
+    async (key) => {
+      readDocument.mockResolvedValue(version(key, 2, SECOND));
+      listDocumentVersions.mockResolvedValue([]);
+      readDocumentVersion.mockResolvedValue(version(key, 1, FIRST));
+
+      const current = documentPageProps(await (await PAGES[key]!.page())());
+      const earlier = documentPageProps(await (await PAGES[key]!.version())(params('1')));
+
+      expect(current.variant).toBeUndefined();
+      expect(earlier.variant).toBeUndefined();
+    },
+  );
 });

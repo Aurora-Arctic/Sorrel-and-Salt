@@ -48,6 +48,21 @@ const DOCUMENTS: readonly DocumentShape[] = [
     cites: [],
   },
   {
+    path: '/about',
+    sections: [
+      { heading: 'Why It Exists' },
+      { heading: 'What Sorrel & Salt Is' },
+      { heading: 'Who It Is For' },
+      { heading: 'The Compendium and Its Sources' },
+      { heading: 'Who Runs It' },
+      { heading: 'What We Promise' },
+      { heading: 'How to Join' },
+      { heading: 'Contact' },
+    ],
+    sources: [],
+    cites: [],
+  },
+  {
     path: '/disclaimer',
     sections: [
       { heading: 'The Short Version' },

@@ -24,10 +24,14 @@ const EMAIL_PAGE = '/account/email';
 
 const VERIFIED_LANDING = `${EMAIL_PAGE}?verified`;
 
-/** `next` is carried on to Continue only once it has passed `safeReturnPath`. */
+// One segment after /invite/: the invitation page, which a link from an invitation lands on directly.
+const INVITATION_PATH = /^\/invite\/[^/?#]+$/;
+
+/** `next` is carried on to Continue only once it has passed `safeReturnPath`; an invitation is landed on itself, as Continue has nowhere else to go. */
 export function verifiedLanding(next: string | undefined): string {
   const path = safeReturnPath(next);
   if (path === undefined) return VERIFIED_LANDING;
+  if (INVITATION_PATH.test(path)) return path;
   return `${VERIFIED_LANDING}&next=${encodeURIComponent(path)}`;
 }
 

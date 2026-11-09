@@ -414,7 +414,7 @@ the tests [`tests.md`](tests.md).
   gate refuses `EMAIL_TAKEN` from `users.email` alone, as before. `user.changeEmail` stays
   off: this replaces it, and nothing on `/api/auth` is added.
 - **Every link lands on the confirmed view, carrying where the account was
-  going**. Better Auth would land a sign-up's link where the
+  going**, except one from an invitation. Better Auth would land a sign-up's link where the
   sign-in asked to go; the `sendVerificationEmail` hook rewrites the link's
   `callbackURL` to `verifiedLanding(next)` (`src/lib/account-email.ts`),
   `/account/email?verified&next=<path>`, and the confirmed view's Continue
@@ -431,7 +431,15 @@ the tests [`tests.md`](tests.md).
   for no return path gives none either: the hook reads `NO_RETURN_PATH` off
   the OAuth state rather than the `callbackURL` standing in for it, so its
   link lands on `/account/email?verified`, and an explicit `/coven` is
-  carried like any other `next`.
+  carried like any other `next`. The one exception is an invitation:
+  a `next` that is `/invite/<token>` is the landing itself, with no
+  confirmed view, since its Continue could only go there. The invitation
+  page uses `getSession()`, so a new account reaches Accept Invitation
+  straight from the link, and meets the terms gate on the first protected
+  page it opens after accepting. A refused link from an invitation lands on the
+  invitation with `?error=`. The page reads only that a code is there,
+  never the code, and its unverified state shows one fixed error sentence
+  beside Confirm Your Email ([`invitation-acceptance.md`](../components/invitation-acceptance.md)).
 - **A refusal keeps the rest of the landing.** `refuseVerification` drops
   the flag before appending `?error=`, so the page never reads a refusal as
   a confirmation, and keeps `next`, so a link sent again from there still

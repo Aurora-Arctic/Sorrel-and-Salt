@@ -238,6 +238,36 @@
       text-align: end;
     }
 
+    // A skeleton's bars end at the column's right edge, as the labels do, and differ in length as
+    // labels do; the widths cycle, since the entries are not yet known.
+    .page-nav__pending .skeleton__line {
+      margin-inline-start: auto;
+    }
+
+    li:nth-child(6n + 1) > .page-nav__pending .skeleton__line {
+      width: 60%;
+    }
+
+    li:nth-child(6n + 2) > .page-nav__pending .skeleton__line {
+      width: 80%;
+    }
+
+    li:nth-child(6n + 3) > .page-nav__pending .skeleton__line {
+      width: 45%;
+    }
+
+    li:nth-child(6n + 4) > .page-nav__pending .skeleton__line {
+      width: 70%;
+    }
+
+    li:nth-child(6n + 5) > .page-nav__pending .skeleton__line {
+      width: 55%;
+    }
+
+    li:nth-child(6n) > .page-nav__pending .skeleton__line {
+      width: 75%;
+    }
+
     .page-nav__apart::before {
       inset-inline: auto space(4);
     }

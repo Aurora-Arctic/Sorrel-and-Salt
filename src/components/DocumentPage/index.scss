@@ -21,7 +21,8 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // A menu of long entries: each entry takes a step more air above and below, so the gap between
   // two entries is plainly wider than the gap between one entry's own lines, and its lines are set
   // a touch looser than the font's own so a two-line entry reads as one thing.
-  > .page-nav a {
+  // The skeleton's pending entries take the same, or its menu is shorter and its bars sit higher than the entries that replace them.
+  > .page-nav :is(a, .page-nav__pending) {
     padding-block: space(2);
     line-height: 1.3;
   }
@@ -133,6 +134,59 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 1.65;
   }
 
+  // A `>` paragraph is a pull-quote: larger type with a hanging opening mark in the accent, and a short accent rule
+  // closing it. The mark is drawn by CSS, so the file holds only the quoted words.
+  blockquote {
+    position: relative;
+    max-width: $measure;
+    margin-block: space(5) space(6);
+    margin-inline: 0;
+    padding: space(5) 0 space(5) space(7);
+    font-size: type-size('quote');
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: $text-primary;
+
+    // A decorative mark, 3.25 times the quote, off the type scale.
+    &::before {
+      content: '\201C';
+      position: absolute;
+      inset-block-start: space(4);
+      inset-inline-start: 0;
+      font-family: $font-heading;
+      font-weight: 700;
+      font-size: 3.25em;
+      line-height: 1;
+      color: $accent;
+    }
+
+    &::after {
+      content: '';
+      display: block;
+      inline-size: space(7);
+      block-size: $rule-heavy;
+      margin-block-start: space(4);
+      border-radius: radius('pill');
+      background: $accent;
+    }
+
+    p {
+      margin: 0;
+      font-size: inherit;
+      line-height: inherit;
+    }
+
+    // On a phone the mark sits above the words instead of beside them.
+    @media (max-width: #{$shell-phone-width}) {
+      padding-inline-start: 0;
+      padding-block-start: calc(#{space(7)} + #{space(1)});
+
+      &::before {
+        inset-block-start: space(1);
+      }
+    }
+  }
+
   .document-page__sources li {
     padding-inline-start: 1.5rem;
     text-indent: -1.5rem;
@@ -204,4 +258,20 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
 // stands where it will.
 .document-page__head .lede .skeleton {
   min-height: 3lh;
+}
+
+// The About Us page's own typography: only the page that asks for the variant takes it, so the other documents draw as before.
+.document-page--about {
+  // A larger lede, since it says what the page is and a visitor may read nothing else.
+  .document-page__head .lede {
+    font-size: type-size('title');
+    line-height: 1.5;
+  }
+
+  // Each section opens under a hairline, with more air above it, so the page reads as parts rather than a run of text.
+  .document-page__body h2 {
+    margin-block-start: space(8);
+    padding-block-start: calc(#{space(8)} * 0.666);
+    border-block-start: 1px solid $hairline;
+  }
 }

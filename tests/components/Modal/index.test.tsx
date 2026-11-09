@@ -122,6 +122,31 @@ describe('Modal', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
   });
 
+  // A view inside the modal whose heading is the modal's title (the sign-in dialog's email view) asks for it this way.
+  it('moves the focus to its title when focusTitle turns on while it is open, and leaves it when it turns off', async () => {
+    const Switching = (): ReactElement => {
+      const [titled, setTitled] = useState(false);
+      return (
+        <Modal title="Testwort" onClose={vi.fn()} focusTitle={titled}>
+          <button type="button" onClick={() => setTitled((was) => !was)}>
+            Switch
+          </button>
+        </Modal>
+      );
+    };
+    render(<Switching />);
+    await settle();
+    const switcher = screen.getByRole('button', { name: 'Switch' });
+    switcher.focus();
+
+    await act(async () => fireEvent.click(switcher));
+    expect(screen.getByRole('heading', { name: 'Testwort' })).toHaveFocus();
+
+    switcher.focus();
+    await act(async () => fireEvent.click(switcher));
+    expect(switcher).toHaveFocus();
+  });
+
   it('takes the focus itself as it opens when it holds no field', async () => {
     render(
       <Modal title="Revoke Admin" onClose={vi.fn()}>

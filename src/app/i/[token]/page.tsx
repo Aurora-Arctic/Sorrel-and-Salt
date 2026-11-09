@@ -55,7 +55,7 @@ const Early = (): ReactElement => (
   </section>
 );
 
-export default async function CardPage({ params }: InvitePageProps) {
+export default async function CardPage({ params }: Pick<InvitePageProps, 'params'>) {
   const { token } = await params;
   const card = await liveCard(token);
   const here = `/i/${encodeURIComponent(token)}`;
@@ -69,7 +69,7 @@ export default async function CardPage({ params }: InvitePageProps) {
   }
 
   return (
-    <PageFrame className={`card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}>
+    <PageFrame className="card-landing welcome-page">
       <div className="card-landing__grid">
         <PageHeader
           title={WORDMARK}

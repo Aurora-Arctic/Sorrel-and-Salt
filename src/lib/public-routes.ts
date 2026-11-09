@@ -20,6 +20,7 @@ export const PUBLIC_ROUTES = [
   '/privacy/versions/*',
   '/disclaimer',
   '/disclaimer/versions/*',
+  '/about',
   '/terms',
   '/terms/versions/*',
   '/code-of-ethics',
@@ -55,7 +56,15 @@ export function isPublic(pathname: string): boolean {
 }
 
 /** The areas Sign Out reloads in place, each page only where a signed-out visitor may read it: the compendium, the public help pages, and the site documents with their versions. */
-const STAY_ON = ['/compendium', '/help', '/privacy', '/disclaimer', '/terms', '/code-of-ethics'];
+const STAY_ON = [
+  '/compendium',
+  '/help',
+  '/privacy',
+  '/disclaimer',
+  '/about',
+  '/terms',
+  '/code-of-ethics',
+];
 
 /**
  * Where Sign Out lands: the compendium, help or document page the visitor is on, which loads again signed out, or `/`

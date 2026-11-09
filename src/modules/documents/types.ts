@@ -1,4 +1,4 @@
-export type DocumentKey = 'privacy' | 'disclaimer' | 'code-of-ethics' | 'terms';
+export type DocumentKey = 'privacy' | 'about' | 'disclaimer' | 'code-of-ethics' | 'terms';
 
 export type PublishedDocument = {
   key: string;

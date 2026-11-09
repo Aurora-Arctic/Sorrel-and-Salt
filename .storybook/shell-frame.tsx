@@ -88,7 +88,9 @@ export const ShellFrame = ({
   if (signedOut)
     return (
       <WorkshopPathname.Provider value={open === DEFAULT_OPEN[area] ? '/compendium' : open}>
-        <PublicFrame>{children}</PublicFrame>
+        <PublicFrame configured={['discord', 'google', 'facebook', 'microsoft']}>
+          {children}
+        </PublicFrame>
       </WorkshopPathname.Provider>
     );
   return (

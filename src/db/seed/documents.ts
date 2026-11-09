@@ -8,7 +8,7 @@ import { documents } from '../../modules/documents/schema/documents';
 import { documentVersions } from '../../modules/documents/schema/document-versions';
 import type { SeedDatabase, SeedDocument, SeedRunOptions, SeedTransaction } from './types';
 
-// The site's documents (the privacy policy, the disclaimer, the code of ethics, the terms), seeded from the markdown files under
+// The site's documents (the privacy policy, the disclaimer, the code of ethics, the terms, the About Us page), seeded from the markdown files under
 // `documents/`. Each file is a document and its published version 1; a document that holds any version row is left as it is, so an
 // admin's published text, their draft and their deletions are never written over. Reference data: it inserts the bootstrap user itself.
 

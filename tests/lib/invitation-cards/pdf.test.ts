@@ -338,10 +338,10 @@ describe("the card sheets PDF's inks", () => {
     }
   });
 
-  it('draws each code in the muted ink', () => {
+  it('draws each code in the heading ink', () => {
     const { pathInks } = drawn(ten, 0);
     expect(pathInks).toHaveLength(10 * 7);
-    for (const ink of pathInks) expect(same(ink, MUTED_INK), `${ink}`).toBe(true);
+    for (const ink of pathInks) expect(same(ink, HEADING_INK), `${ink}`).toBe(true);
     expect(drawn(ten, 1).pathInks).toHaveLength(0);
   });
 
@@ -394,7 +394,9 @@ describe("the card sheets PDF's inks", () => {
       const shadow = page.images.find((image) => names[image.name] === 'shadow')!.box;
       const code = boxOf(
         page.pathBoxes
-          .filter((box, i) => page.pathInks[i].join() === MUTED_INK.join() && overlaps(box, shadow))
+          .filter(
+            (box, i) => page.pathInks[i].join() === HEADING_INK.join() && overlaps(box, shadow),
+          )
           .flatMap(
             (box) =>
               [

@@ -14,7 +14,7 @@ const gettingStartedPages = [
     1,
     'Signing In',
     'The ways to sign in or create an account.',
-    `Choose "Sign In" and the panel says "Sign in or create an account." You can use:
+    `Choose "Sign In" to sign in or create an account. You can use:
 
 - "Continue with Discord", "Continue with Google" or "Continue with Microsoft".
 - "Sign In with a Passkey".

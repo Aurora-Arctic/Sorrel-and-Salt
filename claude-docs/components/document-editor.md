@@ -4,6 +4,8 @@
 
 ## Contracts
 
+- **The status line shows the version being edited, except for About.** About has no versions (`UNVERSIONED_DOCUMENT_KEYS` in `src/lib/unversioned-documents.ts`, shared with the public route), so its editor shows no "Showing version N." line.
+
 - **The draft saves itself.** The shared `useAutosave` hook (`src/lib/autosave/use-autosave.ts`, `claude-docs/autosave.md`) saves the text 3 seconds after the last change, at its default timing. A stale revision stops it: the explaining failure shows and no more saves are sent.
 - **Save Draft** saves at once, and stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft). While a save is in flight, the text is compared with the text that save is writing instead, so an edit that puts back the text saved before it still counts as a change: once the save lands, the autosave sends it, and Save Draft is never enabled with nothing for it to save.
 - **Publish** is yellow (`.btn--caution`), on the button and its confirm. It opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). It is disabled while any save, autosave or Save Draft, is in flight, so it never publishes a draft that is still being written. The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so. Leaving with unsaved text asks first, through the discard question, and a save or publish in flight is not asked about. The page is read again once a publish lands.
