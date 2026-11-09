@@ -221,7 +221,6 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: LIST_KINDS.category.label,
-    describe: 'What this category covers',
     group: {
       label: 'Group',
       placeholder: 'Choose a group',
@@ -239,7 +238,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   form: defineKind({
     noun: LIST_KINDS.form.label,
-    describe: 'What this form is, and what it is not',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     group: {
       label: 'Group',
@@ -255,7 +253,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   deity: defineKind({
     noun: LIST_KINDS.deity.label,
-    describe: 'Who they are and what they are honoured for',
     descriptionHint:
       "Who they are, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name; the other names they go by are Other Names.",
     otherNamesHint:
@@ -286,7 +283,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // moves none; it still carries onto the entries listing the value.
   celestialBody: defineKind({
     noun: LIST_KINDS.celestialBody.label,
-    describe: 'What this body is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
@@ -298,7 +294,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   zodiacSign: defineKind({
     noun: LIST_KINDS.zodiacSign.label,
-    describe: 'What this sign is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
@@ -447,7 +442,6 @@ const GroupedValueForm = ({
             name="description"
             label="Description"
             hint={spec.descriptionHint}
-            placeholder={spec.describe}
             multiline
             required
           />

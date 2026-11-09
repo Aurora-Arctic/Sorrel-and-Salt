@@ -156,7 +156,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   category: defineKind({
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
-    describe: 'What the categories in this group share',
     schema: CategoryGroupInput,
     create: CreateCategoryGroupDocument,
     update: UpdateCategoryGroupDocument,
@@ -165,7 +164,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   form: defineKind({
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
-    describe: 'What kind of thing the forms in this group are',
     // The schema drops the two empty colours a form group does not take, and reads None as null.
     schema: IngredientFormGroupInput.extend({
       icon: z.preprocess(
@@ -180,7 +178,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   tradition: defineKind({
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
-    describe: 'The people or religion whose deities it holds',
     schema: DeityTraditionInput,
     create: CreateDeityTraditionDocument,
     update: UpdateDeityTraditionDocument,
@@ -466,13 +463,7 @@ const GroupForm = ({
             autoComplete="off"
             required
           />
-          <TextField<GroupValues>
-            name="description"
-            label="Description"
-            placeholder={spec.describe}
-            multiline
-            required
-          />
+          <TextField<GroupValues> name="description" label="Description" multiline required />
           {kind === 'category' &&
             COLORS.map(({ column, label, hint }) => {
               const { aria, ...shell } = fieldDescription({
@@ -499,7 +490,7 @@ const GroupForm = ({
                         id={shell.controlId}
                         label={label}
                         column={column}
-                        placeholder="Add a hex"
+                        placeholder="#4e8bc2"
                         value={field.value}
                         onChange={(value) => {
                           field.onChange(value);
