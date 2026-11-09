@@ -3,6 +3,7 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
+import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
@@ -13,7 +14,6 @@ import type { TwoFactorStepProps } from './types';
 // backup code. The right password has already been checked; this step's answer is what signs in
 // (claude-docs/components/sign-in-panel.md, "Contracts").
 
-export const WRONG_CODE = "That code isn't right. Please try again.";
 export const CODE_LOCKED =
   'Too many wrong codes. Your account is locked for 15 minutes; please try again after that.';
 export const CHALLENGE_EXPIRED =

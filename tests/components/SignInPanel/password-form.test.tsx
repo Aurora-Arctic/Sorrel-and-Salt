@@ -1,12 +1,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import {
-  GENERIC_SIGN_UP_ERROR,
-  SIGN_UP_UNAVAILABLE,
-  TOO_MANY_ATTEMPTS,
-  WRONG_CREDENTIALS,
-} from '@/components/SignInPanel/password-form';
+import { GENERIC_SIGN_UP_ERROR, SIGN_UP_UNAVAILABLE } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
 

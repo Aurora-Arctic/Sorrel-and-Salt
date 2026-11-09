@@ -6,7 +6,7 @@ import TwoFactorSettings, {
   STALE_SESSION,
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
-import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { makeQueryClient } from '@/lib/graphql-client';
 
 // The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;

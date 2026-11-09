@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import ConfirmDialog from '../ConfirmDialog';
 import type { DeleteSpellActionProps } from './types';
@@ -41,7 +41,7 @@ export function useDeleteSpell({
     onSuccess: () => navigate(deletedHref, { replace: true }),
     onError: (error) => {
       onClosed();
-      onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+      onRefused(failureMessage(error));
     },
   });
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };

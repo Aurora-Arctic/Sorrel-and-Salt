@@ -4,7 +4,7 @@ import { type ReactElement, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
-import { saveFile } from '@/lib/save-file';
+import { saveFile } from './save-file';
 
 // Download CSV: reads the arrivals as one string through GraphQL, then hands it to the browser as a file. The button stays enabled while busy, so it keeps the focus; a second press does nothing. A failure
 // is the button's click feedback, so it is read where the press was, not in the heading's action slot.

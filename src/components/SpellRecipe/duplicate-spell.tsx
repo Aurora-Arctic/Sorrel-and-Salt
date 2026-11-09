@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
@@ -39,7 +39,7 @@ export function useDuplicateSpell(
       const href = hrefOf(copyId);
       navigate(href);
     },
-    onError: (error) => onError(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
+    onError: (error) => onError(failureMessage(error)),
   });
   return { duplicate: copy.mutate, duplicating: copy.isPending || copy.isSuccess };
 }

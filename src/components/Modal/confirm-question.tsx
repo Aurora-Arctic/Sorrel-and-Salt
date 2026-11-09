@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useRef } from 'react';
-import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
 import { DiscardQuestion } from './discard';
@@ -36,7 +36,7 @@ export function ConfirmQuestion({
       await action();
     } catch (error) {
       if (!onRefused) throw error;
-      onRefused(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
+      onRefused(failureMessage(error));
     }
   };
   return (

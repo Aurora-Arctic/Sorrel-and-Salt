@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -15,8 +15,6 @@ import '../SupportRequests/timeout-panel.scss';
 // A pause on someone's access, inside a modal: the one that stands with Lift Pause, or the form that sets one, and the
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its
 // own words and its own writes (claude-docs/components/user-detail.md, "Contracts").
-
-const refusal = (error: unknown) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE;
 
 const StandingCard = ({
   pause,
@@ -52,7 +50,7 @@ const StandingCard = ({
         confirmClass="btn btn--destructive"
         announcement={copy.lifted}
         inModal
-        refusal={refusal}
+        refusal={failureMessage}
         send={lift}
         onSent={() => {
           onChanged?.();
@@ -117,7 +115,7 @@ const PauseForm = ({
           confirmClass="btn btn--destructive"
           announcement={copy.paused}
           inModal
-          refusal={refusal}
+          refusal={failureMessage}
           send={() => {
             const until = endOf(span, day, new Date());
             if (until === undefined) return Promise.reject(new Error('No end chosen'));
