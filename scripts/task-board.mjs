@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 // The board's calls in one file, each a `gh` argument list, never a shell string; it never adds an item
 // (claude-docs/task-tracking.md, "Status").
-// Usage: node scripts/task-board.mjs <find|status|estimate|comment|sync|list|reorder|move|milestone|retire> ...
+// Usage: node scripts/task-board.mjs <find|status|estimate|comment|sync|list|reorder|move|milestone|retire|place> ...
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { ID, expandIds, loadTasksMd, loadTasksMdText, readEntry } from './tasks-md.mjs';
+import {
+  PROJECTS,
+  projectByNumber,
+  projectOfMilestone,
+  projectOfWave,
+  ProjectConfigError,
+} from './task-projects.mjs';
+import { ID, expandIds, findEntry, loadTasksMd } from './tasks-md.mjs';
 
 export const REPO = 'Aurora-Arctic/Sorrel-and-Salt';
 export const OWNER = 'Aurora-Arctic';
-export const PROJECT = '1';
 export const STATUSES = ['Not Started', 'In Progress', 'In Review', 'Done'];
 export const TRACKED_LABEL = 'tracked';
 
@@ -47,6 +53,7 @@ const STATE_REASONS = { completed: 'COMPLETED', not_planned: 'NOT_PLANNED', reop
 
 export const shapeIssue = (issue) => ({
   number: issue.number,
+  nodeId: issue.node_id,
   title: issue.title,
   state: STATES[issue.state] ?? String(issue.state).toUpperCase(),
   stateReason: issue.state_reason
@@ -117,41 +124,72 @@ const ITEM_QUERY = `
     }
   }`;
 
-export function shapeItem(nodes, number = PROJECT) {
-  const node = nodes.find((candidate) => String(candidate.project.number) === String(number));
-  if (!node) return null;
-  return {
-    id: node.id,
-    projectId: node.project.id,
-    // A field type the query does not spell out answers an empty node.
-    fields: node.project.fields.nodes.filter((field) => field.name),
-    status: node.status?.name ?? null,
-    estimate: node.estimate?.number ?? null,
-  };
+const shapeNode = (node) => ({
+  id: node.id,
+  projectId: node.project.id,
+  projectNumber: node.project.number,
+  // A field type the query does not spell out answers an empty node.
+  fields: (node.project.fields?.nodes ?? []).filter((field) => field.name),
+  status: node.status?.name ?? null,
+  estimate: node.estimate?.number ?? null,
+});
+
+const isConfigured = (number) => PROJECTS.some((project) => project.number === Number(number));
+
+/** The issue's items on the configured Projects; another org Project holding it is not the board's. */
+export const shapeItems = (nodes) =>
+  nodes.filter((node) => isConfigured(node.project.number)).map(shapeNode);
+
+/**
+ * The issue's item on Project `number`, or, unnamed, on the one configured Project holding it.
+ * On two, every command but `place` refuses, as which one is the task's is the question `place` answers.
+ */
+export function shapeItem(nodes, number) {
+  const items = shapeItems(nodes);
+  if (number !== undefined) {
+    return items.find((item) => String(item.projectNumber) === String(number)) ?? null;
+  }
+  if (items.length > 1) {
+    const on = items.map((item) => item.projectNumber).join(' and ');
+    throw new BoardError(
+      `The issue is on Projects ${on}. Run \`node scripts/task-board.mjs place <ID> --apply\` to keep it on its milestone's Project only.`,
+    );
+  }
+  return items[0] ?? null;
 }
 
-export function readItem(issue, number = PROJECT) {
+function readItemNodes(issue) {
   const [owner, name] = REPO.split('/');
   const query = ['-f', `query=${ITEM_QUERY}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
   const data = ghJson(['api', 'graphql', ...query, '-F', `number=${issue.number}`]);
-  return shapeItem(data.data.repository.issue.projectItems.nodes, number);
+  return data.data.repository.issue.projectItems.nodes;
+}
+
+export function readItem(issue, number) {
+  return shapeItem(readItemNodes(issue), number);
 }
 
 /**
- * The item, or a refusal. The Project's auto-add workflow places every
- * tracked issue moments after its creation, and nothing here adds one by
- * hand: an item the script added would be one the triage filter never saw.
+ * The item, or a refusal. A Project with an auto-add workflow places a
+ * tracked issue moments after its creation, and nothing here adds one there:
+ * an item the script added would be one the triage filter never saw.
  */
 export function requireItem(issue, item = readItem(issue)) {
   if (item) return item;
+  const project = projectOfMilestone(issue.milestone);
+  if (project && !project.autoAdd) {
+    throw new BoardError(
+      `#${issue.number} is not on Project ${project.number} yet. Run \`node scripts/task-board.mjs place <ID> --apply\` to add it.`,
+    );
+  }
   throw new BoardError(
-    `#${issue.number} is not on the Project yet. Its auto-add workflow places a \`${TRACKED_LABEL}\` issue moments after creation; retry then.`,
+    `#${issue.number} is not on a Project yet. Its auto-add workflow places a \`${TRACKED_LABEL}\` issue moments after creation; retry then.`,
   );
 }
 
 export function projectField(item, name) {
   const field = item.fields.find((candidate) => candidate.name === name);
-  if (!field) throw new BoardError(`Project ${PROJECT} has no "${name}" field.`);
+  if (!field) throw new BoardError(`Project ${item.projectNumber} has no "${name}" field.`);
   return field;
 }
 
@@ -238,7 +276,7 @@ const ITEMS_QUERY = `
     }
   }`;
 
-export function shapeItems(pages) {
+export function shapeListing(pages) {
   const projects = pages.map((page) => page.data.organization.projectV2);
   return {
     projectId: projects[0]?.id ?? null,
@@ -248,9 +286,9 @@ export function shapeItems(pages) {
   };
 }
 
-export function listItems(number = PROJECT) {
+export function listItems(number) {
   const args = ['-f', `query=${ITEMS_QUERY}`, '-f', `owner=${OWNER}`, '-F', `number=${number}`];
-  return shapeItems(ghJson(['api', 'graphql', '--paginate', '--slurp', ...args]));
+  return shapeListing(ghJson(['api', 'graphql', '--paginate', '--slurp', ...args]));
 }
 
 function longestIncreasing(values) {
@@ -299,7 +337,7 @@ const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
  * The plan: the waves left where they sit, every disagreement between rows and board, the target order of the open waves, and the moves. A wave whose milestone has no open issue is done;
  * an issue on a wave's milestone that its row does not name is appended to the wave and reported.
  */
-export function planReorder({ issues, milestones, listing, tasks }) {
+export function planReorder({ issues, milestones, listing, tasks, project }) {
   const byId = new Map();
   for (const issue of issues) {
     const id = idOf(issue.title);
@@ -310,6 +348,7 @@ export function planReorder({ issues, milestones, listing, tasks }) {
   );
   const headingIndex = new Map(tasks.order.map((id, i) => [id, i]));
   const plan = {
+    project: project.number,
     projectId: listing.projectId,
     skipped: [],
     missing: [],
@@ -326,7 +365,7 @@ export function planReorder({ issues, milestones, listing, tasks }) {
     entries.push({ id, ...onBoard.get(issue.number) });
     placed.add(id);
   };
-  for (const wave of tasks.waves) {
+  for (const wave of tasks.waves.filter((row) => projectOfWave(row.number) === project)) {
     const prefix = waveTitle(wave.number);
     const milestone = milestones.find((candidate) => candidate.title.startsWith(`${prefix} `));
     if (!milestone) {
@@ -342,7 +381,9 @@ export function planReorder({ issues, milestones, listing, tasks }) {
       if (!issue) {
         plan.missing.push(`row ${wave.number}: ${id} has no tracked issue`);
       } else if (!onBoard.has(issue.number)) {
-        plan.missing.push(`row ${wave.number}: ${id} (#${issue.number}) is not on the Project`);
+        plan.missing.push(
+          `row ${wave.number}: ${id} (#${issue.number}) is not on Project ${project.number}`,
+        );
       } else if (placed.has(id)) {
         plan.misplaced.push(`row ${wave.number}: ${id} was already placed by an earlier row`);
       } else {
@@ -378,13 +419,12 @@ export function planReorder({ issues, milestones, listing, tasks }) {
   return plan;
 }
 
-export function readReorderPlan() {
-  return planReorder({
-    issues: listTracked(),
-    milestones: listMilestones(),
-    listing: listItems(),
-    tasks: loadTasksMd(),
-  });
+/** One plan per Project, the reads shared: each Project keeps its own waves in their own order. */
+export function readReorderPlans(projects = PROJECTS) {
+  const [issues, milestones, tasks] = [listTracked(), listMilestones(), loadTasksMd()];
+  return projects.map((project) =>
+    planReorder({ issues, milestones, tasks, project, listing: listItems(project.number) }),
+  );
 }
 
 // One move a request. The ids travel as variables, and only the mutation id
@@ -441,6 +481,7 @@ export async function applyReorder(plan, { limit = Infinity, onMove = () => {} }
 }
 
 function printReorderPlan(plan) {
+  console.log(`Project ${plan.project}, ${projectByNumber(plan.project).title}:`);
   const section = (title, lines) => {
     if (lines.length) console.log(`${title}\n${lines.map((line) => `  ${line}`).join('\n')}`);
   };
@@ -544,6 +585,265 @@ export function planPlacement({ issues, listing, id, after, last }) {
   return { projectId: listing.projectId, move };
 }
 
+// Project placement — `place` keeps each issue on the Project its milestone belongs to, and only there (claude-docs/task-tracking.md, "Several Projects").
+
+const statusRank = (status) => (status === null ? -1 : STATUSES.indexOf(status));
+
+/**
+ * What puts `issue` on its milestone's Project alone, or null when it already sits there. Every write it plans is idempotent and the removal comes last,
+ * so a run that stops part-way leaves the issue on both Projects and a second run finishes it: the furthest Status of the two and the source's Estimate are carried.
+ */
+export function planProjectPlacement(issue, items) {
+  const target = projectOfMilestone(issue.milestone);
+  if (!target) return null;
+  const onTarget = items.find((item) => item.projectNumber === target.number) ?? null;
+  const others = items.filter((item) => item !== onTarget);
+  if (!onTarget && others.length === 0 && target.autoAdd) return null;
+  const labels = issue.labels ?? [];
+  const addLabels = target.label && !labels.includes(target.label) ? [target.label] : [];
+  const removeLabels = PROJECTS.filter((project) => project !== target && project.label)
+    .map((project) => project.label)
+    .filter((label) => labels.includes(label));
+  const status = [...others, onTarget]
+    .filter(Boolean)
+    .reduce(
+      (best, item) => (statusRank(item.status) > statusRank(best) ? item.status : best),
+      null,
+    );
+  const estimate =
+    others.find((item) => item.estimate !== null)?.estimate ?? onTarget?.estimate ?? null;
+  const settled =
+    onTarget && onTarget.status === status && onTarget.estimate === estimate && others.length === 0;
+  if (settled && addLabels.length === 0 && removeLabels.length === 0) return null;
+  return {
+    id: idOf(issue.title) ?? `#${issue.number}`,
+    number: issue.number,
+    nodeId: issue.nodeId,
+    to: target.number,
+    itemId: onTarget?.id ?? null,
+    from: others.map((item) => ({ projectNumber: item.projectNumber, itemId: item.id })),
+    add: !onTarget,
+    current: { status: onTarget?.status ?? null, estimate: onTarget?.estimate ?? null },
+    status,
+    estimate,
+    addLabels,
+    removeLabels,
+  };
+}
+
+const projectMetaQuery = (numbers) => `
+  query ($owner: String!) {
+    organization(login: $owner) {
+      ${numbers
+        .map(
+          (number) => `p${number}: projectV2(number: ${number}) {
+        id
+        number
+        fields(first: 30) {
+          nodes {
+            ... on ProjectV2Field { id name }
+            ... on ProjectV2SingleSelectField { id name options { id name } }
+          }
+        }
+      }`,
+        )
+        .join('\n')}
+    }
+  }`;
+
+/** Each configured Project's node id and fields, in one query. */
+export function readProjects(projects = PROJECTS) {
+  const numbers = projects.map((project) => project.number);
+  const query = ['-f', `query=${projectMetaQuery(numbers)}`, '-f', `owner=${OWNER}`];
+  const data = ghJson(['api', 'graphql', ...query]).data.organization;
+  return new Map(
+    numbers.map((number) => {
+      const project = data[`p${number}`];
+      if (!project) throw new BoardError(`Project ${number} does not exist in ${OWNER}.`);
+      const fields = project.fields.nodes.filter((field) => field.name);
+      return [number, { id: project.id, number, fields }];
+    }),
+  );
+}
+
+const ITEMS_CHUNK = 50;
+
+/** Every listed issue's items on the configured Projects, fifty issues a query under aliases, by issue number. */
+export function readItemsOf(numbers) {
+  const [owner, name] = REPO.split('/');
+  const found = new Map();
+  for (let start = 0; start < numbers.length; start += ITEMS_CHUNK) {
+    const chunk = numbers.slice(start, start + ITEMS_CHUNK);
+    const aliases = chunk
+      .map(
+        (number) => `i${number}: issue(number: ${number}) {
+        projectItems(first: 10) {
+          nodes {
+            id
+            project { id number }
+            status: fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
+            estimate: fieldValueByName(name: "Estimate") { ... on ProjectV2ItemFieldNumberValue { number } }
+          }
+        }
+      }`,
+      )
+      .join('\n');
+    const query = `query ($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { ${aliases} } }`;
+    const args = ['-f', `query=${query}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
+    const repository = ghJson(['api', 'graphql', ...args]).data.repository;
+    for (const number of chunk) {
+      found.set(number, shapeItems(repository[`i${number}`]?.projectItems.nodes ?? []));
+    }
+  }
+  return found;
+}
+
+/** The plan for each issue that is off its milestone's Project, read in one batched query. */
+export function readPlacementPlans(issues) {
+  const items = readItemsOf(issues.map((issue) => issue.number));
+  return issues
+    .map((issue) => planProjectPlacement(issue, items.get(issue.number) ?? []))
+    .filter(Boolean);
+}
+
+const ADD_MUTATION = `
+  mutation ($projectId: ID!, $contentId: ID!) {
+    addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) { item { id } }
+  }`;
+const DELETE_MUTATION = `
+  mutation ($projectId: ID!, $itemId: ID!) {
+    deleteProjectV2Item(input: { projectId: $projectId, itemId: $itemId }) { deletedItemId }
+  }`;
+
+export const addItemArgs = (projectId, contentId) => [
+  'api',
+  'graphql',
+  '-f',
+  `query=${ADD_MUTATION}`,
+  '-f',
+  `projectId=${projectId}`,
+  '-f',
+  `contentId=${contentId}`,
+];
+
+export const deleteItemArgs = (projectId, itemId) => [
+  'api',
+  'graphql',
+  '-f',
+  `query=${DELETE_MUTATION}`,
+  '-f',
+  `projectId=${projectId}`,
+  '-f',
+  `itemId=${itemId}`,
+];
+
+export const addLabelArgs = (number, label) => [
+  'api',
+  '-X',
+  'POST',
+  `repos/${REPO}/issues/${number}/labels`,
+  '-f',
+  `labels[]=${label}`,
+];
+
+export const removeLabelArgs = (number, label) => [
+  'api',
+  '-X',
+  'DELETE',
+  `repos/${REPO}/issues/${number}/labels/${encodeURIComponent(label)}`,
+];
+
+// The target Project's "Item added to project" workflow sets Not Started a moment after an add, so the fields are written after every add has settled.
+const SETTLE_MS = 15000;
+
+/**
+ * Applies the plans in phases across every issue: labels, adds, field values, one verifying read, then the removals for the items verified.
+ * Labels go first, so the default Project's auto-add, which an issue edit triggers, never sees a moved issue unlabelled once it is gone from there.
+ */
+export async function applyPlacements(plans, { log = () => {} } = {}) {
+  const projects = readProjects();
+  const pending = plans.map((plan) => ({ ...plan }));
+  for (const plan of pending) {
+    for (const label of plan.addLabels) {
+      await pacedWrite(() => gh(addLabelArgs(plan.number, label)));
+      log(`${plan.id}: labelled ${label}`);
+    }
+    for (const label of plan.removeLabels) {
+      await pacedWrite(() => gh(removeLabelArgs(plan.number, label)));
+      log(`${plan.id}: unlabelled ${label}`);
+    }
+  }
+  let added = 0;
+  for (const plan of pending.filter((candidate) => candidate.add)) {
+    const projectId = projects.get(plan.to).id;
+    const data = await pacedWrite(() => ghJson(addItemArgs(projectId, plan.nodeId)));
+    plan.itemId = data.data.addProjectV2ItemById.item.id;
+    added += 1;
+    log(`${plan.id}: added to Project ${plan.to}`);
+  }
+  if (added) await sleep(SETTLE_MS);
+  const current = readItemsOf(pending.map((plan) => plan.number));
+  for (const plan of pending) {
+    const project = projects.get(plan.to);
+    const onTarget = current.get(plan.number).find((item) => item.projectNumber === plan.to);
+    if (!onTarget) continue;
+    const item = { ...onTarget, projectId: project.id, fields: project.fields };
+    if (plan.status !== null && item.status !== plan.status) {
+      const field = projectField(item, 'Status');
+      const option = field.options?.find((candidate) => candidate.name === plan.status);
+      if (!option) throw new BoardError(`Project ${plan.to}'s Status has no "${plan.status}".`);
+      await pacedWrite(() => editItem(item, field, ['--single-select-option-id', option.id]));
+      log(`${plan.id}: Status ${item.status ?? '(unset)'} → ${plan.status}`);
+    }
+    if (plan.estimate !== null && item.estimate !== plan.estimate) {
+      const field = projectField(item, 'Estimate');
+      await pacedWrite(() => editItem(item, field, ['--number', String(plan.estimate)]));
+      log(`${plan.id}: Estimate ${item.estimate ?? '(unset)'} → ${plan.estimate}h`);
+    }
+  }
+  const verified = readItemsOf(pending.map((plan) => plan.number));
+  const unverified = [];
+  let removed = 0;
+  for (const plan of pending) {
+    const onTarget = verified.get(plan.number).find((item) => item.projectNumber === plan.to);
+    const right =
+      onTarget &&
+      (plan.status === null || onTarget.status === plan.status) &&
+      (plan.estimate === null || onTarget.estimate === plan.estimate);
+    if (!right) {
+      unverified.push(plan.id);
+      continue;
+    }
+    for (const source of plan.from) {
+      const projectId = projects.get(source.projectNumber).id;
+      await pacedWrite(() => gh(deleteItemArgs(projectId, source.itemId)));
+      removed += 1;
+      log(`${plan.id}: removed from Project ${source.projectNumber}`);
+    }
+  }
+  return { added, removed, unverified };
+}
+
+const show = (value) => (value === null ? '(unset)' : String(value));
+
+export function describePlacement(plan) {
+  const from = plan.from.map((source) => source.projectNumber).join(', ') || '(none)';
+  const labels = [
+    ...plan.addLabels.map((label) => `+${label}`),
+    ...plan.removeLabels.map((label) => `-${label}`),
+  ];
+  return [
+    `${plan.id} (#${plan.number})`,
+    `from Project ${from}`,
+    `to Project ${plan.to}${plan.add ? '' : ' (already there)'}`,
+    `Status ${show(plan.status)}`,
+    `Estimate ${show(plan.estimate)}`,
+    labels.length ? `labels ${labels.join(' ')}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 // A comment is public and indexed before anyone reads it, so a comment is
 // refused when it looks like it carries a value rather than a name. The rule
 // is names, never values; these are the shapes a pasted value tends to take.
@@ -607,21 +907,22 @@ export function postComment(issue, text) {
 
 // Sync — an issue's title and body are its entry's heading and text, and its Estimate the heading's hours (claude-docs/task-tracking.md, "Sync").
 
-const ENTRY_BASE = `https://github.com/${REPO}/blob/staging/claude-docs/tasks/`;
+const BLOB = `https://github.com/${REPO}/blob/staging/`;
 
 /**
  * The entry's text as an issue body: a relative link points at the doc on
  * staging, since an issue page resolves it against nothing. Code spans are
  * left alone, where `](` is text rather than a link.
  */
-export function issueBodyOf(body) {
+export function issueBodyOf(body, path) {
+  const base = new URL(path, BLOB);
   return body
     .split(/(`[^`\n]*`)/)
     .map((part, index) =>
       index % 2 === 1
         ? part
         : part.replace(/\]\(([^)\s]+)\)/g, (link, href) =>
-            /^(?:[a-z][a-z0-9+.-]*:|#)/i.test(href) ? link : `](${new URL(href, ENTRY_BASE)})`,
+            /^(?:[a-z][a-z0-9+.-]*:|#)/i.test(href) ? link : `](${new URL(href, base)})`,
           ),
     )
     .join('');
@@ -634,7 +935,7 @@ export function planSync(issue, entry) {
   if (!matchesId(entry.title, entry.id)) {
     throw new BoardError(`${entry.id}'s heading does not open with "${titlePrefix(entry.id)}".`);
   }
-  const body = issueBodyOf(entry.body);
+  const body = issueBodyOf(entry.body, entry.path);
   const plan = {};
   if (issue.title !== entry.title) plan.title = entry.title;
   if ((issue.body ?? '').trim() !== body) plan.body = body;
@@ -666,18 +967,23 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   comment <ID> "<text>"      comment on the issue; refused if the text looks like a value
   sync <ID> [<ID> …]         bring each issue's title, body and Estimate to its entry
   list                       every tracked issue, as a JSON array
-  reorder [--apply] [--limit N]
-                             the moves that put the open waves in execution order; --apply makes them
+  reorder [--project N] [--apply] [--limit N]
+                             the moves that put each Project's open waves in execution order; --apply makes them
   move <ID> --after <ID> | --last
                              place the task within its milestone: after the named task, or last
-  milestone <ID> "<title>"   move the issue to the open milestone titled exactly so
-  retire <ID>                close the issue as not planned, on "${RETIRED_MILESTONE}"`;
+  milestone <ID> "<title>"   move the issue to the open milestone titled exactly so, and onto its Project
+  retire <ID>                close the issue as not planned, on "${RETIRED_MILESTONE}"
+  place <ID> [<ID> …] | --all [--apply]
+                             put each issue on its milestone's Project alone, carrying Status and Estimate;
+                             a dry run unless --apply`;
 
 const COMMANDS = {
   find([id]) {
     if (!id) throw new BoardError(USAGE);
     const issue = findIssue(id);
-    console.log(JSON.stringify({ ...issue, status: readItem(issue)?.status ?? null }, null, 2));
+    const item = readItem(issue);
+    const project = item?.projectNumber ?? null;
+    console.log(JSON.stringify({ ...issue, project, status: item?.status ?? null }, null, 2));
   },
   status([id, target]) {
     if (!id || !target) throw new BoardError(USAGE);
@@ -699,10 +1005,9 @@ const COMMANDS = {
   },
   sync(ids) {
     if (ids.length === 0) throw new BoardError(USAGE);
-    const text = loadTasksMdText();
     const issues = listTracked();
     for (const id of ids.map((raw) => raw.toUpperCase())) {
-      const entry = readEntry(text, id);
+      const entry = findEntry(id);
       if (!entry)
         throw new BoardError(`No entry in claude-docs/tasks/ is headed "${titlePrefix(id)}…".`);
       const issue = findIssue(id, issues);
@@ -723,19 +1028,24 @@ const COMMANDS = {
     const at = args.indexOf('--limit');
     const limit = at === -1 ? Infinity : Number(args[at + 1]);
     if (limit !== Infinity && !(Number.isInteger(limit) && limit > 0)) throw new BoardError(USAGE);
-    const plan = readReorderPlan();
-    printReorderPlan(plan);
-    if (!args.includes('--apply') || plan.moves.length === 0) return;
+    const named = args.indexOf('--project');
+    const projects = named === -1 ? PROJECTS : [projectByNumber(args[named + 1])];
+    const plans = readReorderPlans(projects);
+    plans.forEach(printReorderPlan);
+    const moves = plans.reduce((sum, plan) => sum + plan.moves.length, 0);
+    if (!args.includes('--apply') || moves === 0) return;
     console.log(`\nApplying${limit === Infinity ? '' : ` the first ${limit}`}…`);
     let made = 0;
     try {
-      await applyReorder(plan, {
-        limit,
-        onMove: (move) => {
-          made += 1;
-          console.log(`  ${move.id} → after ${move.after}`);
-        },
-      });
+      for (const plan of plans) {
+        await applyReorder(plan, {
+          limit: limit - made,
+          onMove: (move) => {
+            made += 1;
+            console.log(`  Project ${plan.project}: ${move.id} → after ${move.after}`);
+          },
+        });
+      }
     } catch (error) {
       console.error(
         `Stopped after ${made} move(s). Re-run \`reorder --apply\`: the plan is recomputed from the live order.`,
@@ -743,13 +1053,15 @@ const COMMANDS = {
       throw error;
     }
     console.log(`${made} move(s) made. Reading the order again…\n`);
-    printReorderPlan(readReorderPlan());
+    readReorderPlans(projects).forEach(printReorderPlan);
   },
   move(args) {
     const { id, after, last } = parseMoveArgs(args);
+    const issues = listTracked();
+    const project = projectOfMilestone(findIssue(id, issues).milestone) ?? PROJECTS[0];
     const { projectId, move } = planPlacement({
-      issues: listTracked(),
-      listing: listItems(),
+      issues,
+      listing: listItems(project.number),
       id,
       after,
       last,
@@ -761,7 +1073,7 @@ const COMMANDS = {
     gh(reorderMutationArgs(projectId, move));
     console.log(`${move.id} → after ${move.after}`);
   },
-  milestone([id, title, ...rest]) {
+  async milestone([id, title, ...rest]) {
     if (!id || !title || rest.length) throw new BoardError(USAGE);
     const issue = findIssue(id);
     const target = findMilestone(title, listMilestones());
@@ -771,6 +1083,31 @@ const COMMANDS = {
     }
     gh(issueEditArgs(issue, { milestone: target.number }));
     console.log(`${id.toUpperCase()}: ${issue.milestone ?? '(none)'} → ${target.title}`);
+    // A milestone on the same Project changes nothing on the board, and costs no read.
+    if (projectOfMilestone(issue.milestone) === projectOfMilestone(target.title)) return;
+    const plans = readPlacementPlans([{ ...issue, milestone: target.title }]);
+    if (plans.length === 0) return;
+    console.log(describePlacement(plans[0]));
+    await applyPlacementsReported(plans);
+  },
+  async place(args) {
+    const all = args.includes('--all');
+    const ids = args.filter((arg) => !arg.startsWith('--'));
+    if (
+      all === ids.length > 0 ||
+      args.some((arg) => arg.startsWith('--') && !['--all', '--apply'].includes(arg))
+    ) {
+      throw new BoardError(USAGE);
+    }
+    const issues = listTracked();
+    const chosen = all ? issues : ids.map((id) => findIssue(id, issues));
+    const plans = readPlacementPlans(chosen);
+    console.log(
+      `${plans.length} issue(s) off their milestone's Project${plans.length ? ':' : '.'}`,
+    );
+    for (const plan of plans) console.log(`  ${describePlacement(plan)}`);
+    if (!args.includes('--apply') || plans.length === 0) return;
+    await applyPlacementsReported(plans);
   },
   retire([id, ...rest]) {
     if (!id || rest.length) throw new BoardError(USAGE);
@@ -797,6 +1134,17 @@ const COMMANDS = {
   },
 };
 
+async function applyPlacementsReported(plans) {
+  console.log('\nApplying…');
+  const result = await applyPlacements(plans, { log: (line) => console.log(`  ${line}`) });
+  console.log(`${result.added} added, ${result.removed} removed.`);
+  if (result.unverified.length) {
+    throw new BoardError(
+      `Not verified, so left on their old Project too: ${result.unverified.join(', ')}. Re-run \`place --apply\` to finish them.`,
+    );
+  }
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
   const run = COMMANDS[command];
@@ -815,7 +1163,7 @@ const invokedDirectly = (() => {
 
 if (invokedDirectly) {
   main().catch((error) => {
-    if (error instanceof BoardError) {
+    if (error instanceof BoardError || error instanceof ProjectConfigError) {
       console.error(error.message);
       process.exit(1);
     }
