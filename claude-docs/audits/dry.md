@@ -16,7 +16,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Not yet fixed                                   |
 | D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Not yet fixed                                   |
 | D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
-| D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Not yet fixed                                   |
+| D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Fixed                                           |
 | D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Not yet fixed                                   |
 | D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Not yet fixed                                   |
 | D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Not yet fixed                                   |
@@ -36,7 +36,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Not yet fixed                                   |
 | D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
-| D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Not yet fixed                                   |
+| D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
 | D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Not yet fixed                                   |
 | D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Not yet fixed                                   |
 | D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Not yet fixed                                   |
@@ -47,7 +47,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-33  | Coven create and rename repeat the name schema, the slug-race retry and the index names                                                                      | high     | Server        |      2 |   1.5 | Not yet fixed                                   |
 | D-34  | Visibility and status lists written three times, one copy without its drift check                                                                            | high     | Server        |      2 |   0.5 | Not yet fixed                                   |
 | D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Not yet fixed                                   |
-| D-36  | Recipient lookup and signed-out view token written three times in support mail builders                                                                      | high     | Server        |      1 |     2 | Not yet fixed                                   |
+| D-36  | Recipient lookup and signed-out view token written three times in support mail builders                                                                      | high     | Server        |      1 |     2 | Fixed                                           |
 | D-37  | "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper                                     | medium   | Server        |     10 |   1.5 | Not yet fixed                                   |
 | D-38  | The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places                                       | medium   | Components    |      9 |     4 | Not yet fixed                                   |
 | D-39  | the `next/navigation` router mock is declared in about 80 dom and app test files                                                                             | medium   | Tests         |    178 |  3.25 | Not fixed: owner moved it to a Z. Cleanup task  |
@@ -331,7 +331,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
   Estimate: 2 h
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. The signed-out support form now allows the same 100-character error reference as the signed-in one, and both share the `about` choices; regression test "same limit signed-in and signed-out" in `tests/modules/support/validation/support.test.ts`.
 
 ### D-6: Help articles: duplicate audience rank map, missing id guard, repeated lookups
 
@@ -877,7 +877,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 `support/services/timeouts.ts` `checkedNote` (trim, blank, max 500, `until` in the future) parallels `identity/services/access-pause.ts`; the schemas `identity/schema/user-access-pauses.ts` and `support/schema/support-timeouts.ts` share `until`, `note` (not-blank check), `message`, `liftedAt`, `auditColumns`.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. `parsePauseEnd`, `parsePauseNote` and `PAUSE_TEXT_MAX_LENGTH` live in `src/lib/pause-message.ts` and serve the access, member and support-address pauses, and the "already paused" refusal uses `fieldRefusal`; `tests/guards/pause-validation.test.ts` refuses the future-time sentence anywhere else. Not folded in: the invitation-card expiry check in `invitation-cards.ts`, whose sentence differs and which builds its own list of issues; it moves to a Z. Cleanup task.
 
 ### D-26: Retention predicates repeated between the finders and the writers
 
@@ -1059,7 +1059,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
   Estimate: 2 h
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `supportRecipientFor` in `src/modules/support/services/recipient.ts` serves the reply notice, the status mail and retention; the System-actor check stays where it was, so behaviour is unchanged. No guard: none is practical.
 
 ### D-37: "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper
 
