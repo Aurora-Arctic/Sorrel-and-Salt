@@ -7,7 +7,7 @@ import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'reac
 import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
 import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
@@ -24,7 +24,7 @@ import {
   RadioGroupField,
   TextField,
   fieldDescription,
-  useFormHistory,
+  useEntityForm,
 } from '../Field';
 import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -244,7 +244,6 @@ const GroupForm = ({
   const {
     control,
     handleSubmit,
-    setError,
     setValue,
     getValues,
     formState: { errors, isSubmitting, isDirty },
@@ -267,18 +266,17 @@ const GroupForm = ({
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
   const discard = useDiscardGuard(isDirty);
-  const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, {
-    root,
-    enabled: !discard.asking && step.at === 'idle',
+  const { root, history, setAlert, rootError, send } = useEntityForm({
+    methods,
+    discard,
+    save: (input) => spec.save(input, group?.id),
+    onDone,
+    asking: step.at !== 'idle',
+    toField: ({ path: [field, ...rest] }) =>
+      rest.length === 0 && isField(field) ? field : undefined,
   });
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
-  const [alert, setAlert] = useState<string>();
-
-  const save = useMutation({
-    mutationFn: (input: GroupValues): Promise<void> => spec.save(input, group?.id),
-  });
 
   const remove = useMutation({
     mutationFn: async (target: string | undefined): Promise<void> => {
@@ -290,18 +288,6 @@ const GroupForm = ({
       await spec.remove(variables);
     },
   });
-
-  const send = async (input: GroupValues): Promise<void> => {
-    setAlert(undefined);
-    try {
-      await save.mutateAsync(input);
-      onDone();
-    } catch (error) {
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
-    }
-  };
 
   const confirmDelete = async (target: string | undefined): Promise<void> => {
     setAlert(undefined);
@@ -325,7 +311,6 @@ const GroupForm = ({
   const others = groups.filter((each) => each.id !== group?.id);
   const rowNoun = plural(memberCount, one, many);
   const rows = `${memberCount} ${rowNoun}`;
-  const rootError = errors.root?.message ?? alert;
 
   // The choosing step's safe answer, which takes the focus as it is asked;
   // the confirming step's are ConfirmQuestion's own.

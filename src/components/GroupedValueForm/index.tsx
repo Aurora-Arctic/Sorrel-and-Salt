@@ -3,12 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { placeServerIssues } from '../../lib/graphql-failure';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import FormIcon from '../FormIcon';
@@ -18,7 +17,7 @@ import {
   FormHistoryContext,
   SelectField,
   TextField,
-  useFormHistory,
+  useEntityForm,
 } from '../Field';
 import Notice from '../Notice';
 import { ListField } from '../IngredientForm/fields';
@@ -336,38 +335,28 @@ const GroupedValueForm = ({
   const {
     control,
     handleSubmit,
-    setError,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
   const discard = useDiscardGuard(isDirty);
-  const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root, enabled: !discard.asking && !confirming });
-  const [alert, setAlert] = useState<string>();
+  const { root, history, setAlert, rootError, send } = useEntityForm({
+    methods,
+    discard,
+    save: (input) => spec.save(input, value?.id),
+    onDone,
+    asking: confirming,
+    toField: ({ path: [key, ...rest] }) => {
+      if (key === 'otherNames' && typeof rest[0] === 'number') {
+        return `folkNames.${rest[0]}.value` as const;
+      }
+      return rest.length === 0 ? fieldOf(spec, key) : undefined;
+    },
+  });
   const name = useWatch({ control, name: 'name' });
   const renamed =
     renameNote !== undefined && value !== undefined && (name ?? '').trim() !== value.name;
 
-  const save = useMutation({
-    mutationFn: (input: GroupedValueValues) => spec.save(input, value?.id),
-  });
-
   const remove = useMutation({ mutationFn: (valueId: string) => spec.remove(valueId) });
-
-  const send = async (input: GroupedValueValues): Promise<void> => {
-    setAlert(undefined);
-    try {
-      await save.mutateAsync(input);
-      onDone();
-    } catch (error) {
-      placeServerIssues(error, setError, ({ path: [key, ...rest] }) => {
-        if (key === 'otherNames' && typeof rest[0] === 'number') {
-          return `folkNames.${rest[0]}.value` as const;
-        }
-        return rest.length === 0 ? fieldOf(spec, key) : undefined;
-      });
-    }
-  };
 
   const confirmDelete = async (): Promise<void> => {
     if (!value) return;
@@ -381,7 +370,6 @@ const GroupedValueForm = ({
     label: each.name,
     icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
   }));
-  const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
 
   const actions = (): ReactElement => (

@@ -18,6 +18,7 @@ export { usePointerHeld, useSettledWhilePressed } from './pointer-held';
 export { FormActions } from './form-actions';
 export { ReasonField } from './reason-field';
 export { useFormHistory } from './use-form-history';
+export { useEntityForm } from './use-entity-form';
 export { FormHistoryContext, useFormHistoryContext } from './form-history-context';
 export { FormHistoryButtons } from './form-history-buttons';
 export type { FormHistory } from './types';
