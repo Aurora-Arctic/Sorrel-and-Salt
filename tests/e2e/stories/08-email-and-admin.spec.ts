@@ -716,10 +716,12 @@ test(
     const opened = await visitor.goto(path);
     expect(opened?.status()).toBe(200);
     expect(new URL(visitor.url()).pathname).toBe(path);
-    await expect(visitor.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
-      'href',
-      `/sign-in?next=${encodeURIComponent(path)}`,
-    );
+    for (const name of ['Create Account', 'Sign In']) {
+      await expect(visitor.getByRole('main').getByRole('link', { name })).toHaveAttribute(
+        'href',
+        `/sign-in?next=${encodeURIComponent(path)}`,
+      );
+    }
     await expect(visitor.getByRole('main').getByText(/keeper/i)).toHaveCount(0);
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
@@ -741,8 +743,12 @@ test(
       emailVerified: false,
     });
     await rename(invitee, 'Invited Fixturewort');
-    const unverified = await expectInvitationRefused(page, path);
-    expect(unverified).not.toBe(different);
+    // The invitee's own account, not yet verified: told to check its inbox, not refused.
+    expect((await visit(page, path)).status()).toBe(200);
+    await expect(page.getByRole('main')).toContainText(invited);
+    await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+    expect(different).not.toContain(invited);
     const confirm = page.getByRole('link', { name: 'Confirm Your Email' });
     await expect(confirm).toBeVisible();
     await assertNoAccessibilityViolations(page);

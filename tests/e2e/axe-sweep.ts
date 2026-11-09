@@ -378,6 +378,11 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
     await page.getByRole('banner').getByRole('link', { name: 'Compendium' }).first().click();
     return dialogNamed(page, 'Discard Changes?');
   },
+  'sign-in': async (page) => {
+    await visit(page, '/compendium');
+    await page.getByRole('banner').getByRole('link', { name: 'Sign In' }).click();
+    return dialogNamed(page, 'Sign In');
+  },
   'add-ingredient': async (page, w) => {
     await visit(page, `/coven/${w.coven.slug}/ingredients?new=ingredient-coven-${w.coven.slug}`);
     return dialogNamed(page, 'Add Ingredient');

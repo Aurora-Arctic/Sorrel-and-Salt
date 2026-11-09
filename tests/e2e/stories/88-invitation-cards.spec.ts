@@ -75,18 +75,21 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(welcome).toBeVisible();
       await expect(betaTester).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: 'Your Invitation' })).toBeVisible();
-      await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
+      const main = page.getByRole('main');
+      await expect(main.getByRole('link', { name: 'Create Account' })).toBeVisible();
+      await expect(main.getByRole('link', { name: 'Sign In' })).toBeVisible();
       await page.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
       await expect(page.getByRole('dialog', { name: 'Contact Support' })).toBeVisible();
       await expect(page).toHaveURL(/\/i\/[^/?]+\?support=$/);
     });
 
-    await test.step('an unverified account opening the other card is sent to confirm its email', async () => {
+    await test.step('an unverified account opening the other card is told to check its inbox', async () => {
       await signInAs(page, 'unverified@story-88.test', ['discord'], 'user', {
         emailVerified: false,
       });
       await page.goto(links[1]);
-      await expect(page.getByText(/email address isn't confirmed yet/)).toBeVisible();
+      await expect(page.getByRole('main')).toContainText('unverified@story-88.test');
+      await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
       await page.getByRole('link', { name: 'Confirm Your Email' }).click();
       await expect(page).toHaveURL(/\/account\/email/);
     });
