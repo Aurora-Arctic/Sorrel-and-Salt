@@ -30,6 +30,7 @@ export const TASKS_FILES = [
   'claude-docs/tasks/m22.md',
   'claude-docs/tasks/m7a.md',
   'claude-docs/tasks/mb.md',
+  'claude-docs/tasks/mc.md',
   'claude-docs/tasks/mw.md',
 ];
 
