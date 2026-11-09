@@ -153,6 +153,28 @@ describe('/help', () => {
     expect(linkHrefs()).not.toContain('/help/staff');
   });
 
+  // The FAQ is cached for every reader; who is asking is read beside it, per request, for the pencil alone.
+  it.each([
+    ['a verified keeper', KEEPER, ['/keepers/help?view=faq']],
+    ['a curator', CURATOR, []],
+    ['a signed-out reader', null, []],
+  ] as const)('hands Edit FAQ to %s alone', async (_, session, edit) => {
+    getSession.mockResolvedValue(session);
+    readHelpFaq.mockResolvedValue(entries([row('testwort-question-one', { kind: 'faq' })]));
+    readHelpArticleIndex.mockResolvedValue(entries([]));
+    readHelpArticle.mockRejectedValue(new NotFound());
+    readHelpGlossary.mockResolvedValue(entries([]));
+    const { default: Page } = await load();
+
+    render((await Page()) as React.ReactElement);
+
+    // Precondition: the page drew the FAQ, so a missing pencil is the viewer's, not an empty FAQ's.
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Frequently Asked Questions' }),
+    ).toBeInTheDocument();
+    expect(hrefs(screen.queryAllByRole('link', { name: 'Edit FAQ' }))).toEqual(edit);
+  });
+
   it('has a title, a description and its canonical address, and is indexable', async () => {
     const meta = await metadataOf(await load());
 

@@ -27,6 +27,20 @@
     margin-block-start: space(6);
   }
 
+  // The FAQ heading stands in one row with a keeper's Edit FAQ (HelpArticleView/title.scss): the row takes the
+  // heading's margins, and the heading none of its own.
+  &__section > .help-article__title {
+    margin-block: space(8) space(3);
+
+    > h2 {
+      margin-block: 0;
+    }
+  }
+
+  &.page-with-nav &__section + &__section > .help-article__title:first-child {
+    margin-block-start: space(6);
+  }
+
   // Under a back link the link's own bottom margin is the step to Guides, as it is to a guide's title: a section is a
   // flex stack, so its heading's top margin would add to it.
   .help-article__parent + &__section > h2:first-child {

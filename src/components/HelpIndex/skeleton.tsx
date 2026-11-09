@@ -7,6 +7,7 @@ import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import { SkeletonWords } from '../Skeleton/text';
+import '../HelpArticleView/title.scss';
 import './index.scss';
 
 /** Each stand-in guide's title and summary lengths, in words, so the cards vary as the real ones do. */
@@ -95,7 +96,9 @@ export const HelpIndexSkeleton = ({
     </section>
     {menu && (
       <section className="help-index__section" aria-label="Frequently Asked Questions">
-        <h2>Frequently Asked Questions</h2>
+        <div className="help-article__title">
+          <h2>Frequently Asked Questions</h2>
+        </div>
         {QUESTIONS.map(([question, answer], n) => (
           <div key={n} className="help-index__faq">
             <h3>

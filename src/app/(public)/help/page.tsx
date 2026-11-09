@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import HelpIndex from '@/components/HelpIndex';
 import { readGlossaryTerms } from '@/lib/help-glossary';
 import { HELP_LEDE, HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
+import { keeperHelpViewPath } from '@/lib/help-paths';
 import { HELP_QUICK_LINKS, quickLinks } from '@/lib/help-quick-links';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { siteUrl } from '@/lib/site';
@@ -31,6 +32,7 @@ export default async function Page() {
       articles={articles.map(({ node }) => linkTo(node))}
       terms={terms}
       staffHelp={offers.staffHelp}
+      faqEditHref={offers.edit ? keeperHelpViewPath('faq') : undefined}
     />
   );
 }

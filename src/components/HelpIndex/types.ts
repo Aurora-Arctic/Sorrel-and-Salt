@@ -23,4 +23,6 @@ export interface HelpIndexProps {
   back?: { href: string; title: string };
   /** Draws the link to Staff Help beneath the quick links: a curator's or keeper's alone (`helpViewerOffers`). */
   staffHelp?: boolean;
+  /** Edit FAQ at the end of the FAQ heading's row: a verified keeper's alone (`helpViewerOffers`). */
+  faqEditHref?: string;
 }

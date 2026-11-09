@@ -165,3 +165,27 @@ describe('HelpIndex front page', () => {
     expect(screen.queryByRole('link', { name: 'Back to Top' })).toBeNull();
   });
 });
+
+describe('HelpIndex Edit FAQ', () => {
+  it('hands a keeper Edit FAQ after the FAQ heading, inside the FAQ', () => {
+    render(<HelpIndex faq={FAQ} articles={ARTICLES} faqEditHref="/keepers/help?view=faq" />);
+
+    const faq = screen.getByRole('region', { name: 'Frequently Asked Questions' });
+    const edit = within(faq).getByRole('link', { name: 'Edit FAQ' });
+    expect(edit).toHaveAttribute('href', '/keepers/help?view=faq');
+    expect(
+      within(faq)
+        .getByRole('heading', { level: 2, name: 'Frequently Asked Questions' })
+        .compareDocumentPosition(edit),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(document.getElementById(FAQ[0].slug)!.compareDocumentPosition(edit)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+  });
+
+  it('draws no Edit FAQ when handed no edit address', () => {
+    index();
+
+    expect(screen.queryByRole('link', { name: 'Edit FAQ' })).not.toBeInTheDocument();
+  });
+});

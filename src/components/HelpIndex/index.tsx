@@ -7,12 +7,14 @@ import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HashTarget from '../HashTarget';
 import HelpSearchForm from '../HelpSearchForm';
+import { EditLink } from '../IconTip';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import { HelpBackLink } from '../HelpArticleView/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import type { HelpIndexProps } from './types';
+import '../HelpArticleView/title.scss';
 import './index.scss';
 
 // The two sections the jump menu names. An answer's heading never takes these ids; a question's slug could only if it
@@ -32,6 +34,7 @@ const HelpIndex = ({
   terms = [],
   back,
   staffHelp = false,
+  faqEditHref,
 }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
   const reserved = [GUIDES_ID, FAQ_ID, ...faq.map((entry) => entry.slug)];
@@ -105,7 +108,10 @@ const HelpIndex = ({
           className="help-index__section"
           aria-label="Frequently Asked Questions"
         >
-          <h2>Frequently Asked Questions</h2>
+          <div className="help-article__title">
+            <h2>Frequently Asked Questions</h2>
+            {faqEditHref && <EditLink href={faqEditHref as Route} name="FAQ" />}
+          </div>
           {faq.map((entry, index) => (
             <div key={entry.slug} id={entry.slug} className="help-index__faq">
               <h3>{entry.title}</h3>
