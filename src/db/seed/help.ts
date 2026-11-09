@@ -1,4 +1,5 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, exists, isNull } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { helpArticles } from '../../modules/help/schema/help-articles';
 import { applyAudit } from '../audit';
@@ -64,6 +65,10 @@ export async function seedHelpEntries(
         `${entry.seedKey}: its parent ${entry.parent} is not in the list or the table`,
       );
     }
+    const parentEntry = entries.find((other) => other.seedKey === entry.parent);
+    if (parentEntry !== undefined && parentEntry.kind !== 'guide') {
+      throw new Error(`${entry.seedKey}: its parent ${entry.parent} is not a guide`);
+    }
     const values = {
       kind: entry.kind,
       audience: entry.audience,
@@ -86,7 +91,33 @@ export async function seedHelpEntries(
       .set({ ...applyAudit('update', values, BOOTSTRAP_SESSION), deletedAt: null, deletedBy: null })
       .where(eq(helpArticles.id, existing.id));
   }
+  await makeGuides(tx);
   return lines;
+}
+
+/**
+ * Makes each live top-level article holding a live sub page a guide, whoever wrote it, setting the kind alone so a keeper's
+ * edit stays the keeper's. Here and not in a migration: the migrator runs every pending file in one transaction, and Postgres
+ * refuses a new enum value inside the transaction that adds it.
+ */
+async function makeGuides(tx: SeedTransaction): Promise<void> {
+  const child = alias(helpArticles, 'child');
+  await tx
+    .update(helpArticles)
+    .set({ kind: 'guide' })
+    .where(
+      and(
+        eq(helpArticles.kind, 'article'),
+        isNull(helpArticles.parentId),
+        isNull(helpArticles.deletedAt),
+        exists(
+          tx
+            .select({ id: child.id })
+            .from(child)
+            .where(and(eq(child.parentId, helpArticles.id), isNull(child.deletedAt))),
+        ),
+      ),
+    );
 }
 
 type HelpRow = typeof helpArticles.$inferSelect;

@@ -1,6 +1,6 @@
-import { article, subPage } from './build';
+import { article, guide, subPage } from './build';
 
-const curating = article(
+const curating = guide(
   10,
   'Curating a Compendium Entry',
   'How curators and Keepers add and correct Compendium entries.',
@@ -42,7 +42,7 @@ Deleting a category group moves its categories rather than removing them. A cate
   'staff',
 );
 
-const queue = article(
+const queue = guide(
   12,
   'Working the Support Queue',
   'How curators and Keepers answer support requests.',
@@ -101,7 +101,7 @@ const inviteStaff = article(
   'keeper',
 );
 
-const cards = article(
+const cards = guide(
   16,
   'Minting Printed Cards',
   'Making printed invitation cards.',
@@ -131,7 +131,7 @@ The PDF is built in your browser and nothing you type is saved. The file is name
   'keeper',
 );
 
-const documentsArticle = article(
+const documentsArticle = guide(
   18,
   'Editing Site Documents',
   'Changing the privacy policy, disclaimer, code of ethics and terms.',
@@ -154,7 +154,7 @@ A mailing pauses when the mail provider's monthly allowance is used, and "Resume
   ),
 ];
 
-const writingHelp = article(
+const writingHelp = guide(
   19,
   'Writing Help Articles',
   'How a Keeper adds, edits and deletes help entries.',

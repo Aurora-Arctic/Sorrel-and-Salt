@@ -250,7 +250,7 @@ describe('the shipped help list', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('names a parent only by the key of an article in the list, one level deep', () => {
+  it('names a parent only by the key of a guide in the list, one level deep', () => {
     const children = articles.filter((article) => article.parent !== null);
     // Precondition: the list has sub pages, so the loop reads some.
     expect(children.length).toBeGreaterThan(0);
@@ -258,7 +258,7 @@ describe('the shipped help list', () => {
       const parent = byKey.get(child.parent as string);
       expect(parent, `${child.title}'s parent ${child.parent}`).toBeDefined();
       expect(child.kind, child.title).toBe('article');
-      expect(parent?.kind, child.title).toBe('article');
+      expect(parent?.kind, child.title).toBe('guide');
       expect(parent?.parent, `${child.title}'s parent has a parent`).toBeNull();
     }
   });
@@ -290,8 +290,8 @@ describe('the shipped help list', () => {
     expect(new Set(positions).size).toBe(positions.length);
   });
 
-  it('holds every article and sub page, under its parent and at its audience', () => {
-    expect(ofKind('article').map(shaped).sort(byTitle)).toEqual(
+  it('holds every guide, article and sub page, under its parent and at its audience', () => {
+    expect([...ofKind('guide'), ...ofKind('article')].map(shaped).sort(byTitle)).toEqual(
       [...EXPECTED_ARTICLES].sort(byTitle),
     );
   });
@@ -307,7 +307,9 @@ describe('the shipped help list', () => {
   });
 
   it('holds at least one staff article and one keeper article', () => {
-    const audiences = new Set(ofKind('article').map((article) => article.audience));
+    const audiences = new Set(
+      [...ofKind('guide'), ...ofKind('article')].map((article) => article.audience),
+    );
     expect(audiences.has('staff')).toBe(true);
     expect(audiences.has('keeper')).toBe(true);
   });

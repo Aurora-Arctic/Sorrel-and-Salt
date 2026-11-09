@@ -1,6 +1,6 @@
-import { article, subPage } from './build';
+import { guide, subPage } from './build';
 
-const gettingStarted = article(
+const gettingStarted = guide(
   1,
   'Getting Started',
   'How to sign in, what the Demo Coven is, and how invitations and printed cards bring you into a coven.',
@@ -68,7 +68,7 @@ You are shown only the pages you may read. Pages for [[Curator|curators]] and [[
   ),
 ];
 
-const compendium = article(
+const compendium = guide(
   2,
   'The Compendium',
   'The shared reference of ingredients, readable by anyone.',
@@ -118,7 +118,7 @@ The Toxic filter keeps an entry flagged on itself or on any live form.`,
   ),
 ];
 
-const yourCoven = article(
+const yourCoven = guide(
   3,
   'Your Coven',
   'Roles, invitations, pauses, and joining, leaving or deleting a coven.',
@@ -199,7 +199,7 @@ The [[Demo Coven]] cannot be deleted.
   ),
 ];
 
-const ingredients = article(
+const ingredients = guide(
   4,
   'Ingredients',
   "Your coven's own ingredients and stock: what you have.",
@@ -261,7 +261,7 @@ Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitre
   ),
 ];
 
-const grimoire = article(
+const grimoire = guide(
   5,
   'Grimoire',
   "Your coven's spells: what you make.",
@@ -350,7 +350,7 @@ The spell builder saves first when you choose Close, and it never sends a blank 
   ),
 ];
 
-const workings = article(
+const workings = guide(
   6,
   'Workings',
   'Recording that a spell was worked, and taking stock out.',
@@ -375,7 +375,7 @@ The recorder or a named participant can complete it. A jar short of stock goes t
   ),
 ];
 
-const account = article(
+const account = guide(
   7,
   'Account and Security',
   'Passwords, lockout, passkeys, two-factor sign-in and your email.',
@@ -418,7 +418,7 @@ Two-factor guards password sign-ins only. An account with no password is told to
   ),
 ];
 
-const support = article(
+const support = guide(
   8,
   'Support',
   'How to ask for help and follow a reply.',
@@ -464,7 +464,7 @@ Write under "Your Reply", up to 4,000 characters, and choose "Reply". A client t
   ),
 ];
 
-const troubleshooting = article(
+const troubleshooting = guide(
   9,
   'Troubleshooting',
   'Causes and fixes for the most common problems.',
