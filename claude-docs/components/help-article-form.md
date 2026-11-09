@@ -1,32 +1,35 @@
 # HelpArticleForm
 
-`src/components/HelpArticleForm/` is the keepers' form for one help row: an FAQ entry, an article or a glossary term. It fills a page of its own: `/keepers/help/new` adds a row and `/keepers/help/<id>` edits one (`src/app/(shell)/keepers/help/`). Both pages call `requireAdminSession()`, as the keepers layout lets a curator through for Support, and an id no live row holds answers 404. The list they return to is [`HelpOutline`](help-outline.md).
+`src/components/HelpArticleForm/` is the keepers' form for one help row: an FAQ entry, an article, a guide or a glossary term. It fills a page of its own: `/keepers/help/new` adds a row and `/keepers/help/<id>` edits one (`src/app/(shell)/keepers/help/`). Both pages call `requireAdminSession()`, as the keepers layout lets a curator through for Support, and an id no live row holds answers 404. The list they return to is [`HelpOutline`](help-outline.md).
 
 ## The page
 
 - **Two columns from tablet width up.** The text (Title, Summary, Body) sits on the left at the measure. A Details card on the right holds Kind, Shown, Parent, Sub Pages, Audience and Position, sticky under the shell bar as the body scrolls. Save and Cancel sit under the text. On a phone the card follows the text and the buttons follow the card. `index.scss` holds the grid.
-- **Heading.** An edit's page header is the row's title under the eyebrow `Edit Article`, `Edit FAQ Entry` or `Edit Term` (`helpFormHeading`, `heading.ts`). A new row's `h1` is drawn by the form, `Add Article`, `Add FAQ Entry` or `Add Term`, since it follows the Kind chosen. So the new page loads it through `NewHelpArticleForm`, whose loading face draws the heading too.
-- **View.** An edit's page header ends in an eye link, `ViewLink` named and tipped View, to the row's reader page (`HelpViewLink`, `view-link.tsx`, through `helpPath`). It is drawn only for a shown article whose guide, if it has one, is shown too: a hidden row's address is a 404 to a keeper as well, and an FAQ entry or a term is an anchor on a list, not a page. The skeleton draws no place for it.
+- **Heading.** An edit's page header is the row's title under the eyebrow `Edit Article`, `Edit Guide`, `Edit FAQ Entry` or `Edit Term` (`helpFormHeading`, `heading.ts`). A new row's `h1` is drawn by the form, `Add Article`, `Add Guide`, `Add FAQ Entry` or `Add Term`, since it follows the Kind chosen. So the new page loads it through `NewHelpArticleForm`, whose loading face draws the heading too.
+- **View.** An edit's page header ends in an eye link, `ViewLink` named and tipped View, to the row's reader page (`HelpViewLink`, `view-link.tsx`, through `helpPath`). It is drawn only for a shown article or guide whose guide, if it has one, is shown too: a hidden row's address is a 404 to a keeper as well, and an FAQ entry or a term is an anchor on a list, not a page. The skeleton draws no place for it.
 - **Loading.** `index.tsx` loads `form.tsx` through `next/dynamic`, because the body's editor is large and only these two pages need it. `HelpArticleFormSkeleton` stands in at the form's size, and the `/keepers/help/new` and `/keepers/help/[id]` skeletons in `src/app/skeletons.ts` use it.
 - **Back link.** `Help`, to `returnHref`, raised into the page top as on an ingredient page.
 
 ## Contracts
 
 - **Props:** `{ article?, guides, candidates, presetParentId?, returnHref }` (`types.ts`). Without `article` it adds a row. `readHelpFormChoices(session)` (`form-choices.ts`) builds both lists from one `listKeeperHelpArticles` read of every article, shown and hidden, in position order:
-  - `guides`: every live top-level article in reading order, with its count of live sub pages;
-  - `candidates`: every live article holding no sub pages, each guide's sub pages grouped under it in order.
+  - `guides`: every live guide in reading order, with its count of live sub pages;
+  - `candidates`: every live article, each guide's sub pages grouped under it in order, then the top-level articles. A guide is never a candidate, as a sub page is always an article.
 - **`returnHref`** is `helpFormReturn(kind, guideId)`: the outline at the row's guide (itself, for a guide), at the FAQ or at the glossary. Cancel, a save and a delete all go there.
 - **`presetParentId`** comes from the outline's Add Sub Page (`/keepers/help/new?parent=<id>`). The new row starts in that guide, at its audience, last among its sub pages.
-- **Writes** go through `/api/graphql` as `CreateHelpArticle`, `UpdateHelpArticle`, `DeleteHelpArticle` and `SetHelpArticleShown`. An update carries no `kind`. Nothing writes until Save.
+- **Writes** go through `/api/graphql` as `CreateHelpArticle`, `UpdateHelpArticle`, `DeleteHelpArticle` and `SetHelpArticleShown`. An update carries `kind` only for an article or a guide, the two kinds that change into each other. A guide becoming an article also sends an empty `childIds`. Nothing writes until Save.
 - **The body** is the shared [`RichTextEditor`](rich-text-editor.md), and its Markdown is what is saved. There is no preview: the editor shows the text as it will read.
 - **The address.** The Title's description is the address the title makes (`helpPath` over `slugify(title)` and the chosen guide's slug). Every slug comes from the title, so the form has no Slug field.
 
 ## The Details card
 
-- **Kind** is a choice chip (Article, FAQ, Term). It is held on an edit, as a row's kind is fixed once it exists, and its tip says so.
+- **Kind** is a choice chip (Article, Guide, FAQ, Term). A guide is a top-level page that holds sub pages; an article holds none.
+  - On an edit, an FAQ entry or a term keeps its kind, so the chip is held. An article and a guide change into each other, and FAQ and Term are held.
+  - Guide is held for a sub page, with a note to choose No Parent first, since a guide has no parent. Article is held for a guide holding sub pages, with a note to remove them first. The service refuses both (`checkKindChange`, `help-writes.ts`), and refuses every other change of kind.
+  - Changing the kind clears Parent unless the kind is Article, and Sub Pages unless it is Guide.
 - **Shown** is a [`ShownSwitch`](#shownswitch) in form-field mode. A new row is created shown and, when the switch is off, hidden by `SetHelpArticleShown` once it exists. An edit sends `SetHelpArticleShown` only when the switch changed.
-- **Fields by kind.** A term has no Audience, Parent, Sub Pages, Position or Summary. An FAQ entry has no Parent, Sub Pages or Summary, and the service refuses a summary on either (`checkSummary`, `help-writes.ts`). An article has all five, with three exceptions: a top-level page has no Position field, and, as help is one level deep, a sub page has no Sub Pages and a guide holding sub pages has its Parent held at No Parent.
-- **Parent** offers No Parent and every guide but the row itself.
+- **Fields by kind.** A term has no Audience, Parent, Sub Pages, Position or Summary. An FAQ entry has no Parent, Sub Pages or Summary, and the service refuses a summary on either (`checkSummary`, `help-writes.ts`). An article has Audience, Parent and Summary, and no Sub Pages. A guide has Audience, Sub Pages and Summary, and no Parent: the service refuses a parent on a guide. Neither has a Position field at the top level; a sub page shows its place (below).
+- **Parent** offers No Parent and every guide. The service refuses any other parent.
   - Choosing a guide narrows a wider audience to the guide's and places the row last in it (its sub page count plus one).
   - Choosing its own guide again puts a sub page back at its saved place.
   - Leaving a guide makes the row the last guide, placed by the service.
@@ -43,7 +46,7 @@
 - **Renaming.** When the title's slug differs from the row's, Save first reads `HelpRenameEffects`: the other rows whose bodies link the old address (or, for a term, mark the old title), and the front page's quick links that read the old slug. When either list holds anything, a confirmation names each one and saves only on Rename; Cancel keeps the form as typed. When both are empty it saves at once. Why: `claude-docs/design-decisions/support.md`, "Renaming a help row".
 - **Refusals.** A server issue on `title`, `position` or `audience` shows on that field, not above the form. A delete the service refuses (the guide has live sub pages) shows as an alert and leaves the form open.
 - **Leaving.** Cancel with changes asks Keep Editing or Discard Changes through the discard guard. A save or a delete leaves without asking.
-- **Delete** is drawn on an edit only, named for the kind (`Delete Article`), and asks first.
+- **Delete** is drawn on an edit only, named for the kind (`Delete Article`, `Delete Guide`), and asks first.
 
 `tests/components/HelpArticleForm/index.test.tsx` holds the cases, with the editor mocked as a text box.
 

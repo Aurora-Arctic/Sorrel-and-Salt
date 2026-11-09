@@ -8,7 +8,8 @@ The public help centre and its staff counterpart. Components: `HelpSearchForm`, 
 
 - A term is `/help/glossary#slug`.
 - An FAQ entry is `/help#slug` when public, `/help/staff#slug` otherwise.
-- An article is `/help/[parent/]slug` when public, `/help/staff/[parent/]slug` otherwise.
+- A guide is `/help/slug` when public, `/help/staff/slug` otherwise. A guide and a top-level article share one address space.
+- An article is `/help/[parent/]slug` when public, `/help/staff/[parent/]slug` otherwise; `parent` is always a guide.
 
 `glossary`, `staff` and `search` are reserved slugs, so no article takes those addresses.
 
@@ -16,11 +17,11 @@ The public help centre and its staff counterpart. Components: `HelpSearchForm`, 
 
 `/help`, `/help/glossary`, `/help/[slug]` and `/help/[slug]/[child]` read the cached public finders (tag `help`) and are in the sitemap. `/help/search` is public, reads the session, is never cached and is `noindex`. The proxy admits `/help`, `/help/glossary`, `/help/search` and one or two segments beneath `/help` except `staff` (`HELP_ARTICLE` in `src/proxy.ts`); robots allows the `/help` prefix.
 
-An article page answers 404 for a row that is not a public article, and for a child requested at the wrong parent. A child asked for at its top-level address gets a 308 to its nested address.
+A top-level page answers 404 for a row that is not a public article or guide, a nested page for a row that is not a public article, and for a child requested at the wrong parent. A child asked for at its top-level address gets a 308 to its nested address.
 
 ## Staff routes
 
-`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The `/curator` and `/keepers` layouts link to `/help/staff`.
+`/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The staff index lists the top-level staff and keeper articles and guides together. The `/curator` and `/keepers` layouts link to `/help/staff`.
 
 ## Layout
 

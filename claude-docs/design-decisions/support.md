@@ -3495,6 +3495,7 @@ included, in one transaction.
 - **A row the seed retired comes back** when its entry returns to the list: it
   is revived and restated. Only a row a person deleted (`deleted_by` not the
   bootstrap user) stays deleted.
+- **Every live top-level article holding a live sub page becomes a guide** (`makeGuides`), in the same run. The step lives in the seed, not in the migration that adds `guide` to the enum: drizzle's migrator runs every pending migration in one transaction, and Postgres refuses a new enum value inside the transaction that adds it. A seeded entry names its kind (`guide` or `subPage` in `help-content/build.ts`), and the seed refuses a sub page listed under an entry that is not a guide.
 - **`--dry-run`** runs all of this, prints the same lines and rolls back.
 
 ### The module: `help`
