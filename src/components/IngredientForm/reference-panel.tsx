@@ -10,9 +10,11 @@ import {
   useId,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import {
   FormProvider,
+  type FieldPath,
   type Resolver,
   useController,
   useForm,
@@ -22,14 +24,16 @@ import {
 import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
+import DateField from '../DateField';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import Notice from '../Notice';
 import { RemoveIcon } from './icons';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
-import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
+import { FORMAT_OF, latestDay } from '@/modules/ingredients/validation/reference-format';
 import {
+  FieldShell,
   FormActions,
   FormHistoryButtons,
   FormErrorSummary,
@@ -37,6 +41,7 @@ import {
   SelectField,
   SwitchField,
   TextField,
+  useField,
   useFormHistory,
 } from '../Field';
 import { HeaderSlotContext } from '../Modal';
@@ -146,9 +151,8 @@ const KIND_LABELS: Record<ReferenceKind, string> = {
 
 const KIND_OPTIONS = REFERENCE_KINDS.map((kind) => ({ value: kind, label: KIND_LABELS[kind] }));
 
-// No field carries a hint: how to cite is one How to Cite tip at the panel's head, and a
-// field whose format matters shows an example as its placeholder
-// (claude-docs/components/info-tip.md).
+// No field carries a hint: how to cite is one How to Cite tip at the panel's head, and a placeholder is
+// only a short sample (claude-docs/components/info-tip.md, claude-docs/components/ingredient-form.md).
 const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,
@@ -210,7 +214,7 @@ const PAGES: ReferenceFieldSpec = {
 const HOST: ReferenceFieldSpec = {
   name: 'host',
   label: 'Read Through',
-  placeholder: 'Perseus Digital Library',
+  placeholder: 'Perseus',
 };
 const url = (required = false): ReferenceFieldSpec => ({
   name: 'url',
@@ -218,6 +222,7 @@ const url = (required = false): ReferenceFieldSpec => ({
   required,
   placeholder: 'https://',
   type: 'url',
+  inputMode: 'url',
 });
 const MODIFIED: ReferenceFieldSpec = { name: 'modified', label: 'Last Modified', type: 'date' };
 const accessed = (required = false): ReferenceFieldSpec => ({
@@ -460,6 +465,47 @@ function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElem
   );
 }
 
+/**
+ * A day, picked from a calendar that offers none past tomorrow, the latest the server accepts. An optional
+ * day can be cleared again, as the calendar has no way to unpick one.
+ */
+function ReferenceDayField({ spec }: { spec: ReferenceFieldSpec }): ReactElement {
+  const name = spec.name as FieldPath<ReferenceFormValues>;
+  const { control } = useFormContext<ReferenceFormValues>();
+  const { field } = useController({ control, name });
+  const { aria, ...shell } = useField<ReferenceFormValues>(name);
+  const [latest] = useState(() => latestDay());
+  const value = typeof field.value === 'string' ? field.value : '';
+  return (
+    <FieldShell
+      label={spec.label}
+      required={spec.required}
+      {...shell}
+      action={
+        value !== '' && !spec.required ? (
+          <button
+            type="button"
+            className="field__label-action"
+            aria-label={`Clear ${spec.label}`}
+            onClick={() => field.onChange('')}
+          >
+            Clear
+          </button>
+        ) : undefined
+      }
+    >
+      <DateField
+        id={shell.controlId}
+        labelledBy={shell.labelId}
+        value={value}
+        max={latest}
+        onChange={field.onChange}
+        {...aria}
+      />
+    </FieldShell>
+  );
+}
+
 function ScholarlyField(): ReactElement {
   const { control } = useFormContext<ReferenceFormValues>();
   const { field } = useController({ control, name: 'scholarly' });
@@ -600,13 +646,17 @@ function PanelForm({
             // A kind decides which fields are refused, so a change revalidates them.
             deps={FIELD_NAMES}
           />
-          {shown.map((spec) => (
-            <TextField<ReferenceFormValues>
-              key={spec.name}
-              {...spec}
-              format={FORMAT_OF[spec.name]}
-            />
-          ))}
+          {shown.map((spec) =>
+            spec.type === 'date' ? (
+              <ReferenceDayField key={spec.name} spec={spec} />
+            ) : (
+              <TextField<ReferenceFormValues>
+                key={spec.name}
+                {...spec}
+                format={FORMAT_OF[spec.name]}
+              />
+            ),
+          )}
           {/* A compendium source's alone: absent from a coven's, not hidden. */}
           {(editing ? editing.isGlobal : workspaceId === null) && <ScholarlyField />}
           {/* Held down from the press to the answer, as the ingredient's saves are, so a source
