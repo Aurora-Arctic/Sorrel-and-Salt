@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
@@ -8,7 +8,7 @@ import { useResultFocus } from '../../lib/use-result-focus';
 import { BackChevron } from '../IngredientEntry/back-chevron';
 import BusyButton from '../BusyButton';
 import PageHeader from '../PageHeader';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import TwoFactorStep from './two-factor-step';
@@ -77,8 +77,6 @@ const PasswordForm = ({
   onStart,
   onCodeStep,
 }: PasswordFormProps): ReactElement => {
-  const nameId = useId();
-  const emailId = useId();
   const [mode, setMode] = useState<Mode>('sign-in');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -162,9 +160,6 @@ const PasswordForm = ({
     );
   }
 
-  const nameField = fieldDescription({ id: nameId });
-  const emailField = fieldDescription({ id: emailId, error: problem.email });
-
   return (
     <div className="sign-in-panel__password" ref={ref}>
       <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
@@ -196,33 +191,25 @@ const PasswordForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {signingUp && (
-          <FieldShell label="Name" required {...nameField}>
-            <input
-              id={nameField.controlId}
-              className="input"
-              type="text"
-              autoComplete="name"
-              placeholder="Add a name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              aria-required
-              {...nameField.aria}
-            />
-          </FieldShell>
-        )}
-        <FieldShell label="Email Address" required {...emailField}>
-          <input
-            id={emailField.controlId}
-            className="input"
-            type="email"
-            autoComplete={signingUp ? 'email' : 'username'}
-            placeholder="Add an email"
-            value={email}
-            onChange={(event) => onEmailChange(event.target.value)}
-            aria-required
-            {...emailField.aria}
+          <PlainTextField
+            label="Name"
+            required
+            autoComplete="name"
+            placeholder="Your name"
+            value={name}
+            onChange={setName}
           />
-        </FieldShell>
+        )}
+        <PlainTextField
+          label="Email Address"
+          required
+          type="email"
+          autoComplete={signingUp ? 'email' : 'username'}
+          placeholder="name@example.com"
+          value={email}
+          onChange={onEmailChange}
+          error={problem.email}
+        />
         <PasswordField
           label="Password"
           purpose={signingUp ? 'new' : 'current'}

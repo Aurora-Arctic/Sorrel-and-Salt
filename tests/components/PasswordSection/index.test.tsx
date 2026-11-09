@@ -65,6 +65,19 @@ describe('PasswordSection, changing a password', () => {
     expect(change()).toBeEnabled();
   });
 
+  it('names the current password to confirm with and the new one to set', () => {
+    renderSection(<PasswordSection hasPassword />);
+
+    expect(screen.getByLabelText(/^Current Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'current-password',
+    );
+    expect(screen.getByLabelText(/^New Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'new-password',
+    );
+  });
+
   it('sends both passwords as typed, signing out every other session, and clears the fields', async () => {
     changePassword.mockResolvedValue({ data: { token: null }, error: null });
     renderSection(<PasswordSection hasPassword />);

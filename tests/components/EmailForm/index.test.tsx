@@ -39,6 +39,12 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
+  it('keeps autofill off for a new address, which "email" would fill with the old one', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    expect(emailField()).toHaveAttribute('autocomplete', 'off');
+  });
+
   it('embedded, shows no heading of its own and never the confirmed view', () => {
     renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
 

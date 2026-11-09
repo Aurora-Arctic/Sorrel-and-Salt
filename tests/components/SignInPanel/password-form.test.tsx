@@ -145,6 +145,16 @@ describe('SignInPanel, email and password', () => {
     expect(submit('Create Account')).toBeEnabled();
   });
 
+  it('names the address as the username when signing in, and as the visitor’s own email and name when signing up', async () => {
+    expect(field('Email Address')).toHaveAttribute('autocomplete', 'username');
+    expect(field('Password')).toHaveAttribute('autocomplete', 'current-password');
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(field('Email Address')).toHaveAttribute('autocomplete', 'email');
+    expect(field('Name')).toHaveAttribute('autocomplete', 'name');
+  });
+
   it('signs up with the destination as the link’s callback, then follows the new session to the sign-in page', async () => {
     signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
     getSession.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });

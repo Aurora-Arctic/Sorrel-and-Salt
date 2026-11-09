@@ -1,11 +1,11 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { FormActions, PlainTextField } from '../Field';
 import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
@@ -42,8 +42,6 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
     },
   });
 
-  const { aria, ...field } = fieldDescription({ id: useId(), error: fieldError });
-
   // Outer whitespace is no change: the server trims it, as it would store it.
   const unchanged = value.trim() === saved;
 
@@ -64,18 +62,14 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Name" {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="text"
-            autoComplete="name"
-            placeholder="Add your name"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Name"
+          autoComplete="name"
+          placeholder="Your name"
+          value={value}
+          onChange={setValue}
+          error={fieldError}
+        />
         <FormActions noun="Name" dirty={!unchanged} submitting={mutation.isPending} />
       </form>
     </div>

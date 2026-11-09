@@ -27,4 +27,10 @@ describe('autofill', () => {
     render(<Hooked autoComplete="username" />);
     expect(note()).toHaveAttribute('autocomplete', 'username');
   });
+  it('asks 1Password to leave a field alone only when told to', () => {
+    const { rerender } = render(<PlainTextField label="Note" value="" onChange={() => {}} />);
+    expect(note()).not.toHaveAttribute('data-1p-ignore');
+    rerender(<PlainTextField label="Note" value="" onChange={() => {}} ignorePasswordManagers />);
+    expect(note()).toHaveAttribute('data-1p-ignore');
+  });
 });

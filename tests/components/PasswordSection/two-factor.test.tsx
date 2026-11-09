@@ -80,6 +80,20 @@ describe('TwoFactorSettings', () => {
     expect(button('Turn On Two-Factor')).toBeEnabled();
   });
 
+  it('confirms with the current password, then takes the app’s code as a one-time code', async () => {
+    enable.mockResolvedValue({
+      data: { totpURI: TOTP_URI, backupCodes: BACKUP_CODES },
+      error: null,
+    });
+    renderSection(false);
+    expect(field('Confirm Your Password')).toHaveAttribute('autocomplete', 'current-password');
+
+    type('Confirm Your Password', PASSWORD);
+    await press(button('Turn On Two-Factor'));
+
+    expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
+  });
+
   it('shows the QR code, the key and the backup codes, and is not on until a code is confirmed', async () => {
     await startEnrolment();
 

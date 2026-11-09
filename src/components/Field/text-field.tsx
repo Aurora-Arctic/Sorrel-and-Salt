@@ -58,6 +58,8 @@ export function TextField<V extends FieldValues = FieldValues>({
   spellCheck,
   autoCapitalize,
   enterKeyHint,
+  autoFocus,
+  ignorePasswordManagers,
   busy,
 }: TextFieldProps<V>): ReactElement {
   const { register, setValue, getFieldState } = useFormContext<V>();
@@ -104,6 +106,8 @@ export function TextField<V extends FieldValues = FieldValues>({
       spellCheck,
       autoCapitalize,
       enterKeyHint,
+      autoFocus,
+      ignorePasswordManagers,
     }),
     'aria-required': required || undefined,
     ...aria,

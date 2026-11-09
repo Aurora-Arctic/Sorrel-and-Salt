@@ -100,9 +100,10 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
         required
         // The address is someone else's, so the browser must not offer the signed-in person's own.
         autoComplete="off"
+        ignorePasswordManagers
         autoCapitalize="none"
         spellCheck={false}
-        placeholder="Add an email"
+        placeholder="name@example.com"
         format={emailFormat}
         value={email}
         disabled={sending}

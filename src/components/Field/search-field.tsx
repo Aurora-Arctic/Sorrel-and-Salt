@@ -44,6 +44,8 @@ export function SearchField({
             entered.current = event.key === 'Enter';
           }}
           type="search"
+          // Not a sign-in field; 1Password documents this attribute to leave a field alone.
+          data-1p-ignore
           name={name}
           placeholder={placeholder}
           value={value}

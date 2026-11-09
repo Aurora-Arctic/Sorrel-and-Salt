@@ -6,7 +6,7 @@ import { twoFactor, useSession } from '../../lib/auth-client';
 import { useLeaveGuard } from '../../lib/navigation';
 import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
@@ -145,7 +145,6 @@ const CodeAction = ({
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
   const email = useSession().data?.user.email;
-  const codeId = useId();
   const tipId = useId();
   const [on, setOn] = useState(enabled);
   const [enrolment, setEnrolment] = useState<Enrolment>();
@@ -255,8 +254,6 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
     setProblem({});
   };
 
-  const codeField = fieldDescription({ id: codeId, error: problem.code });
-
   return (
     <div className="two-factor" ref={root} tabIndex={-1}>
       {warning &&
@@ -360,20 +357,17 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           </ol>
           {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
           <form className="form" onSubmit={confirm} noValidate>
-            <FieldShell label="Code From Your App" required {...codeField}>
-              <input
-                id={codeField.controlId}
-                className="input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                spellCheck={false}
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
-                aria-required
-                {...codeField.aria}
-              />
-            </FieldShell>
+            <PlainTextField
+              label="Code From Your App"
+              required
+              placeholder="123456"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              spellCheck={false}
+              value={code}
+              onChange={setCode}
+              error={problem.code}
+            />
             <div className="form__actions">
               <BusyButton
                 type="submit"

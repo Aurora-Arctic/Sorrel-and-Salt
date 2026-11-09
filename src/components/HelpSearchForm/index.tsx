@@ -33,6 +33,8 @@ const HelpSearchForm = ({ query = '', size }: HelpSearchFormProps): ReactElement
         aria-label="Search Help"
         placeholder="Search Help"
         autoComplete="off"
+        // Not a sign-in field; 1Password documents this attribute to leave a field alone.
+        data-1p-ignore
       />
       <button className="btn btn--solid" type="submit">
         Search

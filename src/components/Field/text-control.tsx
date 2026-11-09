@@ -22,6 +22,8 @@ export function browserAttributes({
   spellCheck,
   autoCapitalize,
   enterKeyHint,
+  autoFocus,
+  ignorePasswordManagers,
 }: Pick<
   TextControlProps,
   | 'type'
@@ -31,6 +33,8 @@ export function browserAttributes({
   | 'spellCheck'
   | 'autoCapitalize'
   | 'enterKeyHint'
+  | 'autoFocus'
+  | 'ignorePasswordManagers'
 >) {
   const identifier = !multiline && type !== undefined && IDENTIFIER_TYPES.has(type);
   return {
@@ -39,6 +43,8 @@ export function browserAttributes({
     spellCheck: spellCheck ?? (multiline ? true : identifier ? false : undefined),
     autoCapitalize: autoCapitalize ?? (type === 'email' || type === 'url' ? 'none' : undefined),
     enterKeyHint,
+    autoFocus,
+    'data-1p-ignore': ignorePasswordManagers || undefined,
     // Any decimal: the browser's default step is whole numbers, which would flag 2.5 as invalid.
     step: type === 'number' ? ('any' as const) : undefined,
   };

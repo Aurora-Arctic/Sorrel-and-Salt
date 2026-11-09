@@ -35,6 +35,10 @@ describe('ForgotPasswordForm', () => {
     expect(send()).toBeEnabled();
   });
 
+  it('fills the visitor’s own email, not a username', () => {
+    expect(email()).toHaveAttribute('autocomplete', 'email');
+  });
+
   it('asks for a link to the trimmed address, opening the reset page, and says one is on its way', async () => {
     requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
     fireEvent.change(email(), { target: { value: ' someone@forgot.test ' } });

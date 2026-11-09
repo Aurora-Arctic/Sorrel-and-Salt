@@ -38,6 +38,12 @@ describe('NameForm', () => {
   // Whether Save is off until there is something to save is FormActions' rule
   // (tests/components/Field/form-actions.test.tsx); what counts as a change is
   // this form's: the server trims the name.
+  it('fills the name from the browser’s own details', () => {
+    renderForm(<NameForm name="Ada Fixture" />);
+
+    expect(nameField()).toHaveAttribute('autocomplete', 'name');
+  });
+
   it('does not count outer whitespace as a change to the name', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 

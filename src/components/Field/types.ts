@@ -85,12 +85,19 @@ export interface TextControlProps extends FieldProps {
   mask?: FieldMask;
   /** The browser's autofill. `off` by default; a specific token (never `on`) for a credential or the person's own details. */
   autoComplete?: AutofillToken;
+  /**
+   * Asks 1Password not to offer to fill or save this field (`data-1p-ignore`), for a field it may take
+   * for a credential, such as the address of someone being invited. LastPass and Bitwarden document no such field attribute.
+   */
+  ignorePasswordManagers?: boolean;
   /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
   spellCheck?: boolean;
   /** `none` by default for email and url. */
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   /** The label on a phone keyboard's Enter key: `next` between fields, `done` or `send` on the last. */
   enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  /** Takes focus when the field appears, for a step that replaces the form the person was typing in. */
+  autoFocus?: boolean;
   describedBy?: string;
   invalid?: boolean;
   after?: ReactNode;

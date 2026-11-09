@@ -2,11 +2,11 @@
 
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { FormActions, PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
@@ -61,7 +61,6 @@ const EmailForm = ({
   embedded = false,
   accountPath,
 }: EmailFormProps): ReactElement => {
-  const fieldId = useId();
   const [value, setValue] = useState(email);
   const [sentTo, setSentTo] = useState<string>();
   const [alert, setAlert] = useState(error);
@@ -144,7 +143,6 @@ const EmailForm = ({
   }
 
   const nothingToDo = verified && normalise(value) === email;
-  const { aria, ...field } = fieldDescription({ id: fieldId, error: fieldError });
 
   return (
     <div className="email-form">
@@ -159,18 +157,16 @@ const EmailForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Email Address" {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="email"
-            autoComplete="email"
-            placeholder="Add your email"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Email Address"
+          type="email"
+          // A new address: "email" would fill in the one the account has now.
+          autoComplete="off"
+          placeholder="name@example.com"
+          value={value}
+          onChange={setValue}
+          error={fieldError}
+        />
         <FormActions
           noun="Confirmation"
           label={coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
