@@ -17,7 +17,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Not yet fixed                                   |
 | D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
 | D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Fixed                                           |
-| D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Not yet fixed                                   |
+| D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Fixed                                           |
 | D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Not yet fixed                                   |
 | D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Not yet fixed                                   |
 | D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Not yet fixed                                   |
@@ -37,18 +37,18 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Not yet fixed                                   |
 | D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
 | D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
-| D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Not yet fixed                                   |
-| D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Not yet fixed                                   |
+| D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Fixed                                           |
+| D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Fixed                                           |
 | D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Not yet fixed                                   |
 | D-29  | GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted                                                         | high     | Components    |      4 |     8 | Fixed                                           |
 | D-30  | Viewer's live covens list built three times, one copy drifted                                                                                                | high     | Server        |      3 |     2 | Fixed                                           |
-| D-31  | `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`                                                                                   | high     | Server        |      3 |     1 | Not yet fixed                                   |
+| D-31  | `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`                                                                                   | high     | Server        |      3 |     1 | Fixed                                           |
 | D-32  | Two different `covenSlugOf` functions with the same name                                                                                                     | high     | Pages and lib |      3 |     1 | Not yet fixed                                   |
 | D-33  | Coven create and rename repeat the name schema, the slug-race retry and the index names                                                                      | high     | Server        |      2 |   1.5 | Fixed                                           |
 | D-34  | Visibility and status lists written three times, one copy without its drift check                                                                            | high     | Server        |      2 |   0.5 | Fixed                                           |
 | D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Fixed                                           |
 | D-36  | Recipient lookup and signed-out view token written three times in support mail builders                                                                      | high     | Server        |      1 |     2 | Fixed                                           |
-| D-37  | "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper                                     | medium   | Server        |     10 |   1.5 | Not yet fixed                                   |
+| D-37  | "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper                                     | medium   | Server        |     10 |   1.5 | Fixed                                           |
 | D-38  | The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places                                       | medium   | Components    |      9 |     4 | Not yet fixed                                   |
 | D-39  | the `next/navigation` router mock is declared in about 80 dom and app test files                                                                             | medium   | Tests         |    178 |  3.25 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-40  | a `QueryClientProvider` render wrapper is rewritten in 61 component test files                                                                               | medium   | Tests         |     61 |     3 | Not fixed: owner moved it to a Z. Cleanup task  |
@@ -345,7 +345,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** tests/modules/help services tests.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. Updating or deleting a help article now refuses an id that is not a uuid with `NotFound`, as the other help services do, rather than a database cast error; regression test in `tests/modules/help/services/help-writes.test.ts`. The audience rank map is written once in `src/lib/help-audience`.
 
 ### D-7: Status label 'Used Up' versus 'Used up' has drifted
 
@@ -894,7 +894,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/support/` retention tests, `tests/db/repository/support*.test.ts`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. The retention finders and writers share their predicates.
 
 ### D-27: Two category filters are the same function; the grimoire copy has already dropped one term
 
@@ -909,7 +909,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/db/repository/grimoire*.test.ts`, `tests/db/repository/ingredients*.test.ts`, `tests/db/repository/ingredient-facets*.test.ts`.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `categoryArms` and `pointsLive` in `src/db/repository/category-arms.ts` serve both filters, and the ingredient filter adds its extra live-pair term as an argument. The facet-count twins move to a Z. Cleanup task.
 
 ### D-28: Compendium `reviewOf` is written twice and the copies have drifted
 
@@ -984,7 +984,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/support/` (send-limit and time-out tests), `tests/db/` repository support tests.
 
 - **Estimate:** 1 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. One private `standingOnUser` in `src/db/repository/support.ts` serves `findStandingSupportTimeout` and `lockSupportSender`.
 
 ### D-32: Two different `covenSlugOf` functions with the same name
 
@@ -1096,7 +1096,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Extra copies of D-156** (stand-in ids, `applyAudit(...) as never`): see D-159 and D-156.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `newestFirst` in `src/db/repository/predicates.ts` is the one newest-first key, and the re-sort of a spell's workings uses the same order, so ties now break by id; regression test in `tests/modules/grimoire/services/workings.test.ts`. `tests/guards/pagination.test.ts` refuses the key spelled anywhere else.
 
 ### D-38: The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places
 
