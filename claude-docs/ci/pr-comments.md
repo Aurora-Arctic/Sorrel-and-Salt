@@ -32,6 +32,8 @@ A **sectioned** comment is shared by several jobs. There are two, each with a ta
 | Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. `result`: the merge job, with the merged result and coverage.                |
 | Playwright | `<!-- ci-playwright -->` | `gate`: `playwright.yml` for the gate suite. `stories`: `playwright.yml` with `suite: stories`. `coverage`: `playwright-coverage.yml`. |
 
+A Vitest part's Result is its own counts and duration (`summarize-vitest.mjs` with `VITEST_PART=true`); the coverage table and the slowest files are in the merged result's section alone.
+
 The heading's status is the worst of the sections: Failed, then Running, then Warning, then Passed; Skipped only when every section is.
 
 pr-gate's `pr-comments` job (`.github/workflows/pr-comments.yml`) starts both comments for the run: every section shows Running, except those the path filter skipped, which show Skipped. A new commit's run therefore resets both comments. It needs `changes` and `gitflow` and nothing needs it, so it fails without skipping a required check; the suites need `gitflow` too, so it starts as early as they can. When gitflow fails, every section shows Skipped, because no suite runs. A job writes its section under `!cancelled()`, so a cancelled job leaves its section as it was.

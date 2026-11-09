@@ -1,11 +1,14 @@
 // Vitest's JSON reporter output, into the `summary` stat and `details` block
-// job-summary and pr-comment consume.
+// job-summary and pr-comment consume. With VITEST_PART=true it summarises one
+// part job's results for its row of the Vitest comment: no coverage table,
+// because a part covers only its own share of src/, and no slowest-files block.
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
-const RESULTS_PATH = '/app/vitest-results.json';
+const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
+const PART = process.env.VITEST_PART === 'true';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
@@ -13,6 +16,14 @@ const MAX_DETAILS = 15;
 function setOutput(name, value) {
   const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
+}
+
+// Vitest crashed before writing its results; the part's row says so and the
+// comment still posts.
+if (PART && !fs.existsSync(RESULTS_PATH)) {
+  setOutput('summary', 'No results: Vitest stopped before writing them.');
+  setOutput('details', '');
+  process.exit(0);
 }
 
 const data = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
@@ -23,12 +34,22 @@ const testSummary =
     ? `${numPassedTests} passed`
     : `${numPassedTests} passed, ${numFailedTests} failed`;
 
-const coverage = buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
+const coverage = PART ? null : buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
 // A file over the budget is named in the stat line too, so the warning is
 // read without opening the block (MB.180); it never fails the job.
 const slowest = buildSlowestFilesSection(data.testResults, REPO_ROOT);
 const overBudget = slowest?.over.length ? `, ${slowest.over.length} over the file budget` : '';
-const summary = `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}`;
+// The run's wall-clock time, from its start to the last file's end.
+function runDuration() {
+  const ends = (data.testResults ?? []).map((r) => r.endTime).filter((t) => typeof t === 'number');
+  if (typeof data.startTime !== 'number' || ends.length === 0) return '';
+  const seconds = Math.round((Math.max(...ends) - data.startTime) / 1000);
+  return seconds >= 60 ? ` in ${Math.floor(seconds / 60)}m ${seconds % 60}s` : ` in ${seconds}s`;
+}
+
+const summary = PART
+  ? `${testSummary}${runDuration()}${overBudget}`
+  : `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}`;
 
 const failures = [];
 for (const testResult of data.testResults ?? []) {
@@ -55,7 +76,7 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-for (const block of [coverage?.table, slowest?.block]) {
+for (const block of PART ? [] : [coverage?.table, slowest?.block]) {
   if (block) details = details ? `${details}\n\n${block}` : block;
 }
 

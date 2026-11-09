@@ -158,7 +158,12 @@
   (beside `summarize-playwright.mjs` and shared `lib/coverage-table.mjs`) for the
   merge job's section of the Vitest comment: its stat line and coverage table.
   Each part job writes its own section too, so the comment shows the parts as
-  they finish ([`pr-comments.md`](pr-comments.md)). The script also appends a "Slowest
+  they finish ([`pr-comments.md`](pr-comments.md)). A part runs the JSON reporter
+  beside its blob reporter, into `/app/.reports/vitest-part.json`, and the same
+  script with `VITEST_PART=true` turns it into the part's Result: the counts, the
+  duration and any over-budget count, with no coverage table, since a part covers
+  only its own share of `src/`. A part that crashed before writing the file
+  shows that instead. The script also appends a "Slowest
   files" block — the ten slowest files from the JSON reporter's per-file times, a
   ⚠ on any over the 10 s budget and the count in the stat line — as a warning
   only; it never fails the job, and the file is split along its owning layer
