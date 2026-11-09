@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  ERROR_REFERENCE_MAX_LENGTH,
   ISSUE_LINK_EXPECTED,
   ISSUE_REPOSITORY,
   PAGE_NOT_ON_SITE,
@@ -12,17 +13,17 @@ import { supportRequestAbout } from '../schema/support-requests';
 export const SUBJECT_MAX_LENGTH = 120;
 export const MESSAGE_MAX_LENGTH = 4000;
 export const PATH_MAX_LENGTH = 500;
-export const ERROR_REFERENCE_MAX_LENGTH = 100;
-
-export { ISSUE_REPOSITORY };
+export { ERROR_REFERENCE_MAX_LENGTH, ISSUE_REPOSITORY };
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
 export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LENGTH, {
   error: `Keep the message to ${MESSAGE_MAX_LENGTH} characters`,
 });
 
+const About = z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' });
+
 export const SupportRequestInput = z.object({
-  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
+  about: About,
   subject: requiredText('Write a subject').max(SUBJECT_MAX_LENGTH, {
     error: `Keep the subject to ${SUBJECT_MAX_LENGTH} characters`,
   }),
@@ -66,7 +67,7 @@ export const SIGNED_OUT_ABOUTS = [
 
 // A signed-out request. `website` is the honeypot: a field no person sees, so a value in it is a bot.
 export const SignedOutSupportRequestInput = z.object({
-  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
+  about: About,
   email: z
     .string()
     .trim()
@@ -77,7 +78,7 @@ export const SignedOutSupportRequestInput = z.object({
   message: SupportMessage,
   path: SupportRequestInput.shape.path,
   errorCode: SupportRequestInput.shape.errorCode,
-  errorReference: z.string().trim().max(64, { error: 'That reference is too long' }).nullish(),
+  errorReference: SupportRequestInput.shape.errorReference,
   website: z.string().nullish(),
 });
 
