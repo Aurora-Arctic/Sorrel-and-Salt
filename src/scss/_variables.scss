@@ -232,6 +232,12 @@ $badge-palettes: (
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
+  // The help audience every reader may read: Local's contrast-checked green inks.
+  'public': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
+    ),
   // Last-used's solid accent inks.
   'new': (
       treatment: solid,
@@ -794,6 +800,9 @@ $layers: (
 
   @return map.get($layers, $name);
 }
+
+// How far a ruled help row (a glossary term, an FAQ entry) and its target tint reach past the text each side.
+$ruled-row-overhang: 0.75rem;
 
 // A chip's or badge's inner padding is its own geometry, trimmed by its 1px edge, and stays off the scale.
 // claude-docs/styling.md, "Spacing".

@@ -35,6 +35,21 @@ describe('HelpIndex', () => {
     expect(anchors[0]).toHaveTextContent('Testwort Question One?');
   });
 
+  it('gives each question a link to its own anchor, named for the question', () => {
+    index();
+
+    for (const entry of FAQ) {
+      const heading = screen.getByRole('heading', {
+        level: 3,
+        name: new RegExp(entry.title.replace('?', '\\?')),
+      });
+      expect(within(heading).getByRole('link', { name: `Link to ${entry.title}` })).toHaveAttribute(
+        'href',
+        `#${entry.slug}`,
+      );
+    }
+  });
+
   it('renders each answer as Markdown', () => {
     index();
 
@@ -146,6 +161,16 @@ describe('HelpIndex front page', () => {
     index();
 
     expect(screen.queryByRole('list', { name: 'Quick Links' })).toBeNull();
+  });
+
+  it('gives the FAQ section the id the keepers’ FAQ view links to', () => {
+    index();
+
+    expect(screen.getByRole('region', { name: 'Frequently Asked Questions' })).toHaveAttribute(
+      'id',
+      'faq',
+    );
+    expect(document.querySelectorAll('[id="faq"]')).toHaveLength(1);
   });
 
   it('ends the FAQ with one Back to Top link, after the last entry', () => {

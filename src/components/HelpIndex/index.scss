@@ -19,6 +19,16 @@
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
+  // The FAQ stack has no gap, so an entry’s tint runs down to the next entry’s rule; the step the gap gave sits in the
+  // entries’ own padding and in the first entry’s margin, so the height is the same.
+  &__section--faq {
+    gap: 0;
+  }
+
+  &__section--faq > .help-article__title + &__faq {
+    margin-block-start: space(4);
+  }
+
   &.page-with-nav &__section > h2:first-child {
     margin-block-start: 0;
   }
@@ -139,18 +149,28 @@
   }
 
   &__faq {
-    margin-block-end: space(5);
-    padding-block-start: space(5);
+    // The entry owns the space beneath its answer, so its tint runs down to the next rule; the rules and the tint reach
+    // the same overhang past the text, which the padding keeps in place.
+    margin-inline: calc(-1 * #{$ruled-row-overhang});
+    padding: space(5) $ruled-row-overhang calc(#{space(5)} + #{space(4)});
     border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
-    // The question an address names, as the glossary marks a term. The tint reaches as far below the answer as the
-    // padding stands above the question, short of the next rule, so it clears Back to Top beneath the last question.
-    @include target-highlight(calc(-1 * #{space(5)}));
+    // The question an address names, as the glossary marks a term.
+    @include target-highlight;
+
+    &:target::before {
+      inset-inline: 0;
+      border-inline-start: 0;
+    }
 
     h3 {
       margin: 0 0 space(2);
       font-size: heading-size(4);
+    }
+
+    &-self {
+      @include entry-anchor('.help-index__faq');
     }
 
     > p:last-child {

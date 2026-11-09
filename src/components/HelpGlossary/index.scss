@@ -8,7 +8,9 @@
   }
 
   &__entry {
-    padding-block: space(4);
+    // The rules and the highlight reach the same step past the text each side; the padding keeps the text where it was.
+    margin-inline: calc(-1 * #{$ruled-row-overhang});
+    padding: space(4) $ruled-row-overhang;
     border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
@@ -18,6 +20,12 @@
 
     // The term an address names (a mark’s link, “See in Glossary”).
     @include target-highlight;
+
+    // The tint fills the padded row, as wide as the rules, with no edge line.
+    &:target::before {
+      inset-inline: 0;
+      border-inline-start: 0;
+    }
 
     @media (min-width: 40rem) {
       display: grid;
@@ -46,27 +54,7 @@
     }
   }
 
-  // Hidden until the row is hovered or the link takes focus; it keeps its place so the term does not shift.
   &__self {
-    margin-inline-start: space(2);
-    font-family: $font-body;
-    font-size: type-size('small');
-    font-weight: 300;
-    color: $text-muted;
-    text-decoration: none;
-    opacity: 0;
-
-    &::before {
-      content: '#';
-    }
-
-    &:focus-visible,
-    .help-glossary__entry:hover & {
-      opacity: 1;
-    }
-
-    &:hover {
-      color: $accent;
-    }
+    @include entry-anchor('.help-glossary__entry');
   }
 }

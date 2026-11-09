@@ -21,7 +21,7 @@ export interface HelpIndexProps {
   terms?: HelpTermSource[];
   /** The index above this one, linked under the search box as a guide links back: the staff index's way to Help. */
   back?: { href: string; title: string };
-  /** Draws the link to Staff Help beneath the quick links: a curator's or keeper's alone (`helpViewerOffers`). */
+  /** Draws the link to Staff Help at the end of the title row: a curator's or keeper's alone (`helpViewerOffers`). */
   staffHelp?: boolean;
   /** Edit FAQ at the end of the FAQ heading's row: a verified keeper's alone (`helpViewerOffers`). */
   faqEditHref?: string;

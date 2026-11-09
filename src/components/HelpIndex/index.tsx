@@ -105,7 +105,7 @@ const HelpIndex = ({
       {faq.length > 0 && (
         <section
           id={FAQ_ID}
-          className="help-index__section"
+          className="help-index__section help-index__section--faq"
           aria-label="Frequently Asked Questions"
         >
           <div className="help-article__title">
@@ -114,7 +114,15 @@ const HelpIndex = ({
           </div>
           {faq.map((entry, index) => (
             <div key={entry.slug} id={entry.slug} className="help-index__faq">
-              <h3>{entry.title}</h3>
+              <h3>
+                {entry.title}
+                {/* The mark is drawn by CSS, so the question reads as its title alone. */}
+                <a
+                  className="help-index__faq-self"
+                  href={`#${entry.slug}`}
+                  aria-label={`Link to ${entry.title}`}
+                />
+              </h3>
               {answers[index]}
             </div>
           ))}
