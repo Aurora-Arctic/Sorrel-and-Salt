@@ -89,11 +89,10 @@ the public `categories` query.
 
 **The services parse ids first.** `listCompendium` and `countCompendium` run their
 filter through `CompendiumFilter` and `getIngredient` checks its id the same way,
-because `selectFrom`'s keyset branch maps every SQLSTATE class-22 error to
-`InvalidCursor`, on the premise that the cursor is the only client text a page
-query carries. A category id compared to a `uuid` column is client text too, so a
-malformed one is refused before the query or it would come back as "Invalid
-cursor". The check is `z.guid()`, not `z.uuid()`: Postgres's `uuid` takes any
+because a data exception from a page query is rethrown as the database error,
+not `InvalidCursor`, unless the cursor's own values fail their casts. A category
+id compared to a `uuid` column is client text too, so a malformed one is refused
+before the query or it would come back as a database error. The check is `z.guid()`, not `z.uuid()`: Postgres's `uuid` takes any
 version and variant, and the seed's hand-written ids are not RFC-shaped.
 `getIngredient` takes an optional `workspaceId`; with one it asks
 `assertMembership(…, { ingredient: ['read'] })` (a signed-out caller, a site admin

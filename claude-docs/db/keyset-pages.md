@@ -63,9 +63,10 @@ limit $limit  -- the page plus one
 - **A sort column must be `NOT NULL`**, by type. A NULL makes the row
   comparison NULL, and that row would fall out of every page. An expression's
   nullness is not in its type, so a nullable one is the caller's bug.
-- **A cursor that will not cast** (SQLSTATE class 22) throws `InvalidCursor`.
-  The cursor is the only client text in a page query, so a data exception
-  there can only come from it.
+- **A cursor that will not cast** throws `InvalidCursor`. When a page query
+  raises a data exception (SQLSTATE class 22), `selectFrom` casts the
+  cursor's values alone; only if one of those casts fails is it `InvalidCursor`,
+  and any other data exception is rethrown as the database raised it.
 - The query goes through the private `selectFrom`, which has an overload that
   adds the key column, the order and the limit. The one-builder invariant therefore holds, and `findPageInWorkspace` ANDs the
   proof's workspace like every scoped finder.

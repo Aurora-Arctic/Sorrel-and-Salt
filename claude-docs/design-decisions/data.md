@@ -153,7 +153,7 @@ INSERT` trigger on `users` records what `app.current_user_id` held inside
 - **The sort key is selected as `sort::text` in SQL and compared back in SQL.** A `timestamptz` keeps its microseconds; a JS `Date` would truncate to milliseconds and repeat or skip rows.
 - **`sortColumn` is typed to NOT NULL columns**, because a NULL breaks row comparison.
 - **`t.pagedConnection` is a method added to `RootFieldBuilder.prototype`**, as the Relay plugin adds `t.connection`. A free function `pagedConnection(t, …)` gave TypeScript an "excessively deep" instantiation. The pagination guard scans for `.connection(`.
-- **`InvalidCursor` (`src/lib/errors.ts`)** is thrown by the repository for a cursor that will not cast to the sort column's type (SQLSTATE class 22); `t.pagedConnection` turns it into an `Invalid cursor` GraphQL error.
+- **`InvalidCursor` (`src/lib/errors.ts`)** is thrown by the repository for a cursor whose values will not cast to the sort column types; a data exception from anything else in the query is rethrown as it was raised; `t.pagedConnection` turns it into an `Invalid cursor` GraphQL error.
 - **`MAX_COST` (5000) lives in `builder.ts`**, beside the complexity plugin that enforces it. A connection spends two depth levels on `edges` and `node`, so route-level cost tests use two nested connections from the root, which reach exactly depth 7.
 - **A page finder for another table is adopted per PR by the task that needs it**, not speculated.
 
