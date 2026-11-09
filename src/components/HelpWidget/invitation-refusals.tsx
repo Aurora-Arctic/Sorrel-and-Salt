@@ -5,6 +5,7 @@ import { REFUSAL_FIXES } from './invitation-refusal-fixes';
 import { PrintedCardMark, RefusalWho } from './refusal-parts';
 import RefusalFinder from './refusal-finder';
 import type { RefusalEntry } from './types';
+import '../CollapsibleSection/index.scss';
 
 // Every message the accept page can give, read from the invitation service's own tables, so a reason added there shows
 // here. The service is server-only, so this shell reads it and hands the messages to the picker as props; the list it
@@ -32,12 +33,16 @@ const EVERY_MESSAGE = 'Every Message the Page Can Give';
 const InvitationRefusals = (): ReactElement => (
   <figure className="figure help-widget">
     <RefusalFinder entries={ENTRIES} />
-    <details className="help-widget__disclosure">
-      <summary>
-        {EVERY_MESSAGE}
-        <ChevronIcon className="help-widget__chevron" />
+    <details className="collapsible-section help-widget__disclosure">
+      <summary className="collapsible-section__head" aria-label={EVERY_MESSAGE}>
+        <span className="collapsible-section__line">
+          <span className="collapsible-section__title">{EVERY_MESSAGE}</span>
+          <span className="collapsible-section__chevron" aria-hidden="true">
+            <ChevronIcon />
+          </span>
+        </span>
       </summary>
-      <ul className="help-widget__every" aria-label={EVERY_MESSAGE}>
+      <ul className="collapsible-section__fields help-widget__every" aria-label={EVERY_MESSAGE}>
         {ENTRIES.map((entry) => (
           <li key={entry.key}>
             {entry.card && <PrintedCardMark />}

@@ -188,15 +188,13 @@
   vertical-align: 1px;
 }
 
-.help-widget__disclosure {
-  margin-top: space(3);
+// The form sections' fold (CollapsibleSection) on a native `<details>`, so the list opens with no script. What a
+// summary needs and the section's button does not have: no marker, its own focus ring, the chevron turned over by
+// `[open]` rather than `.is-open`, and a hairline to close it above the caption.
+body .help-widget__disclosure {
+  border-bottom: 1px solid $hairline;
 
   > summary {
-    @include field-box;
-    display: flex;
-    gap: space(2);
-    align-items: center;
-    justify-content: space-between;
     list-style: none;
     cursor: pointer;
 
@@ -204,44 +202,27 @@
       display: none;
     }
 
-    &:hover {
-      border-color: $text-primary;
-    }
-
     &:focus-visible {
       @include focus-ring;
     }
   }
 
-  &[open] > summary {
-    border-end-start-radius: 0;
-    border-end-end-radius: 0;
+  &[open] > summary .collapsible-section__chevron {
+    transform: rotateX(180deg);
   }
 }
 
-.help-widget__chevron {
-  @include disclosure-chevron('.help-widget__disclosure[open]');
-}
-
+// Flush, as a section's fields are; the child selector outweighs the article's list margins and indent.
 .help-widget__disclosure > .help-widget__every {
   margin: 0;
-  padding: space(2) space(3);
-  border: 1px solid $text-muted;
-  border-top: 0;
-  border-radius: 0 0 radius('control') radius('control');
+  padding-inline: 0;
   list-style: none;
 
   > li {
     margin: 0;
-    padding: space(3) 0;
-    border-top: 1px solid $hairline;
 
     &::before {
       content: none;
-    }
-
-    &:first-child {
-      border-top: 0;
     }
   }
 }
