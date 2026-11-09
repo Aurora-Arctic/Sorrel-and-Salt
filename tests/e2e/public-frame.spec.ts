@@ -16,10 +16,14 @@ test.describe('without script', () => {
   test('the signed-out chrome is in the HTML as served', async ({ page }) => {
     await page.goto('/compendium');
 
-    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toHaveAttribute(
-      'href',
-      '/sign-in',
-    );
+    // Sign In carries the page the visitor is on, so signing in comes back to it.
+    const signInHref = await page
+      .getByRole('banner')
+      .getByRole('link', { name: 'Sign In' })
+      .getAttribute('href');
+    const signIn = new URL(signInHref!, 'http://localhost');
+    expect(signIn.pathname).toBe('/sign-in');
+    expect(signIn.searchParams.get('next')).toBe('/compendium');
     await expect(page.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute(
       'href',
       '#main',

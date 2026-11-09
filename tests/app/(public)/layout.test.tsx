@@ -44,7 +44,13 @@ describe('the (public) layout', () => {
 
     await layout();
 
-    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
+    // The bar's Sign In carries the page the visitor is on, so signing in comes back to it.
+    const signIn = new URL(
+      screen.getByRole('link', { name: 'Sign In' }).getAttribute('href')!,
+      'http://localhost',
+    );
+    expect(signIn.pathname).toBe('/sign-in');
+    expect(signIn.searchParams.get('next')).toBe('/compendium');
     expect(screen.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute('href', '#main');
     expect(screen.getByRole('navigation', { name: 'Site' })).toBeInTheDocument();
     expect(document.getElementById('main')!.nextElementSibling).toContainElement(
