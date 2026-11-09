@@ -5,7 +5,7 @@ import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
 import { UNVERSIONED_DOCUMENT_KEYS } from '../../lib/unversioned-documents';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
@@ -117,7 +117,7 @@ const DocumentEditor = ({
         id: saveDocumentDraft.id,
       };
     } catch (error) {
-      setFailure(readGraphqlFailure(error).alert);
+      setFailure(failureMessage(error));
       throw error;
     } finally {
       sendingRef.current = null;

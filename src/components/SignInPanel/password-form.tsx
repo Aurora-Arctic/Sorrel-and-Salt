@@ -19,8 +19,6 @@ import type { PasswordFormProps, SignInMode } from './types';
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
 // (claude-docs/components/sign-in-panel.md, "Contracts").
 
-// Still imported from here by ForgotPasswordForm and ResetPasswordForm, which another lane owns.
-export { TOO_MANY_ATTEMPTS };
 export const SIGN_UP_UNAVAILABLE =
   "We couldn't create your account just now. Please try again later.";
 export const GENERIC_PASSWORD_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";

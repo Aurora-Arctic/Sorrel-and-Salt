@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ResetPasswordForm, { GENERIC_RESET_ERROR } from '@/components/ResetPasswordForm';
-import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
 import { PASSWORD } from '../../support/constants';
 

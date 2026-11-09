@@ -7,22 +7,14 @@ import { describe, expect, inject, it } from 'vitest';
 const COMPONENT = /^src\/components\/.*\.tsx?$/;
 const STORY = /\.stories\.tsx$/;
 const LOCAL_FOLD = /\.trim\(\)\.toLowerCase\(\)|\.toLocaleLowerCase\(\)/;
-// Not matching text: an email address normalised for storage, and a lookup key built from a database value.
-const ALLOWED = new Set([
-  'src/components/EmailForm/index.tsx',
-  'src/components/CompendiumList/facets.ts',
-]);
 
 describe('text folding', () => {
   it('is written once, in src/lib/text.ts', () => {
     const files = inject('repoFiles').filter((file) => COMPONENT.test(file) && !STORY.test(file));
-    const offenders = files.filter(
-      (file) => !ALLOWED.has(file) && LOCAL_FOLD.test(readFileSync(file, 'utf8')),
-    );
+    const offenders = files.filter((file) => LOCAL_FOLD.test(readFileSync(file, 'utf8')));
 
-    // Preconditions: the scan reached the components, and the allowance still names live code.
+    // Precondition: the scan reached the components.
     expect(files.length).toBeGreaterThan(200);
-    expect([...ALLOWED].every((file) => LOCAL_FOLD.test(readFileSync(file, 'utf8')))).toBe(true);
     expect(offenders).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ForgotPasswordForm, { GENERIC_RESET_REQUEST_ERROR } from '@/components/ForgotPasswordForm';
-import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 
 // Better Auth's client is mocked at its one call; tests/db/password-reset.test.ts proves an unknown address is answered as a known one.
 const requestPasswordReset = vi.fn();

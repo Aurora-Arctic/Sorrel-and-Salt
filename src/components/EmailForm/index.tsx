@@ -6,6 +6,7 @@ import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'r
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { fold } from '../../lib/text';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -33,7 +34,7 @@ export const RESEND_DELAY_SECONDS = 60;
 
 /** As the column stores it, so "unchanged" compares what the server would see. */
 function normalise(input: string): string {
-  return input.trim().toLowerCase();
+  return fold(input);
 }
 
 // The status line, one per state of the address: the only rendering of that

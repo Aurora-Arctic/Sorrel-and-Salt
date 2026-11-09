@@ -12,7 +12,7 @@ import type {
   IngredientUpdateInput,
 } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage, placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
@@ -545,7 +545,7 @@ const IngredientForm = ({
           await graphqlRequest(SetCompendiumEntryReviewedDocument, { id: row.id, reviewed });
           setReviewedSaved(reviewed);
         } catch (error) {
-          reviewRefusal = `Saved, but the review mark was not: ${readGraphqlFailure(error).alert}`;
+          reviewRefusal = `Saved, but the review mark was not: ${failureMessage(error)}`;
         }
       }
       if (mirror) clearMirror(mirror);
@@ -723,7 +723,7 @@ const IngredientForm = ({
         });
         setReviewedSaved(sent.reviewed);
       } catch (error) {
-        setRefusal('Saved, but the review mark was not: ' + readGraphqlFailure(error).alert);
+        setRefusal('Saved, but the review mark was not: ' + failureMessage(error));
       }
     }
     if (shownField) setShownSaved(sent.shown);

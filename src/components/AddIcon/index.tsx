@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useClickFeedback } from '../ClickFeedback';
 import { useFade } from '../ClickFeedback/fade';
@@ -105,7 +105,7 @@ const AddIcon = ({
       refresh();
     },
     // No fields of its own, so the reader always answers with an alert.
-    onError: (error) => feedback.report(readGraphqlFailure(error).alert),
+    onError: (error) => feedback.report(failureMessage(error)),
   });
   const refused = add.isError;
   useEffect(() => {
