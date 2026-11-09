@@ -156,7 +156,9 @@
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest` project's
   `json-summary` coverage reporter feed `.github/scripts/summarize-vitest.mjs`
   (beside `summarize-playwright.mjs` and shared `lib/coverage-table.mjs`) for the
-  merge job's section of the Vitest comment: its stat line and coverage table.
+  merge job's two sections of the Vitest comment: the merged result's stat line,
+  and the final Coverage section, written by its own step, with the coverage
+  figure, the threshold verdict and the per-file table.
   Each part job writes its own section too, so the comment shows the parts as
   they finish ([`pr-comments.md`](pr-comments.md)). A part runs the JSON reporter
   beside its blob reporter, into `/app/.reports/vitest-part.json`, and the same
@@ -181,9 +183,8 @@
   `summarize-playwright.mjs` reads the gate's failing tests), the Playwright comment's section it writes
   (`stories` rather than `gate`), the report artifact's name (`stories-report`, since
   one workflow run may not upload two artifacts under one name) and the coverage
-  artifact's (`playwright-coverage-stories`). The summariser adds this run's own
-  coverage figure through `lib/coverage-table.mjs`, as `summarize-playwright.mjs`
-  does, and posts the checklist alone when no report was written. Both suites'
+  artifact's (`playwright-coverage-stories`). Neither suite's summariser reports
+  coverage: the merged figure is the Coverage section's. Both suites'
   coverage artifacts hold monocart's raw data too, for the `playwright-coverage`
   job. The run step carries `continue-on-error: true` for stories, since a job
   that calls a workflow cannot, so a red story never fails the job; the section
@@ -214,7 +215,7 @@
   Coverage section. A merge that fails writes its log there, and a merge that
   finds no coverage at all writes a failure saying neither suite left any. The
   summary line names the suites included. Only this section carries the per-file
-  table; the two suites' sections carry their figure alone. It reads as a failure when
+  table and the only coverage figure; the two suites' sections carry none. It reads as a failure when
   either suite failed (`suites-failed`): `playwright`'s result, and `stories`'s
   run step outcome, which `playwright.yml` exposes as its `outcome` output because
   the stories job passes whatever its stories did.

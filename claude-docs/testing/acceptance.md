@@ -94,8 +94,8 @@ image and one database image, and it runs beside the other jobs rather than
 after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), and the section of the Playwright comment it writes (`stories`). That
-section carries the story suite's own coverage figure in its summary line; the
-per-file table is the Coverage section's alone, and the coverage artifact is named
+section carries no coverage figure; the merged figure and the per-file table
+are the Coverage section's alone, and the coverage artifact is named
 `playwright-coverage-stories`. The `playwright-coverage` job then merges
 this suite's coverage with the gate suite's and writes the merged figure into
 the same comment's Coverage section (`testing/coverage.md`, "The merged

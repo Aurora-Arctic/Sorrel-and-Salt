@@ -1,7 +1,9 @@
 // Vitest's JSON reporter output, into the `summary` stat and `details` block
-// job-summary and pr-comment consume. With VITEST_PART=true it summarises one
-// part job's results for its row of the Vitest comment: no coverage table,
-// because a part covers only its own share of src/, and no slowest-files block.
+// job-summary and pr-comment consume. The merged run also gets `coverage_*`
+// outputs for the comment's Coverage section, and `result_outcome`, its tests'
+// verdict without the coverage thresholds. With VITEST_PART=true it summarises
+// one part job's results for its row: no coverage, because a part covers only
+// its own share of src/, and no slowest-files block.
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
@@ -13,6 +15,8 @@ const PART = process.env.VITEST_PART === 'true';
 // a run that failed on one alone reports no failed test.
 const OUTCOME = process.env.VITEST_OUTCOME ?? '';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
+// The merged run's log: Vitest reports a missed threshold only there.
+const LOG_PATH = process.env.VITEST_LOG || '/app/output.log';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
 
@@ -68,13 +72,32 @@ for (const testResult of data.testResults ?? []) {
   }
 }
 
+function stripAnsi(str) {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
+// Each missed threshold, as Vitest's coverage provider words it.
+const violations = (
+  PART || !fs.existsSync(LOG_PATH) ? '' : stripAnsi(fs.readFileSync(LOG_PATH, 'utf8'))
+)
+  .split('\n')
+  .map((line) => {
+    const pct = line.match(
+      /ERROR: Coverage for (\w+) \(([\d.]+)%\) does not meet .*threshold \(([\d.]+)%\)/,
+    );
+    if (pct) return `${pct[1]} ${pct[2]}% (needs ${pct[3]}%)`;
+    const count = line.match(/ERROR: Uncovered (\w+) \((\d+)\) exceed .*threshold \((\d+)\)/);
+    return count ? `${count[1]}: ${count[2]} uncovered (allows ${count[3]})` : null;
+  })
+  .filter(Boolean);
+
+const runFailed = OUTCOME === 'failure';
 const unexplained =
-  OUTCOME === 'failure' && failures.length === 0
+  runFailed && failures.length === 0 && violations.length === 0
     ? '; run failed with no failed test: see the log'
     : '';
-const summary = PART
-  ? `${testSummary}${runDuration()}${overBudget}${unexplained}`
-  : `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}${unexplained}`;
+const summary = `${testSummary}${PART ? runDuration() : ''}${overBudget}${unexplained}`;
 
 let details = '';
 if (failures.length > 0) {
@@ -91,9 +114,30 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-for (const block of PART ? [] : [coverage?.table, slowest?.block]) {
-  if (block) details = details ? `${details}\n\n${block}` : block;
-}
+if (!PART && slowest?.block) details = details ? `${details}\n\n${slowest.block}` : slowest.block;
 
 setOutput('summary', summary);
 setOutput('details', details);
+
+if (!PART) {
+  // A run that failed only on coverage still passed its tests.
+  setOutput('result_outcome', failures.length > 0 || unexplained ? 'failure' : 'success');
+  let coverageSummary;
+  let coverageOutcome;
+  if (coverage) {
+    coverageSummary = violations.length
+      ? `${coverage.stat}; below threshold: ${violations.join(', ')}`
+      : `${coverage.stat}; every threshold met`;
+    coverageOutcome = violations.length ? 'failure' : 'success';
+  } else if (failures.length > 0) {
+    // Vitest's reportOnFailure is off, so a failed test means no report.
+    coverageSummary = 'Not measured, because a test failed.';
+    coverageOutcome = 'skipped';
+  } else {
+    coverageSummary = 'No coverage report was written: see the log.';
+    coverageOutcome = 'failure';
+  }
+  setOutput('coverage_summary', coverageSummary);
+  setOutput('coverage_details', coverage?.table ?? '');
+  setOutput('coverage_outcome', coverageOutcome);
+}

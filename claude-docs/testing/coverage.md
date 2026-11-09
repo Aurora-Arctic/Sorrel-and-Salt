@@ -82,9 +82,8 @@ a CLI `--reporter` replaces the config's list and with it the html report's
 
 The story suite (`suite: stories`, M14.28) reports its coverage the same way: it
 uploads its own report as `playwright-coverage-stories`, and
-`summarize-stories.mjs` adds the figure to the summary line of the Playwright
-comment's Stories section through `buildCoverageSection`. Neither suite's
-section carries the per-file table: it is the Coverage section's alone. Each suite's report also holds
+neither suite's section of the Playwright comment carries its figure: the
+merged figure and the per-file table are the Coverage section's alone. Each suite's report also holds
 monocart's `raw` data (`coverage-e2e/raw/`, the unprocessed V8 data the `raw`
 report keeps), so it travels inside the same artifact. That is what lets the
 two suites be merged without running either again.

@@ -332,6 +332,7 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           VITEST_OUTCOME: ${{ steps.run.outcome }}
+          VITEST_LOG: /app/output.log
         run: node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.
@@ -351,9 +352,16 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}
+          details: |
+            ${{ steps.summarize.outputs.details }}
 
-      # The merged result's section of the Vitest comment, coverage with it.
+            **Coverage:** ${{ steps.summarize.outputs.coverage_summary }}
+
+            ${{ steps.summarize.outputs.coverage_details }}
+
+      # The merged result's section of the Vitest comment. Its outcome leaves out
+      # the coverage thresholds, which the Coverage section reports; a summary
+      # that did not run falls back to the run's outcome.
       - name: Comment on PR
         if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
@@ -363,7 +371,21 @@ jobs:
           section: result
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.run.outcome }}
+          outcome: ${{ steps.summarize.outputs.result_outcome || steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
+
+      - name: Comment coverage on PR
+        if: ${{ !cancelled() && inputs.pr-number }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Vitest
+          marker-slug: vitest
+          section: coverage
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.summarize.outputs.coverage_outcome || 'failure' }}
+          log-file: /app/output.log
+          summary: ${{ steps.summarize.outputs.coverage_summary || 'No coverage was summarised, so see the log.' }}
+          details: ${{ steps.summarize.outputs.coverage_details }}

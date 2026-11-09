@@ -16,6 +16,8 @@ const STATUSES = {
   warning: { mark: '⚠️', word: 'Warning' },
 };
 
+// A `final` section has no row in the table: its summary heads its own block,
+// which comes after every other section's, whichever job writes first.
 const LAYOUTS = {
   vitest: {
     title: 'Vitest',
@@ -24,7 +26,8 @@ const LAYOUTS = {
       { key: 'dom', label: 'DOM (`dom`)' },
       { key: 'node', label: 'Node (`unit`, `rsc`)' },
       { key: 'db', label: 'Database (`db`, `db-mocking`, `workflow`)' },
-      { key: 'result', label: 'Merged Result and Coverage' },
+      { key: 'result', label: 'Merged Result' },
+      { key: 'coverage', label: 'Coverage', final: true },
     ],
   },
   playwright: {
@@ -33,14 +36,14 @@ const LAYOUTS = {
     sections: [
       { key: 'gate', label: 'Gate Specs' },
       { key: 'stories', label: 'Stories' },
-      { key: 'coverage', label: 'Coverage' },
+      { key: 'coverage', label: 'Coverage', final: true },
     ],
   },
 };
 
 const LOG_LINES = 100;
 // GitHub refuses a comment over 65,536 characters; a sectioned comment holds
-// up to four sections, so each gets a smaller share.
+// up to five sections, so each gets a smaller share.
 const LIMITS = {
   single: { details: 40000, log: 20000 },
   section: { details: 12000, log: 6000 },
@@ -137,12 +140,24 @@ function cell(text) {
   return (text ?? '').replace(/\s*\n\s*/g, ' ').replace(/\|/g, '\\|');
 }
 
+// A final section with no block still shows, since it has no row to say so.
+function finalPlaceholder({ label }, { status, reported }) {
+  if (reported) return heading(4, status, label);
+  return status === 'skipped' ? `${label} was skipped.` : `${label} has not run yet.`;
+}
+
+function wrapBlock(key, block) {
+  return `<!-- ci-section:${key} -->\n\n${block}\n\n<!-- /ci-section:${key} -->`;
+}
+
 function renderSectioned({ marker, layout, title, state, blocks }) {
   const present = layout.sections.filter(({ key }) => state.sections[key]);
+  const rows = present.filter(({ final }) => !final);
+  const finals = present.filter(({ final }) => final);
   const table = [
     `| ${layout.column} | Status | Result |`,
     '| --- | --- | --- |',
-    ...present.map(({ key, label }) => {
+    ...rows.map(({ key, label }) => {
       const { status, summary } = state.sections[key];
       const { mark, word } = STATUSES[status];
       return `| ${label} | ${mark} ${word} | ${cell(summary)} |`;
@@ -152,17 +167,19 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
     `${marker}\n${encodeState(state)}`,
     heading(3, overallStatus(present.map(({ key }) => state.sections[key].status)), title),
     table,
-    ...present
-      .filter(({ key }) => blocks[key])
-      .map(
-        ({ key }) => `<!-- ci-section:${key} -->\n\n${blocks[key]}\n\n<!-- /ci-section:${key} -->`,
-      ),
+    ...rows.filter(({ key }) => blocks[key]).map(({ key }) => wrapBlock(key, blocks[key])),
+    ...finals.map((section) =>
+      blocks[section.key]
+        ? wrapBlock(section.key, blocks[section.key])
+        : finalPlaceholder(section, state.sections[section.key]),
+    ),
     footer({ sha: state.sha, runUrl: state.url }),
   ]);
 }
 
-function sectionBlock(label, { status, details, log }) {
+function sectionBlock({ label, final }, { status, summary, details, log }) {
   const content = [
+    final ? summary : '',
     capped(details, LIMITS.section.details, 'breakdown'),
     log ? logBlock(tail(log, LIMITS.section.log)) : '',
   ];
@@ -222,7 +239,7 @@ function planSectionWrite(
       attempt: run.attempt,
       reported: true,
     };
-    const block = sectionBlock(section.label, write);
+    const block = sectionBlock(section, write);
     if (block) blocks[write.key] = block;
     else delete blocks[write.key];
   }

@@ -242,6 +242,7 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-stories.mjs'
+              - '.github/scripts/lib/playwright-failures.mjs'
               - '.github/scripts/merge-playwright-coverage.mjs'
               - '.github/workflows/playwright-coverage.yml'
               - 'Docker/Dockerfile.e2e'
@@ -429,7 +430,7 @@ jobs:
     uses: ./.github/workflows/pr-comments.yml
     with:
       pr-number: ${{ github.event.pull_request.number }}
-      vitest-skipped: ${{ (needs.gitflow.result != 'success' || needs.changes.outputs.vitest != 'true') && 'dom,node,db,result' || '' }}
+      vitest-skipped: ${{ (needs.gitflow.result != 'success' || needs.changes.outputs.vitest != 'true') && 'dom,node,db,result,coverage' || '' }}
       playwright-skipped: >-
         ${{ needs.gitflow.result != 'success' && 'gate,stories,coverage' || format('{0},{1},{2}',
         needs.changes.outputs.playwright != 'true' && 'gate' || '',
