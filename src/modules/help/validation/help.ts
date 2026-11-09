@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { RowId, optionalText, requiredText } from '@/lib/validation';
+import { helpArticleKind, helpAudience } from '../schema/help-articles';
 
-const Kind = z.enum(['faq', 'article', 'guide', 'term']);
-const Audience = z.enum(['public', 'staff', 'keeper']);
+const Kind = z.enum(helpArticleKind.enumValues);
+const Audience = z.enum(helpAudience.enumValues);
 const Position = z
   .number()
   .int('Give the position as a whole number')

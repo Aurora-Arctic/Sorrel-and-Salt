@@ -9,11 +9,12 @@ import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { ReorderButton } from '../IconTip';
-import Notice from '../Notice';
 import Spinner from '../Spinner';
 import HiddenEye from './eye';
 import HelpGuideSelect from './guide-select';
-import { HelpSortable, useHelpSortableRow } from './sortable';
+import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
+import { SortableColumn } from '@/lib/sortable/column';
+import { useHelpSortableRow } from './sortable';
 import type { HelpGuidesBarProps, HelpOutlineAudience, HelpOutlineOrderGuide } from './types';
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each. At rest it
@@ -36,16 +37,6 @@ const byGroup = <Entry extends { audience: HelpOutlineAudience }>(entries: reado
     audience,
     entries: entries.filter((entry) => entry.audience === audience),
   })).filter((group) => group.entries.length > 0);
-
-interface Move {
-  id: string;
-  title: string;
-  /** Where it lands among its audience's, from 1. */
-  place: number;
-  /** The whole order before the move, to spring back to, and after it, to send. */
-  from: string[];
-  to: string[];
-}
 
 const ReorderRow = ({
   entry,
@@ -94,18 +85,13 @@ const HelpGuidesBar = ({
   const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
   const grouped = byAudience(order).map((entry) => entry.id);
-  const orderKey = grouped.join(' ');
 
-  // The order shown: the page's, or a moved one from the move until the page's catches up.
-  const [ids, setIds] = useState<string[]>(grouped);
-  const [seenKey, setSeenKey] = useState(orderKey);
-  if (seenKey !== orderKey) {
-    setSeenKey(orderKey);
-    setIds(grouped);
-  }
+  const { ids, saving, failed, save, clearFailed } = useOptimisticOrder(grouped, async (move) => {
+    await graphqlRequest(OrderHelpGuidesDocument, { ids: move.to });
+    announce(`Moved ${move.title} to position ${move.place}.`);
+    refresh();
+  });
   const [reordering, setReordering] = useState(false);
-  const [saving, setSaving] = useState<string>();
-  const [failed, setFailed] = useState<Move>();
 
   const modeRef = useRef<HTMLDivElement>(null);
   const barButton = useRef<HTMLButtonElement>(null);
@@ -139,13 +125,13 @@ const HelpGuidesBar = ({
   };
 
   const open = (from: 'bar' | 'phone') => {
-    setFailed(undefined);
+    clearFailed();
     setFocusBack(from);
     setReordering(true);
     announce('Reorder mode. Drag a guide by its handle, or focus it and press Space.');
   };
   const close = () => {
-    setFailed(undefined);
+    clearFailed();
     setReordering(false);
     announce('Reorder mode ended.');
   };
@@ -166,22 +152,6 @@ const HelpGuidesBar = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [reordering, saving]);
 
-  // A move saves at once, in the whole order; a failure puts the order back as it was.
-  const save = async (move: Move) => {
-    setIds(move.to);
-    setSaving(move.id);
-    setFailed(undefined);
-    try {
-      await graphqlRequest(OrderHelpGuidesDocument, { ids: move.to });
-      announce(`Moved ${move.title} to position ${move.place}.`);
-      refresh();
-    } catch {
-      setIds(move.from);
-      setFailed(move);
-    } finally {
-      setSaving(undefined);
-    }
-  };
   const onMove = (audience: HelpOutlineAudience, from: number, to: number) => {
     const run = rows.filter((row) => row.audience === audience);
     const move = run[from];
@@ -255,7 +225,7 @@ const HelpGuidesBar = ({
                   {HELP_AUDIENCE_LABELS[audience]}
                 </p>
                 {/* One sortable per audience, so neither a pointer nor a key carries a guide out of its own. */}
-                <HelpSortable
+                <SortableColumn
                   ids={entries.map((entry) => entry.id)}
                   names={entries.map((entry) => entry.title)}
                   onMove={(from, to) => onMove(audience, from, to)}
@@ -275,17 +245,10 @@ const HelpGuidesBar = ({
                       />
                     ))}
                   </ul>
-                </HelpSortable>
+                </SortableColumn>
               </div>
             ))}
-            {failed && (
-              <Notice kind="error" block>
-                Could not move {failed.title}. It is back where it was.{' '}
-                <button type="button" className="btn btn--small" onClick={() => void save(failed)}>
-                  Try Again
-                </button>
-              </Notice>
-            )}
+            {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
           </div>
         ) : (
           <>

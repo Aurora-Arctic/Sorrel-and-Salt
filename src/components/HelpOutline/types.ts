@@ -1,8 +1,9 @@
+import type { HelpArticleKind, HelpAudience } from '@/modules/help';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
-export type HelpOutlineKind = 'faq' | 'article' | 'guide' | 'term';
-export type HelpOutlineAudience = 'public' | 'staff' | 'keeper';
+export type HelpOutlineKind = HelpArticleKind;
+export type HelpOutlineAudience = HelpAudience;
 export type HelpOutlineShown = 'shown' | 'hidden' | 'all';
 
 /** What the right pane shows: a guide by id, every FAQ entry, or the glossary. */
@@ -120,4 +121,14 @@ export interface HelpOrderRow {
   title: string;
   index: number;
   cells: readonly ReactNode[];
+}
+
+/** One reorder that saves at once: the whole order before it, to spring back to, and after it, to send. */
+export interface HelpOrderMove {
+  id: string;
+  title: string;
+  /** Where it lands, from 1, as the live region says it. */
+  place: number;
+  from: readonly string[];
+  to: string[];
 }
