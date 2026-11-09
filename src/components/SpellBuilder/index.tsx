@@ -719,24 +719,19 @@ const SpellBuilder = ({
               </>,
             )}
           </div>
+          <div className="spell-builder__share">
+            <SpellVisibilityField
+              name={name}
+              created={opened !== undefined || createdId !== null}
+              flush={flush}
+            />
+          </div>
           <FormActions
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
             saveReason={saveReason ?? undefined}
-            aside={
-              deletedHrefOf && spellId ? (
-                <BinButton
-                  verb="Delete Spell"
-                  name={name}
-                  onClick={() => {
-                    clearErrors('root');
-                    setDeleting(true);
-                  }}
-                />
-              ) : undefined
-            }
           >
             <SpellStatusField
               name={name}
@@ -745,11 +740,16 @@ const SpellBuilder = ({
               spellId={spellId}
               copiedHrefOf={copiedHrefOf}
             />
-            <SpellVisibilityField
-              name={name}
-              created={opened !== undefined || createdId !== null}
-              flush={flush}
-            />
+            {deletedHrefOf && spellId && (
+              <BinButton
+                verb="Delete Spell"
+                name={name}
+                onClick={() => {
+                  clearErrors('root');
+                  setDeleting(true);
+                }}
+              />
+            )}
             <SaveStatus
               status={autosave.status}
               savedAt={autosave.savedAt}
