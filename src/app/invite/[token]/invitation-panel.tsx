@@ -5,8 +5,11 @@ import type { InvitationAcceptanceProps } from '../../../components/InvitationAc
 import type { PageHeaderProps } from '../../../components/PageHeader/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { getSession } from '../../../lib/request-session';
-import { ADMIN_LANDING, CURATOR_LANDING, signInPath } from '../../../lib/sign-in';
-import { invitationStanding } from '@/modules/identity';
+import { ADMIN_LANDING, CURATOR_LANDING } from '../../../lib/sign-in';
+// Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
+// oxlint-disable-next-line no-restricted-imports
+import { configuredProviders } from '../../../lib/social-providers-config';
+import { getMe, invitationStanding, isPlaceholderEmail } from '@/modules/identity';
 
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).
 const standingOf = cache(invitationStanding);
@@ -36,12 +39,20 @@ export default async function InvitationPanel({
     // Nothing of the invitation is read until a session holds the link.
     panel = {
       status: 'signed-out',
-      signInHref: signInPath(here),
+      next: here,
+      configured: configuredProviders(),
       card: here.startsWith('/i/'),
     };
   } else {
     const standing = await standingOf(session, token);
-    if (!standing.acceptable) {
+    // An unverified account matched the address, so its inbox holds the message, unless the address is a stand-in.
+    const unverifiedEmail =
+      !standing.acceptable && standing.reason === 'unverified'
+        ? (await getMe(session)).email
+        : undefined;
+    if (unverifiedEmail !== undefined && !isPlaceholderEmail(unverifiedEmail)) {
+      panel = { status: 'unverified', email: unverifiedEmail, emailHref: emailPagePath(here) };
+    } else if (!standing.acceptable) {
       panel = {
         status: 'refused',
         message: standing.message,

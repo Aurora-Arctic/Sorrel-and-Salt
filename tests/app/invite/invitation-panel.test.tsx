@@ -10,18 +10,28 @@ vi.mock('@/lib/request-session', () => ({ getSession }));
 
 const invitationStanding = vi.fn();
 const recordCardAttempt = vi.fn();
-vi.mock('@/modules/identity', () => ({ invitationStanding, recordCardAttempt }));
+const getMe = vi.fn();
+vi.mock('@/modules/identity', () => ({
+  invitationStanding,
+  recordCardAttempt,
+  getMe,
+  isPlaceholderEmail: (email: string) => email.endsWith('@placeholder.test'),
+}));
+vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
 
 const recorded: string[] = [];
 const landings: string[] = [];
 const startCovenHrefs: (string | undefined)[] = [];
+const shown: Record<string, unknown>[] = [];
 vi.mock('@/components/InvitationAcceptance', () => ({
   default: (props: {
+    [key: string]: unknown;
     status: string;
     token?: string;
     startCovenHref?: string;
     landing?: string;
   }) => {
+    shown.push(props);
     if (props.token) recorded.push(props.token);
     if (props.landing) landings.push(props.landing);
     if (props.status === 'refused') startCovenHrefs.push(props.startCovenHref);
@@ -38,6 +48,8 @@ beforeEach(() => {
   recorded.length = 0;
   startCovenHrefs.length = 0;
   landings.length = 0;
+  shown.length = 0;
+  getMe.mockReset();
 });
 
 describe('the invitation panel page', () => {
@@ -50,6 +62,57 @@ describe('the invitation panel page', () => {
     expect(invitationStanding).not.toHaveBeenCalled();
     expect(recordCardAttempt).not.toHaveBeenCalled();
     expect(recorded).toEqual([]);
+  });
+
+  it('hands a signed-out visitor the link itself to return to, and the providers the server holds', async () => {
+    getSession.mockResolvedValue(null);
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc' }));
+
+    expect(shown[0]).toMatchObject({
+      status: 'signed-out',
+      next: '/invite/abc',
+      configured: ['google'],
+      card: false,
+    });
+  });
+
+  // The address matched before the verification check, so the account is the invitee's, waiting on its message.
+  it('tells an unverified account to check the inbox of its own address, with the way to the email page back here', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({
+      acceptable: false,
+      reason: 'unverified',
+      message: 'Unverified.',
+    });
+    getMe.mockResolvedValue({ email: 'someone@invitation.test' });
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc' }));
+
+    expect(shown[0]).toEqual({
+      status: 'unverified',
+      email: 'someone@invitation.test',
+      emailHref: '/account/email?next=%2Finvite%2Fabc',
+    });
+    expect(recorded).toEqual([]);
+  });
+
+  // An address stood in for a provider that gave none was never written to, so there is no inbox to check.
+  it('keeps the refusal for an unverified account holding a stand-in address', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({
+      acceptable: false,
+      reason: 'unverified',
+      message: 'Unverified.',
+    });
+    getMe.mockResolvedValue({ email: 'discord-1@placeholder.test' });
+
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+
+    expect(shown[0]).toMatchObject({
+      status: 'refused',
+      emailHref: '/account/email?next=%2Fi%2Fabc',
+    });
   });
 
   it('hands a refused signed-in visitor the token to record, and writes nothing itself', async () => {

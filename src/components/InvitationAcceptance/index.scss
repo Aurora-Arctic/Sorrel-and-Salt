@@ -14,3 +14,14 @@
 .invitation-acceptance__actions {
   margin: 0;
 }
+
+// Two equal choices side by side, each as wide as the other; one column on a phone.
+.invitation-acceptance__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: space(3);
+
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
