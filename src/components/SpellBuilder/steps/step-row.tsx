@@ -111,6 +111,7 @@ export function BuilderStepRow({
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
       placeholder="Add an instruction"
+      spellCheck
       multiline
       rows={2}
     />
@@ -198,6 +199,8 @@ export function BuilderStepRow({
             required
             placeholder="Add a name"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -207,8 +210,10 @@ export function BuilderStepRow({
             name={`steps.${index}.form`}
             label="Form"
             labelSuffix={step.name ?? undefined}
-            placeholder="Add a form"
+            hint="Pick a form, or write your own"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
