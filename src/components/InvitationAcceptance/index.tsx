@@ -45,7 +45,7 @@ const SIGNED_OUT_GRANT =
 const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 
 const CARD_SIGNED_OUT_GRANT =
-  "You've been given a card to join Sorrel & Salt. Create an account or sign in with any you have. You can accept once its email address is verified.";
+  "You've been given a card to join Sorrel & Salt. Create an account or sign in to accept it.";
 
 /** To every unverified account that matched the address, new or not: a resend is the same press either way. */
 const UNVERIFIED_GRANT =
