@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
+import { useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
@@ -53,6 +53,7 @@ import { EntryHrefContext } from './substitute-summary';
 import {
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   SelectField,
   TextField,
@@ -317,9 +318,6 @@ const IngredientForm = ({
         return next;
       }),
   });
-  // The first field marked invalid, in page order, takes the focus once a
-  // save's errors are all drawn.
-  useFocusFirstInvalid(form, submitCount);
   // A save held on the duplicate warning focuses its button rather than the
   // name it marks, which needs no change, only an answer. After the effect
   // above, so it wins when both run, and again on each held save.
@@ -883,6 +881,8 @@ const IngredientForm = ({
               >
                 {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
                 {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+                {/* Not while a near-match warning holds the save: its answer is Create Anyway, which takes the focus. */}
+                {!blocking && <FormErrorSummary />}
                 {refusal && <Notice kind="error">{refusal}</Notice>}
                 {/* The sections flush, between hairlines. The one control that opens or closes them
               all sits beside the modal's title; outside a modal, at the end of the line above the

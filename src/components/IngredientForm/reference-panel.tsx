@@ -32,6 +32,7 @@ import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
 import {
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   SelectField,
   SwitchField,
@@ -50,7 +51,6 @@ import type {
   ReferenceSendInput,
   SavedReference,
 } from './types';
-import { useFocusFirstInvalid } from './on-submit';
 import { useReportPanelChanges } from './panel-changes';
 import { placeServerIssues } from '../../lib/graphql-failure';
 
@@ -492,7 +492,7 @@ function PanelForm({
     control,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting, isDirty, submitCount },
+    formState: { errors, isSubmitting, isDirty },
   } = methods;
   useReportPanelChanges(isDirty);
   const panel = useRef<HTMLFieldSetElement>(null);
@@ -511,7 +511,6 @@ function PanelForm({
     panel.current?.scrollIntoView?.({ block: 'start' });
     panel.current?.querySelector<HTMLElement>('[role="combobox"]')?.focus({ preventScroll: true });
   }, [summons]);
-  useFocusFirstInvalid(panel, submitCount);
 
   // A new source is written to this coven, or the compendium; an edited one
   // in its own tier, which in a coven's form is the coven's, since only its
@@ -591,6 +590,7 @@ function PanelForm({
             )}
           </PanelHead>
           {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+          <FormErrorSummary within={panel} />
           <SelectField<ReferenceFormValues>
             name="kind"
             label="Kind"

@@ -17,6 +17,7 @@ export { errorShown, useField } from './use-field';
 export { EditedFieldsContext, useEditedFields, useEditedFieldsContext } from './edited-fields';
 export { usePointerHeld, useSettledWhilePressed } from './pointer-held';
 export { FormActions } from './form-actions';
+export { FormErrorSummary } from './form-error-summary';
 export { ReasonField } from './reason-field';
 export { useFormHistory } from './use-form-history';
 export { FormHistoryContext, useFormHistoryContext } from './form-history-context';

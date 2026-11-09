@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -709,7 +710,7 @@ describe('ReferencesField', () => {
       expect(
         within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
       ).toHaveAccessibleDescription(HERBAL.citation);
-      expect(box()).toHaveFocus();
+      expectSummaryLinksTo(box());
     });
   });
 });
