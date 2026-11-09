@@ -33,9 +33,13 @@ would need no edit at any call site; nothing passes it today.
   then `job-summary` and `pr-comment`.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
-- **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
-  in `minimize` (resolve-on-pass) or `comment` (always post) mode, plus a
-  separate fail-only thread for `merge-queue: true` callers. Every caller runs
+- **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`)
+  through `.github/scripts/lib/pr-comment.cjs`, the renderer every CI comment
+  shares. A single-result comment uses `minimize` (resolve-on-pass) or
+  `comment` (always post) mode, plus a separate fail-only thread for
+  `merge-queue: true` callers. With `section` it writes one section of the
+  shared Vitest or Playwright comment, and with `reset` it starts one
+  ([`pr-comments.md`](pr-comments.md)). Every caller runs
   it under `!cancelled()`, not `always()`: the action reads any outcome but
   `success` as a failure, so a leg cancelled by a newer push's
   `cancel-in-progress` posted "❌ failed — 0 errors" over a check that never

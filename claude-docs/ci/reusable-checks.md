@@ -51,12 +51,13 @@
     `|| true`), deliberately non-blocking and **never a required status check**.
     It builds its own comment, through `.github/scripts/audit-comment.cjs` under
     `actions/github-script` rather than `pr-comment`: a severity table and a
-    package breakdown reported as a `[!WARNING]` on a step that passed, which
-    `pr-comment`'s pass/fail vocabulary cannot say. Its "Fix available" column
+    package breakdown reported as Warning on a step that passed, which
+    `pr-comment`'s pass/fail outcome cannot say. It renders through the same
+    layout as every other comment ([`pr-comments.md`](pr-comments.md)). Its "Fix available" column
     compares npm's suggested version with the lockfile's, through
     `.github/scripts/lib/audit-fix.cjs`: when no patched release exists,
     `npm audit` can name an older major as the fix, and that reads as "No —
-    downgrade only". The same script writes the same callout to the job summary
+    downgrade only". The same script writes the same report to the job summary
     (the pass/fail `job-summary` action would put "Dependency Audit passed"
     above the table). The summary is written whether or not a `pr-number` was
     passed; the PR comment only when one was, so `make act-check CHECK=audit`
@@ -155,7 +156,9 @@
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest` project's
   `json-summary` coverage reporter feed `.github/scripts/summarize-vitest.mjs`
   (beside `summarize-playwright.mjs` and shared `lib/coverage-table.mjs`) for the
-  PR comment's stat line and coverage table. The script also appends a "Slowest
+  merge job's section of the Vitest comment: its stat line and coverage table.
+  Each part job writes its own section too, so the comment shows the parts as
+  they finish ([`pr-comments.md`](pr-comments.md)). The script also appends a "Slowest
   files" block — the ten slowest files from the JSON reporter's per-file times, a
   ⚠ on any over the 10 s budget and the count in the stat line — as a warning
   only; it never fails the job, and the file is split along its owning layer
@@ -168,15 +171,15 @@
   input switches the run command (`npm run test:stories` with
   `STORIES_JSON=/app/stories.json`), the summariser
   (`.github/scripts/summarize-stories.mjs`: "3 of 63 stories passing" and a
-  markdown checklist), the check name, the comment thread
-  (`marker-slug: stories`), the report artifact's name (`stories-report`, since
+  markdown checklist), the Playwright comment's section it writes
+  (`stories` rather than `gate`), the report artifact's name (`stories-report`, since
   one workflow run may not upload two artifacts under one name) and the coverage
   artifact's (`playwright-coverage-stories`). The summariser adds this run's own
   coverage figure through `lib/coverage-table.mjs`, as `summarize-playwright.mjs`
   does, and posts the checklist alone when no report was written. Both suites'
   coverage artifacts hold monocart's raw data too, for the `playwright-coverage`
   job. The run step carries `continue-on-error: true` for stories, since a job
-  that calls a workflow cannot, so a red story never fails the job; the comment
+  that calls a workflow cannot, so a red story never fails the job; the section
   reads the real result from `steps.run.outcome`, and so does the report upload,
   which also runs when the summariser reports a test that failed and passed on
   retry (its `flaky` output). It is never a required check, which keeps red
@@ -189,20 +192,22 @@
   the stand-down, which it would otherwise ignore; it is no required check, and
   the workflow carries `continue-on-error` too). A run that stands down leaves it
   skipped, as for the other called workflows. Its steps run only when `changes`
-  says a suite ran (`should-run`), and post nothing otherwise. It downloads each
+  says a suite ran (`should-run`), and write nothing otherwise: the
+  `pr-comments` job has already marked the section Skipped. It downloads each
   coverage artifact by name into a folder of its own. A failed download is either
   an artifact never uploaded (a suite that did not run), which the merge leaves
   out quietly, or one that exists in the run and could not be fetched;
   `check-coverage-downloads.mjs` tells them apart by asking the run's artifact
   list (the called workflow and its caller grant `actions: read` for this). For
-  the second kind the job posts the "Playwright Coverage" comment as a failure
+  the second kind the job writes the Playwright comment's Coverage section as a failure
   saying coverage is missing for this commit, with the run link, merges nothing,
   and fails, so "Re-run failed jobs" runs it again. Otherwise
   `merge-playwright-coverage.mjs` merges the `raw/` data that is there, and the
-  job uploads `playwright-coverage-merged`, writes the job summary and comments as
-  "Playwright Coverage" (`marker-slug: playwright-coverage`). The summary line
-  names the suites included. Only this comment carries the per-file table; the
-  two suites' comments carry their figure alone. It reads as a failure when
+  job uploads `playwright-coverage-merged`, writes the job summary and writes the
+  Coverage section. A merge that fails writes its log there, and a merge that
+  finds no coverage at all writes a failure saying neither suite left any. The
+  summary line names the suites included. Only this section carries the per-file
+  table; the two suites' sections carry their figure alone. It reads as a failure when
   either suite failed (`suites-failed`): `playwright`'s result, and `stories`'s
   run step outcome, which `playwright.yml` exposes as its `outcome` output because
   the stories job passes whatever its stories did.

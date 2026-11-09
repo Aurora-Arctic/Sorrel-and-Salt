@@ -43,7 +43,7 @@ decisions make it hold:
 - **A flaky story is not a passing story.** Retries stay on in CI (one) so the
   run completes, but a test that passed only on its retry counts as failed: its
   box stays unticked, the tally counts it among the failing, and its line ends
-  ` — FLAKY (failed, then passed on retry)`, or in the PR comment
+  ` — FLAKY (failed, then passed on retry)`, or in the PR comment's Stories section
   ` — **flaky** (failed, then passed on retry)`. A flake is a bug to fix, not
   to tolerate.
 - **A test with no tag fails the run.** A test under `stories/` without an
@@ -93,17 +93,16 @@ needs the same image jobs as `playwright`, so the two suites share one e2e
 image and one database image, and it runs beside the other jobs rather than
 after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
-(`.github/scripts/summarize-stories.mjs`), the check name and the comment
-thread (marker `stories`). Its comment carries the story suite's own coverage
-figure in its summary line; the per-file table is the merged
-comment's alone, and the coverage artifact is named
+(`.github/scripts/summarize-stories.mjs`), and the section of the Playwright comment it writes (`stories`). That
+section carries the story suite's own coverage figure in its summary line; the
+per-file table is the Coverage section's alone, and the coverage artifact is named
 `playwright-coverage-stories`. The `playwright-coverage` job then merges
-this suite's coverage with the gate suite's and posts the merged figure in a
-"Playwright Coverage" comment of its own (`testing/coverage.md`, "The merged
+this suite's coverage with the gate suite's and writes the merged figure into
+the same comment's Coverage section (`testing/coverage.md`, "The merged
 report"); like the suite, it is never a required check. It is never a
 required check, and the run step carries `continue-on-error: true` (a job that
 calls a workflow cannot carry it), so a red scaffold or an unfinished story
-shows in the PR's Stories comment, read from `steps.run.outcome`, without
+shows in the Playwright comment's Stories section, read from `steps.run.outcome`, without
 blocking a merge. Nothing in the gate waits on it, so the gate's time does not
 grow with the suite. It runs on pull requests only; `npm run test:stories`
 gives the checklist for any branch.
