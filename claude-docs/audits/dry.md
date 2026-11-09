@@ -33,7 +33,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Fixed in part                                   |
 | D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Fixed                                           |
-| D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
+| D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Fixed                                           |
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Fixed                                           |
 | D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
 | D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
@@ -796,7 +796,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 `NOTE_HINT` is declared again in `UserDetail/pause-panel.tsx` and `access-pause-panel.tsx` beside the timeout-panel copy.
 
 - **Estimate:** 4 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. The support time-out panel is a thin wrapper over the shared `PausePanel` in `src/components/UserDetail/pause-panel.tsx`, which now carries every word through `PausePanelCopy`, and the site and coven pause panels share `PAUSE_WORDS`. A refused time-out now shows its reason through `failureMessage`, and lifting one refreshes the page as lifting a site pause does. The per-row coven pause in `UserList/pause-control.tsx` has its own flow and stays.
 
 ### D-23: Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening
 
