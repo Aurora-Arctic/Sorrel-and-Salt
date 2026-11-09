@@ -16,6 +16,7 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import { EMAIL_VIEW, EMAIL_VIEW_PARAM, MODE_PARAM, SIGN_UP_MODE, modeFromParam } from './address';
 import ModeSwitch from './mode-switch';
 import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
@@ -43,11 +44,12 @@ const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
 // Whether the cookie names a passkey sign-in, which is not a roster provider.
 const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey';
 
-// The query parameter that opens the email view; each view is its own history entry, so the
-// browser's Back button returns from the email form to the provider buttons.
-export const EMAIL_VIEW_PARAM = 'method';
-export const EMAIL_VIEW = 'email';
 const PUSHED_MARK = 'signInEmailViewPushed';
+
+const addressOf = (params: URLSearchParams): string => {
+  const query = params.toString();
+  return query ? `?${query}` : window.location.pathname;
+};
 
 const SignInPanel = ({
   next,
@@ -104,22 +106,42 @@ const SignInPanel = ({
     )?.focus();
   }, [emailView]);
 
+  // Whether this document pushed the email entry: if so, the entry beneath is one this panel still writes the mode to.
+  const pushedHere = useRef(false);
   const showView = (toEmail: boolean): void => {
     if (inDialog) return setDialogEmailView(toEmail);
     const params = new URLSearchParams(searchParams.toString());
     if (toEmail) params.set(EMAIL_VIEW_PARAM, EMAIL_VIEW);
     else params.delete(EMAIL_VIEW_PARAM);
-    const query = params.toString();
-    const url = query ? `?${query}` : window.location.pathname;
+    const url = addressOf(params);
     if (toEmail) {
-      // The mark lets Back undo this push. Next adds its own state keys; copying them in would make its patched pushState skip the sync.
-      window.history.pushState({ [PUSHED_MARK]: true }, '', url);
-    } else if (window.history.state?.[PUSHED_MARK]) {
+      // The mark lets Back undo this push, and names the mode the entry beneath was written in. Next adds its own state
+      // keys; copying them in would make its patched pushState skip the sync.
+      pushedHere.current = true;
+      window.history.pushState({ [PUSHED_MARK]: mode }, '', url);
+    } else if (
+      window.history.state?.[PUSHED_MARK] &&
+      (pushedHere.current || window.history.state[PUSHED_MARK] === mode)
+    ) {
+      // After a reload the entry beneath belongs to an earlier document, so only one in this mode is gone back to.
       window.history.back();
     } else {
       window.history.replaceState(null, '', url);
     }
   };
+
+  // On the page the address names the mode beside the view (./address.ts), written in place so a switch is no history
+  // entry and the email entry keeps the mark Back undoes. An entry Back or Forward lands on takes the mode held here.
+  const addressMode = modeFromParam(searchParams.get(MODE_PARAM));
+  useEffect(() => {
+    if (inDialog || addressMode === mode) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === SIGN_UP_MODE) params.set(MODE_PARAM, SIGN_UP_MODE);
+    else params.delete(MODE_PARAM);
+    const pushedIn: unknown = window.history.state?.[PUSHED_MARK];
+    const marked = pushedIn ? { [PUSHED_MARK]: pushedIn } : null;
+    window.history.replaceState(marked, '', addressOf(params));
+  }, [inDialog, addressMode, mode, searchParams]);
 
   // One Back for the page and the dialog, keeping its identity so a dialog holding it is not told again.
   const latestShowView = useRef(showView);

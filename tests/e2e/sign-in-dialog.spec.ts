@@ -246,3 +246,40 @@ test.describe('the sign-in dialog', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
   });
 });
+
+// The panel's other home: on /sign-in the view and the mode are in the address, so a reload shows the same view in
+// the same mode, and Back and Forward walk the views without losing the mode. The dialog above holds both in state.
+test('the /sign-in page keeps its view and mode through a reload, Back and Forward', async ({
+  page,
+}) => {
+  await page.goto('/sign-in');
+  const main = page.getByRole('main');
+  const title = (name: string) => main.getByRole('heading', { level: 1, name, exact: true });
+  await expect(title('Sign In')).toBeVisible();
+
+  await main.getByRole('button', { name: 'Create an Account', exact: true }).click();
+  await expect(title('Create an Account')).toBeVisible();
+  await page.reload();
+  await expect(title('Create an Account')).toBeVisible();
+
+  await main.getByRole('button', { name: 'Continue with Email' }).click();
+  await expect(title('Create an Account with Email')).toBeVisible();
+  await page.reload();
+  await expect(title('Create an Account with Email')).toBeVisible();
+
+  await page.goBack();
+  await expect(title('Create an Account')).toBeVisible();
+  await page.goForward();
+  await expect(title('Create an Account with Email')).toBeVisible();
+
+  await main.getByRole('button', { name: 'Sign In Instead' }).click();
+  await expect(title('Sign In with Email')).toBeVisible();
+  await page.reload();
+  await expect(title('Sign In with Email')).toBeVisible();
+
+  // Back from a form reloaded in another mode than it was opened in still lands in the form's mode.
+  await main.getByRole('button', { name: 'Back to Sign-In Options' }).click();
+  await expect(title('Sign In')).toBeVisible();
+  await page.reload();
+  await expect(title('Sign In')).toBeVisible();
+});

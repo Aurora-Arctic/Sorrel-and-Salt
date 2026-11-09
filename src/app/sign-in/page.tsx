@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import { ADDRESS_LEDES } from '../../components/InvitationAcceptance/ledes';
 import SignInPanel from '../../components/SignInPanel';
+import { modeFromParam } from '../../components/SignInPanel/address';
 import type { SignInLedes } from '../../components/SignInPanel/types';
 import { emailPagePath } from '../../lib/account-email';
 import { signedInLanding } from '../../lib/landing';
@@ -51,7 +52,13 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <PageFrame narrow>
-      <SignInPanel next={next} error={error} configured={configured} ledes={ledesFor(next)} />
+      <SignInPanel
+        next={next}
+        error={error}
+        configured={configured}
+        mode={modeFromParam(params.mode)}
+        ledes={ledesFor(next)}
+      />
     </PageFrame>
   );
 }

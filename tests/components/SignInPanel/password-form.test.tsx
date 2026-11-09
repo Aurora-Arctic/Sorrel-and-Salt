@@ -281,6 +281,90 @@ describe('SignInPanel, email and password', () => {
     expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
   });
 
+  // The page's address holds the mode beside the view, so a reload keeps both; sign-in, the default, is left out.
+  const lastAddress = () =>
+    new URLSearchParams(String(history.replace.mock.lastCall?.[2] ?? '').split('?')[1] ?? '');
+
+  it('writes a switch of mode into the address in place, adding no history entry, and leaves sign-in out of it', async () => {
+    // Precondition: the email view was its own entry, and no mode was written yet.
+    expect(history.push).toHaveBeenCalledTimes(1);
+    expect(history.replace).not.toHaveBeenCalled();
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+    expect(lastAddress().get('mode')).toBe('sign-up');
+    expect(lastAddress().get('method')).toBe('email');
+    expect(history.push).toHaveBeenCalledTimes(1);
+
+    await press(screen.getByRole('button', { name: 'Sign In Instead' }));
+    expect(lastAddress().has('mode')).toBe(false);
+    expect(lastAddress().get('method')).toBe('email');
+    expect(history.push).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the email entry Back undoes when the mode is written, and carries the mode to the buttons', async () => {
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+
+    // Back still goes back through history, so the entry kept its mark through the rewrite.
+    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(lastAddress().get('mode')).toBe('sign-up');
+    expect(lastAddress().has('method')).toBe(false);
+  });
+
+  // A reload keeps the email entry's state but starts a new document, so the entry beneath may be one written in the other
+  // mode, which nothing here can correct any longer.
+  const reloadEmailEntry = (pushedIn: string, mode: 'sign-in' | 'sign-up') => {
+    cleanup();
+    vi.restoreAllMocks();
+    setQuery('');
+    history = installHistory();
+    window.history.pushState(
+      { signInEmailViewPushed: pushedIn },
+      '',
+      `?method=email${mode === 'sign-up' ? '&mode=sign-up' : ''}`,
+    );
+    history.push.mockClear();
+    render(<SignInPanel next="/coven/hearth" configured={['google']} mode={mode} />);
+  };
+
+  it('after a reload, returns to the buttons in place when the entry beneath was in the other mode', async () => {
+    reloadEmailEntry('sign-in', 'sign-up');
+    // Precondition: the reloaded form is creating an account.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Create an Account with Email' }),
+    ).toBeInTheDocument();
+
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+
+    expect(history.back).not.toHaveBeenCalled();
+    expect(lastAddress().get('mode')).toBe('sign-up');
+    expect(lastAddress().has('method')).toBe(false);
+    expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
+  });
+
+  it('after a reload, goes back through history when the entry beneath was in the same mode', async () => {
+    reloadEmailEntry('sign-up', 'sign-up');
+
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
+
+    expect(history.back).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes nothing when the panel opens in the mode the address already names', () => {
+    cleanup();
+    vi.restoreAllMocks();
+    setQuery('mode=sign-up');
+    history = installHistory();
+    render(<SignInPanel next="/coven/hearth" configured={['google']} mode="sign-up" />);
+    // Precondition: it did open creating an account.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Create an Account' }),
+    ).toBeInTheDocument();
+    expect(history.replace).not.toHaveBeenCalled();
+    expect(history.push).not.toHaveBeenCalled();
+  });
+
   it('links to the forgot-password page at sign-in, and not at sign-up', async () => {
     expect(screen.getByRole('link', { name: 'Forgot Password?' })).toHaveAttribute(
       'href',

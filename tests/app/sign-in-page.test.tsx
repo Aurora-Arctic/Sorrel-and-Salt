@@ -19,7 +19,7 @@ const redirect = vi.fn((to: string) => {
 vi.mock('next/navigation', () => ({ redirect }));
 
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
-const SignInPanel = vi.fn<(props: { ledes?: unknown }) => null>(() => null);
+const SignInPanel = vi.fn<(props: { ledes?: unknown; mode?: unknown }) => null>(() => null);
 vi.mock('@/components/SignInPanel', () => ({ default: SignInPanel }));
 
 const { default: SignInPage, generateMetadata } = await import('@/app/sign-in/page');
@@ -119,6 +119,30 @@ describe('the sign-in page lede for a signed-out visitor', () => {
     ['the bare invite path', '/invite/'],
   ])('passes none for %s', async (_label, next) => {
     expect(await ledesFor(next)).toBeUndefined();
+  });
+});
+
+// The mode is in the address, so a reload of Create an Account comes back as Create an Account. Sign-in is the default and
+// stays out of the address; only the one known value reads as anything else.
+describe('the sign-in page mode', () => {
+  const modeFor = async (mode?: string | string[]) => {
+    getSession.mockResolvedValue(null);
+    render(await SignInPage({ searchParams: Promise.resolve(mode === undefined ? {} : { mode }) }));
+    expect(SignInPanel).toHaveBeenCalledTimes(1);
+    return SignInPanel.mock.calls[0]![0].mode;
+  };
+
+  it('opens the panel creating an account when the address says mode=sign-up', async () => {
+    expect(await modeFor('sign-up')).toBe('sign-up');
+  });
+
+  it.each([
+    ['no mode', undefined],
+    ['sign-in, which is the default', 'sign-in'],
+    ['an unknown value', 'register'],
+    ['a repeated key', ['sign-up', 'sign-up']],
+  ])('opens the panel signing in for %s', async (_label, mode) => {
+    expect(await modeFor(mode)).toBe('sign-in');
   });
 });
 
