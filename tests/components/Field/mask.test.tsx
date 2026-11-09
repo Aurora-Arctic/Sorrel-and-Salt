@@ -44,6 +44,33 @@ describe('applyMask', () => {
   it('leaves text with a letter as typed', () => {
     expect(type('', '202x')).toEqual({ value: '202x', caret: 4 });
   });
+  it('Backspace in the middle removes the digit before the caret and leaves the caret where it was', () => {
+    // "(202) 555-0123", caret after the second 5, Backspace removed that 5.
+    expect(type('(202) 555-0123', '(202) 55-0123', 7, 'backward')).toEqual({
+      value: '(202) 550-123',
+      caret: 7,
+    });
+  });
+  it('Delete in the middle removes the digit after the caret and keeps the caret still', () => {
+    expect(type('(202) 555-0123', '(202) 55-0123', 7, 'forward')).toEqual({
+      value: '(202) 550-123',
+      caret: 7,
+    });
+  });
+  it('typing over a selected run of digits puts the new digit there, with the caret after it', () => {
+    // "555" selected and "7" typed.
+    expect(type('(202) 555-0123', '(202) 7-0123', 7)).toEqual({
+      value: '(202) 701-23',
+      caret: 7,
+    });
+  });
+  it('deleting a selection that spans a mask character removes the digits in it', () => {
+    // "2) 5" selected (a digit, ")", a space, a digit) and deleted.
+    expect(type('(202) 555-0123', '(2055-0123', 3, 'backward')).toEqual({
+      value: '(205) 501-23',
+      caret: 3,
+    });
+  });
 });
 
 // The caret is set with the value, as the browser has it when the input event fires.

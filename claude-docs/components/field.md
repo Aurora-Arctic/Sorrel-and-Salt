@@ -33,7 +33,7 @@ A `mask` (type `FieldMask`, `src/lib/formats.ts`) formats the text while the per
 - **Nothing is blocked silently.** Text the mask cannot format is kept as typed, and the schema refuses it on Save.
 - **The saved value is the server's.** The mask is display only; `format` still runs on blur, and the schema validates.
 
-The first mask is `phoneMask` (`src/lib/phone-number.ts`), on the Business Cards phone number ([Business Cards](business-cards.md)).
+The approved masks are `phoneMask` (`src/lib/phone-number.ts`), on the Business Cards phone number ([Business Cards](business-cards.md)), and `hexMask` (`src/lib/contrast.ts`), on the chip colour hex box ([ChipColorField](chip-color-field.md)). A new mask needs the owner's approval.
 
 ## Form actions
 

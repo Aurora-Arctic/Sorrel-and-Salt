@@ -163,3 +163,127 @@ test('the phone number is laid out as it is typed, deletes through its brackets,
   await page.keyboard.insertText('+44 7700 900123');
   await expect(phone).toHaveValue('+44 7700 900123');
 });
+
+test('the phone number can be edited from its middle: Backspace, Delete, typing over a selection, deleting across a bracket, and after a click', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-middler@business-cards.test', ['discord'], 'admin');
+  await page.goto(PATH);
+  const phone = page.getByRole('main').getByRole('textbox', { name: 'Phone' });
+  const caret = () => phone.evaluate((input: HTMLInputElement) => input.selectionStart);
+  const select = (start: number, end = start) =>
+    phone.evaluate(
+      (input: HTMLInputElement, [a, b]) => input.setSelectionRange(a, b),
+      [start, end],
+    );
+  const fresh = async () => {
+    await phone.fill('');
+    await phone.click();
+    await phone.pressSequentially('2025550123');
+    await expect(phone).toHaveValue('(202) 555-0123');
+  };
+
+  // Backspace with the caret after the second 5, reached by clicking and then moving.
+  await fresh();
+  await phone.click({ position: { x: 2, y: 5 } });
+  await select(8);
+  await page.keyboard.press('Backspace');
+  await expect(phone).toHaveValue('(202) 550-123');
+  expect(await caret()).toBe(7);
+
+  // Delete with the caret before a digit in the middle.
+  await fresh();
+  await select(7);
+  await page.keyboard.press('Delete');
+  await expect(phone).toHaveValue('(202) 550-123');
+  expect(await caret()).toBe(7);
+
+  // Select 555 with Shift and the arrow keys, and type 7 over it.
+  await fresh();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 6; i += 1) await page.keyboard.press('ArrowRight');
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.type('7');
+  await expect(phone).toHaveValue('(202) 701-23');
+  expect(await caret()).toBe(7);
+
+  // Select a digit, ") " and a digit, and delete them.
+  await fresh();
+  await select(3, 7);
+  await page.keyboard.press('Backspace');
+  await expect(phone).toHaveValue('(205) 501-23');
+  expect(await caret()).toBe(3);
+
+  // A click into the middle, then a typed digit.
+  await fresh();
+  const box = await phone.boundingBox();
+  await phone.click({ position: { x: 60, y: (box?.height ?? 10) / 2 } });
+  const clicked = await caret();
+  expect(clicked).toBeGreaterThan(0);
+  expect(clicked).toBeLessThan(14);
+  await page.keyboard.type('9');
+  expect((await phone.inputValue()).replace(/\D/g, '')).toHaveLength(11);
+});
+
+test('the phone number survives a run of Backspace, typing and an arrow key without leaving the field', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-runner@business-cards.test', ['discord'], 'admin');
+  await page.goto(PATH);
+  const phone = page.getByRole('main').getByRole('textbox', { name: 'Phone' });
+  const caret = () => phone.evaluate((input: HTMLInputElement) => input.selectionStart);
+  const expectState = async (value: string, at: number) => {
+    await expect(phone).toHaveValue(value);
+    expect(await caret()).toBe(at);
+  };
+
+  await phone.fill('2025550123');
+  await phone.blur();
+  await expect(phone).toHaveValue('(202) 555-0123');
+  // A real click focuses the box; a pixel cannot name a character, so the caret is then set after the third 5.
+  await phone.click();
+  await phone.evaluate((input: HTMLInputElement) => input.setSelectionRange(9, 9));
+
+  await page.keyboard.press('Backspace');
+  await expectState('(202) 550-123', 8);
+  await page.keyboard.type('7');
+  await expectState('(202) 557-0123', 9);
+  await page.keyboard.press('Backspace');
+  await expectState('(202) 550-123', 8);
+  await page.keyboard.press('ArrowLeft');
+  expect(await caret()).toBe(7);
+  await page.keyboard.type('8');
+  await expectState('(202) 585-0123', 8);
+});
+
+test('the phone number survives a run of Delete, typing and an arrow key without leaving the field', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-deleter@business-cards.test', ['discord'], 'admin');
+  await page.goto(PATH);
+  const phone = page.getByRole('main').getByRole('textbox', { name: 'Phone' });
+  const caret = () => phone.evaluate((input: HTMLInputElement) => input.selectionStart);
+  const expectState = async (value: string, at: number) => {
+    await expect(phone).toHaveValue(value);
+    expect(await caret()).toBe(at);
+  };
+
+  await phone.fill('2025550123');
+  await phone.blur();
+  await expect(phone).toHaveValue('(202) 555-0123');
+  await phone.click();
+  await phone.evaluate((input: HTMLInputElement) => input.setSelectionRange(8, 8));
+
+  // Delete removes the third 5; the caret stays.
+  await page.keyboard.press('Delete');
+  await expectState('(202) 550-123', 8);
+  await page.keyboard.type('7');
+  await expectState('(202) 557-0123', 9);
+  // The next character is the "-" the mask added, so Delete takes the digit after it.
+  await page.keyboard.press('Delete');
+  await expectState('(202) 557-123', 9);
+  await page.keyboard.press('ArrowRight');
+  expect(await caret()).toBe(10);
+  await page.keyboard.type('8');
+  await expectState('(202) 557-8123', 11);
+});

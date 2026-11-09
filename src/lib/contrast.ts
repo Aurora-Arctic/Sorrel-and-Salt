@@ -1,4 +1,4 @@
-import type { FieldFormat } from './formats';
+import type { FieldFormat, FieldMask } from './formats';
 import type { GroupColorColumn } from './types';
 
 // WCAG 2.1 contrast for the floor a category group's colours are held to on write: each against the harder of its theme's two surfaces, as a chip's label
@@ -21,6 +21,19 @@ export const hexColour: FieldFormat = (text) => {
   const digits = LOOSE_HEX.exec(text.replace(/\s+/g, ''))?.[1].toLowerCase();
   if (!digits) return text;
   return `#${digits.length === 3 ? [...digits].map((digit) => digit + digit).join('') : digits}`;
+};
+
+/**
+ * Field's `mask` for the hex box: one leading "#" kept while the person types, spaces dropped, and the box
+ * empty when only the "#" is left, so Backspace can clear it. Digits keep their case and a non-hex
+ * character stays on screen; `hexColour` tidies the rest on blur.
+ */
+export const hexMask: FieldMask = {
+  format: (text) => {
+    const rest = text.replace(/[#\s]/g, '');
+    return rest ? `#${rest}` : '';
+  },
+  isSignificant: (character) => !/[#\s]/.test(character),
 };
 
 export const channels = (hex: string): number[] =>

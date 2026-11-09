@@ -141,8 +141,8 @@ describe('ChipColorField', () => {
       ['#4E8BC2 ', '#4e8bc2'],
     ]) {
       fireEvent.change(hex(), { target: { value: typed } });
-      // Left alone while it is being typed.
-      expect(hex()).toHaveValue(typed);
+      // Only the # is laid out while it is being typed; the digits wait for the blur.
+      expect(hex()).toHaveValue(typed.includes('#') ? typed.trim() : `#${typed.trim()}`);
       fireEvent.blur(hex());
       expect(hex()).toHaveValue(shown);
     }
@@ -242,5 +242,35 @@ describe('ChipColorField', () => {
     expect(hex()).toHaveAccessibleDescription(expect.stringContaining('135° apart in hue'));
     expect(hex().getAttribute('aria-describedby')).toMatch(/^dark-error /);
     expect(hex()).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  describe('typing in the hex box', () => {
+    const typeInto = (text: string, caret = text.length) => {
+      const box = hex() as HTMLInputElement;
+      fireEvent.input(box, {
+        target: { value: text, selectionStart: caret, selectionEnd: caret },
+        inputType: 'insertText',
+      });
+      return box;
+    };
+
+    it('adds the # as digits arrive and keeps the caret after the digit just typed', () => {
+      render(<Controlled initial="" />);
+      const box = typeInto('4');
+      expect(box).toHaveValue('#4');
+      expect(box.selectionStart).toBe(2);
+    });
+    it('shows a pasted hex with a single #', () => {
+      render(<Controlled initial="" />);
+      expect(typeInto('##4e8bc2')).toHaveValue('#4e8bc2');
+    });
+    it('keeps a character that is not a hex digit on screen', () => {
+      render(<Controlled initial="" />);
+      expect(typeInto('4g')).toHaveValue('#4g');
+    });
+    it('clears the box when the last digit is deleted, not leaving a lone #', () => {
+      render(<Controlled initial="#4" />);
+      expect(typeInto('#', 1)).toHaveValue('');
+    });
   });
 });
