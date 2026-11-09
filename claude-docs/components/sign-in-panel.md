@@ -49,7 +49,7 @@ A visitor who is already signed in never sees the panel. The page redirects on t
 
 **Signing in or creating an account**
 
-- The panel holds one mode, `sign-in` or `sign-up`, from the `mode` prop and reported through `onModeChange`. The switch under the buttons and under the email form is `ModeSwitch` (`mode-switch.tsx`): "New here? Create an Account" or "Already have an account? Sign In Instead", a quiet small button. The mode survives Back from the email form.
+- The panel holds one mode, `sign-in` or `sign-up`, from the `mode` prop and reported through `onModeChange`. The switch under the buttons and under the email form is `ModeSwitch` (`mode-switch.tsx`): "New here? Create an Account" or "Already have an account? Sign In Instead", a quiet small button on its own line under the sentence (`.sign-in-panel__switch--mode`), on the page and in the dialog alike. The mode survives Back from the email form.
 - On the page the head reads Sign In or Create an Account. Creating an account offers no passkey, since a passkey signs in to an account that already exists.
 
 **In a dialog** (`inDialog`)

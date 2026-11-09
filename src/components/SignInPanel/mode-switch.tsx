@@ -5,8 +5,8 @@ import type { ModeSwitchProps } from './types';
 const ModeSwitch = ({ mode, onSwitch }: ModeSwitchProps): ReactElement => {
   const signingUp = mode === 'sign-up';
   return (
-    <p className="sign-in-panel__switch">
-      {signingUp ? 'Already have an account?' : 'New here?'}{' '}
+    <p className="sign-in-panel__switch sign-in-panel__switch--mode">
+      <span>{signingUp ? 'Already have an account?' : 'New here?'}</span>
       <button
         type="button"
         className="btn btn--quiet btn--small"

@@ -167,6 +167,14 @@
   text-align: center;
 }
 
+// The mode switch's button takes a line of its own, under its sentence.
+.sign-in-panel__switch--mode {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: center;
+}
+
 div.sign-in-panel__switch {
   display: flex;
   flex-wrap: wrap;
