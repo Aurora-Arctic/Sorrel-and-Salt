@@ -302,7 +302,7 @@ describe('HelpArticleForm, its kinds', () => {
     await waitFor(left);
     const input = calls[0]?.input ?? {};
     expect(input.kind).toBe('term');
-    for (const field of ['audience', 'parentId', 'childIds', 'position']) {
+    for (const field of ['audience', 'parentId', 'childIds', 'position', 'summary']) {
       expect(input).not.toHaveProperty(field);
     }
   });
@@ -324,6 +324,30 @@ describe('HelpArticleForm, its kinds', () => {
     expect(calls[0]?.input).toMatchObject({ kind: 'faq', audience: 'staff', position: 4 });
     expect(calls[0]?.input).not.toHaveProperty('parentId');
     expect(calls[0]?.input).not.toHaveProperty('childIds');
+    expect(calls[0]?.input).not.toHaveProperty('summary');
+  });
+
+  it('draws Summary for an article alone, as it draws Parent', () => {
+    renderForm();
+
+    // Precondition: a new article has the field, so its absence below is the kind's.
+    expect(textbox('Summary')).toBeInTheDocument();
+    fireEvent.click(radio('FAQ'));
+    expect(queryTextbox('Summary')).toBeNull();
+    fireEvent.click(radio('Term'));
+    expect(queryTextbox('Summary')).toBeNull();
+    fireEvent.click(radio('Article'));
+    expect(textbox('Summary')).toBeInTheDocument();
+  });
+
+  it.each([
+    { article: FAQ, summary: false },
+    { article: TERM, summary: false },
+    { article: GUIDE, summary: true },
+  ])('draws Summary on an opened $article.kind: $summary', ({ article, summary }) => {
+    renderForm({ article });
+
+    expect(queryTextbox('Summary') !== null).toBe(summary);
   });
 
   it('keeps an edited row its kind: the choice is held, and the update names none', async () => {
@@ -335,7 +359,7 @@ describe('HelpArticleForm, its kinds', () => {
     expect(kindChip.getByRole('button', { name: /^Kind: ?FAQ$/ })).toBeDisabled();
     expect(kindChip.queryAllByRole('radio')).toHaveLength(0);
 
-    type('Summary', 'A changed summary');
+    type('Position', '5');
     press('Save FAQ Entry');
 
     await waitFor(left);
@@ -669,7 +693,7 @@ describe('HelpArticleForm, Shown', () => {
     const shown = captureShown();
     renderForm({ article: FAQ });
 
-    type('Summary', 'A changed summary');
+    type('Position', '5');
     press('Save FAQ Entry');
 
     await waitFor(left);
@@ -851,12 +875,12 @@ describe('HelpArticleForm, saving and leaving', () => {
   it('asks before Cancel discards a change, and goes back on Discard Changes', async () => {
     renderForm({ article: FAQ });
 
-    type('Summary', 'A changed summary');
+    type('Position', '5');
     press('Cancel');
 
     expect(router.push).not.toHaveBeenCalled();
     press(answer('Keep Editing'));
-    expect(textbox('Summary')).toHaveValue('A changed summary');
+    expect(textbox('Position')).toHaveValue('5');
 
     press('Cancel');
     await act(async () => press(answer('Discard Changes')));
@@ -867,7 +891,7 @@ describe('HelpArticleForm, saving and leaving', () => {
     captureUpdate();
     renderForm({ article: FAQ });
 
-    type('Summary', 'A changed summary');
+    type('Position', '5');
     press('Save FAQ Entry');
 
     await waitFor(left);

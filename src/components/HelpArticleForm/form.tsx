@@ -193,13 +193,14 @@ const HelpArticleForm = ({
       const where = {
         ...(values.kind !== 'term' && { audience: values.audience, position: placed }),
         ...(values.kind === 'article' && {
+          summary,
           parentId: parent,
           childIds: parent ? [] : values.childIds,
         }),
       };
       if (!article) {
         const { createHelpArticle } = await graphqlRequest(CreateHelpArticleDocument, {
-          input: { kind: values.kind, title: values.title, body: values.body, summary, ...where },
+          input: { kind: values.kind, title: values.title, body: values.body, ...where },
         });
         // A new row is shown unless the form says otherwise.
         if (!values.shown) {
@@ -212,7 +213,7 @@ const HelpArticleForm = ({
       }
       await graphqlRequest(UpdateHelpArticleDocument, {
         id: article.id,
-        input: { title: values.title, body: values.body, summary, ...where },
+        input: { title: values.title, body: values.body, ...where },
       });
       if (values.shown !== article.shown) {
         await graphqlRequest(SetHelpArticleShownDocument, { id: article.id, shown: values.shown });
@@ -407,7 +408,9 @@ const HelpArticleForm = ({
               )
             }
           />
-          <TextField<HelpFormValues> name="summary" label="Summary" placeholder="Add Summary" />
+          {kind === 'article' && (
+            <TextField<HelpFormValues> name="summary" label="Summary" placeholder="Add Summary" />
+          )}
           <div className="field">
             <div className="field__label-row">
               <span className="field__label" aria-hidden="true">

@@ -432,6 +432,39 @@ describe('the structure rules', () => {
     expect(await rowOf(created.id)).toMatchObject({ position: null, parent_id: null });
   });
 
+  it.each([
+    ['a term', 'term' as const, 'Testwort Sorrel'],
+    ['an FAQ entry', 'faq' as const, 'Testwort Question'],
+  ])('gives %s no summary, as the form draws none', async (_what, kind, title) => {
+    const row = { kind, title, body: 'A fixture answer.' };
+
+    await expectRefusedAt(createHelpArticle(asUser(E), { ...row, summary: 'A line.' }), 'summary');
+
+    // Precondition: the same row with no summary, or a null one, is written.
+    const created = await createHelpArticle(asUser(E), { ...row, summary: null });
+    expect(created).toMatchObject({ kind, summary: null });
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), created.id, { summary: 'A line.' }),
+      'summary',
+    );
+    const [stored] = await sql`select summary from help_articles where id = ${created.id}`;
+    expect(stored.summary).toBeNull();
+    // An update that leaves the summary out, or clears it, still saves.
+    await expect(
+      updateHelpArticle(asUser(E), created.id, { body: 'A second answer.', summary: null }),
+    ).resolves.toMatchObject({ summary: null });
+  });
+
+  it('still gives an article a summary', async () => {
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Summary',
+      summary: 'A line.',
+    });
+    expect(created).toMatchObject({ summary: 'A line.' });
+  });
+
   it('refuses to delete a parent with live children, and deletes it once they are gone', async () => {
     const childId = await insertHelpArticle(
       sql,

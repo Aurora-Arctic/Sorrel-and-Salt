@@ -25,7 +25,7 @@
 
 - **Kind** is a choice chip (Article, FAQ, Term). It is held on an edit, as a row's kind is fixed once it exists, and its tip says so.
 - **Shown** is a [`ShownSwitch`](#shownswitch) in form-field mode. A new row is created shown and, when the switch is off, hidden by `SetHelpArticleShown` once it exists. An edit sends `SetHelpArticleShown` only when the switch changed.
-- **Fields by kind.** A term has no Audience, Parent, Sub Pages or Position. An FAQ entry has no Parent or Sub Pages. An article has all four, with two exceptions, as help is one level deep: a sub page has no Sub Pages, and a guide holding sub pages has its Parent held at No Parent.
+- **Fields by kind.** A term has no Audience, Parent, Sub Pages, Position or Summary. An FAQ entry has no Parent, Sub Pages or Summary, and the service refuses a summary on either (`checkSummary`, `help-writes.ts`). An article has all five, with two exceptions, as help is one level deep: a sub page has no Sub Pages, and a guide holding sub pages has its Parent held at No Parent.
 - **Parent** offers No Parent and every guide but the row itself.
   - Choosing a guide narrows a wider audience to the guide's and places the row last in it (its sub page count plus one).
   - Choosing its own guide again puts a sub page back at its saved place.

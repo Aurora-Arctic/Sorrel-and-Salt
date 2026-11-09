@@ -75,6 +75,12 @@ async function checkSlug(
     );
 }
 
+/** Only an article carries a summary; the check reads the value sent, so a row saved before the rule still saves. */
+function checkSummary(kind: HelpArticleKind, summary: string | null | undefined): void {
+  if (kind !== 'article' && summary != null)
+    throw fieldRefusal('summary', `An ${kind === 'faq' ? 'FAQ entry' : 'term'} has no summary`);
+}
+
 /** The structure rules, on the row as it would stand after the write. SQL scopes the audience of a read; these rules hold the shape of a write. */
 async function checkStructure(row: Merged, selfId: string | null): Promise<void> {
   if (row.kind === 'term') {
@@ -193,6 +199,7 @@ export async function createHelpArticle(
     parentId: values.parentId ?? null,
     childIds: values.childIds ?? undefined,
   };
+  checkSummary(merged.kind, values.summary);
   await checkSlug(merged.kind, slug, null);
   await checkStructure(merged, null);
   await checkChildren(merged, null);
@@ -243,6 +250,7 @@ export async function updateHelpArticle(
     parentId: values.parentId === undefined ? current.parentId : values.parentId,
     childIds: values.childIds ?? undefined,
   };
+  checkSummary(current.kind, values.summary);
   if (slug !== current.slug) await checkSlug(current.kind, slug, id);
   await checkStructure(merged, id);
   await checkChildren(merged, id);
