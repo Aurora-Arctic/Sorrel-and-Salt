@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { PreloadHandlers } from '../../lib/types';
 import type { MouseEvent, ReactElement, Ref } from 'react';
 
 export type MenuButtonItem = {
@@ -67,4 +68,6 @@ export type MenuButtonProps = MenuButtonChoices & {
   state?: string;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
+  /** Starts a load as a person reaches for the button, before the menu opens. */
+  preload?: PreloadHandlers;
 };

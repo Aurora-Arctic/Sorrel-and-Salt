@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
   RecordWorkingMembersQuery,
@@ -19,6 +19,7 @@ import {
   mockGraphQLMutation,
   mockGraphQLQuery,
 } from '../../support/msw/graphql';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -104,6 +105,11 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
   );
   fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
 }
+
+// The calendar loads apart from the date field; it has arrived by the time a person opens the dialog.
+beforeAll(async () => {
+  await dayPickerModule.load();
+});
 
 describe('Record a Working', () => {
   it('saves a draft naming a picked member, then closes and refreshes the page', async () => {

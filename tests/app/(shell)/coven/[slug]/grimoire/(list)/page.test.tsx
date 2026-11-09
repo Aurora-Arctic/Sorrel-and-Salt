@@ -592,7 +592,8 @@ describe('the spell builder over a Grimoire tab', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     });
 
-    // The modal fades out first: this test's media query leaves motion on.
+    // The modal fades out first (this test's media query leaves motion on); the end of the fade is sent rather than waited for.
+    fireEvent.transitionEnd(screen.getByRole('dialog'));
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',
@@ -864,6 +865,7 @@ describe('Quick Look over a Grimoire tab', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     });
 
+    fireEvent.transitionEnd(screen.getByRole('dialog'));
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',

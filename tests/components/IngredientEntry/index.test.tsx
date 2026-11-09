@@ -4,7 +4,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import type { ReactElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import type { Route } from 'next';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
 import { detailsHeading } from '@/components/IngredientEntry/details';
 import type { IngredientEntryProps } from '@/components/IngredientEntry/types';
@@ -19,6 +19,11 @@ import type {
   IngredientVariantRow,
   VariantDetail,
 } from '@/modules/ingredients';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
+import {
+  compendiumEntryFormModule,
+  ingredientFormModule,
+} from '@/components/IngredientEntry/lazy-forms';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -249,6 +254,13 @@ function sharedColumn(elements: HTMLElement[]): HTMLElement {
 
 const precedes = (a: Node, b: Node): boolean =>
   (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+  await ingredientFormModule.load();
+  await compendiumEntryFormModule.load();
+});
 
 describe('IngredientEntry', () => {
   it('draws the latest edit when given one, and none when not', () => {

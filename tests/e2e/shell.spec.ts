@@ -345,7 +345,7 @@ test('at a desktop width, once fitted, the curator row shows every tab and draws
   await page.goto('/curator');
 
   const nav = await fittedAdminNav(page);
-  await expect(rowLinks(nav)).toHaveCount(5);
+  await expect(rowLinks(nav)).toHaveCount(6);
   await expect(nav.getByRole('button')).toHaveCount(0);
   expect(await rowOverflows(nav)).toBe(false);
 });
@@ -371,14 +371,14 @@ test('before the script runs, a desktop curator row shows every tab and no More'
 
   const admin = page.getByRole('navigation', { name: 'Curator' });
   await expect(admin).toBeVisible();
-  await expect(admin.getByRole('link')).toHaveCount(5);
+  await expect(admin.getByRole('link')).toHaveCount(6);
   for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
   await expect(admin.getByRole('button')).toHaveCount(0);
 
   const hrefs = await admin
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-  expect(new Set(hrefs).size).toBe(5);
+  expect(new Set(hrefs).size).toBe(6);
   release();
 });
 

@@ -20,6 +20,8 @@
 
 ### The button and the dialog
 
+- **The form loads apart.** `index.tsx` holds the openers and `form.tsx` the form (react-hook-form, zod). `lazy-form.tsx` holds the one import of `form.tsx` (`stockFormModule`) and `LazyStockDialogForm`, which draws nothing until it arrives. Each opener starts it once the page is idle (`usePreloadWhenIdle`) and when its button is pointed at, focused or pressed (`ModalButton`'s `preload`), so the dialog opens with the form already there.
+
 - A `ModalButton` ([`modal.md`](modal.md#modalbutton)) whose `IconTip` is passed as `ModalButton`'s `tip`, so the tip wraps the button and never the dialog ([`icon-tip.md`](icon-tip.md)). The icon is a jar with a cloth (`StockIcon`), not the pencil, since Edit beside it in the foot already wears the pencil; it is in `.icon-tip__edit`, the accent green, while the foot's Edit and Annotate use the plain text colour. The button is named "Edit Stock, Rosemary", so buttons down a list never share a name.
 - The dialog is the `listed` size ([`modal.md`](modal.md#styling)): the default 32rem column plus half again plus a step of gap, so the fields keep the 32rem they would have in a dialog of their own and the list takes the rest.
 - The form is a child of the modal so its discard guard reaches Close, Escape and the backdrop. Every jar is a row of the form's values (`rows.<i>`), drawn or not: react-hook-form keeps a value when its field is not on screen, so what was typed into one jar survives choosing another.

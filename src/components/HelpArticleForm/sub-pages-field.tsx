@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useId, useMemo, useState } from 'react';
-import Combobox, { ComboboxSortableEntries } from '../Combobox';
+import Combobox from '../Combobox';
+import { LazySortableEntries } from '../Combobox/lazy-sortable';
 import { FieldError } from '../Field';
 import { AUDIENCE_LABELS, NARROWNESS, ordinal } from './rules';
 import type { HelpFormAudience, HelpSubPageChoice } from './types';
@@ -119,7 +120,7 @@ export function HelpSubPagesField({
         placeholder="Add Sub Page"
         entries={
           entries.length > 0 && (
-            <ComboboxSortableEntries
+            <LazySortableEntries
               entries={entries}
               onMove={(from, to) => {
                 const next = [...value];

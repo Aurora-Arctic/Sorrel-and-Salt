@@ -5,11 +5,10 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
-import CompendiumEntryForm from '../CompendiumEntryForm';
-import IngredientForm from '../IngredientForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import { editEyebrow } from './edit-heading';
+import { LazyCompendiumEntryForm, LazyIngredientForm } from './lazy-forms';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
@@ -43,7 +42,7 @@ export default function EntryDialog({
           heading: editHeading(entry, editEyebrow(edit)),
           body: () =>
             coven ? (
-              <IngredientForm
+              <LazyIngredientForm
                 key={opened.id}
                 workspaceId={coven.workspaceId}
                 mayPromote={coven.mayPromote}
@@ -68,7 +67,7 @@ export default function EntryDialog({
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
               />
             ) : (
-              <CompendiumEntryForm
+              <LazyCompendiumEntryForm
                 key={opened.id}
                 review={review}
                 sourcing={sourcing}

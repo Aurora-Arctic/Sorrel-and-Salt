@@ -4,7 +4,7 @@ import { mintedLinks } from './cards';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Who may mint is tests/modules/identity's.
+// Who may mint is tests/modules/identity's. Each test signs in as its own address: a worker keeps one database across the file's tests.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -14,7 +14,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
 }) => {
   // Minting a sheet and drawing its cards runs past the default 30 seconds on CI under coverage.
   test.setTimeout(90_000);
-  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await signInAs(page, 'cards-admin-mint@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
@@ -79,7 +79,7 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await signInAs(page, 'cards-admin-phone@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
   await page.getByRole('button', { name: /^Filters/ }).click();
   const drawer = page.getByRole('dialog', { name: 'Filters' });
@@ -104,7 +104,7 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
 test('an admin revokes a whole batch and its links are refused as withdrawn', async ({
   page,
 }, testInfo) => {
-  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await signInAs(page, 'cards-admin-revoke@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
   const before = await page.getByRole('button', { name: /^Revoke Batch / }).count();
 
@@ -142,7 +142,7 @@ test("a beta card's landing page has no violations, and no sideways scroll on a 
   page,
   browser,
 }) => {
-  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await signInAs(page, 'cards-admin-beta@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });

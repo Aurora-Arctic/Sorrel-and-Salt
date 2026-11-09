@@ -2,7 +2,8 @@
 
 import { type ReactElement, useState } from 'react';
 import { oneOf } from '../../lib/search-params';
-import { FilterSelectField, SearchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { PRIVILEGE_CHANGES_PATH, privilegeLedgerHref } from './href';
 import { PRIVILEGES, PRIVILEGE_LABELS } from './privileges';

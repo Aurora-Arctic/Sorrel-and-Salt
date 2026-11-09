@@ -2,7 +2,9 @@
 
 import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
+import { preloadOnIntent, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import { MoreMenu } from '../IconTip';
+import { covenChoiceModule } from '../IngredientEntry/lazy-coven-choice';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
 import EditStock, { type StockPlace } from '../IngredientEntry/edit-stock';
@@ -34,6 +36,7 @@ export default function CompendiumCardMore({
   places,
   leaveHref,
 }: CompendiumCardMoreProps): ReactElement | null {
+  usePreloadWhenIdle(covenChoiceModule);
   const [asking, setAsking] = useState<Asking>();
   const [alert, setAlert] = useState<string>();
   const [target, setTarget] = useState(places[0]?.workspaceId);
@@ -106,7 +109,12 @@ export default function CompendiumCardMore({
 
   return (
     <>
-      <MoreMenu ref={trigger} name={name} {...choices} />
+      <MoreMenu
+        ref={trigger}
+        name={name}
+        preload={preloadOnIntent(covenChoiceModule)}
+        {...choices}
+      />
       {asking === 'stock' && (
         <EditStock
           places={stockers}

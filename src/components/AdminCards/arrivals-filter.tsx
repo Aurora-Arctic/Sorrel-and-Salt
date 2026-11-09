@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField } from '../Field';
+import { SearchField } from '../Field/search-field';
 import FilterForm from '../FilterForm';
 import { ARRIVALS_PATH, arrivalsHref } from './href';
 import type { ArrivalsFilterProps } from './types';
