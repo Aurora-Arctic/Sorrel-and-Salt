@@ -257,7 +257,7 @@ describe('SignInPanel, email and password', () => {
   });
 
   it('puts the Back button before the view’s heading, and shows one heading', () => {
-    const back = screen.getByRole('button', { name: 'Back' });
+    const back = screen.getByRole('button', { name: 'Back to Sign-In Options' });
     const headings = screen.getAllByRole('heading', { name: /Sign In with Email/ });
     expect(headings).toHaveLength(1);
     expect(
