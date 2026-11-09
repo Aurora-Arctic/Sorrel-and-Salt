@@ -8,7 +8,8 @@ import {
   useWatch,
   type FieldError as FormFieldError,
 } from 'react-hook-form';
-import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSortableEntries } from '../Combobox';
+import Combobox, { ComboboxEntry, ComboboxMultiSelect } from '../Combobox';
+import { LazySortableEntries } from '../Combobox/lazy-sortable';
 import type { ComboboxOption } from '../Combobox/types';
 import { FieldError, FieldShell, SwitchField, useField } from '../Field';
 import InfoTip from '../InfoTip';
@@ -324,7 +325,7 @@ export function ListField({
   const entries =
     fields.length > 0 &&
     (ordered ? (
-      <ComboboxSortableEntries entries={chips} onMove={moveEntry} />
+      <LazySortableEntries entries={chips} onMove={moveEntry} />
     ) : (
       <ul className="combobox__entries">
         {chips.map(({ id: key, ...chip }) => (

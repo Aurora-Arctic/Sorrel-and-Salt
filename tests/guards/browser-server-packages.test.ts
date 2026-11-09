@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { parseSync } from 'vite';
+import { existsSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
+import { browserGraph, chain, isClientEntry, runtimeSpecifiers } from '../support/import-graph';
 import { REPO_ROOT } from '../support/paths';
 
 // Walks every file a `'use client'` file imports, through Vite's parser, and fails on a runtime import of the
@@ -9,73 +9,6 @@ import { REPO_ROOT } from '../support/paths';
 // reaches (claude-docs/graphql/client-types.md, "No server packages in the browser").
 
 const SERVER_PACKAGES = /^(@pothos\/core|graphql)(\/|$)/;
-const EXTENSIONS = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
-
-/** The file a specifier names, or none for a package or a stylesheet. */
-function resolveLocal(from: string, specifier: string): string | undefined {
-  const base = specifier.startsWith('@/')
-    ? join(REPO_ROOT, 'src', specifier.slice(2))
-    : specifier.startsWith('.')
-      ? join(dirname(from), specifier)
-      : undefined;
-  if (base === undefined) return undefined;
-  if (/\.tsx?$/.test(base) && existsSync(base)) return base;
-  return EXTENSIONS.map((extension) => base + extension).find((file) => existsSync(file));
-}
-
-/** Every specifier a file imports or re-exports at runtime: an import or export whose every name is a type is erased. */
-function runtimeSpecifiers(file: string): string[] {
-  const code = readFileSync(file, 'utf8');
-  const { module } = parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : 'ts' });
-  const imports = module.staticImports
-    .filter(({ entries }) => entries.length === 0 || entries.some((entry) => !entry.isType))
-    .map(({ moduleRequest }) => moduleRequest.value);
-  const exports = module.staticExports.flatMap(({ entries }) =>
-    entries.flatMap(({ moduleRequest, isType }) =>
-      moduleRequest && !isType ? [moduleRequest.value] : [],
-    ),
-  );
-  const dynamic = module.dynamicImports.flatMap(({ moduleRequest }) => {
-    const literal = /^['"`]([^'"`$]+)['"`]$/.exec(
-      code.slice(moduleRequest.start, moduleRequest.end),
-    );
-    return literal ? [literal[1]] : [];
-  });
-  return [...imports, ...exports, ...dynamic];
-}
-
-function isClientEntry(file: string): boolean {
-  const code = readFileSync(file, 'utf8');
-  const [first] = parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : 'ts' }).program
-    .body;
-  return first?.type === 'ExpressionStatement' && first.directive === 'use client';
-}
-
-/** Each browser file mapped to the file that first brought it in, so a failure names the path. */
-function browserGraph(entries: string[]): Map<string, string | undefined> {
-  const reachedFrom = new Map<string, string | undefined>(
-    entries.map((entry) => [entry, undefined]),
-  );
-  const queue = [...entries];
-  for (let file = queue.shift(); file !== undefined; file = queue.shift()) {
-    for (const specifier of runtimeSpecifiers(file)) {
-      const next = resolveLocal(file, specifier);
-      if (next !== undefined && !reachedFrom.has(next)) {
-        reachedFrom.set(next, file);
-        queue.push(next);
-      }
-    }
-  }
-  return reachedFrom;
-}
-
-function chain(graph: Map<string, string | undefined>, file: string): string {
-  const path: string[] = [];
-  for (let at: string | undefined = file; at !== undefined; at = graph.get(at)) {
-    path.unshift(relative(REPO_ROOT, at));
-  }
-  return path.join(' -> ');
-}
 
 describe('no server package reaches the browser', () => {
   const sources = inject('repoFiles')

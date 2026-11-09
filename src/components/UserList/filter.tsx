@@ -2,7 +2,9 @@
 
 import { type ReactElement, useState } from 'react';
 import { oneOf } from '../../lib/search-params';
-import { FilterSelectField, SearchField, SwitchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
+import { SwitchField } from '../Field/switch-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { USERS_PATH, userListHref } from './href';
 import { ROLES, ROLE_LABELS } from './roles';

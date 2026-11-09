@@ -211,7 +211,8 @@ export function useLookup<TResult, TScope extends object, O extends ComboboxOpti
       document,
       ...([{ ...scope, query, first: SUGGESTION_ROWS }] as VariablesArg<TScope & LookupText>),
     ),
-    enabled: active,
+    // Only the settled text is asked for: a caller that switches on a render before `query` catches up would otherwise send the stale one.
+    enabled: active && text.trim() === query,
     placeholderData: keepPreviousData,
     throwOnError: false,
   });

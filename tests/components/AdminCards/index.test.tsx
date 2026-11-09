@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
 import AdminArrivals, { ArrivalsActions } from '@/components/AdminCards/arrivals';
@@ -92,6 +93,11 @@ beforeEach(() => {
   router.push.mockClear();
   router.replace.mockClear();
   router.refresh.mockClear();
+});
+
+// The calendar loads on its own; these tests start after it has arrived.
+beforeAll(async () => {
+  await dayPickerModule.load();
 });
 
 afterEach(() => {

@@ -8,7 +8,7 @@ import { graphql } from '@/lib/graphql-document';
 import ConfirmDialog from '../ConfirmDialog';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import CovenChoice from './coven-choice';
+import CovenChoice from './lazy-coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
 // Make It Ours and Remove, the two writes a coven's member makes to a compendium entry it holds,

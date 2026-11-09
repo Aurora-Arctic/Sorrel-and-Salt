@@ -7,6 +7,7 @@ import LinkHint from '../LinkHint';
 import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
 import { SpellCardFrame } from './frame';
+import { UNTITLED_SPELL } from './untitled';
 import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -15,7 +16,7 @@ import './index.scss';
 // last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
 
-export const UNTITLED_SPELL = 'Untitled Spell';
+export { UNTITLED_SPELL };
 
 export const SPELL_LOOK_PLACE = 'look';
 

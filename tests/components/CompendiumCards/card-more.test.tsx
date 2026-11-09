@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import CompendiumCardMore from '@/components/CompendiumCards/card-more';
 import type {
   CompendiumCardMoreProps,
@@ -9,8 +9,10 @@ import type {
 } from '@/components/CompendiumCards/types';
 import type { StockData, StockJar } from '@/components/StockDialog/types';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { covenChoiceModule } from '@/components/IngredientEntry/lazy-coven-choice';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -82,6 +84,16 @@ function choose(item: string): void {
   fireEvent.click(more());
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: item }));
 }
+
+// The coven choice loads apart from the dialogs; it has arrived by the time a person opens one.
+beforeAll(async () => {
+  await covenChoiceModule.load();
+});
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+});
 
 describe('CompendiumCardMore', () => {
   beforeEach(() => {

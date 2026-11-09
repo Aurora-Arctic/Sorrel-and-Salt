@@ -5,12 +5,8 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import FormIcon from '../FormIcon';
 import { FieldShell, fieldDescription } from '../Field';
 import { MagnifierIcon } from '../Field/icons';
-import Combobox, {
-  ComboboxEntry,
-  ComboboxMultiSelect,
-  ComboboxSelect,
-  ComboboxSortableEntries,
-} from '.';
+import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '.';
+import { ComboboxSortableEntries } from './sortable';
 import { ComboboxTypeahead } from './typeahead';
 import type { ComboboxOption } from './types';
 

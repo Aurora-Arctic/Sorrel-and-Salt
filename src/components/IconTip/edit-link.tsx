@@ -13,6 +13,7 @@ const IconLink = ({
   name,
   heading,
   ref,
+  preload,
   verb,
   icon,
   place,
@@ -28,7 +29,7 @@ const IconLink = ({
   const Link = heading ? ModalLink : PendingLink;
   return (
     <IconTip tip={verb}>
-      <Link ref={ref} className={className} href={href} onClick={onClick}>
+      <Link ref={ref} className={className} href={href} onClick={onClick} {...preload}>
         {icon}
         <span className="visually-hidden">{name ? `${verb} ${name}` : verb}</span>
       </Link>

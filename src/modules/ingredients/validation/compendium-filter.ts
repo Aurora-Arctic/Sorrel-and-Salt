@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MIN_QUERY_LENGTH } from './query-length';
 import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
@@ -42,9 +43,6 @@ const filterElements = z
   .array(z.enum(INGREDIENT_ELEMENTS))
   .nullish()
   .transform((elements) => (elements && elements.length > 0 ? elements : undefined));
-
-/** The shortest query that searches: one character is a trigram or two that half the compendium shares, so it ranks by noise. */
-export const MIN_QUERY_LENGTH = 2;
 
 export const CompendiumFilter = z.object({
   // Counted in composed code points, so `ñ` is one character however it was typed.

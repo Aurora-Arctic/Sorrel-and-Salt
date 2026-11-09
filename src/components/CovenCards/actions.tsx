@@ -1,10 +1,10 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import { AnnotateLink, EditLink } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import StockDialog from '../StockDialog';
 import CardMore from './card-more';
+import { CardAnnotateLink, CardEditLink } from './sortable-links';
 import type { CovenCardEntry } from './types';
 
 // A coven card's foot controls, shared by the list's cards and Quick Look: Edit Stock where the page
@@ -34,7 +34,7 @@ const PLAIN = 'icon-tip__edit icon-tip__edit--plain';
 const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
   if (entry.editHref && entry.editHeading)
     return (
-      <EditLink
+      <CardEditLink
         href={entry.editHref}
         heading={entry.editHeading}
         name={covenCardName(entry)}
@@ -43,7 +43,7 @@ const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
     );
   if (entry.annotateHref)
     return (
-      <AnnotateLink
+      <CardAnnotateLink
         href={entry.annotateHref}
         heading={ANNOTATE_HEADING}
         name={covenCardName(entry)}

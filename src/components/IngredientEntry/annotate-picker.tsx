@@ -5,7 +5,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import Modal from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import { ANNOTATE_HEADING } from './annotate-heading';
-import CovenChoice from './coven-choice';
+import CovenChoice from './lazy-coven-choice';
 import type { CupboardPlace } from './types';
 
 export default function AnnotatePicker({

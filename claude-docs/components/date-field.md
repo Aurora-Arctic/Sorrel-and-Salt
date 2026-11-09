@@ -7,6 +7,7 @@ The [date range field](#date-range-field) below picks two days in the same calen
 ## Contracts
 
 - **Built on `react-day-picker`.** Its own stylesheet is not imported: `calendar.scss` styles it with the tokens, inside the browser floor. Only classes are given, no `style`.
+- **The calendar loads apart.** `day-picker.ts` re-exports `DayPicker` and its locale; `lazy-day-picker.ts` holds the one shared import (`dayPickerModule`). Both fields start it once the page is idle and when their button is pointed at, focused or pressed, so the calendar opens with no loading state, and draw nothing in the popover until it arrives ([`../design-decisions/graphql.md`](../design-decisions/graphql.md), "The date field, the sortable list and the coven choice load apart").
 - **`day.ts` holds the day helpers the grimoire shares**: `isoDay(date)` (a local date as `YYYY-MM-DD`), `today()` and `dayWords(day)` ("12 March 2026", read at UTC midnight so no zone shifts it). The button, the Workings rows and the reason Complete is off all write a day through `dayWords`.
 - **Days are parsed and written in the browser's local calendar**, never through `Date.parse`, so no timezone shifts the day.
 - **`calendar.tsx` holds what the day field shares with the range field**: `parseDay`, the popover hook `useCalendarPopover` (placing, the press outside, Escape), the caption's month and year boxes (`CaptionDropdown`), the steps' chevron (`CalendarChevron`), the class names handed to the library (`CALENDAR_CLASS_NAMES`) and the end mark (`CalendarIcon`). `calendar.scss` is the look both open.
