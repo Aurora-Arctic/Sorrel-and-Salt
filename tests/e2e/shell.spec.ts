@@ -259,7 +259,7 @@ test('the curator row fits the window at 642px, without overflowing', async ({ p
   // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
-  const more = nav.getByRole('button', X);
+  const more = nav.getByRole('button', { name: 'More', exact: true });
   if ((await more.count()) > 0) {
     await expect(more).toBeVisible();
   } else {
@@ -285,7 +285,7 @@ const rowOverflows = (nav: Locator) =>
     .first()
     .evaluate((list) => list.scrollWidth > list.clientWidth + 1);
 
-test('at a tablet width, More carries the current page when its tab is hidden behind it', async ({
+test('at a tablet width, More stays More and carries the current page when its tab is hidden behind it', async ({
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
