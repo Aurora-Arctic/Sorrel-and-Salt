@@ -211,6 +211,17 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: $close-reserve;
 }
 
+// A centred head (`headerAlign="center"`): the × 's reserve on both sides, so the title centres on the
+// dialog rather than on what is left beside the ×.
+.modal-dialog__header--centered > .modal-dialog__heading {
+  padding-inline: $close-reserve;
+  text-align: center;
+
+  > .modal-dialog__under {
+    justify-content: center;
+  }
+}
+
 .modal-dialog__title {
   margin: 0;
   overflow-wrap: anywhere;

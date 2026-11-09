@@ -57,6 +57,7 @@ const SignInDialog = ({
         <Modal
           title={inbox ? INBOX_TITLE : (emailView ? EMAIL_VIEW_TITLES : SIGN_IN_TITLES)[mode]}
           focusTitle={emailView && !inbox}
+          headerAlign="center"
           under={
             inbox ? (
               <p className="lede">{INBOX_LEDE}</p>

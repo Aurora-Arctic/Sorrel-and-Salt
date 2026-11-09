@@ -80,6 +80,7 @@ const Modal = ({
   actionsUnderClose,
   under,
   focusTitle = false,
+  headerAlign = 'start',
   aboveName,
   onClose,
   returnTo,
@@ -300,7 +301,11 @@ const Modal = ({
       }}
     >
       <div
-        className={['modal-dialog__header', topEnd !== undefined && 'modal-dialog__header--topped']
+        className={[
+          'modal-dialog__header',
+          topEnd !== undefined && 'modal-dialog__header--topped',
+          headerAlign === 'center' && 'modal-dialog__header--centered',
+        ]
           .filter(Boolean)
           .join(' ')}
       >
