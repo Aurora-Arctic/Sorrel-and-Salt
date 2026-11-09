@@ -48,14 +48,32 @@ function sideFor(anchor: Element | null | undefined, fallback: Placement): Place
 }
 
 /**
+ * The height of the sticky top bar over the reference, in pixels: the frame publishes it as the inherited
+ * `--sticky-top` (a rem or px length), the one place the bar's height is stated. 0 where none is published.
+ */
+function barInset(reference: Element): number {
+  const raw = getComputedStyle(reference).getPropertyValue('--sticky-top').trim();
+  const amount = parseFloat(raw);
+  if (!Number.isFinite(amount)) return 0;
+  if (raw.endsWith('rem')) {
+    return amount * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16);
+  }
+  return raw.endsWith('px') ? amount : 0;
+}
+
+/**
  * The edges a bubble keeps inside: the nearest ancestor marked
  * `data-tip-boundary` (the filter panel, which is narrower than the screen
- * and whose tips must not leave it), else the screen.
+ * and whose tips must not leave it), else the screen less the sticky top bar,
+ * so a bubble flips or shifts before it slides under the bar.
  */
 const edges = ({ elements }: { elements: { reference: unknown } }) => {
   const reference = elements.reference;
   const marked = reference instanceof Element ? reference.closest('[data-tip-boundary]') : null;
-  return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
+  if (marked) return { padding: EDGE_PX, boundary: marked };
+  const top =
+    reference instanceof Element ? Math.max(EDGE_PX, barInset(reference) + EDGE_PX) : EDGE_PX;
+  return { padding: { top, right: EDGE_PX, bottom: EDGE_PX, left: EDGE_PX } };
 };
 
 /**
