@@ -347,6 +347,25 @@ describe('the brand and text colours clear their floors on the page and the card
   });
 });
 
+// Needs Review is the ochre warning as a tint, so it reads as a warning and not as the red alarm (claude-docs/styling.md, "Badge palettes").
+describe('the needs-review badge palette is the warning ochre and clears its floors', () => {
+  it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
+    const tokens = surfaces(theme);
+    const part = (name: string) => toHex(tokens[`--badge-needs-review-${name}`], theme);
+    const warning = toHex(tokens['--warning'], theme);
+
+    if (theme === 'dark') expect(part('fg')).toBe(warning);
+    for (const ground of ['--surface-page', '--surface-card']) {
+      const under = toHex(tokens[ground], theme);
+      expect(
+        contrastRatio(part('fg'), part('bg')),
+        `label on tint, ${ground}`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(part('border'), under), `edge on ${ground}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
 describe("the faceted jar's two bands are solid theme tokens that swap roles between themes", () => {
   it.each(['--jar-shade', '--jar-shine'])(
     '%s is a solid colour with a value for each theme',

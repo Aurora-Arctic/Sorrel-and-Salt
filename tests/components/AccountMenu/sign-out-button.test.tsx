@@ -25,7 +25,7 @@ describe('SignOutButton', () => {
   it('signs out once, busy meanwhile with the focus kept, and opens / as a full load', async () => {
     let finish: (value: { error: null }) => void = () => {};
     signOutMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
-    vi.stubGlobal('location', { assign: assignMock });
+    vi.stubGlobal('location', { assign: assignMock, pathname: '/coven/alpha', search: '' });
     render(<SignOutButton />);
 
     const busy = screen.getByRole('button', { name: 'Sign Out' });
@@ -49,7 +49,7 @@ describe('SignOutButton', () => {
     'says so in an alert under it when the endpoint %s, keeps the focus on it, and its badge brings the alert back',
     async (_how, answer) => {
       signOutMock.mockImplementation(answer);
-      vi.stubGlobal('location', { assign: assignMock });
+      vi.stubGlobal('location', { assign: assignMock, pathname: '/coven/alpha', search: '' });
       render(<SignOutButton />);
       const button = screen.getByRole('button', { name: 'Sign Out' });
       expect(button).not.toHaveAccessibleDescription();
@@ -86,12 +86,32 @@ describe('SignOutButton', () => {
   it('reports the page is leaving before it opens /', async () => {
     const leaving = leavingAtEachLoad(assignMock);
     signOutMock.mockResolvedValue({ error: null });
-    vi.stubGlobal('location', { assign: assignMock });
+    vi.stubGlobal('location', { assign: assignMock, pathname: '/coven/alpha', search: '' });
     render(<SignOutButton />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
     expect(leaving).toEqual([true]);
+  });
+});
+
+describe('SignOutButton destination', () => {
+  afterEach(() => {
+    signOutMock.mockReset();
+    assignMock.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ['/compendium', '', '/compendium'],
+    ['/compendium/some-entry', '?x=1', '/compendium/some-entry?x=1'],
+    ['/coven/alpha', '', '/'],
+  ])('on %s%s loads %s', async (pathname, search, expected) => {
+    signOutMock.mockResolvedValue({ error: null });
+    vi.stubGlobal('location', { assign: assignMock, pathname, search });
+    render(<SignOutButton />);
+    await press(screen.getByRole('button', { name: 'Sign Out' }));
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith(expected));
   });
 });

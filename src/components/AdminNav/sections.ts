@@ -132,7 +132,6 @@ const GUIDES: AdminSection = { name: 'Guides', pages: [ADMIN_PAGES.staffHelp] };
 
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
-    name: 'Compendium',
     pages: [
       ADMIN_PAGES.compendium,
       ADMIN_PAGES.categories,

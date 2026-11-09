@@ -2,10 +2,10 @@
 @use '../../scss/mixins' as *;
 @use './panels';
 
-// The Shared switch in the footer's row, beside Mark Complete: the toggle first, its label to the
+// The Shared switch on its own line above the footer row: the toggle first, its label to the
 // right and the short note under the label, a control's height in all so it stands level with the
 // buttons. A grid rather than the primitive's column, which centres the toggle under its label.
-.spell-builder .form__actions > .switch {
+.spell-builder__share > .switch {
   display: grid;
   grid-template-columns: auto auto;
   grid-template-areas:

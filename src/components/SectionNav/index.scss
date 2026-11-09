@@ -300,7 +300,7 @@
     border-radius: 0 0 $rule-heavy $rule-heavy;
   }
 
-  // Only on a More button standing in for a hidden page: the small chevron says there is more behind it. Taken out of
+  // Only on a More button whose section holds the current page: the small chevron says there is more behind it. Taken out of
   // the flow of the column so the icon and label keep their place, hit area and size.
   .section-nav__chevron {
     display: none;

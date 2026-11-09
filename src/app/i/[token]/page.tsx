@@ -62,7 +62,7 @@ export default async function CardPage({ params }: InvitePageProps) {
 
   if (!card) {
     return (
-      <PageFrame narrow>
+      <PageFrame narrow className="card-landing--closed">
         <InvitationPanel token={token} here={here} />
       </PageFrame>
     );

@@ -8,6 +8,7 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
+import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -149,5 +150,23 @@ describe('Delete in the spell builder', () => {
     expect(await screen.findByText('You cannot delete this spell')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('The spell builder footer layout', () => {
+  it('sets Delete Spell in the row of Save and Duplicate, with the Shared switch outside it', () => {
+    renderBuilder({
+      spell: { ...SPELL, status: 'complete' },
+      deletedHrefOf,
+      copiedHrefOf: (id) => `/coven/fixture-coven/grimoire?new=${id}` as Route,
+    });
+    // Duplicate is a direct child of the footer row, so its parent is that row.
+    const row = screen.getByRole('button', { name: 'Duplicate' }).parentElement as HTMLElement;
+    expect(within(row).getByRole('button', { name: 'Save Spell' })).toBeInTheDocument();
+    expect(
+      within(row).getByRole('button', { name: 'Delete Spell Fixture Working' }),
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole('switch')).toBeNull();
+    expect(screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace })).toBeInTheDocument();
   });
 });

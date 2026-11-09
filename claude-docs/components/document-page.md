@@ -12,7 +12,7 @@ Facts the types (`DocumentPageProps`) cannot say:
 - **It reads nothing itself**: no session, no database, no search params. The page route reads the document through `@/modules/documents` (`readDocument`, `readDocumentVersion`, `listDocumentVersions`) and passes the text in. Those reads are cached under the `documents` tag by `src/lib/documents-cache.ts`, and the route is `force-dynamic` so nothing is read at build time.
 - **A signed-out visitor and a member read the same page**, inside whichever frame the public layout chooses for them (`src/app/(public)/layout.tsx`).
 - **A document page carries no application data**, so it is not an exception to the rule that the compendium is the one public surface of data (`CLAUDE.md`, "Domain invariants"). No search covers the documents table, so no in-site search can list one, and `tests/e2e/document-pages.spec.ts` proves the compendium search returns nothing for a document's title.
-- **A document route is listed in three places beside its page**: `PUBLIC_ROUTES` in `src/proxy.ts`, so the proxy lets a signed-out visitor through; `CRAWLABLE_PATHS` in `src/app/robots.ts`, so a crawler may index it on production; and `src/app/sitemap.ts`. The footer ([`site-footer.md`](site-footer.md)) links every document as a text link before Support.
+- **A document route is listed in three places beside its page**: `PUBLIC_ROUTES` in `src/lib/public-routes.ts`, so the proxy lets a signed-out visitor through; `CRAWLABLE_PATHS` in `src/app/robots.ts`, so a crawler may index it on production; and `src/app/sitemap.ts`. The footer ([`site-footer.md`](site-footer.md)) links every document as a text link before Support.
 
 ### The jump menu
 

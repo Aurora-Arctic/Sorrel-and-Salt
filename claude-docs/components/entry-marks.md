@@ -9,7 +9,7 @@
 - **Local is a `span`; Compendium is an `output` element** with the `status` role: present from the start, never announced. Retired and Annotated are `button`s (not statuses) with the tip described by `aria-describedby`, so a screen reader hears the reason without opening it.
 - **Meaning is the badge's words, never its tint alone.**
 - **One safety badge.** Toxic when the ingredient or a shown form is flagged, else Caution when any has notes. Toxic says more, so the two never show together. `SafetyMark` decides, from `toxic`, `safetyNotes` and `variants` ([`safety-note.md`](safety-note.md)).
-- **The review mark is shown to everyone.** `reviewedAt` is an ISO date for a Reviewed By Curator badge, `null` for Needs Review, and left out for no badge. It is never drawn on a coven's own entry, and only the date shows.
+- **The review mark is shown to everyone.** `reviewedAt` is an ISO date for a Reviewed By Curator badge, `null` for Needs Review, and left out for no badge. It is never drawn on a coven's own entry, and only the date shows. Needs Review wears the `needs-review` palette, the ochre warning as a tint, not `attention`'s red; it stays in the last group, which holds every warning, whatever its hue.
 
 ## The three kinds
 
@@ -31,14 +31,15 @@ The reasoning is in [`design-decisions/ingredients.md`, "A coven's cupboard name
 
 This component holds the order for every badge row. Each badge belongs to a group by its palette's colour, and the row draws the green group, then the neutral, then the red. Inside a group the badges keep the order they are built in. The sort is `byTone` in `index.tsx`, the same shape as `MenuButton`'s `greenFirst`.
 
-| Badge      | Palette     | Colour                 | Group   |
-| ---------- | ----------- | ---------------------- | ------- |
-| Local      | `local`     | sorrel green tint      | green   |
-| Annotated  | `annotated` | Local's inks           | green   |
-| Compendium | `low-stock` | chalk on the muted ink | neutral |
-| Retired    | `retired`   | chalk on the muted ink | neutral |
-| Toxic      | `safety`    | solid wax red          | red     |
-| Caution    | `caution`   | wax red tint           | red     |
+| Badge        | Palette        | Colour                 | Group   |
+| ------------ | -------------- | ---------------------- | ------- |
+| Local        | `local`        | sorrel green tint      | green   |
+| Annotated    | `annotated`    | Local's inks           | green   |
+| Compendium   | `low-stock`    | chalk on the muted ink | neutral |
+| Retired      | `retired`      | chalk on the muted ink | neutral |
+| Toxic        | `safety`       | solid wax red          | red     |
+| Caution      | `caution`      | wax red tint           | red     |
+| Needs Review | `needs-review` | ochre warning tint     | red     |
 
 So a held, annotated entry with notes reads Annotated, Caution; a held, unannotated toxic one Compendium, Toxic; and a retired, annotated one Annotated, Retired, then its safety badge. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
 
