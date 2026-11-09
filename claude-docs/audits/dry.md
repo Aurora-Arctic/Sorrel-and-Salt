@@ -2209,7 +2209,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-75: About 59 hand-written empty-id early returns in the repository
 
 - **Severity:** medium
-- **Why it matters:** About 59 empty-list early returns each return a different shape ([], a Map or undefined). A caller expecting one shape can crash or mis-handle the other, and the guards are not needed for correctness, so they add noise to every repository file.
+- **Why it matters:** About 59 empty-list early returns are written by hand, though Drizzle's `inArray(col, [])` already compiles to `false`, so most add a line of noise to each repository function without changing its result.
 - **Where:**
   - `if (ids.length === 0) return ...` in `src/db/repository/ingredients.ts` (8), `support.ts` (7), `spells.ts` (5), `invitations.ts` (4), `documents.ts` (4), `stock.ts` (3), `workings.ts` (3), `vocabularies.ts` (3) and about ten other files. Drizzle's `inArray(col, [])` already compiles to `false`, so the guard only saves a round trip; it is not a correctness need, and some copies return `[]`, some `new Map()`, some `undefined`.
 - **Shared piece:** `findWhereIn` (or a short-circuit in `findManyByIds` in `finders.ts`) that owns the empty case and the return shape.
