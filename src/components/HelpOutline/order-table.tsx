@@ -1,16 +1,17 @@
 'use client';
 
 import { arrayMove } from '@dnd-kit/sortable';
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import EmptyState from '../EmptyState';
-import Notice from '../Notice';
 import Spinner from '../Spinner';
-import { HelpSortable, useHelpSortableRow } from './sortable';
+import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
+import { SortableColumn } from '@/lib/sortable/column';
+import { useHelpSortableRow } from './sortable';
 import type { HelpOrderColumn, HelpOrderList, HelpOrderRow } from './types';
 
 // A guide's sub pages, or the FAQ, as a stacking table with a grip on every row: a drop saves at once, in the whole
@@ -37,14 +38,6 @@ const write = (list: HelpOrderList, ids: string[]) =>
   list.kind === 'faq'
     ? graphqlRequest(OrderHelpFaqDocument, { ids })
     : graphqlRequest(OrderHelpSubPagesDocument, { id: list.guideId, input: { childIds: ids } });
-
-interface Move {
-  id: string;
-  title: string;
-  /** The whole order before the drop, to spring back to, and after it, to send. */
-  from: readonly string[];
-  to: string[];
-}
 
 const cellClass = ({ className, corner }: HelpOrderColumn) =>
   [className, corner && 'data-table__card-action'].filter(Boolean).join(' ') || undefined;
@@ -116,16 +109,16 @@ const HelpOrderTable = ({
 }): ReactElement => {
   const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  const orderKey = order.join(' ');
-  // The order shown: the page's, or a dropped one from the drop until the page's catches up.
-  const [shown, setShown] = useState<readonly string[]>(order);
-  const [seenKey, setSeenKey] = useState(orderKey);
-  if (seenKey !== orderKey) {
-    setSeenKey(orderKey);
-    setShown(order);
-  }
-  const [saving, setSaving] = useState<string>();
-  const [failed, setFailed] = useState<Move>();
+  const {
+    ids: shown,
+    saving,
+    failed,
+    save,
+  } = useOptimisticOrder(order, async (move) => {
+    await write(list, move.to);
+    announce(`Moved ${move.title} to position ${move.place}.`);
+    refresh();
+  });
 
   if (!rows.length) {
     return (
@@ -138,42 +131,26 @@ const HelpOrderTable = ({
   const placeOf = new Map(shown.map((id, at) => [id, at]));
   const listed = [...rows].sort((a, b) => (placeOf.get(a.id) ?? 0) - (placeOf.get(b.id) ?? 0));
 
-  const save = async (move: Move) => {
-    setShown(move.to);
-    setSaving(move.id);
-    setFailed(undefined);
-    try {
-      await write(list, move.to);
-      announce(`Moved ${move.title} to position ${move.to.indexOf(move.id) + 1}.`);
-      refresh();
-    } catch {
-      setShown(move.from);
-      setFailed(move);
-    } finally {
-      setSaving(undefined);
-    }
-  };
-
   const onMove = (from: number, to: number) => {
     const moving = listed[from];
     const over = listed[to];
+    if (!moving || !over) return;
     const before = [...shown];
     const after = arrayMove(before, before.indexOf(moving.id), before.indexOf(over.id));
-    void save({ id: moving.id, title: moving.title, from: before, to: after });
+    void save({
+      id: moving.id,
+      title: moving.title,
+      place: after.indexOf(moving.id) + 1,
+      from: before,
+      to: after,
+    });
   };
 
   return (
     <>
-      {failed && (
-        <Notice kind="error" block>
-          Could not move {failed.title}. It is back where it was.{' '}
-          <button type="button" className="btn btn--small" onClick={() => void save(failed)}>
-            Try Again
-          </button>
-        </Notice>
-      )}
+      {failed && <MoveFailedNotice move={failed} onRetry={() => void save(failed)} />}
       {/* Round the table, not its body: dnd-kit draws its instructions in a div, which a table may not hold. */}
-      <HelpSortable
+      <SortableColumn
         ids={listed.map((row) => row.id)}
         names={listed.map((row) => row.title)}
         onMove={onMove}
@@ -222,7 +199,7 @@ const HelpOrderTable = ({
             </tbody>
           </table>
         </div>
-      </HelpSortable>
+      </SortableColumn>
     </>
   );
 };

@@ -122,3 +122,13 @@ export interface HelpOrderRow {
   index: number;
   cells: readonly ReactNode[];
 }
+
+/** One reorder that saves at once: the whole order before it, to spring back to, and after it, to send. */
+export interface HelpOrderMove {
+  id: string;
+  title: string;
+  /** Where it lands, from 1, as the live region says it. */
+  place: number;
+  from: readonly string[];
+  to: string[];
+}
