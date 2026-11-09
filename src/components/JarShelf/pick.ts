@@ -1,3 +1,4 @@
+import { fold } from '@/lib/text';
 import { BOTTLES, JARS } from './shapes';
 import type { JarShapeName } from './types';
 
@@ -17,6 +18,6 @@ export function hash(text: string): number {
  */
 export function pick(seed: string, form: string): JarShapeName {
   const pool = LIQUID.test(form) ? BOTTLES : JARS;
-  const key = `${seed.trim().toLowerCase()} ${form.trim().toLowerCase()}`;
+  const key = `${fold(seed)} ${fold(form)}`;
   return pool[hash(key) % pool.length] as JarShapeName;
 }

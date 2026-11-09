@@ -35,6 +35,7 @@ import type {
   VariantFormValues,
   VariantSectionKey,
 } from './types';
+import { fold } from '@/lib/text';
 
 // The form's values against the shape the schema and the mutation take, and the one mapping from
 // an issue's path back to a field, which the resolver's issues and the server's `fieldErrors` use
@@ -397,13 +398,6 @@ function placeIn(
   }
   return index === undefined ? field : undefined;
 }
-
-/**
- * An entry's key, as the schema folds a list's text: trimmed, its case set
- * aside. `toLowerCase` rather than the type-ahead's `toLocaleLowerCase`, since
- * this key must agree with the database's own fold, not the reader's locale.
- */
-export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
  * The name a variant's picked form now goes by, when a keeper has renamed it since the pick;

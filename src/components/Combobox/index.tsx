@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
+import { fold } from '@/lib/text';
 import Spinner from '../Spinner';
 import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, noMatch, Popup } from './popup';
@@ -99,10 +100,8 @@ function arrange<O extends ComboboxOption>(
       : [{ heading: null, key: 'all', rows: options }];
   const lastRow: ActionRow | null = action === undefined ? null : { value: action, action: true };
   // A suggestion whose row reads as the text typed already offers it, so the typed row would only repeat it; a label that differs ("Wax (Animal)") keeps the typed row.
-  const folded = typed.trim().toLowerCase();
-  const matched = options.some(
-    (option) => (option.label ?? option.value).trim().toLowerCase() === folded,
-  );
+  const folded = fold(typed);
+  const matched = options.some((option) => fold(option.label ?? option.value) === folded);
   const firstRow: TypedRow | null =
     lastRow === null && typed !== '' && offerTyped && !matched
       ? { value: typed, typed: true }

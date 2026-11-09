@@ -1,5 +1,6 @@
 'use client';
 
+import { fold } from '@/lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import { type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
@@ -35,7 +36,7 @@ export interface StepPickerProps {
 const PICKER_HINT = 'Type to search your ingredients and the compendium.';
 const ONE_OFF_TAKEN = 'This ingredient is already in the jar.';
 
-export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
+export const oneOffKey = (name: string): string => fold(name);
 
 export const ROW_CATEGORY_CAP = 1;
 
@@ -203,7 +204,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
     () =>
       typed !== '' &&
       !suggestions.options.some(
-        (option) => (option.label ?? option.value).trim().toLocaleLowerCase() === oneOffKey(typed),
+        (option) => oneOffKey(option.label ?? option.value) === oneOffKey(typed),
       ),
     [typed, suggestions.options],
   );

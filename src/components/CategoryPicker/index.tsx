@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { fold } from '@/lib/text';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import { matchesLabelOrGroup } from '../Combobox/match';
 import InfoTip from '../InfoTip';
@@ -100,9 +101,7 @@ const CategoryPicker = ({
   // Enter with nothing highlighted: the one category the text names, if the
   // text is its whole name, since nothing typed is a category of its own.
   const commit = (typed: string) => {
-    const named = options.filter(
-      (option) => option.value.toLowerCase() === typed.trim().toLowerCase(),
-    );
+    const named = options.filter((option) => fold(option.value) === fold(typed));
     if (named.length === 1) add(named[0].category);
   };
 

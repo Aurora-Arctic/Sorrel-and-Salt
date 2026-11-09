@@ -19,6 +19,9 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** Matching text, trimmed and case-folded the same way everywhere. `toLowerCase` rather than `toLocaleLowerCase`, so a Turkish-locale browser folds an "I" as the database does. */
+export const fold = (text: string): string => text.trim().toLowerCase();
+
 export const emptyList = (things: string): string => `There are no ${things} yet.`;
 
 /** Shared with lists that draw their filters as nodes (CompendiumList), so the wording has one source. */

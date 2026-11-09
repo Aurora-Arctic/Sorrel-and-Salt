@@ -1,4 +1,6 @@
+import { fold } from '@/lib/text';
+
 export function matchesLabelOrGroup(label: string, group: string | undefined, text: string) {
-  const needle = text.trim().toLowerCase();
-  return label.toLowerCase().includes(needle) || (group?.toLowerCase().includes(needle) ?? false);
+  const needle = fold(text);
+  return fold(label).includes(needle) || (group !== undefined && fold(group).includes(needle));
 }
