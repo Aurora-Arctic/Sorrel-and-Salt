@@ -138,7 +138,7 @@ The table shows each thing a role may do, from the rules the app checks:
 
 ::widget[role-permission-table]
 
-A Steward renames a coven in the "Rename Coven" section of its page. The address follows the new name, and the old address still opens the coven. The [[Demo Coven]] cannot be renamed. A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
+A Steward renames a coven in the "Rename Coven" section of its page. The address follows the new name, and the latest old address still opens the coven, until another coven takes that address. The [[Demo Coven]] cannot be renamed. A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
   ),
   subPage(
     yourCoven,

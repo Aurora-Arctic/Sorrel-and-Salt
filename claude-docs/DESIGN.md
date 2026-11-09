@@ -497,7 +497,7 @@ An FAQ, a set of help articles on how the site is used, and a glossary of the si
 - A help body marks a callout as a blockquote opening `**Note:**`, `**Tip:**` or `**Take Care:**`; the help pages draw it as a notice named by that label, and any other blockquote, and every blockquote in a site document, stays a blockquote (claude-docs/components/help-pages.md, "Callouts").
 - The rows ship as a `help` seed target keyed on `seed_key` (MB.171), in `migrate.yml`'s step and `deploy.yml`'s paths. The seed does not overwrite a row a keeper has edited.
 
-96. As a Steward, I want to rename my coven and have its old address still lead there, so that its name fits what it has become without breaking the links people already have. A coven's name is not unique, only its address is, so the coven switcher shows the address beside a name two of a member's covens share.
+96. As a Steward, I want to rename my coven and have its previous address still lead there until another coven takes it, so that its name fits what it has become without breaking the links people already have. A coven's name is not unique, only its address is, so the coven switcher shows the address beside a name two of a member's covens share.
 
 ## 11. TDD approach
 

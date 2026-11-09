@@ -10,8 +10,8 @@ import type { WorkspaceRow } from '../types';
 import { freeCovenSlug } from './coven-slug';
 import { assertMembership } from './membership';
 
-// A steward renames a coven. Its address follows the name, and the old address stays on `workspace_slugs` so links to it
-// still arrive (claude-docs/db/identity-model.md, "Coven addresses").
+// A steward renames a coven. Its address follows the name, and the previous address stays on `workspace_slugs` as its one old
+// address so links to it still arrive (claude-docs/db/identity-model.md, "Coven addresses").
 
 const NAME_LIMIT = 80;
 

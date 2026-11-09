@@ -161,7 +161,7 @@ builder.mutationField('renameWorkspace', (t) =>
   t.field({
     type: WorkspaceRef,
     description:
-      'Renames a coven, and moves its address to follow the name; the old address still reaches it for its members. Owners only; refused for the demo coven.',
+      'Renames a coven, and moves its address to follow the name; the latest old address still reaches it for its members, until another coven takes that address. Owners only; refused for the demo coven.',
     args: {
       workspaceId: t.arg.id({ required: true }),
       name: t.arg.string({ required: true }),

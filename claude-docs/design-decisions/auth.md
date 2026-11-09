@@ -3143,3 +3143,5 @@ Node-side Playwright `request`).
 **Why no proof can exist.** `/coven/[slug]` receives an address, and a proof needs a coven id and a seat. The address may be a coven's old one, left behind by a rename (M17.23), so the lookup cannot be the `workspaces.slug` read alone. The read returns the live coven holding the address, and whether that address is its current one.
 
 **What stops it leaking.** `membershipBySlug` is the only caller. A non-member, and an address held by a deleted coven or by nobody, get the same bare `Forbidden`, which the page turns into a 404. Only a member is told the coven moved (`CovenMoved`, carrying the current address). A guard test limits which files may name the function.
+
+The address writers are the same kind of exception: when a coven takes an address another coven holds as its old one, the repository writer soft-deletes that coven's row in the same transaction, without that coven's `Membership` proof. It never touches a current address, and no service handles another coven's row.
