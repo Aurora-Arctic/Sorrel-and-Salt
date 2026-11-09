@@ -43,7 +43,7 @@ An account with a password also gets a quiet, small Forgot Your Password? button
 
 ## Styling
 
-- **The QR code is always inverted**: `.two-factor` draws it as light modules (`#c0baac`, the invitation card's dot tone, a variable in the component's SCSS) on `$soot`, in both themes, so it matches the printed card. The design review must scan-test it in at least two authenticator apps, in both themes.
+- **The QR code is always inverted**: `.two-factor` draws it as light modules (`#c0baac`, a variable in the component's SCSS) on `$soot`, in both themes. The printed invitation card now draws its code in the heading chalk instead, so the two no longer match. The design review must scan-test it in at least two authenticator apps, in both themes.
 
 ## Not here
 

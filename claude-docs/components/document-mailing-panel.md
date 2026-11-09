@@ -16,3 +16,9 @@ every document changed since the last email. Admin only: the service is the guar
   When the terms, the disclaimer or the code of ethics is pending, the question says each account is asked to agree again; when a
   mailing is open, it says that mailing stops. The summaries are sent trimmed, each with its version id.
 - The labels are Title Case, and the tests ask for them by role and name.
+
+## Loading
+
+`skeleton.tsx` (`DocumentMailingSkeleton`) is the Email Updates tab's panel while it loads: the page's own `document-mailing` section with its real heading, two text bars and a field block. It is not a `PanelSkeleton`, which draws a card with padding, as the real page has neither; so it starts at the tab row's left edge and nothing moves when the page arrives. `AdminNav/skeleton.tsx` maps `/keepers/documents` to it.
+
+The panel sets no width or centring of its own. The documents layout's column ([`document-editor.md`](document-editor.md)) sets the width and the left edge the heading, tab row and panel share; a `ch` measure of the panel's own is taken in the panel's font, so a narrower box centred in the column starts right of the tab row.

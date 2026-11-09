@@ -21,9 +21,10 @@ function nodesOf(value: unknown): { type?: unknown; text?: unknown }[] {
 }
 
 describe('the document editor’s markdown', () => {
-  // Precondition: the four documents, so a pass is not a loop over nothing.
-  it('is proved over the four documents', () => {
+  // Precondition: the five documents, so a pass is not a loop over nothing.
+  it('is proved over the five documents', () => {
     expect(documents.map((document) => document.key).sort()).toEqual([
+      'about',
       'code-of-ethics',
       'disclaimer',
       'privacy',

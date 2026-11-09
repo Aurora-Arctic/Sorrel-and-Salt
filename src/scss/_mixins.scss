@@ -458,6 +458,14 @@
   gap: space($step);
 }
 
+// The body of an error page (404, 500, not authorized): a stack as wide as its content, left-aligned
+// inside. The page frame around it centres the block across and down the window; the block is
+// `fit-content` so it is the content, not the full measure, that is centred.
+@mixin centred-block {
+  @include stack(5);
+  width: fit-content;
+}
+
 // The `::after` is stretched over the card, which must be positioned. `$ring: false` leaves the ring to the card.
 @mixin card-link($ring: true) {
   color: $text-primary;
@@ -1037,6 +1045,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
   --warning: #{$ochre-bright};
+  --clay: #{$clay-dark};
+  --sloe: #{$sloe-dark};
+  --woad: #{$woad-dark};
   // More on dark, where a tint of the same strength reads fainter.
   --notice-tint: 8%;
   --focus-ring-link-strength: #{$focus-ring-strength};
@@ -1090,6 +1101,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
   --warning: #{$ochre-deep};
+  --clay: #{$clay-light};
+  --sloe: #{$sloe-light};
+  --woad: #{$woad-light};
   --notice-tint: 7%;
   // Darker than the accent: a button on a warning or an error tint is 4.25:1 and 4.19:1 in it.
   --notice-button-ink: #{$sorrel-notice-button};

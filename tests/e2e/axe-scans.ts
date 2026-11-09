@@ -46,6 +46,7 @@ export const ROUTE_SCANS = [
   { route: '/privacy/versions/[number]', as: ['signedOut'] },
   { route: '/disclaimer', as: ['signedOut'] },
   { route: '/disclaimer/versions/[number]', as: ['signedOut'] },
+  { route: '/about', as: ['signedOut'] },
   { route: '/code-of-ethics', as: ['signedOut'] },
   { route: '/code-of-ethics/versions/[number]', as: ['signedOut'] },
   { route: '/terms', as: ['signedOut'] },

@@ -106,6 +106,7 @@ describe('AdminNav, the Keepers nav', () => {
     ['/keepers/support', [SUPPORT]],
     ['/keepers/documents/privacy', [DOCUMENTS]],
     ['/keepers/documents/disclaimer', [DOCUMENTS]],
+    ['/keepers/documents/about', [DOCUMENTS]],
     ['/keepers/business-cards', [BUSINESS_CARDS]],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
