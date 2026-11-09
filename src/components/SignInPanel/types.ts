@@ -5,8 +5,23 @@ export type SignInAttempt = ProviderId | 'passkey';
 /** Signing in to an account, or creating one. */
 export type SignInMode = 'sign-in' | 'sign-up';
 
-/** One sentence per mode, under the title: the panel's own on the sign-in page, the dialog's under its title in a dialog. */
+/** One sentence per mode, under the title, on the sign-in page and in a dialog alike. */
 export type SignInLedes = Partial<Record<SignInMode, string>>;
+
+/** The buttons, the email form, or the two-factor code step that follows a right password. */
+export type SignInView = 'buttons' | 'email' | 'code';
+
+/** What heads the panel in its current mode and view, from `signInHeader` (./header.tsx). */
+export interface SignInHeader {
+  title: string;
+  /** Back shows above the title, returning from the email form to the buttons. */
+  back: boolean;
+  /** The Last Used mark goes with the title. */
+  lastUsed: boolean;
+  lede?: string;
+  /** The focus lands on the title as the view opens; otherwise the panel or the view places it. */
+  focusTitle: boolean;
+}
 
 export interface SignInPanelProps {
   /** Already run through safeReturnPath; absent, the landing is the account role's. */
@@ -16,18 +31,18 @@ export interface SignInPanelProps {
   configured: readonly ProviderId[];
   /** The mode it opens on; signing in when absent. */
   mode?: SignInMode;
-  /** The sentence under the page's title in each mode; none when absent. A dialog draws its own under its title, so a panel in one ignores these. */
+  /** The sentence under the title in each mode; none when absent. */
   ledes?: SignInLedes;
   /** Told of each switch between the modes, so a dialog can retitle itself. */
   onModeChange?: (mode: SignInMode) => void;
-  /** Inside a dialog: the dialog's title heads it, its headings sit a level under that title, and the email view is held here rather than in the address of the page beneath. */
+  /** Inside a dialog: the panel draws no head, reporting it through `onHeaderChange` for the dialog to draw, and the email view is held here rather than in the address of the page beneath. */
   inDialog?: boolean;
   /** `next` itself tells a new, unverified account to check its inbox, so an email sign-up loads it directly rather than through the sign-in page, which would send the account to the email page. */
   signUpLandsOnNext?: boolean;
   /** Given, a new email account stays on the page, signed in, and this is called in place of the navigation. */
   onSignedUp?: () => void;
-  /** Told when the email view opens (true) or closes (false), so a dialog can title itself for the view. */
-  onEmailViewChange?: (open: boolean) => void;
+  /** In a dialog, told the head at the start and at each change, with the one Back that returns from the email form. `back` keeps its identity. */
+  onHeaderChange?: (header: SignInHeader, back: () => void) => void;
 }
 
 export interface ProviderButtonProps {
@@ -43,18 +58,11 @@ export interface PasswordFormProps {
   next?: string;
   mode: SignInMode;
   onModeChange: (mode: SignInMode) => void;
-  /** The level of the view's heading: h1 on the sign-in page, h3 under a dialog's title. */
-  headingLevel: 'h1' | 'h3';
-  /** False in a dialog, whose title is the view's heading: the form then draws none, and puts its Last Used mark under that title. */
-  ownHeading: boolean;
   signUpLandsOnNext?: boolean;
   onSignedUp?: () => void;
-  /** Whether this browser last signed in with a password. */
-  lastUsed: boolean;
   /** The address typed, held by the panel so it survives a trip back to the provider buttons. */
   email: string;
   onEmailChange: (email: string) => void;
-  onBack: () => void;
   /** Called at each submit, so the panel clears its own error. */
   onStart?: () => void;
   /** Called when the code step opens (true) or closes (false), so the panel can show it alone. */
@@ -72,7 +80,6 @@ export interface PasskeyButtonProps {
 
 export interface TwoFactorStepProps {
   next?: string;
-  headingLevel?: 'h1' | 'h3';
   onRestart: (reason?: string) => void;
 }
 

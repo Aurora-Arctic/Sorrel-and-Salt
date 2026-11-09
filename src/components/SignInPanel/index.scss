@@ -25,6 +25,13 @@
   justify-content: center;
 }
 
+// The page's head: Back over the title in the email view, as close to it as the form's own rows.
+.sign-in-panel__head {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
 .sign-in-panel__header {
   text-align: center;
 }
@@ -153,10 +160,6 @@
   cursor: pointer;
 }
 
-.sign-in-panel__password-heading {
-  margin: 0;
-}
-
 .sign-in-panel__password .form__actions > .btn {
   flex: 1 1 100%;
 }
@@ -181,7 +184,7 @@ div.sign-in-panel__switch {
   justify-content: center;
 }
 
-// The Last Used mark under a dialog's title, where the email view has no heading of its own to carry it.
+// The Last Used mark under a dialog's title, which cannot carry it without putting it in the dialog's name.
 .sign-in-panel__last-used-note {
   margin: 0;
 }

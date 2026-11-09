@@ -183,6 +183,22 @@ describe('SignInDialog', () => {
     expect(within(dialog()).getByRole('button', { name: 'Continue with Email' })).toHaveFocus();
   });
 
+  it('puts Back above the title in the email view, first in reading order, and only there', async () => {
+    render(<SignInDialog next="/compendium" configured={['google']} label="Sign In" />);
+    await press(trigger());
+    // Precondition: the first view has a title and no Back.
+    expect(within(dialog()).getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: 'Back' })).toBeNull();
+
+    await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
+
+    const back = within(dialog()).getByRole('button', { name: 'Back' });
+    const heading = within(dialog()).getByRole('heading', { name: 'Sign In with Email' });
+    expect(back.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Back is not part of the dialog's name.
+    expect(dialog()).toHaveAccessibleName('Sign In with Email');
+  });
+
   it('keeps the Last Used mark in the email view for a browser that last signed in with a password', async () => {
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=email; path=/`;
     render(<SignInDialog next="/compendium" configured={['google']} label="Sign In" />);

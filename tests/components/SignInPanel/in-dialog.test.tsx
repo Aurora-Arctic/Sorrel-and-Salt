@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
+import type { SignInHeader } from '@/components/SignInPanel/types';
 import { installHistory, setQuery } from './search-params';
 
 // The panel inside a dialog (SignInDialog): the page beneath keeps its address, so the email view
@@ -52,32 +53,38 @@ describe('SignInPanel in a dialog', () => {
     assign.mockReset();
   });
 
-  it('opens the email form in place, with no heading of its own, telling the dialog, leaving the address and the history alone, and Back returns the focus to Continue with Email', async () => {
-    const onEmailViewChange = vi.fn();
+  it('opens the email form in place, with no head of its own, reporting the head to the dialog, leaving the address and the history alone, and Back returns the focus to Continue with Email', async () => {
+    const onHeaderChange = vi.fn<(header: SignInHeader, back: () => void) => void>();
     render(
       <SignInPanel
         next="/invite/abc"
         configured={['google']}
         inDialog
-        onEmailViewChange={onEmailViewChange}
+        onHeaderChange={onHeaderChange}
       />,
     );
-    expect(onEmailViewChange).not.toHaveBeenCalled();
+    const reported = () => onHeaderChange.mock.lastCall!;
+    expect(reported()[0]).toMatchObject({ title: 'Sign In', back: false });
 
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
 
-    // The dialog's title heads the view.
+    // The dialog draws the head: the panel holds no heading and no Back.
     expect(screen.queryByRole('heading')).toBeNull();
-    expect(onEmailViewChange).toHaveBeenLastCalledWith(true);
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(reported()[0]).toMatchObject({
+      title: 'Sign In with Email',
+      back: true,
+      focusTitle: true,
+    });
     expect(field('Email Address')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
     expect(history.replace).not.toHaveBeenCalled();
     type('Email Address', 'someone@in-dialog.test');
 
-    await press(screen.getByRole('button', { name: 'Back' }));
+    await act(async () => reported()[1]());
 
     expect(history.back).not.toHaveBeenCalled();
-    expect(onEmailViewChange).toHaveBeenLastCalledWith(false);
+    expect(reported()[0]).toMatchObject({ title: 'Sign In', back: false });
     expect(screen.queryByLabelText(/^Email Address/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Continue with Email' })).toHaveFocus();
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { type MouseEvent, type ReactElement, useRef, useState } from 'react';
+import { type MouseEvent, type ReactElement, useCallback, useRef, useState } from 'react';
 import { emailPagePath } from '../../lib/account-email';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
-import SignInPanel, { EMAIL_VIEW_TITLES, SIGN_IN_TITLES } from '../SignInPanel';
+import SignInPanel, { LastUsedMark, SignInBack, signInHeader } from '../SignInPanel';
+import type { SignInHeader } from '../SignInPanel/types';
 import type { SignInDialogProps } from './types';
 import './index.scss';
 
@@ -31,20 +32,25 @@ const SignInDialog = ({
   // An auth page is no return path, so from one the panel lands the account by its role.
   const next = safeReturnPath(asked);
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState(openingMode);
   // A new email account, signed in by its sign-up, told to check its inbox here rather than sent anywhere.
   const [inbox, setInbox] = useState(false);
-  // The panel's email view, whose heading is this dialog's title; `focusTitle` puts the focus there as it opens.
-  const [emailView, setEmailView] = useState(false);
+  // The panel's head, reported by the panel and drawn in this dialog's header; until the first report, the opening one.
+  const [reported, setReported] = useState<{ header: SignInHeader; back: () => void } | null>(null);
+  const onHeaderChange = useCallback(
+    (header: SignInHeader, back: () => void) => setReported({ header, back }),
+    [],
+  );
+  const header =
+    reported?.header ??
+    signInHeader({ mode: openingMode, view: 'buttons', lastUsedPassword: false, ledes });
   const { refresh } = usePendingNavigation();
   const link = useRef<HTMLAnchorElement>(null);
 
   const openDialog = (event: MouseEvent<HTMLAnchorElement>): void => {
     if (opensElsewhere(event)) return;
     event.preventDefault();
-    setMode(openingMode);
     setInbox(false);
-    setEmailView(false);
+    setReported(null);
     setOpen(true);
   };
 
@@ -55,14 +61,22 @@ const SignInDialog = ({
       </PendingLink>
       {open && (
         <Modal
-          title={inbox ? INBOX_TITLE : (emailView ? EMAIL_VIEW_TITLES : SIGN_IN_TITLES)[mode]}
-          focusTitle={emailView && !inbox}
+          title={inbox ? INBOX_TITLE : header.title}
+          aboveName={!inbox && header.back && reported && <SignInBack onBack={reported.back} />}
+          focusTitle={!inbox && header.focusTitle}
           headerAlign="center"
           under={
             inbox ? (
               <p className="lede">{INBOX_LEDE}</p>
             ) : (
-              ledes?.[mode] && <p className="lede">{ledes[mode]}</p>
+              <>
+                {header.lede && <p className="lede">{header.lede}</p>}
+                {header.lastUsed && (
+                  <p className="sign-in-panel__last-used-note">
+                    <LastUsedMark />
+                  </p>
+                )}
+              </>
             )
           }
           // Nothing typed here is kept, so nothing is asked before it closes. After a sign-up the page
@@ -85,8 +99,8 @@ const SignInDialog = ({
               next={next}
               configured={configured}
               mode={openingMode}
-              onModeChange={setMode}
-              onEmailViewChange={setEmailView}
+              ledes={ledes}
+              onHeaderChange={onHeaderChange}
               inDialog
               signUpLandsOnNext={signUpLandsOnNext}
               // From an invitation the invitation itself is the inbox view.

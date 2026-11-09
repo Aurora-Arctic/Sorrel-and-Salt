@@ -1,7 +1,15 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { type ReactElement, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
@@ -13,11 +21,11 @@ import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
-import { SIGN_IN_TITLES } from './titles';
-import type { SignInAttempt, SignInMode, SignInPanelProps } from './types';
+import { LastUsedMark, SignInBack, signInHeader } from './header';
+import type { SignInAttempt, SignInMode, SignInPanelProps, SignInView } from './types';
 import './index.scss';
 
-export { EMAIL_VIEW_TITLES, SIGN_IN_TITLES } from './titles';
+export { LastUsedMark, SignInBack, signInHeader } from './header';
 
 // A cookie announces no change, and only a callback, a full navigation away, writes this one:
 // there is nothing to subscribe to.
@@ -50,7 +58,7 @@ const SignInPanel = ({
   inDialog = false,
   signUpLandsOnNext,
   onSignedUp,
-  onEmailViewChange,
+  onHeaderChange,
   ledes,
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
@@ -85,17 +93,16 @@ const SignInPanel = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const emailButton = useRef<HTMLButtonElement>(null);
   const shown = useRef(emailView);
-  // On a switch of view, focus moves to the new view's heading, or in a dialog, whose buttons have
-  // none, back to Continue with Email; the first render leaves focus alone. A dialog's email view has no
-  // heading of its own: the dialog's title is it, and the dialog, told here, focuses that.
+  // On a switch of view, focus moves to the page's heading, or in a dialog, whose title the panel does
+  // not hold, to Continue with Email on the way back; the dialog focuses its own title for the email
+  // view (`focusTitle`). The first render leaves focus alone.
   useEffect(() => {
     if (shown.current === emailView) return;
     shown.current = emailView;
-    onEmailViewChange?.(emailView);
     (
       panelRef.current?.querySelector<HTMLElement>('[data-view-heading]') ?? emailButton.current
     )?.focus();
-  }, [emailView, onEmailViewChange]);
+  }, [emailView]);
 
   const showView = (toEmail: boolean): void => {
     if (inDialog) return setDialogEmailView(toEmail);
@@ -113,6 +120,23 @@ const SignInPanel = ({
       window.history.replaceState(null, '', url);
     }
   };
+
+  // One Back for the page and the dialog, keeping its identity so a dialog holding it is not told again.
+  const latestShowView = useRef(showView);
+  useEffect(() => {
+    latestShowView.current = showView;
+  });
+  const goBack = useCallback(() => latestShowView.current(false), []);
+
+  const view: SignInView = codeStep ? 'code' : emailView ? 'email' : 'buttons';
+  const header = useMemo(
+    () => signInHeader({ mode, view, lastUsedPassword, ledes }),
+    [mode, view, lastUsedPassword, ledes],
+  );
+  // A dialog draws the head in its own header (claude-docs/components/sign-in-dialog.md).
+  useEffect(() => {
+    if (inDialog) onHeaderChange?.(header, goBack);
+  }, [inDialog, header, goBack, onHeaderChange]);
 
   const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
   useEffect(() => {
@@ -153,33 +177,33 @@ const SignInPanel = ({
   return (
     <div className={classes.filter(Boolean).join(' ')} ref={panelRef}>
       {message && <Notice kind="error">{message}</Notice>}
+      {!inDialog && (
+        <div className="sign-in-panel__head">
+          {header.back && <SignInBack onBack={goBack} />}
+          <PageHeader
+            className="sign-in-panel__header"
+            headingClassName="auth-title"
+            focusable
+            title={header.title}
+            suffix={header.lastUsed ? <LastUsedMark /> : undefined}
+            lede={header.lede}
+          />
+        </div>
+      )}
       {emailView ? (
         <PasswordForm
           next={next}
           mode={mode}
           onModeChange={switchMode}
-          headingLevel={inDialog ? 'h3' : 'h1'}
-          ownHeading={!inDialog}
           signUpLandsOnNext={signUpLandsOnNext}
           onSignedUp={onSignedUp}
-          lastUsed={lastUsedPassword}
           email={email}
           onEmailChange={setEmail}
-          onBack={() => showView(false)}
           onStart={() => setMessage(undefined)}
           onCodeStep={setCodeStep}
         />
       ) : (
         <>
-          {!inDialog && (
-            <PageHeader
-              className="sign-in-panel__header"
-              headingClassName="auth-title"
-              focusable
-              title={SIGN_IN_TITLES[mode]}
-              lede={ledes?.[mode]}
-            />
-          )}
           <div className="sign-in-panel__providers">
             {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (
               <ProviderButton
