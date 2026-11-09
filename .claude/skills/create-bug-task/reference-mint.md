@@ -44,7 +44,7 @@ Run these only after the user has approved the draft (and, for a feature, the mi
    gh issue create --title "<ID> — <name>" --type <Bug|Task> --label tracked --milestone "<milestone>" --body-file <file>
    ```
 
-   A Project 4 task adds `--label v1-next`, then runs `node scripts/task-board.mjs place <ID> --apply`, because Project 4 has no auto-add.
+   When the Project's entry in `scripts/task-projects.mjs` names a `label`, the command adds `--label <label>` as well: `--label tracked --label v1-next` on Sorrel & Salt V1.Next. That task then runs `node scripts/task-board.mjs place <ID> --apply`, because Project 4 has no auto-add.
 
    The title is `<ID> — <name>` with a spaced em dash and nothing before the id. Never hand-compose other `gh issue` calls. A rate-limit error waits for the reset and retries once, then reports.
 

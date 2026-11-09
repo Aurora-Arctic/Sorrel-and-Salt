@@ -24,7 +24,7 @@ export const PROJECTS = [
     prefix: 'N',
     milestonePrefix: 'N · ',
     bugfixes: 'N · Z. Bugfixes',
-    // Project 1's auto-add filter excludes this label, the only qualifier it can tell the two apart by.
+    // Project 1's auto-add filter is `is:issue label:tracked -label:v1-next`; a new Project's label joins it as one more `-label:` term.
     label: 'v1-next',
     autoAdd: false,
   },

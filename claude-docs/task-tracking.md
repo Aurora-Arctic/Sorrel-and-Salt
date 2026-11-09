@@ -22,7 +22,7 @@ comment is public too; the rule that costs is under **Comments**.
 | `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                                                      |
 | Milestones  | One per wave (`Wave 07 — GraphQL`, `N · Wave 01 — Privacy`) and per pre-wave grouping, plus a closed `Retired — not done`, so every issue has one. A wave's description is its id list on the first line, then a link to its [`waves/<slug>/wave-NN.md`](waves/) on `staging`, the one home of its reasoning; `reorder` reads the first line (**Order**). |
 | Issue types | `Bug` for a task that fixes a bug, a failure that reached a PR, staging or production; `Task` for everything else, whatever its id. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                     |
-| Labels      | `tracked` on every task, Project 1's auto-add filter; `v1-next` on every Sorrel & Salt V1.Next task, which that filter excludes; `hotfix` on a task that branches off `main`.                                                                                                                                                                             |
+| Labels      | `tracked` on every task; `v1-next` as well on every Sorrel & Salt V1.Next task, which Project 1's auto-add filter excludes; `hotfix` on a task that branches off `main`.                                                                                                                                                                                  |
 | Sub-issues  | Only for a genuine parent/child; a wave is a milestone, never a parent issue.                                                                                                                                                                                                                                                                             |
 
 The rules for naming, labelling and keeping each object are in `.claude/rules/task-tracking.md`, under "Board layout".
@@ -44,7 +44,7 @@ The rules for naming, labelling and keeping each object are in `.claude/rules/ta
 
 A command finds its Project from the issue: `find`, `status`, `estimate`, `comment` and `sync` read the issue's own Project item; `move`, `milestone` and `place` take the Project of the issue's milestone; `reorder` runs once per Project, each over its own wave rows (a row `**N · 01 — …**` is Project 4's) and its own item order, or over one with `--project N`. An issue on two Projects is refused until `place <ID> --apply` leaves it on its milestone's alone.
 
-**Adding a Project.** Create it in the org and link it to the repo; add an entry with a new `number`, `slug`, `prefix` letter, `milestonePrefix`, `bugfixes` and `label`; create the label and the bug milestone; make the auto-add filter of every Project with `autoAdd: true` exclude the new label; and create `claude-docs/tasks/<slug>/` and `claude-docs/waves/<slug>/`. Its wave rows go in their own table in `TASKS.md`, labelled `**<prefix> · NN — <name>**`.
+**Adding a Project.** Create it in the org and link it to the repo; add an entry with a new `number`, `slug`, `prefix` letter, `milestonePrefix`, `bugfixes` and `label`; create the label and the bug milestone; add the new label to Project 1's auto-add filter, now `is:issue label:tracked -label:v1-next`, as one more `-label:<label>` term; and create `claude-docs/tasks/<slug>/` and `claude-docs/waves/<slug>/`. Its wave rows go in their own table in `TASKS.md`, labelled `**<prefix> · NN — <name>**`.
 
 ## The title rule
 
@@ -74,8 +74,8 @@ the issue closing: a PR body opens with `Closes #N`, and on merge the issue is
 closed, at which point the Project's built-in workflow moves the item to `Done`.
 
 **The Project's workflows own the ends and the script owns the middle.** Eight
-built-in workflows are on. _Auto-add to project_ (filtered on the `tracked`
-label) and _Auto-add sub-issues to project_ place every task, so the script
+built-in workflows are on. _Auto-add to project_ (on Project 1, filtered
+`is:issue label:tracked -label:v1-next`) and _Auto-add sub-issues to project_ place every task, so the script
 never adds an item: `status` and `estimate` on an issue the auto-add has not
 placed yet refuse and say to retry, and an item the script added would be one
 the triage filter never saw. _Item added to project_ sets `Not Started`.
