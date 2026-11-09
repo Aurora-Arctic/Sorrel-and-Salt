@@ -192,21 +192,25 @@ describe('invitations table', () => {
       expect(error.constraint_name).toBe(SITE_TIER_CHECK);
     });
 
-    it('refuses user, which grants nothing', async () => {
-      const error = await failureOf(inviteToSite({ siteRole: 'user' }));
+    // Written as the allowed set, as `invitations_role_invitable` is, so a role the enum gains later is refused until named here.
+    it('names every invitable site role in its allowed set', async () => {
+      const [{ definition }] = await sql`
+        select pg_get_constraintdef(oid) as definition from pg_constraint where conname = ${SITE_ROLE_CHECK}
+      `;
 
-      expect(error.code).toBe('23514');
-      expect(error.constraint_name).toBe(SITE_ROLE_CHECK);
+      expect(definition).toMatch(/'user'.*'curator'.*'admin'/);
     });
 
-    // Why the refusals above could have succeeded: the column is nullable and the enum admits `user`.
-    it('accepts curator and keeper on the site tier, and none on a coven invitation', async () => {
+    // Why the refusals above could have succeeded: the column is nullable. `user` is the invitation that turns on coven creation alone.
+    it('accepts user, curator and keeper on the site tier, and none on a coven invitation', async () => {
+      await inviteToSite({ siteRole: 'user', tokenHash: 'd'.repeat(64) });
       await inviteToSite({ siteRole: 'curator' });
       await inviteToSite({ siteRole: 'admin', tokenHash: HASH_B });
       await invite('member', { tokenHash: 'c'.repeat(64) });
 
-      const rows = await sql`select site_role::text from invitations order by site_role nulls last`;
-      expect(rows.map((row) => row.site_role)).toEqual(['admin', 'curator', null]);
+      const rows =
+        await sql`select site_role::text from invitations order by site_role::text nulls last`;
+      expect(rows.map((row) => row.site_role)).toEqual(['admin', 'curator', 'user', null]);
     });
   });
 

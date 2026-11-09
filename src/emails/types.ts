@@ -28,7 +28,7 @@ export interface VerifyEmailProps extends BaseEmailProps {
 }
 
 export interface AdminInvitationProps extends BaseEmailProps {
-  siteRole: 'curator' | 'admin';
+  siteRole: 'user' | 'curator' | 'admin';
   inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;

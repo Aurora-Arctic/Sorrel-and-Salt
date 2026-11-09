@@ -211,6 +211,16 @@ export async function declineInvitationById(session: Session, id: string): Promi
   return declined;
 }
 
+// A soft-deleted account since the read rolls the stamp back with it. One who holds the flag gets no ledger row.
+async function grantCreation(
+  write: AuditWriter,
+  user: { id: string; canCreateWorkspace: boolean },
+): Promise<void> {
+  if (user.canCreateWorkspace) return;
+  const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
+  if (!granted) throw new NotFound('No such user');
+}
+
 async function acceptChecked(
   session: Session,
   standing: InvitationCheck,
@@ -232,8 +242,13 @@ async function acceptChecked(
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
-        // Only upwards: an account holding the role or above is stamped alone.
         const { siteRole } = standing.invitation;
+        // `user` turns on coven creation and leaves the role as it is.
+        if (siteRole === 'user') {
+          await grantCreation(write, user);
+          return stamped;
+        }
+        // Only upwards: an account holding the role or above is stamped alone.
         if (outranks(siteRole, user.role)) {
           const [granted] = await writeSiteRoleGrant(write, user.id, siteRole);
           // Soft-deleted since the read: roll the stamp back with it.
@@ -243,10 +258,7 @@ async function acceptChecked(
       }
       if (standing.tier === 'card') {
         // A card seats nobody and grants no role: the right to create a coven is all it gives.
-        if (!user.canCreateWorkspace) {
-          const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
-          if (!granted) throw new NotFound('No such user');
-        }
+        await grantCreation(write, user);
         return stamped;
       }
       const { workspaceId, role } = standing.invitation;
@@ -259,10 +271,7 @@ async function acceptChecked(
         );
         if (!revived) await write.insertMembership(workspaceId, user.id, role, stamped.createdBy);
       }
-      if (!user.canCreateWorkspace) {
-        const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
-        if (!granted) throw new NotFound('No such user');
-      }
+      await grantCreation(write, user);
       return stamped;
     },
     { via: standing.tier === 'card' ? 'card' : 'invitation', note: invitation.note ?? undefined },

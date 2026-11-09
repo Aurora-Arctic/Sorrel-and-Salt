@@ -142,35 +142,23 @@ describe('Mutation.createAdminInvitation', () => {
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);
   });
 
-  // The role is the keeper's choice, and the transport carries it through.
-  it('answers the curator role it was asked to invite to', async () => {
-    const { sender } = recordingSender();
+  // The role is the keeper's choice, and the transport carries it through. `user` is the invitation to create a coven.
+  it.each(['curator', 'user'])(
+    'answers the %s role it was asked to invite to',
+    async (siteRole) => {
+      const { sender } = recordingSender();
 
-    const result = await run<CreateAdminInvitationResult>(
-      asUser(E),
-      CREATE,
-      { email: INVITED, siteRole: 'curator' },
-      { invitations: sender },
-    );
+      const result = await run<CreateAdminInvitationResult>(
+        asUser(E),
+        CREATE,
+        { email: INVITED, siteRole },
+        { invitations: sender },
+      );
 
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.createAdminInvitation).toMatchObject({ siteRole: 'curator' });
-  });
-
-  it('refuses the user role, which no invitation grants, before the service is reached', async () => {
-    const { sent, sender } = recordingSender();
-
-    const result = await run(
-      asUser(E),
-      CREATE,
-      { email: INVITED, siteRole: 'user' },
-      { invitations: sender },
-    );
-
-    expect(result.errors).toHaveLength(1);
-    expect(result.data).toBeUndefined();
-    expect(sent).toEqual([]);
-  });
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.createAdminInvitation).toMatchObject({ siteRole });
+    },
+  );
 
   it('answers a malformed address as VALIDATION on the email', async () => {
     const result = await run(asUser(E), CREATE, { email: 'not-an-address' });

@@ -80,7 +80,7 @@ async function invitationMessage(
   const to = invitation.email;
   if (!to) return null;
   if (invitation.workspaceId === null) {
-    if (invitation.siteRole !== 'curator' && invitation.siteRole !== 'admin') return null;
+    if (!invitation.siteRole) return null;
     return invitationLinkMessage(link.origin, token, {
       to,
       inviterName,
