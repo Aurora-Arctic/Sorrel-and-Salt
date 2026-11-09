@@ -1,10 +1,10 @@
 @use '../../scss/variables' as *;
 
+// No width or centring of its own: the documents layout's column sets the width and the tab row's left edge, and a `ch` measure here is
+// taken in this panel's font, so a narrower box centred in the column would start right of the tabs.
 .document-mailing {
   display: grid;
   gap: space(2);
-  max-inline-size: $measure;
-  margin-inline: auto;
 
   h2,
   h3 {

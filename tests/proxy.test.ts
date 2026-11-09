@@ -51,6 +51,7 @@ describe('the proxy matcher', () => {
     '/support',
     '/privacy',
     '/disclaimer',
+    '/about',
     '/terms',
     '/code-of-ethics',
     '/coven/hearth/grimoire/new?from=draft',
@@ -120,6 +121,7 @@ describe('public routes', () => {
     // The public documents carry no application data.
     '/privacy',
     '/disclaimer',
+    '/about',
     '/terms',
     '/code-of-ethics',
     '/help',
@@ -228,6 +230,7 @@ describe('X-Robots-Tag', () => {
     '/compendium/ingredients/testwort',
     '/privacy',
     '/disclaimer',
+    '/about',
     '/terms',
     '/code-of-ethics',
     '/coven/hearth',

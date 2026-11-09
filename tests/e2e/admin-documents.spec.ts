@@ -11,7 +11,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-const DOCUMENT_KEYS = ['terms', 'disclaimer', 'code-of-ethics', 'privacy'] as const;
+const DOCUMENT_KEYS = ['terms', 'disclaimer', 'code-of-ethics', 'privacy', 'about'] as const;
 
 const editorOf = (page: Page) =>
   page.getByRole('main').getByRole('textbox', { name: 'Document Text' });
@@ -50,6 +50,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
     'Disclaimer',
     'Code of Ethics',
     'Privacy Policy',
+    'About Us',
     'Email Updates',
   ]);
   for (const [index, key] of DOCUMENT_KEYS.entries()) {
@@ -448,4 +449,68 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
   await expect(
     editorOf(page).getByRole('heading', { name: 'Changes to This Policy', exact: true }),
   ).toBeVisible();
+});
+
+test('the Pull Quote button turns the paragraph holding the caret into a quote, and a second press undoes it', async ({
+  page,
+}) => {
+  await signInAs(page, 'pull-quote-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  const pullQuote = toolbarOf(page).getByRole('button', { name: 'Pull Quote' });
+  await expect(pullQuote).toBeVisible();
+  await editorOf(page).getByText('Your email changes only when you verify the new one.').click();
+  // Precondition: the caret sits in an ordinary paragraph.
+  await expect(pullQuote).toHaveAttribute('aria-pressed', 'false');
+
+  await pullQuote.click();
+  await expect(pullQuote).toHaveAttribute('aria-pressed', 'true');
+  await pullQuote.click();
+  await expect(pullQuote).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('moving to another document keeps the same tab row and never marks Terms of Use as current on the way', async ({
+  page,
+}) => {
+  await signInAs(page, 'tab-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  const tabs = page.getByRole('main').getByRole('navigation').first();
+  const terms = tabs.getByRole('link', { name: 'Terms of Use' });
+  await expect(tabs.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  // Precondition: Terms is not current to start with, so a mark later is a change this click caused.
+  await expect(terms).not.toHaveAttribute('aria-current', 'page');
+
+  const tabRow = await tabs.elementHandle();
+
+  // Records every moment Terms of Use carries the current-page mark, however brief, from now on.
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { termsSeen: string[] }).termsSeen = seen;
+    const watch = () => {
+      for (const link of document.querySelectorAll('a[aria-current="page"]')) {
+        if (link.textContent?.includes('Terms of Use')) seen.push('Terms of Use');
+      }
+    };
+    new MutationObserver(watch).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['aria-current'],
+    });
+  });
+
+  await tabs.getByRole('link', { name: 'About Us' }).click();
+  await expect(page).toHaveURL(/\/keepers\/documents\/about$/);
+  await expect(tabs.getByRole('link', { name: 'About Us' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+
+  // The tab row is the same element throughout, not a skeleton's copy that replaced it and was replaced in turn.
+  expect(await tabRow!.evaluate((row) => row.isConnected)).toBe(true);
+  expect(
+    await page.evaluate(() => (window as unknown as { termsSeen: string[] }).termsSeen),
+  ).toEqual([]);
 });

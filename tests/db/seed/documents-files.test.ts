@@ -15,8 +15,9 @@ describe('the document files', () => {
   const documents = loadDocuments(fromRoot('documents'));
   const byKey = new Map(documents.map((document) => [document.key, document]));
 
-  it('hold the four documents, one file each', () => {
+  it('hold the five documents, one file each', () => {
     expect(documents.map((document) => document.key).sort()).toEqual([
+      'about',
       'code-of-ethics',
       'disclaimer',
       'privacy',
@@ -32,7 +33,9 @@ describe('the document files', () => {
   // Version 1 is dated by the day each page showed before the move, so no reader sees a date change.
   it('date each document by the day its page last changed', () => {
     const days = Object.fromEntries(
-      documents.map((document) => [document.key, document.publishedOn.toISOString()]),
+      documents
+        .filter((document) => document.key !== 'about')
+        .map((document) => [document.key, document.publishedOn.toISOString()]),
     );
     expect(days).toEqual({
       'code-of-ethics': '2026-11-02T00:00:00.000Z',
@@ -93,6 +96,26 @@ describe('the document files', () => {
     expect(body).toMatch(/^## Changes to This Policy$/m);
     expect(blocks.length).toBeGreaterThanOrEqual(2);
     expect(blocks.some((block) => /\bemail/i.test(block))).toBe(true);
+  });
+
+  // The About Us page draws its four parts and its three roles as cards from code, so the file holds a placeholder paragraph where
+  // each list stood, under its editable heading and the sentence before it; a list there would print beside the cards.
+  it.each([
+    ['What Sorrel & Salt Is', '{aboutPillars}'],
+    ['Who Runs It', '{aboutRoles}'],
+  ])('hold the about page’s %s placeholder %s, and no list beside it', (heading, placeholder) => {
+    const body = byKey.get('about')?.body ?? '';
+    const section = body.split(new RegExp(`^## ${heading}$`, 'm'))[1]?.split(/^#{1,6} /m)[0] ?? '';
+    const blocks = section
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter((block) => block !== '');
+
+    expect(body).toMatch(new RegExp(`^## ${heading}$`, 'm'));
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+    expect(blocks[0]).not.toBe(placeholder);
+    expect(blocks).toContain(placeholder);
+    expect(section).not.toMatch(/^\s*[-*] /m);
   });
 });
 

@@ -88,7 +88,7 @@ export const ADMIN_PAGES = {
     icon: 'documents',
     adminOnly: true,
     description:
-      'The terms of use, disclaimer, code of ethics and privacy policy: edit a draft, then publish it as a new version.',
+      'The terms of use, disclaimer, code of ethics, privacy policy and About Us page: edit a draft, then publish it as a new version.',
     // One tab per document, in the footer's order, each that document's editor, then the page that emails every account about the
     // documents changed since the last email. The cast is because typed routes know an editor's address only as `[key]`.
     tabs: [
@@ -99,6 +99,7 @@ export const ADMIN_PAGES = {
         label: 'Code of Ethics',
       },
       { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy' },
+      { href: '/keepers/documents/about' as Route, label: 'About Us' },
       { href: '/keepers/documents', label: 'Email Updates' },
     ],
   },

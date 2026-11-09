@@ -256,6 +256,15 @@ describe('SignInPanel, email and password', () => {
     expect(screen.queryByRole('button', { name: /^Continue with Google/ })).toBeNull();
   });
 
+  it('puts the Back button before the view’s heading, and shows one heading', () => {
+    const back = screen.getByRole('button', { name: 'Back' });
+    const headings = screen.getAllByRole('heading', { name: /Sign In with Email/ });
+    expect(headings).toHaveLength(1);
+    expect(
+      back.compareDocumentPosition(headings[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('holds the buttons and the email form as two views, each its own history entry, and keeps the typed address between them', async () => {
     expect(screen.getByRole('heading', { name: /Sign In with Email/ })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();

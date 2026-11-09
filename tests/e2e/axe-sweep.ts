@@ -274,6 +274,7 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/privacy/versions/[number]': () => '/privacy/versions/1',
   '/disclaimer': () => '/disclaimer',
   '/disclaimer/versions/[number]': () => '/disclaimer/versions/1',
+  '/about': () => '/about',
   '/code-of-ethics': () => '/code-of-ethics',
   '/code-of-ethics/versions/[number]': () => '/code-of-ethics/versions/1',
   '/terms': () => '/terms',

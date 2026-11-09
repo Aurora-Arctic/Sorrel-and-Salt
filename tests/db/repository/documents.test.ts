@@ -679,6 +679,21 @@ describe('findPendingDocumentVersions', () => {
     ]);
   });
 
+  // About is not an agreed document, so a keeper edit to it is never mailed with the agreement wording.
+  it('leaves out the about document’s newer version and keeps another document’s', async () => {
+    const aboutId = await aDocument('about');
+    await aVersion(aboutId, 1, 'published');
+    await aVersion(aboutId, 2, 'published');
+    const terms = await aVersion(await aDocument('terms'), 2, 'published');
+
+    // Precondition: about does have a published version 2 past its first, so only its key leaves it out.
+    const [{ count }] = await sql`
+      select count(*)::int as count from document_versions where document_id = ${aboutId} and number = 2 and status = 'published'
+    `;
+    expect(count).toBe(1);
+    expect(await pendingIds()).toEqual([terms]);
+  });
+
   it('leaves out a document whose only published version is the first', async () => {
     await aVersion(await aDocument(), 1, 'published');
     // Precondition: a second document past its first version is read, so the empty answer is the first version's.

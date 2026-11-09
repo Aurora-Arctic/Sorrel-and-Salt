@@ -28,6 +28,9 @@ const SiteFooter = (): ReactElement => (
           <PendingLink href="/privacy" className="site-footer__link">
             Privacy
           </PendingLink>
+          <PendingLink href="/about" className="site-footer__link">
+            About Us
+          </PendingLink>
           <PendingLink href="/help" className="site-footer__link">
             Help
           </PendingLink>

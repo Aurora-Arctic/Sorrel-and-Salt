@@ -560,6 +560,12 @@
     }
   }
 
+  // A frame drawn inside a layout's `.page-column` (the public 404) takes back the column's top and
+  // side padding, so it fills the window exactly as a frame of its own does and adds no scroll.
+  .page-column > .page-frame--in-column {
+    margin: calc(-1 * #{space(6)}) calc(-1 * #{space(4)}) 0;
+  }
+
   // The front door fills the whole window, so the footer always follows below the fold; the other frames
   // leave the footer's room (`.welcome-page` is also Backdrop's hook for its larger art).
   .page-frame.welcome-page {

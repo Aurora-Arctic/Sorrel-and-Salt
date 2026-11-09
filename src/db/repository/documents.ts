@@ -13,6 +13,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { UNMAILED_DOCUMENT_KEYS } from '../../lib/unversioned-documents';
 import { documentMailingItems } from '../../modules/documents/schema/document-mailing-items';
 import { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
 import { documentMailings } from '../../modules/documents/schema/document-mailings';
@@ -139,6 +140,7 @@ export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]>
       notSoftDeleted(documentVersions),
       eq(documentVersions.status, 'published'),
       gt(documentVersions.number, 1),
+      notInArray(documents.key, [...UNMAILED_DOCUMENT_KEYS]),
       not(
         existsIn(
           newerVersion,
