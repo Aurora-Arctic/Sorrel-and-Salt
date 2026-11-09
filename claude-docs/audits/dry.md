@@ -15,7 +15,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-1   | Two helpers for numbered pagination in the curator pages, and the keepers help page hand-builds a third                                                      | high     | Pages and lib |      8 |     2 | Not yet fixed                                   |
 | D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Not yet fixed                                   |
 | D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Not yet fixed                                   |
-| D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Not yet fixed                                   |
+| D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
 | D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Not yet fixed                                   |
 | D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Not yet fixed                                   |
 | D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Not yet fixed                                   |
@@ -40,7 +40,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Not yet fixed                                   |
 | D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Not yet fixed                                   |
 | D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Not yet fixed                                   |
-| D-29  | GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted                                                         | high     | Components    |      4 |     8 | Not yet fixed                                   |
+| D-29  | GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted                                                         | high     | Components    |      4 |     8 | Fixed                                           |
 | D-30  | Viewer's live covens list built three times, one copy drifted                                                                                                | high     | Server        |      3 |     2 | Not yet fixed                                   |
 | D-31  | `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`                                                                                   | high     | Server        |      3 |     1 | Not yet fixed                                   |
 | D-32  | Two different `covenSlugOf` functions with the same name                                                                                                     | high     | Pages and lib |      3 |     1 | Not yet fixed                                   |
@@ -312,7 +312,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **D-69 (busy button):** AdminCards/minted.tsx:91-99.
 
 - **Estimate:** 4 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. Both invite forms use the shared address field `src/components/InviteDialog/email-field.tsx`, which checks the address before anything is sent and clears its refusal on edit; regression tests in `tests/components/AdminInvitations/index.test.tsx`, and `tests/guards/invite-forms.test.ts` refuses an invite form that checks the address itself.
 
 ### D-5: Signed-out support input repeats the signed-in input and has drifted
 
@@ -949,7 +949,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - Icon-bearing group choices (`kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined`) appear at `GroupForm/index.tsx:320` and `GroupedValueForm/index.tsx:386`.
 
 - **Estimate:** 8 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `useEntityForm` in `src/components/Field/use-entity-form.ts` holds the undo history, the save mutation and where a refused save is said, for GroupForm and GroupedValueForm; each still calls `useDiscardGuard` itself, which the `long-form-guards-leaving` lint rule requires. HelpArticleForm's delete now reports a refusal through `ConfirmQuestion`'s `onRefused`, like the other forms. No guard: none is practical.
 
 ### D-30: Viewer's live covens list built three times, one copy drifted
 
