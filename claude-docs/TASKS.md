@@ -106,5 +106,5 @@ The `## M… —` sections that followed the execution order live in [`tasks/`](
 | [`tasks/m22.md`](tasks/m22.md) | M22 — Email consent and notifications · _7 tasks · 25 hours_                                                  |
 | [`tasks/m7a.md`](tasks/m7a.md) | M7.A — PR gates · _1 task · 1 hour · unscheduled by design_                                                   |
 | [`tasks/mb.md`](tasks/mb.md)   | MB — Bugfixes and gap tasks                                                                                   |
-| [`tasks/mc.md`](tasks/mc.md)   | MC — Cleanup · _9 tasks · 316.75 hours_                                                                       |
+| [`tasks/mc.md`](tasks/mc.md)   | MC — Cleanup · _9 tasks · 79.5 hours_                                                                         |
 | [`tasks/mw.md`](tasks/mw.md)   | MW — Wave close-out · _2 done, 12 retired, 1 live: MW.15 at 3 hours_                                          |

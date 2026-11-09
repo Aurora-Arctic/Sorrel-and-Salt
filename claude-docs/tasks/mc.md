@@ -2,7 +2,7 @@
 
 MC ids hold grouped clean-up work from the audits, the first being M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)). They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
-**MC.1 — Tidy the Test Support** · 22.25h
+**MC.1 — Tidy the Test Support** · 5.5h
 
 _Story:_ As a developer, I want the test harness written once, so that a change to a mock, a wrapper or a helper is made in one place.
 
@@ -18,7 +18,7 @@ _Acceptance criteria:_
 - The e2e specs touched pass, run with the placeholder secret on the command line
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.2 — Share Page and Route Building** · 49.75h
+**MC.2 — Share Page and Route Building** · 12.5h
 
 _Story:_ As a developer, I want pages, paths and routes built from shared pieces, so that a route or layout change is made once.
 
@@ -36,7 +36,7 @@ _Acceptance criteria:_
 - Authorisation still lives in services, not pages, and the pages touched pass their tests
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.3 — Share Repository Queries** · 27h
+**MC.3 — Share Repository Queries** · 6.75h
 
 _Story:_ As a developer, I want repository filters and predicates defined once, so that a fix to a filter reaches both the list and its count.
 
@@ -52,7 +52,7 @@ _Acceptance criteria:_
 - Soft-delete filtering stays in the repository, and the repository and pause tests for the files touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.4 — Share Service and Schema Blocks** · 55h
+**MC.4 — Share Service and Schema Blocks** · 13.75h
 
 _Story:_ As a developer, I want service sequences, input handling and schema declarations written once, so that a rule change lands everywhere it applies.
 
@@ -72,7 +72,7 @@ _Acceptance criteria:_
 - Authorisation checks stay in services, and the vocabulary, compendium, ingredient, grimoire, coven, identity and support service tests for the files touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.5 — Share Form and Failure Handling** · 36.5h
+**MC.5 — Share Form and Failure Handling** · 9.25h
 
 _Story:_ As a developer, I want form state, lists and field shells written once, so that a fix to a form pattern reaches every form.
 
@@ -89,7 +89,7 @@ _Acceptance criteria:_
 - The component tests for the forms and callers touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.6 — Share Hooks, Menus and Hover Tips** · 36.25h
+**MC.6 — Share Hooks, Menus and Hover Tips** · 9h
 
 _Story:_ As a developer, I want hover tips, menus and small hooks written once, so that a fix to dismissal, floating position or tips reaches every component that uses it.
 
@@ -105,7 +105,7 @@ _Acceptance criteria:_
 - The component tests for the callers touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.7 — Share Text and Label Helpers** · 22h
+**MC.7 — Share Text and Label Helpers** · 5.5h
 
 _Story:_ As a developer, I want class-name joining, labels and wording built by shared helpers, so that a wording or label change is made once.
 
@@ -120,7 +120,7 @@ _Acceptance criteria:_
 - The unverified-email sentence, invitation-path regex, calendar-day regex and `joinList` exist once (D-141, D-142, D-164, D-109), and the pager label union exists once (D-210)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.8 — Share Feature Components** · 45.5h
+**MC.8 — Share Feature Components** · 11.5h
 
 _Story:_ As a developer, I want admin, ingredient, spell, date and help components built from shared pieces, so that a fix to a shared piece reaches every screen that shows it.
 
@@ -139,7 +139,7 @@ _Acceptance criteria:_
 - The component tests for the callers touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.9 — Clean Up Styles and Unused Code** · 22.5h
+**MC.9 — Clean Up Styles and Unused Code** · 5.75h
 
 _Story:_ As a developer, I want repeated styles gone and unused code removed or exposed, so that a style change is made once and unused code stops accumulating.
 
