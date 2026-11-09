@@ -134,7 +134,6 @@ const HelpArticleFormBody = ({ editing }: { editing: boolean }): ReactElement =>
         value="Public"
         note="Who reads it. A sub page is as wide as this or narrower."
       />
-      <Field label="Position" note="1 of 21 guides. Whole numbers only." />
     </div>
     <div className="help-article-form__actions" aria-hidden="true">
       <div className="form__actions">

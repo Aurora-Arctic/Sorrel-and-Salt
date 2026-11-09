@@ -83,7 +83,7 @@ describe('the help writes are a keeper’s alone', () => {
       audience: 'public',
       title: 'Testwort Ledger',
       slug: 'testwort-ledger',
-      position: null,
+      position: 1,
       parentId: null,
     });
     expect(await rowOf(created.id)).toMatchObject({ created_by: E.id, updated_by: E.id });
@@ -800,6 +800,78 @@ describe('the position', () => {
     await expect(updateHelpArticle(asUser(E), id, { position: 0 })).resolves.toMatchObject({
       position: 0,
     });
+  });
+
+  it('puts a new top-level page given no position after every guide, of any audience or flag', async () => {
+    await insertHelpArticle(
+      sql,
+      {
+        title: 'Testwort Keeper Guide',
+        slug: 'testwort-keeper-guide',
+        audience: 'keeper',
+        position: 4,
+      },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Hidden Guide', slug: 'testwort-hidden-guide', shown: false, position: 6 },
+      E.id,
+    );
+    const parentId = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Parent', slug: 'testwort-parent', position: 2 },
+      E.id,
+    );
+    // A sub page's or an FAQ entry's higher number is another list's, so it does not count.
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Deep', slug: 'testwort-deep', parent_id: parentId, position: 9 },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Asked', slug: 'testwort-asked', position: 9 },
+      E.id,
+    );
+
+    const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Newest' });
+    expect(created).toMatchObject({ parentId: null, position: 7 });
+  });
+
+  it('puts a sub page that leaves its guide, given no position, after every guide', async () => {
+    const parentId = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Parent', slug: 'testwort-parent', position: 3 },
+      E.id,
+    );
+    const child = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Leaver', slug: 'testwort-leaver', parent_id: parentId, position: 1 },
+      E.id,
+    );
+
+    await expect(updateHelpArticle(asUser(E), child, { parentId: null })).resolves.toMatchObject({
+      parentId: null,
+      position: 4,
+    });
+  });
+
+  it('keeps a guide where it stands when an update gives no position', async () => {
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Later', slug: 'testwort-later', position: 5 },
+      E.id,
+    );
+    const id = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Steady', slug: 'testwort-steady', position: 2 },
+      E.id,
+    );
+
+    await expect(
+      updateHelpArticle(asUser(E), id, { body: 'A second body.' }),
+    ).resolves.toMatchObject({ position: 2 });
   });
 });
 

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import type { ChangeEvent } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -284,10 +284,11 @@ describe('HelpArticleForm, its kinds', () => {
     const calls = captureCreate();
     renderForm();
 
-    // Precondition: an article has all four.
+    // Precondition: an article has an audience, a parent and sub pages, and an FAQ entry a position.
     expect(group('Audience')).toBeInTheDocument();
     expect(combobox('Parent')).toBeInTheDocument();
     expect(group('Sub Pages')).toBeInTheDocument();
+    fireEvent.click(radio('FAQ'));
     expect(textbox('Position')).toBeInTheDocument();
 
     fireEvent.click(radio('Term'));
@@ -488,19 +489,23 @@ describe('HelpArticleForm, its parent', () => {
     expect(screen.getByText(`1 of 2 in ${STAFF_GUIDE.title}`)).toBeInTheDocument();
   });
 
-  it('makes a sub page that leaves its guide the last guide', async () => {
+  it('sends a sub page that leaves its guide with no position, as the service makes it the last guide', async () => {
     const calls = captureUpdate();
     renderForm({ article: SUB_PAGE });
 
+    // Precondition: under its guide the page says where it stands.
+    expect(screen.getByText(new RegExp(` in ${STAFF_GUIDE.title}$`))).toBeInTheDocument();
+
     choose('Parent', 'No Parent');
 
-    expect(textbox('Position')).toHaveValue(String(GUIDES.length + 1));
+    expect(queryTextbox('Position')).toBeNull();
     expect(group('Sub Pages')).toBeInTheDocument();
 
     press('Save Article');
 
     await waitFor(left);
-    expect(calls[0]?.input).toMatchObject({ parentId: null, position: GUIDES.length + 1 });
+    expect(calls[0]?.input).toMatchObject({ parentId: null });
+    expect(calls[0]?.input).not.toHaveProperty('position');
   });
 
   it('links a sub page to its guide for reordering, as its position is the guide’s to set', () => {
@@ -606,9 +611,10 @@ describe('HelpArticleForm, its position', () => {
     const calls = captureCreate();
     renderForm();
 
+    fireEvent.click(radio('FAQ'));
     fillNew();
     type('Position', '2.5');
-    press('Save Article');
+    press('Save FAQ Entry');
 
     await waitFor(() => expect(textbox('Position')).toHaveAttribute('aria-invalid', 'true'));
     expect(textbox('Position')).toHaveAccessibleDescription(/whole number/i);
@@ -620,24 +626,37 @@ describe('HelpArticleForm, its position', () => {
     const calls = captureCreate();
     renderForm();
 
+    fireEvent.click(radio('FAQ'));
     fillNew();
     type('Position', '0');
-    press('Save Article');
+    press('Save FAQ Entry');
 
     await waitFor(left);
     expect(calls[0]?.input).toMatchObject({ position: 0 });
   });
 
-  it('says where a guide stands among the guides', () => {
-    renderForm({ article: GUIDE });
+  it('draws no Position for a top-level page, new or saved, and sends none, as Reorder Mode orders the guides', async () => {
+    renderForm();
+    expect(queryTextbox('Position')).toBeNull();
+    // Precondition: the same new form draws it for an FAQ entry.
+    fireEvent.click(radio('FAQ'));
+    expect(textbox('Position')).toBeInTheDocument();
+    cleanup();
 
-    expect(textbox('Position')).toHaveAccessibleDescription(
-      expect.stringContaining(`1 of ${GUIDES.length} guides`),
-    );
+    const calls = captureUpdate();
+    captureShown();
+    renderForm({ article: GUIDE });
+    expect(queryTextbox('Position')).toBeNull();
+    fireEvent.click(shownSwitch());
+    press('Save Article');
+
+    await waitFor(left);
+    expect(calls[0]?.input).not.toHaveProperty('position');
   });
 
   it('asks for the numeric keyboard', () => {
     renderForm();
+    fireEvent.click(radio('FAQ'));
 
     expect(textbox('Position')).toHaveAttribute('inputmode', 'numeric');
   });
@@ -810,10 +829,11 @@ describe("HelpArticleForm, the service's refusals", () => {
         code: 'VALIDATION',
         fieldErrors: [{ path: [path], message }],
       });
-      renderForm({ article: GUIDE });
+      // An FAQ entry draws both fields.
+      renderForm({ article: FAQ });
 
-      type('Summary', 'A changed summary');
-      press('Save Article');
+      fireEvent.click(shownSwitch());
+      press('Save FAQ Entry');
 
       await waitFor(() => expect(textbox(label)).toHaveAttribute('aria-invalid', 'true'));
       expect(textbox(label)).toHaveAccessibleDescription(expect.stringContaining(message));

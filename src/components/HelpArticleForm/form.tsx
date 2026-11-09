@@ -190,8 +190,10 @@ const HelpArticleForm = ({
       const typed = values.position.trim();
       const parent = values.kind === 'article' ? values.parentId || null : null;
       const placed = typed === '' ? null : Number(typed);
+      // A top-level page sends no place: Reorder Mode in the Guides bar orders the guides, and the service puts a new one last.
       const where = {
-        ...(values.kind !== 'term' && { audience: values.audience, position: placed }),
+        ...(values.kind !== 'term' && { audience: values.audience }),
+        ...((values.kind === 'faq' || parent) && { position: placed }),
         ...(values.kind === 'article' && {
           summary,
           parentId: parent,
@@ -244,7 +246,7 @@ const HelpArticleForm = ({
   const send = async (values: HelpFormValues): Promise<void> => {
     setAlert(undefined);
     const typed = values.position.trim();
-    if (values.kind !== 'term' && typed !== '' && !WHOLE_NUMBER.test(typed)) {
+    if (values.kind === 'faq' && typed !== '' && !WHOLE_NUMBER.test(typed)) {
       setError('position', { type: 'client', message: 'Give a whole number, 0 or more' });
       return;
     }
@@ -283,16 +285,14 @@ const HelpArticleForm = ({
     }
   };
 
-  // A sub page goes last in a new guide, or back where it was in its own; one leaving its guide becomes the last guide,
-  // and a guide keeps its number.
+  // A sub page goes last in a new guide, or back where it was in its own; a top-level page holds no place in the form.
   const placeUnder = (guide: HelpGuideChoice | undefined): string => {
     if (guide) {
       return guide.id === article?.parentId
         ? String(article.position ?? guide.subPages)
         : String(guide.subPages + 1);
     }
-    if (article?.parentId) return String(guides.length + 1);
-    return article?.position == null ? '' : String(article.position);
+    return '';
   };
 
   const changeParent = (next: string) => {
@@ -343,11 +343,8 @@ const HelpArticleForm = ({
           : `Its guide, ${parent.title}, is ${AUDIENCE_LABELS[parent.audience]}, so this page is ${AUDIENCE_LABELS[parent.audience]} or narrower.`
         : 'Who reads it. A sub page is as wide as this or narrower.';
 
-  // Where the row stands now among the guides, for a guide that keeps its place.
-  const guidePlace =
-    article && !article.parentId ? guides.findIndex(({ id }) => id === article.id) + 1 : 0;
   const positionField: ReactNode =
-    kind === 'term' ? null : kind === 'article' && parent ? (
+    kind === 'article' && parent ? (
       <div className="field">
         <div className="field__label-row">
           <span className="field__label">Position</span>
@@ -368,22 +365,16 @@ const HelpArticleForm = ({
           </PendingLink>
         )}
       </div>
-    ) : (
+    ) : kind === 'faq' ? (
       <TextField<HelpFormValues>
         name="position"
         label="Position"
         placeholder="Add Number"
         type="text"
         inputMode="numeric"
-        note={
-          kind === 'article'
-            ? guidePlace > 0
-              ? `${guidePlace} of ${guides.length} guides. Whole numbers only.`
-              : `${guides.length} guides now. Whole numbers only.`
-            : 'Whole numbers only.'
-        }
+        note="Whole numbers only."
       />
-    );
+    ) : null;
 
   return (
     <FormProvider {...methods}>

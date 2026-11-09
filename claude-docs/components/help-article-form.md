@@ -25,15 +25,16 @@
 
 - **Kind** is a choice chip (Article, FAQ, Term). It is held on an edit, as a row's kind is fixed once it exists, and its tip says so.
 - **Shown** is a [`ShownSwitch`](#shownswitch) in form-field mode. A new row is created shown and, when the switch is off, hidden by `SetHelpArticleShown` once it exists. An edit sends `SetHelpArticleShown` only when the switch changed.
-- **Fields by kind.** A term has no Audience, Parent, Sub Pages, Position or Summary. An FAQ entry has no Parent, Sub Pages or Summary, and the service refuses a summary on either (`checkSummary`, `help-writes.ts`). An article has all five, with two exceptions, as help is one level deep: a sub page has no Sub Pages, and a guide holding sub pages has its Parent held at No Parent.
+- **Fields by kind.** A term has no Audience, Parent, Sub Pages, Position or Summary. An FAQ entry has no Parent, Sub Pages or Summary, and the service refuses a summary on either (`checkSummary`, `help-writes.ts`). An article has all five, with three exceptions: a top-level page has no Position field, and, as help is one level deep, a sub page has no Sub Pages and a guide holding sub pages has its Parent held at No Parent.
 - **Parent** offers No Parent and every guide but the row itself.
   - Choosing a guide narrows a wider audience to the guide's and places the row last in it (its sub page count plus one).
   - Choosing its own guide again puts a sub page back at its saved place.
-  - Leaving a guide makes the row the last guide (the guide count plus one).
+  - Leaving a guide makes the row the last guide, placed by the service.
 - **Sub Pages** (`sub-pages-field.tsx`) are chips in their order, with an Add Sub Page combobox over `candidates`. It leaves out the pages already chosen and those wider than the row's audience. A pick that sits in another guide says, under the chips, that it leaves that guide and which place it takes here when the form is saved. A save sends `childIds`, the chips in order, and the service moves and releases sub pages in the same transaction (`claude-docs/design-decisions/support.md`, "Showing and hiding, and a parent's children").
 - **Audience** is a choice chip offering Public, Staff and Keeper. An option is held when it is wider than the parent's, or narrower than the widest chosen sub page's, as a sub page is as wide as its guide or narrower.
 - **Position.**
-  - A guide or an FAQ entry has a text field with the numeric keyboard. It takes a whole number, 0 or more; anything else is refused in the form, before a request. Its note says where a guide stands, such as "1 of 3 guides".
+  - An FAQ entry has a text field with the numeric keyboard. It takes a whole number, 0 or more; anything else is refused in the form, before a request.
+  - A top-level page has no field and sends no position, as Reorder Mode in the Guides bar orders the guides. The service puts a new top-level page, or a sub page leaving its guide, after every guide, so it comes last in its audience's group. The service still takes a position for a top-level page when one is sent.
   - A sub page has no field, as its place is the guide's to set. It shows "2 of 4 in Guide", with a Reorder in the Guide link to the outline when the guide is its saved one.
 
 ## Saving

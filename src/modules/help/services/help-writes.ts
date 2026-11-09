@@ -75,6 +75,9 @@ async function checkSlug(
     );
 }
 
+/** A top-level page given no place goes after every guide, so last in its audience's group in the Guides bar. */
+const lastGuidePlace = async (): Promise<number> => (await findLastTopLevelHelpPosition()) + 1;
+
 /** Only an article carries a summary; the check reads the value sent, so a row saved before the rule still saves. */
 function checkSummary(kind: HelpArticleKind, summary: string | null | undefined): void {
   if (kind !== 'article' && summary != null)
@@ -195,7 +198,9 @@ export async function createHelpArticle(
     kind: values.kind,
     audience: values.audience ?? 'public',
     slug,
-    position: values.position ?? null,
+    position:
+      values.position ??
+      (values.kind === 'article' && values.parentId == null ? await lastGuidePlace() : null),
     parentId: values.parentId ?? null,
     childIds: values.childIds ?? undefined,
   };
@@ -246,7 +251,12 @@ export async function updateHelpArticle(
     kind: current.kind,
     audience: values.audience ?? current.audience,
     slug,
-    position: values.position === undefined ? current.position : values.position,
+    position:
+      values.position !== undefined
+        ? values.position
+        : current.parentId !== null && values.parentId === null
+          ? await lastGuidePlace()
+          : current.position,
     parentId: values.parentId === undefined ? current.parentId : values.parentId,
     childIds: values.childIds ?? undefined,
   };
