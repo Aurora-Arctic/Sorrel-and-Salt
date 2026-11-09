@@ -87,6 +87,27 @@ describe('the invitation panel page', () => {
     expect(shown[0]).toMatchObject({ status: 'signed-out', card: true, lead: 'sign-up' });
   });
 
+  // A site invitation's mailed link carries the marker; the invitation itself is not read signed out.
+  it('leads a link marked as a site invitation with Create Account', async () => {
+    getSession.mockResolvedValue(null);
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc', marker: 'site' }));
+
+    expect(shown[0]).toMatchObject({ status: 'signed-out', card: false, lead: 'sign-up' });
+    expect(invitationStanding).not.toHaveBeenCalled();
+  });
+
+  it.each([['coven'], [['site', 'site']], ['SITE']])(
+    'leads a link with any other marker, %j, with Sign In',
+    async (marker) => {
+      getSession.mockResolvedValue(null);
+
+      render(await InvitationPanel({ token: 'abc', here: '/invite/abc', marker }));
+
+      expect(shown[0]).toMatchObject({ status: 'signed-out', lead: 'sign-in' });
+    },
+  );
+
   // The address matched before the verification check, so the account is the invitee's, waiting on its message.
   it('tells an unverified account to check its inbox, with the way to the email page back here', async () => {
     getSession.mockResolvedValue({ userId: 'u', role: 'user' });

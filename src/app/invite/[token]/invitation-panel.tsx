@@ -7,6 +7,7 @@ import type {
 } from '../../../components/InvitationAcceptance/types';
 import type { PageHeaderProps } from '../../../components/PageHeader/types';
 import { emailPagePath } from '../../../lib/account-email';
+import { isSiteInvitationMarker } from '../../../lib/invitation-link';
 import { getSession } from '../../../lib/request-session';
 import { ADMIN_LANDING, CURATOR_LANDING } from '../../../lib/sign-in';
 // Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
@@ -25,21 +26,27 @@ const CARD_LANDING = '/coven/new' satisfies Route;
 // The same page with the marker that makes it say what the card gave. A cast, as the built routes know no query.
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
+// The one place a signed-out invitation's leading choice is decided (claude-docs/components/invitation-acceptance.md). The
+// marker is the link's word alone, never checked against the invitation: a hand-edited one changes only the button order.
+const leadOf = (card: boolean, siteMarked: boolean): SignedOutLead =>
+  card || siteMarked ? 'sign-up' : 'sign-in';
+
 // `getSession()`, not `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect would drop the reason (claude-docs/auth/admin-users.md, "Inviting a keeper").
-// The one place a signed-out invitation's leading choice is decided (claude-docs/components/invitation-acceptance.md).
-const leadOf = (card: boolean): SignedOutLead => (card ? 'sign-up' : 'sign-in');
 
 export default async function InvitationPanel({
   token,
   here,
   headingLevel,
   linkFailed = false,
+  marker,
 }: {
   token: string;
   here: string;
   /** The page was reached with `?error=`, a verification link refused on its way back. */
   linkFailed?: boolean;
   headingLevel?: PageHeaderProps['level'];
+  /** The link's site-invitation marker as the page received it (`src/lib/invitation-link.ts`). */
+  marker?: string | string[];
 }) {
   const session = await getSession();
 
@@ -52,7 +59,7 @@ export default async function InvitationPanel({
       next: here,
       configured: configuredProviders(),
       card,
-      lead: leadOf(card),
+      lead: leadOf(card, isSiteInvitationMarker(marker)),
     };
   } else {
     const standing = await standingOf(session, token);
