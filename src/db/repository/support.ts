@@ -356,6 +356,10 @@ export const timeoutStands = and(
   noEndOrAhead(supportTimeouts.until),
 ) as SQL;
 
+// The rows that stand on a sender; the send lock reads them inside its own transaction by the same predicate.
+const standingOnUser = (userId: string): SQL =>
+  and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands) as SQL;
+
 /**
  * The end of the time-out standing on the sender, latest first, `until` null when one has no end date; `undefined` when none
  * stands.
@@ -363,10 +367,7 @@ export const timeoutStands = and(
 export async function findStandingSupportTimeout(
   userId: string,
 ): Promise<StandingTimeout | undefined> {
-  const rows = await selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands),
-  );
+  const rows = await selectFrom(supportTimeouts, standingOnUser(userId));
   return latestEnd(rows);
 }
 
@@ -847,14 +848,7 @@ export function supportWrites({
       const timeouts = await tx
         .select({ until: supportTimeouts.until })
         .from(supportTimeouts)
-        .where(
-          and(
-            notSoftDeleted(supportTimeouts),
-            eq(supportTimeouts.userId, userId),
-            isNull(supportTimeouts.liftedAt),
-            noEndOrAhead(supportTimeouts.until),
-          ),
-        );
+        .where(standingOnUser(userId));
       return { recent: recent.length, timedOut: latestEnd(timeouts) };
     },
   };
