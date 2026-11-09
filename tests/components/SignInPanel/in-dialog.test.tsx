@@ -70,7 +70,7 @@ describe('SignInPanel in a dialog', () => {
 
     // The dialog draws the head: the panel holds no heading and no Back.
     expect(screen.queryByRole('heading')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Back to Sign-In Options' })).toBeNull();
     expect(reported()[0]).toMatchObject({
       title: 'Sign In with Email',
       back: true,

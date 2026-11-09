@@ -177,7 +177,7 @@ describe('SignInDialog', () => {
     expect(headings()[0]).toHaveAccessibleName('Create an Account with Email');
     expect(dialog()).toHaveAccessibleName('Create an Account with Email');
 
-    await press(within(dialog()).getByRole('button', { name: 'Back' }));
+    await press(within(dialog()).getByRole('button', { name: 'Back to Sign-In Options' }));
 
     expect(dialog()).toHaveAccessibleName('Create an Account');
     expect(within(dialog()).getByRole('button', { name: 'Continue with Email' })).toHaveFocus();
@@ -188,11 +188,11 @@ describe('SignInDialog', () => {
     await press(trigger());
     // Precondition: the first view has a title and no Back.
     expect(within(dialog()).getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
-    expect(within(dialog()).queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Back to Sign-In Options' })).toBeNull();
 
     await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
 
-    const back = within(dialog()).getByRole('button', { name: 'Back' });
+    const back = within(dialog()).getByRole('button', { name: 'Back to Sign-In Options' });
     const heading = within(dialog()).getByRole('heading', { name: 'Sign In with Email' });
     expect(back.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // Back is not part of the dialog's name.

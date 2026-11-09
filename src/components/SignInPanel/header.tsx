@@ -43,7 +43,7 @@ export function signInHeader({
 export const SignInBack = ({ onBack }: { onBack: () => void }): ReactElement => (
   <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
     <BackChevron />
-    Back
+    Back to Sign-In Options
   </button>
 );
 

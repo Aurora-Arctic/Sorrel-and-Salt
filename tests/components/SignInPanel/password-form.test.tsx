@@ -261,7 +261,7 @@ describe('SignInPanel, email and password', () => {
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();
     type('Email Address', 'someone@password-form.test');
 
-    await press(screen.getByRole('button', { name: 'Back' }));
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
     expect(history.back).toHaveBeenCalledTimes(1);
     expect(history.push).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('heading', { name: 'Sign In' })).toHaveFocus();
@@ -275,7 +275,7 @@ describe('SignInPanel, email and password', () => {
   it('keeps a switch to creating an account made in the form when Back returns to the buttons', async () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
-    await press(screen.getByRole('button', { name: 'Back' }));
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
@@ -302,7 +302,7 @@ describe('SignInPanel, email and password', () => {
     setQuery('method=email');
     history = installHistory();
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
-    await press(screen.getByRole('button', { name: 'Back' }));
+    await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
     expect(history.replace).toHaveBeenCalledTimes(1);
     expect(history.back).not.toHaveBeenCalled();
     expect(history.push).not.toHaveBeenCalled();
