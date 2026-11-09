@@ -36,6 +36,7 @@ const CovenHome = ({
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
+    ...(showRename ? [{ href: '#coven-rename' as const, label: 'Rename Coven' }] : []),
     ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete Coven' }] : []),
   ];
 

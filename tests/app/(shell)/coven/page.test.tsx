@@ -234,7 +234,8 @@ describe('the /coven/[slug] page', () => {
     const menu = () => screen.queryByRole('navigation', { name: 'On This Page' });
 
     it.each<[WorkspaceRole, number]>([
-      ['owner', 3],
+      ['owner', 4],
+      ['member', 2],
       ['viewer', 2],
     ])('has an entry for each of a %s’s sections', async (role, count) => {
       await renderAs(role);
@@ -246,6 +247,16 @@ describe('the /coven/[slug] page', () => {
         expect(target).toBeInstanceOf(HTMLElement);
         expect(target?.tagName).toBe('SECTION');
       }
+    });
+
+    it('lists no Rename Coven entry on the demo coven, even for a steward', async () => {
+      await renderAs('owner', true);
+
+      const names = within(menu() as HTMLElement)
+        .getAllByRole('link')
+        .map((link) => link.textContent);
+      expect(names).toContain('Delete Coven');
+      expect(names).not.toContain('Rename Coven');
     });
   });
 });
