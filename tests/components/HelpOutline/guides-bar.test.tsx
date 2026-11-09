@@ -186,12 +186,30 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     expect(document.activeElement).toBe(grips()[0]);
   });
 
-  it('shows each row’s place in the whole order in the mode', () => {
+  it('numbers each audience’s rows from 1, before and after a move, and still sends the whole order', async () => {
+    layOutBarRows();
+    const sent: string[][] = [];
+    mockGraphQLMutation('OrderHelpGuides', (variables: { ids: string[] }) => {
+      sent.push(variables.ids);
+      return { orderHelpGuides: variables.ids.map((id) => ({ id })) };
+    });
     bar();
     reorder();
 
-    expect(grips()[2].closest('li')).toHaveTextContent(/^3\./);
-    expect(grips()[3].closest('li')).toHaveTextContent(/^4\./);
+    const places = (list: HTMLElement) =>
+      within(list)
+        .getAllByRole('listitem')
+        .map((row) => row.textContent?.match(/^\d+\./)?.[0]);
+    expect(places(audienceLists()[0])).toEqual(['1.', '2.', '3.']);
+    expect(places(audienceLists()[1])).toEqual(['1.']);
+
+    await moveByKeyboard(grips()[2], 'Home');
+    expect(gripsIn(audienceLists()[0])[0]).toBe('Move Testwort Roots');
+    expect(places(audienceLists()[0])).toEqual(['1.', '2.', '3.']);
+    expect(places(audienceLists()[1])).toEqual(['1.']);
+
+    fireEvent.click(saveOrder());
+    await waitFor(() => expect(sent).toEqual([['g3', 'g1', 'g2', 'g4']]));
   });
 
   it('moves a guide by keyboard only among its own audience’s guides', async () => {

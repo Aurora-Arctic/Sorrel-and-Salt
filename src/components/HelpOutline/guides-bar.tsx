@@ -112,7 +112,6 @@ const HelpGuidesBar = ({
 
   const byId = new Map(order.map((entry) => [entry.id, entry]));
   const rows = ids.flatMap((key) => byId.get(key) ?? []);
-  const placeOf = new Map(ids.map((key, at) => [key, at + 1]));
   /** Moves a guide within its audience's run of the whole order, leaving every other audience's as it is. */
   const moveWithin = (audience: HelpOutlineAudience, from: number, to: number) =>
     setIds((now) => {
@@ -222,13 +221,8 @@ const HelpGuidesBar = ({
                     aria-labelledby={`${id}-mode-${audience}`}
                     aria-busy={saving || undefined}
                   >
-                    {entries.map((entry) => (
-                      <ReorderRow
-                        key={entry.id}
-                        entry={entry}
-                        place={placeOf.get(entry.id) ?? 0}
-                        disabled={saving}
-                      />
+                    {entries.map((entry, at) => (
+                      <ReorderRow key={entry.id} entry={entry} place={at + 1} disabled={saving} />
                     ))}
                   </ul>
                 </HelpSortable>
