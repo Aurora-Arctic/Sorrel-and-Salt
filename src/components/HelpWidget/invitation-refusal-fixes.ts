@@ -32,11 +32,11 @@ export const REFUSAL_FIXES: Readonly<Record<InvitationRefusal, RefusalFixes>> = 
   },
   revoked: {
     link: { who: 'Whoever Sent It', now: 'Ask whoever sent it for a new invitation.' },
-    card: { who: 'A Keeper', now: 'Ask a coven to invite you.' },
+    card: { who: 'A Keeper', now: 'Ask a keeper for a new card, or ask a coven to invite you.' },
   },
   expired: {
     link: { who: 'Whoever Sent It', now: 'Ask whoever sent it for a new invitation.' },
-    card: { who: 'A Keeper', now: 'Ask a coven to invite you.' },
+    card: { who: 'A Keeper', now: 'Ask a keeper for a new card, or ask a coven to invite you.' },
   },
   closed: {
     link: {
