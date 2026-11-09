@@ -88,9 +88,15 @@ export function watchLoads(specifiers: readonly string[]): () => string[] {
   vi.resetModules();
   const loaded: string[] = [];
   for (const specifier of specifiers) {
-    vi.doMock(specifier, async (importOriginal) => {
-      loaded.push(specifier);
-      return importOriginal();
+    // Vitest caches an async factory's result only once it resolves, so two importers asking at once
+    // would each run it; the one promise keeps a specifier counted once however many ask.
+    let evaluated: Promise<unknown> | undefined;
+    vi.doMock(specifier, (importOriginal) => {
+      evaluated ??= (async () => {
+        loaded.push(specifier);
+        return importOriginal();
+      })();
+      return evaluated as Promise<Record<string, unknown>>;
     });
   }
   onTestFinished(() => {
