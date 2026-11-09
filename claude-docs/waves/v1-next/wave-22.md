@@ -2,7 +2,7 @@
 
 **The row is** `M22.1 → M22.7`.
 
-The build work for promotional email consent and for the switchable support mails. It is separate from Wave 21 (Billing and memberships) because it has no dependency on billing. The tasks are in [`tasks/m22.md`](../tasks/m22.md); the decision is [`support.md`, "Promotional email needs recorded consent, withdrawn in one click"](../design-decisions/support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click) and the research is [`email/promotional-consent.md`](../email/promotional-consent.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to send the first promotional mail, or to let users switch off support mail.
+The build work for promotional email consent and for the switchable support mails. It is separate from Wave 21 (Billing and memberships) because it has no dependency on billing. The tasks are in [`tasks/v1-next/m22.md`](../../tasks/v1-next/m22.md); the decision is [`support.md`, "Promotional email needs recorded consent, withdrawn in one click"](../../design-decisions/support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click) and the research is [`email/promotional-consent.md`](../../email/promotional-consent.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to send the first promotional mail, or to let users switch off support mail.
 
 **The order is the dependency order.**
 

@@ -182,7 +182,7 @@ Section 6, "Built in M12.31", lists the lanes.
 
 The first version of the task asked only about errors. The owner's review widened
 it to all feedback, so the task's title and entry now say so
-([`tasks/m12.md`](../tasks/m12.md), M12.31).
+([`tasks/v1/m12.md`](../tasks/v1/m12.md), M12.31).
 
 An interactive comparison of the six designs, with the four screens and a
 screen reader log, is published as a private page:
@@ -417,7 +417,7 @@ is after the menu closes.
 The owner decided on 2026-10-20 that M12.31 builds Design F itself, in parallel
 agent lanes, rather than naming follow-up tasks to mint.
 Each estimate is ours, by comparison with
-tasks of similar size in `tasks/m12.md`; none is measured. Lane A runs first,
+tasks of similar size in `tasks/v1/m12.md`; none is measured. Lane A runs first,
 because the other three build on its API; B, C and D then run in parallel.
 
 | Lane | What it builds                                                                                                                                                                                                                                        | Estimate |
@@ -984,7 +984,7 @@ The brand link and Your Coven both point at the `/coven` landing: a page that se
 
 ## Robots, sitemap, page metadata and structured data
 
-**Decided:** the public pages tell a search engine what they are (title, description, canonical, JSON-LD), `robots.txt` lets a crawler into the home page and the compendium alone, and off production nothing is offered at all. The task's entry in `claude-docs/tasks/mb.md` carries the acceptance criteria and the owner's amendment of 2026-10-19.
+**Decided:** the public pages tell a search engine what they are (title, description, canonical, JSON-LD), `robots.txt` lets a crawler into the home page and the compendium alone, and off production nothing is offered at all. The task's entry in `claude-docs/tasks/v1/mb.md` carries the acceptance criteria and the owner's amendment of 2026-10-19.
 
 ### The pieces
 

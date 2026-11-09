@@ -8,7 +8,7 @@ import { loadHelpArticles } from '@/db/seed/help';
 import type { SeedHelpArticle } from '@/db/seed/types';
 
 // Which rows the shipped help list holds, read without a database: each FAQ, article, sub page and glossary term the help
-// record names (claude-docs/tasks/m17.md, M17.17), with its audience and its parent. What the prose says is reviewed, not tested;
+// record names (claude-docs/tasks/v1/m17.md, M17.17), with its audience and its parent. What the prose says is reviewed, not tested;
 // a body is only required to be there. Running the seed is help.test.ts's.
 
 type Audience = SeedHelpArticle['audience'];

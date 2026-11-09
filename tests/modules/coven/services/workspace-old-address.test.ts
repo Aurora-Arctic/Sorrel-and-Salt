@@ -105,7 +105,7 @@ async function covenWith(name: string, members: [string, string][]): Promise<str
   return row.id as string;
 }
 
-// Another coven may take an old address, and the redirect it gave ends (claude-docs/tasks/m17.md, M17.23).
+// Another coven may take an old address, and the redirect it gave ends (claude-docs/tasks/v1/m17.md, M17.23).
 describe('membershipBySlug once another coven takes the old address', () => {
   it("refuses the old coven's member there as an unknown address, and admits the new holder's member", async () => {
     const t = token();
@@ -157,7 +157,7 @@ describe('membershipBySlug once another coven takes the old address', () => {
   });
 });
 
-// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/m17.md, M17.23).
+// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/v1/m17.md, M17.23).
 describe('membershipBySlug after a second rename', () => {
   it('refuses a member at the first address as an unknown address, and still sends them on from the second', async () => {
     const t = token();

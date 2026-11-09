@@ -175,7 +175,7 @@ The two least certain rows are the invitations. The FTC's category 1 speaks of a
 
 ### Billing mails that Wave 21 implies
 
-[Wave 21](../waves/wave-21.md) specifies no mail, so any billing mail is implied. Classes are the researcher's inference **(own reading)** from the FTC categories.
+[Wave 21](../waves/v1-next/wave-21.md) specifies no mail, so any billing mail is implied. Classes are the researcher's inference **(own reading)** from the FTC categories.
 
 - **Transactional:** payment failed or past due, trial ending, seat lapsed and exemption ending (FTC category 3, a change in standing of an ongoing account); a receipt or switch confirmation (category 1, and 3).
 - **Promotional:** a mail that announces or pitches paid plans to existing users. Its main purpose is to advertise, so it needs consent and the promotional frame.

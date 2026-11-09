@@ -2,12 +2,12 @@
 name: create-bug-task
 model: sonnet
 effort: medium
-description: Use when the user wants to log a bug as a tracked task (e.g. "create a bug task", "log this bug", "/create-bug-task"). Asks for the bug and its steps to reproduce, drafts a user story, acceptance criteria and a name for review, then on approval files the issue in the Z. Bugfixes milestone of the Sorrel & Salt board and adds its entry to `claude-docs/tasks/mb.md`.
+description: Use when the user wants to log a bug as a tracked task (e.g. "create a bug task", "log this bug", "/create-bug-task"). Asks for the bug and its steps to reproduce, drafts a user story, acceptance criteria and a name for review, then on approval files the issue in the Z. Bugfixes milestone of the Sorrel & Salt board and adds its entry to `claude-docs/tasks/v1/mb.md`.
 ---
 
 # create-bug-task
 
-Turn a bug report into a tracked `MB.*` task: an issue in the **Z. Bugfixes** milestone and its entry in `claude-docs/tasks/mb.md`. Nothing is written until the user approves the draft.
+Turn a bug report into a tracked `MB.*` task: an issue in the **Z. Bugfixes** milestone and its entry in `claude-docs/tasks/v1/mb.md`. Nothing is written until the user approves the draft.
 
 Shared mechanics (drafting rules, the approval gate, minting, the doc edits) are in [`reference-mint.md`](reference-mint.md); this file holds only what is specific to bugs.
 
@@ -26,5 +26,5 @@ Shared mechanics (drafting rules, the approval gate, minting, the doc edits) are
 | Type      | `Bug`                                                                                                 |
 | Milestone | `Z. Bugfixes` (not a wave, so there is no id line to update, no wave row and no `reorder`)            |
 | Labels    | `tracked`, plus `hotfix` only if the user confirmed it                                                |
-| Docs      | A summary-table row (Status column: `Bugfixes`) and a full entry in `claude-docs/tasks/mb.md`         |
+| Docs      | A summary-table row (Status column: `Bugfixes`) and a full entry in `claude-docs/tasks/v1/mb.md`      |
 | Entry     | A "Found on <date>" paragraph carrying the bug and its steps to reproduce, between story and criteria |

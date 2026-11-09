@@ -64,4 +64,4 @@ node scripts/task-board.mjs estimate <ID> 3
 node scripts/task-board.mjs reorder --apply
 ```
 
-The notes are the entry's text in `claude-docs/tasks/<milestone>.md`. The entry, the wave's row in `TASKS.md`'s execution-order table, its wave file in `claude-docs/waves/` where the reasoning changes, `tasks/mb.md`'s summary table and the first line of the milestone's description are edited in the same pass, the row before `reorder --apply` runs, since that places the new item by the row. An issue minted into a closed milestone takes it after creation (claude-docs/task-tracking.md, "Minting a task").
+The notes are the entry's text in `claude-docs/tasks/<milestone>.md`. The entry, the wave's row in `TASKS.md`'s execution-order table, its wave file in `claude-docs/waves/` where the reasoning changes, `tasks/v1/mb.md`'s summary table and the first line of the milestone's description are edited in the same pass, the row before `reorder --apply` runs, since that places the new item by the row. An issue minted into a closed milestone takes it after creation (claude-docs/task-tracking.md, "Minting a task").

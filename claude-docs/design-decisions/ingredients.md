@@ -539,9 +539,9 @@ Tests `tests/components/StockDialog/index.test.tsx` with fetch mocked at `/api/g
 
 **11. Task docs, synced in the same turn** (`node scripts/task-board.mjs sync <ID>` after each edit; keep heading hours consistent, M9.9 re-estimated for the larger scope):
 
-- `claude-docs/tasks/m9.md` M9.9 → "Edit stock from the card": dialog, pencil through `covenCardActions`, Quick Look Forms section, single worst-state badge, coven-card forms removed, `saveStock`; acceptance criteria rewritten accordingly.
+- `claude-docs/tasks/v1/m9.md` M9.9 → "Edit stock from the card": dialog, pencil through `covenCardActions`, Quick Look Forms section, single worst-state badge, coven-card forms removed, `saveStock`; acceptance criteria rewritten accordingly.
 - M9.10: keeps a local entry's Delete only; jar removal is the dialog's Remove.
-- `claude-docs/tasks/m12.md` M12.29: entry-page Stock section listing jars with badges, heading carries the same pencil opening `StockDialog`; no per-line Edit, no Add Stock dialog.
+- `claude-docs/tasks/v1/m12.md` M12.29: entry-page Stock section listing jars with badges, heading carries the same pencil opening `StockDialog`; no per-line Edit, no Add Stock dialog.
 
 ### Agents and order (owner's call, 2026-10-20: two lanes, then merge)
 
@@ -967,7 +967,7 @@ second hatch-named scope, `workspaceListScopeIncludingSoftDeleted`
 
 ## Linking Goes One Way
 
-**Decided:** 2026-10-20, by the owner. In v1 a coven can annotate a compendium entry and make it its own (Make It Ours, Annotate). It cannot link one of its own ingredients to a compendium entry. That direction is a v2 feature ([`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"). The task is M12.42 in [`../tasks/m12.md`](../tasks/m12.md).
+**Decided:** 2026-10-20, by the owner. In v1 a coven can annotate a compendium entry and make it its own (Make It Ours, Annotate). It cannot link one of its own ingredients to a compendium entry. That direction is a v2 feature ([`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"). The task is M12.42 in [`../tasks/v1/m12.md`](../tasks/v1/m12.md).
 
 ### What "linking" meant
 
@@ -991,13 +991,13 @@ Linking a coven's own ingredient to the compendium meant the own entry stopped e
 
 ### What went where
 
-| Work                                                                                                    | Now                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| The Link dialog, the split service, the form map, the pick summaries, and the M12.38–M12.41 task drafts | The pushed branch `feature/link-to-compendium-v2`, commit 6adcd849, as they stood                                     |
-| M8.17's Link parts                                                                                      | Stripped from M8.17's branch; its entry in [`../tasks/m8.md`](../tasks/m8.md) says so                                 |
-| M12.21's conversion and M12.22's This Is It                                                             | Removed by M12.42                                                                                                     |
-| M12.38–M12.41 (issues #1138–#1141)                                                                      | Retired, 2026-10-20, closed as not planned; their entries in [`../tasks/m12.md`](../tasks/m12.md) point at the branch |
-| The v2 description                                                                                      | [`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"; the out-of-scope list in `CLAUDE.md`                    |
+| Work                                                                                                    | Now                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| The Link dialog, the split service, the form map, the pick summaries, and the M12.38–M12.41 task drafts | The pushed branch `feature/link-to-compendium-v2`, commit 6adcd849, as they stood                                           |
+| M8.17's Link parts                                                                                      | Stripped from M8.17's branch; its entry in [`../tasks/v1/m8.md`](../tasks/v1/m8.md) says so                                 |
+| M12.21's conversion and M12.22's This Is It                                                             | Removed by M12.42                                                                                                           |
+| M12.38–M12.41 (issues #1138–#1141)                                                                      | Retired, 2026-10-20, closed as not planned; their entries in [`../tasks/v1/m12.md`](../tasks/v1/m12.md) point at the branch |
+| The v2 description                                                                                      | [`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"; the out-of-scope list in `CLAUDE.md`                          |
 
 The records (see "Editing a coven's own ingredient") and (see "A coven's cupboard names the compendium's entry, rather than hiding it") carry a dated note at the top and are otherwise left as approved.
 
@@ -1691,7 +1691,7 @@ disclaimer rests on.
 
 ## The compendium seed as markdown files, a formal-name rule and curator review
 
-The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`process.md`, "Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review (plan)"](process.md#compendium-seed-as-markdown-files-with-a-hash-gated-update-path-a-formal-name-rule-and-curator-review-plan); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/m14.md`](../tasks/m14.md)).
+The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`process.md`, "Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review (plan)"](process.md#compendium-seed-as-markdown-files-with-a-hash-gated-update-path-a-formal-name-rule-and-curator-review-plan); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/v1/m14.md`](../tasks/v1/m14.md)).
 
 **It supersedes two rows of (see "A researched, sourced compendium seed")**: "One file per entry" and "The entries repeated in markdown", both rejected there on 2026-10-11. Their reasons were a shard of 100 files in one pull request and about 700 KB of markdown that nothing checked against the literal. Here the markdown file is the source of truth, not a copy, so there is nothing to drift, and the guard reads the files. Pull requests stay small because the shards were already per-lane and lanes still add their own files.
 
@@ -1819,7 +1819,7 @@ The seed writes `approved` files only. CI fails a `draft` file on `staging` and 
 
 ## The sourcing score: facts, weights and the data they need (plan)
 
-_The plan as the owner approved it on 2026-10-31. The task entries in [`tasks/m14.md`](../tasks/m14.md) carry the acceptance criteria; this record carries the reasoning._
+_The plan as the owner approved it on 2026-10-31. The task entries in [`tasks/v1/m14.md`](../tasks/v1/m14.md) carry the acceptance criteria; this record carries the reasoning._
 
 ### Context
 
@@ -2018,7 +2018,7 @@ One task builds all of the above: M14.39, "Result Cards Show A Form's Categories
 
 ## Subscription Billing Scope
 
-Decided by the owner on 2026-11-06 while M17.1 (#1356) was re-scoped. This record holds every decision the research behind it needed, and the brief for the proof of concept that settles the one question left open. The research is in [`claude-docs/billing/`](../billing/README.md): [`subscription-models.md`](../billing/subscription-models.md) (the models, the processor, the break-even), [`running-costs.md`](../billing/running-costs.md) (the cost model) and [`scripts/billing-model.mjs`](../../scripts/billing-model.mjs) (the script that computes every figure in them). The build is Wave 21 — Billing and memberships, `M21.1 → M21.20` ([`tasks/m21.md`](../tasks/m21.md), [`waves/wave-21.md`](../waves/wave-21.md)).
+Decided by the owner on 2026-11-06 while M17.1 (#1356) was re-scoped. This record holds every decision the research behind it needed, and the brief for the proof of concept that settles the one question left open. The research is in [`claude-docs/billing/`](../billing/README.md): [`subscription-models.md`](../billing/subscription-models.md) (the models, the processor, the break-even), [`running-costs.md`](../billing/running-costs.md) (the cost model) and [`scripts/billing-model.mjs`](../../scripts/billing-model.mjs) (the script that computes every figure in them). The build is Wave 21 — Billing and memberships, `M21.1 → M21.20` ([`tasks/v1-next/m21.md`](../tasks/v1-next/m21.md), [`waves/v1-next/wave-21.md`](../waves/v1-next/wave-21.md)).
 
 This record does not edit `documents/privacy.md`. The Wave 21 task that adds Stripe as a processor (M21.4 for the table row, M21.7 for the checkout page script) edits it, in the same PR as the code that makes it true.
 
@@ -2327,7 +2327,7 @@ Decisions the owner gave in planning (recorded here so the docs don't re-ask):
 | Model choice              | During M17.1: docs drafted and committed, owner chooses, then the record and tasks are written                                                                                             |
 | Doc home                  | `claude-docs/billing/` (new), Markdown                                                                                                                                                     |
 
-Repo facts the inventory established (paths relative to the worktree): Vercel Hobby, $0 (DESIGN.md §4); M17.4 records a Pro move; three daily crons in `vercel.json`; Vercel Workflows via `withWorkflow` in `next.config.ts`; Neon free tier, `main` + `staging` branches, snapshot branches before each production migration; Resend in production, Mailtrap in previews, Mailpit locally, 100-mails-a-day assumption in `claude-docs/tasks/m15.md`; Better Auth with Discord/Google/Microsoft/Facebook, no paid auth; public repo, GitHub-hosted `ubuntu-26.04` runners, ~500 gate runs a month (`claude-docs/ci/runner-budget.md`); no error tracking, uptime, alerting, log drain, CodeQL, SECURITY.md or incident runbook beyond `claude-docs/db/snapshot-and-restore.md`; privacy policy names Vercel, Neon, Resend and the four sign-in providers as processors (`documents/privacy.md`); the Code of Ethics forbids browser-side analytics and any advertising (`documents/code-of-ethics.md`, "Developers").
+Repo facts the inventory established (paths relative to the worktree): Vercel Hobby, $0 (DESIGN.md §4); M17.4 records a Pro move; three daily crons in `vercel.json`; Vercel Workflows via `withWorkflow` in `next.config.ts`; Neon free tier, `main` + `staging` branches, snapshot branches before each production migration; Resend in production, Mailtrap in previews, Mailpit locally, 100-mails-a-day assumption in `claude-docs/tasks/v1/m15.md`; Better Auth with Discord/Google/Microsoft/Facebook, no paid auth; public repo, GitHub-hosted `ubuntu-26.04` runners, ~500 gate runs a month (`claude-docs/ci/runner-budget.md`); no error tracking, uptime, alerting, log drain, CodeQL, SECURITY.md or incident runbook beyond `claude-docs/db/snapshot-and-restore.md`; privacy policy names Vercel, Neon, Resend and the four sign-in providers as processors (`documents/privacy.md`); the Code of Ethics forbids browser-side analytics and any advertising (`documents/code-of-ethics.md`, "Developers").
 
 ##### Worktree and branch
 
@@ -2339,11 +2339,11 @@ Repo facts the inventory established (paths relative to the worktree): Vercel Ho
 2. **`claude-docs/billing/subscription-models.md`** — the proposals. For each model: structure, price points (from comparables), which of the five §13 requirements it keeps/drops/alters, how the multi-coven discount and the keeper exemption map onto it, Stripe objects it needs (products, prices, coupons, per-seat vs tiered), reception evidence (comparable products' pricing pages, published surveys, community discussion — linked), free-tier recommendation with cost, break-even table per size against (a) cash costs, (b) cash + contractor-rate time, (c) cash + $250k-plus-load. Ends with a recommendation and the questions the owner must answer.
 3. **`claude-docs/billing/README.md`** — what the folder holds and how to re-run the model (the inputs table, dated; prices expire).
 4. **`claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope"** — the record. Renamed from the criterion's `m17.1-billing-plugin-or-sdk.md` because the plugin-or-SDK choice now belongs to the PoC task; the criterion in `m17.md` is corrected in place. Holds: the chosen model (owner's pick); the PoC's brief (both candidates, the five requirements, what the PoC must show for each, the env var name `STRIPE_SECRET_KEY`, the throwaway-branch rule); the data model (billing reference on `workspaces` or a `workspace_subscriptions` table, `billing_exempt_until_cleared` flag, entitlement service, all through `withAudit` with `auditColumns`); the multi-coven discount definition; the pause rule (site pause M15.52, coven pause M15.55: pauses/keeps running/extends; discount counting); the membership-management section (the four views, who may reach each, which GraphQL fields they need); the minted tasks in order. Also carries this plan verbatim as an appendix ([[feedback_store_plan_beside_design_decisions]]).
-5. **Board and task docs**: `claude-docs/tasks/m17.md` M17.1 entry corrected (story, criteria, estimate) and `claude-docs/waves/wave-17.md` saying the minted tasks live on Wave 21; the new wave's files (`tasks/m21.md`, `waves/wave-21.md`, the `TASKS.md` row, the `tasks-md.mjs` entry, the milestone); `node scripts/task-board.mjs sync` run from the worktree ([[project_task_board_sync_reads_own_checkout]]); DESIGN.md §13 "Subscription billing", §14 row, §15 bullet updated to say the scope is decided and point at the record and tasks; `claude-docs/backlog.md` V2 item moved to V Fast Follow naming the tasks; `documents/privacy.md` is **not** edited here (a build task that adds Stripe as a processor edits it then — say so in the record).
+5. **Board and task docs**: `claude-docs/tasks/v1/m17.md` M17.1 entry corrected (story, criteria, estimate) and `claude-docs/waves/v1/wave-17.md` saying the minted tasks live on Wave 21; the new wave's files (`tasks/v1-next/m21.md`, `waves/v1-next/wave-21.md`, the `TASKS.md` row, the `tasks-md.mjs` entry, the milestone); `node scripts/task-board.mjs sync` run from the worktree ([[project_task_board_sync_reads_own_checkout]]); DESIGN.md §13 "Subscription billing", §14 row, §15 bullet updated to say the scope is decided and point at the record and tasks; `claude-docs/backlog.md` V2 item moved to V Fast Follow naming the tasks; `documents/privacy.md` is **not** edited here (a build task that adds Stripe as a processor edits it then — say so in the record).
 
 ##### Tasks to mint: a new wave, **Wave 21 — Billing and memberships**
 
-M17.1 stays on Wave 17. Everything it mints is `M21.1 → M21.n`, on a new milestone **Wave 21 — Billing and memberships** (the board has no command to create a milestone, so it is one `gh api` POST to `repos/…/milestones`, description = the id list then the wave link, as `task-tracking.md` says), with `claude-docs/tasks/m21.md` (header like `m20.md`: "minted by M17.1 on <date> from the record"), `claude-docs/waves/wave-21.md`, a `21 — Billing and memberships` row in `TASKS.md`'s Execution order, and `claude-docs/tasks/m21.md` added to the list in `scripts/tasks-md.mjs` (the criterion allows that file). Ids confirmed against the board at minting, since parallel sessions mint ([[project_parallel_sessions_mint_ids]]).
+M17.1 stays on Wave 17. Everything it mints is `M21.1 → M21.n`, on a new milestone **Wave 21 — Billing and memberships** (the board has no command to create a milestone, so it is one `gh api` POST to `repos/…/milestones`, description = the id list then the wave link, as `task-tracking.md` says), with `claude-docs/tasks/v1-next/m21.md` (header like `m20.md`: "minted by M17.1 on <date> from the record"), `claude-docs/waves/v1-next/wave-21.md`, a `21 — Billing and memberships` row in `TASKS.md`'s Execution order, and `claude-docs/tasks/v1-next/m21.md` added to the list in `scripts/tasks-md.mjs` (the criterion allows that file). Ids confirmed against the board at minting, since parallel sessions mint ([[project_parallel_sessions_mint_ids]]).
 
 Table task before every behaviour task that depends on it. Estimates set at minting. Draft list; the chosen model may add or remove a task:
 
@@ -2504,7 +2504,7 @@ Every file below is `approved`. Each answer is written into its file under `ques
 
 ### The build tasks, Wave 19
 
-The build went to a new wave, **Wave 19 — Compendium ethics**, on the owner's call of 2026-11-06, not to Wave 17 as M17.2's entry first said. The reasons: the build is ten tasks with a trigger of its own (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. The tasks are in `claude-docs/tasks/m19.md` and the wave in `claude-docs/waves/wave-19.md`. The wave runs after Wave 18 in board order. M19.1 and M19.2 come first, because removing the controlled substances is the owner's priority.
+The build went to a new wave, **Wave 19 — Compendium ethics**, on the owner's call of 2026-11-06, not to Wave 17 as M17.2's entry first said. The reasons: the build is ten tasks with a trigger of its own (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. The tasks are in `claude-docs/tasks/v1-next/m19.md` and the wave in `claude-docs/waves/v1-next/wave-19.md`. The wave runs after Wave 18 in board order. M19.1 and M19.2 come first, because removing the controlled substances is the owner's priority.
 
 | Order  | Task                                                                                              | Depends on                      |
 | ------ | ------------------------------------------------------------------------------------------------- | ------------------------------- |
@@ -2628,7 +2628,7 @@ These come from the file names under `compendium/ingredients/`. Each is unverifi
 - **M19.1 — Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed.** It checks each candidate against 21 CFR Part 1308 and RCW 69.50 by its sources, keeps every plant lawful to grow, gives each kept candidate a sourced safety note where a source names a harm, leaves no preparation or dosing sentence, records each removal, and updates the Code of Ethics.
 - **M19.2 — Retire the removed entries from seeded databases.** A forward-only data migration on M14.30's pattern (`0090_retire-endangered-entries.sql`): it soft-deletes each entry by seed key, keeps the variants a coven holds, and later seed runs report the key as `retired`.
 
-Both open Wave 19 — Compendium ethics (`claude-docs/waves/wave-19.md`), because the removal is the owner's priority.
+Both open Wave 19 — Compendium ethics (`claude-docs/waves/v1-next/wave-19.md`), because the removal is the owner's priority.
 
 ### Sources
 
@@ -2643,7 +2643,7 @@ Opened on 2026-11-06.
 
 ## The ethical warnings on ingredients
 
-The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind Wave 20 (`claude-docs/tasks/m20.md`, `claude-docs/waves/wave-20.md`). The plan it was written from is `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
+The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind Wave 20 (`claude-docs/tasks/v1-next/m20.md`, `claude-docs/waves/v1-next/wave-20.md`). The plan it was written from is `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 
 Nothing under `src/` or `compendium/` changes in M17.3. The numbers below were counted by script from `compendium/ethics/` on 2026-11-06; the files are the source, and the lists will move as the question tasks run.
 

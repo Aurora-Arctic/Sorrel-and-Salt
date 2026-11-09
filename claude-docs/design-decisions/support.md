@@ -27,7 +27,7 @@ The support form, its admin page and the sender's list shipped as M15.26 to
 M15.31 (see "A support form, reviewed by keepers"). The owner then
 reviewed them in a browser, as a sender and as a keeper, in both themes and
 at phone width, and chose what to change. This record lists the decisions;
-the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
+the sixteen tasks that carry them are in [`tasks/v1/m15.md`](../tasks/v1/m15.md),
 "Support revision". The decisions are the owner's, made on 2026-10-31.
 
 - Review page: <https://claude.ai/artifact/WRNYpvcfoFNa1uEP4TrLZN>
@@ -751,7 +751,7 @@ module" steps.
 ### Build tasks
 
 Six tasks, minted 2026-10-31 as M15.26 to M15.31 in
-[`tasks/m15.md`](../tasks/m15.md), "Support build". Each is its own PR, in the
+[`tasks/v1/m15.md`](../tasks/v1/m15.md), "Support build". Each is its own PR, in the
 order the table-then-behaviour rule fixes.
 
 | Id     | Name                                                  | Estimate |
@@ -829,7 +829,7 @@ One heading per decision in the issue's list (Who can submit · Kinds · Data re
 
 #### 3. Mint six build tasks (order fixed by the table-then-behaviour rule)
 
-Each entry written to `claude-docs/tasks/m15.md` under a new `### Support` sub-heading after M15.1, then `gh issue create --title "<ID> — <name>" --type Task --label tracked --milestone "Wave 15 — Launch" --body-file <scratchpad file>` and `node scripts/task-board.mjs estimate <ID> <h>`. Re-check each id with `find` first.
+Each entry written to `claude-docs/tasks/v1/m15.md` under a new `### Support` sub-heading after M15.1, then `gh issue create --title "<ID> — <name>" --type Task --label tracked --milestone "Wave 15 — Launch" --body-file <scratchpad file>` and `node scripts/task-board.mjs estimate <ID> <h>`. Re-check each id with `find` first.
 
 | ID     | Name                                                  | h   | Criteria highlights                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------ | ----------------------------------------------------- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -844,9 +844,9 @@ Placement in `TASKS.md:62`: `M15.1 · M15.2 · M15.23 → M15.28 · M15.3 · M15
 
 #### 4. Doc edits (same PR)
 
-- `claude-docs/tasks/m15.md`: head count (`_22 tasks · N hours_` → 28), the "### Support" paragraph, six entries; M15.4's entry names `/support?kind=accessibility` (or the modal param) as the accessibility-bug route.
-- `claude-docs/tasks/mb.md`: MB.176's entry marked retired, superseded by M15.1, and its summary-table row updated.
-- `claude-docs/waves/wave-15.md`: M15.1's paragraph gains where the build sits and why; MB.176's mention removed or marked retired.
+- `claude-docs/tasks/v1/m15.md`: head count (`_22 tasks · N hours_` → 28), the "### Support" paragraph, six entries; M15.4's entry names `/support?kind=accessibility` (or the modal param) as the accessibility-bug route.
+- `claude-docs/tasks/v1/mb.md`: MB.176's entry marked retired, superseded by M15.1, and its summary-table row updated.
+- `claude-docs/waves/v1/wave-15.md`: M15.1's paragraph gains where the build sits and why; MB.176's mention removed or marked retired.
 - `claude-docs/TASKS.md`: Wave 15 row; MB.176 struck wherever listed.
 - `claude-docs/DESIGN.md`: §5 three tables (in the `**name** — cols, + audit` shape); §7 SDL additions (the queries and mutations above, `SupportRequest`, `SupportReply`, `SupportTimeout`, `SupportKind`, `SupportStatus`); §9 routes `/support`, `/account/support`, `/admin/support`; §10 story 89 "a support request" and the count 66 (1–34, 47–64, 76–89); §3 module tree gains `support`.
 - `CLAUDE.md`: story count line → 66 stories; the two lines MB.176 named — "Admins and curators curate … and nothing else" gains "and review support requests, which hold only what a sender chose to write", and "Observers write nothing" gains "to a workspace; an observer may still send a support request" — recorded as architecture decisions in the record. Modules line gains `support`.
@@ -865,7 +865,7 @@ Placement in `TASKS.md:62`: `M15.1 · M15.2 · M15.23 → M15.28 · M15.3 · M15
 
 ### Verification
 
-Doc-only PR: `npm run format:check` and `npm run lint` (no coverage run — memory: no tests on doc-only changes). `node scripts/task-board.mjs find M15.23 … M15.28` each print Wave 15 and Not Started; `find MB.176` shows `CLOSED` / `NOT_PLANNED`; `grep -n "MB.176" claude-docs/TASKS.md claude-docs/waves/wave-15.md` shows only the retired note; `node scripts/task-board.mjs reorder` dry-run lists the six where the row places them.
+Doc-only PR: `npm run format:check` and `npm run lint` (no coverage run — memory: no tests on doc-only changes). `node scripts/task-board.mjs find M15.23 … M15.28` each print Wave 15 and Not Started; `find MB.176` shows `CLOSED` / `NOT_PLANNED`; `grep -n "MB.176" claude-docs/TASKS.md claude-docs/waves/v1/wave-15.md` shows only the retired note; `node scripts/task-board.mjs reorder` dry-run lists the six where the row places them.
 
 ### Acceptance criteria mapped
 
@@ -1055,7 +1055,7 @@ The values the owner set for it: ethics first, anti-racism, LGBTQIA+ inclusion, 
 | WCAG is the W3C's standard for making web content accessible to people with disabilities                                                                                                                                                      | W3C WAI, "WCAG 2 Overview" (read 2026-11-01): "WCAG documents explain how to make web content more accessible to people with disabilities"; "WCAG 2.2 is an approved International Organization for Standardization (ISO) standard"                                                                                                                                                                                                                                                                                 |
 | Both themes keep to the contrast floor                                                                                                                                                                                                        | `claude-docs/styling.md`: "WCAG AA 4.5:1 is the floor for every token, in both themes"                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | The support link opens the form with Accessibility chosen, with or without an account                                                                                                                                                         | `src/lib/support-path.ts` (`supportAboutOf`, the `accessibility` value); `src/modules/support/services/signed-out.ts` (`SIGNED_OUT_ABOUTS` includes accessibility); `DESIGN.md` §9, `/support`                                                                                                                                                                                                                                                                                                                      |
-| The closed-practice warning and ethical warnings on ingredients are planned, not built                                                                                                                                                        | The task entry (`claude-docs/tasks/m15.md`, M15.4): "It does not build the two fast-follow warnings in the backlog … the page may describe them as planned"                                                                                                                                                                                                                                                                                                                                                         |
+| The closed-practice warning and ethical warnings on ingredients are planned, not built                                                                                                                                                        | The task entry (`claude-docs/tasks/v1/m15.md`, M15.4): "It does not build the two fast-follow warnings in the backlog … the page may describe them as planned"                                                                                                                                                                                                                                                                                                                                                      |
 
 ### For the owner
 
@@ -1468,7 +1468,7 @@ Each item is a decision I took conservatively, or a fact I could not establish. 
 1. **How strong "anything you do after an update is bound by the updated terms" is, and why the click matters.** I could fetch no court opinion at first hand (CourtListener and FindLaw refused), so this rests on three Wikipedia articles and is for M15.62 to confirm. What they report: United States courts have "usually" upheld terms a person accepted by clicking, a **clickwrap** ("Clickwrap": _Feldman v. Google_, E.D. Pa. 2007, a forum clause; _Meyer v. Uber Technologies_, 2d Cir. 2017, "The user is still on inquiry notice" where the terms were linked), while terms a person is meant to accept merely by using a site, a **browsewrap**, turn on "whether a website user has actual or constructive notice" and have failed where the terms sat behind a link nobody was made to see (_Specht v. Netscape_, 2d Cir. 2002: "a consumer's clicking on a download button does not communicate assent to contractual terms"; _Nguyen v. Barnes & Noble_, 9th Cir. 2014, hyperlinked terms gave no reasonable notice; _In re Zappos.com_, D. Nev., no year given) and succeeded where exposure to the terms was "repeated, conspicuous" (_Hubbert v. Dell_, Ill. App. 2005). On changing terms, "Terms of service" reports _In re Zappos.com_ (2012) holding terms "worded to allow unilateral amendment, where one party can change the agreement at any time" unenforceable. So, plainly: on its own, a sentence that binds by continued use is the weak kind of clause, the browsewrap kind, and a clause that lets the site change the terms at will has been struck down. What makes this site's version strong is the gate: an account cannot reach a page that needs an account after an update without being sent to `/account/terms` and clicking to agree to the new version, which the site records with its date. That click is a clickwrap for each version, the kind courts have usually upheld, and the "bound by the updated terms" sentence then describes what the click already did rather than doing the work itself. Two limits, for the lawyer: the API is not gated, so an account that never loads a page could act under an old version with no click, and the sentence is all that covers that; and no Washington opinion was fetched, so whether Washington courts follow the pattern above is unconfirmed.
 2. **Five clauses for M15.62, every sentence of them: the governing law, the courts, the arbitration with its cost and hardship terms, and the limitation of liability, with the continued-use sentence above.** The courts clause states only the owner's choice of forum; the owner did not say where they live, and the sentence that said so, with its venue-law citation, was removed (2 November 2026). "Which Law Applies" names the State of Washington and, on the owner's answer (2 November 2026), the state courts of Washington in Spokane County, worded as both sides consenting to that court; "What the Site Is Not Liable For" is the limitation of liability the owner asked for, written to be read: what the site is not liable for, a cap of what you paid, and what no limitation can remove. All of it was drafted by Claude, not a lawyer. The questions to put to a lawyer: does the choice-of-law wording do what it says; should the forum clause be exclusive, and does it bind a reader outside Washington; is "what you paid" an enforceable cap, both while the site charges nothing and once it charges (the owner removed "which is nothing" on 2 November 2026, since the site will not stay free); which categories of liability Washington law does not let a site exclude (I could not fetch the gross-negligence case, see the claims table), so the clause can name them; and whether citing RCW 62A.2-719, a rule for sales of goods, as an example of Washington treating unconscionable limitations as invalid is fair or should go. Nothing in the clause claims more than its sources say. On the arbitration's cost: the clause now says whoever asks for arbitration pays the arbitrator, with a hardship exception that lets a person who meets GR 34's indigency guidelines skip arbitration and go to court, checking themselves against the guidelines with no order first. Ask the lawyer whether claimant-pays plus that exception keeps the clause enforceable, given that Washington courts have struck arbitration terms whose costs block a claim. The coordinator named _Adler v. Fred Lind Manor_ (Washington Supreme Court, 2004) from memory as such a case; Justia refused the fetch (403), so it is **unverified** here and cited nowhere, and the lawyer should check it. Also ask whether the "false claim of hardship" sentence needs more than it says, since GR 34 itself is silent on a false declaration. The terms deliberately carry no loser-pays clause: the frivolous-claim sentence states what RCW 4.84.185 already lets a court do, in either direction, and adds nothing to it. A one-sided attorney-fee clause was left out because RCW 4.84.330 would turn it against the owner as readily as for them: "In any action on a contract … where such contract … specifically provides that attorneys' fees and costs … shall be awarded to one of the parties, the prevailing party, whether he or she is the party specified in the contract or lease or not, shall be entitled to reasonable attorneys' fees", the fees "shall not be subject to waiver", and "Any provision in any such contract or lease which provides for a waiver of attorneys' fees is void" (fetched 2 November 2026). Ask the lawyer to confirm that leaving the clause out is the right call for a free service, and that the frivolous-claim sentence, which names a statute on the page, reads as information rather than as a fee clause RCW 4.84.330 would reach.
 3. **Thirteen, from COPPA.** Answered: the United States, Washington state. The age sentence now rests on 15 U.S.C. § 6501(1) and 16 C.F.R. part 312 (the figure, and the parental-consent mechanism), and says the site asks no parent's consent. It makes no claim that COPPA reaches the site: whether it is an "operator" of a "commercial" service is a lawyer's question, and the age is a sensible floor either way. The earlier sentence "the site relies on your consent", a statement about a lawful basis under the GDPR, is gone, and nothing else on the four pages assumed the United Kingdom: I checked `/privacy`, `/disclaimer` and `/code-of-ethics` and their notes, and found no UK law, no "consent" basis and no UK assumption in them. The privacy policy's notes still point the questions of controller, lawful basis and supervisory authority at M15.58, which is right. The owner chose (2 November 2026) to keep the sentence with no age screen: COPPA reaches a general-audience site only once it has "actual knowledge" that a user is under thirteen, and commentary on the FTC's guidance says it does not require a site to ask (https://paulhastings.com/insights/caveat-vendor/blog-ftc-releases-second-set-of-coppa-faqs-here-are-some-highlights, fetched 2 November 2026). If a screen is ever added, it is a neutral date-of-birth field, never an "I am over 13" box, which the FTC does not treat as neutral. An account the site learns belongs to someone under thirteen is erased. A question for a lawyer: is a stated minimum age in the agreed terms enough for COPPA, with no age screen?
-4. **Whether the GDPR applies to EU visitors is not settled here.** The terms say nothing about the GDPR, and these notes do not claim it does or does not apply to a site run from Washington with visitors in the EU. That is M15.58's question (`claude-docs/tasks/m15.md`, M15.58: "Lawful basis and retention"), and the terms should be re-read when it answers.
+4. **Whether the GDPR applies to EU visitors is not settled here.** The terms say nothing about the GDPR, and these notes do not claim it does or does not apply to a site run from Washington with visitors in the EU. That is M15.58's question (`claude-docs/tasks/v1/m15.md`, M15.58: "Lawful basis and retention"), and the terms should be re-read when it answers.
 5. **Washington's My Health My Data Act (RCW 19.373): no, on its definitions, and a lawyer should confirm.** The Act regulates "consumer health data", defined in RCW 19.373.010(8)(a) as "personal information that is linked or reasonably linkable to a consumer" that identifies the consumer's past, present or future physical or mental health status, with examples in (8)(b) such as health conditions, treatments, medication, reproductive or sexual health, biometric and genetic data, and health-related inferences drawn from non-health data; a "regulated entity" (19.373.010(23)) is one that conducts business in Washington or targets Washington consumers and "alone or jointly with others, determines the purpose and means of collecting, processing, sharing, or selling" such data. The site stores what a person writes about ingredients, stock and spells, their name, address and sign-in details, and support requests holding what the sender chose to write (the section "The privacy policy's working notes"); none of it identifies a person's health status, and the compendium's safety notes are about the ingredient, not the reader. I did not stretch the Act to the case of a member writing about their own health in a spell or a support request; a lawyer should say whether that edge makes the site a regulated entity. I looked at no other Washington statute, and the terms cite none.
 6. **Promises.** Answered: "sells nothing about you" and "never used to train anything" are true. On 2 November 2026 the owner asked that the Short Version not make them a permanent promise, so it states them as the present state; "What Is Yours" still says "We promise that …". The owner also removed "Today the site is run by people in their spare time" from the terms and the disclaimer, since it will not always be true, and the claim that the site is free, since it will not stay free. The owner also removed the claim that creating a coven needs an invitation or a keeper's grant, with no way to buy your way in, since that is changing soon. The owner kept "What Is Yours" as a promise (2 November 2026). A question for a lawyer: does the "never sold, never used to train" promise limit what a later version of the terms can do with writing already on the site? The FTC warned on 13 February 2024 that quietly applying a looser rule to data people gave earlier can be unfair or deceptive (summarised at https://www.consumerfinancemonitor.com/2024/02/28/ftc-warns-quietly-changing-privacy-policies-may-be-an-unfair-or-deceptive-practice/, fetched 2 November 2026), so a change would be told to people first, agreed again, and applied only to writing done after it.
 7. **The Disclaimer and the Code of Ethics are "part of these terms".** Answered: kept. The terms state it in their opening paragraph, under the version line; the Disclaimer and the Code of Ethics each open by saying they are part of the terms; and the acceptance page names both beside the Agree button, so the inclusion is stated before anyone agrees. The terms now say which part of the Code of Ethics binds whom: "What Everyone Agrees To" binds every account, and the curator, admin and owner sections bind whoever holds that role. The staff sections are drafts for the owner's review, rule by rule (the section "The code of ethics' working notes", item 10).
@@ -1761,7 +1761,7 @@ The owner's decision of 2 November 2026: the build tasks that came out of the M1
 
 This needs no extra task. It becomes criteria on M15.74 below and a paragraph in the privacy policy.
 
-### Tasks to mint (Wave 15 — Launch, `claude-docs/tasks/m15.md`)
+### Tasks to mint (Wave 15 — Launch, `claude-docs/tasks/v1/m15.md`)
 
 **M15.73 — Mark an Account as Erased** · 1h _(the schema half; the behaviour follows in M15.74)_
 _Story:_ As the site, I want an erased account marked as erased, so that nothing can lift the pause on it or show it as a person.
@@ -1824,7 +1824,7 @@ _Story:_ As a visitor, I want the site to set only the cookies it strictly needs
 
 1. Recheck the ids against the board and `git log --all`.
 2. In a worktree `/home/node/worktrees/m15.58-tasks` on `feature/m15.58-mint-gdpr-tasks` off `origin/staging` (never `/app`):
-   - add the four entries and the M15.61 edit to `claude-docs/tasks/m15.md`, after the Done items;
+   - add the four entries and the M15.61 edit to `claude-docs/tasks/v1/m15.md`, after the Done items;
    - add the four entries to `TASKS.md`'s index and execution order.
 3. File each issue through the create-feature-task flow (`node scripts/task-board.mjs`), with the drafts above as the approved text, then run `task-board.mjs sync` from the worktree.
 4. Run `npm run format:check` and `npm run lint` only. No tests, because the change is prose.
@@ -2172,7 +2172,7 @@ markdown edited with this editor.
 
 ### Build tasks
 
-Minted 2026-11-02 in [`tasks/m15.md`](../tasks/m15.md), "Legal", and built in
+Minted 2026-11-02 in [`tasks/v1/m15.md`](../tasks/v1/m15.md), "Legal", and built in
 one group PR with this record and M15.63, bar the contract.
 
 | Id     | Name                                                        | Estimate |
@@ -2311,8 +2311,8 @@ The id is the next free M17.x: M17.5, since M17.4 is #1482. I recheck it at mint
 1. **Branch.** In a worktree, since your memory says never to work in /app: run `git fetch origin staging` and the collision checks, then `git worktree add -b feature/m15.59-scope-admin-editor-for-sites-documents --no-track /home/node/worktrees/m15.59 origin/staging`. Comment on #1458 and move it to `In Progress`.
 2. **Write the record.** Write `claude-docs/design-decisions/support.md`, "A keeper editor for the site's documents" from the main session, which already holds every fact it needs. It follows the section "A support form, reviewed by keepers"'s shape: title, status and date line, an intro, one `##` per decision with its reasons and alternatives, the library research table with sources, `## DESIGN.md sections the builds change`, and `## Build tasks`. Copy this plan to `claude-docs/design-decisions/support.md`, "Scope a keeper editor for the site's documents (plan)".
 3. **Mint the tasks.** Recheck the ids, then mint build tasks A–D and M17.5:
-   - add each entry to `claude-docs/tasks/m15.md` or `claude-docs/tasks/m17.md`, after the Done items;
-   - place each in `claude-docs/waves/wave-15.md` or `claude-docs/waves/wave-17.md`;
+   - add each entry to `claude-docs/tasks/v1/m15.md` or `claude-docs/tasks/v1/m17.md`, after the Done items;
+   - place each in `claude-docs/waves/v1/wave-15.md` or `claude-docs/waves/v1/wave-17.md`;
    - mint each through `node scripts/task-board.mjs`;
    - run `task-board sync` from the worktree.
 
@@ -2680,8 +2680,8 @@ surface line) and each story-adding build (the count).
 
 ### Build tasks
 
-Minted 2026-11-03 in [`tasks/m18.md`](../tasks/m18.md), in
-[Wave 18](../waves/wave-18.md). Estimates are mine.
+Minted 2026-11-03 in [`tasks/v1-next/m18.md`](../tasks/v1-next/m18.md), in
+[Wave 18](../waves/v1-next/wave-18.md). Estimates are mine.
 
 | Id    | Name                                                         | Estimate |
 | ----- | ------------------------------------------------------------ | -------- |
@@ -2926,9 +2926,9 @@ There is nothing to publish now. The seed sentence names M18.5. M18.5 delivers t
 
 ### Wave 18 — Privacy
 
-- **Placement.** A new `TASKS.md` row after Wave 15, a new `waves/wave-18.md`, and a milestone "Wave 18 — Privacy".
+- **Placement.** A new `TASKS.md` row after Wave 15, a new `waves/v1-next/wave-18.md`, and a milestone "Wave 18 — Privacy".
 - **Moved tasks.** M15.61 and M15.73 to M15.76 keep their ids and entries but move milestone, and leave Wave 15's row, Wave 15's milestone description and `wave-15.md`. M15.74's entry gains the `data_copies` criterion, synced with `task-board.mjs sync`.
-- **New tasks.** M18.n, in a new `claude-docs/tasks/m18.md`.
+- **New tasks.** M18.n, in a new `claude-docs/tasks/v1-next/m18.md`.
 - **Row order.** M15.61 · M15.75 · M15.76 · M18.1 → M18.9 · M15.73 · M15.74. Erasure comes last, after the pieces it may reuse.
 - **The table's name.** Below, "`data_copies`" means the table named `privacy_requests` (decision 13).
 
@@ -2965,10 +2965,10 @@ The main session coordinates. One Sonnet agent does the edits, briefed with thes
 
 3. **Write the record**, `claude-docs/design-decisions/support.md`, "A way for people to take their own writing with them", in M15.59's shape. It includes "Alternatives weighed" for every decision, the proposed stories, "DESIGN.md sections the builds change", "Text to publish", "Build tasks", "What I could not read" and "Sources".
 4. **Copy the plan** to `claude-docs/design-decisions/support.md`, "Scope a way for people to take their own writing with them (plan)", under a one-line note that it is not maintained.
-5. **Set up the wave.** Write `waves/wave-18.md` and add the `TASKS.md` row. Take the moved tasks out of Wave 15. Add the M15.74 criterion and sync it. Create the milestone as `claude-docs/task-tracking.md` sets out.
+5. **Set up the wave.** Write `waves/v1-next/wave-18.md` and add the `TASKS.md` row. Take the moved tasks out of Wave 15. Add the M15.74 criterion and sync it. Create the milestone as `claude-docs/task-tracking.md` sets out.
 6. **Mint the tasks.**
    1. Re-check that M18.1 is free.
-   2. Write `tasks/m18.md`.
+   2. Write `tasks/v1-next/m18.md`.
    3. For each task, run `gh issue create --type Task --label tracked --milestone "Wave 18 — Privacy"`, then `estimate`.
    4. Move the five existing issues to the new milestone.
    5. Update both milestones' first lines.
@@ -3144,14 +3144,14 @@ The owner answered every question on 2026-11-06 (this session); the answers are 
 
 **Where it lands:** a second record, `claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"; a "No controlled substances" section in the seed README beside "No endangered species"; the Code of Ethics' sourcing section gains the rule in the content task's PR; two build tasks open Wave 19 (table below). M17.2 itself deletes no entry.
 
-**The build is a new wave (the owner's call, 2026-11-06), not Wave 17.** M17.2's entry and issue say "minted as `M17.n` tasks on Wave 17"; that line is corrected in place in `claude-docs/tasks/m17.md`, synced to #1467, and the record says why: the build is eight tasks with its own trigger (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. Proposed name **Wave 19 — Compendium ethics**, after Wave 18 (Privacy); the tasks are `M19.1 → M19.10` in a new `claude-docs/tasks/m19.md` and `claude-docs/waves/wave-19.md`, registered in `scripts/tasks-md.mjs` (one added path line, as Wave 18's commit `78a55cc7b` did; the "only Markdown" criterion is amended to allow it, as M17.1's already does). The milestone `Wave 19 — Compendium ethics` is created on GitHub (`gh api -X POST repos/Aurora-Arctic/Sorrel-and-Salt/milestones`) with its first line the id list and the wave-file link, before minting. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision, named in the wave file.
+**The build is a new wave (the owner's call, 2026-11-06), not Wave 17.** M17.2's entry and issue say "minted as `M17.n` tasks on Wave 17"; that line is corrected in place in `claude-docs/tasks/v1/m17.md`, synced to #1467, and the record says why: the build is eight tasks with its own trigger (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. Proposed name **Wave 19 — Compendium ethics**, after Wave 18 (Privacy); the tasks are `M19.1 → M19.10` in a new `claude-docs/tasks/v1-next/m19.md` and `claude-docs/waves/v1-next/wave-19.md`, registered in `scripts/tasks-md.mjs` (one added path line, as Wave 18's commit `78a55cc7b` did; the "only Markdown" criterion is amended to allow it, as M17.1's already does). The milestone `Wave 19 — Compendium ethics` is created on GitHub (`gh api -X POST repos/Aurora-Arctic/Sorrel-and-Salt/milestones`) with its first line the id list and the wave-file link, before minting. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision, named in the wave file.
 
 ### Deliverables (all Markdown, `compendium/ethics/`, `scripts/tasks-md.mjs`, and the board)
 
 0. **`claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"**: the rule, jurisdiction, citations, test, candidate list, reason, and the two tasks; plus the seed README section and a line in `compendium/ethics/checked.md`'s heading rules if the format changes (it does not; removals use ethics files as before).
 1. **`claude-docs/design-decisions/ingredients.md`, "The closed-practice warning"** with sections: the data today (stacte on Wikipedia; after the decisions, peyote and white sage) with file and source per entry; which sources may establish a closed practice and why Wikipedia alone may not (rule above, with the authorities); how an entry records the tradition of each piece of lore (nullable `tradition_id` on `reference_links`, the later pair of tasks); the data model (table below); what the warning shows and who sets it; the owner's answers per file; the build tasks and their order. Written plainly per `.claude/rules/writing.md`, British spelling, no versions.
 2. **`compendium/ethics/` updates:** README table in `claude-docs/compendium/compendium-seed/README.md` gains `closedPractice[].kind` (`closed` | `asked-not-to-use`). White sage and peyote get `closedPractice` rows with new source files under `compendium/ethics/sources/` (`hcn-sage-advice`, `narf-ncnac-2016`, `ict-ncnac-2016`, `ipci-public-statements`, Chicago form, accessed dates) and go `approved`. Stacte loses its row and records the answer; stacte, onycha, yopo, cowrie, lava stone, Strychnos icaja each get "Answered by the owner 2026-11-06: …" under their question (costus's pattern) and go `approved`.
-3. **Task entries** in a new `claude-docs/tasks/m19.md` (header, sequencing paragraph, ten entries with estimates and "Tests are written first" lines), a new `claude-docs/waves/wave-19.md` (why the wave exists, its row, its trigger), a new **TASKS.md** row `| **19 — Compendium ethics** | M19.1 → M19.10 |`; MB.175's entry in `tasks/mb.md` amended so a help article may have a parent article (sub pages), synced to #690; after Wave 18 and the wave count where TASKS.md states it, `claude-docs/tasks/m17.md` M17.2's corrected criterion and wave-17.md's M17.2 paragraph saying the build went to Wave 19, and **`claude-docs/backlog.md`** line 38 naming the tasks.
+3. **Task entries** in a new `claude-docs/tasks/v1-next/m19.md` (header, sequencing paragraph, ten entries with estimates and "Tests are written first" lines), a new `claude-docs/waves/v1-next/wave-19.md` (why the wave exists, its row, its trigger), a new **TASKS.md** row `| **19 — Compendium ethics** | M19.1 → M19.10 |`; MB.175's entry in `tasks/v1/mb.md` amended so a help article may have a parent article (sub pages), synced to #690; after Wave 18 and the wave count where TASKS.md states it, `claude-docs/tasks/v1/m17.md` M17.2's corrected criterion and wave-17.md's M17.2 paragraph saying the build went to Wave 19, and **`claude-docs/backlog.md`** line 38 naming the tasks.
 4. **Board minting** per `.claude/rules/task-tracking.md`: create the milestone, re-check that no `M19.n` issue exists, `gh issue create --type Task --label tracked --milestone "Wave 19 — Compendium ethics"`, `estimate`, the milestone description's first line, then `reorder` dry-run and `--apply` from the branch holding the row; `sync M17.2` and `sync MB.175` for the corrected entries.
 5. Progress comments on #1467 via `task-board.mjs comment` (names, never values).
 
@@ -3230,7 +3230,7 @@ A default I am taking without asking, because it matches M17.2: a curator or kee
 
 ### Corrections to M17.3's own entry
 
-Two acceptance criteria in `claude-docs/tasks/m17.md` conflict with these decisions. I rewrite them and sync the issue:
+Two acceptance criteria in `claude-docs/tasks/v1/m17.md` conflict with these decisions. I rewrite them and sync the issue:
 
 - "Each `needs-review` question … is put to the owner, and the owner's answer is recorded" becomes "Each `needs-review` question is assigned to a Wave 20 question task, named in the record."
 - "minted as `M17.n` tasks on Wave 17" becomes "minted as `M20.n` tasks on Wave 20."
@@ -3273,8 +3273,8 @@ The record lists the entries the data marks **as it stands today**. It also says
      - The seed from `compendium/ethics/`, placed after every question task.
      - The help page, which waits on MB.175's build tasks.
    - **Files:**
-     - new: `claude-docs/waves/wave-20.md` and `claude-docs/tasks/m20.md`;
-     - updated: the Execution order row in `claude-docs/TASKS.md`, the "Ethical warnings around ingredients" item in `claude-docs/backlog.md` (it names the tasks), and `claude-docs/tasks/m17.md` and `claude-docs/waves/wave-17.md`, which point to Wave 20.
+     - new: `claude-docs/waves/v1-next/wave-20.md` and `claude-docs/tasks/v1-next/m20.md`;
+     - updated: the Execution order row in `claude-docs/TASKS.md`, the "Ethical warnings around ingredients" item in `claude-docs/backlog.md` (it names the tasks), and `claude-docs/tasks/v1/m17.md` and `claude-docs/waves/v1/wave-17.md`, which point to Wave 20.
    - **Board:** create the milestone and the issues as `.claude/rules/task-tracking.md` says, then run `node scripts/task-board.mjs sync` from the worktree.
 3. **Copy this plan** to `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 4. **Commit each green step** in the worktree. I do not push or open a PR until you run `/create-pr`. The PR body will name the MB.175 retitle.
@@ -3600,14 +3600,14 @@ M17.2 is merged (#1554). The `parent_id` amendment it asked for is already in #6
 
 1. **Placement**
    - `claude-docs/TASKS.md`: remove MB.175 from Wave 15's row. Wave 17's row becomes `M17.1 → M17.3 · M17.5 · M17.4 · MB.175 · M17.13 → M17.17 · M17.6 → M17.12 · MB.163`. Correct the "Unscheduled by design" paragraph (line 66).
-   - `claude-docs/waves/wave-15.md` line 27: say MB.175 moved to Wave 17.
-   - `claude-docs/waves/wave-17.md` line 21: replace the "stay on Wave 15" paragraph with the move. It gives the date (the owner's call of 2026-11-06) and says MB.175 and its five tasks sit after M17.4 and before the M17.6 audits, so the accessibility audit (M17.9) scans the help pages. MB.78 stays on Wave 15.
+   - `claude-docs/waves/v1/wave-15.md` line 27: say MB.175 moved to Wave 17.
+   - `claude-docs/waves/v1/wave-17.md` line 21: replace the "stay on Wave 15" paragraph with the move. It gives the date (the owner's call of 2026-11-06) and says MB.175 and its five tasks sit after M17.4 and before the M17.6 audits, so the accessibility audit (M17.9) scans the help pages. MB.78 stays on Wave 15.
    - **What the move changes, stated in the docs:** the help pages ship after launch, not in v1. Wave 15's axe sweep (M11.16, M11.8) no longer covers them; M17.9 does. "v1 scope" becomes "fast follow" in the mb.md entry, the waves and DESIGN.md.
    - Move the issue's milestone to Wave 17 by the method `claude-docs/task-tracking.md` gives (sync, or the script's milestone command).
 2. **The model**, as #690's body sets it out, recorded in DESIGN.md §5 (the `help_articles` table: `kind` `faq`/`article`/`term`, nullable `parent_id`, one level deep, pointing at an `article`; `slug` unique among live rows; `glossary` reserved), §7 (services: `assertSiteAdmin` writes, a sessionless finder cached under tag `help`), §9 (`/keepers/help`, `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`, PUBLIC_ROUTES, sitemap, links) and §10 ("Help and FAQ articles").
 3. **The record:** `claude-docs/design-decisions/support.md`, "Help and FAQ articles, and a glossary, as rows a keeper edits". It weighs rows against files in the repo and names the two invariants it widens. **Module: I recommend a sixth module, `help`.** The articles have no tie to identity, and `claude-docs/modules.md` "Adding a module" gives the steps. Copy this plan in as `design-decisions/support.md`, "Scope Help and FAQ articles (plan)".
 4. **CLAUDE.md:** amend the two lines. "Keepers and curators curate …" gains the help articles (writes are admin only). "The compendium is the one public surface" gains `/help`, which carries no workspace data.
-5. **Mint the five build tasks** in `claude-docs/tasks/m17.md`. Ids M17.13–M17.17 are free on every branch and on the board (checked today). Recheck just before minting. Each task gets an estimate and names its prerequisite:
+5. **Mint the five build tasks** in `claude-docs/tasks/v1/m17.md`. Ids M17.13–M17.17 are free on every branch and on the board (checked today). Recheck just before minting. Each task gets an estimate and names its prerequisite:
    - M17.13 the table, with `parent_id` (after MB.175)
    - M17.14 services and GraphQL (after M17.13)
    - M17.15 the `/keepers/help` admin page (after M17.14)
@@ -3632,7 +3632,7 @@ M17.3 rebases onto staging and names M17.16 (the public pages) as M20.15's prere
 
 ## Promotional email needs recorded consent, withdrawn in one click
 
-The site sends no promotional mail; every template is transactional. This decides how consent is gathered and recorded before the first one. The law, the provider rules and the class of every template are in [`../email/promotional-consent.md`](../email/promotional-consent.md); the build work is Wave 22 ([`../waves/wave-22.md`](../waves/wave-22.md)).
+The site sends no promotional mail; every template is transactional. This decides how consent is gathered and recorded before the first one. The law, the provider rules and the class of every template are in [`../email/promotional-consent.md`](../email/promotional-consent.md); the build work is Wave 22 ([`../waves/v1-next/wave-22.md`](../waves/v1-next/wave-22.md)).
 
 ### The decision
 
