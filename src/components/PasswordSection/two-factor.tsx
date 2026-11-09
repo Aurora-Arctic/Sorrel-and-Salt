@@ -4,6 +4,7 @@ import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState }
 import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
 import { useLeaveGuard } from '../../lib/navigation';
+import { saveFile } from '../../lib/save-file';
 import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
@@ -77,16 +78,6 @@ const TURN_ON_WARNING = {
 };
 
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
-
-/** Hands the codes to the browser as a text file, one per line. */
-function downloadCodes(text: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = CODES_FILE;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 // The print window has none of the app's stylesheets, so the page carries its own: two equal
 // columns with each code centred, as on screen.
@@ -341,7 +332,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                   icon={<DownloadIcon />}
                   onClick={() => {
                     setKept(true);
-                    downloadCodes(codesText(enrolment));
+                    saveFile(new Blob([codesText(enrolment)], { type: 'text/plain' }), CODES_FILE);
                   }}
                 />
                 <CodeAction

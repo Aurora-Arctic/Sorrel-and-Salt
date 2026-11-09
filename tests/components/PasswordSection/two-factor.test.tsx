@@ -226,6 +226,20 @@ describe('TwoFactorSettings', () => {
       click.mockRestore();
     });
 
+    it('keeps the download link alive after the click so the browser can read it', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:codes');
+      const revoke = vi.fn();
+      URL.revokeObjectURL = revoke;
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      await startEnrolment();
+
+      await press(button('Download'));
+
+      expect(click).toHaveBeenCalledOnce();
+      expect(revoke).not.toHaveBeenCalled();
+      click.mockRestore();
+    });
+
     it('prints the codes one per line', async () => {
       const print = vi.fn();
       const page = document.implementation.createHTMLDocument('');
