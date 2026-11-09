@@ -3,8 +3,8 @@ import { useEffect, useRef } from 'react';
 type DismissOptions = {
   /** Listens only while true, so a closed popover listens for nothing. */
   active: boolean;
-  /** True for a target that belongs to the popover and its opener. */
-  inside: (target: Node) => boolean;
+  /** True for a target that belongs to the popover and its opener; needed with `onOutsidePress`. */
+  inside?: (target: Node) => boolean;
   onOutsidePress?: (event: PointerEvent) => void;
   onEscape?: (event: KeyboardEvent) => void;
   /** The press is heard on the capture phase unless a caller needs the target's own handlers first. */
@@ -35,7 +35,7 @@ export function useDismiss({
   useEffect(() => {
     if (!active || !hearsPress) return undefined;
     const onPress = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !latest.current.inside(event.target)) {
+      if (event.target instanceof Node && !latest.current.inside?.(event.target)) {
         latest.current.onOutsidePress?.(event);
       }
     };

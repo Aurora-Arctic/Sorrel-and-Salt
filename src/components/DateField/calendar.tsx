@@ -1,6 +1,7 @@
 'use client';
 
-import { type ChangeEvent, type RefObject, useEffect, useId, useLayoutEffect } from 'react';
+import { type ChangeEvent, type RefObject, useId, useLayoutEffect } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import type { ChevronProps, ClassNames, DropdownProps } from 'react-day-picker';
 import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../IconTip/icons';
@@ -71,21 +72,18 @@ export function useCalendarPopover({
     };
   }, [open, floating, fieldId, panel]);
   // A manual popover has no light dismiss, so a press outside the calendar and its field closes it.
-  useEffect(() => {
-    if (!open || !floating) return undefined;
-    const away = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (panel.current?.contains(target) || document.getElementById(fieldId)?.contains(target))
-        return;
-      close();
-    };
-    document.addEventListener('pointerdown', away, true);
-    return () => document.removeEventListener('pointerdown', away, true);
-  }, [open, floating, fieldId, panel, close]);
-  useEffect(() => {
-    if (!open) return undefined;
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+  useDismiss({
+    active: open && floating,
+    inside: (target) =>
+      Boolean(
+        panel.current?.contains(target) || document.getElementById(fieldId)?.contains(target),
+      ),
+    onOutsidePress: close,
+  });
+  useDismiss({
+    active: open,
+    escapeCapture: true,
+    onEscape: (event) => {
       // An open month or year list takes the key and closes alone.
       if ((event.target as HTMLElement).getAttribute?.('aria-expanded') === 'true') return;
       // Claimed as well as stopped: a modal dialog round the field closes on any unclaimed Escape.
@@ -93,10 +91,8 @@ export function useCalendarPopover({
       event.stopPropagation();
       close();
       document.getElementById(fieldId)?.focus();
-    };
-    document.addEventListener('keydown', onEscape, true);
-    return () => document.removeEventListener('keydown', onEscape, true);
-  }, [open, fieldId, close]);
+    },
+  });
 }
 
 // The month and year pickers drawn as the app's select-only box rather than a native select, whose open list the page cannot style (claude-docs/components/date-field.md).

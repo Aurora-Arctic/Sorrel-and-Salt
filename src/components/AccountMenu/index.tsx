@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { ChevronIcon } from '../IconTip/icons';
 import { countText } from './counts';
 import { initialsOf } from './initials';
@@ -45,23 +46,17 @@ const AccountMenu = ({
   // Open only: a closed menu listens for nothing. Escape is heard on the window so
   // it works wherever the focus is and hears one after a failed Sign Out's callout,
   // which takes its own Escape (`defaultPrevented`) and leaves the menu open.
-  useEffect(() => {
-    if (!open) return;
-    const closeOnOutsidePress = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
-      setOpen(false);
+  useDismiss({
+    active: open,
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: close,
+    onEscape: (event) => {
+      if (event.defaultPrevented) return;
+      close();
       button.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    window.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePress);
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [open]);
+    },
+    escapeOn: 'window',
+  });
 
   return (
     <div ref={root} className="account-menu">

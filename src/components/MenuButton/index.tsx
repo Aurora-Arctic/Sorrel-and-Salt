@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
@@ -133,12 +134,13 @@ export default function MenuButton({
   useEffect(() => {
     if (!open) return;
     root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-    const closeOnOutsidePress = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    return () => document.removeEventListener('pointerdown', closeOnOutsidePress);
   }, [open]);
+
+  useDismiss({
+    active: open,
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: () => setOpen(false),
+  });
 
   const onMenuKey = (event: KeyboardEvent): void => {
     const list = all();

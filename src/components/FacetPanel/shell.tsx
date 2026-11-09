@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
@@ -115,22 +116,14 @@ export function FacetShell({
     return () => clearTimeout(limit);
   });
 
-  useEffect(() => {
-    if (!slide.shown) return undefined;
-    const outside = (event: PointerEvent) => {
-      const target = event.target;
-      if (modal.current || !(target instanceof Node)) return;
-      if (dialogRef.current?.contains(target)) return;
-      if (
-        target instanceof Element &&
-        target.closest('.facet-panel__button, .facet-panel__clear')
-      ) {
-        return;
-      }
-      dismiss();
-    };
-    document.addEventListener('pointerdown', outside);
-    return () => document.removeEventListener('pointerdown', outside);
+  useDismiss({
+    active: slide.shown,
+    inside: (target) =>
+      modal.current ||
+      Boolean(dialogRef.current?.contains(target)) ||
+      (target instanceof Element &&
+        target.closest('.facet-panel__button, .facet-panel__clear') !== null),
+    onOutsidePress: dismiss,
   });
 
   // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and

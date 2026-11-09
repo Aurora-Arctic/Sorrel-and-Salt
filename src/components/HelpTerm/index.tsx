@@ -10,6 +10,7 @@ import {
   type PointerEvent,
   type ReactElement,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
 import { useTip } from '../InfoTip/use-tip';
@@ -37,16 +38,15 @@ const HelpTerm = ({ slug, title, definition, shown }: HelpTermProps): ReactEleme
   );
 
   // A tap outside the term and its tooltip closes a tooltip a tap opened.
-  useEffect(() => {
-    if (!open || !heldOpen.current) return undefined;
-    const onPointerDown = (event: Event): void => {
-      if (event.target instanceof Node && wrapper.current?.contains(event.target)) return;
+  useDismiss({
+    active: open,
+    inside: (target) => wrapper.current?.contains(target) ?? false,
+    onOutsidePress: () => {
+      if (!heldOpen.current) return;
       heldOpen.current = false;
       hide();
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [open, hide]);
+    },
+  });
 
   useEffect(() => {
     if (!open) heldOpen.current = false;
