@@ -13,6 +13,19 @@ import '../SupportRequests/timeout-panel.scss';
 // owner's pause on one coven (`MemberList/pause-control.tsx`), so the two ask and list alike
 // (claude-docs/components/user-detail.md, "Contracts").
 
+/** The words a pause on access is drawn with; a time-out overrides them. */
+export const PAUSE_WORDS = {
+  badge: 'Paused',
+  pauseLabel: 'Pause Access',
+  pauseConfirm: 'Pause',
+  pauseTitle: (name: string) => `Pause Access for ${name}?`,
+  pauseBusy: 'Pausing',
+  liftLabel: 'Lift Pause',
+  liftConfirm: 'Lift',
+  liftTitle: 'Lift the Pause?',
+  earlierTitle: 'Earlier Pauses',
+} as const;
+
 export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'day', label: '1 Day' },
   { value: 'week', label: '1 Week' },
