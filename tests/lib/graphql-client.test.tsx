@@ -154,6 +154,20 @@ describe('graphqlRequest', () => {
     expect(error).toBeInstanceOf(GraphQLClientError);
   });
 
+  it('stays put on ACCESS_PAUSED on the create page, which is no coven', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', {
+      origin: window.location.origin,
+      href: `${window.location.origin}/coven/new`,
+      assign,
+    });
+    mockGraphQLError('Ok', { code: 'ACCESS_PAUSED', pausedUntil: null });
+
+    await graphqlRequest(OkDocument).catch(() => undefined);
+
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it('stays put on ACCESS_PAUSED outside a coven, and on any other refusal inside one', async () => {
     const assign = vi.fn();
     vi.stubGlobal('location', {
