@@ -188,6 +188,25 @@ describe('createAdminInvitation', () => {
     expect((await invitations())[0].note).toBeNull();
   });
 
+  it('keeps a reason of 500 characters and refuses one of 501, writing and mailing nothing', async () => {
+    await createAdminInvitation(asUser(E), INVITED, 'admin', 'r'.repeat(500), sender());
+    expect((await invitations())[0].note).toHaveLength(500);
+
+    send.mockClear();
+    const refused = await createAdminInvitation(
+      asUser(E),
+      `other${DOMAIN}`,
+      'admin',
+      'r'.repeat(501),
+      sender(),
+    ).catch((error: unknown) => error);
+
+    expect(refused).toBeInstanceOf(ValidationError);
+    expect((refused as ValidationError).issues[0]?.path).toEqual(['note']);
+    expect(await invitations()).toHaveLength(1);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   // The address rules are email.ts's (tests/modules/identity/services/email.test.ts);
   // one row proves this service parses its input before writing or mailing.
   it('refuses a malformed address as a ValidationError on the email, writing and mailing nothing', async () => {

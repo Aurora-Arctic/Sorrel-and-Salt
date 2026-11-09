@@ -32,6 +32,18 @@ beforeEach(() => {
 });
 
 describe('BusinessCards', () => {
+  it('tidies the email on blur and keeps Generate off for an address with no domain dot', async () => {
+    render(<BusinessCards />);
+    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
+
+    fillAll('  Testwort@Example.TEST ');
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('Testwort@example.test');
+    await waitFor(() => expect(generate()).toBeEnabled());
+
+    fill('Email', 'testwort@example');
+    await waitFor(() => expect(generate()).toBeDisabled());
+  });
+
   it('starts with Generate off and Include Backs off', async () => {
     render(<BusinessCards />);
 

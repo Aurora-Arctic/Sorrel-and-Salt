@@ -9,6 +9,7 @@ import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
 import { widgetOf, type HelpWidgetName } from '../../lib/help-widgets';
+import { OPENABLE_ADDRESS } from '../../lib/link-address';
 import { slugify } from '../../lib/slugify';
 import HelpScreenshot from '../HelpScreenshot';
 import HelpTerm from '../HelpTerm';
@@ -17,7 +18,6 @@ import type { DocumentPlaceholders } from './types';
 
 // Raw HTML in a body becomes text, never an element (there is no rehype-raw); a link is kept
 // only for an address the site opens.
-const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
 
 /**
  * An address in the account pages, which robots.txt blocks and which send a signed-out visitor to

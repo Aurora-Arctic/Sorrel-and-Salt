@@ -56,7 +56,7 @@ const LiftDocument = graphql(`
   }
 `);
 
-const NOTE_HINT = 'Seen by staff only, up to 500 characters.';
+const NOTE_HINT = 'Seen by staff only.';
 
 const LiftButton = ({
   timeout,

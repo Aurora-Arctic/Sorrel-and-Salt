@@ -1,17 +1,21 @@
 'use client';
 
-import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, type ReactNode, useId, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import {
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from '../../modules/support/validation/limits';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
-import { CharacterCount } from '../Field/character-count';
-import { FieldShell } from '../Field/shell';
+import { PlainTextField } from '../Field/plain-text-field';
 import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
-import { fieldDescription } from '../Field/description';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
@@ -30,16 +34,10 @@ const SendSupportRequestDocument = graphql(`
   }
 `);
 
-const SUBJECT_LIMIT = 120;
-const MESSAGE_LIMIT = 4000;
-const PATH_LIMIT = 500;
-
 const ABOUT_REQUIRED = 'Choose what this is about.';
 
 const SUBJECT_REQUIRED = 'Write a subject';
 const MESSAGE_REQUIRED = 'Write a message';
-const SUBJECT_TOO_LONG = `Keep the subject to ${SUBJECT_LIMIT} characters`;
-const MESSAGE_TOO_LONG = `Keep the message to ${MESSAGE_LIMIT} characters`;
 const PATH_TOO_LONG = 'That page address is too long';
 
 const ABOUT_LABEL = 'What Is This About?';
@@ -53,9 +51,7 @@ const SupportForm = ({
 }: SupportFormProps): ReactElement => {
   const aboutId = useId();
   const aboutBoxId = `${aboutId}-choices`;
-  const subjectId = useId();
-  const messageId = useId();
-  const pageId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
   const [about, setAbout] = useState<SupportAbout | null>(initialAbout ?? null);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -70,14 +66,8 @@ const SupportForm = ({
     ...(failure.field && { [failure.field.name]: failure.field.message }),
     ...problems,
   };
-  const subjectCountId = `${subjectId}-count`;
-  const messageCountId = `${messageId}-count`;
-  const pageCountId = `${pageId}-count`;
-
   const pageNote: ReactNode =
-    errorCode === undefined ? (
-      `Up to ${PATH_LIMIT} characters.`
-    ) : (
+    errorCode === undefined ? undefined : (
       <>
         Opened from the Error {errorCode} page
         {errorReference && (
@@ -89,36 +79,12 @@ const SupportForm = ({
       </>
     );
 
-  const subjectField = fieldDescription({
-    id: subjectId,
-    describedBy: subjectCountId,
-    note: `Up to ${SUBJECT_LIMIT} characters.`,
-    error: shown.subject,
-  });
-  const messageField = fieldDescription({
-    id: messageId,
-    describedBy: messageCountId,
-    note: `Up to ${MESSAGE_LIMIT} characters.`,
-    error: shown.message,
-  });
-
-  const pageField = fieldDescription({
-    id: pageId,
-    describedBy: pageCountId,
-    note: pageNote,
-    error: shown.path,
-  });
-
   // The topic group's first radio stands for the group.
   function focusFirst(wrong: Problems) {
     const target = wrong.about
       ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
-      : document.getElementById(
-          wrong.path
-            ? pageField.controlId
-            : wrong.subject
-              ? subjectField.controlId
-              : messageField.controlId,
+      : formRef.current?.querySelector<HTMLElement>(
+          `[name="${wrong.path ? 'path' : wrong.subject ? 'subject' : 'message'}"]`,
         );
     target?.focus();
   }
@@ -129,12 +95,14 @@ const SupportForm = ({
   function problemsOf(): Problems {
     const found: Problems = {};
     if (about === null) found.about = ABOUT_REQUIRED;
-    if (page.trim().length > PATH_LIMIT) found.path = PATH_TOO_LONG;
+    if (page.trim().length > PATH_MAX_LENGTH) found.path = PATH_TOO_LONG;
     else if (!isSitePage(page)) found.path = PAGE_NOT_ON_SITE;
     if (subject.trim() === '') found.subject = SUBJECT_REQUIRED;
-    else if (subject.trim().length > SUBJECT_LIMIT) found.subject = SUBJECT_TOO_LONG;
+    else if (subject.trim().length > SUBJECT_MAX_LENGTH)
+      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
     if (message.trim() === '') found.message = MESSAGE_REQUIRED;
-    else if (message.trim().length > MESSAGE_LIMIT) found.message = MESSAGE_TOO_LONG;
+    else if (message.trim().length > MESSAGE_MAX_LENGTH)
+      found.message = limitMessage(MESSAGE_MAX_LENGTH);
     return found;
   }
 
@@ -198,7 +166,7 @@ const SupportForm = ({
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form ref={formRef} className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <RadioGroupField
         id={aboutBoxId}
@@ -215,78 +183,56 @@ const SupportForm = ({
           edited('about');
         }}
       />
-      <FieldShell
+      <PlainTextField
+        name="path"
         label="Page"
         note={pageNote}
-        after={<CharacterCount id={pageCountId} length={page.length} limit={PATH_LIMIT} />}
-        {...pageField}
-      >
-        <input
-          id={pageField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          {...pageField.aria}
-          value={page}
-          disabled={sending}
-          onChange={(event) => {
-            setPage(event.target.value);
-            edited('path');
-          }}
-        />
-      </FieldShell>
-      <FieldShell
+        autoComplete="off"
+        limit={PATH_MAX_LENGTH}
+        disabled={sending}
+        value={page}
+        error={shown.path}
+        onChange={(next) => {
+          setPage(next);
+          edited('path');
+        }}
+      />
+      <PlainTextField
+        name="subject"
         label="Subject"
         required
-        note={`Up to ${SUBJECT_LIMIT} characters.`}
-        after={<CharacterCount id={subjectCountId} length={subject.length} limit={SUBJECT_LIMIT} />}
-        {...subjectField}
-      >
-        <input
-          id={subjectField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder="Add a subject"
-          aria-required
-          {...subjectField.aria}
-          value={subject}
-          disabled={sending}
-          onChange={(event) => {
-            setSubject(event.target.value);
-            edited('subject');
-          }}
-        />
-      </FieldShell>
-      <FieldShell
+        placeholder="Add a subject"
+        autoComplete="off"
+        limit={SUBJECT_MAX_LENGTH}
+        disabled={sending}
+        value={subject}
+        error={shown.subject}
+        onChange={(next) => {
+          setSubject(next);
+          edited('subject');
+        }}
+      />
+      <PlainTextField
+        name="message"
         label="Message"
         required
+        multiline
+        rows={6}
+        placeholder="Write a message"
         note={
-          <>
-            {`Up to ${MESSAGE_LIMIT} characters. `}
-            <span className="field__warning">
-              Don’t include passwords, payment details or other private information.
-            </span>
-          </>
+          <span className="field__warning">
+            Don’t include passwords, payment details or other private information.
+          </span>
         }
-        after={<CharacterCount id={messageCountId} length={message.length} limit={MESSAGE_LIMIT} />}
-        {...messageField}
-      >
-        <textarea
-          id={messageField.controlId}
-          className="textarea"
-          rows={6}
-          placeholder="Write a message"
-          aria-required
-          {...messageField.aria}
-          value={message}
-          disabled={sending}
-          onChange={(event) => {
-            setMessage(event.target.value);
-            edited('message');
-          }}
-        />
-      </FieldShell>
+        limit={MESSAGE_MAX_LENGTH}
+        disabled={sending}
+        value={message}
+        error={shown.message}
+        onChange={(next) => {
+          setMessage(next);
+          edited('message');
+        }}
+      />
       <FormActions
         noun="Request"
         label="Send Request"

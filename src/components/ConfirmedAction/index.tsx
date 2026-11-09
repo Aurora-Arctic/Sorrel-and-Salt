@@ -3,6 +3,7 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { reasonTooLong } from '../../modules/identity/validation/reason';
 import { useClickFeedback } from '../ClickFeedback';
 import { ReasonField } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
@@ -130,7 +131,8 @@ const ConfirmedAction = ({
     confirmClass,
     describedBy: warning ? warningId : undefined,
     sending,
-    disabled: confirmDisabled,
+    // A reason past its limit is refused by the server too; the field says so.
+    disabled: confirmDisabled || (withNote && reasonTooLong(note)),
     confirmRef,
     cancelRef,
     onConfirm: () => void confirm(),

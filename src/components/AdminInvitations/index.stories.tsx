@@ -126,7 +126,7 @@ const SEND_ADDRESS_REFUSED = [
     refusal({
       message: 'Validation failed',
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['email'], message: 'That address already has an invitation.' }],
+      fieldErrors: [{ path: ['email'], message: 'That address already has an invitation' }],
     }),
   ),
 ];

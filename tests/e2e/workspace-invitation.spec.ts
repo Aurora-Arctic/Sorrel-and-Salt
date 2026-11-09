@@ -223,3 +223,21 @@ async function userIdOf(email: string): Promise<string> {
   const [{ id }] = await withSql((sql) => sql`select id from users where email = ${email}`);
   return id as string;
 }
+
+test('an invite address typed with spaces and a capitalised domain is tidied on leaving the field, and the invitation reaches it', async ({
+  page,
+}) => {
+  const tidy = address('tidy');
+  await signInAgainAs(page, ownerId);
+  await page.goto(`/coven/${COVEN_SLUG}/members`);
+  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  const email = dialog.getByRole('textbox', { name: 'Email Address' });
+  await email.fill(`  ${tidy.replace(DOMAIN, DOMAIN.toUpperCase())}  `);
+  await email.blur();
+  await expect(email).toHaveValue(tidy);
+  await dialog.getByRole('radio', { name: 'Practitioner' }).check();
+  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
+  await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
+  expect((await latestMessageTo(tidy)).text).toContain('/invite/');
+});

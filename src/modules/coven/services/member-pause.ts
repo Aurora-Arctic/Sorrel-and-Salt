@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
-import { parseOptionalPauseMessage } from '../../../lib/pause-message';
+import { PAUSE_NOTE_MAX_LENGTH, parseOptionalPauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -19,14 +19,13 @@ import { assertMembership } from './membership';
 // The member keeps the seat; `assertMembership` refuses them with AccessPaused while the pause stands
 // (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way").
 
-const NOTE_MAX_LENGTH = 500;
 const OWNER_REFUSAL =
   "A steward's access can't be paused. Change their role first if they should be paused.";
 const STAND_IN_REFUSAL = 'This account is not a person, so its access to a coven cannot be paused';
 const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
 const STRANGER_REFUSAL = 'That person is not a member of this coven';
 const PAST_END = 'Choose a time in the future';
-const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
+const LONG_NOTE = `Keep the note to ${PAUSE_NOTE_MAX_LENGTH} characters`;
 
 /** An id that cannot name a user is refused as a stranger, as a wrong one is. */
 async function memberRoleOf(workspaceId: string, userId: string) {
@@ -60,7 +59,7 @@ export async function pauseMemberAccess(
   ) {
     throw fieldRefusal('until', PAST_END);
   }
-  if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
+  if (trimmed && trimmed.length > PAUSE_NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
   const toMember = parseOptionalPauseMessage(message);

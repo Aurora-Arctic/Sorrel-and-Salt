@@ -449,3 +449,44 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     editorOf(page).getByRole('heading', { name: 'Changes to This Policy', exact: true }),
   ).toBeVisible();
 });
+
+test('a bare address typed into the link dialog becomes an https link, and stays one on the published page', async ({
+  page,
+  browser,
+}) => {
+  await signInAs(page, 'link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await appendTo(page, 'Changes to This Policy', ' Fixturelink');
+  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const main = page.getByRole('main');
+  await main.getByRole('button', { name: 'Save Draft' }).click();
+  await expect(main.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+  await page.reload();
+  await expect(editorOf(page).getByRole('link', { name: 'Fixturelink' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
+
+  await main.getByRole('button', { name: 'Publish', exact: true }).click();
+  const confirmation = page.getByRole('dialog');
+  await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(confirmation).toHaveCount(0);
+
+  const reader = await (await browser.newContext()).newPage();
+  await reader.goto('/privacy');
+  await expect(
+    reader.getByRole('main').getByRole('link', { name: 'Fixturelink', exact: true }),
+  ).toHaveAttribute('href', 'https://example.com');
+  await reader.context().close();
+});

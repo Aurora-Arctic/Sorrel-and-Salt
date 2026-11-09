@@ -10,10 +10,14 @@ import { trimEnds } from '../../../lib/formats';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
-export const SUBJECT_MAX_LENGTH = 120;
-export const MESSAGE_MAX_LENGTH = 4000;
-export const PATH_MAX_LENGTH = 500;
-export const ERROR_REFERENCE_MAX_LENGTH = 100;
+import {
+  ERROR_REFERENCE_MAX_LENGTH,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from './limits';
+
+export { ERROR_REFERENCE_MAX_LENGTH, MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH };
 
 export { ISSUE_REPOSITORY };
 

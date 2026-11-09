@@ -7,7 +7,14 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import { expiryOfDay } from '../../lib/utc';
 import DateField from '../DateField';
-import { FieldError, FieldShell, FormActions, SwitchField, fieldDescription } from '../Field';
+import {
+  FieldError,
+  FieldShell,
+  FormActions,
+  PlainTextField,
+  SwitchField,
+  fieldDescription,
+} from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
@@ -73,7 +80,6 @@ const totalOf = (text: string): string | undefined => {
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
   const dayId = useId();
-  const noteId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
@@ -95,12 +101,6 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     id: dayId,
     error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
   });
-  const noteField = fieldDescription({
-    id: noteId,
-    hint: NOTE_HINT,
-    error: failure.field?.name === 'note' ? failure.field.message : undefined,
-  });
-  const { aria: noteAria, ...noteShell } = noteField;
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
   const { aria: dayAria, ...dayShell } = dayField;
 
@@ -203,19 +203,19 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           />
         </FieldShell>
       </div>
-      <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
-        <textarea
-          id={noteShell.controlId}
-          className="textarea"
-          rows={3}
-          maxLength={MAX_NOTE_LENGTH}
-          placeholder="Add a note"
-          {...noteAria}
-          value={note}
-          disabled={minting}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        name="note"
+        label="Note"
+        hint={NOTE_HINT}
+        multiline
+        rows={3}
+        placeholder="Add a note"
+        limit={MAX_NOTE_LENGTH}
+        value={note}
+        disabled={minting}
+        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        onChange={setNote}
+      />
       <div className="admin-cards__switches">
         <SwitchField
           label="Print Backs"

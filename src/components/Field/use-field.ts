@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 import {
   type FieldError as FormFieldError,
   type FieldPath,
@@ -41,7 +41,7 @@ export function errorShown(
 export function useField<V extends FieldValues>(
   name: FieldPath<V>,
   hint?: string,
-  note?: string,
+  note?: ReactNode,
   describedBy?: string,
   invalid?: boolean,
 ): FieldDescription {

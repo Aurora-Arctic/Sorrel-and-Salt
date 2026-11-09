@@ -16,6 +16,7 @@ import {
 import { FootnoteDefinitionPlugin, FootnoteReferencePlugin } from '@platejs/footnote/react';
 import { IndentPlugin } from '@platejs/indent/react';
 import { LinkPlugin } from '@platejs/link/react';
+import { LINK_SCHEMES } from '../../lib/link-address';
 import { ListPlugin } from '@platejs/list/react';
 import {
   TableCellHeaderPlugin,
@@ -226,7 +227,7 @@ export const editorPlugins = [
   ItalicPlugin.withComponent(mark('em')),
   StrikethroughPlugin.withComponent(mark('s')),
   CodePlugin.withComponent(mark('code')),
-  LinkPlugin.withComponent(Link),
+  LinkPlugin.configure({ options: { allowedSchemes: LINK_SCHEMES } }).withComponent(Link),
   IndentPlugin.configure({
     inject: {
       targetPlugins: [KEYS.p, KEYS.h2, KEYS.h3, KEYS.h4, KEYS.h5, KEYS.h6, KEYS.blockquote],

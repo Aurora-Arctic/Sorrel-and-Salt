@@ -13,8 +13,8 @@
   moves to the first field with a problem (the topic group's first radio, or the input). A refused field the
   server names is drawn and focused the same way; a failure that is no field's shows as an error `Notice` at the top.
   The form keeps `novalidate`.
-- **Subject, Message and Page carry no `maxlength`.** Past 75% of its limit each shows how many characters are
-  left (`CharacterCount`), and past the limit how many are over; the overrun is refused on send.
+- **Subject, Message and Page are `PlainTextField`s with a soft `limit`**, the numbers from `src/modules/support/validation/limits.ts` (client-safe; the service imports them too). Past 75% of its limit each shows how many characters are
+  left, and past the limit how many are over; the overrun is refused on send with `limitMessage`. Nothing stops typing.
 - **Once sent, the form is replaced by a "received" status** naming the request (its subject, a link to Your
   Support Requests), saying "We aim to reply within 5 working days" and that we are a small team, and that replies
   appear on Your Support Requests and arrive by email.

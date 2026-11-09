@@ -1,11 +1,13 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { EmailAddress, emailFormat } from '../../lib/email-address';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { reasonTooLong } from '../../modules/identity/validation/reason';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, RadioGroupField, ReasonField, fieldDescription } from '../Field';
+import { FormActions, PlainTextField, RadioGroupField, ReasonField } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
@@ -45,22 +47,23 @@ export const invitationRoleLabel = (role: InvitableSiteRole): string =>
  * "Unsaved changes").
  */
 const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
-  const emailId = useId();
-
   const [email, setEmail] = useState('');
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
-  const { aria: emailAria, ...emailField } = fieldDescription({
-    id: emailId,
-    error: failure.field?.message,
-  });
 
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const parsed = EmailAddress.safeParse(email);
+    if (!parsed.success) {
+      return setFailure({
+        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
+      });
+    }
+    if (reasonTooLong(note)) return;
     const address = email.trim();
     setSending(true);
     setFailure({});
@@ -86,20 +89,25 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         address can accept it.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Email Address" required {...emailField}>
-        <input
-          id={emailField.controlId}
-          className="input"
-          type="email"
-          autoComplete="off"
-          placeholder="Add an email"
-          aria-required
-          {...emailAria}
-          value={email}
-          disabled={sending}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        label="Email Address"
+        name="email"
+        type="email"
+        required
+        // The address is someone else's, so the browser must not offer the signed-in person's own.
+        autoComplete="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        placeholder="Add an email"
+        format={emailFormat}
+        value={email}
+        disabled={sending}
+        error={failure.field?.message}
+        onChange={(next) => {
+          setEmail(next);
+          if (failure.field) setFailure({ ...failure, field: undefined });
+        }}
+      />
       <RadioGroupField
         legend="Role"
         name="invite-site-role"

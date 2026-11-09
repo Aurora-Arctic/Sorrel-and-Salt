@@ -1,12 +1,14 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
+import { FormActions } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
@@ -47,11 +49,6 @@ const CreateWorkspaceForm = (): ReactElement => {
     },
   });
 
-  const { aria, ...field } = fieldDescription({
-    id: useId(),
-    error: fieldError,
-  });
-
   const busy = mutation.isPending || leaving;
   const empty = value.trim() === '';
   // A typed name, kept from a link, a tab close or a reload. Not while busy: the
@@ -75,20 +72,16 @@ const CreateWorkspaceForm = (): ReactElement => {
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
         {/* No tip: the label says it. */}
-        <FieldShell label="Name" required {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="text"
-            autoComplete="off"
-            placeholder="Add a name"
-            required
-            aria-required
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Name"
+          required
+          autoComplete="off"
+          placeholder="Add a name"
+          limit={COVEN_NAME_LIMIT}
+          value={value}
+          onChange={setValue}
+          error={fieldError}
+        />
         {/* Offered only when there is something to create, and busy, saying so, from
                     the press to the next page. */}
         <FormActions

@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactElement, useEffect, useState } from 'react';
 import { FormProvider, type Resolver, useForm } from 'react-hook-form';
+import { emailFormat } from '../../lib/email-address';
 import { renderBusinessCards } from '../../lib/business-cards/pdf';
 import { fetchCardAssets } from '../../lib/invitation-cards/assets';
 import type { CardAssets } from '../../lib/invitation-cards/types';
@@ -80,8 +81,23 @@ const BusinessCards = (): ReactElement => {
         )}
         <FormErrorSummary />
         <TextField<BusinessCardValues> name="name" label="Name" required />
-        <TextField<BusinessCardValues> name="email" label="Email" required />
-        <TextField<BusinessCardValues> name="phone" label="Phone" required />
+        <TextField<BusinessCardValues>
+          name="email"
+          label="Email"
+          type="email"
+          required
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          format={emailFormat}
+        />
+        <TextField<BusinessCardValues>
+          name="phone"
+          label="Phone"
+          type="tel"
+          autoComplete="off"
+          required
+        />
         <SwitchField
           label="Include Backs"
           name="backs"
