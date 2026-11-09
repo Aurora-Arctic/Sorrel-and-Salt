@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
-import postgres from 'postgres';
 import type { Page } from '@playwright/test';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { latestMessageTo } from './mailpit';
 
 // Against the built server: the token rides in the URL fragment, never sent to the server (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply").
@@ -88,12 +87,9 @@ test('the receipt’s link opens the request from its fragment with no session, 
   expect(await elsewhere.cookies()).toEqual([]);
   await otherTab.close();
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`update support_requests set status = 'closed' where sender_email = ${address}`;
-  } finally {
-    await sql.end();
-  }
+  });
   await visitor.reload();
   await expectNoRequest(visitor);
   expect(await tabHolds(visitor, token!)).toBe(false);

@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
-import postgres from 'postgres';
 import { insertHelpArticle } from '../support/db/insert-help-article';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // Ordering on Keepers › Help: Reorder Mode moves a guide among its own audience's and saves the whole order at each move;
@@ -25,9 +24,8 @@ test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   const author = randomUUID();
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       // The privilege trigger refuses an undeclared keeper; this is the route a `psql` fix declares.
       await tx`select set_config('app.privilege_route', 'manual', true)`;
@@ -82,9 +80,7 @@ test.beforeAll(async () => {
       { title: FAQ_TWO, slug: 'why-testwort-birch', kind: 'faq', position: 102 },
       author,
     );
-  } finally {
-    await sql.end();
-  }
+  });
 });
 
 const said = (page: Page, text: RegExp | string) =>

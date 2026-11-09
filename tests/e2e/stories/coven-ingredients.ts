@@ -5,21 +5,14 @@ import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import type { IngredientFixture, Overrides } from '../../support/fixtures/types';
-import { e2eDatabaseUrl } from '../database';
+import { withE2eSql } from '../database';
 import { signInAs } from '../session';
 
 // Rows go in through the raw client so setup does not depend on the code a story proves (CLAUDE.md, Testing).
 
 export type Role = 'owner' | 'member' | 'viewer';
 
-export async function withSql<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await use(sql);
-  } finally {
-    await sql.end();
-  }
-}
+export { withE2eSql as withSql };
 
 export interface Coven {
   id: string;
@@ -43,7 +36,7 @@ export async function seedCoven(
   const creator = users[owner];
   const slug = slugify(name);
 
-  const id = await withSql((sql) =>
+  const id = await withE2eSql((sql) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${creator}, true)`;
       for (const [key, userId] of Object.entries(users)) {

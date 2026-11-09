@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import postgres from 'postgres';
 import { insertHelpArticle } from '../support/db/insert-help-article';
-import { e2eDatabaseUrl } from './database';
+import { withE2eSql } from './database';
 
 // The help rows the help specs read, written straight to the slot's database. The e2e servers run with the data
 // cache off, so a row written here is on the next page load.
@@ -28,9 +27,8 @@ export const PUBLIC_WORD = 'emberglow';
 
 /** Writes the help rows, by a keeper made for the purpose, and answers the keeper's id. */
 export async function seedHelpArticles(authorEmail: string): Promise<string> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   const author = randomUUID();
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       // The privilege trigger refuses an undeclared keeper; this is the route a `psql` fix declares.
       await tx`select set_config('app.privilege_route', 'manual', true)`;
@@ -145,22 +143,17 @@ export async function seedHelpArticles(authorEmail: string): Promise<string> {
       },
       author,
     );
-  } finally {
-    await sql.end();
-  }
+  });
   return author;
 }
 
 /** The precondition a 404 test leans on: the row is in the table, live or deleted as the test says. */
 export async function helpRowState(slug: string): Promise<'live' | 'deleted' | 'absent'> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  return withE2eSql(async (sql) => {
     const [row] = await sql<{ deleted: boolean }[]>`
       select deleted_at is not null as deleted from help_articles where slug = ${slug}
       order by deleted_at nulls first limit 1`;
     if (!row) return 'absent';
     return row.deleted ? 'deleted' : 'live';
-  } finally {
-    await sql.end();
-  }
+  });
 }

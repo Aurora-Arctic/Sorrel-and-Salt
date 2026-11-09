@@ -1,13 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import postgres from 'postgres';
 import type { IngredientElement } from '@/modules/ingredients/schema/ingredient-enums';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { insertDeityLink, insertIngredient } from '../support/db/insert-ingredient';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { seedCoven } from './stories/coven-ingredients';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 
@@ -289,15 +288,12 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
     'admin',
   );
   // Enough matches to fill the dropdown past its height, which the seed has no one query for.
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     for (let i = 1; i <= 30; i++) {
       const name = `Scrollwort ${String(i).padStart(2, '0')}`;
       await insertIngredient(sql, makeIngredient({ name, nomenclature: 'none' }), userId);
     }
-  } finally {
-    await sql.end();
-  }
+  });
   await page.goto('/curator/compendium');
   await page.waitForLoadState('networkidle');
 
@@ -394,8 +390,7 @@ test('?elements= in the address filters the list, survives the pager and another
     ['discord'],
     'admin',
   );
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     for (let i = 1; i <= 30; i++) {
       const elements: IngredientElement[] =
         i <= 28 ? ['fire', 'air'] : i === 29 ? ['earth'] : ['water'];
@@ -409,9 +404,7 @@ test('?elements= in the address filters the list, survives the pager and another
         userId,
       );
     }
-  } finally {
-    await sql.end();
-  }
+  });
 
   const row = (n: number) =>
     page.getByRole('link', { name: `Edit Elementwort ${String(n).padStart(2, '0')}` });
@@ -462,16 +455,13 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
     ['discord'],
     'admin',
   );
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const add = (name: string, categories: string[]) =>
       insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
     await add('Categorywort Both', ['Protection', 'Cleansing']);
     await add('Categorywort One', ['Protection']);
     await add('Categorywort None', []);
-  } finally {
-    await sql.end();
-  }
+  });
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
   await page.goto('/curator/compendium?query=Categorywort');
@@ -552,16 +542,13 @@ test('the match mode widens two categories to Any, is kept in the address, and g
     ['discord'],
     'admin',
   );
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const add = (name: string, categories: string[]) =>
       insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
     await add('Modewort Both', ['Protection', 'Cleansing']);
     await add('Modewort One', ['Protection']);
     await add('Modewort None', []);
-  } finally {
-    await sql.end();
-  }
+  });
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
   const match = page.getByRole('group', { name: 'Match' });
@@ -629,15 +616,12 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
     canonicalName: 'Fixtura promotea',
     folkNames: ['Hedge Promote', 'Lane Promote'],
   });
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const ingredientId = await insertIngredient(sql, fixture, userId);
     for (const coven of covens) {
       await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, userId);
     }
-  } finally {
-    await sql.end();
-  }
+  });
   const editUrl = `/curator/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`;
   await page.goto(editUrl);
   const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Promotewort/ });
@@ -684,8 +668,7 @@ const GREEK_SLUG = deitySlug(FACET_DEITY, 'Greek');
 const ROMAN_SLUG = deitySlug(FACET_DEITY, 'Roman');
 
 async function seedFacetworts(userId: string) {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     // Seeded once per database: the specs below share it, and a deity's slug is unique.
     const [seeded] = await sql`select 1 from ingredients where name = 'Facetwort A' limit 1`;
     if (seeded) return;
@@ -719,9 +702,7 @@ async function seedFacetworts(userId: string) {
     await insertDeityLink(sql, await add('C', 'Gamma'), greek, 0, userId);
     await insertDeityLink(sql, await add('D', 'Alpha', true), greek, 0, userId);
     await insertDeityLink(sql, await add('E', 'Alpha'), roman, 0, userId);
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 /** The native radio is drawn invisible and, while the menu is shut, out of the accessibility tree, so the option's label is clicked. */
@@ -1016,8 +997,7 @@ for (const [label, width, height] of [
 const CHIPWORT = 'Aaa Chipwort';
 
 async function seedChipwort(userId: string) {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const [seeded] = await sql`select 1 from ingredients where name = ${CHIPWORT} limit 1`;
     if (seeded) return;
     await insertIngredient(
@@ -1029,9 +1009,7 @@ async function seedChipwort(userId: string) {
       }),
       userId,
     );
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 for (const [name, viewport] of [
@@ -1109,8 +1087,7 @@ test('the Edit column stays pinned at the frame edge while the table scrolls sid
 });
 
 async function seedFormlessworts(userId: string) {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const [seeded] = await sql`select 1 from ingredients where name = 'Formlesswort A' limit 1`;
     if (seeded) return;
     const add = (letter: string, variants: ReturnType<typeof makeVariant>[]) =>
@@ -1122,9 +1099,7 @@ async function seedFormlessworts(userId: string) {
     await add('A', []);
     await add('B', []);
     await add('C', [makeVariant({ form: 'Formlessform Alpha' })]);
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 test('No Form lists the entries with no form, counts them, and lives in the address', async ({

@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { insertHelpArticle } from '../support/db/insert-help-article';
 import { CONVERSION_REFUSALS } from '@/components/HelpWidget/conversion-refusals';
 import type { HelpWidgetName } from '@/lib/help-widgets';
@@ -19,9 +18,8 @@ const ARTICLES: Readonly<Record<HelpWidgetName, string>> = {
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   const author = randomUUID();
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       // The privilege trigger refuses an undeclared keeper; this is the route a `psql` fix declares.
       await tx`select set_config('app.privilege_route', 'manual', true)`;
@@ -42,9 +40,7 @@ test.beforeAll(async () => {
         author,
       );
     }
-  } finally {
-    await sql.end();
-  }
+  });
 });
 
 test('the unit converter converts within a dimension and shows the refusal across one', async ({

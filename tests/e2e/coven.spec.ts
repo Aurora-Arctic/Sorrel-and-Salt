@@ -1,7 +1,6 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
-import postgres from 'postgres';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
@@ -36,8 +35,7 @@ async function seedFixtureCoven(page: Page): Promise<void> {
     users[key] = { id: (await signInAs(page, `${key}@coven-page.test`)).userId };
   }
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     const [coven] = await sql`
       insert into workspaces (name, slug, created_by, updated_by)
       values (${COVEN_NAME}, ${COVEN_SLUG}, ${users.owner.id}, ${users.owner.id})
@@ -53,9 +51,7 @@ async function seedFixtureCoven(page: Page): Promise<void> {
     expect(members.map((row) => [row.user_id, row.role]).sort()).toEqual(
       (['owner', 'viewer'] as const).map((role) => [users[role].id, role]).sort(),
     );
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 test('a viewer opens the coven page with its nav, offered Leave and not Delete', async ({

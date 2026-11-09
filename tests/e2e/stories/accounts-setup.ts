@@ -1,22 +1,14 @@
 import { expect, type Page } from '@playwright/test';
-import postgres from 'postgres';
 import type { UserRole } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { e2eDatabaseUrl } from '../database';
+import { withE2eSql } from '../database';
 import { signInAs } from '../session';
 
 // Setup written straight to the worker's slot database, bypassing the code under test; beside its two specs, not in tests/e2e/, which holds the harness every spec uses.
 
 type CovenRole = 'owner' | 'member' | 'viewer';
 
-export async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await fn(sql);
-  } finally {
-    await sql.end();
-  }
-}
+export { withE2eSql as withSql };
 
 export async function makeUser(
   page: Page,
@@ -25,7 +17,7 @@ export async function makeUser(
   { role = 'user', canCreate = false }: { role?: UserRole; canCreate?: boolean } = {},
 ): Promise<string> {
   const { userId } = await signInAs(page, email, ['discord'], role);
-  await withSql((sql) =>
+  await withE2eSql((sql) =>
     sql.begin(async (tx) => {
       // A grant made by hand declares its route, as signInAs's insert does:
       // the privilege trigger refuses an undeclared change to the right.
@@ -43,7 +35,7 @@ export async function makeCoven(
 ): Promise<{ id: string; slug: string }> {
   const slug = slugify(name);
   const maker = seats[0][0];
-  return withSql(async (sql) => {
+  return withE2eSql(async (sql) => {
     const [coven] = await sql`
       insert into workspaces (name, slug, created_by, updated_by)
       values (${name}, ${slug}, ${maker}, ${maker})
@@ -58,7 +50,7 @@ export async function makeCoven(
 }
 
 export async function seatsOf(covenId: string): Promise<Record<string, CovenRole>> {
-  return withSql(async (sql) => {
+  return withE2eSql(async (sql) => {
     const rows = await sql`
       select user_id, role::text from workspace_members
       where workspace_id = ${covenId} and deleted_at is null`;

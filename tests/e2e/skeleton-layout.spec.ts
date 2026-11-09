@@ -1,4 +1,4 @@
-import type { BrowserContext, Page, Route } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs, signInAgainAs } from './session';
@@ -12,6 +12,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
 
 // A page's skeleton stands where the page will: every static part the skeleton draws (the header and its
 // action, the tabs, the side menu, the toolbar, the filter row, the list's frame, its first card and the table's
@@ -254,34 +255,6 @@ const navigations: Navigation[] = [
     inAccountMenu: true,
   },
 ];
-
-/**
- * Holds back every server-component answer from `hold()` until `release()`, and refuses every
- * prefetch, so a click always waits on the server and the skeleton is drawn.
- */
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const headers = route.request().headers();
-    if (headers['next-router-prefetch'] || headers['next-router-segment-prefetch']) {
-      return route.abort();
-    }
-    const rsc = headers.rsc === '1' || new URL(route.request().url()).searchParams.has('_rsc');
-    if (!holding || !rsc) return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold: () => {
-      holding = true;
-    },
-    held: () => held.length,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 type Box = { x: number; y: number; w: number; h: number };
 type Dimension = keyof Box;

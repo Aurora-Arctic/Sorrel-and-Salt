@@ -1,8 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 
@@ -40,8 +39,7 @@ async function seedFixtures(page: Page): Promise<void> {
     };
   }
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;
       await tx`update users set can_create_workspace = true where id = ${users.multi.id}`;
@@ -70,9 +68,7 @@ async function seedFixtures(page: Page): Promise<void> {
       join workspaces w on w.id = m.workspace_id
       where m.deleted_at is null and w.slug in ${sql([ALPHA.slug, BETA.slug])}`;
     expect(rows[0].n).toBe(3);
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 async function toggleTheme(page: Page): Promise<void> {

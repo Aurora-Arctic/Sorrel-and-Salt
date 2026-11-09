@@ -1,10 +1,9 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { scanBothThemes } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
-import { latestMessageTo } from './mailpit';
-import { signInAs } from './session';
+import { recreateE2eDatabase, withE2eSql } from './database';
+import { VERIFY_LINK, latestMessageTo } from './mailpit';
+import { PASSWORD, field, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Locator, Page } from '@playwright/test';
 
@@ -17,17 +16,6 @@ const COVEN_SLUG = `fixture-dialog-coven-${run}`;
 const INVITED = `invitee-${run}@sign-in-dialog.test`;
 const TOKEN = randomBytes(24).toString('base64url');
 const INVITATION = `/invite/${TOKEN}`;
-const PASSWORD = 'lantern moss under the north window';
-const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
-
-async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
 
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
@@ -40,7 +28,7 @@ test.beforeAll(async ({ browser, slot }) => {
   } finally {
     await setup.close();
   }
-  await withSql((sql) =>
+  await withE2eSql((sql) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${ownerId}, true)`;
       const [coven] = await tx`
@@ -56,8 +44,6 @@ test.beforeAll(async ({ browser, slot }) => {
     }),
   );
 });
-
-const field = (dialog: Locator, label: string) => dialog.getByLabel(new RegExp(`^${label}`));
 
 /** Reads where the page is scrolled, to prove a closed dialog left it there. */
 const scrolled = (page: Page) => page.evaluate(() => window.scrollY);
@@ -218,7 +204,7 @@ test.describe('the sign-in dialog', () => {
     const accept = page.getByRole('button', { name: 'Accept Invitation' });
     await expect(accept).toBeVisible();
     const seats = () =>
-      withSql(
+      withE2eSql(
         (sql) => sql`
           select 1 from workspace_members m join users u on u.id = m.user_id
           join workspaces w on w.id = m.workspace_id

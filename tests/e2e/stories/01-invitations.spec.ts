@@ -1,9 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
-import postgres from 'postgres';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
+import { recreateE2eDatabase, withE2eSql } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
 import { newToken } from '@/lib/invitation-token';
@@ -28,19 +27,10 @@ const people = {
 };
 let covenId = '';
 
-async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
-
 /** `signInAs` names everyone alike. */
 async function signInNamed(page: Page, email: string, name: string): Promise<Person> {
   const { userId } = await signInAs(page, email);
-  await withSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
+  await withE2eSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
   return { id: userId, name, email };
 }
 
@@ -111,7 +101,7 @@ async function seedInvitation(
 ): Promise<{ id: string; path: string }> {
   const token = newToken();
   const owner = people.owner.id;
-  const [row] = await withSql(
+  const [row] = await withE2eSql(
     (sql) => sql`
       insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by,
         expires_at, revoked_at, accepted_at, accepted_by)
@@ -132,7 +122,7 @@ async function deadLinkRefusal(page: Page, email: string, state: InvitationState
 
 /** No page shows it to anyone but an owner's controls. */
 async function invitationIdFor(email: string): Promise<string> {
-  const [row] = await withSql(
+  const [row] = await withE2eSql(
     (sql) =>
       sql`select id from invitations where email = ${email} order by created_at desc limit 1`,
   );
@@ -222,7 +212,7 @@ test.beforeAll(async ({ browser }) => {
   } finally {
     await page.close();
   }
-  await withSql(async (sql) => {
+  await withE2eSql(async (sql) => {
     const [coven] = await sql`
       insert into workspaces (name, slug, created_by, updated_by)
       values (${COVEN_NAME}, ${COVEN_SLUG}, ${people.owner.id}, ${people.owner.id})
@@ -369,7 +359,7 @@ test(
     const before = await ownerReadsRoll(page);
     const stranger = await signInNamed(page, address('stranger'), 'Fixture Stranger');
     // Verified, signed in, holding the live link: only the address is wrong.
-    const [row] = await withSql(
+    const [row] = await withE2eSql(
       (sql) => sql`select email_verified from users where id = ${stranger.id}`,
     );
     expect(row.email_verified).toBe(true);
@@ -454,7 +444,7 @@ test(
       'member',
       'accepted',
     );
-    await withSql(
+    await withE2eSql(
       (sql) => sql`
         insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
         values (${covenId}, ${invited.id}, 'member', ${people.owner.id}, ${people.owner.id})`,
@@ -537,7 +527,7 @@ test(
     const holder = await signInNamed(page, late, 'Fixture Late');
     await page.goto(path);
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toBeVisible();
-    await withSql(
+    await withE2eSql(
       (sql) =>
         sql`update invitations set expires_at = now() - interval '1 hour' where email = ${late}`,
     );

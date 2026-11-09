@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { latestMessageTo } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
@@ -17,15 +16,6 @@ const address = (local: string) => `${local}-${run}${DOMAIN}`;
 let ownerId = '';
 let covenId = '';
 
-async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
-
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
@@ -36,7 +26,7 @@ test.beforeAll(async ({ browser, slot }) => {
   } finally {
     await setup.close();
   }
-  await withSql(async (sql) => {
+  await withE2eSql(async (sql) => {
     const [coven] = await sql`
       insert into workspaces (name, slug, created_by, updated_by)
       values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
@@ -144,7 +134,7 @@ test.describe('a declined coven invitation', () => {
       page.getByRole('button', { name: `Decline the invitation to ${COVEN_NAME}` }),
     ).toHaveCount(0);
     await expect(banner.getByRole('button', { name: 'Fixture Person', exact: true })).toBeVisible();
-    const [declined] = await withSql(
+    const [declined] = await withE2eSql(
       (sql) => sql`
         select declined_at is not null as declined, revoked_at is not null as revoked
         from invitations where email = ${invited}`,
@@ -174,7 +164,7 @@ test.describe('a declined coven invitation', () => {
     await confirm.getByRole('button', { name: 'Remove', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(page.getByRole('row').filter({ hasText: invited })).toHaveCount(0);
-    const [removed] = await withSql(
+    const [removed] = await withE2eSql(
       (sql) => sql`
         select declined_at is not null as declined, revoked_at is not null as revoked
         from invitations where email = ${invited}`,
@@ -201,7 +191,7 @@ test.describe('a deleted coven’s invitation', () => {
     await page.goto(linkPath);
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toBeVisible();
 
-    await withSql(
+    await withE2eSql(
       (sql) =>
         sql`update workspaces set deleted_at = now(), deleted_by = ${ownerId} where id = ${covenId}`,
     );
@@ -210,7 +200,7 @@ test.describe('a deleted coven’s invitation', () => {
 
     // Not a broken link's reason.
     expect(closedMessage).not.toBe(await refusalAt(page, '/invite/not-a-real-token'));
-    const seats = await withSql(
+    const seats = await withE2eSql(
       (sql) => sql`
         select count(*)::int as count from workspace_members m join users u on u.id = m.user_id
         where m.workspace_id = ${covenId} and u.email = ${invited}`,
@@ -220,6 +210,6 @@ test.describe('a deleted coven’s invitation', () => {
 });
 
 async function userIdOf(email: string): Promise<string> {
-  const [{ id }] = await withSql((sql) => sql`select id from users where email = ${email}`);
+  const [{ id }] = await withE2eSql((sql) => sql`select id from users where email = ${email}`);
   return id as string;
 }
