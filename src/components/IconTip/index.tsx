@@ -9,6 +9,7 @@ export {
   PreviewButton,
   QuickLookButton,
   RecordButton,
+  ReorderButton,
 } from './icon-button';
 export { LiddedEyeIcon } from './lidded-eye';
 export {
@@ -30,6 +31,7 @@ export {
   PreviewIcon,
   PrintIcon,
   RedoIcon,
+  ReorderIcon,
   SproutIcon,
   CircleCheckIcon,
   BubbleLinesIcon,

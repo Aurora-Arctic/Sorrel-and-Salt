@@ -274,12 +274,16 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   align-items: center;
   justify-content: space-between;
 
+  // The title takes the room left of the actions and wraps within it; when the room would hold fewer than 14
+  // characters of the title a line (about three lines for a long title), the actions wrap to a line below.
   h2 {
+    flex: 1 1 14ch;
     margin: 0;
   }
 }
 
 .help-outline__head-actions {
+  margin-inline-start: auto;
   display: inline-flex;
   gap: space(4);
   align-items: center;

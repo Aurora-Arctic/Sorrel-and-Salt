@@ -86,3 +86,14 @@ describe('HelpOutline sub page counts', () => {
     expect(facts).not.toHaveTextContent(/Sub Page/);
   });
 });
+
+describe('HelpOutline guide pane', () => {
+  it('hands a keeper the chosen guide’s editor as the Edit Guide link', () => {
+    outline();
+
+    expect(screen.getByRole('link', { name: 'Edit Guide' })).toHaveAttribute(
+      'href',
+      '/keepers/help/empty',
+    );
+  });
+});

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { PencilIcon } from '../IconTip';
 import { ListBodySkeleton, ListFilterFrame } from '../ListFrame/skeleton';
 import Skeleton from '../Skeleton';
 import { SkeletonWords } from '../Skeleton/text';
@@ -33,7 +34,9 @@ export const HelpOutlineBodySkeleton = (): ReactElement => (
         </h2>
         <span className="help-outline__head-actions">
           <span className="shown-switch__label">Shown</span>
-          <span className="btn btn--quiet">Edit Guide</span>
+          <span className="icon-tip__edit">
+            <PencilIcon />
+          </span>
         </span>
       </div>
       <p className="help-outline__facts" aria-hidden="true">

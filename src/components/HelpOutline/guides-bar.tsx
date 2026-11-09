@@ -9,6 +9,7 @@ import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import { useAnnounce } from '../ClickFeedback/status-region';
+import { ReorderButton } from '../IconTip';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import HiddenEye from './eye';
@@ -174,14 +175,11 @@ const HelpGuidesBar = ({
   };
 
   const reorderButton = (from: 'bar' | 'phone') => (
-    <button
-      type="button"
+    <ReorderButton
       ref={from === 'bar' ? barButton : phoneButton}
-      className={`btn btn--quiet help-outline__reorder-open help-outline__reorder-open--${from}`}
+      className={`help-outline__reorder-open help-outline__reorder-open--${from}`}
       onClick={() => open(from)}
-    >
-      Reorder
-    </button>
+    />
   );
   const canReorder = order.length > 1;
 

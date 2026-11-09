@@ -102,9 +102,7 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
       </h2>
       <span className="help-outline__head-actions">
         <HelpShownSwitch id={guide.id} title={guide.title} shown={guide.shown} label="Shown" />
-        <PendingLink className="btn btn--quiet" href={guide.editHref}>
-          Edit Guide
-        </PendingLink>
+        <EditLink href={guide.editHref} name="Guide" />
       </span>
     </div>
     <p className="help-outline__facts">
