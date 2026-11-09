@@ -275,7 +275,7 @@ A variant's fields, adding and removing it, and the folds are in "The variants",
 
 ### Submitting and focusing the first error
 
-`useOnEachSubmit` runs while rendering, once per new `submitCount`, and a save's last update carries its count with every error found, so a fold is open in the same commit that draws its error and the form never paints a closed fold with an error inside. `useFocusFirstInvalid` is a layout effect, so focus moves in that commit; it replaces react-hook-form's `shouldFocusError`, which focuses in registration order and only a registered field. An issue naming a picked category lands on the picker's one error element, named by the pick.
+`useOnEachSubmit` runs while rendering, once per new `submitCount`, and a save's last update carries its count with every error found, so a fold is open in the same commit that draws its error and the form never paints a closed fold with an error inside. [`FormErrorSummary`](field.md#announcing-errors) is a layout effect, so focus moves to it in that commit; it replaces react-hook-form's `shouldFocusError` (set to `false`), which focuses in registration order and only a registered field. The summary is not drawn while the duplicate warning is open, so Create Anyway keeps the focus. An issue naming a picked category lands on the picker's one error element, named by the pick.
 
 ### One error element, two sources
 

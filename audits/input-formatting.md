@@ -62,6 +62,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** High. A person using a screen reader may never hear that Save failed, and a person with a long form (ingredient, spell, reference panel) has to scroll to find which field refused.
 
+**Status:** Fixed — FieldError is announced with a hidden "Error:" prefix, and FormErrorSummary lists and links every error on a failed Save.
+
 **Where:**
 
 - `Field/shell.tsx:10-17`: `FieldError` is a bare `<p class="field__error">` with no live region and no hidden "Error:" prefix.
@@ -81,6 +83,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 3. No Shared Blur Normalisation Beyond the Reference Panel
 
 **Severity:** Medium. Rules such as trimming, collapsing spaces and adding a missing prefix are asked of the person instead of done for them, and the reference panel's good mechanism is not reused.
+
+**Status:** Fixed — `tidy` (src/lib/formats.ts) is the blur default of every single-line text field, and the schema helpers run the same function.
 
 **Where:** every text input outside `IngredientForm/reference-panel.tsx:607`. `IngredientForm/references.tsx:429-440` (Locator) copies the same blur logic by hand with its own `onBlur`. Examples that would gain: Formal Name (`IngredientForm/index.tsx:931-933`), Form on spell steps (`SpellBuilder/steps/step-row.tsx:207`), Seal Wax (`SpellBuilder/index.tsx:672`), Moon Phase and Day (`SpellBuilder/index.tsx:697,704`), Folk Names and the other list fields.
 
@@ -179,6 +183,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Medium. Each raw input has to rebuild error, hint, tidying and limit behaviour, and most did not.
 
+**Status:** Fixed — PlainTextField gives a plain-state form the same shell, tidying, limit and attributes as TextField.
+
 **Where:**
 
 - `RecordWorking/form.tsx:297` (Note); the whole form uses `useState` with a hand-rolled date test (`DAY.test`) at 241-242 rather than the shared `CalendarDay`.
@@ -208,6 +214,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 9. Mobile Keyboard and Browser Attributes Are Missing
 
 **Severity:** Medium. Fields show the wrong phone keyboard, capitalise identifiers and underline names as typos.
+
+**Status:** Fixed — both text fields take type, inputMode, autoComplete, spellCheck, autoCapitalize and enterKeyHint, with identifier-safe defaults.
 
 **Where:** Field's type list (`Field/types.ts:49-69`) allows none of `enterKeyHint`, `autoCapitalize`, `spellCheck` or `autoComplete` tokens other than `off`; only `PasswordField`, `ChipColorField` and the two-factor inputs set any of them. Examples: Phone (`BusinessCards/index.tsx:82`, no `type="tel"`), Email (line 81), Locator (`IngredientForm/references.tsx:429`), Address (`IngredientForm/reference-panel.tsx:217`), Formal Name (`IngredientForm/index.tsx:931-933`). No form sets `enterKeyHint`.
 

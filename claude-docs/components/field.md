@@ -16,6 +16,10 @@
 - **`labelSuffix`** is read after the label, out of sight, and in the hint's tip name, so a field drawn once per row (the StockDialog's) never shares a name between rows.
 - **`disabled` is the attribute**, not react-hook-form's option, which would drop the value from what is validated and sent.
 - **`TextField`**: `type="number"` is read back as the text typed. `rows` sets a textarea's height where prose outgrows the 6rem default (the compendium's Description and each variant's take 7). `busy` shows the [`Spinner`](busy-button.md#spinner) after 100ms, so a quick answer never flashes it.
+- **Text fields share `TextControlProps`** (`types.ts`, behaviour in `text-control.tsx`). `TextField` needs a `<FormProvider>`; `PlainTextField` takes `value` and `onChange` and needs none, so a plain-state form gets the same shell, tidying, limit and attributes. A plain-state form is not moved to react-hook-form for this.
+- **`format`** runs when the person leaves the field. A single-line field defaults to `tidy` (`src/lib/formats.ts`: trims the ends and collapses runs of spaces); a multiline one to none, and its schema passes `trimEnds`. `requiredText` and `optionalText` in `src/lib/validation.ts` apply the same function with `.overwrite`, so the server stores what the browser showed. Pass a field-specific formatter (`formatLocator`, `formatReferenceLink`) to replace the default.
+- **`limit`** is soft: no `maxlength`, a `CharacterCount` from 75% of it, and Save refuses past it. A form with a resolver needs the number in its schema too (`.max(limit, { error: limitMessage(limit) })`), because react-hook-form ignores a field's own `validate` when a resolver is present.
+- **Browser attributes**: `type` takes `email` and `tel` as well as `text`, `date`, `url` and `number`; `inputMode` takes `numeric`, `decimal`, `email`, `tel` and `url`; `autoComplete` takes a real autofill token. `spellCheck` defaults on for multiline and off for `email`, `url` and `tel`; `autoCapitalize` defaults to `none` for `email` and `url`. `enterKeyHint` is passed through.
 - **`SelectField`**: `typeahead` is for a set long enough to want a search; text naming no option is no value, so a required one shows its error on save ([`combobox.md`](combobox.md), "The type-ahead box"). `disabled` applies to the select-only box only.
 - **`FieldShell`**'s `className` carries a filter's `filter-row__choice` ([`filter-form.md`](filter-form.md), "Styling").
 
@@ -61,7 +65,7 @@
 
 ## Errors wait for an edit and a leave
 
-`errorShown` draws a field's error when the form has been submitted, or the field has been **left** (`touchedFields`) and **ever edited** since the form started. A required field passed through with Tab stays quiet; one typed into, emptied and left shows "Required". A field made invalid by another field (a classification pick raising the formal-name rule) stays quiet until it is edited and left itself, or the form is submitted. It is one rule, so no field or section flag repeats it.
+`errorShown` draws a field's error when the form has been submitted, or the field has been **left** (`touchedFields`) and **ever edited** since the form started. A field that has shown an error re-checks as the person types and clears it once fixed. A required field passed through with Tab stays quiet. One typed into, emptied and left shows "Required" where the form supplies the edit record below; a form without it flags an empty required field only on Save (`ShownState.empty`). A field made invalid by another field (a classification pick raising the formal-name rule) stays quiet until it is edited and left itself, or the form is submitted. It is one rule, so no field or section flag repeats it.
 
 ## The edited-fields record
 
@@ -93,3 +97,10 @@ An error drawn when a field is left pushes everything below it down before a but
 - `enabled`, `ignore`, `undo` and `redo` are effect dependencies, so listeners never see a stale one.
 
 Tests are in `tests/components/Field/` and in the tests of the forms and lists that use it (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 5).
+
+## Announcing errors
+
+- **`FieldError`** is always in the page, so a screen reader has a live region before the text arrives. Its message sits behind a visually hidden "Error:" and the region is `aria-live="polite"`. An empty one is `position: absolute` (`.field__error:empty`) so it adds no gap.
+- **`FormErrorSummary`** goes inside a `<FormProvider>` form, beneath any form-wide notice. After a failed Save it lists each error (the field's label and message) as a link to its control, takes focus once per Save, and prefixes the document title with "Error: " while it shows. It reads the `aria-invalid` controls in the form, in page order, so a control outside react-hook-form (a list entry) is included; `within` points it at another container, as the reference panel does.
+- **A form using it sets `shouldFocusError: false`**, or react-hook-form's own focus takes the focus back from the summary. A form with a near-match question that must keep focus (IngredientForm's duplicate warning) does not draw the summary while that question is open.
+- **`tests/support/error-summary.ts`**'s `expectSummaryLinksTo(control)` is the test for it.
