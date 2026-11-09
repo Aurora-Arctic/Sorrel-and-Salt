@@ -4,8 +4,13 @@ import PublicFrame from '@/components/PublicFrame';
 import { Navigating } from '../../support/navigating';
 
 const pathname = vi.fn<() => string>();
+const query = vi.hoisted(() => ({ current: '' }));
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname(),
+  useRouter: () => router,
+  useSearchParams: () => new URLSearchParams(query.current),
+}));
 
 // The page brings its own `main`, as the (public) layout gives it one.
 
@@ -28,6 +33,7 @@ const compendiumLink = () =>
 describe('PublicFrame', () => {
   beforeEach(() => {
     pathname.mockReturnValue('/compendium');
+    query.current = '';
   });
 
   it('holds the page just after the empty target the skip link names', () => {
@@ -73,7 +79,10 @@ describe('PublicFrame', () => {
   it('offers the way in, and the Compendium in the site nav', () => {
     frame();
 
-    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Fcompendium',
+    );
     expect(
       within(screen.getByRole('navigation', { name: 'Site' })).getByRole('link', {
         name: 'Compendium',
@@ -82,6 +91,25 @@ describe('PublicFrame', () => {
     expect(screen.getByRole('banner')).toContainElement(
       screen.getByRole('link', { name: 'Sorrel & Salt' }),
     );
+  });
+
+  it('has Sign In carry the page it is on, query string included', () => {
+    pathname.mockReturnValue('/compendium/ingredients/achiote-bixa-orellana');
+    query.current = 'entry=2&q=rose';
+    frame();
+
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=' +
+        encodeURIComponent('/compendium/ingredients/achiote-bixa-orellana?entry=2&q=rose'),
+    );
+  });
+
+  it('has Sign In carry no return path from an auth page', () => {
+    pathname.mockReturnValue('/forgot-password');
+    frame();
+
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
   });
 
   it('marks the Compendium link as the current page on and beneath /compendium', () => {

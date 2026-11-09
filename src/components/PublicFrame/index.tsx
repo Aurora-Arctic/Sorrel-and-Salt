@@ -1,7 +1,8 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, Suspense } from 'react';
 import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import { PendingLink } from '../../lib/navigation';
+import { SignInLink, SignInLinkWithQuery } from './sign-in-link';
 import ThemeToggle from '../ThemeToggle';
 import SiteNav from '../AppShell/site-nav';
 import type { SiteLink } from '../AppShell/types';
@@ -27,9 +28,9 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
         </PendingLink>
         <SiteNav links={COMPENDIUM_LINK} />
         <div className="public-frame__end">
-          <PendingLink className="btn btn--solid btn--medium" href="/sign-in">
-            Sign In
-          </PendingLink>
+          <Suspense fallback={<SignInLink />}>
+            <SignInLinkWithQuery />
+          </Suspense>
           {/* The shell’s wrapper (AppShell/index.scss). */}
           <span className="app-shell__theme">
             <ThemeToggle variant="inline" />

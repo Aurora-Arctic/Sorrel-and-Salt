@@ -740,16 +740,6 @@ const SpellBuilder = ({
               spellId={spellId}
               copiedHrefOf={copiedHrefOf}
             />
-            {deletedHrefOf && spellId && (
-              <BinButton
-                verb="Delete Spell"
-                name={name}
-                onClick={() => {
-                  clearErrors('root');
-                  setDeleting(true);
-                }}
-              />
-            )}
             <SaveStatus
               status={autosave.status}
               savedAt={autosave.savedAt}
@@ -760,6 +750,18 @@ const SpellBuilder = ({
               onReload={() => void reloadLatest()}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
+            {deletedHrefOf && spellId && (
+              <div className="form__aside spell-builder__delete">
+                <BinButton
+                  verb="Delete Spell"
+                  name={name}
+                  onClick={() => {
+                    clearErrors('root');
+                    setDeleting(true);
+                  }}
+                />
+              </div>
+            )}
           </FormActions>
           <ConfirmQuestion
             asked={deleting}

@@ -19,12 +19,18 @@ export function postSignInLanding(role: UserRole): Route {
   return role === 'curator' ? CURATOR_LANDING : POST_SIGN_IN_LANDING;
 }
 
+/** The auth pages: coming back to one after signing in would show the form again, so none is a return path. */
+const AUTH_PAGE = /^\/(?:sign-in|forgot-password|reset-password)(?:[/?#]|$)/;
+
 /** The open-redirect guard for `?next=`: without it `?next=https://evil.example` would redirect anywhere after sign-in. */
 export function safeReturnPath(raw: string | string[] | undefined): string | undefined {
   if (typeof raw !== 'string' || raw.length === 0) return undefined;
   // A single leading slash, not a second slash or backslash right after it —
   // both are how a URL parser can be tricked into reading the rest as a host.
   if (!/^\/(?!\/|\\)/.test(raw)) return undefined;
+  // A backslash anywhere: browsers read it as a slash in a URL.
+  if (raw.includes('\\')) return undefined;
+  if (AUTH_PAGE.test(raw)) return undefined;
   // A newline anywhere would let this value smuggle a second header into
   // whatever eventually turns it into a redirect response.
   if (/[\r\n]/.test(raw)) return undefined;

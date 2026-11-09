@@ -98,9 +98,12 @@ so a page directly in the shell calls `requireSession()` itself; it must
 anyway, since a layout does not re-run on client-side navigation.
 
 - **The return path round trip.** The proxy builds `next` from the request's
-  pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which runs
+  pathname and query, and the public frame's Sign In link builds it from the page
+  the visitor is on (password, passkey and OAuth all end at `/sign-in` or
+  the callback, which read it back), through `signInPath()` (`src/lib/sign-in.ts`), which runs
   `safeReturnPath` first, since a request can really carry a pathname of
-  `//evil.example`. `/sign-in` reads `next` back through the same guard and
+  `//evil.example`. The guard refuses anything not starting with a single `/`,
+  any backslash or line break, and the auth pages themselves. `/sign-in` reads `next` back through the same guard and
   hands it to `SignInPanel` as Better Auth's `callbackURL`, and its
   `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
   destination too. One guard on the way out and on the way back is what makes

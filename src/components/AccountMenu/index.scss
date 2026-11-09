@@ -242,6 +242,13 @@ $account-menu-avatar: 2rem;
   position: relative;
 }
 
+// The spinner sits at the row's right end, where the counts sit on the other rows; BusyButton draws
+// it before the label, so it is moved here rather than in the shared button.
+.account-menu__signout-action > .account-menu__item > .spinner {
+  order: 1;
+  margin-inline-start: auto;
+}
+
 .account-menu__link {
   display: none;
 }
