@@ -32,7 +32,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Fixed in part                                   |
 | D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Not yet fixed                                   |
 | D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
-| D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Not yet fixed                                   |
+| D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Fixed                                           |
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Not yet fixed                                   |
 | D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
@@ -41,12 +41,12 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Not yet fixed                                   |
 | D-28  | Compendium `reviewOf` is written twice and the copies have drifted                                                                                           | high     | Pages and lib |      4 |   1.5 | Not yet fixed                                   |
 | D-29  | GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted                                                         | high     | Components    |      4 |     8 | Fixed                                           |
-| D-30  | Viewer's live covens list built three times, one copy drifted                                                                                                | high     | Server        |      3 |     2 | Not yet fixed                                   |
+| D-30  | Viewer's live covens list built three times, one copy drifted                                                                                                | high     | Server        |      3 |     2 | Fixed                                           |
 | D-31  | `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`                                                                                   | high     | Server        |      3 |     1 | Not yet fixed                                   |
 | D-32  | Two different `covenSlugOf` functions with the same name                                                                                                     | high     | Pages and lib |      3 |     1 | Not yet fixed                                   |
-| D-33  | Coven create and rename repeat the name schema, the slug-race retry and the index names                                                                      | high     | Server        |      2 |   1.5 | Not yet fixed                                   |
-| D-34  | Visibility and status lists written three times, one copy without its drift check                                                                            | high     | Server        |      2 |   0.5 | Not yet fixed                                   |
-| D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Not yet fixed                                   |
+| D-33  | Coven create and rename repeat the name schema, the slug-race retry and the index names                                                                      | high     | Server        |      2 |   1.5 | Fixed                                           |
+| D-34  | Visibility and status lists written three times, one copy without its drift check                                                                            | high     | Server        |      2 |   0.5 | Fixed                                           |
+| D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Fixed                                           |
 | D-36  | Recipient lookup and signed-out view token written three times in support mail builders                                                                      | high     | Server        |      1 |     2 | Fixed                                           |
 | D-37  | "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper                                     | medium   | Server        |     10 |   1.5 | Not yet fixed                                   |
 | D-38  | The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places                                       | medium   | Components    |      9 |     4 | Not yet fixed                                   |
@@ -761,7 +761,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/ingredients/` stock, cupboard-entries, held-in specs; `tests/modules/coven/membership*.test.ts`.
 
 - **Estimate:** 3 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed for the workspace services (ingredients, coven, grimoire), which share one membership-refusal helper; `tests/guards/membership-refusal.test.ts` refuses a new hand-written catch of `Forbidden` around `assertMembership`. The similar catches in `help/reach.ts` and `support/reads.ts` wrap `assertSiteAdmin` and are a different check, so they stay.
 
 ### D-22: Support time-out panel rebuilds the access-pause panel
 
@@ -964,7 +964,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/ingredients/entry-covens*.test.ts`, `compendium-held-in*.test.ts`, cupboard-entries tests.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. The live-covens list is built once. The drift was not a bug: a paused seat makes `AccessPaused`, which is a `Forbidden`, so every copy already left paused covens out; a test in `tests/modules/ingredients/services/compendium-held-in.test.ts` now says so.
 
 ### D-31: `lockSupportSender` re-writes `timeoutStands` and uses a raw `tx.select()`
 
@@ -1012,7 +1012,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/coven/` workspace creation and rename specs, the slug-race specs.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. Coven create and rename share the name schema, the slug-race retry and the index names.
 
 ### D-34: Visibility and status lists written three times, one copy without its drift check
 
@@ -1026,7 +1026,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/grimoire/` spell and working validation tests.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `src/modules/grimoire/validation/visibility.ts` holds the lists, typed with `satisfies` against the enums; they are not read from the `pgEnum` values, which would bring the database layer into the browser. Drift tests in `tests/modules/grimoire/validation/` check them against the enums.
 
 ### D-35: `textList` and the element-array schema are written twice and have drifted
 
@@ -1040,7 +1040,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/modules/ingredients/validation/` cupboard-entry and ingredient tests.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `src/modules/ingredients/validation/lists.ts` holds both schemas, which keep their different handling of blanks on purpose (the ingredient form keeps blanks until its cross-field rules have run). A repeated element in a cupboard entry is now refused at its own position, in the ingredient form's wording, rather than once for the whole list.
 
 ### D-36: Recipient lookup and signed-out view token written three times in support mail builders
 
