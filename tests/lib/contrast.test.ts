@@ -7,6 +7,7 @@ import {
   contrastRatio,
   formatRatio,
   hexColour,
+  hexMask,
   relativeLuminance,
 } from '@/lib/contrast';
 
@@ -86,5 +87,28 @@ describe('hexColour', () => {
     for (const typed of ['', 'blue', '#ab', '#4e8bc', '#4e8bc2ff', '#gggggg', '4e8b']) {
       expect(hexColour(typed), typed).toBe(typed);
     }
+  });
+});
+
+describe('hexMask', () => {
+  it('keeps one leading # and the digits after it, as typed', () => {
+    expect(hexMask.format('4E8BC2')).toBe('#4E8BC2');
+    expect(hexMask.format('#4e8bc2')).toBe('#4e8bc2');
+    expect(hexMask.format(' 4e8bc2')).toBe('#4e8bc2');
+    expect(hexMask.format('##4e8bc2')).toBe('#4e8bc2');
+  });
+  it('leaves the box empty when nothing but the # is left', () => {
+    expect(hexMask.format('')).toBe('');
+    expect(hexMask.format('#')).toBe('');
+    expect(hexMask.format(' # ')).toBe('');
+  });
+  it('keeps a character that is not a hex digit on screen, so the refusal can name it', () => {
+    expect(hexMask.format('4e8bg2')).toBe('#4e8bg2');
+  });
+  it('counts the digits typed, not the # it adds', () => {
+    expect(hexMask.isSignificant('4')).toBe(true);
+    expect(hexMask.isSignificant('g')).toBe(true);
+    expect(hexMask.isSignificant('#')).toBe(false);
+    expect(hexMask.isSignificant(' ')).toBe(false);
   });
 });

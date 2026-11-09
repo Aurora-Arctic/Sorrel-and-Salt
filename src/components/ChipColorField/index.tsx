@@ -2,6 +2,7 @@
 
 import { ColorPicker, Tooltip, parseColor } from '@ark-ui/react';
 import { type ReactElement, useMemo, useState } from 'react';
+import { useMask } from '../Field/mask';
 import { chipColors } from '../../lib/chip-colors';
 import {
   CHIP_GROUNDS,
@@ -10,6 +11,7 @@ import {
   chipContrast,
   formatRatio,
   hexColour,
+  hexMask,
 } from '../../lib/contrast';
 import {
   contrastBoundary,
@@ -110,6 +112,7 @@ const ChipColorField = ({
   'aria-invalid': invalid,
   'aria-required': required,
 }: ChipColorFieldProps): ReactElement => {
+  const hexInput = useMask(hexMask);
   const hex = HEX_COLOR.test(value) ? value.toLowerCase() : undefined;
   // The picker keeps its own colour, since a hex forgets a grey's hue and a drag through the grey edge
   // would snap the hue to red. A hex from outside (typed, or the partner's) replaces it; half a hex
@@ -248,7 +251,11 @@ const ChipColorField = ({
                 autoCapitalize="none"
                 autoComplete="off"
                 placeholder={placeholder}
-                onChange={(event) => onChange(event.currentTarget.value)}
+                onFocus={hexInput.onFocus}
+                onChange={(event) => {
+                  hexInput.mask(event);
+                  onChange(event.currentTarget.value);
+                }}
                 onBlur={(event) => {
                   const shown = hexColour(event.currentTarget.value);
                   if (shown !== event.currentTarget.value) onChange(shown);

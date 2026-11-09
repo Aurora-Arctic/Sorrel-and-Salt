@@ -32,6 +32,38 @@ test('a chip colour typed loosely is tidied to a six-digit lower-case hex when t
   await expect(dark).toHaveValue('#aabbcc');
 });
 
+test('a chip colour gains its # as it is typed, keeps a pasted one single, and Backspace clears the box', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signInAs(page, 'a-hexer@input-formatting.test', ['discord'], 'admin');
+  await page.goto('/curator/category-groups?new');
+  const adding = page.getByRole('dialog', { name: 'Add Category Group' });
+  await expect(adding).toBeVisible();
+  await page.waitForLoadState('networkidle');
+
+  const dark = adding.getByRole('textbox', { name: 'Dark Theme Colour' });
+  const caret = () => dark.evaluate((input: HTMLInputElement) => input.selectionStart);
+  await dark.fill('');
+  await dark.click();
+  await dark.pressSequentially('4e8bc2');
+  await expect(dark).toHaveValue('#4e8bc2');
+  expect(await caret()).toBe(7);
+
+  // Backspace goes all the way back to an empty box, never stuck behind the #.
+  for (let i = 0; i < 6; i += 1) await page.keyboard.press('Backspace');
+  await expect(dark).toHaveValue('');
+
+  // A pasted value, however it is written, shows one #. insertText puts it in at once, as a paste does.
+  await page.keyboard.insertText('##4e8bc2');
+  await expect(dark).toHaveValue('#4e8bc2');
+
+  // A character that is not a hex digit stays on screen.
+  await dark.fill('');
+  await dark.pressSequentially('4g');
+  await expect(dark).toHaveValue('#4g');
+});
+
 test('a refused Save on the Cupboard entry form puts focus on the error summary', async ({
   page,
 }) => {
