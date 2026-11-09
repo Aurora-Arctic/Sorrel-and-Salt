@@ -1,20 +1,17 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getRun, start } from 'workflow/api';
 import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalAccountExpiry } from '@/modules/identity/jobs/provisional-expiry';
+import { useTestDatabase } from '../support/db/database';
 
 const DOMAIN = '@provisional-expiry-run.test';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 async function signUp(label: string, verified: boolean): Promise<string> {

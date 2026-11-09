@@ -8,6 +8,7 @@ import { get, post, pwnedRange } from '../support/password';
 import { totpCode, wrongTotpCode } from '../support/two-factor';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // Through Better Auth's real endpoints (DESIGN.md §8; claude-docs/auth/two-factor.md).
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -23,11 +24,9 @@ const OLD_SECRET = 'testwort-old-secret-0123456789abcdef0123456789';
 const NEW_SECRET = 'testwort-new-secret-0123456789abcdef0123456789';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer(pwnedRange([], []));

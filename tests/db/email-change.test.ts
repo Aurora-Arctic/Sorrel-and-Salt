@@ -16,6 +16,7 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
+import { useTestDatabase } from '../support/db/database';
 
 // Through Better Auth's real endpoints: an address becomes the account's only when the mailed change link is followed from a session holding the row,
 // so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
@@ -32,12 +33,8 @@ const STRANGER = `stranger${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

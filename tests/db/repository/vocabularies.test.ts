@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import {
   findAstrologyValueCount,
@@ -17,11 +17,12 @@ import { DEITIES } from '@/db/seed/deities';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { DeityFilter, IngredientFormValueRow } from '@/modules/vocabulary';
+import { useTestDatabase } from '../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 // The seed is shared by every test in this file, so each undoes its own tombstones.

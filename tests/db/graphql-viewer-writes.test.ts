@@ -1,5 +1,5 @@
-import { afterAll, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import {
@@ -8,6 +8,7 @@ import {
   runProbe,
   useProbeRows,
 } from '../support/graphql-workspace-probes';
+import { useTestDatabase } from '../support/db/database';
 
 // A viewer reads everything in the coven and writes nothing (CLAUDE.md: "Viewers write nothing"). Every Mutation field taking a
 // `workspaceId` is probed as C, W's viewer, who is refused with nothing changed; B or A, whom the same request admits, then
@@ -28,8 +29,11 @@ const refusedToViewers = (fields: string[]) =>
 
 useProbeRows();
 
-const sql = postgres(process.env.DATABASE_URL as string);
-afterAll(() => sql.end());
+let sql: postgres.Sql;
+
+useTestDatabase((client) => {
+  sql = client;
+});
 
 async function snapshot(): Promise<Record<string, string>> {
   const tables = await sql<{ table_name: string }[]>`

@@ -41,20 +41,21 @@ import {
   parsed,
 } from './compendium/files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
+import { useTestDatabase } from '../../support/db/database';
 
 // The five vocabularies the compendium picks from are seeded once for the file and each case empties only what it writes, because re-seeding per case cost most of the file's time;
 // cases that need other vocabularies, or none, have describes of their own that put the shared state back.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 async function seedVocabularies(): Promise<void> {

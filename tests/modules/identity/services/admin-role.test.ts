@@ -18,6 +18,7 @@ import {
 import { importAuth } from '../../../support/auth-module';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { Message, ProviderId } from '@/lib/types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The primary keeper is promoted at a sign-in whose fresh provider profile is Google or Discord and verified (claude-docs/design-decisions/auth.md, "The primary keeper").
 // The sign-in half drives the real `/api/auth/callback/:id` endpoint with MSW standing in for each provider, so what is under test is Better Auth's own flow with our hooks attached.
@@ -29,12 +30,8 @@ const PRIMARY = 'owner@primary-admin.test';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 // The harness re-clones per file, not per test; every user here is on this domain.

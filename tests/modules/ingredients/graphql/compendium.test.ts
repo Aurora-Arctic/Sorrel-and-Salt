@@ -7,6 +7,7 @@ import { insertIngredient, insertSubstituteLink } from '../../../support/db/inse
 import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CompendiumConnection, SubstituteNode } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The `compendium` query over the standard seed's 26 entries: public, a page at a time, with folk names and categories batched.
 // What each filter matches is tests/db/repository/ingredients.test.ts's and how the service reads it is services/compendium.test.ts's.
@@ -34,10 +35,14 @@ vi.mock('@/db/repository', async (importOriginal) => {
 });
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let categoryIds: Map<string, string>;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string);
   // A coven's own row, beside the seed, to be left out of every answer below.
   await insertIngredient(
     sql,

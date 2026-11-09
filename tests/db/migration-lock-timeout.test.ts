@@ -3,7 +3,8 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../support/db/database';
 
 // `drizzle-kit migrate`, run as `npm run db:migrate` runs it, against this file's migrated clone with one
 // pending probe migration that alters `users` while another connection holds a read transaction open on it.
@@ -18,8 +19,12 @@ const KILL_AFTER_MS = 30_000;
 // The lock timeout plus drizzle-kit's start-up, with room for a loaded machine.
 const FAILS_WITHIN_MS = 20_000;
 
-const sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+let sql: postgres.Sql;
 let folder: string;
+
+useTestDatabase((client) => {
+  sql = client;
+});
 
 type Run = { code: number | null; killed: boolean; output: string; elapsedMs: number };
 
@@ -77,7 +82,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await sql.end();
   await rm(folder, { recursive: true, force: true });
 });
 

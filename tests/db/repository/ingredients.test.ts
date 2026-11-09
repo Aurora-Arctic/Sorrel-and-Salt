@@ -33,14 +33,15 @@ import { insertReference, insertVariantReferenceLink } from '../../support/db/in
 import { makeIngredient, makeVariant } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
+import { useTestDatabase } from '../../support/db/database';
 // The finders of claude-docs/db/compendium-read.md, "The compendium read".
 
 // Every expected order comes from SQL, because the database collates `en_US.utf8` and JS does not.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

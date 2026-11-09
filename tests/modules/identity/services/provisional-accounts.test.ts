@@ -17,6 +17,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import { asTouch } from '../../../support/db/touch-row';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // Through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the job started at its
@@ -44,12 +45,8 @@ const INSIDE_CAP = '170 minutes';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

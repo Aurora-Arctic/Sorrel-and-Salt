@@ -1,12 +1,13 @@
 import { createYoga } from 'graphql-yoga';
 import type { GraphQLObjectType } from 'graphql';
 import { beforeAll } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { A, B, C, asUser } from './as-user';
+import { useTestDatabase } from './db/database';
 import { insertIngredient } from './db/insert-ingredient';
 import { insertCupboardEntry } from './db/insert-cupboard-entry';
 import { insertReference } from './db/insert-reference';
@@ -74,8 +75,13 @@ let completableWorkingId: string;
 let deletableWorkingId: string;
 
 export function useProbeRows(): void {
+  let sql: postgres.Sql;
+
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
   beforeAll(async () => {
-    const sql = postgres(process.env.DATABASE_URL as string);
     ingredientId = await insertIngredient(
       sql,
       makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' }),
@@ -202,7 +208,6 @@ export function useProbeRows(): void {
     updatableWorkingId = await insertWorking();
     completableWorkingId = await insertWorking();
     deletableWorkingId = await insertWorking();
-    await sql.end();
   });
 }
 

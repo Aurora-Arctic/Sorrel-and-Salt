@@ -4,12 +4,18 @@ import { start } from 'workflow/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
+import { useTestDatabase } from '../support/db/database';
 
 const DOMAIN = '@support-reply-notice-run.test';
 const ORIGIN = 'http://localhost:3000';
 const MAILPIT_URL = 'http://mailpit.test';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
@@ -34,7 +40,6 @@ async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Re
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -44,7 +49,6 @@ beforeAll(() => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(async () => {

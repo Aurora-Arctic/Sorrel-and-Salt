@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
@@ -13,14 +13,15 @@ import {
   makeVariant,
 } from '../../../support/fixtures';
 import type { DuplicateNode, IngredientSuggestionConnection } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The transport half of the substitute picker's search: the nodes, a page at a time, and one refusal on the wire.
 // What it matches, its scope and who is refused are services/ingredient-suggestions.test.ts's. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

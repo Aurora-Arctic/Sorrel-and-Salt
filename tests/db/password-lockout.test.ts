@@ -7,6 +7,7 @@ import { importAuth } from '../support/auth-module';
 import { get, post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // Password lockout (@story-72) through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
 // claude-docs/auth/passwords.md, "Lockout". Counts are seeded in SQL rather than reached by a hundred sign-ins.
@@ -24,11 +25,9 @@ const WRONG = 'Testwort climbs the western wall';
 const NEW = 'Testwort sleeps beneath the elder';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer(pwnedRange([], []));

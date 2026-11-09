@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { base64 } from '@better-auth/utils/base64';
 import { cookieHeader } from '../support/oauth';
 import { assert, softKey, type SoftKey } from '../support/passkey-authenticator';
 import { authenticationOptions } from '../support/passkey';
+import { useTestDatabase } from '../support/db/database';
 
 // The passkey plugin as a deploy runs it: NODE_ENV=production, the base URL
 // resolved per request across the three hosts, and the limiter on. Better Auth
@@ -27,12 +28,11 @@ const DOMAIN = '@passkey-hosts.test';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+useTestDatabase((client) => {
+  sql = client;
 });
 
 afterAll(async () => {
-  await sql.end();
   vi.unstubAllEnvs();
 });
 

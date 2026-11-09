@@ -12,6 +12,7 @@ import { importAuth } from '../support/auth-module';
 import { softKey } from '../support/passkey-authenticator';
 import { enrol } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // Passkey management (@story-74) through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
 // never the last way it has to sign in (claude-docs/auth/plugins.md, "Passkeys").
@@ -24,6 +25,11 @@ const OWNER = `owner${DOMAIN}`;
 const OTHER = `other${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 
 const server = setupServer();
@@ -32,12 +38,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth(PROVIDER_CREDENTIALS);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

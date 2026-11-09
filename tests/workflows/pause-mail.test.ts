@@ -6,6 +6,7 @@ import { memberPauseMail } from '@/modules/coven/jobs/member-pause-mail';
 import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
+import { useTestDatabase } from '../support/db/database';
 
 const DOMAIN = '@pause-mail-run.test';
 const ORIGIN = 'http://localhost:3000';
@@ -14,6 +15,11 @@ const NOTE = 'Staff only: never mailed.';
 const MESSAGE = 'A message written to the user.';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
@@ -88,7 +94,6 @@ async function memberPause(userId: string, name: string, lifted = false): Promis
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -104,7 +109,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(() => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes } from 'node:crypto';
 import postgres from 'postgres';
 import { Forbidden } from '@/lib/errors';
@@ -7,11 +7,17 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every keeper mutation close at once (claude-docs/design-decisions/auth.md, "Revoking").
 // Through the real session reader; the cookie cache that would keep the old role is pinned off in tests/lib/auth.test.ts.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 let requestSession: typeof import('@/lib/request-session');
 let identity: typeof import('@/modules/identity');
@@ -19,14 +25,9 @@ let identity: typeof import('@/modules/identity');
 const REVOKED = '00000000-0000-0000-0000-0000000000f1';
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth({});
   requestSession = await import('@/lib/request-session');
   identity = await import('@/modules/identity');
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

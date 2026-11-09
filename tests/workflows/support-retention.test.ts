@@ -6,6 +6,7 @@ import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportRetention } from '@/modules/support/jobs/support-retention';
 import { supportRetentionBatch } from '@/modules/support/jobs/support-retention-batch';
+import { useTestDatabase } from '../support/db/database';
 
 // The stand-in Mailpit records the request's status as each mail arrives. No run sleeps, so none is woken.
 
@@ -13,6 +14,11 @@ const DOMAIN = '@support-retention-run.test';
 const ORIGIN = 'http://localhost:3000';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string; status: string | undefined }[] = [];
@@ -45,7 +51,6 @@ async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Re
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -55,7 +60,6 @@ beforeAll(() => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(async () => {

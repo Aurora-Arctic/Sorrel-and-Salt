@@ -7,6 +7,7 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
+import { useTestDatabase } from '../support/db/database';
 
 // Each attempt of the step gives the invitation a fresh token and mails that, so a link from a refused attempt names nothing. A printed card never goes this way.
 
@@ -17,6 +18,11 @@ const MAILPIT_URL = 'http://mailpit.test';
 const staleToken = (n: number) => `fixture-token-${n}-dddddddddddddddddddddddddddddddd`;
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: { to: string; text: string }[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
@@ -47,7 +53,6 @@ let inviterId: string;
 let covenId: string;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -71,7 +76,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(() => {

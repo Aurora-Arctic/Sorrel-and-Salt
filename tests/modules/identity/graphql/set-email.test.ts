@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import type { EmailVerificationSender } from '@/modules/identity';
 import { noSender } from '../../../support/email-verification';
 import { B, asUser } from '../../../support/as-user';
 import { run as runOperation } from '../../../support/graphql/run';
+import { useTestDatabase } from '../../../support/db/database';
 
 const NEW = 'new@set-email.test';
 
@@ -17,12 +18,8 @@ const SET_EMAIL = /* GraphQL */ `
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 async function run(variables: Record<string, unknown>) {

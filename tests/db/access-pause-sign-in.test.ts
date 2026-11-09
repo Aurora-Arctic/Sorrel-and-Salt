@@ -19,6 +19,7 @@ import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
+import { useTestDatabase } from '../support/db/database';
 
 // A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
 // and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
@@ -35,6 +36,11 @@ const PASSKEY_USER = `passkey${DOMAIN}`;
 const PASSWORD = 'Testwort crowns the eastern hedge';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 
 const server = setupServer(pwnedRange([], []));
@@ -43,12 +49,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth(PROVIDER_CREDENTIALS);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

@@ -6,6 +6,7 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { documentMailing } from '@/modules/documents/jobs/document-mailing';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '@/modules/documents/mailing-pace';
 import { insertDocumentMailing, insertDocumentVersion } from '../support/db/insert-document';
+import { useTestDatabase } from '../support/db/database';
 
 // The run carries the mailing's id and the origin alone and mails the mailing's recipient rows, so each test writes exactly the rows it mails.
 
@@ -16,6 +17,11 @@ const RESEND_URL = 'https://api.resend.com/emails';
 const SUMMARY = 'We now keep sign-in records for ninety days.';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 /** When set, the stand-in Resend answers 429 with this name once `quotaAfter` sends have been taken. */
 let quota: { name: string; after: number } | null = null;
@@ -67,7 +73,6 @@ function useResend() {
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', transport);
   vi.stubEnv('VERCEL_ENV', '');
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
@@ -76,7 +81,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(async () => {
