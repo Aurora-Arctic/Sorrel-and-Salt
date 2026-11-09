@@ -10,6 +10,7 @@ export interface HelpArticleSeed {
   title?: string;
   slug?: string;
   summary?: string | null;
+  search_terms?: string | null;
   body?: string;
   position?: number | null;
   seed_key?: string | null;

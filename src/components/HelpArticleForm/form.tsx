@@ -78,6 +78,7 @@ const FIELDS: readonly string[] = [
   'kind',
   'title',
   'summary',
+  'searchTerms',
   'body',
   'audience',
   'parentId',
@@ -127,6 +128,7 @@ const HelpArticleForm = ({
       kind: article?.kind ?? 'article',
       title: article?.title ?? '',
       summary: article?.summary ?? '',
+      searchTerms: article?.searchTerms ?? '',
       body: openBody,
       audience: article?.audience ?? preset?.audience ?? 'public',
       parentId: article?.parentId ?? preset?.id ?? '',
@@ -190,6 +192,7 @@ const HelpArticleForm = ({
   const save = useMutation({
     mutationFn: async (values: HelpFormValues): Promise<string> => {
       const summary = values.summary.trim() || null;
+      const searchTerms = values.searchTerms.trim() || null;
       const typed = values.position.trim();
       const parent = values.kind === 'article' ? values.parentId || null : null;
       const placed = typed === '' ? null : Number(typed);
@@ -206,7 +209,13 @@ const HelpArticleForm = ({
       };
       if (!article) {
         const { createHelpArticle } = await graphqlRequest(CreateHelpArticleDocument, {
-          input: { kind: values.kind, title: values.title, body: values.body, ...where },
+          input: {
+            kind: values.kind,
+            title: values.title,
+            body: values.body,
+            searchTerms,
+            ...where,
+          },
         });
         // A new row is shown unless the form says otherwise.
         if (!values.shown) {
@@ -222,6 +231,7 @@ const HelpArticleForm = ({
         input: {
           title: values.title,
           body: values.body,
+          searchTerms,
           ...(isPage(article.kind) && { kind: values.kind }),
           ...where,
         },
@@ -405,6 +415,11 @@ const HelpArticleForm = ({
           {isPage(kind) && (
             <TextField<HelpFormValues> name="summary" label="Summary" placeholder="Add Summary" />
           )}
+          <TextField<HelpFormValues>
+            name="searchTerms"
+            label="Search Terms"
+            placeholder="Add Search Terms"
+          />
           <div className="field">
             <div className="field__label-row">
               <span className="field__label" aria-hidden="true">

@@ -140,6 +140,7 @@ const GUIDE: HelpArticleFormValue = {
   title: PUBLIC_GUIDE.title,
   slug: PUBLIC_GUIDE.slug,
   summary: 'A guide the test holds',
+  searchTerms: null,
   body: 'Fixture guide body.',
   audience: 'public',
   parentId: null,
@@ -155,6 +156,7 @@ const SUB_PAGE: HelpArticleFormValue = {
   title: STAFF_SUB.title,
   slug: 'fixture-staff-sub-page',
   summary: null,
+  searchTerms: null,
   body: 'Fixture sub page body.',
   audience: 'staff',
   parentId: STAFF_GUIDE.id,
@@ -170,6 +172,7 @@ const ARTICLE: HelpArticleFormValue = {
   title: LONE_PUBLIC.title,
   slug: 'fixture-lone-public-page',
   summary: null,
+  searchTerms: null,
   body: 'Fixture article body.',
   audience: 'public',
   parentId: null,
@@ -184,6 +187,7 @@ const TERM: HelpArticleFormValue = {
   title: 'Testwort',
   slug: 'testwort',
   summary: null,
+  searchTerms: null,
   body: 'A word the test holds.',
   audience: 'public',
   parentId: null,
@@ -912,6 +916,55 @@ describe("HelpArticleForm, the service's refusals", () => {
       expect(group('Audience')).toHaveAccessibleDescription(/wider than a sub page/),
     );
     expect(router.push).not.toHaveBeenCalled();
+  });
+});
+
+describe('HelpArticleForm, Search Terms', () => {
+  it.each(['Article', 'FAQ', 'Term'])('draws Search Terms for a new %s', (kind) => {
+    renderForm();
+    fireEvent.click(radio(kind));
+
+    expect(textbox('Search Terms')).toBeInTheDocument();
+  });
+
+  it('saves a new row with the search terms typed', async () => {
+    const calls = captureCreate();
+    renderForm();
+
+    fillNew();
+    type('Search Terms', 'venomous, deadly');
+    press('Save Article');
+
+    await waitFor(left);
+    expect(calls[0]?.input).toMatchObject({ searchTerms: 'venomous, deadly' });
+  });
+
+  it('fills Search Terms from the row, and saves a change to them', async () => {
+    const calls = captureUpdate();
+    renderForm({ article: { ...GUIDE, searchTerms: 'venomous' } });
+
+    expect(textbox('Search Terms')).toHaveValue('venomous');
+    // Precondition: nothing has changed yet, so the change below is what enables Save.
+    expect(button('Save Guide')).toBeDisabled();
+
+    type('Search Terms', 'venomous, baneful');
+    expect(button('Save Guide')).toBeEnabled();
+    press('Save Guide');
+
+    await waitFor(left);
+    expect(calls[0]?.id).toBe(GUIDE.id);
+    expect(calls[0]?.input).toMatchObject({ searchTerms: 'venomous, baneful' });
+  });
+
+  it('sends null for search terms cleared to blank', async () => {
+    const calls = captureUpdate();
+    renderForm({ article: { ...FAQ, searchTerms: 'venomous' } });
+
+    type('Search Terms', '   ');
+    press('Save FAQ Entry');
+
+    await waitFor(left);
+    expect(calls[0]?.input).toHaveProperty('searchTerms', null);
   });
 });
 

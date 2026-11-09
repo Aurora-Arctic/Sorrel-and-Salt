@@ -60,6 +60,7 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
           title: article.title,
           slug: article.slug,
           summary: article.summary,
+          searchTerms: article.searchTerms,
           body: article.body,
           audience: article.audience,
           parentId: article.parentId,

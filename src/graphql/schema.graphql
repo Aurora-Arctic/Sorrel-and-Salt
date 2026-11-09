@@ -522,6 +522,11 @@ input HelpArticleInput {
 
   """A whole number, 0 or more."""
   position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
   summary: String
   title: String!
 }
@@ -537,7 +542,7 @@ enum HelpArticleKind {
 }
 
 """
-Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.
+Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.
 """
 input HelpArticlePatch {
   audience: HelpAudience
@@ -552,6 +557,11 @@ input HelpArticlePatch {
 
   """A whole number, 0 or more."""
   position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
   summary: String
   title: String
 }

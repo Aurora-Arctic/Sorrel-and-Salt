@@ -483,6 +483,49 @@ describe('the help writes', () => {
       'NOT_FOUND',
     );
   });
+
+  it('takes searchTerms on create and on update', async () => {
+    const created = await run<{ createHelpArticle: { id: string } }>(asUser(E), CREATE, {
+      input: {
+        kind: 'article',
+        title: 'Testwort Wire Terms',
+        body: 'Fixture.',
+        searchTerms: 'quenchwort',
+      },
+    });
+    expect(created.errors).toBeUndefined();
+    const id = created.data?.createHelpArticle.id ?? null;
+    const [made] = await sql`select search_terms from help_articles where id = ${id}`;
+    expect(made?.search_terms).toBe('quenchwort');
+
+    const updated = await run(asUser(E), UPDATE, {
+      id: staffId,
+      input: { searchTerms: 'ledgerling' },
+    });
+    expect(updated.errors).toBeUndefined();
+    const [row] = await sql`select search_terms from help_articles where id = ${staffId}`;
+    expect(row.search_terms).toBe('ledgerling');
+  });
+
+  it.each([
+    ['an observer', C],
+    ['the curator', F],
+  ])('answers FORBIDDEN to %s writing searchTerms by id, and leaves them', async (_who, user) => {
+    await sql`update help_articles set search_terms = 'standing' where id = ${staffId}`;
+
+    const result = await run(asUser(user), UPDATE, {
+      id: staffId,
+      input: { searchTerms: 'taken' },
+    });
+
+    expect(codeOf(result)).toBe('FORBIDDEN');
+    const [row] = await sql`select search_terms from help_articles where id = ${staffId}`;
+    expect(row.search_terms).toBe('standing');
+
+    // Precondition: the refusal is the role's, not the schema's, as the keeper's same call is answered.
+    const kept = await run(asUser(E), UPDATE, { id: staffId, input: { searchTerms: 'taken' } });
+    expect(kept.errors).toBeUndefined();
+  });
 });
 
 const SET_SHOWN = /* GraphQL */ `

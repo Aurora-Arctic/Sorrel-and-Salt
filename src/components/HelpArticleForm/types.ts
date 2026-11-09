@@ -31,6 +31,7 @@ export interface HelpArticleFormValue {
   title: string;
   slug: string;
   summary: string | null;
+  searchTerms: string | null;
   body: string;
   audience: HelpFormAudience;
   parentId: string | null;
@@ -58,6 +59,7 @@ export interface HelpFormValues {
   kind: HelpFormKind;
   title: string;
   summary: string;
+  searchTerms: string;
   body: string;
   audience: HelpFormAudience;
   parentId: string;

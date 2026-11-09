@@ -62,7 +62,7 @@ A card you have already used says so and points you to your account to start a c
     'How to find a help page by what it says.',
     `Type in the "Search Help" box and choose "Search". The results page is titled "Search Help". A blank search finds nothing.
 
-The search looks in each page's title, summary and body. A match in the title ranks above a match in the summary, and a match in the summary ranks above one in the body. If no page matches the words, it falls back to titles close to what you typed, so a misspelt title still finds its page.
+You can type a whole question. The search finds a page that has any of your words, and puts a page that has all of them first. A match in the title ranks above a match in the summary, and a match in the summary ranks above one in the body. If no page matches the words, it falls back to titles close to what you typed, so a misspelt title still finds its page.
 
 You are shown only the pages you may read. Pages for [[Curator|curators]] and [[Keeper|Keepers]] never appear in a public search. Search engines do not index the results page.`,
   ),

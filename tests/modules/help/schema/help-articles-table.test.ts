@@ -59,6 +59,7 @@ describe('the help_articles table', () => {
           'title',
           'slug',
           'summary',
+          'search_terms',
           'body',
           'position',
           'seed_key',
@@ -78,6 +79,7 @@ describe('the help_articles table', () => {
         title: { type: 'text', nullable: false },
         slug: { type: 'text', nullable: false },
         summary: { type: 'text', nullable: true },
+        search_terms: { type: 'text', nullable: true },
         body: { type: 'text', nullable: false },
         position: { type: 'integer', nullable: true },
         seed_key: { type: 'text', nullable: true },
@@ -309,7 +311,7 @@ describe('the help_articles table', () => {
   });
 
   describe('the search vector', () => {
-    it('is generated from the title, summary and body, weighted A, B and C in English', async () => {
+    it('is generated from the title, summary, search terms and body, weighted A, B and C in English', async () => {
       const id = await insert({
         title: 'Testwort Gathering',
         summary: 'Fixturebloom harvests',

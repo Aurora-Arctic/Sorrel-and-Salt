@@ -7,6 +7,7 @@ import { BOOTSTRAP_SESSION, touched } from './bootstrap-admin';
 import { FAQ_ENTRIES } from './help-content/faq';
 import { GLOSSARY_ENTRIES } from './help-content/glossary';
 import { PUBLIC_ARTICLES } from './help-content/articles';
+import { SEARCH_TERMS } from './help-content/search-terms';
 import { STAFF_ARTICLES } from './help-content/staff';
 import { beginSeedTransaction, insertStamped } from './idempotent';
 import { slugify } from '../../lib/slugify';
@@ -21,7 +22,12 @@ import type { SeedDatabase, SeedHelpArticle, SeedRunOptions, SeedTransaction } f
 
 /** Every entry of the shipped list: parents before their sub pages. */
 export function loadHelpArticles(): SeedHelpArticle[] {
-  return [...FAQ_ENTRIES, ...PUBLIC_ARTICLES, ...STAFF_ARTICLES, ...GLOSSARY_ENTRIES];
+  const entries = [...FAQ_ENTRIES, ...PUBLIC_ARTICLES, ...STAFF_ARTICLES, ...GLOSSARY_ENTRIES];
+  const keys = new Set(entries.map((entry) => entry.seedKey));
+  const unknown = Object.keys(SEARCH_TERMS).filter((key) => !keys.has(key));
+  if (unknown.length > 0)
+    throw new Error(`Search terms for entries not in the list: ${unknown.join(', ')}`);
+  return entries.map((entry) => ({ ...entry, searchTerms: SEARCH_TERMS[entry.seedKey] ?? null }));
 }
 
 export interface SeedHelpOptions extends SeedRunOptions {
@@ -75,6 +81,7 @@ export async function seedHelpEntries(
       title: entry.title,
       slug: slugify(entry.title),
       summary: entry.summary,
+      searchTerms: entry.searchTerms ?? null,
       body: entry.body,
       position: entry.position,
       parentId,
