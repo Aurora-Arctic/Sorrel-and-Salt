@@ -2,7 +2,7 @@ import type { ProviderId } from '../../lib/types';
 import type { SignInMode } from '../SignInPanel/types';
 
 export interface SignInDialogProps {
-  /** Where signing in returns to: the page the link is on, already run through safeReturnPath. */
+  /** Where signing in returns to: the page the link is on. Run through safeReturnPath here. */
   next?: string;
   configured: readonly ProviderId[];
   label: string;

@@ -66,6 +66,23 @@ describe('SignInDialog', () => {
     );
   });
 
+  // Coming back to an auth page would show its form again.
+  it('asks for no return path from an auth page, in the link and in the dialog alike', async () => {
+    social.mockReturnValue(new Promise(() => undefined));
+    render(<SignInDialog next="/forgot-password" configured={['google']} label="Sign In" />);
+    expect(trigger()).toHaveAttribute('href', '/sign-in');
+    await press(trigger());
+
+    await press(within(dialog()).getByRole('button', { name: 'Continue with Google' }));
+
+    expect(social).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCallbackURL: '/sign-in',
+        additionalData: { noReturnPath: true },
+      }),
+    );
+  });
+
   it.each([
     ['a modifier key', { ctrlKey: true }],
     ['the middle button', { button: 1 }],

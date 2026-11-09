@@ -3,7 +3,7 @@
 import { type MouseEvent, type ReactElement, useRef, useState } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
-import { signInPath } from '../../lib/sign-in';
+import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
 import SignInPanel from '../SignInPanel';
 import type { SignInMode } from '../SignInPanel/types';
@@ -20,7 +20,7 @@ const TITLES: Record<SignInMode, string> = {
  * (claude-docs/components/sign-in-dialog.md).
  */
 const SignInDialog = ({
-  next,
+  next: asked,
   configured,
   label,
   className = 'btn btn--solid btn--medium',
@@ -28,6 +28,8 @@ const SignInDialog = ({
   ledes,
   signUpLandsOnNext,
 }: SignInDialogProps): ReactElement => {
+  // An auth page is no return path, so from one the panel lands the account by its role.
+  const next = safeReturnPath(asked);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(openingMode);
   const link = useRef<HTMLAnchorElement>(null);
