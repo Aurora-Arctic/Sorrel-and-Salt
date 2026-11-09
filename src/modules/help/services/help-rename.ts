@@ -65,7 +65,7 @@ export async function readHelpRenameEffects(
       (holdsAddress(other.body, oldPath) || (term && marksTerm(other.body, row.title, row.slug))),
   );
   const quickLinks =
-    row.kind === 'article' && row.audience === 'public'
+    (row.kind === 'article' || row.kind === 'guide') && row.audience === 'public'
       ? HELP_QUICK_LINKS.filter((linked) => slugify(linked) === row.slug)
       : [];
   return { oldPath, newPath, articles: await toHelpArticles(holders, 'keeper'), quickLinks };

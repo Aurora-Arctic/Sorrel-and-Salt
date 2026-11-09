@@ -10,7 +10,7 @@ export const STAFF_HELP = '/help/staff';
 
 /** The address of a top-level public guide, for a screen that points at one by its slug. */
 export const publicGuidePath = (slug: string): string =>
-  helpPath({ kind: 'article', audience: 'public', slug, parentSlug: null });
+  helpPath({ kind: 'guide', audience: 'public', slug, parentSlug: null });
 
 /** A help row's edit page under Keepers › Help. */
 export const keeperHelpEditPath = (id: string): string => `/keepers/help/${id}`;

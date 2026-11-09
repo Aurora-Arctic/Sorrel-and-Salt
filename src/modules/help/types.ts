@@ -1,4 +1,4 @@
-export type HelpArticleKind = 'faq' | 'article' | 'term';
+export type HelpArticleKind = 'faq' | 'article' | 'guide' | 'term';
 export type HelpAudience = 'public' | 'staff' | 'keeper';
 
 /** The widest audience a reader is admitted to: it reads that audience and every narrower-reach one below it. */
@@ -38,6 +38,8 @@ export interface HelpArticleInput {
 }
 
 export interface HelpArticlePatch {
+  /** A top-level article becomes a guide, and a guide holding no sub page an article; no other kind changes. */
+  kind?: HelpArticleKind | null;
   title?: string | null;
   body?: string | null;
   audience?: HelpAudience | null;

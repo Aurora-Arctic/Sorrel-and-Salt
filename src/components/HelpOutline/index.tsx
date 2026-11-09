@@ -29,7 +29,7 @@ import './index.scss';
 // (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the sortable tables and the
 // shown switches.
 
-const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', term: 'Term' } as const;
+const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', guide: 'Guide', term: 'Term' } as const;
 
 /** The audience, drawn only when it is not Public, which every reader may read. */
 export const AudienceBadge = ({ audience }: Pick<HelpOutlineRow, 'audience'>): ReactNode =>

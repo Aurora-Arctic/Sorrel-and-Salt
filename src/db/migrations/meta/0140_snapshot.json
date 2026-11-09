@@ -1,5 +1,5 @@
 {
-  "id": "d6c8bbfa-a960-4a6e-bf99-a8b5b2c76d3b",
+  "id": "bdb3c9f5-5003-4376-a319-cb49f3be8511",
   "prevId": "c8b4ab03-b432-49f3-9328-9581a7d998bf",
   "version": "7",
   "dialect": "postgresql",
@@ -2759,12 +2759,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "search_terms": {
-          "name": "search_terms",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "body": {
           "name": "body",
           "type": "text",
@@ -2802,7 +2796,7 @@
           "primaryKey": false,
           "notNull": false,
           "generated": {
-            "as": "setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', coalesce(summary, '')), 'B') || setweight(to_tsvector('english', coalesce(search_terms, '')), 'B') || setweight(to_tsvector('english', body), 'C')",
+            "as": "setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', coalesce(summary, '')), 'B') || setweight(to_tsvector('english', body), 'C')",
             "type": "stored"
           }
         },
@@ -9288,7 +9282,7 @@
     "public.help_article_kind": {
       "name": "help_article_kind",
       "schema": "public",
-      "values": ["faq", "article", "term"]
+      "values": ["faq", "article", "guide", "term"]
     },
     "public.help_audience": {
       "name": "help_audience",

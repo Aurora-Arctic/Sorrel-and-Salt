@@ -6,6 +6,7 @@ import { loadHelpArticles, seedHelp } from '@/db/seed/help';
 import type { SeedHelpArticle } from '@/db/seed/types';
 import { slugify } from '@/lib/slugify';
 import { E } from '../../support/as-user';
+import { insertHelpArticle } from '../../support/db/insert-help-article';
 
 // What running the help seed writes: each entry as a row keyed on its `seed_key`, its slug derived from its title, a sub page linked
 // to its parent by the parent's key. A re-run restates a row no person has touched and leaves one a keeper edited or deleted as
@@ -30,7 +31,7 @@ beforeEach(async () => {
 
 const GUIDE: SeedHelpArticle = {
   seedKey: 'fixture-guide',
-  kind: 'article',
+  kind: 'guide',
   audience: 'public',
   title: 'Testwort Guide',
   summary: 'What the Testwort guide covers.',
@@ -240,6 +241,66 @@ describe('seedHelp', () => {
       expect(['glossary', 'staff', 'search'], row.title).not.toContain(row.slug);
       // A slug is unique within its kind, so an article and a term may share one; a term's is its anchor on /help/glossary.
       expect(row.slug, row.title).toBe(slugify(row.title));
+    }
+  });
+});
+
+// A guide is a kind of its own; the seed is where an existing top-level article holding sub pages becomes one, as a migration
+// cannot use an enum value in the transaction that adds it (src/db/migrations/0140_help-guide-kind.sql).
+describe('seedHelp and guides', () => {
+  const kindOf = async (id: string) => {
+    const [row] =
+      await sql`select kind::text as kind, body, updated_by from help_articles where id = ${id}`;
+    return row;
+  };
+
+  it('makes every live top-level article holding a live sub page a guide, changing nothing else, even on a row a keeper wrote', async () => {
+    const holder = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Holder', body: 'The keeper’s own words.' },
+      E.id,
+    );
+    await insertHelpArticle(sql, { title: 'Testwort Held', parent_id: holder, position: 1 }, E.id);
+    const lone = await insertHelpArticle(sql, { title: 'Testwort Lone' }, E.id);
+    const emptied = await insertHelpArticle(sql, { title: 'Testwort Emptied' }, E.id);
+    const gone = await insertHelpArticle(
+      sql,
+      { title: 'Testwort Gone', parent_id: emptied, position: 1 },
+      E.id,
+    );
+    await sql`update help_articles set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
+    // Precondition: each is an article before the seed runs, and the holder reads as a keeper's.
+    expect(await kindOf(holder)).toMatchObject({ kind: 'article', updated_by: E.id });
+
+    await seedHelp(db, { articles: [QUESTION] });
+
+    expect(await kindOf(holder)).toEqual({
+      kind: 'guide',
+      body: 'The keeper’s own words.',
+      updated_by: E.id,
+    });
+    expect((await kindOf(lone)).kind).toBe('article');
+    expect((await kindOf(emptied)).kind).toBe('article');
+  });
+
+  it('refuses a list whose sub page hangs beneath an entry that is not a guide', async () => {
+    const plain: SeedHelpArticle = { ...GUIDE, kind: 'article' };
+
+    await expect(seedHelp(db, { articles: [plain, DETAIL] })).rejects.toThrow(/not a guide/);
+    // Precondition: the same list with its parent a guide seeds.
+    await expect(seedHelp(db, { articles: [GUIDE, DETAIL] })).resolves.toBeDefined();
+  });
+
+  it('ships every entry holding sub pages as a guide, and every sub page as an article', async () => {
+    const shipped = loadHelpArticles();
+    const parents = new Set(shipped.flatMap((entry) => (entry.parent ? [entry.parent] : [])));
+    // Precondition: the shipped list has sub pages, so the sweep reads something.
+    expect(parents.size).toBeGreaterThan(0);
+
+    for (const entry of shipped) {
+      if (parents.has(entry.seedKey)) expect(entry.kind, entry.title).toBe('guide');
+      if (entry.parent) expect(entry.kind, entry.title).toBe('article');
+      if (entry.kind === 'guide') expect(entry.parent, entry.title).toBeNull();
     }
   });
 });

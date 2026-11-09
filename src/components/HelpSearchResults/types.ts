@@ -1,7 +1,7 @@
 import type { HelpAudience } from '@/modules/help';
 
 export interface HelpSearchResult {
-  kind: 'faq' | 'article' | 'term';
+  kind: 'faq' | 'article' | 'guide' | 'term';
   /** A row that is not public carries a chip naming its audience. */
   audience: HelpAudience;
   title: string;

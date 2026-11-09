@@ -513,7 +513,7 @@ export interface SeedDocument {
 export interface SeedHelpArticle {
   /** The key the seed finds its row by, unique across the list. */
   seedKey: string;
-  kind: 'faq' | 'article' | 'term';
+  kind: 'faq' | 'article' | 'guide' | 'term';
   audience: 'public' | 'staff' | 'keeper';
   title: string;
   summary: string | null;

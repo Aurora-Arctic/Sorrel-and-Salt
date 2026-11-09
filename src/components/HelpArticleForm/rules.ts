@@ -3,6 +3,7 @@ import type { HelpFormAudience, HelpFormKind } from './types';
 export const NOUNS: Record<HelpFormKind, string> = {
   faq: 'FAQ Entry',
   article: 'Article',
+  guide: 'Guide',
   term: 'Term',
 };
 

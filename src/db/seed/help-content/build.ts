@@ -51,6 +51,17 @@ export function article(
   };
 }
 
+/** A top-level guide: the one kind that holds sub pages. Its key keeps the `article/` prefix it was seeded under before guides were a kind. */
+export function guide(
+  position: number,
+  title: string,
+  summary: string,
+  body: string,
+  audience: Audience = 'public',
+): SeedHelpArticle {
+  return { ...article(position, title, summary, body, audience), kind: 'guide' };
+}
+
 /** A sub page of `parent`, at the parent's audience unless one is given. */
 export function subPage(
   parent: SeedHelpArticle,

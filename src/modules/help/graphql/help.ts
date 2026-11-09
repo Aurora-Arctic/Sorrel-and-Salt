@@ -22,8 +22,9 @@ import { readHelpRenameEffects } from '../services/help-rename';
 import type { HelpArticle, HelpRenameEffects } from '../types';
 
 const HelpArticleKindEnum = builder.enumType('HelpArticleKind', {
-  description: 'A question and answer, a guide, or a glossary term.',
-  values: ['faq', 'article', 'term'] as const,
+  description:
+    'A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term.',
+  values: ['faq', 'article', 'guide', 'term'] as const,
 });
 
 const HelpAudienceEnum = builder.enumType('HelpAudience', {
@@ -96,7 +97,7 @@ const HelpArticleInputRef = builder.inputType('HelpArticleInput', {
     position: t.int({ description: 'A whole number, 0 or more.' }),
     parentId: t.id(),
     childIds: t.idList({
-      description: 'The articles this one holds, in order, each placed by its place in the list.',
+      description: 'The sub pages a guide holds, in order, each placed by its place in the list.',
     }),
   }),
 });
@@ -105,6 +106,11 @@ const HelpArticlePatchRef = builder.inputType('HelpArticlePatch', {
   description:
     'Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.',
   fields: (t) => ({
+    kind: t.field({
+      type: HelpArticleKindEnum,
+      description:
+        'A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused.',
+    }),
     title: t.string(),
     body: t.string(),
     audience: t.field({ type: HelpAudienceEnum }),
@@ -131,7 +137,7 @@ builder.queryField('helpFaq', (t) =>
 builder.queryField('helpArticles', (t) =>
   t.pagedConnection({
     type: HelpArticleRef,
-    description: 'The public top-level articles, in position order.',
+    description: 'The public top-level pages, guides and articles together, in position order.',
     resolve: (_query, _args, page) => readHelpArticleIndex(page),
   }),
 );

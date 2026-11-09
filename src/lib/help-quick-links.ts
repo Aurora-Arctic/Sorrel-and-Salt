@@ -28,6 +28,9 @@ export async function quickLinks(
     ),
   );
   return rows
-    .filter((row): row is QuickLinkRow => row?.kind === 'article' && row.audience === 'public')
+    .filter(
+      (row): row is QuickLinkRow =>
+        (row?.kind === 'article' || row?.kind === 'guide') && row.audience === 'public',
+    )
     .map(linkTo);
 }

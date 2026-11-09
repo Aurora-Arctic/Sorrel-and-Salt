@@ -514,7 +514,7 @@ input HelpArticleInput {
   body: String!
 
   """
-  The articles this one holds, in order, each placed by its place in the list.
+  The sub pages a guide holds, in order, each placed by its place in the list.
   """
   childIds: [ID!]
   kind: HelpArticleKind!
@@ -531,10 +531,13 @@ input HelpArticleInput {
   title: String!
 }
 
-"""A question and answer, a guide, or a glossary term."""
+"""
+A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term.
+"""
 enum HelpArticleKind {
   article
   faq
+  guide
   term
 }
 
@@ -545,6 +548,11 @@ input HelpArticlePatch {
   audience: HelpAudience
   body: String
   childIds: [ID!]
+
+  """
+  A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused.
+  """
+  kind: HelpArticleKind
   parentId: ID
 
   """A whole number, 0 or more."""
@@ -1889,7 +1897,9 @@ type Query {
   """A public row by slug; not found for any other audience."""
   helpArticle(slug: String!): HelpArticle!
 
-  """The public top-level articles, in position order."""
+  """
+  The public top-level pages, guides and articles together, in position order.
+  """
   helpArticles(after: String, before: String, first: Int, last: Int): QueryHelpArticlesConnection!
 
   """The public FAQ entries, in position order."""

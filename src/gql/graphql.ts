@@ -135,7 +135,7 @@ export type FormGroupIcon =
 export type HelpArticleInput = {
   audience?: HelpAudience | null | undefined;
   body: string;
-  /** The articles this one holds, in order, each placed by its place in the list. */
+  /** The sub pages a guide holds, in order, each placed by its place in the list. */
   childIds?: Array<string | number> | null | undefined;
   kind: HelpArticleKind;
   parentId?: string | number | null | undefined;
@@ -147,10 +147,11 @@ export type HelpArticleInput = {
   title: string;
 };
 
-/** A question and answer, a guide, or a glossary term. */
+/** A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term. */
 export type HelpArticleKind =
   | 'article'
   | 'faq'
+  | 'guide'
   | 'term';
 
 /** Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level. */
@@ -158,6 +159,8 @@ export type HelpArticlePatch = {
   audience?: HelpAudience | null | undefined;
   body?: string | null | undefined;
   childIds?: Array<string | number> | null | undefined;
+  /** A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused. */
+  kind?: HelpArticleKind | null | undefined;
   parentId?: string | number | null | undefined;
   /** A whole number, 0 or more. */
   position?: number | null | undefined;

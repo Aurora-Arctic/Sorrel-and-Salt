@@ -24,6 +24,10 @@ const ADMITTED: Record<HelpReach, HelpAudience[]> = {
   keeper: ['public', 'staff', 'keeper'],
 };
 
+// A guide and an article are both pages under /help/<slug>: one address space, one top-level list.
+const PAGE_KINDS: HelpArticleKind[] = ['article', 'guide'];
+const isPage = (): SQL => inArray(helpArticles.kind, PAGE_KINDS);
+
 const admits = (reach: HelpReach, column: AnyPgColumn = helpArticles.audience): SQL =>
   inArray(column, ADMITTED[reach]);
 
@@ -64,13 +68,13 @@ export function findHelpFaqPage(page: PageRequest): Promise<PageEntry<HelpArticl
   );
 }
 
-/** One page of the public top-level articles, in position order. */
+/** One page of the public top-level pages, guides and articles together, in position order. */
 export function findHelpArticleIndexPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
   return findPage(
     helpArticles,
     BY_POSITION,
     page,
-    and(eq(helpArticles.kind, 'article'), isNull(helpArticles.parentId), readable('public')),
+    and(isPage(), isNull(helpArticles.parentId), readable('public')),
   );
 }
 
@@ -127,19 +131,14 @@ export async function findHelpArticlesWhoseBodyHolds(text: string): Promise<Help
   return rows.sort((a, b) => a.title.localeCompare(b.title));
 }
 
-/** The live article under `slug` among the audiences `reach` admits, or `undefined`; a slug is unique within a kind, so a page lookup names the kind. */
+/** The live guide or article under `slug` among the audiences `reach` admits, or `undefined`. */
 export function findHelpArticleBySlug(
   slug: string,
   reach: HelpReach,
 ): Promise<HelpArticleRow | undefined> {
   return selectOne(
     helpArticles,
-    and(
-      notSoftDeleted(helpArticles),
-      eq(helpArticles.kind, 'article'),
-      eq(helpArticles.slug, slug),
-      readable(reach),
-    ),
+    and(notSoftDeleted(helpArticles), isPage(), eq(helpArticles.slug, slug), readable(reach)),
   );
 }
 
@@ -174,14 +173,9 @@ export async function findHelpArticleSlugsByIds(
   return new Map(rows.map((row) => [row.id, row.slug]));
 }
 
-/** One page of the public articles of any depth a reader sees, A to Z: what the sitemap lists. */
+/** One page of the public guides and articles of any depth a reader sees, A to Z: what the sitemap lists. */
 export function findHelpArticlePathPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
-  return findPage(
-    helpArticles,
-    A_TO_Z,
-    page,
-    and(eq(helpArticles.kind, 'article'), readable('public')),
-  );
+  return findPage(helpArticles, A_TO_Z, page, and(isPage(), readable('public')));
 }
 
 /** Every live child of one parent, whatever its audience or flag, in position order: how a write checks the structure rules and a keeper edits. */
@@ -194,15 +188,11 @@ export async function findAllHelpArticleChildren(parentId: string): Promise<Help
   return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
 }
 
-/** The highest position among the live top-level articles, shown or hidden, or 0 when none has one: where a released child goes after. */
+/** The highest position among the live top-level guides and articles, shown or hidden, or 0 when none has one: where a released child goes after. */
 export async function findLastTopLevelHelpPosition(): Promise<number> {
   const rows = await selectFrom(
     helpArticles,
-    and(
-      notSoftDeleted(helpArticles),
-      eq(helpArticles.kind, 'article'),
-      isNull(helpArticles.parentId),
-    ),
+    and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId)),
   );
   return Math.max(0, ...rows.map((row) => row.position ?? 0));
 }
@@ -212,25 +202,25 @@ export async function findAllHelpOrdered(list: 'guides' | 'faq'): Promise<HelpAr
   const rows = await selectFrom(
     helpArticles,
     list === 'guides'
-      ? and(
-          notSoftDeleted(helpArticles),
-          eq(helpArticles.kind, 'article'),
-          isNull(helpArticles.parentId),
-        )
+      ? and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId))
       : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq')),
   );
   const rank = (row: HelpArticleRow) => row.position ?? LAST;
   return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
 }
 
-/** The live row holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. */
+/** The live row of `kind` holding `slug`, whatever its audience, or `undefined`: how a write finds a duplicate. A guide and an article share one address space. */
 export function findHelpArticleHoldingSlug(
   kind: HelpArticleKind,
   slug: string,
 ): Promise<HelpArticleRow | undefined> {
   return selectOne(
     helpArticles,
-    and(notSoftDeleted(helpArticles), eq(helpArticles.kind, kind), eq(helpArticles.slug, slug)),
+    and(
+      notSoftDeleted(helpArticles),
+      PAGE_KINDS.includes(kind) ? isPage() : eq(helpArticles.kind, kind),
+      eq(helpArticles.slug, slug),
+    ),
   );
 }
 
