@@ -10,6 +10,7 @@ import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import SignInDialog from '../SignInDialog';
+import { ADDRESS_LEDES } from './ledes';
 import type { InvitationAcceptanceProps } from './types';
 import type { PageHeaderProps } from '../PageHeader/types';
 import './index.scss';
@@ -40,12 +41,6 @@ const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Create an account or sign in. Its email address must be the one this invitation was sent to.";
-
-/** Under the dialog's title, for an invitation sent to one address; a card takes any account. */
-const ADDRESS_LEDES = {
-  'sign-in': 'Use the account whose email address this invitation was sent to.',
-  'sign-up': 'Use the email address this invitation was sent to.',
-};
 
 const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 

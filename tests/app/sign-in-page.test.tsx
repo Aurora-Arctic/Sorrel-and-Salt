@@ -19,9 +19,12 @@ const redirect = vi.fn((to: string) => {
 vi.mock('next/navigation', () => ({ redirect }));
 
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
-vi.mock('@/components/SignInPanel', () => ({ default: () => null }));
+const SignInPanel = vi.fn<(props: { ledes?: unknown }) => null>(() => null);
+vi.mock('@/components/SignInPanel', () => ({ default: SignInPanel }));
 
 const { default: SignInPage, generateMetadata } = await import('@/app/sign-in/page');
+const { ADDRESS_LEDES } = await import('@/components/InvitationAcceptance/ledes');
+const { newCardToken, newToken, looksLikeCardToken } = await import('@/lib/invitation-token');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 const SIGNED_IN: Session = { userId: USER_ID, role: 'user' };
@@ -43,6 +46,7 @@ beforeEach(() => {
   signedInLanding.mockReset();
   signedInLanding.mockResolvedValue('/coven/fixture-coven');
   redirect.mockClear();
+  SignInPanel.mockClear();
 });
 
 describe('the sign-in page for a signed-in visitor', () => {
@@ -78,6 +82,43 @@ describe('the sign-in page for a signed-out visitor', () => {
     getSession.mockResolvedValue(null);
     expect(await visit('/coven/fixture-coven')).toBeUndefined();
     expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+// The page decides by the address alone, as the invite page does signed out: no invitation is read, so a lede tells a
+// signed-out visitor nothing about whether a token is live.
+describe('the sign-in page lede for a signed-out visitor', () => {
+  const ledesFor = async (next?: string) => {
+    getSession.mockResolvedValue(null);
+    expect(await visit(next)).toBeUndefined();
+    expect(SignInPanel).toHaveBeenCalledTimes(1);
+    return SignInPanel.mock.calls[0]![0].ledes;
+  };
+
+  it('passes the address ledes when next is an invitation link sent to an address', async () => {
+    const token = newToken();
+    // Precondition: an address token is not card-shaped, so only the path decides it.
+    expect(looksLikeCardToken(token)).toBe(false);
+    expect(await ledesFor(`/invite/${token}`)).toBe(ADDRESS_LEDES);
+  });
+
+  it('passes none for a card code, under the card path or typed under /invite/', async () => {
+    const card = newCardToken();
+    // Precondition: the code is card-shaped, so the shape check is what refuses it under /invite/.
+    expect(looksLikeCardToken(card)).toBe(true);
+    expect(await ledesFor(`/invite/${card}`)).toBeUndefined();
+    SignInPanel.mockClear();
+    expect(await ledesFor(`/i/${card}`)).toBeUndefined();
+  });
+
+  it.each([
+    ['an ordinary page', '/coven/fixture-coven'],
+    ['no next', undefined],
+    ['a path under an invitation', `/invite/${'a'.repeat(43)}/more`],
+    ['an invitation path with a query', `/invite/${'a'.repeat(43)}?x=1`],
+    ['the bare invite path', '/invite/'],
+  ])('passes none for %s', async (_label, next) => {
+    expect(await ledesFor(next)).toBeUndefined();
   });
 });
 

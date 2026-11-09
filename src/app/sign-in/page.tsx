@@ -1,8 +1,11 @@
 import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
+import { ADDRESS_LEDES } from '../../components/InvitationAcceptance/ledes';
 import SignInPanel from '../../components/SignInPanel';
+import type { SignInLedes } from '../../components/SignInPanel/types';
 import { emailPagePath } from '../../lib/account-email';
 import { signedInLanding } from '../../lib/landing';
+import { looksLikeCardToken } from '../../lib/invitation-token';
 import { getSession, sessionIsVerified } from '../../lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
 import { siteUrl } from '../../lib/site';
@@ -25,6 +28,14 @@ export async function generateMetadata({ searchParams }: SignInPageProps): Promi
   };
 }
 
+const INVITE_LINK = /^\/invite\/([^/?#]+)$/;
+
+/** Read from the address alone, as the invite page does signed out: reading the invitation would tell a visitor with no account whether its token is live. */
+function ledesFor(next: string | undefined): SignInLedes | undefined {
+  const token = next === undefined ? undefined : INVITE_LINK.exec(next)?.[1];
+  return token === undefined || looksLikeCardToken(token) ? undefined : ADDRESS_LEDES;
+}
+
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
 // reachable while signed out.
 export default async function SignInPage({ searchParams }: SignInPageProps) {
@@ -40,7 +51,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <PageFrame narrow>
-      <SignInPanel next={next} error={error} configured={configured} />
+      <SignInPanel next={next} error={error} configured={configured} ledes={ledesFor(next)} />
     </PageFrame>
   );
 }
