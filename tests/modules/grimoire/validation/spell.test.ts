@@ -107,6 +107,11 @@ describe('SpellStepInput', () => {
     expect(failedPaths({ body: '', name: 'Testwort' })).toEqual([['body']]);
   });
 
+  it('refuses a quantity with more than three decimal places, and takes three', () => {
+    expect(SpellStepInput.safeParse({ name: 'Testwort', quantity: 0.125 }).success).toBe(true);
+    expect(failedPaths({ name: 'Testwort', quantity: 0.1234 })).toEqual([['quantity']]);
+  });
+
   it('refuses a negative, oversized or non-numeric quantity, at its field', () => {
     for (const quantity of [-1, MAX_QUANTITY + 1, '3', Number.NaN]) {
       expect(failedPaths({ name: 'Testwort', quantity }), String(quantity)).toEqual([['quantity']]);

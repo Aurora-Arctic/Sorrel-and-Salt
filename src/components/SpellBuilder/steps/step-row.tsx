@@ -7,6 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { GripIcon } from '../../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
+import { formatQuantity } from '@/lib/formats';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
@@ -110,6 +111,7 @@ export function BuilderStepRow({
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
       placeholder="Add an instruction"
+      spellCheck
       multiline
       rows={2}
     />
@@ -197,6 +199,8 @@ export function BuilderStepRow({
             required
             placeholder="Add a name"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -206,8 +210,10 @@ export function BuilderStepRow({
             name={`steps.${index}.form`}
             label="Form"
             labelSuffix={step.name ?? undefined}
-            placeholder="Add a form"
+            hint="Pick a form, or write your own"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -219,9 +225,12 @@ export function BuilderStepRow({
           name={`steps.${index}.quantity`}
           label="Quantity"
           labelSuffix={name}
-          type="number"
-          placeholder="Amount"
+          inputMode="decimal"
+          format={formatQuantity}
+          hint="A number, like 2.5"
           autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="next"
         />
       }
       unitField={

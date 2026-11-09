@@ -1,6 +1,8 @@
 // Tidying shared by the forms and the server schemas: the form shows exactly what the server will store.
 // Pure and client-safe. A format changes only what it can read with certainty and leaves the rest as typed.
 
+import { QUANTITY_SCALE } from '../modules/ingredients/schema/quantities';
+
 export type FieldFormat = (text: string) => string;
 
 /** Single-line text with its ends trimmed and each run of white space made one space. Never for multiline text, whose line breaks matter. */
@@ -19,3 +21,26 @@ export const trimEnds: FieldFormat = (text) => text.trim();
 /** What a form says when text runs past a soft limit; the schema's `.max` carries the same words, so the form and the server agree. */
 export const limitMessage = (limit: number): string =>
   `Keep this to ${limit.toLocaleString('en-US')} characters or fewer`;
+
+const AMOUNT = /^-?(\d+\.?\d*|\.\d+)$/;
+
+/** An amount typed as digits with at most one point, commas dropped as thousands separators ("2,5" reads as 25): its number, null for blank, NaN for anything else (letters, two points, an exponent), which the quantity rule refuses. */
+export function parseQuantity(text: string): number | null {
+  const trimmed = text.trim();
+  if (trimmed === '') return null;
+  const plain = trimmed.replace(/,/g, '');
+  return AMOUNT.test(plain) ? Number(plain) : Number.NaN;
+}
+
+/** A stored amount as a form shows it: thousands separators, no padded decimals (1234567.5 is "1,234,567.5"). */
+export const showQuantity = (amount: number): string =>
+  String(amount).includes('e')
+    ? String(amount)
+    : amount.toLocaleString('en-GB', { maximumFractionDigits: QUANTITY_SCALE });
+
+/** An amount shown with thousands separators ("1000" becomes "1,000"); what it cannot read stays as typed. */
+export const formatQuantity: FieldFormat = (text) => {
+  const amount = parseQuantity(text);
+  if (amount === null) return '';
+  return Number.isNaN(amount) || String(amount).includes('e') ? text.trim() : showQuantity(amount);
+};

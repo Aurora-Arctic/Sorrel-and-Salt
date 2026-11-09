@@ -47,7 +47,7 @@ test('an open step stays open for a click on anything inside its fields', async 
     }
   };
 
-  await probe('quantity', () => row.getByRole('spinbutton', { name: /^Quantity/ }).click());
+  await probe('quantity', () => row.getByRole('textbox', { name: /^Quantity/ }).click());
   await probe('quantity label', () =>
     row
       .locator('label', { hasText: /^Quantity/ })

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import StockFields, {
@@ -27,31 +27,31 @@ function Harness({ start }: { start: StockFormValues }) {
   );
 }
 
-const quantity = () => screen.getByRole('spinbutton', { name: 'Quantity' });
-const threshold = () => screen.getByRole('spinbutton', { name: 'Low Stock At' });
+const quantity = () => screen.getByRole('textbox', { name: 'Quantity' });
+const threshold = () => screen.getByRole('textbox', { name: 'Low Stock At' });
 const unit = () => screen.getByRole('combobox', { name: 'Unit' });
 
 describe('StockFields', () => {
   it('shows a held jar as it is: the amounts typed, the unit chosen', () => {
     render(<Harness start={stockFormValues({ quantity: 250, unit: 'g', threshold: 30 })} />);
 
-    expect(quantity()).toHaveValue(250);
-    expect(threshold()).toHaveValue(30);
+    expect(quantity()).toHaveValue('250');
+    expect(threshold()).toHaveValue('30');
     expect(unit()).toHaveTextContent('g');
   });
 
   it('shows an unmeasured jar with the quantity and threshold empty and no unit', () => {
     render(<Harness start={stockFormValues({ quantity: null, unit: null, threshold: null })} />);
 
-    expect(quantity()).toHaveValue(null);
-    expect(threshold()).toHaveValue(null);
+    expect(quantity()).toHaveValue('');
+    expect(threshold()).toHaveValue('');
   });
 
   it('keeps zero as zero, not as nothing', () => {
     render(<Harness start={stockFormValues({ quantity: 0, unit: 'g', threshold: 0 })} />);
 
-    expect(quantity()).toHaveValue(0);
-    expect(threshold()).toHaveValue(0);
+    expect(quantity()).toHaveValue('0');
+    expect(threshold()).toHaveValue('0');
   });
 
   it('hands what is typed to the form', () => {
@@ -63,11 +63,47 @@ describe('StockFields', () => {
     expect(held).toMatchObject({ quantityOnHand: '12.5', lowStockThreshold: '2' });
   });
 
-  it('takes any decimal, which a number box with the default step would refuse', () => {
+  it('tidies an amount to its plain number on blur, and drops a comma as a thousands separator', () => {
     render(<Harness start={EMPTY_STOCK} />);
 
-    expect(quantity()).toHaveAttribute('step', 'any');
-    expect(threshold()).toHaveAttribute('step', 'any');
+    typeIn(quantity(), ' 2.50 ');
+    fireEvent.blur(quantity());
+    typeIn(threshold(), '0.250');
+    fireEvent.blur(threshold());
+
+    expect(quantity()).toHaveValue('2.5');
+    expect(threshold()).toHaveValue('0.25');
+    expect(held).toMatchObject({ quantityOnHand: '2.5', lowStockThreshold: '0.25' });
+
+    typeIn(quantity(), '1,000');
+    fireEvent.blur(quantity());
+    expect(quantity()).toHaveValue('1,000');
+  });
+
+  it('opens a stored amount with thousands separators', () => {
+    render(
+      <Harness start={stockFormValues({ quantity: 1234567.5, unit: 'g', threshold: 1000 })} />,
+    );
+
+    expect(quantity()).toHaveValue('1,234,567.5');
+    expect(threshold()).toHaveValue('1,000');
+    expect(stockAmountsOf(held)).toMatchObject({
+      quantityOnHand: 1234567.5,
+      lowStockThreshold: 1000,
+    });
+  });
+
+  it('asks for a decimal keypad on both amount fields', () => {
+    render(<Harness start={EMPTY_STOCK} />);
+
+    expect(quantity()).toHaveAttribute('inputmode', 'decimal');
+    expect(threshold()).toHaveAttribute('inputmode', 'decimal');
+  });
+
+  it('reads a point amount as the number it means, and a comma amount with the comma dropped', () => {
+    expect(
+      stockAmountsOf({ quantityOnHand: '2.5', unit: '', lowStockThreshold: '1,000' }),
+    ).toMatchObject({ quantityOnHand: 2.5, lowStockThreshold: 1000 });
   });
 
   it('leaves the numbers as typed when the unit changes: nothing converts', () => {
@@ -76,8 +112,8 @@ describe('StockFields', () => {
     choose('Unit', 'kg');
 
     expect(held).toEqual({ quantityOnHand: '250', unit: 'kg', lowStockThreshold: '30' });
-    expect(quantity()).toHaveValue(250);
-    expect(threshold()).toHaveValue(30);
+    expect(quantity()).toHaveValue('250');
+    expect(threshold()).toHaveValue('30');
   });
 
   it('can clear the unit with None', () => {
@@ -158,16 +194,16 @@ describe('StockFields in a list of jars', () => {
   it('names each row by its form, so two rows never share a field name', () => {
     render(<Rows start={start} />);
 
-    expect(screen.getByRole('spinbutton', { name: 'Quantity, Flower' })).toHaveValue(250);
-    expect(screen.getByRole('spinbutton', { name: 'Quantity, Oil' })).toHaveValue(5);
-    expect(screen.getByRole('spinbutton', { name: 'Low Stock At, Oil' })).toHaveValue(1);
+    expect(screen.getByRole('textbox', { name: 'Quantity, Flower' })).toHaveValue('250');
+    expect(screen.getByRole('textbox', { name: 'Quantity, Oil' })).toHaveValue('5');
+    expect(screen.getByRole('textbox', { name: 'Low Stock At, Oil' })).toHaveValue('1');
     expect(screen.getByRole('combobox', { name: 'Unit, Flower' })).toHaveTextContent('g');
   });
 
   it('keeps what is typed under its own row', () => {
     render(<Rows start={start} />);
 
-    typeIn(screen.getByRole('spinbutton', { name: 'Quantity, Oil' }), '7');
+    typeIn(screen.getByRole('textbox', { name: 'Quantity, Oil' }), '7');
     choose('Unit, Flower', 'kg');
 
     expect(jars.jars[0]).toEqual({ quantityOnHand: '250', unit: 'kg', lowStockThreshold: '30' });

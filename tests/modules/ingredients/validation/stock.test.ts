@@ -50,6 +50,12 @@ describe('StockInput', () => {
     }
   });
 
+  it('refuses more than three decimal places, at its field', () => {
+    expect(StockInput.safeParse({ quantityOnHand: 0.125 }).success).toBe(true);
+    expect(failedPaths({ quantityOnHand: 0.1234 })).toEqual([['quantityOnHand']]);
+    expect(failedPaths({ lowStockThreshold: 2.0005 })).toEqual([['lowStockThreshold']]);
+  });
+
   it('takes a unit the units module names, and refuses one it does not', () => {
     for (const unit of ['fl_oz_uk', 'fl_oz_us']) {
       expect(StockInput.safeParse({ unit }).success, unit).toBe(true);

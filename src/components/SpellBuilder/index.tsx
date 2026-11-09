@@ -646,11 +646,14 @@ const SpellBuilder = ({
                   label="Title"
                   placeholder="Add a title"
                   autoComplete="off"
+                  spellCheck
+                  enterKeyHint="next"
                 />
                 <TextField<SpellBuilderValues>
                   name="intent"
                   label="Intent"
                   placeholder="Add an intent"
+                  spellCheck
                   multiline
                   rows={3}
                 />
@@ -667,14 +670,18 @@ const SpellBuilder = ({
                       label="Jar Description"
                       placeholder="Add a description"
                       autoComplete="off"
+                      spellCheck
+                      enterKeyHint="next"
                     />
                   }
                   waxField={
                     <TextField<SpellBuilderValues>
                       name="sealWaxColor"
                       label="Seal Wax"
-                      placeholder="Add a colour"
+                      hint="Any colour, in your own words"
                       autoComplete="off"
+                      spellCheck={false}
+                      enterKeyHint="next"
                     />
                   }
                 />
@@ -698,6 +705,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="moonPhase"
                   label="Moon Phase"
+                  hint="Pick one, or write your own"
                   placeholder="Add a phase"
                   options={MOON_PHASES}
                   icon={moonPhaseIcon}
@@ -705,6 +713,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="dayOfWeek"
                   label="Day"
+                  hint="Pick one, or write your own"
                   placeholder="Add a day"
                   options={DAYS_OF_THE_WEEK}
                 />
@@ -717,6 +726,7 @@ const SpellBuilder = ({
                   name="note"
                   label="Note"
                   placeholder="Add a note"
+                  spellCheck
                   multiline
                 />
               </>,

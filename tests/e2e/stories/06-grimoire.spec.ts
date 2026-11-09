@@ -171,7 +171,7 @@ test(
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
     const step = await addIngredientStep(page, 'Rosemary (Herb)');
-    await step.getByRole('spinbutton', { name: /^Quantity/ }).fill('2');
+    await step.getByRole('textbox', { name: /^Quantity/ }).fill('2');
     await pickUnit(step, 'g');
     const save = page.getByRole('button', { name: 'Save' });
     await save.click();

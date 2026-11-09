@@ -1,6 +1,7 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
-import { type FieldFormat, tidy, trimEnds } from './formats';
+import { type FieldFormat, parseQuantity, tidy, trimEnds } from './formats';
+import { MAX_QUANTITY, QUANTITY_SCALE } from '../modules/ingredients/schema/quantities';
 import type { ValidationIssue } from './types';
 
 // Apart from errors.ts so that stays schema-library-free (claude-docs/validation.md).
@@ -27,6 +28,25 @@ export const optionalText = (format: FieldFormat = tidy) =>
       const formatted = format(value);
       return formatted === '' ? null : formatted;
     });
+
+/**
+ * A stock or recipe amount: a number from 0 to what the columns hold with up to three decimals. Not a CHECK for the
+ * negative case, which has something to say. `label` names the field in the messages that need it.
+ */
+export const quantity = (label: string) =>
+  z
+    .number({ error: 'Enter an amount as a number, like 2.5' })
+    .nonnegative({ error: `${label} cannot be negative` })
+    .max(MAX_QUANTITY, {
+      error: `${label} is too large — the most it can be is ${MAX_QUANTITY.toLocaleString('en', { maximumFractionDigits: QUANTITY_SCALE })}`,
+    })
+    .refine((amount) => Number(amount.toFixed(QUANTITY_SCALE)) === amount, {
+      error: `${label} can have up to three decimal places`,
+    });
+
+/** `quantity` for the text a form holds: blank is no amount, digits with at most one point, commas dropped as thousands separators. */
+export const quantityText = (label: string) =>
+  z.string().transform(parseQuantity).pipe(quantity(label).nullable());
 
 /** No slug: it is derived by src/lib/slugify.ts, so one in the input is dropped. */
 export const curatedValueInput = (noun: string) =>
