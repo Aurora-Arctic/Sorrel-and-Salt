@@ -41,6 +41,7 @@ export async function seedHelpArticles(authorEmail: string): Promise<string> {
       sql,
       {
         ...HELP.guide,
+        kind: 'guide',
         audience: 'public',
         position: 1,
         summary: 'How a fixture hearth is lit.',
@@ -107,6 +108,7 @@ export async function seedHelpArticles(authorEmail: string): Promise<string> {
       sql,
       {
         ...HELP.curation,
+        kind: 'guide',
         audience: 'staff',
         position: 1,
         summary: 'How a fixture curator works.',

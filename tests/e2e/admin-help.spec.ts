@@ -49,12 +49,21 @@ async function writeBody(page: Page, text: string): Promise<void> {
   await page.keyboard.type(text);
 }
 
-// The chip's radios are in its menu, out of the accessibility tree while it is shut, so the hidden ones are counted too.
-const audience = (page: Page, name: string) =>
+// A chip's radios are in its menu, out of the accessibility tree while it is shut, so the hidden ones are counted too.
+const chipRadio = (page: Page, legend: RegExp, name: string) =>
   page
     .getByRole('main')
-    .getByRole('group', { name: /^Audience/ })
+    .getByRole('group', { name: legend })
     .getByRole('radio', { name, includeHidden: true });
+
+const audience = (page: Page, name: string) => chipRadio(page, /^Audience/, name);
+
+/** Opens the chip's menu and presses the option's label, as a keeper does: the menu's native radio is drawn invisible. */
+async function choose(page: Page, legend: RegExp, name: string): Promise<void> {
+  await page.getByRole('main').getByRole('group', { name: legend }).locator('summary').click();
+  await chipRadio(page, legend, name).locator('xpath=ancestor::label[1]').click();
+  await expect(chipRadio(page, legend, name)).toBeChecked();
+}
 
 /** Leaves the form for the outline it returns to. */
 const expectBackAtOutline = (page: Page) => expect(page).toHaveURL(/\/keepers\/help(\?|$)/);
@@ -79,9 +88,10 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await page.goto(PATH);
   await assertNoAccessibilityViolations(page);
 
-  // The parent: a public guide, written on the form's own page.
+  // The parent: a public guide, written on the form's own page, as only a guide holds sub pages.
   await addLink(page).click();
   await expect(page).toHaveURL(`${PATH}/new`);
+  await choose(page, /^Kind/, 'Guide');
   await title(page).fill(PARENT);
   await page
     .getByRole('main')
@@ -89,7 +99,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
     .fill('A guide the test writes.');
   await writeBody(page, 'A paragraph the test writes.');
   await assertNoAccessibilityViolations(page);
-  await page.getByRole('button', { name: 'Save Article' }).click();
+  await page.getByRole('button', { name: 'Save Guide' }).click();
   await expectBackAtOutline(page);
   await expectListed(page, PARENT);
 
@@ -109,14 +119,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   );
   await title(page).fill(CHILD);
   await writeBody(page, 'A sub page the test writes.');
-  // The chip opens its menu, and the menu's native radio is drawn invisible, so its label is pressed, as a keeper presses it.
-  await page
-    .getByRole('main')
-    .getByRole('group', { name: /^Audience/ })
-    .locator('summary')
-    .click();
-  await audience(page, 'Staff').locator('xpath=ancestor::label[1]').click();
-  await expect(audience(page, 'Staff')).toBeChecked();
+  await choose(page, /^Audience/, 'Staff');
   await page.getByRole('button', { name: 'Save Article' }).click();
   await expectBackAtOutline(page);
   await expect(
@@ -144,7 +147,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await expect(audience(page, 'Staff')).toBeEnabled();
 
   // A parent with a live sub page is not deleted: the refusal says why, and the form stays.
-  await page.getByRole('button', { name: 'Delete Article' }).click();
+  await page.getByRole('button', { name: 'Delete Guide' }).click();
   await assertNoAccessibilityViolations(page);
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
@@ -161,7 +164,7 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
   await expectNotListed(page, CHILD);
 
   await openEdit(page, PARENT);
-  await page.getByRole('button', { name: 'Delete Article' }).click();
+  await page.getByRole('button', { name: 'Delete Guide' }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expectBackAtOutline(page);
   await expectNotListed(page, PARENT);
