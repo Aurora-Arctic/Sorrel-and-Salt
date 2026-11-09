@@ -19,8 +19,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Fixed                                           |
 | D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Fixed                                           |
 | D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Fixed                                           |
-| D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Not yet fixed                                   |
-| D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Not yet fixed                                   |
+| D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Fixed                                           |
+| D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Fixed                                           |
 | D-10  | fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL                                                              | high     | Tests         |     31 |     6 | Not yet fixed                                   |
 | D-11  | e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`                                                             | high     | Tests         |     30 |   3.5 | Not yet fixed                                   |
 | D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Not yet fixed                                   |
@@ -375,7 +375,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** the files themselves.
 
 - **Estimate:** 5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-9: `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one
 
@@ -402,7 +402,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 - **Owner's call:** Every test imports the one `ORIGIN`, set to `http://localhost:8000`.
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-10: fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL
 
