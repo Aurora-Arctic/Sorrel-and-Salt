@@ -25,6 +25,7 @@ import {
   TextField,
   fieldDescription,
   useFormHistory,
+  FormErrorSummary,
 } from '../Field';
 import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -240,6 +241,8 @@ const GroupForm = ({
         }
       : EMPTY,
     resolver,
+    mode: 'onTouched',
+    shouldFocusError: false,
   });
   const {
     control,
@@ -455,6 +458,7 @@ const GroupForm = ({
         >
           <FormHistoryButtons />
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           <TextField<GroupValues>
             name="name"
             label="Name"

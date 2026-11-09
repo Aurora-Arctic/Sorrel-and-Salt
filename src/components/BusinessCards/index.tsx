@@ -8,7 +8,7 @@ import { fetchCardAssets } from '../../lib/invitation-cards/assets';
 import type { CardAssets } from '../../lib/invitation-cards/types';
 import { slugify } from '../../lib/slugify';
 import { saveFile } from '../AdminCards/save-file';
-import { FormActions, SwitchField, TextField } from '../Field';
+import { FormActions, FormErrorSummary, SwitchField, TextField } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { BusinessCardSchema } from './schema';
@@ -28,6 +28,7 @@ const BusinessCards = (): ReactElement => {
   const methods = useForm<BusinessCardValues>({
     defaultValues: EMPTY,
     mode: 'onTouched',
+    shouldFocusError: false,
     resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
   });
   const { isDirty, isValid } = methods.formState;
@@ -77,6 +78,7 @@ const BusinessCards = (): ReactElement => {
             The card fonts and pictures could not be loaded. Reload the page.
           </Notice>
         )}
+        <FormErrorSummary />
         <TextField<BusinessCardValues> name="name" label="Name" required />
         <TextField<BusinessCardValues> name="email" label="Email" required />
         <TextField<BusinessCardValues> name="phone" label="Phone" required />

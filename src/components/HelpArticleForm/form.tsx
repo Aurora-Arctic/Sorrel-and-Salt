@@ -11,7 +11,14 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { slugify } from '../../lib/slugify';
-import { FieldError, FormActions, Required, SelectField, TextField } from '../Field';
+import {
+  FieldError,
+  FormActions,
+  FormErrorSummary,
+  Required,
+  SelectField,
+  TextField,
+} from '../Field';
 import HelpShownSwitch, { SetHelpArticleShownDocument } from '../HelpOutline/shown-switch';
 import { keepersHelpHref } from '../HelpOutline/href';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
@@ -124,6 +131,8 @@ const HelpArticleForm = ({
   const [openBody] = useState(() => markdownOf(editor));
   const preset = guides.find(({ id }) => id === presetParentId);
   const methods = useForm<HelpFormValues>({
+    mode: 'onTouched',
+    shouldFocusError: false,
     defaultValues: {
       kind: article?.kind ?? 'article',
       title: article?.title ?? '',
@@ -396,6 +405,7 @@ const HelpArticleForm = ({
       <form className="form help-article-form" onSubmit={handleSubmit(send)} noValidate>
         <div className="help-article-form__main">
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           <TextField<HelpFormValues>
             name="title"
             label="Title"

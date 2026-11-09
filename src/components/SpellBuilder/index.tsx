@@ -23,6 +23,7 @@ import {
   FormHistoryContext,
   TextField,
   useFormHistory,
+  FormErrorSummary,
 } from '../Field';
 import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
@@ -228,6 +229,7 @@ const SpellBuilder = ({
     // A field is checked when it is first left, and on every change after,
     // as the ingredient form's are.
     mode: 'onTouched',
+    shouldFocusError: false,
     reValidateMode: 'onChange',
   });
   const {
@@ -629,6 +631,7 @@ const SpellBuilder = ({
         >
           {recovery && (headerNote ? createPortal(recovery, headerNote) : recovery)}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
+          <FormErrorSummary />
           <div className="collapsible-sections">
             <FoldAll
               anyOpen={open.size > 0}

@@ -19,6 +19,7 @@ import {
   SelectField,
   TextField,
   useFormHistory,
+  FormErrorSummary,
 } from '../Field';
 import Notice from '../Notice';
 import { ListField } from '../IngredientForm/fields';
@@ -332,6 +333,8 @@ const GroupedValueForm = ({
         }
       : EMPTY,
     resolver: spec.resolver,
+    mode: 'onTouched',
+    shouldFocusError: false,
   });
   const {
     control,
@@ -421,6 +424,7 @@ const GroupedValueForm = ({
         >
           <FormHistoryButtons />
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           {/* Autofill off: Chrome takes a field named "name" for a person's and
             offers the user's own. */}
           <TextField<GroupedValueValues>

@@ -7,7 +7,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
-import { FieldError, FieldShell, FormActions, fieldDescription } from '../Field';
+import { FieldError, FieldShell, FormActions, FormErrorSummary, fieldDescription } from '../Field';
 import { BinButton } from '../IconTip';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import EmptyState from '../EmptyState';
@@ -198,7 +198,10 @@ export const StockDialogForm = ({
       seeded: seed ? openOn : null,
     };
   });
-  const methods = useForm<StockDialogValues>({ defaultValues: { rows: opened.rows } });
+  const methods = useForm<StockDialogValues>({
+    defaultValues: { rows: opened.rows },
+    shouldFocusError: false,
+  });
   const {
     control,
     handleSubmit,
@@ -283,6 +286,7 @@ export const StockDialogForm = ({
     <FormProvider {...methods}>
       {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
       <form className="form" noValidate onSubmit={handleSubmit(send)}>
+        <FormErrorSummary />
         <div className="stock-dialog">
           <div className="stock-dialog__columns">
             <div className="stock-dialog__list">
