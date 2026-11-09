@@ -133,6 +133,9 @@ export const MODAL_SCANS = [
   { id: 'two-factor-warning', source: 'src/components/PasswordSection/two-factor.tsx', as: 'user' },
   { id: 'my-request', source: 'src/components/SupportList/index.tsx', as: 'user' },
 
+  // The help pages.
+  { id: 'help-screenshot', source: 'src/components/HelpScreenshot/index.tsx', as: 'user' },
+
   // A coven's people.
   {
     id: 'member',

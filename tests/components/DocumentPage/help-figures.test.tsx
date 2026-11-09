@@ -1,11 +1,20 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderMarkdown } from '@/components/DocumentPage/markdown';
 import { helpTerms } from '@/lib/help-marks';
 
 // A help body's screenshot: a paragraph that is one image becomes a figure, its title the caption beneath, drawn in a
-// light and a dark picture of which the stylesheet shows the theme's. An image whose address the site does not serve
-// becomes its alt text, as a link to one becomes its text.
+// light and a dark picture of which the stylesheet shows the theme's, as a button that opens it full size. An image
+// whose address the site does not serve becomes its alt text, as a link to one becomes its text.
+
+const ENLARGE = 'Enlarge: The Testwort entry page';
+
+/** The two pictures inside an element, each with an empty alt, so the alt text is read once. */
+function pictures(holder: HTMLElement) {
+  const found = within(holder).getAllByRole('presentation');
+  expect(found.map((picture) => picture.getAttribute('alt'))).toEqual(['', '']);
+  return found.map((picture) => picture.getAttribute('src'));
+}
 
 function draw(body: string, help = true) {
   const { content } = renderMarkdown(body, {}, [], false, help ? helpTerms([]) : undefined);
@@ -19,30 +28,51 @@ describe('renderMarkdown screenshots in a help body', () => {
     // jsdom names no figure from its figcaption, as a browser does, so the caption is found inside it.
     const figure = screen.getByRole('figure');
     expect(within(figure).getByText('An entry page, signed out.').tagName).toBe('FIGCAPTION');
-    expect(within(figure).getByRole('img', { name: 'The Testwort entry page' })).toBeVisible();
+    expect(within(figure).getByRole('button', { name: ENLARGE })).toBeVisible();
     expect(figure).toHaveClass('figure');
   });
 
-  it('draws the screenshot as one image to assistive tech, holding a light and a dark picture beside it', () => {
+  it('draws the screenshot as one button named by its alt text, holding a light and a dark picture', () => {
     draw('![The Testwort entry page](/help/screens/testwort.png "An entry page, signed out.")');
 
-    // Both pictures are in the page, so a theme switch needs no request, and the alt text is read once in either theme.
-    const images = within(screen.getByRole('figure')).getAllByRole('img');
-    expect(images).toHaveLength(1);
-    expect(images[0]).toHaveAccessibleName('The Testwort entry page');
-    const pictures = within(images[0]).getAllByRole('presentation');
-    expect(pictures.map((picture) => picture.getAttribute('src'))).toEqual([
+    // Both pictures are in the page, so a theme switch needs no request; the button alone names them.
+    const figure = screen.getByRole('figure');
+    expect(within(figure).queryAllByRole('img')).toEqual([]);
+    expect(pictures(within(figure).getByRole('button', { name: ENLARGE }))).toEqual([
       '/help/screens/testwort.png',
       '/help/screens/testwort.dark.png',
     ]);
-    expect(pictures.map((picture) => picture.getAttribute('alt'))).toEqual(['', '']);
+  });
+
+  it('opens the screenshot full size in a dialog as one image, and gives the focus back to its button on Escape', async () => {
+    draw('![The Testwort entry page](/help/screens/testwort.png "An entry page, signed out.")');
+    const button = screen.getByRole('button', { name: ENLARGE });
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(button);
+
+    const dialog = screen.getByRole('dialog');
+    const images = within(dialog).getAllByRole('img');
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAccessibleName('The Testwort entry page');
+    expect(pictures(images[0])).toEqual([
+      '/help/screens/testwort.png',
+      '/help/screens/testwort.dark.png',
+    ]);
+    expect(button).not.toHaveFocus();
+
+    // jsdom sends no cancel on Escape, as a browser does, so the dialog is sent the cancel itself.
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(button).toHaveFocus();
   });
 
   it('draws an image with no title as a figure with no caption', () => {
     draw('![The Testwort entry page](/help/screens/testwort.png)');
 
     const figure = screen.getByRole('figure');
-    expect(within(figure).getByRole('img', { name: 'The Testwort entry page' })).toBeVisible();
+    expect(within(figure).getByRole('button', { name: ENLARGE })).toBeVisible();
     expect(figure.querySelector('figcaption')).toBeNull();
   });
 

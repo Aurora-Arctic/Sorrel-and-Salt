@@ -101,7 +101,7 @@ export async function seedWorld(page: Page): Promise<World> {
 
     const [guide] = await sql<{ id: string }[]>`
       select id from help_articles
-      where kind = 'article' and slug = 'getting-started' and deleted_at is null`;
+      where kind = 'guide' and slug = 'getting-started' and deleted_at is null`;
 
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${steward}, true)`;
@@ -396,6 +396,14 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
   'my-request': async (page, w) => {
     await visit(page, `/account/support?request=${w.supportRequestId}`);
     return page.getByRole('dialog', { name: /Fixture question/ });
+  },
+  'help-screenshot': async (page) => {
+    await visit(page, '/help/grimoire/build-a-spell');
+    await page
+      .getByRole('button', { name: /^Enlarge: / })
+      .first()
+      .click();
+    return dialogNamed(page, 'Screenshot');
   },
   member: async (page, w) => {
     await visit(page, `/coven/${w.coven.slug}/members?member=${w.members.practitioner}`);

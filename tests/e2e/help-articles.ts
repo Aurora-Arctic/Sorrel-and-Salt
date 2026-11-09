@@ -21,6 +21,8 @@ export const HELP = {
 
 /** A word only staff rows hold, so a search for it tells a staff reader from a public one. */
 export const STAFF_WORD = 'quillwort';
+/** The alt text of the screenshot on the kindling sub page, a shipped picture taller than a screen. */
+export const SCREENSHOT_ALT = 'The Testwort spell builder';
 /** A word the public guide and its public sub page hold. */
 export const PUBLIC_WORD = 'emberglow';
 
@@ -57,7 +59,7 @@ export async function seedHelpArticles(authorEmail: string): Promise<string> {
         parent_id: guide,
         position: 1,
         summary: 'What a fixture burns first.',
-        body: `Kindling keeps the ${PUBLIC_WORD} going.`,
+        body: `Kindling keeps the ${PUBLIC_WORD} going.\n\n![${SCREENSHOT_ALT}](/help/screens/spell-builder.png "The builder, every section open.")`,
       },
       author,
     );

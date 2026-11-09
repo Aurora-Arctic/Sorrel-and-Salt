@@ -10,6 +10,7 @@ import { unified } from 'unified';
 import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
 import { widgetOf, type HelpWidgetName } from '../../lib/help-widgets';
 import { slugify } from '../../lib/slugify';
+import HelpScreenshot from '../HelpScreenshot';
 import HelpTerm from '../HelpTerm';
 import type { PageNavEntry } from '../PageNav/types';
 import type { DocumentPlaceholders } from './types';
@@ -188,27 +189,23 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
 /** An image the site serves: a path on this site, never another's, so a body cannot pull in a picture from elsewhere. */
 const SITE_IMAGE = /^\/(?!\/)/;
 
+const SCREENSHOT_TAG = 'help-screenshot';
+
 /**
- * A figure's picture in both themes: the written file for light and `<name>.dark.<ext>` beside it for dark, which the
- * stylesheet swaps on the theme's own selectors, as a `<picture>` media query would ignore a reader's chosen theme.
- * The pair is one image to assistive tech, so the alt text is read once.
+ * A figure's picture, drawn by HelpScreenshot: the written file for light and `<name>.dark.<ext>` beside it for dark,
+ * as a button that opens it full size.
  */
-function themedScreen(image: Element): Element {
-  const { alt, src, ...rest } = image.properties;
-  const picture = (file: string, theme: 'light' | 'dark'): Element => ({
-    type: 'element',
-    tagName: 'img',
-    properties: { ...rest, src: file, alt: '', className: [`figure__${theme}`] },
-    children: [],
-  });
+function screenshot(image: Element): Element {
+  const src = String(image.properties.src);
   return {
     type: 'element',
-    tagName: 'span',
-    properties: { className: ['figure__screen'], role: 'img', ariaLabel: String(alt ?? '') },
-    children: [
-      picture(String(src), 'light'),
-      picture(String(src).replace(/(\.[^./]+)?$/, '.dark$1'), 'dark'),
-    ],
+    tagName: SCREENSHOT_TAG,
+    properties: {
+      src,
+      dark: src.replace(/(\.[^./]+)?$/, '.dark$1'),
+      alt: String(image.properties.alt ?? ''),
+    },
+    children: [],
   };
 }
 
@@ -239,7 +236,7 @@ function shapeFigures(children: ElementContent[]): ElementContent[] {
       tagName: 'figure',
       properties: { className: ['figure'] },
       children: [
-        themedScreen(image),
+        screenshot(image),
         ...(typeof caption === 'string' && caption !== ''
           ? [
               {
@@ -263,6 +260,7 @@ function reactProcessorFor(placeholders: DocumentPlaceholders, widgets: HelpWidg
     components: {
       [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
       [TERM_TAG]: HelpTerm,
+      [SCREENSHOT_TAG]: HelpScreenshot,
       [WIDGET_TAG]: ({ name }: { name: HelpWidgetName }) => widgets[name],
     },
   });
