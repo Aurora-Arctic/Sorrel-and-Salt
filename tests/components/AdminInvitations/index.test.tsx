@@ -341,4 +341,37 @@ describe('AdminInvitations filter', () => {
       { scroll: false },
     );
   });
+  describe('the invite form checks the address in the browser, as the coven invite dialog does', () => {
+    const emailField = () => within(dialog()).getByRole('textbox', { name: 'Email Address' });
+
+    it('refuses an address the format rule rejects before anything is sent', async () => {
+      const calls: CreateAdminInvitationMutationVariables[] = [];
+      mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
+        'CreateAdminInvitation',
+        (variables) => {
+          calls.push(variables);
+          return { createAdminInvitation: { id: 'i9' } };
+        },
+      );
+      render(<AdminInvitations invitations={[]} inviting />);
+
+      fireEvent.change(emailField(), { target: { value: 'ada@example.invalid' } });
+      fireEvent.click(send());
+
+      await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
+      expect(emailField()).toHaveAccessibleDescription(/\S/);
+      expect(calls).toEqual([]);
+    });
+
+    it('clears the refusal as the address is changed', async () => {
+      render(<AdminInvitations invitations={[]} inviting />);
+      fireEvent.change(emailField(), { target: { value: 'ada.example.test' } });
+      fireEvent.click(send());
+      await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
+
+      fireEvent.change(emailField(), { target: { value: 'ada@example.test' } });
+
+      expect(emailField()).not.toHaveAttribute('aria-invalid', 'true');
+    });
+  });
 });

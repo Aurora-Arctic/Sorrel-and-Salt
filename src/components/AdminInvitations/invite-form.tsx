@@ -1,11 +1,12 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, RadioGroupField, ReasonField, fieldDescription } from '../Field';
+import { FormActions, RadioGroupField, ReasonField } from '../Field';
+import InviteEmailField, { checkInviteAddress } from '../InviteDialog/email-field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
@@ -45,23 +46,19 @@ export const invitationRoleLabel = (role: InvitableSiteRole): string =>
  * "Unsaved changes").
  */
 const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
-  const emailId = useId();
-
   const [email, setEmail] = useState('');
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
-  const { aria: emailAria, ...emailField } = fieldDescription({
-    id: emailId,
-    error: failure.field?.message,
-  });
 
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const address = email.trim();
+    const refusal = checkInviteAddress(address);
+    if (refusal) return setFailure(refusal);
     setSending(true);
     setFailure({});
     try {
@@ -86,20 +83,15 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         address can accept it.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Email Address" required {...emailField}>
-        <input
-          id={emailField.controlId}
-          className="input"
-          type="email"
-          autoComplete="off"
-          placeholder="Add an email"
-          aria-required
-          {...emailAria}
-          value={email}
-          disabled={sending}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </FieldShell>
+      <InviteEmailField
+        value={email}
+        error={failure.field?.message}
+        disabled={sending}
+        onChange={(value) => {
+          setEmail(value);
+          if (failure.field) setFailure({});
+        }}
+      />
       <RadioGroupField
         legend="Role"
         name="invite-site-role"
