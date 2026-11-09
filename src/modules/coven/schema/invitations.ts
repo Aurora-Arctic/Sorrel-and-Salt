@@ -81,7 +81,7 @@ export const invitations = namedWrites(
       // database migrated before both.
       check(
         'invitations_site_role_invitable',
-        sql`${table.siteRole} is null or ${table.siteRole}::text in ('curator', 'admin')`,
+        sql`${table.siteRole} is null or ${table.siteRole}::text in ('user', 'curator', 'admin')`,
       ),
       // A keeper invitation is accepted by its link or not at all.
       check(

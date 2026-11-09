@@ -30,7 +30,7 @@ const REFUSAL = 'Only a site keeper may invite or withdraw a keeper invitation';
  * Stored as its hash alone (claude-docs/auth/admin-users.md, "Inviting a keeper").
  *
  * @throws {Forbidden} the session's role is not `admin`, or keeper changes are paused and the caller is not the primary keeper.
- * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above.
+ * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above, or for `user` may already create a coven.
  */
 export async function createAdminInvitation(
   session: Session,
@@ -43,10 +43,15 @@ export async function createAdminInvitation(
   const email = normaliseEmail(input);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
-  const held = (await findUserByEmail(email))?.role;
-  if (held && !outranks(siteRole, held)) {
+  const holder = await findUserByEmail(email);
+  if (holder && siteRole === 'user' && holder.canCreateWorkspace) {
     throw new ValidationError([
-      { path: ['email'], message: `That address belongs to ${withArticle(held)} already` },
+      { path: ['email'], message: 'That address can already create a coven' },
+    ]);
+  }
+  if (holder && siteRole !== 'user' && !outranks(siteRole, holder.role)) {
+    throw new ValidationError([
+      { path: ['email'], message: `That address belongs to ${withArticle(holder.role)} already` },
     ]);
   }
 

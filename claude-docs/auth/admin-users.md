@@ -107,7 +107,8 @@ A keeper approves someone who has no invitation from that person's user modal on
 `/keepers/users`, so a person starting a coven of their own gets in without
 knowing an existing user, and can revoke the approval from the same modal. It is
 the second of the flag's routes: the first is accepting a workspace invitation
-(M7.5), and being made a curator or a keeper sets it in its own write. Neither act
+(M7.5), a keeper's invitation to create a coven is the third ("Inviting a
+keeper", below), and being made a curator or a keeper sets it in its own write. Neither act
 touches anything but the flag: it confers no workspace access on the admin,
 creates no workspace, and a revoke leaves every workspace the user already
 created, and their ownership of it
@@ -300,10 +301,10 @@ the good ones while it is dealt with, and back on. The argument is
 
 ## Inviting a keeper
 
-A keeper can make someone a keeper or a curator, the role picked in the invite form, before they have signed in, by inviting their address: option B of [`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin), "The approaches", on the site tier of `invitations` ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the address and accepted only by an account that has proved it holds it, so no one is handed a bearer token for the site's highest privilege. The names in code still say "admin invitation" for both roles: a keeper is who sends one.
+A keeper can make someone a keeper or a curator, or let them create covens with no role change, the choice picked in the invite form, before they have signed in, by inviting their address: option B of [`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin), "The approaches", on the site tier of `invitations` ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the address and accepted only by an account that has proved it holds it, so no one is handed a bearer token for the site's highest privilege. The names in code still say "admin invitation" for all three: a keeper is who sends one.
 
 - **A repeat invitation replaces the pending one**. Inviting an address
-  that already has a pending site-tier invitation, keeper or curator, stamps that
+  that already has a pending site-tier invitation, of any site role, stamps that
   one revoked, as the admin, in the same write that creates the new one, so one
   is pending and its role is the one that applies. A coven's invitation to the
   address is not touched ([`db/invitations.md`](../db/invitations.md)).
@@ -337,14 +338,17 @@ filter, page)` is one page of the pending list, newest first, and
   `Invitation` has no field that could. A mail that fails every attempt is
   logged by invitation id, and the invitation stays pending, to be withdrawn
   and sent again.
-- **The role is the invitation's.** `siteRole` is `curator` or `admin`,
-  stored on the row (`invitations.site_role`), named in the mail's subject
-  and body, and on the Accept page; GraphQL takes it as the
-  `InvitableSiteRole` enum, which has no `user`.
+- **The role is the invitation's.** `siteRole` is `user`, `curator` or
+  `admin`, stored on the row (`invitations.site_role`), named in the mail's
+  subject and body, and on the Accept page; GraphQL takes it as the
+  `InvitableSiteRole` enum. `user` means "may create covens" and changes no
+  role: the mail and the Accept page offer starting a coven.
 - **What is refused at creation.** An address the email page would refuse,
   as a `ValidationError` on `email`, and the address of an account that
-  already holds the invited role or a higher one, which would have nothing to
-  accept: a curator invited as a curator, a keeper as either. The ladder is
+  would have nothing to accept: for `curator` or `admin`, one that already
+  holds the invited role or a higher one (a curator invited as a curator, a
+  keeper as either); for `user`, one that may already create covens, which
+  every curator and keeper may. The ladder is
   `outranks` in `src/lib/site-roles.ts`, user below curator below admin, so
   a curator may be invited to become a keeper. A second invitation to the same address is
   not refused: either link works, and the other then says it has been
@@ -407,19 +411,25 @@ filter, page)` is one page of the pending list, newest first, and
   a keeper invitation becomes an admin: a `curator` revoke and an `admin`
   grant at one instant, via the invitation. A revoke or a second accept that commits
   between the checks and the stamp leaves nothing to stamp, and the refusal
-  is the link's state read again.
+  is the link's state read again. A `user` invitation writes no role: it sets
+  `canCreateWorkspace` alone, under the same declaration, so the trigger
+  records one `create_workspace` grant via the invitation, and nothing if
+  the flag was already on. It seats the person nowhere; the demo coven's
+  Observer seat is the one every account gets at sign-up.
 - **`/invite/[token]`** is public in `src/proxy.ts`. Signed out, it says an
   invitation is waiting and offers Sign In, which returns to the link; it
   reads nothing of the invitation until a session holds it. Signed in, it
   asks `invitationStanding(session, token)`, the same checks as the accept,
   and shows the refusal, with a link to the email page for an unverified
   match, or Accept Invitation, naming the role it grants, whose mutation
-  lands a new curator or keeper on `/admin`. An
+  lands a new curator or keeper on their landing page, and the accepter of
+  a `user` invitation on `/coven/new`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
 - **On `/keepers/invitations`**, the People page's Invitations tab, every keeper sees Invite
-  Admin, whose form asks for the address, the role (Curator chosen to begin
-  with, so granting the People page is a choice) and an optional reason, and
+  Admin, whose form asks for the address, the role (Coven Creator, meaning `user`, Curator or Keeper;
+  Coven Creator chosen to begin with, so granting a role is a choice) and an
+  optional reason, and
   the pending invitations 25 to a page, each with
   its address, its role, its reason, when it expires and Revoke, and the pager
   beneath them

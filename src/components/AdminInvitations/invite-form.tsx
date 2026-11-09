@@ -26,8 +26,18 @@ const CreateAdminInvitationDocument = graphql(`
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
-/** Lesser role first and chosen to begin with, so granting the People page is a choice. */
-const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
+/** Lesser role first and chosen to begin with, so granting a role is a choice. */
+const SITE_ROLES: readonly InvitableSiteRole[] = ['user', 'curator', 'admin'];
+
+// Accepting a `user` invitation is itself the approval the shared description says a user waits for.
+const ACCESS: Record<InvitableSiteRole, string> = {
+  ...SITE_ROLE_ACCESS,
+  user: 'Creates covens and uses the site through them, with no curator or keeper access.',
+};
+
+/** A `user` invitation grants coven creation, not the role, so it is named for that. */
+export const invitationRoleLabel = (role: InvitableSiteRole): string =>
+  role === 'user' ? 'Coven Creator' : roleLabel(role);
 
 /**
  * The form inside the modal, so its guard over unsaved changes reaches the
@@ -95,8 +105,8 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         name="invite-site-role"
         options={SITE_ROLES.map((role) => ({
           value: role,
-          label: roleLabel(role),
-          description: SITE_ROLE_ACCESS[role],
+          label: invitationRoleLabel(role),
+          description: ACCESS[role],
         }))}
         value={siteRole}
         onChange={setSiteRole}

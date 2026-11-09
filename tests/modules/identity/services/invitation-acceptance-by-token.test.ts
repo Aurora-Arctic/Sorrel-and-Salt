@@ -191,6 +191,77 @@ describe('acceptInvitation, on the site tier', () => {
       },
     );
   });
+
+  // A keeper's invitation to create a coven: the flag alone, no site role and no seat (claude-docs/auth/admin-users.md, "Inviting a keeper").
+  describe('to create a coven', () => {
+    const seats = async (id: string) =>
+      sql`select workspace_id, role::text from workspace_members where user_id = ${id} and deleted_at is null`;
+
+    beforeEach(async () => {
+      // A stand-in for the demo coven's Observer seat every account holds from sign-up, which the standard seed has no coven for.
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'viewer', ${GRANTEE}, ${GRANTEE})
+      `;
+    });
+
+    it('lets the verified holder of the address create covens and leaves the role user, recorded via the invitation with its note', async () => {
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
+      const id = await invite({ siteRole: 'user' });
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
+        acceptable: true,
+        tier: 'site',
+        siteRole: 'user',
+      });
+
+      const accepted = await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(accepted).toMatchObject({ id, workspaceId: null, acceptedBy: GRANTEE });
+      expect(await roleOf(GRANTEE)).toEqual({
+        role: 'user',
+        can_create_workspace: true,
+        updated_by: GRANTEE,
+      });
+      expect(await seats(GRANTEE)).toEqual([{ workspace_id: WORKSPACE_W_ID, role: 'viewer' }]);
+      expect(await ledger()).toEqual([
+        expect.objectContaining({
+          user_id: GRANTEE,
+          privilege: 'create_workspace',
+          change: 'grant',
+          via: 'invitation',
+          note: 'Curates the resins',
+          created_by: GRANTEE,
+        }),
+      ]);
+    });
+
+    it('stamps it for an account that may already create one, recording nothing', async () => {
+      await asManualFix(sql, async (tx) => {
+        await tx`update users set can_create_workspace = true where id = ${GRANTEE}`;
+      });
+      await sql`truncate user_privilege_changes`;
+      await invite({ siteRole: 'user' });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: true });
+      expect(await invitation()).toMatchObject({ accepted_by: GRANTEE });
+      expect(await ledger()).toEqual([]);
+    });
+
+    it('leaves a curator a curator', async () => {
+      await asManualFix(sql, async (tx) => {
+        await tx`update users set role = 'curator', can_create_workspace = true where id = ${GRANTEE}`;
+      });
+      await sql`truncate user_privilege_changes`;
+      await invite({ siteRole: 'user' });
+
+      await acceptInvitation(asUser({ id: GRANTEE, role: 'curator' }), TOKEN);
+
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'curator', can_create_workspace: true });
+      expect(await ledger()).toEqual([]);
+    });
+  });
 });
 
 describe('who may accept', () => {

@@ -1,6 +1,6 @@
 {
-  "id": "d51494a1-b5d4-432b-8e5d-7c190c35a9f2",
-  "prevId": "0f3afc11-35d3-432a-a880-33edebe1ed51",
+  "id": "856abec2-dd07-4c10-862b-2e667d5d0f98",
+  "prevId": "d51494a1-b5d4-432b-8e5d-7c190c35a9f2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -446,7 +446,7 @@
         },
         "invitations_site_role_invitable": {
           "name": "invitations_site_role_invitable",
-          "value": "\"invitations\".\"site_role\" is null or \"invitations\".\"site_role\"::text in ('curator', 'admin')"
+          "value": "\"invitations\".\"site_role\" is null or \"invitations\".\"site_role\"::text in ('user', 'curator', 'admin')"
         },
         "invitations_declined_coven": {
           "name": "invitations_declined_coven",

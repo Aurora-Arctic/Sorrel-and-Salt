@@ -94,7 +94,7 @@ export interface InvitationFixture {
   workspaceId?: string | null;
   role?: 'viewer' | 'member' | null;
   /** The site role a site-tier invitation grants; `admin` by default there, none on a coven's. */
-  siteRole?: 'curator' | 'admin' | null;
+  siteRole?: 'user' | 'curator' | 'admin' | null;
   expired?: boolean;
   revoked?: boolean;
   accepted?: boolean;

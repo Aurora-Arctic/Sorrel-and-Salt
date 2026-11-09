@@ -293,10 +293,11 @@ export type InvitableRole =
   | 'member'
   | 'viewer';
 
-/** A site role an invitation may grant: never `user`, which every account holds. */
+/** What a site invitation grants: `user` turns on coven creation alone and changes no role; `curator` or `admin` grants that role. */
 export type InvitableSiteRole =
   | 'admin'
-  | 'curator';
+  | 'curator'
+  | 'user';
 
 /** Why a card link was refused: withdrawn, past its date, or used by another account. */
 export type InvitationCardAttemptReason =

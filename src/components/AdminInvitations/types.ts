@@ -1,8 +1,8 @@
 import type { Route } from 'next';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
-/** A site role an invitation may grant: never `user`, which every account holds. */
-export type InvitableSiteRole = 'curator' | 'admin';
+/** What a site invitation grants: `user` (shown as Coven Creator) turns on coven creation alone; `curator` and `admin` grant the role. */
+export type InvitableSiteRole = 'user' | 'curator' | 'admin';
 
 export interface AdminInvitationEntry {
   id: string;
