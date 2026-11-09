@@ -1,4 +1,4 @@
-import { parseQuantity } from '@/lib/formats';
+import { parseQuantity, showQuantity } from '@/lib/formats';
 import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -41,7 +41,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
     variantId,
     name: step.name,
     form: step.form,
-    quantity: step.quantity === null ? '' : String(step.quantity),
+    quantity: step.quantity === null ? '' : showQuantity(step.quantity),
     unit: step.unit ?? '',
     savedUnit: step.unit,
     body: step.body,

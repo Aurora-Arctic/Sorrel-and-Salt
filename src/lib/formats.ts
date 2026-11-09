@@ -1,6 +1,8 @@
 // Tidying shared by the forms and the server schemas: the form shows exactly what the server will store.
 // Pure and client-safe. A format changes only what it can read with certainty and leaves the rest as typed.
 
+import { QUANTITY_SCALE } from '../modules/ingredients/schema/quantities';
+
 export type FieldFormat = (text: string) => string;
 
 /** Single-line text with its ends trimmed and each run of white space made one space. Never for multiline text, whose line breaks matter. */
@@ -22,17 +24,23 @@ export const limitMessage = (limit: number): string =>
 
 const AMOUNT = /^-?(\d+\.?\d*|\.\d+)$/;
 
-/** An amount typed as digits with at most one point: its number, null for blank, NaN for anything else (a comma, letters, two points, an exponent), which the quantity rule refuses. */
+/** An amount typed as digits with at most one point, commas dropped as thousands separators ("2,5" reads as 25): its number, null for blank, NaN for anything else (letters, two points, an exponent), which the quantity rule refuses. */
 export function parseQuantity(text: string): number | null {
   const trimmed = text.trim();
   if (trimmed === '') return null;
-  return AMOUNT.test(trimmed) ? Number(trimmed) : Number.NaN;
+  const plain = trimmed.replace(/,/g, '');
+  return AMOUNT.test(plain) ? Number(plain) : Number.NaN;
 }
 
-/** An amount shown as its canonical number (" 2.50 " becomes "2.5"); what it cannot read, a comma included, stays as typed. */
+/** A stored amount as a form shows it: thousands separators, no padded decimals (1234567.5 is "1,234,567.5"). */
+export const showQuantity = (amount: number): string =>
+  String(amount).includes('e')
+    ? String(amount)
+    : amount.toLocaleString('en-GB', { maximumFractionDigits: QUANTITY_SCALE });
+
+/** An amount shown with thousands separators ("1000" becomes "1,000"); what it cannot read stays as typed. */
 export const formatQuantity: FieldFormat = (text) => {
   const amount = parseQuantity(text);
   if (amount === null) return '';
-  const canonical = String(amount);
-  return Number.isNaN(amount) || canonical.includes('e') ? text.trim() : canonical;
+  return Number.isNaN(amount) || String(amount).includes('e') ? text.trim() : showQuantity(amount);
 };

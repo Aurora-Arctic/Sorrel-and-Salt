@@ -342,7 +342,7 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
-  it('saves a point quantity as the number it means, and refuses an unreadable or comma one without sending', async () => {
+  it('saves a point quantity as the number it means, and refuses an unreadable one without sending', async () => {
     suggest(ROSEWORT);
     const calls = acceptCreate();
     renderBuilder();
@@ -350,7 +350,7 @@ describe('the spell builder’s Add to Jar', () => {
     await add('Rose', /Fixture Rosewort/);
     const box = () =>
       within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
-    fireEvent.change(box(), { target: { value: '1,000' } });
+    fireEvent.change(box(), { target: { value: 'lots' } });
     fireEvent.blur(box());
     submit();
 
@@ -632,6 +632,45 @@ describe('the spell builder’s Add to Jar', () => {
     await waitFor(() => expect(unit).toHaveTextContent('ml'));
     expect(unit).not.toHaveAttribute('aria-invalid', 'true');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
+  });
+
+  it('opens a saved quantity with thousands separators', () => {
+    suggest(MOCKROOT);
+    renderBuilder({
+      spell: {
+        ...answer('s3', 4),
+        steps: [
+          {
+            id: ID.savedRosewort,
+            name: 'Fixture Rosewort',
+            form: 'dried leaf',
+            quantity: 1000,
+            unit: 'g',
+            body: null,
+            ingredient: {
+              id: ID.rosewort,
+              toxic: false,
+              safetyNotes: null,
+              categories: [category('Love')],
+              stock: [],
+            },
+            variant: {
+              id: ID.roseLeaf,
+              toxic: false,
+              safetyNotes: null,
+              categories: [],
+              formChoice: null,
+            },
+          },
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+    openRow('Fixture Rosewort (Dried Leaf)');
+
+    expect(
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ }),
+    ).toHaveValue('1,000');
   });
 
   it('opens a saved spell’s steps, and saves them back by id with the step added', async () => {

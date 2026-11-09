@@ -171,7 +171,8 @@ describe('quantityText', () => {
   const rule = quantityText('Low Stock At');
   it('reads typed text through the same rule, blank as no amount', () => {
     expect(rule.parse('2.5')).toBe(2.5);
-    expect(() => rule.parse('1,000')).toThrow(/Enter an amount as a number, like 2.5/);
+    expect(rule.parse('1,000')).toBe(1000);
+    expect(rule.parse('2,5')).toBe(25);
     expect(rule.parse('')).toBeNull();
   });
   it('refuses unreadable and out-of-range text with the rule’s messages', () => {
@@ -179,6 +180,7 @@ describe('quantityText', () => {
       const result = rule.safeParse(text);
       return result.success ? null : result.error.issues[0]?.message;
     };
+    expect(message('1.000,5')).toBe('Low Stock At can have up to three decimal places');
     expect(message('abc')).toBe('Enter an amount as a number, like 2.5');
     expect(message('-1')).toBe('Low Stock At cannot be negative');
     expect(message('1.2345')).toBe('Low Stock At can have up to three decimal places');

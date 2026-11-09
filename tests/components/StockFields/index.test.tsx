@@ -63,7 +63,7 @@ describe('StockFields', () => {
     expect(held).toMatchObject({ quantityOnHand: '12.5', lowStockThreshold: '2' });
   });
 
-  it('tidies an amount to its plain number on blur, and leaves a comma as typed', () => {
+  it('tidies an amount to its plain number on blur, and drops a comma as a thousands separator', () => {
     render(<Harness start={EMPTY_STOCK} />);
 
     typeIn(quantity(), ' 2.50 ');
@@ -80,6 +80,19 @@ describe('StockFields', () => {
     expect(quantity()).toHaveValue('1,000');
   });
 
+  it('opens a stored amount with thousands separators', () => {
+    render(
+      <Harness start={stockFormValues({ quantity: 1234567.5, unit: 'g', threshold: 1000 })} />,
+    );
+
+    expect(quantity()).toHaveValue('1,234,567.5');
+    expect(threshold()).toHaveValue('1,000');
+    expect(stockAmountsOf(held)).toMatchObject({
+      quantityOnHand: 1234567.5,
+      lowStockThreshold: 1000,
+    });
+  });
+
   it('asks for a decimal keypad on both amount fields', () => {
     render(<Harness start={EMPTY_STOCK} />);
 
@@ -87,10 +100,10 @@ describe('StockFields', () => {
     expect(threshold()).toHaveAttribute('inputmode', 'decimal');
   });
 
-  it('reads a point amount as the number it means, and a comma amount as none', () => {
+  it('reads a point amount as the number it means, and a comma amount with the comma dropped', () => {
     expect(
       stockAmountsOf({ quantityOnHand: '2.5', unit: '', lowStockThreshold: '1,000' }),
-    ).toMatchObject({ quantityOnHand: 2.5, lowStockThreshold: null });
+    ).toMatchObject({ quantityOnHand: 2.5, lowStockThreshold: 1000 });
   });
 
   it('leaves the numbers as typed when the unit changes: nothing converts', () => {
