@@ -1,5 +1,4 @@
-import { notFound } from 'next/navigation';
-import { NotFound } from '../../../../../lib/errors';
+import { orMissing, orNotFound } from '@/lib/or-not-found';
 import { SHARE_CARD_SIZE, SHARE_CARD_TYPE, entryCardImage } from '../../../../../lib/share-card';
 import { readCompendiumShareCard } from '@/modules/ingredients';
 
@@ -11,22 +10,14 @@ import { readCompendiumShareCard } from '@/modules/ingredients';
  * at build, which asks with no slug since no entry is drawn ahead of its first request.
  */
 export async function generateImageMetadata({ params }: { params?: { slug?: string } }) {
-  if (!params?.slug) return [];
-  try {
-    const card = await readCompendiumShareCard(params.slug);
-    return [{ id: 'card', alt: card.name, size: SHARE_CARD_SIZE, contentType: SHARE_CARD_TYPE }];
-  } catch (error) {
-    if (error instanceof NotFound) return [];
-    throw error;
-  }
+  const slug = params?.slug;
+  if (!slug) return [];
+  const card = await orMissing(() => readCompendiumShareCard(slug));
+  if (!card) return [];
+  return [{ id: 'card', alt: card.name, size: SHARE_CARD_SIZE, contentType: SHARE_CARD_TYPE }];
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  try {
-    return entryCardImage(await readCompendiumShareCard(slug));
-  } catch (error) {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  }
+  return entryCardImage(await orNotFound(() => readCompendiumShareCard(slug)));
 }

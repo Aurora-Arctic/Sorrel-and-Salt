@@ -1,5 +1,5 @@
+import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata, Route } from 'next';
-import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import CovenSwitchTargets from '../../../../../../components/CovenSwitchTargets';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
@@ -7,7 +7,7 @@ import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-t
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
 import { entryDescription } from '../../../../../../lib/page-metadata';
 import { siteUrl } from '../../../../../../lib/site';
-import { Forbidden, NotFound } from '../../../../../../lib/errors';
+import { Forbidden } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
@@ -47,12 +47,8 @@ const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Rou
 const entryOf = cache(async (slug: string, id: string) => {
   const { workspace } = await requireCovenMembership(slug);
   const session = await requireSession();
-  try {
-    return { workspace, session, entry: await getIngredient(session, id, workspace.id) };
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) notFound();
-    throw error;
-  }
+  const entry = await orNotFound(() => getIngredient(session, id, workspace.id), Forbidden);
+  return { workspace, session, entry };
 });
 
 const cupboardOf = cache(async (slug: string, id: string) => {

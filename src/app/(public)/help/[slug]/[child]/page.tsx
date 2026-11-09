@@ -4,7 +4,8 @@ import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
+import { guideSteps, linkTo } from '@/lib/help-pages';
+import { orNotFound } from '@/lib/or-not-found';
 import { siteUrl } from '@/lib/site';
 import { readHelpArticle } from '@/modules/help';
 

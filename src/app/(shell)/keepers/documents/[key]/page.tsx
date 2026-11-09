@@ -1,7 +1,6 @@
+import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import DocumentEditor from '@/components/DocumentEditor';
-import { NotFound } from '@/lib/errors';
 import { requireAdminSession } from '@/lib/request-session';
 import { readDocumentForEditing } from '@/modules/documents';
 
@@ -13,10 +12,7 @@ export const metadata: Metadata = {
 export default async function AdminDocumentPage({ params }: { params: Promise<{ key: string }> }) {
   const session = await requireAdminSession();
   const { key } = await params;
-  const document = await readDocumentForEditing(session, key).catch((error: unknown) => {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  });
+  const document = await orNotFound(() => readDocumentForEditing(session, key));
   const { draft, published } = document;
   return (
     <DocumentEditor

@@ -1,3 +1,4 @@
+import { orMissing } from '@/lib/or-not-found';
 import { cache } from 'react';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { listUsers } from '@/modules/identity';
@@ -12,7 +13,6 @@ import {
   usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportRequestFilter, SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
-import { NotFound } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { Session } from '@/lib/session';
@@ -141,13 +141,10 @@ export const readViewCounts = cache(async (session: Session, filter: SupportRequ
  */
 export const readOpened = cache(
   async (session: Session, id: string): Promise<SupportRequestDetailEntry | undefined> => {
-    let row: SupportRequestRow;
-    try {
-      row = await getSupportRequest(session, id);
-    } catch (error) {
-      if (error instanceof NotFound) return undefined;
-      throw error;
-    }
+    const row: SupportRequestRow | undefined = await orMissing(() =>
+      getSupportRequest(session, id),
+    );
+    if (!row) return undefined;
     const [replies] = await repliesForRequests(session, [row.id]);
     const [tier] = await tiersForSenders(session, [row.createdBy]);
     const [timeouts] =

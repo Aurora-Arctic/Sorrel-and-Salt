@@ -6,7 +6,8 @@ import type {
 } from '../components/CompendiumList/types';
 import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
-import { NotFound } from '../lib/errors';
+import { Forbidden, NotFound } from '../lib/errors';
+import { orMissing } from '../lib/or-not-found';
 import { readNumberedPage } from '../lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
 import type { Session } from '../lib/session';
@@ -22,6 +23,8 @@ import {
   listCompendium,
   listCompendiumHeldIn,
   readCompendiumEntry,
+  readCompendiumReview,
+  readSourcingScore,
   variantsOf,
 } from '@/modules/ingredients';
 import type { CovenPick } from '@/modules/ingredients';
@@ -264,3 +267,22 @@ export const readCompendiumDetails = cache(
     }
   },
 );
+
+/**
+ * The curator's review read: when the entry was last reviewed (an ISO string, since the list page sends it to a client component) and whether it shows. Per viewer, never in the cached reads. A refusal or a missing entry means no switch, never an error page.
+ */
+export function readEntryReview(curator: Session | null, id: string) {
+  if (!curator) return Promise.resolve(undefined);
+  return orMissing(async () => {
+    const found = await readCompendiumReview(curator, id);
+    // A curator's read reaches a hidden entry too, so the switch starts from the row's own flag.
+    const row = await getIngredient(curator, id);
+    return { reviewedAt: found?.reviewedAt.toISOString() ?? null, shown: row.shown };
+  }, Forbidden);
+}
+
+/** The curator's sourcing score, from its own guarded, uncached read. A refusal or a missing entry means no score. */
+export function readEntrySourcing(curator: Session | null, id: string) {
+  if (!curator) return Promise.resolve(undefined);
+  return orMissing(() => readSourcingScore(curator, id), Forbidden);
+}

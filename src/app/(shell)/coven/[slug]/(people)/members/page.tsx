@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
@@ -9,6 +8,7 @@ import { SoleStewardNotice } from '../sole-steward-notice';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
+import { orNotFound } from '../../../../../../lib/or-not-found';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
 import { readCursorPage, readPageCursors } from '../../../../../../lib/numbered-page';
@@ -44,15 +44,10 @@ export default async function MembersPage({
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
 
-  let page;
-  try {
-    page = await readCursorPage({ after, before }, (request) =>
-      listMembers(session, workspace, request),
-    );
-  } catch (error) {
-    if (error instanceof Forbidden) notFound();
-    throw error;
-  }
+  const page = await orNotFound(
+    () => readCursorPage({ after, before }, (request) => listMembers(session, workspace, request)),
+    Forbidden,
+  );
 
   // Read to the end, since one page of the list cannot say how many stewards there are.
   const soleOwner =
