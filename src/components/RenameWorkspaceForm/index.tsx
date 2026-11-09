@@ -78,7 +78,7 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
   return (
     <>
       {alert && <Notice kind="error">{alert}</Notice>}
-      <form className="form" onSubmit={handleSubmit} noValidate>
+      <form className="form form--inline-actions" onSubmit={handleSubmit} noValidate>
         <FieldShell label="Name" required {...field}>
           <input
             id={field.controlId}
