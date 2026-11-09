@@ -165,6 +165,22 @@ describe('HelpSearchResults emphasis and no-match state', () => {
     ).toEqual(['a+b', '(c']);
   });
 
+  it('labels a question and a term result with their kind, and a public guide or article with none', () => {
+    const guide = {
+      ...RESULTS[0]!,
+      kind: 'guide' as const,
+      title: 'Testwort Hearth Guide',
+      href: '/help/testwort-hearth-guide',
+    };
+    render(<HelpSearchResults query="" results={[...RESULTS, guide]} />);
+
+    const labelsOf = (name: RegExp) => itemOf(name).querySelector('.help-results__labels');
+    expect(labelsOf(/Testwort Stock Levels/)).toBeNull();
+    expect(labelsOf(/Testwort Hearth Guide/)).toBeNull();
+    expect(labelsOf(/^Stock$/)?.children).toHaveLength(1);
+    expect(labelsOf(/Where Is My Stock/)?.children).toHaveLength(1);
+  });
+
   it('marks nothing in a result the words do not appear in', () => {
     render(<HelpSearchResults query="zzz" results={RESULTS.slice(0, 1)} />);
 
