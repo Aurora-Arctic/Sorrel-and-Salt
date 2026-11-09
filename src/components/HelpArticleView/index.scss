@@ -1,11 +1,12 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The title and a keeper's Edit Article pencil share one row at every width; when the title wraps, the pencil stays
-// beside its first line rather than dropping below, and sits centred on that line.
+// The title and a keeper's Edit Article pencil share one row at every width, the pencil at its right end as the
+// help index's Staff Help link ends its title row; when the title wraps, the title takes the room left of the pencil,
+// which stays on its first line, centred on it.
 .help-article__title {
   display: grid;
-  grid-template-columns: minmax(0, max-content) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   column-gap: space(2);
   align-items: start;
   margin-block-end: space(4);
