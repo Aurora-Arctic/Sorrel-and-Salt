@@ -92,14 +92,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      # This part's counts for its row of the comment. A part that crashed before
-      # writing its results still gets a row saying so.
+      # This part's counts for its row of the comment and its failing tests for
+      # its section. A part that crashed before writing its results still gets a
+      # row saying so.
       - name: Summarize output
         id: summarize
         if: ${{ !cancelled() }}
         env:
           VITEST_RESULTS: /app/.reports/vitest-part.json
           VITEST_PART: 'true'
+          VITEST_OUTCOME: ${{ steps.run.outcome }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # This part's own section of the Vitest comment (.github/actions/pr-comment).
@@ -115,6 +117,7 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
+          details: ${{ steps.summarize.outputs.details }}
 
   vitest-node:
     if: inputs.should-run
@@ -160,14 +163,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      # This part's counts for its row of the comment. A part that crashed before
-      # writing its results still gets a row saying so.
+      # This part's counts for its row of the comment and its failing tests for
+      # its section. A part that crashed before writing its results still gets a
+      # row saying so.
       - name: Summarize output
         id: summarize
         if: ${{ !cancelled() }}
         env:
           VITEST_RESULTS: /app/.reports/vitest-part.json
           VITEST_PART: 'true'
+          VITEST_OUTCOME: ${{ steps.run.outcome }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # This part's own section of the Vitest comment (.github/actions/pr-comment).
@@ -183,6 +188,7 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
+          details: ${{ steps.summarize.outputs.details }}
 
   vitest-db:
     if: inputs.should-run
@@ -246,14 +252,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      # This part's counts for its row of the comment. A part that crashed before
-      # writing its results still gets a row saying so.
+      # This part's counts for its row of the comment and its failing tests for
+      # its section. A part that crashed before writing its results still gets a
+      # row saying so.
       - name: Summarize output
         id: summarize
         if: ${{ !cancelled() }}
         env:
           VITEST_RESULTS: /app/.reports/vitest-part.json
           VITEST_PART: 'true'
+          VITEST_OUTCOME: ${{ steps.run.outcome }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # This part's own section of the Vitest comment (.github/actions/pr-comment).
@@ -269,6 +277,7 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
+          details: ${{ steps.summarize.outputs.details }}
 
   # The required check, "vitest / vitest": the caller's job name, a slash, this
   # one. Keep this job named `vitest`; renaming it needs the ruleset changed.
@@ -321,6 +330,8 @@ jobs:
       - name: Summarize output
         id: summarize
         if: ${{ !cancelled() }}
+        env:
+          VITEST_OUTCOME: ${{ steps.run.outcome }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.

@@ -32,7 +32,7 @@ A **sectioned** comment is shared by several jobs. There are two, each with a ta
 | Vitest     | `<!-- ci-vitest -->`     | `dom`, `node`, `db`: the three part jobs in `vitest.yml`. `result`: the merge job, with the merged result and coverage.                |
 | Playwright | `<!-- ci-playwright -->` | `gate`: `playwright.yml` for the gate suite. `stories`: `playwright.yml` with `suite: stories`. `coverage`: `playwright-coverage.yml`. |
 
-A Vitest part's Result is its own counts and duration (`summarize-vitest.mjs` with `VITEST_PART=true`); the coverage table and the slowest files are in the merged result's section alone.
+A Vitest part's Result is its own counts and duration (`summarize-vitest.mjs` with `VITEST_PART=true`), and its section lists its failing tests, collapsed above the log, as the merged result's does; the coverage table and the slowest files are in the merged result's section alone. A file that failed outside its tests (an import error or a failing hook) is listed too. Vitest's JSON reporter drops errors thrown outside any test file, so a run that failed with no failed test says so in its Result and points to the log.
 
 The heading's status is the worst of the sections: Failed, then Running, then Warning, then Passed; Skipped only when every section is.
 

@@ -9,6 +9,9 @@ import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = process.env.VITEST_RESULTS || '/app/vitest-results.json';
 const PART = process.env.VITEST_PART === 'true';
+// The run step's outcome. The JSON reporter drops Vitest's unhandled errors, so
+// a run that failed on one alone reports no failed test.
+const OUTCOME = process.env.VITEST_OUTCOME ?? '';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
@@ -47,19 +50,31 @@ function runDuration() {
   return seconds >= 60 ? ` in ${Math.floor(seconds / 60)}m ${seconds % 60}s` : ` in ${seconds}s`;
 }
 
-const summary = PART
-  ? `${testSummary}${runDuration()}${overBudget}`
-  : `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}`;
-
 const failures = [];
 for (const testResult of data.testResults ?? []) {
   const file = path.relative(REPO_ROOT, testResult.name);
+  // A file that failed outside its tests: an import error or a failing hook.
+  if (testResult.status === 'failed' && testResult.message) {
+    failures.push({
+      file,
+      title: '(outside any test)',
+      message: testResult.message.split('\n')[0],
+    });
+  }
   for (const assertion of testResult.assertionResults ?? []) {
     if (assertion.status !== 'failed') continue;
     const message = (assertion.failureMessages?.[0] ?? '').split('\n')[0];
     failures.push({ file, title: assertion.fullName, message });
   }
 }
+
+const unexplained =
+  OUTCOME === 'failure' && failures.length === 0
+    ? '; run failed with no failed test: see the log'
+    : '';
+const summary = PART
+  ? `${testSummary}${runDuration()}${overBudget}${unexplained}`
+  : `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}${unexplained}`;
 
 let details = '';
 if (failures.length > 0) {
