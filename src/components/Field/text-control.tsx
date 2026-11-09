@@ -35,7 +35,7 @@ export function browserAttributes({
   const identifier = !multiline && type !== undefined && IDENTIFIER_TYPES.has(type);
   return {
     inputMode,
-    autoComplete,
+    autoComplete: autoComplete ?? ('off' as const),
     spellCheck: spellCheck ?? (multiline ? true : identifier ? false : undefined),
     autoCapitalize: autoCapitalize ?? (type === 'email' || type === 'url' ? 'none' : undefined),
     enterKeyHint,

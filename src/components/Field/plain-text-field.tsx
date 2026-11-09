@@ -1,9 +1,10 @@
 'use client';
 
-import { type FocusEvent, type ReactElement, useId } from 'react';
+import { type ChangeEvent, type FocusEvent, type ReactElement, useId } from 'react';
 import Spinner from '../Spinner';
 import { CharacterCount } from './character-count';
 import { fieldDescription } from './description';
+import { useMask } from './mask';
 import { FieldShell } from './shell';
 import { blurFormat, browserAttributes } from './text-control';
 import type { PlainTextFieldProps } from './types';
@@ -31,6 +32,7 @@ export function PlainTextField({
   after,
   action,
   format,
+  mask,
   limit,
   autoComplete,
   spellCheck,
@@ -53,6 +55,7 @@ export function PlainTextField({
     invalid,
   });
   const blurFormatter = blurFormat({ format, multiline });
+  const masked = useMask(multiline ? undefined : mask);
   const leave = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const formatted = blurFormatter?.(event.target.value) ?? event.target.value;
     if (formatted !== event.target.value) onChange(formatted);
@@ -75,7 +78,11 @@ export function PlainTextField({
     }),
     'aria-required': required || undefined,
     ...aria,
-    onChange: (event: { target: { value: string } }) => onChange(event.target.value),
+    onFocus: masked.onFocus,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      masked.mask(event);
+      onChange(event.target.value);
+    },
     onBlur: leave,
   };
   return (

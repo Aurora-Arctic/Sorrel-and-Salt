@@ -22,7 +22,7 @@ const fill = (label: string, text: string) => {
 const fillAll = (email = 'testwort@example.test') => {
   fill('Name', 'Testwort Hollin');
   fill('Email', email);
-  fill('Phone', '555.010.0199');
+  fill('Phone', '202-555-0199');
 };
 
 beforeEach(() => {
@@ -32,6 +32,38 @@ beforeEach(() => {
 });
 
 describe('BusinessCards', () => {
+  it('lays the phone number out while it is typed, in the form of its own country', async () => {
+    render(<BusinessCards />);
+    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
+    const phone = screen.getByRole('textbox', { name: 'Phone' });
+    fireEvent.input(phone, { target: { value: '2025550123' } });
+    expect(phone).toHaveValue('(202) 555-0123');
+    fireEvent.input(phone, { target: { value: '+44 7911 123456' } });
+    expect(phone).toHaveValue('+44 7911 123456');
+  });
+
+  it("names the phone as the keeper's own for autofill", async () => {
+    render(<BusinessCards />);
+    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
+    expect(screen.getByRole('textbox', { name: 'Phone' })).toHaveAttribute('autocomplete', 'tel');
+  });
+
+  it('refuses a number that is not one, with an example, and keeps Generate off', async () => {
+    render(<BusinessCards />);
+    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
+    fillAll();
+    await waitFor(() => expect(generate()).toBeEnabled());
+
+    fill('Phone', '555-0123');
+
+    await waitFor(() => expect(generate()).toBeDisabled());
+    const phone = screen.getByRole('textbox', { name: 'Phone' });
+    expect(phone).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      await screen.findAllByText('Enter a phone number, like (202) 555-0123'),
+    ).not.toHaveLength(0);
+  });
+
   it('tidies the email on blur and keeps Generate off for an address with no domain dot', async () => {
     render(<BusinessCards />);
     await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
@@ -56,7 +88,7 @@ describe('BusinessCards', () => {
     render(<BusinessCards />);
 
     fill('Name', 'Testwort Hollin');
-    fill('Phone', '555.010.0199');
+    fill('Phone', '202-555-0199');
     await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
     expect(generate()).toBeDisabled();
 
@@ -100,7 +132,7 @@ describe('BusinessCards', () => {
     render(<BusinessCards />);
     fill('Name', '  Testwort Hollin ');
     fill('Email', 'testwort@example.test');
-    fill('Phone', '555.010.0199');
+    fill('Phone', '202-555-0199');
     fireEvent.click(screen.getByRole('switch', { name: 'Include Backs' }));
     await waitFor(() => expect(generate()).toBeEnabled());
 
@@ -111,7 +143,7 @@ describe('BusinessCards', () => {
       {
         name: 'Testwort Hollin',
         email: 'testwort@example.test',
-        phone: '555.010.0199',
+        phone: '(202) 555-0199',
         backs: true,
       },
       ASSETS,

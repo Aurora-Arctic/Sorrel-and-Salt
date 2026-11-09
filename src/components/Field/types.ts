@@ -1,5 +1,9 @@
 import type { AutoFill, HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
+import type { FieldMask } from '../../lib/formats';
 import type { FieldPath, FieldValues } from 'react-hook-form';
+
+/** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
+export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
 
 export interface FieldProps {
   label: string;
@@ -73,8 +77,14 @@ export interface TextControlProps extends FieldProps {
    * and Save refuses. No `maxlength` is set. The schema states the same number, once.
    */
   limit?: number;
-  /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's; a real token for the person's own details. */
-  autoComplete?: AutoFill;
+  /**
+   * Formats the text while the person types, keeping the caret, paste and Backspace working
+   * (claude-docs/components/field.md, "Masks"). Only for a field the owner has approved; the schema still
+   * checks the value, and `format` still runs on blur. Not for a multiline field.
+   */
+  mask?: FieldMask;
+  /** The browser's autofill. `off` by default; a specific token (never `on`) for a credential or the person's own details. */
+  autoComplete?: AutofillToken;
   /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
   spellCheck?: boolean;
   /** `none` by default for email and url. */

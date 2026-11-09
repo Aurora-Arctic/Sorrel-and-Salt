@@ -1,6 +1,6 @@
 'use client';
 
-import { type FocusEvent, type ReactElement, useId } from 'react';
+import { type ChangeEvent, type FocusEvent, type ReactElement, useId } from 'react';
 import {
   type FieldPath,
   type FieldValues,
@@ -11,6 +11,7 @@ import {
 import { limitMessage } from '../../lib/formats';
 import Spinner from '../Spinner';
 import { CharacterCount } from './character-count';
+import { useMask } from './mask';
 import { FieldShell } from './shell';
 import { blurFormat, browserAttributes } from './text-control';
 import type { TextFieldProps } from './types';
@@ -51,6 +52,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   after,
   action,
   format,
+  mask,
   limit,
   autoComplete,
   spellCheck,
@@ -68,6 +70,7 @@ export function TextField<V extends FieldValues = FieldValues>({
     invalid,
   );
   const blurFormatter = blurFormat({ format, multiline });
+  const masked = useMask(multiline ? undefined : mask);
   const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const text = event.target.value;
     const formatted = blurFormatter?.(text) ?? text;
@@ -78,6 +81,15 @@ export function TextField<V extends FieldValues = FieldValues>({
       shouldValidate: getFieldState(name).invalid || formatted === '',
     });
   };
+  const registered = register(name, {
+    deps,
+    onBlur: blurFormatter ? tidy : undefined,
+    // A form with a resolver ignores this: its schema carries the limit (claude-docs/components/field.md, "Text fields").
+    validate: limit
+      ? (value: unknown) =>
+          typeof value !== 'string' || value.length <= limit || limitMessage(limit)
+      : undefined,
+  });
   // The attribute, not register's `disabled`, which would drop the value from validation and sending. And
   // `aria-required`, not `required`, whose `:invalid` would mark an empty field before a save is tried.
   const control = {
@@ -95,15 +107,12 @@ export function TextField<V extends FieldValues = FieldValues>({
     }),
     'aria-required': required || undefined,
     ...aria,
-    ...register(name, {
-      deps,
-      onBlur: blurFormatter ? tidy : undefined,
-      // A form with a resolver ignores this: its schema carries the limit (claude-docs/components/field.md, "Text fields").
-      validate: limit
-        ? (value: unknown) =>
-            typeof value !== 'string' || value.length <= limit || limitMessage(limit)
-        : undefined,
-    }),
+    ...registered,
+    onFocus: masked.onFocus,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      masked.mask(event);
+      return registered.onChange(event);
+    },
   };
   return (
     <FieldShell

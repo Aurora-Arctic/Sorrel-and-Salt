@@ -44,3 +44,13 @@ export const formatQuantity: FieldFormat = (text) => {
   if (amount === null) return '';
   return Number.isNaN(amount) || String(amount).includes('e') ? text.trim() : showQuantity(amount);
 };
+
+/**
+ * Formatting while the person types (Field's `mask`). `format` lays out the whole text; `isSignificant`
+ * says which characters the person typed, as opposed to the ones `format` adds (the brackets and
+ * spaces of a phone number), so the caret can stay beside the same character.
+ */
+export interface FieldMask {
+  format: FieldFormat;
+  isSignificant: (character: string) => boolean;
+}

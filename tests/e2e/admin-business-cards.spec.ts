@@ -58,7 +58,7 @@ test('Generate waits for a name, an email address and a phone number, and builds
   await expect(generate).toBeDisabled();
 
   await main.getByRole('textbox', { name: 'Name' }).fill('Testwort Hollin');
-  await main.getByRole('textbox', { name: 'Phone' }).fill('555.010.0199');
+  await main.getByRole('textbox', { name: 'Phone' }).fill('202-555-0199');
   await expect(generate).toBeDisabled();
   await main.getByRole('textbox', { name: 'Email' }).fill('testwort at example');
   await main.getByRole('textbox', { name: 'Email' }).blur();
@@ -125,4 +125,41 @@ test('a signed-out visitor is sent to sign in, and back to the page afterwards',
 }) => {
   await page.goto(PATH);
   await expect(page).toHaveURL(`/sign-in?next=${encodeURIComponent(PATH)}`);
+});
+
+test('the phone number is laid out as it is typed, deletes through its brackets, and keeps a pasted foreign number in its own form', async ({
+  page,
+}) => {
+  await signInAs(page, 'a-dialler@business-cards.test', ['discord'], 'admin');
+  await page.goto(PATH);
+  const phone = page.getByRole('main').getByRole('textbox', { name: 'Phone' });
+
+  await phone.click();
+  await phone.pressSequentially('2025550123');
+  await expect(phone).toHaveValue('(202) 555-0123');
+
+  // Backspace works straight through the digits and the brackets the mask added.
+  for (let i = 0; i < 7; i += 1) await page.keyboard.press('Backspace');
+  await expect(phone).toHaveValue('(202)');
+  await page.keyboard.press('Backspace');
+  await expect(phone).toHaveValue('20');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await expect(phone).toHaveValue('');
+
+  // A digit typed in the middle leaves the caret beside it.
+  await phone.pressSequentially('202555012');
+  await expect(phone).toHaveValue('(202) 555-012');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type('9');
+  await expect(phone).toHaveValue('(290) 255-5012');
+  expect(await phone.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(3);
+
+  // A pasted number with a country code keeps that country's form. insertText puts the whole text in at
+  // once, as a paste does; the page is not a secure origin, so the real clipboard is not there to use.
+  await phone.fill('');
+  await page.keyboard.insertText('+44 7700 900123');
+  await expect(phone).toHaveValue('+44 7700 900123');
 });

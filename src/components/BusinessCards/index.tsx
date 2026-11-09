@@ -5,6 +5,7 @@ import { type ReactElement, useEffect, useState } from 'react';
 import { FormProvider, type Resolver, useForm } from 'react-hook-form';
 import { emailFormat } from '../../lib/email-address';
 import { renderBusinessCards } from '../../lib/business-cards/pdf';
+import { phoneMask } from '../../lib/phone-number';
 import { fetchCardAssets } from '../../lib/invitation-cards/assets';
 import type { CardAssets } from '../../lib/invitation-cards/types';
 import { slugify } from '../../lib/slugify';
@@ -95,7 +96,8 @@ const BusinessCards = (): ReactElement => {
           name="phone"
           label="Phone"
           type="tel"
-          autoComplete="off"
+          autoComplete="tel"
+          mask={phoneMask}
           required
         />
         <SwitchField
