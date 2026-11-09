@@ -53,14 +53,14 @@
   }
 }
 
-// The light theme's screenshot in a `.figure`, its dark one hidden.
-@mixin figure-light-screen {
-  > .figure__screen {
-    > .figure__light {
+// A screenshot's light picture shown and its dark one hidden, under the light theme's selectors.
+@mixin light-screenshot {
+  .screenshot {
+    > .screenshot__light {
       display: block;
     }
 
-    > .figure__dark {
+    > .screenshot__dark {
       display: none;
     }
   }
@@ -781,6 +781,34 @@
     }
   }
 
+  // A help screenshot's light and dark pictures, never wider than what holds them. The theme's own selectors pick
+  // one, as a reader's chosen theme outranks the system's (claude-docs/components/help-pages.md, "Screenshots").
+  .screenshot {
+    display: block;
+    max-width: 100%;
+
+    > img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: radius('control');
+    }
+
+    > .screenshot__light {
+      display: none;
+    }
+  }
+
+  @include color-scheme-light {
+    html:not([data-theme='dark']) & {
+      @include light-screenshot;
+    }
+  }
+
+  html[data-theme='light'] & {
+    @include light-screenshot;
+  }
+
   // One frame for a screenshot or a widget in running text, with its caption beneath (claude-docs/styling.md).
   .figure {
     max-width: $measure;
@@ -790,32 +818,11 @@
     border-radius: radius('surface');
     background-color: $surface-card;
 
-    > img,
-    > .figure__screen > img {
+    > img {
       display: block;
       max-width: 100%;
       height: auto;
       border-radius: radius('control');
-    }
-
-    // A screenshot holds a light and a dark picture; the theme's own selectors pick one, as a reader's chosen theme
-    // outranks the system's (claude-docs/components/help-pages.md, "Screenshots").
-    > .figure__screen {
-      display: block;
-
-      > .figure__light {
-        display: none;
-      }
-    }
-
-    @include color-scheme-light {
-      html:not([data-theme='dark']) & {
-        @include figure-light-screen;
-      }
-    }
-
-    html[data-theme='light'] & {
-      @include figure-light-screen;
     }
 
     > figcaption {

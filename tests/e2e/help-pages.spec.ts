@@ -1,8 +1,8 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { recreateE2eDatabase } from './database';
-import { HELP, STAFF_WORD, helpRowState, seedHelpArticles } from './help-articles';
+import { HELP, SCREENSHOT_ALT, STAFF_WORD, helpRowState, seedHelpArticles } from './help-articles';
 import { signInAs } from './session';
 
 // The public help pages, the staff help pages and the help search against the built server (DESIGN.md §10, "Help and
@@ -335,6 +335,113 @@ test.describe('accessibility', () => {
       await page.goto(path!);
       await assertNoSidewaysScroll(page, { restore: true });
       await assertNoAccessibilityViolations(page);
+    });
+  }
+});
+
+test.describe('screenshots', () => {
+  const ARTICLE = `/help/${HELP.guide.slug}/${HELP.kindling.slug}`;
+  const ENLARGE = `Enlarge: ${SCREENSHOT_ALT}`;
+
+  // The file names of the pictures inside `scope` that take up room on the page.
+  const shown = (page: Page, scope: string) =>
+    page.evaluate(
+      (scope) =>
+        [...document.querySelectorAll<HTMLImageElement>(`${scope} img`)]
+          .filter((picture) => picture.getBoundingClientRect().width > 0)
+          .map((picture) => picture.getAttribute('src')!.split('/').pop()),
+      scope,
+    );
+
+  for (const { name, scheme, theme, file } of [
+    { name: 'a light system', scheme: 'light', theme: null, file: 'spell-builder.png' },
+    { name: 'a dark system', scheme: 'dark', theme: null, file: 'spell-builder.dark.png' },
+    {
+      name: 'a chosen light theme on a dark system',
+      scheme: 'dark',
+      theme: 'light',
+      file: 'spell-builder.png',
+    },
+    {
+      name: 'a chosen dark theme on a light system',
+      scheme: 'light',
+      theme: 'dark',
+      file: 'spell-builder.dark.png',
+    },
+  ] as const) {
+    test(`shows only the picture for ${name}, in the article and in the dialog`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      if (theme) await page.addInitScript((chosen) => localStorage.setItem('theme', chosen), theme);
+      await page.goto(ARTICLE);
+
+      expect(await shown(page, 'figure')).toEqual([file]);
+      await page.getByRole('button', { name: ENLARGE }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      expect(await shown(page, 'dialog[open]')).toEqual([file]);
+    });
+  }
+
+  test('Enter opens the picture full size as one named image, scrolling, and Escape or Close gives the focus back', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1200, height: 700 });
+    await page.goto(ARTICLE);
+    const button = page.getByRole('button', { name: ENLARGE });
+    const dialog = page.getByRole('dialog');
+
+    await button.focus();
+    await page.keyboard.press('Enter');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('img')).toHaveCount(1);
+    await expect(dialog.getByRole('img', { name: SCREENSHOT_ALT })).toBeVisible();
+    // The shipped picture is taller than the window, so the dialog's body scrolls it rather than the dialog growing.
+    expect(
+      await dialog.evaluate((open) => {
+        const body = open.querySelector('.modal-dialog__body')!;
+        return {
+          scrolls: body.scrollHeight > body.clientHeight,
+          fits: open.getBoundingClientRect().bottom <= innerHeight,
+        };
+      }),
+    ).toEqual({ scrolls: true, fits: true });
+    await settleTransitions(page);
+    await assertNoAccessibilityViolations(page);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(button).toBeFocused();
+
+    await button.press('Space');
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(button).toBeFocused();
+  });
+
+  for (const width of [1200, 375]) {
+    test(`the picture is never wider than its article section at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(ARTICLE);
+      const sizes = await page.evaluate(() => {
+        const picture = [...document.querySelectorAll('figure img')].find(
+          (each) => each.getBoundingClientRect().width > 0,
+        )!;
+        const section = picture.closest('section, article')!;
+        const style = getComputedStyle(section);
+        return {
+          picture: picture.getBoundingClientRect().width,
+          section:
+            section.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+          page: document.documentElement.scrollWidth,
+          window: document.documentElement.clientWidth,
+        };
+      });
+
+      expect(sizes.picture).toBeGreaterThan(0);
+      expect(sizes.picture).toBeLessThanOrEqual(sizes.section);
+      expect(sizes.page).toBeLessThanOrEqual(sizes.window);
     });
   }
 });
