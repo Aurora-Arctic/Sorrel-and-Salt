@@ -15,7 +15,10 @@
 // The dialog is the sign-in page's card: as wide (`$narrow-column`, which the card takes from `.page-frame--narrow`),
 // padded as `.sign-in-panel.panel` is, and its head spaced as the page's, so both draw one column with one set of gaps.
 .modal-dialog:has(.sign-in-panel, .sign-in-dialog__inbox) {
-  max-width: $narrow-column;
+  // On a phone, the page frame's `space(4)` gutter rather than Modal's own edge gap, so it is the card's width there too.
+  width: min($narrow-column, calc(100vw - #{space(4)} * 2));
+  // The browser's own cap on a modal dialog (`100% - 2em - 6px`) would hold it short of that.
+  max-width: none;
   padding: space(5) space(6) space(6);
 
   > .modal-dialog__main {
