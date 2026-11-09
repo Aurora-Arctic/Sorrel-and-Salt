@@ -3,7 +3,7 @@
 
 // The closed box's narrowest width, so a short coven name still reads as a control with room
 // before its chevron rather than shrinking to the word. A width, not a gap, so off the space
-// scale. The open list takes the floating menus' width, $panel-min-width to $panel-max-width.
+// scale. The open list is as wide as the closed box, and no narrower than $panel-min-width.
 $switcher-min-width: 12rem;
 
 // The coven's name as the context row's lead: the name in the display face with a chevron inside a hairline, so the
@@ -54,8 +54,8 @@ $switcher-min-width: 12rem;
 
   .combobox__list {
     z-index: layer('floating');
-    min-width: max(#{$panel-min-width}, 100%);
-    max-width: max(#{$panel-max-width}, 100%);
+    // The list is fixed, so a percentage would measure the window; its width is the closed box's, set inline.
+    min-width: $panel-min-width;
   }
 
   .combobox__option {
