@@ -69,7 +69,7 @@ export default async function CardPage({ params }: Pick<InvitePageProps, 'params
   }
 
   return (
-    <PageFrame className={`card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}>
+    <PageFrame className="card-landing welcome-page">
       <div className="card-landing__grid">
         <PageHeader
           title={WORDMARK}
