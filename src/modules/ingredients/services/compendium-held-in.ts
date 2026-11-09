@@ -15,7 +15,7 @@ import { compendiumFilterFor, seesReview } from './compendium-filter';
 import { countCompendium, listCompendium } from './compendium';
 import { compendiumFacets } from './ingredient-facets';
 import type { CovenPick, IngredientRow } from '../types';
-import { assertMembership, type Membership, membershipsOf } from '@/modules/coven';
+import { type Membership, liveMembershipsOf, tryMembership } from '@/modules/coven';
 
 // The compendium narrowed to the entries the viewer's covens hold (In My Covens). Each picked coven earns a proof or is dropped, so a foreign id
 // filters nothing; with no proof left the read is the cached public one, else the viewer's and never cached (rule 6), filtered in SQL (rule 7).
@@ -30,14 +30,9 @@ const MAX_PICKED_COVENS = 20;
  */
 async function proofsOf(session: Session, covenIds: readonly string[]): Promise<Membership[]> {
   const proofs = await Promise.all(
-    covenIds.map((id) =>
-      assertMembership(session, id, { ingredient: ['read'] }).catch((error: unknown) => {
-        if (error instanceof Forbidden) return null;
-        throw error;
-      }),
-    ),
+    covenIds.map((id) => tryMembership(session, id, { ingredient: ['read'] })),
   );
-  return proofs.filter((proof): proof is Membership => proof !== null);
+  return proofs.filter((proof): proof is Membership => !(proof instanceof Forbidden));
 }
 
 const pickedProofs = (session: Session, covenIds: readonly string[]) =>
@@ -47,8 +42,7 @@ const pickedProofs = (session: Session, covenIds: readonly string[]) =>
  * Not capped, as the list is the viewer's own and not the address's.
  */
 async function everyCovenProof(session: Session): Promise<Membership[]> {
-  const [memberships] = await membershipsOf(session, [session.userId]);
-  if (!memberships || memberships instanceof Error) return [];
+  const memberships = await liveMembershipsOf(session);
   return proofsOf(
     session,
     memberships.map(({ workspaceId }) => workspaceId),

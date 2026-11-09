@@ -4,7 +4,7 @@ import { Forbidden } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
-import { assertMembership } from './membership';
+import { assertMembership, tryMembership } from './membership';
 import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
@@ -60,16 +60,10 @@ export async function emailsOfMembers(
   const answers = new Map<string, Map<string, string> | Forbidden>(
     await Promise.all(
       [...covens].map(async ([workspaceId, userIds]) => {
-        try {
-          const emails = await memberEmails(session, workspaceId, userIds);
-          return [
-            workspaceId,
-            new Map(emails.map(({ userId, address }) => [userId, address])),
-          ] as const;
-        } catch (error) {
-          if (error instanceof Forbidden) return [workspaceId, error] as const;
-          throw error;
-        }
+        const membership = await tryMembership(session, workspaceId, { member: ['readEmail'] });
+        if (membership instanceof Forbidden) return [workspaceId, membership] as const;
+        const rows = await findMemberEmails(membership, userIds);
+        return [workspaceId, new Map(rows.map(({ id, email }) => [id, email]))] as const;
       }),
     ),
   );

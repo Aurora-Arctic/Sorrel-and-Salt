@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { CalendarDay, RowId, optionalText, requiredText } from '../../../lib/validation';
+import { VISIBILITIES, VISIBILITY_MESSAGE } from './visibility';
 
 // Pure, like `spell.ts`. It mirrors spell_workings' and spell_working_participants' CHECKs and unique indexes.
-
-// Written out for the reason `spell.ts` gives; `public` is deferred with the notes subsystem (§13).
-const VISIBILITIES = ['private', 'workspace'] as const;
 
 // A coven member by id, or a name typed for anyone else: never both, never neither
 // (spell_working_participants' one-of CHECK).
@@ -54,6 +52,6 @@ export const WorkingInput = z
     // In order. Left out: on record, the recorder alone; on update, unchanged.
     participants: z.array(Participant).optional(),
     // Left out: the column's default on record (workspace, capped at the spell's), unchanged on update.
-    visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
+    visibility: z.enum(VISIBILITIES, { error: VISIBILITY_MESSAGE }).optional(),
   })
   .superRefine(distinctParticipants);

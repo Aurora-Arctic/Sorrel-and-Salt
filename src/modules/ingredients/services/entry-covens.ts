@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Session } from '../../../lib/session';
-import { assertMembership, byCovenName, membershipsOf } from '@/modules/coven';
+import { assertMembership, byCovenName, liveMembershipsOf } from '@/modules/coven';
 import type { HoldingCoven, IngredientRow } from '../types';
 import { heldCompendiumEntry, isRetired } from './cupboard-entries';
 
@@ -12,11 +12,7 @@ export async function covensOpeningEntry(
   session: Session,
   entry: Pick<IngredientRow, 'id' | 'workspaceId' | 'deletedAt'>,
 ): Promise<readonly HoldingCoven[]> {
-  const [memberships] = await membershipsOf(session, [session.userId]);
-  if (!memberships || memberships instanceof Error) return [];
-  // A paused seat opens nothing in its coven, so it is left out rather than refused.
-  const covens = memberships
-    .filter(({ pause }) => !pause)
+  const covens = (await liveMembershipsOf(session))
     .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
     .filter(({ id }) => entry.workspaceId === null || id === entry.workspaceId)
     .sort(byCovenName);

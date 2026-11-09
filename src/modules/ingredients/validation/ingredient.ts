@@ -2,13 +2,13 @@ import { z } from 'zod';
 import {
   CITED_ENTRY_FIELDS,
   CITED_VARIANT_FIELDS,
-  INGREDIENT_ELEMENTS,
   NAME_BASES,
   NAMELESS_KIND,
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
 import { RowId, optionalText, requiredText } from '../../../lib/validation';
+import { elementArray, textEntries } from './lists';
 import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
@@ -28,7 +28,7 @@ import type {
 // Both parse it, since the browser is not the only caller (claude-docs/validation.md, "The two ingredient variants").
 
 /** Blank entries stay through the cross-field rules so an issue's index counts the rows sent; `dropBlankEntries` then drops them, and a list left with none is absent. */
-const textList = z.array(z.string().trim()).nullish();
+const textList = textEntries.nullish();
 
 const nonBlank = <T extends string>(list: T[]) => list.filter((entry) => entry !== '');
 
@@ -47,19 +47,6 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   folkNames: withoutBlanks(value.folkNames),
 });
 
-/** Closed: the five values and nothing typed (DESIGN.md §5). Kept in the order chosen, and a repeat is refused rather than dropped, as the form never offers an element twice. */
-const elementArray = z
-  .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
-  .superRefine((elements, ctx) => {
-    elements.forEach((element, index) => {
-      if (elements.indexOf(element) === index) return;
-      ctx.addIssue({
-        code: 'custom',
-        path: [index],
-        message: `${element[0]?.toUpperCase()}${element.slice(1)} is already chosen`,
-      });
-    });
-  });
 const elementList = elementArray.nullish();
 
 /** A substitute links an ingredient or names one (DESIGN.md §5, `ingredient_substitutes`): halves trimmed and blank as absent, a blank entry refused later so the service's refusal still counts the rows sent. */

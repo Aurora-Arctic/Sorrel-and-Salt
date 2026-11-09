@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { spellVisibility } from '@/modules/grimoire/schema/spells';
 import { WorkingInput } from '@/modules/grimoire/validation/working';
 
 // The input mirrors the CHECKs of spell_workings and spell_working_participants, so the database never refuses a working a user sees.
@@ -62,6 +63,12 @@ describe('WorkingInput', () => {
       WorkingInput.safeParse({ ...base, participants: [{ userId: MEMBER }, { userId: OTHER }] })
         .success,
     ).toBe(true);
+  });
+
+  it('lists the visibilities the column holds', () => {
+    for (const visibility of spellVisibility.enumValues) {
+      expect(WorkingInput.safeParse({ ...base, visibility }).success, visibility).toBe(true);
+    }
   });
 
   it('takes only private or workspace visibility', () => {
