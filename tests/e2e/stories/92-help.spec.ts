@@ -48,7 +48,7 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
     });
 
     await test.step('the visitor opens the sub page, nested under its parent', async () => {
-      await page.getByRole('link', { name: new RegExp(HELP.kindling.title) }).click();
+      await page.getByRole('link', { name: HELP.kindling.title, exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`/help/${HELP.guide.slug}/${HELP.kindling.slug}$`));
       await expect(
         page.getByRole('heading', { level: 2, name: HELP.kindling.title }),

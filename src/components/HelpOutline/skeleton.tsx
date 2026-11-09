@@ -44,7 +44,7 @@ export const HelpOutlineBodySkeleton = (): ReactElement => (
       </p>
       <ListBodySkeleton
         label="Help"
-        headings={['Position', 'Sub Page', 'Audience', 'Order', 'Edit']}
+        headings={['Order', 'Position', 'Sub Page', 'Audience', 'Edit']}
         actions={['Order', 'Edit']}
         hidden={['Edit']}
       />

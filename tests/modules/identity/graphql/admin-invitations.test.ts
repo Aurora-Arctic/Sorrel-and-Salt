@@ -126,6 +126,8 @@ describe('Mutation.createAdminInvitation', () => {
 
   // Named for the mailed token it takes as its argument; it answers the request, whose own type the scan still reads.
   const TAKES_A_TOKEN = ['Query.supportRequestByViewToken'];
+  // Named for the help front page's quick links; it answers their titles, not their addresses.
+  const NAMES_LINKS = ['HelpRenameEffects.quickLinks'];
 
   it('has no token, hash or link field on any type but the card mint result', () => {
     const carriers: string[] = [];
@@ -133,7 +135,7 @@ describe('Mutation.createAdminInvitation', () => {
       if (!isObjectType(type) || type.name.startsWith('__')) continue;
       for (const [name, field] of Object.entries(type.getFields())) {
         const path = `${type.name}.${name}`;
-        if (TAKES_A_TOKEN.includes(path)) continue;
+        if (TAKES_A_TOKEN.includes(path) || NAMES_LINKS.includes(path)) continue;
         if (/token|hash|link(?!ed)/i.test(name) && canCarryText(field)) carriers.push(path);
       }
     }

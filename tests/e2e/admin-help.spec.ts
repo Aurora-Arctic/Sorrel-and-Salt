@@ -77,6 +77,8 @@ async function openEdit(page: Page, name: string): Promise<void> {
 test('a keeper writes a parent and a narrower sub page, meets a refusal at its field, and deletes both', async ({
   page,
 }) => {
+  // Writes two rows and scans each form with axe, which outlasts the default budget under CI coverage.
+  test.setTimeout(60_000);
   await signInAs(page, 'a-keeper@admin-help.test', ['discord'], 'admin');
 
   const response = await page.goto(PATH);
@@ -131,6 +133,8 @@ test('a keeper writes a parent and a narrower sub page, meets a refusal at its f
 
   // A title that makes a reserved address is refused beside Title, and the form stays.
   await page.goto(`${PATH}/new`);
+  // Hydrated first: a title typed into the server HTML never reaches the form, which then keeps Save disabled.
+  await page.waitForLoadState('networkidle');
   await title(page).fill('Glossary');
   await writeBody(page, 'A row the service refuses.');
   await page.getByRole('button', { name: 'Save Article' }).click();
