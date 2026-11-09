@@ -295,6 +295,20 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   @include dotted-row('*');
   margin-block: space(2) space(5);
   color: $text-muted;
+
+  // Each fact stays whole, the address link not breaking at its hyphens, so the row wraps only between facts. Only
+  // where the column is narrower than one address (phone width) may it break within itself, as a last resort.
+  > * {
+    white-space: nowrap;
+  }
+
+  @media (max-width: $shell-tablet-width) {
+    > * {
+      max-inline-size: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
 }
 
 // A hidden row's muted title, beside its shut eye and, in a table, the lidded eye of its switch.
