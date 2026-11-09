@@ -187,7 +187,7 @@
 }
 
 // How long the phone sheet takes to slide: longer than a dialog's fade. shell.tsx waits up to
-// LEAVE_LIMIT_MS, which must stay longer.
+// `FADE_LIMIT_MS` in `src/lib/motion.ts`, which must stay longer.
 $sheet-slide: 250ms ease-out;
 
 // The modal sheet below the tablet width: a full-height drawer from the right, its foot stuck to

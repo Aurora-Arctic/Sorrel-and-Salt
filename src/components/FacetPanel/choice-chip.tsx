@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type FocusEvent,
   type KeyboardEvent,
@@ -25,13 +26,6 @@ import './choice-chip.scss';
 // One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
 // choice; hydrated, the menu fades and stays mounted until the fade ends (see useSlide).
-
-const FADE_LIMIT_MS = 400;
-
-/** Motion turned down, or no way to ask, so a change is not held for a fade. */
-export const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const clipRight = (from: HTMLElement): number => {
   for (let el = from.parentElement; el; el = el.parentElement) {
@@ -96,9 +90,9 @@ export function ChoiceChip<T extends string>({
   const [phase, setPhase] = useState<Phase>('closed');
   const chosen = options.find((option) => option.value === value) ?? options[0];
 
-  const open = () => setPhase(fadesAreOff() ? 'open' : 'opening');
+  const open = () => setPhase(prefersReducedMotion() ? 'open' : 'opening');
   const close = (refocus: boolean) => {
-    setPhase((now) => (now === 'closed' ? now : fadesAreOff() ? 'closed' : 'closing'));
+    setPhase((now) => (now === 'closed' ? now : prefersReducedMotion() ? 'closed' : 'closing'));
     if (refocus) summary.current?.focus();
   };
 

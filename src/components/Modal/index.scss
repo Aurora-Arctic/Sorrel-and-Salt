@@ -95,7 +95,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 // It fades in and out, dialog and backdrop together: in is CSS alone from `@starting-style`, out is
-// `.is-closing`, which the component waits on (FADE_LIMIT_MS there outlasts this)
+// `.is-closing`, which the component waits on (`FADE_LIMIT_MS` in `src/lib/motion.ts` outlasts this)
 // (claude-docs/components/modal.md, "The fade").
 .modal.modal-dialog {
   opacity: 1;
