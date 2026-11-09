@@ -42,13 +42,8 @@ const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 type Natural = {
   widths: number[];
-  // -1 when no tab is the current page's.
-  current: number;
-  currentWidth: number;
   gap: number;
   more: number;
-  buttonGap: number;
-  chevron: number;
 };
 
 const measureNatural = (list: HTMLElement): Natural | null => {
@@ -60,32 +55,20 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   );
   // No layout (happy-dom, a hidden nav): there is nothing to fit, so keep the default.
   if (widths.length === 0 || widths.some((width) => width === 0)) return null;
-  const current = items.findIndex((item) => item.querySelector('[aria-current="page"]'));
   const more = list.querySelector<HTMLElement>(':scope > .section-nav__more');
-  const chevron = more?.querySelector<HTMLElement>('.section-nav__chevron');
-  const moreButton = more?.querySelector<HTMLElement>('.section-nav__more-button');
   return {
     widths,
-    current,
-    currentWidth: current === -1 ? 0 : items[current]!.offsetWidth,
     gap: pixels(getComputedStyle(list).columnGap),
     more: more?.offsetWidth ?? 0,
-    buttonGap: moreButton ? pixels(getComputedStyle(moreButton).columnGap) : 0,
-    chevron: chevron?.offsetWidth ?? 0,
   };
 };
 
 // The most leading tabs, at least one, that fit `available` beside More. More is reserved at its
-// own width, or at the current tab's width plus the button's gap and chevron if that tab would be
-// hidden, whichever is wider. Not the widest hidden tab, which would hide one while room remains.
-const countThatFit = (
-  { widths, current, currentWidth, gap, more, buttonGap, chevron }: Natural,
-  available: number,
-): number => {
+// own width, not the widest hidden tab's, which would hide one while room remains.
+const countThatFit = ({ widths, gap, more }: Natural, available: number): number => {
   for (let count = widths.length; count > 1; count -= 1) {
     const tabs = widths.slice(0, count).reduce((sum, width) => sum + width, 0) + gap * (count - 1);
-    const reserve = current >= count ? Math.max(more, currentWidth + buttonGap + chevron) : more;
-    if (tabs + (count < widths.length ? gap + reserve : 0) <= available) return count;
+    if (tabs + (count < widths.length ? gap + more : 0) <= available) return count;
   }
   return 1;
 };
@@ -236,18 +219,8 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               aria-current={hidden ? 'page' : undefined}
               onClick={() => setOpenAt(open ? null : pathname)}
             >
-              <SectionIcon name={hidden ? hidden.icon : 'more'} />
-              <span>
-                {/* The space sits outside the hidden span: a trailing one inside it is
-                    trimmed from the name, which then reads "More:Astrology". */}
-                {hidden && (
-                  <>
-                    <span className="visually-hidden">More:</span>{' '}
-                  </>
-                )}
-                {hidden ? hidden.label : 'More'}
-                {hidden?.count !== undefined && <FacetCount count={hidden.count} />}
-              </span>
+              <SectionIcon name="more" />
+              <span>More</span>
               <span className="section-nav__chevron">
                 <ChevronIcon />
               </span>
