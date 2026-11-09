@@ -1,7 +1,7 @@
 # Task tracking
 
-The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel &
-Salt** over them, are the live list of what to work on (MB.89), and
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Projects **Sorrel &
+Salt** and **Sorrel & Salt V1.Next** over them, are the live list of what to work on (MB.89), and
 [`TASKS.md`](TASKS.md) is the reasoning behind them. This page is the board's
 shape and its mechanics. The rules for working it are
 [`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s, the
@@ -14,18 +14,37 @@ comment is public too; the rule that costs is under **Comments**.
 
 ## The board
 
-| Object      | Value                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                           |
-| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and reads the node id and field ids at runtime, off the issue's own Project item.                                                                                                                         |
-| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                |
-| `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                      |
-| Milestones  | One per wave (`Wave 07 — GraphQL`) and per pre-wave grouping, plus a closed `Retired — not done`, so every issue has one. A wave's description is its id list on the first line, then a link to its [`waves/wave-NN.md`](waves/) on `staging`, the one home of its reasoning; `reorder` reads the first line (**Order**). |
-| Issue types | `Bug` for a task that fixes a bug, a failure that reached a PR, staging or production; `Task` for everything else, whatever its id. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                     |
-| Labels      | `tracked` on every task, the Project's auto-add filter; `hotfix` on a task that branches off `main`.                                                                                                                                                                                                                      |
-| Sub-issues  | Only for a genuine parent/child; a wave is a milestone, never a parent issue.                                                                                                                                                                                                                                             |
+| Object      | Value                                                                                                                                                                                                                                                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                                                           |
+| Projects    | Two org projects, linked to the repo: **Sorrel & Salt** (number `1`, ids `M…`, `MB.…`, `MW.…`) and **Sorrel & Salt V1.Next** (number `4`, ids `N…`). `scripts/task-projects.mjs` is the one place a Project number is written (**Projects**, below); the scripts read each Project's node id and field ids at runtime, off the issue's own Project item.  |
+| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                                                |
+| `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                                                      |
+| Milestones  | One per wave (`Wave 07 — GraphQL`, `N · Wave 01 — Privacy`) and per pre-wave grouping, plus a closed `Retired — not done`, so every issue has one. A wave's description is its id list on the first line, then a link to its [`waves/<slug>/wave-NN.md`](waves/) on `staging`, the one home of its reasoning; `reorder` reads the first line (**Order**). |
+| Issue types | `Bug` for a task that fixes a bug, a failure that reached a PR, staging or production; `Task` for everything else, whatever its id. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                     |
+| Labels      | `tracked` on every task, Project 1's auto-add filter; `v1-next` on every Sorrel & Salt V1.Next task, which that filter excludes; `hotfix` on a task that branches off `main`.                                                                                                                                                                             |
+| Sub-issues  | Only for a genuine parent/child; a wave is a milestone, never a parent issue.                                                                                                                                                                                                                                                                             |
 
 The rules for naming, labelling and keeping each object are in `.claude/rules/task-tracking.md`, under "Board layout".
+
+## Projects
+
+`scripts/task-projects.mjs` lists the Projects, and nothing else names a Project number. Each entry carries:
+
+| Field             | Meaning                                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `number`, `title` | The org Project.                                                                                                                                  |
+| `slug`            | The directory under `claude-docs/tasks/` and `claude-docs/waves/` holding its entries and wave files: `v1`, `v1-next`.                            |
+| `prefix`          | The letter its task ids start with: `M` (with `MB` and `MW`), `N`. The tally and the branch patterns route an id by it.                           |
+| `milestonePrefix` | What starts each of its milestone titles: nothing for Project 1, `N · ` for Project 4. A milestone belongs to the Project whose prefix starts it. |
+| `bugfixes`        | Its bug milestone: `Z. Bugfixes`, `N · Z. Bugfixes`.                                                                                              |
+| `default`         | The one Project a milestone, wave row or id belongs to when no other prefix matches.                                                              |
+| `label`           | The label its issues carry, so another Project's auto-add filter can exclude them.                                                                |
+| `autoAdd`         | Whether the Project's own auto-add workflow places an issue; when false, `place` adds it.                                                         |
+
+A command finds its Project from the issue: `find`, `status`, `estimate`, `comment` and `sync` read the issue's own Project item; `move`, `milestone` and `place` take the Project of the issue's milestone; `reorder` runs once per Project, each over its own wave rows (a row `**N · 01 — …**` is Project 4's) and its own item order, or over one with `--project N`. An issue on two Projects is refused until `place <ID> --apply` leaves it on its milestone's alone.
+
+**Adding a Project.** Create it in the org and link it to the repo; add an entry with a new `number`, `slug`, `prefix` letter, `milestonePrefix`, `bugfixes` and `label`; create the label and the bug milestone; make the auto-add filter of every Project with `autoAdd: true` exclude the new label; and create `claude-docs/tasks/<slug>/` and `claude-docs/waves/<slug>/`. Its wave rows go in their own table in `TASKS.md`, labelled `**<prefix> · NN — <name>**`.
 
 ## The title rule
 
@@ -136,7 +155,7 @@ item where it belongs.
 
 **A milestone with no wave row is placed by hand, one task at a time.**
 `reorder` orders only the milestones the wave table names, so a task on
-`Z. Bugfixes`, `Z. Deferred` or `Z. Outside the Website` is placed with
+`Z. Bugfixes`, `N · Z. Deferred` or `N · Z. Outside the Website` is placed with
 `node scripts/task-board.mjs move <ID> --after <ID>` or `--last`. It makes
 the same `updateProjectV2ItemPosition` mutation, once, with no dry run, and
 places a task only among its own milestone's items.
@@ -164,18 +183,20 @@ Node built-ins only, every call an `execFileSync('gh', [...])` with an
 argument list — a title or a comment is text a shell string would interpret.
 A `gh` failure prints gh's own stderr on one line, never a stack.
 
-| Command                                        | Does                                                                                                                                                                                                                                                                                 |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `find <ID>`                                    | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it.                                                                                                                       |
-| `status <ID> "<Status>"`                       | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.                                                                                                                           |
-| `estimate <ID> <hours>`                        | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                                                                                                                                               |
-| `comment <ID> "<text>"`                        | Posts the comment, after the secret scan.                                                                                                                                                                                                                                            |
-| `sync <ID> [<ID> …]`                           | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.                                                                                                                          |
-| `list`                                         | Every tracked issue, open and closed, as a JSON array.                                                                                                                                                                                                                               |
-| `reorder [--apply] [--limit N]`                | The moves that put the open waves' items in execution order, as a dry run; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**).                                                                                                                    |
-| `move <ID> --after <ID>` or `move <ID> --last` | Places the task directly after the named task, which must share its milestone, or with `--last` places it after the last item, open or closed, on its own milestone. One move, a no-op when it already sits there (**Order**).                                                       |
-| `milestone <ID> "<title>"`                     | Moves the issue to the open milestone titled exactly so, such as `Z. Bugfixes`; a refusal when no open milestone, or several, carry the title.                                                                                                                                       |
-| `retire <ID>`                                  | Closes the issue as not planned on the closed `Retired — not done` milestone, in one edit; a refusal for an issue closed as completed. The `[RETIRED]` heading stays a hand edit, synced to the issue with `sync` before `retire` closes it, since `sync` never runs on a closed id. |
+| Command                                        | Does                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `find <ID>`                                    | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it.                                                                                                                                                    |
+| `status <ID> "<Status>"`                       | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.                                                                                                                                                        |
+| `estimate <ID> <hours>`                        | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                                                                                                                                                                            |
+| `comment <ID> "<text>"`                        | Posts the comment, after the secret scan.                                                                                                                                                                                                                                                                         |
+| `sync <ID> [<ID> …]`                           | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.                                                                                                                                                       |
+| `list`                                         | Every tracked issue, open and closed, as a JSON array.                                                                                                                                                                                                                                                            |
+| `reorder [--project N] [--apply] [--limit N]`  | The moves that put each Project's open waves in execution order, as a dry run, one Project after another; `--project` picks one; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**).                                                                                           |
+| `move <ID> --after <ID>` or `move <ID> --last` | Places the task directly after the named task, which must share its milestone, or with `--last` places it after the last item, open or closed, on its own milestone. One move, a no-op when it already sits there (**Order**).                                                                                    |
+| `milestone <ID> "<title>"`                     | Moves the issue to the open milestone titled exactly so, such as `Z. Bugfixes`; a refusal when no open milestone, or several, carry the title. When the new milestone is on another Project, it then moves the issue there as `place` does.                                                                       |
+| `retire <ID>`                                  | Closes the issue as not planned on the closed `Retired — not done` milestone, in one edit; a refusal for an issue closed as completed. The `[RETIRED]` heading stays a hand edit, synced to the issue with `sync` before `retire` closes it, since `sync` never runs on a closed id.                              |
+| `place <ID> [<ID> …]` or `place --all`         | Lists each issue that is not on its milestone's Project alone, with the Status and Estimate it would carry; `--apply` labels it, adds it to that Project, sets the same Status and Estimate, reads them back, and only then removes it from the other. A run that stops part-way is finished by running it again. |
+| `renumber <OLD> <NEW> [<OLD> <NEW> …]`         | Retitles each open issue from its old id to the new one, whose entry must already be headed by it, then syncs it; refused for a closed issue, which keeps its id.                                                                                                                                                 |
 
 The Project's node id, its field ids and its option ids are read on each run
 rather than hardcoded — an option recreated in the Project's settings gets a
@@ -235,13 +256,14 @@ costs nothing, and a sweep of every issue is the burst MB.102 removed.
 
 ## Minting a task
 
-Minting is `gh issue create`, then `estimate`, then `reorder --apply`, with
+Minting is `gh issue create`, then `estimate`, then `reorder --apply`
+(on a Project with no auto-add, `place <ID> --apply` before `estimate`), with
 the docs edited in the same pass and the new id added to the first line of
 its milestone's description; the commands and the list of edits are
 [`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s
 "Minting a task". A task on the board and not in `tasks/` is a task
-whose reasoning is nowhere. The auto-add appends the new item at the bottom of
-the Project and `reorder --apply` moves it to its row's place (**Order**),
+whose reasoning is nowhere. The auto-add (or `place`) appends the new item at the bottom of
+its Project and `reorder --apply` moves it to its row's place (**Order**),
 which is why the row is edited first. `--milestone <name>` on create does not
 resolve a closed milestone; an issue minted into one for the record takes it
 afterwards, by number, through `gh api -X PATCH repos/…/issues/<n> -F milestone=<m>`,
@@ -249,7 +271,7 @@ and is closed before `reorder` runs.
 
 ## Progress tally
 
-`.claude/skills/project-progress/tally.mjs` counts a task as done from git, with no board calls. A merge commit names a task in three places, and an id mentioned mid-sentence counts in none:
+`.claude/skills/project-progress/tally.mjs` counts a task as done from git, with no board calls, and reports each Project apart: `--project N` or `--task <ID>` picks one, and with neither it prints every Project. A task counts toward the Project whose directory holds its entry at the ref, or, for an id with no entry there, the Project its prefix letter names. A merge commit names a task in three places, and an id mentioned mid-sentence counts in none:
 
 - **The branch** in `Merge pull request #N from org/feature/<id>-…`.
 - **The id-first form** at the start of the subject, or of the first line of the commit's body, which is where GitHub writes the PR's title: `M15.32/M15.33/M15.49 — Support revision`.

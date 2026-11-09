@@ -29,13 +29,22 @@ An answer other than "Approve" means: apply it, show the changed part, and ask a
 
 Run these only after the user has approved the draft (and, for a feature, the milestone).
 
-1. **Find the next free id.** Take the highest existing id in the series from the entry files (`grep -ho '^\*\*MB\.[0-9]* — ' claude-docs/tasks/*.md | sort -t. -k2 -n | tail -1`, and the same for `M<wave>.`), then confirm it is free on the board with `node scripts/task-board.mjs find <ID>`; zero matches means free. Another session may have taken it, so re-check immediately before creating the issue. Retired ids stay taken.
+**The Project decides the id, the milestone, the labels and the file.** A milestone belongs to the Project in `scripts/task-projects.mjs` whose `milestonePrefix` starts its title; the default Project has none.
+
+| Project                   | Ids                                         | Bug milestone     | Labels added         | Files                        |
+| ------------------------- | ------------------------------------------- | ----------------- | -------------------- | ---------------------------- |
+| Sorrel & Salt (1)         | `M<wave>.<n>`, `MB.<n>`                     | `Z. Bugfixes`     | `tracked`            | `claude-docs/tasks/v1/`      |
+| Sorrel & Salt V1.Next (4) | `N<wave>.<n>`, `NB.<n>`, `ND.<n>`, `NO.<n>` | `N · Z. Bugfixes` | `tracked`, `v1-next` | `claude-docs/tasks/v1-next/` |
+
+1. **Find the next free id.** Take the highest existing id in the series from the entry files (`grep -rho '^\*\*MB\.[0-9]* — ' claude-docs/tasks/ | sort -t. -k2 -n | tail -1`, and the same for `M<wave>.`, `NB.` or `N<wave>.`), then confirm it is free on the board with `node scripts/task-board.mjs find <ID>`; zero matches means free. Another session may have taken it, so re-check immediately before creating the issue. Retired ids stay taken.
 2. **Write the body** to a file in the scratchpad: the story, description and acceptance criteria exactly as they will appear in the docs entry (a bug's entry also carries the steps to reproduce).
 3. **Create the issue:**
 
    ```sh
    gh issue create --title "<ID> — <name>" --type <Bug|Task> --label tracked --milestone "<milestone>" --body-file <file>
    ```
+
+   A Project 4 task adds `--label v1-next`, then runs `node scripts/task-board.mjs place <ID> --apply`, because Project 4 has no auto-add.
 
    The title is `<ID> — <name>` with a spaced em dash and nothing before the id. Never hand-compose other `gh issue` calls. A rate-limit error waits for the reset and retries once, then reports.
 
@@ -54,9 +63,9 @@ Run these only after the user has approved the draft (and, for a feature, the mi
    - …
    ```
 
-   Then add the matching summary-table row where the target file has one (`mb.md` does), and run `npx prettier --write` on each file touched so the table stays aligned.
+   Then add the matching summary-table row where the target file has one (`v1/mb.md` does), and run `npx prettier --write` on each file touched so the table stays aligned.
 
-6. **Verify:** `node scripts/task-board.mjs find <ID>` prints the issue with the right milestone, and `status` is `Not Started` (or `null` for a few seconds while the Project's auto-add runs; don't set it by hand). If the entry was edited after the issue was created, run `node scripts/task-board.mjs sync <ID>`.
+6. **Verify:** `node scripts/task-board.mjs find <ID>` prints the issue with the right milestone, and `status` is `Not Started` (or `null` for a few seconds while Project 1's auto-add or Project 4's _Item added to project_ workflow runs; don't set it by hand). If the entry was edited after the issue was created, run `node scripts/task-board.mjs sync <ID>`.
 7. **Report** the id, the issue link, the files edited and the estimate. Leave the doc edits uncommitted: committing and PRs are a separate, explicit request.
 
 If any step fails, stop and say which step and what already exists (an issue with no entry is the one to flag loudly), and don't retry blindly.

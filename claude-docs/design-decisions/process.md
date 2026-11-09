@@ -405,7 +405,7 @@ A lane must read each source and assert `nameBasis`; anything doubtful is not ci
 | M14.12 | Aspen correction (both files)                                                                                                                                                                                                                                                                                                                                                                            | 3h   | M14.10         |
 | M14.13 | Audit run and owner review queue                                                                                                                                                                                                                                                                                                                                                                         | 2h   | M14.10, M14.11 |
 
-~47h. Parallel: M14.5 ∥ M14.6 after M14.4; M14.7 ∥ M14.8 ∥ M14.9 ∥ M14.11 as dependencies allow. Open shard lanes (MB.243–246, 248) and MB.249 are amended to write markdown files from M14.10 on; `TASKS.md` Execution order, `waves/wave-14.md`, `tasks/m14.md` updated and synced.
+~47h. Parallel: M14.5 ∥ M14.6 after M14.4; M14.7 ∥ M14.8 ∥ M14.9 ∥ M14.11 as dependencies allow. Open shard lanes (MB.243–246, 248) and MB.249 are amended to write markdown files from M14.10 on; `TASKS.md` Execution order, `waves/v1/wave-14.md`, `tasks/v1/m14.md` updated and synced.
 
 ### L. Docs
 
@@ -548,7 +548,7 @@ The main session coordinates: mints, briefs, merges, reviews, updates the board.
 
 **Before the lanes start (main session):**
 
-1. Mint T1–T8 as M15.n on the board with `scripts/task-board.mjs` (check the board and `tasks/m15.md` for the next free number; place them after M15's Done and In Review items), write their entries in `claude-docs/tasks/m15.md`, `sync` each from the checkout holding the edit.
+1. Mint T1–T8 as M15.n on the board with `scripts/task-board.mjs` (check the board and `tasks/v1/m15.md` for the next free number; place them after M15's Done and In Review items), write their entries in `claude-docs/tasks/v1/m15.md`, `sync` each from the checkout holding the edit.
 2. /app is on `review/mb123` today. Create `review/demo-coven` off `staging` and check it out in /app, so port 8000 shows this run. The MB.123 review branch stays as a branch. **I need you to say if 8000 must keep showing MB.123 instead; then this run gets no review server.**
 3. One worktree per lane: `git worktree add /home/node/worktrees/demo-coven-<lane> -b feature/m15.<n>-<slug> staging`, `cp -a /app/node_modules` in, delete `node_modules/.cache/tsc/tsconfig.tsbuildinfo`, copy `/app/.env.local` in.
 

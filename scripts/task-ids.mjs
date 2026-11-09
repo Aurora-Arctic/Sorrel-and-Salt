@@ -1,10 +1,13 @@
 // How a merged PR names the tasks it finishes, read by the project-progress tally. Only the id-first form counts: an id mentioned
 // mid-sentence ("the check M1.5 added") is a reference, not a completion.
 
+import { ID_LETTERS } from './task-projects.mjs';
 import { ID } from './tasks-md.mjs';
 
-export const BRANCH =
-  /from [^/\s]+\/(?:feature|hotfix)\/(?:backlog-)?(m[a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-/i;
+export const BRANCH = new RegExp(
+  String.raw`from [^/\s]+\/(?:feature|hotfix)\/(?:backlog-)?([${ID_LETTERS}][a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-`,
+  'i',
+);
 
 export const LEAD = new RegExp(String.raw`^((?:${ID})(?:\s*/\s*${ID})*)\s+[—-]\s`);
 

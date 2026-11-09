@@ -173,9 +173,9 @@ CASL's definition of a commercial electronic message, and any transactional exem
 
 The two least certain rows are the invitations. The FTC's category 1 speaks of a transaction "the recipient agreed to", and an invited person has agreed to nothing yet **(own reading)**. The mail is still not an advertisement: it is a single message from a named person that carries the access they were offered and no promotion. If a regulator read it otherwise, the exposure is the same as for any commercial mail without consent, and the site's invitations are sent one at a time on a person's request, never in bulk.
 
-### Billing mails that Wave 21 implies
+### Billing mails that N · Wave 04 implies
 
-[Wave 21](../waves/wave-21.md) specifies no mail, so any billing mail is implied. Classes are the researcher's inference **(own reading)** from the FTC categories.
+[N · Wave 04](../waves/v1-next/wave-04.md) specifies no mail, so any billing mail is implied. Classes are the researcher's inference **(own reading)** from the FTC categories.
 
 - **Transactional:** payment failed or past due, trial ending, seat lapsed and exemption ending (FTC category 3, a change in standing of an ongoing account); a receipt or switch confirmation (category 1, and 3).
 - **Promotional:** a mail that announces or pitches paid plans to existing users. Its main purpose is to advertise, so it needs consent and the promotional frame.
