@@ -19,6 +19,8 @@ export interface SignInPanelProps {
   inDialog?: boolean;
   /** `next` itself tells a new, unverified account to check its inbox, so an email sign-up loads it directly rather than through the sign-in page, which would send the account to the email page. */
   signUpLandsOnNext?: boolean;
+  /** Given, a new email account stays on the page, signed in, and this is called in place of the navigation. */
+  onSignedUp?: () => void;
 }
 
 export interface ProviderButtonProps {
@@ -37,6 +39,7 @@ export interface PasswordFormProps {
   /** The level of the view's heading: h1 on the sign-in page, h3 under a dialog's title. */
   headingLevel: 'h1' | 'h3';
   signUpLandsOnNext?: boolean;
+  onSignedUp?: () => void;
   /** Whether this browser last signed in with a password. */
   lastUsed: boolean;
   /** The address typed, held by the panel so it survives a trip back to the provider buttons. */

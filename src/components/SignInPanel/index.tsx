@@ -52,6 +52,7 @@ const SignInPanel = ({
   onModeChange,
   inDialog = false,
   signUpLandsOnNext,
+  onSignedUp,
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
   const [mode, setMode] = useState<SignInMode>(initialMode);
@@ -158,6 +159,7 @@ const SignInPanel = ({
           onModeChange={switchMode}
           headingLevel={inDialog ? 'h3' : 'h1'}
           signUpLandsOnNext={signUpLandsOnNext}
+          onSignedUp={onSignedUp}
           lastUsed={lastUsedPassword}
           email={email}
           onEmailChange={setEmail}

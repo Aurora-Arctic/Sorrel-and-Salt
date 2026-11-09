@@ -73,6 +73,7 @@ const PasswordForm = ({
   onModeChange,
   headingLevel,
   signUpLandsOnNext,
+  onSignedUp,
   lastUsed,
   email,
   onEmailChange,
@@ -143,6 +144,11 @@ const PasswordForm = ({
       setPassword('');
       setAskingForCode(true);
       onCodeStep?.(true);
+      return;
+    }
+    if (signingUp && onSignedUp) {
+      setPending(false);
+      onSignedUp();
       return;
     }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its

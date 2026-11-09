@@ -6,16 +6,21 @@ import SignInDialog from '@/components/SignInDialog';
 // address, the sign-in page, is what a press for a new tab, or a browser without the script, gets.
 
 const push = vi.fn();
+const refresh = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push, replace: vi.fn(), refresh, prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/compendium',
 }));
 
 const social = vi.fn();
+const signUpEmail = vi.fn();
+const getSession = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   signIn: { social: (...args: unknown[]) => social(...args) },
+  signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
+  getSession: (...args: unknown[]) => getSession(...args),
 }));
 
 const trigger = (name = 'Sign In') => screen.getByRole('link', { name });
@@ -30,6 +35,7 @@ afterEach(() => {
   push.mockReset();
   social.mockReset();
   window.history.replaceState(null, '', '/');
+  vi.unstubAllGlobals();
 });
 
 describe('SignInDialog', () => {
@@ -150,5 +156,84 @@ describe('SignInDialog', () => {
     expect(
       within(dialog()).getByRole('button', { name: 'Sign In with a Passkey' }),
     ).toBeInTheDocument();
+  });
+
+  // A new account from the bar stays where it was, signed in: its next step is the inbox, and the link there returns here.
+  describe('a new email account', () => {
+    const createAccount = async (): Promise<HTMLElement> => {
+      signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
+      getSession.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+      render(
+        <SignInDialog
+          next="/compendium?q=rose"
+          configured={['google']}
+          label="Sign In"
+          mode="sign-up"
+        />,
+      );
+      await press(trigger());
+      await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
+      const field = (label: string) =>
+        within(dialog()).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
+      fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
+      fireEvent.change(field('Email Address'), { target: { value: 'someone@dialog.test' } });
+      fireEvent.change(field('Password'), {
+        target: { value: 'Testwort crowns the eastern hedge' },
+      });
+      await press(within(dialog()).getByRole('button', { name: 'Create Account' }));
+      return dialog();
+    };
+
+    it('turns the dialog to the inbox view over the page, without navigating', async () => {
+      const assign = vi.fn();
+      vi.stubGlobal('location', { assign });
+
+      const inbox = await createAccount();
+
+      expect(signUpEmail).toHaveBeenLastCalledWith(
+        expect.objectContaining({ callbackURL: '/compendium?q=rose' }),
+      );
+      expect(inbox).toHaveAccessibleName('Check Your Inbox');
+      expect(within(inbox).queryByRole('textbox')).toBeNull();
+      expect(within(inbox).getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
+        'href',
+        '/account/email?next=%2Fcompendium%3Fq%3Drose',
+      );
+      expect(assign).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it('closes onto the same page, refreshed so it shows the account signed in', async () => {
+      vi.stubGlobal('location', { assign: vi.fn() });
+      refresh.mockClear();
+      const inbox = await createAccount();
+
+      await press(within(inbox).getByRole('button', { name: 'Close' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+
+    // The sign-in that was here before: a held address earns no session, so there is no inbox of its own to check.
+    it('keeps the sign-in view for an address that earned no session', async () => {
+      vi.stubGlobal('location', { assign: vi.fn() });
+      getSession.mockResolvedValue({ data: null, error: null });
+      signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
+      render(
+        <SignInDialog next="/compendium" configured={['google']} label="Sign In" mode="sign-up" />,
+      );
+      await press(trigger());
+      await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
+      const field = (label: string) =>
+        within(dialog()).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
+      fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
+      fireEvent.change(field('Email Address'), { target: { value: 'held@dialog.test' } });
+      fireEvent.change(field('Password'), {
+        target: { value: 'Testwort crowns the eastern hedge' },
+      });
+      await press(within(dialog()).getByRole('button', { name: 'Create Account' }));
+
+      expect(dialog()).toHaveAccessibleName('Sign In');
+    });
   });
 });

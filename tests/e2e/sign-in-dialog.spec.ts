@@ -63,7 +63,7 @@ const field = (dialog: Locator, label: string) => dialog.getByLabel(new RegExp(`
 const scrolled = (page: Page) => page.evaluate(() => window.scrollY);
 
 test.describe('the sign-in dialog', () => {
-  test('opens over a public page from the bar, passes axe in both themes, and Close, Escape and a click outside each leave the page as it was', async ({
+  test('opens over a public page from the bar, passes axe in both themes, and Close, Escape and a click outside each leave the page as it was, and a new email account stays on it, told to check its inbox', async ({
     page,
   }) => {
     await page.goto('/help/glossary?x=1');
@@ -95,6 +95,36 @@ test.describe('the sign-in dialog', () => {
       await expect(signIn, how).toBeFocused();
       expect(await scrolled(page), how).toBe(at);
     }
+
+    // A new email account stays on this page, signed in, with the dialog turned to its inbox.
+    const here = '/help/glossary?x=1';
+    const address = `bar-${run}@sign-in-dialog.test`;
+    await signIn.click();
+    await dialog.getByRole('button', { name: 'Create an Account' }).click();
+    const creating = page.getByRole('dialog', { name: 'Create an Account' });
+    await creating.getByRole('button', { name: 'Continue with Email' }).click();
+    await field(creating, 'Name').fill('Testwort Barholder');
+    await field(creating, 'Email Address').fill(address);
+    await field(creating, 'Password').fill(PASSWORD);
+    await creating.getByRole('button', { name: 'Create Account' }).click();
+
+    const inbox = page.getByRole('dialog', { name: 'Check Your Inbox' });
+    await expect(inbox.getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
+      'href',
+      `/account/email?next=${encodeURIComponent(here)}`,
+    );
+    await expect(page).toHaveURL(here);
+    await scanBothThemes(page);
+    // The mailed link comes back here, through the confirmed view's Continue.
+    const mailed = new URL((await latestMessageTo(address)).text.match(VERIFY_LINK)![0]);
+    expect(mailed.searchParams.get('callbackURL')).toBe(
+      `/account/email?verified&next=${encodeURIComponent(here)}`,
+    );
+
+    await inbox.getByRole('button', { name: 'Close' }).click();
+    await expect(inbox).toHaveCount(0);
+    await expect(page).toHaveURL(here);
+    await expect(signIn).toHaveCount(0);
   });
 
   test('a signed-out invitation offers Create Account and Sign In as equal choices, and either brings the visitor back to press Accept Invitation', async ({

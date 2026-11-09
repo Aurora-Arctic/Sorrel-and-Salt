@@ -1,12 +1,18 @@
 'use client';
 
 import { type MouseEvent, type ReactElement, useRef, useState } from 'react';
-import { PendingLink } from '../../lib/navigation';
+import { emailPagePath } from '../../lib/account-email';
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
 import SignInPanel, { SIGN_IN_TITLES } from '../SignInPanel';
 import type { SignInDialogProps } from './types';
+import './index.scss';
+
+const INBOX_TITLE = 'Check Your Inbox';
+const INBOX_LEDE =
+  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back to this page.";
 
 /**
  * Sign In over the page it is on. A link to the sign-in page, so a press for a new tab and a
@@ -26,12 +32,16 @@ const SignInDialog = ({
   const next = safeReturnPath(asked);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(openingMode);
+  // A new email account, signed in by its sign-up, told to check its inbox here rather than sent anywhere.
+  const [inbox, setInbox] = useState(false);
+  const { refresh } = usePendingNavigation();
   const link = useRef<HTMLAnchorElement>(null);
 
   const openDialog = (event: MouseEvent<HTMLAnchorElement>): void => {
     if (opensElsewhere(event)) return;
     event.preventDefault();
     setMode(openingMode);
+    setInbox(false);
     setOpen(true);
   };
 
@@ -42,20 +52,41 @@ const SignInDialog = ({
       </PendingLink>
       {open && (
         <Modal
-          title={SIGN_IN_TITLES[mode]}
-          under={ledes?.[mode] && <p className="lede">{ledes[mode]}</p>}
-          // Nothing typed here is kept, so nothing is asked before it closes.
-          onClose={() => setOpen(false)}
+          title={inbox ? INBOX_TITLE : SIGN_IN_TITLES[mode]}
+          under={
+            inbox ? (
+              <p className="lede">{INBOX_LEDE}</p>
+            ) : (
+              ledes?.[mode] && <p className="lede">{ledes[mode]}</p>
+            )
+          }
+          // Nothing typed here is kept, so nothing is asked before it closes. After a sign-up the page
+          // is the same one, refreshed so the bar shows the account.
+          onClose={() => {
+            setOpen(false);
+            if (inbox) refresh();
+          }}
           returnTo={() => link.current}
         >
-          <SignInPanel
-            next={next}
-            configured={configured}
-            mode={openingMode}
-            onModeChange={setMode}
-            inDialog
-            signUpLandsOnNext={signUpLandsOnNext}
-          />
+          {inbox ? (
+            // The email page's form sends the new message, with the wait between mails it reads on the server.
+            <p className="sign-in-dialog__inbox">
+              <a className="btn btn--quiet" href={emailPagePath(next)}>
+                Confirm Your Email
+              </a>
+            </p>
+          ) : (
+            <SignInPanel
+              next={next}
+              configured={configured}
+              mode={openingMode}
+              onModeChange={setMode}
+              inDialog
+              signUpLandsOnNext={signUpLandsOnNext}
+              // From an invitation the invitation itself is the inbox view.
+              onSignedUp={signUpLandsOnNext ? undefined : () => setInbox(true)}
+            />
+          )}
         </Modal>
       )}
     </>

@@ -1,0 +1,13 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The inbox view's one link, centred under the sentence; full width on a phone, as the dialog's buttons are.
+.sign-in-dialog__inbox {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+
+  @media (width <= #{$shell-phone-width}) {
+    flex-direction: column;
+  }
+}
