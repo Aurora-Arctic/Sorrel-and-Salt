@@ -22,7 +22,7 @@ import { stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
 import { categories } from '@/modules/vocabulary/schema/categories';
-import { assertMembership, type Membership } from '@/modules/coven';
+import { assertMembership, tryMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
@@ -173,16 +173,10 @@ export async function perCoven<T>(
         const spellIds = [
           ...new Set(refs.filter((ref) => ref.workspaceId === workspaceId).map((ref) => ref.id)),
         ];
-        try {
-          const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-          return [workspaceId, await read(membership, spellIds)] as [
-            string,
-            (spellId: string) => T,
-          ];
-        } catch (error) {
-          if (error instanceof Forbidden) return [workspaceId, error] as [string, Forbidden];
-          throw error;
-        }
+        const membership = await tryMembership(session, workspaceId, { spell: ['read'] });
+        if (membership instanceof Forbidden)
+          return [workspaceId, membership] as [string, Forbidden];
+        return [workspaceId, await read(membership, spellIds)] as [string, (spellId: string) => T];
       }),
     ),
   );

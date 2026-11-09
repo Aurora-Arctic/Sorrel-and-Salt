@@ -24,7 +24,7 @@ import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { referenceLinks } from '../schema/reference-links';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, tryMembership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
 import { curatedNames, describeEntry, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
@@ -53,12 +53,8 @@ export async function proofFor(
   workspaceId: string,
 ): Promise<Membership | undefined> {
   if (!session) return undefined;
-  try {
-    return await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  } catch (error) {
-    if (error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  const proof = await tryMembership(session, workspaceId, { ingredient: ['read'] });
+  return proof instanceof Forbidden ? undefined : proof;
 }
 
 /** The parsed input as columns, every optional one written (`null` for none) so an update replaces the row. */
