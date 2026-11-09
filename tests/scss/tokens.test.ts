@@ -389,3 +389,20 @@ describe("the faceted jar's two bands are solid theme tokens that swap roles bet
     }
   });
 });
+
+// An About Us pillar card wears one hue: a 3px rule, the kicker and the icon in it, on a 5% wash of it over the card (claude-docs/components/about-pillars.md).
+// The kicker is text (4.5:1) and the rule and icon are marks (3:1), on the wash and on the page the band sits on.
+describe('the pillar hues clear their floors on their card wash and on the page', () => {
+  it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
+    const tokens = surfaces(theme);
+    const page = toHex(tokens['--surface-page'], theme);
+    const card = toHex(tokens['--surface-card'], theme);
+
+    for (const token of ['--accent', '--clay', '--sloe', '--woad']) {
+      const hue = toHex(tokens[token], theme);
+      const wash = mixed(hue, card, 0.05);
+      expect(contrastRatio(hue, wash), `${token} text on its wash`).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(hue, page), `${token} mark on the page`).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

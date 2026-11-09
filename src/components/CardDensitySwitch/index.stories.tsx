@@ -21,7 +21,7 @@ const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
   <WorkshopPathname.Provider value="/coven/fixture-coven/ingredients">
-    <PublicFrame>
+    <PublicFrame configured={['discord', 'google', 'facebook', 'microsoft']}>
       <main>
         <div className="page-column">
           <IngredientSearch

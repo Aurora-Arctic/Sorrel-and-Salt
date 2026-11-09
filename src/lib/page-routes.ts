@@ -3,6 +3,7 @@
 // The address of every page, a dynamic segment as its folder names it.
 export const PAGE_PATTERNS: readonly string[] = [
   '/',
+  '/about',
   '/access-paused',
   '/account',
   '/account/email',

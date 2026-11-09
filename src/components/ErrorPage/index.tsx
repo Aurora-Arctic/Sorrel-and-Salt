@@ -15,7 +15,7 @@ const ErrorPage = ({
 }: ErrorPageProps): ReactElement => {
   const Frame = withinMain ? 'div' : 'main';
   return (
-    <Frame className={withinMain ? undefined : 'page-frame'}>
+    <Frame className={withinMain ? 'page-frame page-frame--in-column' : 'page-frame'}>
       <title>{title}</title>
       <div className="error-page">
         <PageHeader title={title} lede={reason} />

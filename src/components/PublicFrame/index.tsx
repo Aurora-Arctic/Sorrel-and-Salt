@@ -16,7 +16,7 @@ const COMPENDIUM_LINK: readonly SiteLink[] = [
   { label: 'Compendium', href: '/compendium', base: '/compendium' },
 ];
 
-const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
+const PublicFrame = ({ configured, children }: PublicFrameProps): ReactElement => (
   <div className="public-frame">
     <a className="skip-link" href="#main">
       Skip to Content
@@ -29,7 +29,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
         <SiteNav links={COMPENDIUM_LINK} />
         <div className="public-frame__end">
           <Suspense fallback={<SignInLink />}>
-            <SignInLinkWithQuery />
+            <SignInLinkWithQuery configured={configured} />
           </Suspense>
           {/* The shell’s wrapper (AppShell/index.scss). */}
           <span className="app-shell__theme">

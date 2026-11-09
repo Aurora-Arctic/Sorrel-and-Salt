@@ -332,6 +332,36 @@ describe('updateDocument', () => {
 });
 
 // Direct-id calls: E's same call succeeds, A holds no site role and F passes only the curation check, so each refusal is the admin check's.
+describe('the About Us document is edited by a keeper alone', () => {
+  it('refuses a direct write from a non-keeper, and the same request succeeds for a keeper', async () => {
+    const aboutId = await insertDocument(
+      sql,
+      { key: 'about', title: 'Fixture About', lede: 'Who the fixture is.' },
+      E.id,
+    );
+    await insertDocumentVersion(sql, aboutId, { number: 1, body: 'Fixture about.' }, E.id);
+    const write = (session: Session) =>
+      saveDocumentDraft(session, aboutId, {
+        body: 'Fixture about, edited.',
+        expectedRevision: null,
+      });
+    // Preconditions: the callers are a curator, a steward and a practitioner, none a keeper, and the keeper is.
+    expect(() => assertCurator(asUser(F))).not.toThrow();
+    expect([asUser(A).role, asUser(B).role]).toEqual(['user', 'user']);
+
+    for (const who of [F, B, A]) {
+      await expect(write(asUser(who)), who.id).rejects.toBeInstanceOf(Forbidden);
+    }
+    expect(await versionsOf(aboutId)).toHaveLength(1);
+
+    await expect(write(asUser(E))).resolves.toMatchObject({
+      number: 2,
+      body: 'Fixture about, edited.',
+    });
+    expect(await versionsOf(aboutId)).toHaveLength(2);
+  });
+});
+
 describe('the editing services are a keeper’s alone', () => {
   const CALLS: [string, (session: Session) => Promise<unknown>][] = [
     ['readDocumentForEditing', (session) => readDocumentForEditing(session, 'privacy')],

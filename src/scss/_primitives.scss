@@ -560,6 +560,12 @@
     }
   }
 
+  // A frame drawn inside a layout's `.page-column` (the public 404) takes back the column's top and
+  // side padding, so it fills the window exactly as a frame of its own does and adds no scroll.
+  .page-column > .page-frame--in-column {
+    margin: calc(-1 * #{space(6)}) calc(-1 * #{space(4)}) 0;
+  }
+
   // The front door fills the whole window, so the footer always follows below the fold; the other frames
   // leave the footer's room (`.welcome-page` is also Backdrop's hook for its larger art).
   .page-frame.welcome-page {
@@ -1303,7 +1309,7 @@
     gap: space(4);
   }
 
-  $card-landing-card-width: 22rem;
+  $card-landing-card-width: $narrow-column;
 
   .card-landing__words {
     @include stack(6);
@@ -1333,7 +1339,8 @@
     align-items: start;
     max-width: calc(#{$measure} + #{$card-landing-card-width} + #{space(8)});
 
-    @media (max-width: #{$shell-phone-width}) {
+    // Under the tablet width the words beside a full-width card would be a column of a few words a line.
+    @media (max-width: #{$shell-tablet-width}) {
       grid-template-columns: minmax(0, 1fr);
     }
   }
@@ -1349,32 +1356,28 @@
     grid-row: 2;
     grid-column: 2;
 
-    @media (max-width: #{$shell-phone-width}) {
+    @media (max-width: #{$shell-tablet-width}) {
       position: static;
       grid-row: auto;
       grid-column: 1;
+      justify-self: start;
+      max-width: $card-landing-card-width;
       margin-top: space(3);
     }
-  }
-
-  .card-landing--single .card-landing__grid {
-    grid-template-columns: minmax(0, 1fr);
-    width: 100%;
-    max-width: $measure;
-    margin-inline: auto;
-  }
-
-  .card-landing--single .card-landing__grid > .card-landing__card {
-    position: static;
-    grid-row: auto;
-    grid-column: 1;
-    justify-self: start;
-    max-width: $card-landing-card-width;
-    margin-top: space(3);
 
     @media (max-width: #{$shell-phone-width}) {
       max-width: none;
     }
+  }
+
+  // Beside the words, the invitation reads down their left edge, not centred as on its own page.
+  .card-landing__card .card-page-header,
+  .card-landing__card .auth-title {
+    text-align: start;
+  }
+
+  .card-landing__card .invitation-acceptance__row {
+    justify-content: flex-start;
   }
 
   .card-landing__head {

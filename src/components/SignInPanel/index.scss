@@ -2,13 +2,17 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// One column, on the page and in a dialog alike; in a dialog the modal's box is the ground and its body the padding.
+.sign-in-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(4);
+}
+
 // The page around it is `.page-frame--narrow`. Compounded with `.panel` because in the app the primitives compile as
 // `body .panel`, which outranks a lone class, while the workshop scopes them with `:where()`.
 .sign-in-panel.panel {
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: space(4);
   width: 100%;
 
   padding: space(5) space(6) space(6);
@@ -19,6 +23,13 @@
 .sign-in-panel--code.sign-in-panel {
   grid-template-columns: min(100%, 22rem);
   justify-content: center;
+}
+
+// The page's head: Back over the title in the email view, as close to it as the form's own rows.
+.sign-in-panel__head {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
 }
 
 .sign-in-panel__header {
@@ -103,7 +114,6 @@
   display: flex;
   flex-direction: column;
   gap: space(3);
-  margin-top: space(4);
 
   // Prose and notices wrap at the column's width: a paragraph is capped at the reading measure and
   // would otherwise widen the column past the card.
@@ -150,10 +160,6 @@
   cursor: pointer;
 }
 
-.sign-in-panel__password-heading {
-  margin: 0;
-}
-
 .sign-in-panel__password .form__actions > .btn {
   flex: 1 1 100%;
 }
@@ -163,9 +169,22 @@
   text-align: center;
 }
 
+// The mode switch's button takes a line of its own, under its sentence.
+.sign-in-panel__switch--mode {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: center;
+}
+
 div.sign-in-panel__switch {
   display: flex;
   flex-wrap: wrap;
   gap: space(2);
   justify-content: center;
+}
+
+// The Last Used mark under a dialog's title, which cannot carry it without putting it in the dialog's name.
+.sign-in-panel__last-used-note {
+  margin: 0;
 }

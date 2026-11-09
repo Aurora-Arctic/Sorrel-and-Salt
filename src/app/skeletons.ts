@@ -8,6 +8,7 @@ import { PrivacySkeleton } from './(public)/privacy/skeleton';
 import { PrivacyVersionSkeleton } from './(public)/privacy/versions/[number]/skeleton';
 import { CodeOfEthicsSkeleton } from './(public)/code-of-ethics/skeleton';
 import { CodeOfEthicsVersionSkeleton } from './(public)/code-of-ethics/versions/[number]/skeleton';
+import { AboutSkeleton } from './(public)/about/skeleton';
 import { DisclaimerSkeleton } from './(public)/disclaimer/skeleton';
 import { DisclaimerVersionSkeleton } from './(public)/disclaimer/versions/[number]/skeleton';
 import { SupportSkeleton } from './(public)/support/skeleton';
@@ -82,6 +83,7 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/privacy/versions/[number]': { host: 'main', Skeleton: PrivacyVersionSkeleton },
   '/code-of-ethics': { host: 'main', Skeleton: CodeOfEthicsSkeleton },
   '/code-of-ethics/versions/[number]': { host: 'main', Skeleton: CodeOfEthicsVersionSkeleton },
+  '/about': { host: 'main', Skeleton: AboutSkeleton },
   '/disclaimer': { host: 'main', Skeleton: DisclaimerSkeleton },
   '/disclaimer/versions/[number]': { host: 'main', Skeleton: DisclaimerVersionSkeleton },
   '/support': { host: 'main', Skeleton: SupportSkeleton },

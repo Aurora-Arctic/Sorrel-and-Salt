@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 .error-page {
-  @include stack(5);
+  @include centred-block;
 }
 
 .error-page__reference,

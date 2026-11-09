@@ -15,7 +15,7 @@ describe('SiteFooter', () => {
     render(<SiteFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(7);
+    expect(screen.getAllByRole('link')).toHaveLength(8);
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
       '/coven/hearth?support=',
@@ -52,6 +52,15 @@ describe('SiteFooter', () => {
         name: 'Disclaimer',
       }),
     ).toHaveAttribute('href', '/disclaimer');
+  });
+
+  it('links to the About Us page', () => {
+    render(<SiteFooter />);
+    expect(
+      within(screen.getByRole('navigation', { name: 'Footer' })).getByRole('link', {
+        name: 'About Us',
+      }),
+    ).toHaveAttribute('href', '/about');
   });
 
   it('links to the terms of use', () => {

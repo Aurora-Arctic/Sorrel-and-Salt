@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink } from '../../lib/navigation';
+import { HelpBackLink } from '../HelpArticleView/back-link';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import { emphasise } from './emphasis';
@@ -18,6 +19,7 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
   <div className="help-page help-results">
     <PageHeader title="Help" />
     <HelpSearchForm query={query} />
+    <HelpBackLink href="/help" title="Help" />
     <h2>Search Help</h2>
     {results.length > 0 ? (
       <>

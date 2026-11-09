@@ -38,6 +38,7 @@ describe('robots', () => {
       '/support',
       '/privacy',
       '/disclaimer',
+      '/about',
       '/terms',
       '/code-of-ethics',
       '/help',

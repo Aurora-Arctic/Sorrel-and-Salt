@@ -61,7 +61,12 @@ export function giveFocusBack(opener: Element | null, returnTo: ModalProps['retu
     opener instanceof HTMLElement && opener.isConnected && !opener.closest('[hidden], [inert]')
       ? opener
       : (returnTo?.(opener) ?? pageHeading());
-  target?.focus();
+  if (!target) return;
+  // One already in the window is focused where it is: a plain focus() would scroll to a link in the sticky bar,
+  // which the root's `scroll-padding-top` counts as hidden under the bar.
+  const { top, bottom, left, right } = target.getBoundingClientRect();
+  const inWindow = bottom > 0 && top < window.innerHeight && right > 0 && left < window.innerWidth;
+  target.focus(inWindow ? { preventScroll: true } : undefined);
 }
 
 const Modal = ({
@@ -75,6 +80,7 @@ const Modal = ({
   actionsUnderClose,
   under,
   focusTitle = false,
+  headerAlign = 'start',
   aboveName,
   onClose,
   returnTo,
@@ -156,6 +162,14 @@ const Modal = ({
     }
     wasLoading.current = loading;
   }, [loading, focusTitle]);
+  // A view the contents switch to whose heading is the title takes the focus there as it turns on.
+  const wasTitled = useRef(focusTitle);
+  useEffect(() => {
+    if (focusTitle && !wasTitled.current && ref.current?.open) {
+      ref.current.querySelector<HTMLElement>('.modal-dialog__title')?.focus();
+    }
+    wasTitled.current = focusTitle;
+  }, [focusTitle]);
   // open, fading, then closed; closed asks the owner once, in an effect, so no render reads a ref.
 
   const [phase, setPhase] = useState<ModalPhase>('open');
@@ -287,7 +301,11 @@ const Modal = ({
       }}
     >
       <div
-        className={['modal-dialog__header', topEnd !== undefined && 'modal-dialog__header--topped']
+        className={[
+          'modal-dialog__header',
+          topEnd !== undefined && 'modal-dialog__header--topped',
+          headerAlign === 'center' && 'modal-dialog__header--centered',
+        ]
           .filter(Boolean)
           .join(' ')}
       >

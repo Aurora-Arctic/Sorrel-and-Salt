@@ -16,6 +16,7 @@ import IconTip, {
   ItalicIcon,
   LinkIcon,
   NumberListIcon,
+  PullQuoteIcon,
   RedoIcon,
   TableIcon,
   UndoIcon,
@@ -38,6 +39,25 @@ interface ToolbarButton {
 const inBlock = (type: string) => (editor: EditorRef) =>
   Boolean(editor.selection) && editor.api.some({ match: { type } });
 
+// A quote wraps its paragraph, so taking it back is an unwrap; toggleBlock would only wrap again.
+function toggleQuote(editor: EditorRef): void {
+  if (inBlock(KEYS.blockquote)(editor))
+    editor.tf.unwrapNodes({ match: { type: KEYS.blockquote }, split: true });
+  else editor.tf.toggleBlock(KEYS.blockquote);
+}
+
+// Wrapping or unwrapping a block leaves the selection null or pointing at a path that no longer holds text, which
+// stops the pressed state and a second press; the caret goes back to the end of the same top-level block.
+function keepSelection(editor: EditorRef, change: () => void): void {
+  const index = editor.selection?.focus.path[0];
+  change();
+  if (index === undefined || index >= editor.children.length) return;
+  const end = editor.api.end([index]);
+  editor.tf.select(end);
+  // The remounted block has no browser selection yet, and the browser would report none back.
+  setTimeout(() => editor.tf.focus({ at: end }), 0);
+}
+
 function nextBlockPath(editor: EditorRef): [number] {
   const index = editor.selection?.focus.path[0] ?? editor.children.length - 1;
   return [index + 1];
@@ -45,7 +65,7 @@ function nextBlockPath(editor: EditorRef): [number] {
 
 const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
   {
-    label: 'Headings',
+    label: 'Blocks',
     buttons: [
       {
         label: 'Heading 2',
@@ -58,6 +78,12 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
         icon: <Heading3Icon />,
         pressed: inBlock(KEYS.h3),
         run: (editor) => editor.tf.toggleBlock(KEYS.h3),
+      },
+      {
+        label: 'Pull Quote',
+        icon: <PullQuoteIcon />,
+        pressed: inBlock(KEYS.blockquote),
+        run: (editor) => keepSelection(editor, () => toggleQuote(editor)),
       },
     ],
   },

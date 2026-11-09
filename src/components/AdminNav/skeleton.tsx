@@ -4,6 +4,7 @@ import { AdminInvitationsSkeleton } from '../AdminInvitations/skeleton';
 import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
 import { CompendiumListSkeleton } from '../CompendiumList/skeleton';
 import { DocumentEditorSkeleton } from '../DocumentEditor/skeleton';
+import { DocumentMailingSkeleton } from '../DocumentMailingPanel/skeleton';
 import { GroupListSkeleton } from '../GroupList/skeleton';
 import { HelpOutlineSkeleton } from '../HelpOutline/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
@@ -15,7 +16,6 @@ import { PrivilegeLedgerSkeleton } from '../PrivilegeLedger/skeleton';
 import { UserListSkeleton } from '../UserList/skeleton';
 import { SupportListSkeleton } from '../SupportRequests/skeleton';
 import PageHeader from '../PageHeader';
-import { PanelSkeleton } from '../Skeleton/panel';
 import TabbedPage from '../TabbedPage';
 import type { PageTab } from '../TabbedPage/types';
 import { ADMIN_PAGES } from './sections';
@@ -45,9 +45,10 @@ const panels = (): Record<string, ReactNode> => ({
   '/keepers/business-cards': <BusinessCardsBodySkeleton />,
   '/keepers/documents/terms': documentPanel,
   '/keepers/documents/disclaimer': documentPanel,
+  '/keepers/documents/about': documentPanel,
   '/keepers/documents/code-of-ethics': documentPanel,
   '/keepers/documents/privacy': documentPanel,
-  '/keepers/documents': <PanelSkeleton fields={2} />,
+  '/keepers/documents': <DocumentMailingSkeleton />,
   '/keepers/help': <HelpOutlineSkeleton />,
 });
 

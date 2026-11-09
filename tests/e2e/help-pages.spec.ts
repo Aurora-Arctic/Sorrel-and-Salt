@@ -209,6 +209,23 @@ test.describe('the staff help pages', () => {
 });
 
 test.describe('search', () => {
+  test('Enter on an empty box stays put, and a back link reaches /help', async ({ page }) => {
+    await page.goto('/help/search?q=');
+    const box = page.getByRole('search').getByRole('searchbox');
+
+    await box.press('Enter');
+    await expect(page).toHaveURL(/\/help\/search\?q=$/);
+    await box.fill('   ');
+    await box.press('Enter');
+    await expect(page).toHaveURL(/\/help\/search\?q=$/);
+
+    await box.fill(STAFF_WORD);
+    await box.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`/help/search\\?q=${STAFF_WORD}$`));
+
+    await page.getByRole('link', { name: 'Back to Help' }).click();
+    await expect(page).toHaveURL(/\/help$/);
+  });
   test("a curator's search links a staff FAQ entry to its anchor on the staff index", async ({
     page,
   }) => {

@@ -95,7 +95,8 @@ Better Auth looks it up ("Provisional accounts",
 load of `/sign-in?next=…`, whose server redirect sends a signed-in account on: to
 `next` or its landing, and an unverified one to the email page first. A sign-up is
 signed in (`autoSignIn: true`): the form checks for a session and follows it on
-the same way. With no session the address was held, and the form says a mail has
+the same way, except from an invitation, which loads the invitation itself so that
+its page can say to check the inbox ([`components/sign-in-dialog.md`](../components/sign-in-dialog.md)). With no session the address was held, and the form says a mail has
 been sent to it.
 
 ### Lockout
