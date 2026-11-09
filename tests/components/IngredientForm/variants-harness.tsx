@@ -151,7 +151,7 @@ export const reference = (id: string, title: string, locator: string) => ({
 export const COPIED = [
   'Description',
   'Safety Notes',
-  'Element',
+  'Elements',
   'Celestial Bodies',
   'Zodiac Signs',
   'Colours',

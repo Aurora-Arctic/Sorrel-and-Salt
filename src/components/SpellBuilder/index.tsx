@@ -33,7 +33,7 @@ import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories } from './categories-field';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';

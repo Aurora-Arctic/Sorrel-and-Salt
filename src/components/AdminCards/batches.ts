@@ -22,7 +22,7 @@ export const STATUS_LABEL: Record<BatchStatus, string> = {
   live: 'Live',
   revoked: 'Revoked',
   expired: 'Expired',
-  'used-up': 'Used up',
+  'used-up': 'Used Up',
 };
 
 export const BATCH_STATUSES = Object.keys(STATUS_LABEL) as BatchStatus[];

@@ -8,6 +8,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { useDebouncedValue } from '../../lib/debounce';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
+import { fold } from '@/lib/text';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
 import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
@@ -90,7 +91,7 @@ const FIELDS = ['workedOn', 'note', 'participants', 'visibility'];
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-const sameText = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const sameText = (a: string, b: string) => fold(a) === fold(b);
 
 export default function RecordWorkingForm({
   workspaceId,

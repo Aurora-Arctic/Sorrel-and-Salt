@@ -995,7 +995,7 @@ const IngredientForm = ({
             the answer "none", so there is no None to choose. */}
                     <MultiSelectField
                       name="elements"
-                      label="Element"
+                      label="Elements"
                       placeholder="Add an element"
                       options={ELEMENT_OPTIONS}
                     />

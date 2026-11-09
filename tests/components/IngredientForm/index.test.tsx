@@ -174,7 +174,7 @@ describe('IngredientForm', () => {
       choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
       type('Description', 'A fixture herb.');
-      chooseEach('Element', 'Water', 'Air');
+      chooseEach('Elements', 'Water', 'Air');
       addEntry('Celestial Body', 'Mercury');
       addEntry('Celestial Body', 'Venus');
       addEntry('Zodiac Sign', 'Gemini');
@@ -251,7 +251,7 @@ describe('IngredientForm', () => {
       choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
       type('Description', 'A fixture herb.');
-      chooseEach('Element', 'Air');
+      chooseEach('Elements', 'Air');
       addEntry('Celestial Body', 'Mercury');
       addEntry('Folk Name', 'Hedge Fixture');
       await pickCategory('Trialcraft');
@@ -443,10 +443,10 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      chooseEach('Element', 'Earth', 'Air');
+      chooseEach('Elements', 'Earth', 'Air');
       save();
 
-      const element = select('Element');
+      const element = select('Elements');
       await waitFor(() => expectErrorOn(element));
       expect(element).toHaveFocus();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();

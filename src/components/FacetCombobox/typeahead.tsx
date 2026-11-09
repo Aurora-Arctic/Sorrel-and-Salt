@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
+import { fold } from '@/lib/text';
 import Combobox from '../Combobox';
 import { ComboboxEntry } from '../Combobox/entry';
 import { matchesLabelOrGroup } from '../Combobox/match';
@@ -39,7 +40,7 @@ export function FacetTypeahead({
 }): ReactElement {
   const [text, setText] = useState('');
   const isOut = (choice: ComboboxChoice) => Boolean(choice.disabled);
-  const needle = text.trim().toLowerCase();
+  const needle = fold(text);
 
   const options: ComboboxOption[] = choices
     .filter(

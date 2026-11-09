@@ -35,6 +35,7 @@ import type {
   VariantFormValues,
   VariantSectionKey,
 } from './types';
+import { fold } from '@/lib/text';
 
 // The form's values against the shape the schema and the mutation take, and the one mapping from
 // an issue's path back to a field, which the resolver's issues and the server's `fieldErrors` use
@@ -63,7 +64,7 @@ export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
   description: { label: 'Description', one: 'description', many: 'description' },
   safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
-  elements: { label: 'Element', one: 'element', many: 'elements' },
+  elements: { label: 'Elements', one: 'element', many: 'elements' },
   celestialBodies: { label: 'Celestial Bodies', one: 'celestial body', many: 'celestial bodies' },
   zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
   colors: { label: 'Colours', one: 'colour', many: 'colours' },
@@ -397,13 +398,6 @@ function placeIn(
   }
   return index === undefined ? field : undefined;
 }
-
-/**
- * An entry's key, as the schema folds a list's text: trimmed, its case set
- * aside. `toLowerCase` rather than the type-ahead's `toLocaleLowerCase`, since
- * this key must agree with the database's own fold, not the reader's locale.
- */
-export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
  * The name a variant's picked form now goes by, when a keeper has renamed it since the pick;

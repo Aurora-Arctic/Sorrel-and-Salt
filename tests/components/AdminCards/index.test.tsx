@@ -327,7 +327,7 @@ describe('AdminCards', () => {
     ).toBeInTheDocument();
     expect(within(second).queryByRole('button', { name: /^Revoke Batch/ })).toBeNull();
     expect(within(first).getByText('Live')).toBeInTheDocument();
-    expect(within(second).getByText('Used up')).toBeInTheDocument();
+    expect(within(second).getByText('Used Up')).toBeInTheDocument();
     expect(within(third).getByText('Revoked')).toBeInTheDocument();
     expect(within(fourth).getByText('Expired')).toBeInTheDocument();
     // Expires is a UTC day; Minted On keeps the time, in the viewer's zone.

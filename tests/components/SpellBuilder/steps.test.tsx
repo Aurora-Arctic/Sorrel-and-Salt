@@ -15,6 +15,7 @@ import { UNMEASURABLE_UNIT } from '@/modules/grimoire/validation/step-unit';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { useTurkishCaseFolding } from '../../support/turkish-locale';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -318,6 +319,22 @@ describe('the spell builder’s Add to Jar', () => {
 
     expect(stepRows()).toHaveLength(1);
     expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
+  });
+
+  it('refuses a one-off already in the jar however a Turkish-locale browser folds its capital I', async () => {
+    const restore = useTurkishCaseFolding();
+    try {
+      suggest();
+      renderBuilder();
+
+      await addOneOff('Irisic');
+      await addOneOff('irisic');
+
+      expect(stepRows()).toHaveLength(1);
+      expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
+    } finally {
+      restore();
+    }
   });
 
   it('saves each step as its ingredient and form, or its one-off name and form, with its amount', async () => {

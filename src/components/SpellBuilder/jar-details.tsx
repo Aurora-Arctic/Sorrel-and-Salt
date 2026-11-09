@@ -4,7 +4,7 @@ import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 

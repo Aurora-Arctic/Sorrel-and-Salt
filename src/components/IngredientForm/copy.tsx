@@ -9,7 +9,8 @@ import { plural } from '@/lib/text';
 import IconTip, { CopyIcon } from '../IconTip';
 import Notice from '../Notice';
 import { RemoveIcon } from './icons';
-import { FIELD_NOUNS, entryText, fold } from './values';
+import { fold } from '@/lib/text';
+import { FIELD_NOUNS, entryText } from './values';
 import type {
   CopiedField,
   CopyFromIngredientProps,

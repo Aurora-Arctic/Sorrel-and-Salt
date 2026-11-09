@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useId, useMemo, useState } from 'react';
+import { fold } from '@/lib/text';
 import Combobox from '../Combobox';
 import { LazySortableEntries } from '../Combobox/lazy-sortable';
 import { FieldError } from '../Field';
@@ -45,14 +46,14 @@ export function HelpSubPagesField({
   const moving = (choice: HelpSubPageChoice) =>
     choice.parentId !== null && choice.parentId !== guideId;
 
-  const typed = text.trim().toLowerCase();
+  const typed = fold(text);
   const options = candidates
     .filter(
       (choice) =>
         choice.id !== guideId &&
         !value.includes(choice.id) &&
         NARROWNESS[choice.audience] >= NARROWNESS[audience] &&
-        (typed === '' || choice.title.toLowerCase().includes(typed)),
+        (typed === '' || fold(choice.title).includes(typed)),
     )
     .map((choice) => ({
       value: choice.id,

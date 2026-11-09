@@ -13,7 +13,7 @@
 ### Invitation Cards (`index.tsx`)
 
 - **A region named "Invitation Cards" with one row per batch**: batch (the first block of the batch id, `batchName`), status, **Beta** (a check for a batch minted for beta testers, a cross otherwise, with "Yes" or "No" as hidden text), cards, accepted, refused opens, minted on, expires, and Revoke Batch. Counts come from SQL. Table cell values are sentence case.
-- **Status is `batchStatus()` in `batches.ts`, read from the counts**, not from one card's `revokedAt`, since the head card may have been accepted. Any card pending is Live. Otherwise, every card accepted is Used up. Otherwise, a passed expiry is Expired. Otherwise Revoked.
+- **Status is `batchStatus()` in `batches.ts`, read from the counts**, not from one card's `revokedAt`, since the head card may have been accepted. Any card pending is Live. Otherwise, every card accepted is Used Up. Otherwise, a passed expiry is Expired. Otherwise Revoked.
 - **Revoke Batch shows while a card of the batch is pending.** Revoking is by batch only. `ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted keep their access. The Revoke column is red like the People table's Impersonate column.
 
 ### Invitation Cards filter (`filter.tsx`, `filter-params.ts`)
