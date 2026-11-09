@@ -6,7 +6,7 @@ Findings are ranked by severity (high, medium, low). High means the copies have 
 
 Each finding records whether it has been fixed in its **Status** line and in the table below. Hours are estimates, not measurements.
 
-Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged a real bug and every high finding (40 findings). Every other medium and low finding becomes a grouped task in the Z. Cleanup milestone and shows "Moved to M17.n", naming the task (MC.1 → MC.9). D-130 shows that the owner keeps `lint:unused` non-blocking.
+Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged a real bug and every high finding (40 findings). Every other medium and low finding becomes a grouped task in the Z. Cleanup milestone and shows "Moved to MC.n", naming the task (MC.1 → MC.9). Each finding's hours are the audit's first estimate; the MC tasks are estimated at about a quarter of their findings' total, scaled to finished de-duplication tasks of the same size (MB.206 → MB.226). D-130 shows that the owner keeps `lint:unused` non-blocking.
 
 ## Summary
 
@@ -5145,4 +5145,44 @@ These ideas were looked at and not recorded as findings, because the code shows 
 
 ## Draft rules
 
-To be written once the fixes land.
+Drafts for the owner to review. None of these binds yet. An accepted rule moves to the home named beside it, and its guard, where it has one, is already on this branch. Each rule comes from a pattern the audit found more than once.
+
+### Before writing code
+
+1. **Search for the shared piece before writing one.** Before adding a helper, hook, component, mixin or test helper, grep `src/lib/`, `src/components/`, `src/scss/_mixins.scss`, `tests/support/` and `tests/e2e/` for its job, not only its name. Most findings were a second copy of something that already existed (D-3, D-14, D-18, D-144). Home: `CLAUDE.md`, "Conventions".
+2. **One name, one meaning.** Never export a function from `src/lib` under a name another file already exports. Two `covenSlugOf` functions took different arguments, and the wrong import compiled (D-32). Guard: `tests/guards/lib-names.test.ts`. Home: `CLAUDE.md`, "Conventions".
+3. **The second copy is the time to share.** When a block is about to be written a second time, and both copies would have to change together, move it into a shared piece instead. A third copy is never written. Copies drifted in every high finding: one copy got a fix and the others did not (D-1, D-24, D-28). Home: `CLAUDE.md`, "Conventions".
+
+### The shared pieces to use
+
+4. **Pages** build metadata with `publicPageMetadata` (public pages) or `pageTitle` (signed-in pages) from `src/lib/page-metadata.ts`, turn a missing row into a 404 with `orNotFound` from `src/lib/or-not-found.ts`, and read a numbered list with `readNumberedPage` or `readCursorPage` from `src/lib/numbered-page.ts`. Guards: `page-metadata`, `not-found`, `pagination`. Home: `.claude/rules/components.md` (or a pages section beside it).
+5. **Failure text** comes from `failureMessage` in `src/lib/graphql-failure.ts`, and the sign-in sentences come from `src/lib/auth-messages.ts`. A component never maps a GraphQL error code to a sentence itself. Guards: `failure-message`, `auth-messages`. Home: `.claude/rules/components.md`.
+6. **Browser behaviour has one home each:**
+   - outside-press dismissal: `useDismiss` (`src/lib/use-dismiss.ts`)
+   - reduced motion and the 400 ms fade limit: `prefersReducedMotion` and `FADE_LIMIT_MS` (`src/lib/motion.ts`)
+   - matching typed text: `fold` (`src/lib/text.ts`)
+   - showing a quantity: `formatQuantity` (`src/lib/quantity.ts`)
+   - downloading a file: `saveFile` (`src/lib/save-file.ts`)
+   - a drag handle: `GripHandle` (`src/components/GripHandle/`)
+
+   Guards: `dismissal`, `reduced-motion`, `text-folding`, `sortable-wiring`. Home: `.claude/rules/components.md`.
+
+7. **Breakpoints** are written with the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`), never as a hand-written `@media` width query. Guard: `breakpoints`. Home: `.claude/rules/components.md`.
+8. **Tests:**
+   - the shared values (`ORIGIN`, `MAILPIT_URL`, `WORKSPACE_ID`, `USER_ID`, `PASSWORD`) come from `tests/support/constants.ts`
+   - a Vitest database client opens through `useTestDatabase` (`tests/support/db/database.ts`)
+   - an e2e client opens through `withE2eSql` (`tests/e2e/database.ts`)
+   - a coven is inserted with `insertWorkspace` (`tests/support/db/insert-workspace.ts`)
+   - a held server answer uses `holdServerAnswers` (`tests/e2e/hold-server-answers.ts`)
+
+   Guards: `test-constants`, `test-database-client`, `workspace-inserts`, `e2e-shared-helpers`. Home: `.claude/rules/testing.md`.
+
+### When adding a shared piece
+
+9. **A shared piece lands with its guard, in the same commit.** The guard is seen failing once with a copy put back. If some callers can't move yet, they go in an allowlist inside the guard, and the allowlist is empty before the task's PR opens. Every guard this branch added follows that shape. Home: `CLAUDE.md`, "The sweep-task rule" (as its code-sweep half).
+10. **Move every caller, not only the ones in the files at hand.** When several agents fix one finding, the plan gives the whole finding, every caller included, to one agent. Five findings here were left half-done because their callers fell in another agent's files (D-3, D-14, D-18, D-19, D-144). Home: `claude-docs/agent-skills.md`, or the audit skill if one is written.
+
+### When writing an audit
+
+11. **A consequence is stated only once it is checked.** An audit's "why it matters" says what the copies are and how they differ. A consequence for users (a crash, a 404, a wrong figure) is written only when the entry or the code shows it. Two in three of the first-draft reasons here had to be corrected. Home: `.claude/rules/writing.md`.
+12. **An estimate is calibrated against finished tasks of the same kind.** Before giving hours, find two or three Done tasks of similar size (for de-duplication, MB.206 → MB.226) and scale to them. The first estimates here were about four times too high, for this task and its clean-up tasks alike. Home: `.claude/rules/task-tracking.md`.
