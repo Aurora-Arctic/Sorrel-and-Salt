@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField } from '../Field';
+import { SearchField } from '../Field/search-field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { KEEPERS_HELP, keepersHelpHref } from './href';
