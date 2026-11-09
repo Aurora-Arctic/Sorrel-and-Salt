@@ -270,6 +270,11 @@ describe('SupportForm', () => {
     expect(screen.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
       /Opened from the Error 500 page, reference abc123\. You can change it\./,
     );
+    const reference = screen.getByText('abc123');
+    expect(reference.tagName).toBe('CODE');
+    expect(
+      screen.getByRole('textbox', { name: 'Page' }).getAttribute('aria-describedby'),
+    ).toContain(reference.closest('[id]')?.id);
     fill();
     fireEvent.click(send());
     await screen.findByRole('status');

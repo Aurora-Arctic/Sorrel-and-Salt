@@ -6,7 +6,7 @@ export interface FieldProps {
   /** Read after the label, out of sight ("Quantity, Flower"), so a field drawn once per row has a name of its own. */
   labelSuffix?: string;
   hint?: string;
-  note?: string;
+  note?: ReactNode;
   required?: boolean;
 }
 

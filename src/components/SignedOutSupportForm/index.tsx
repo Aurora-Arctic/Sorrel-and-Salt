@@ -157,7 +157,11 @@ const SignedOutSupportForm = ({
         required
         multiline
         rows={6}
-        note="Don’t include passwords, payment details or other private information"
+        note={
+          <span className="field__warning">
+            Don’t include passwords, payment details or other private information.
+          </span>
+        }
         placeholder="Write a message"
         limit={MESSAGE_MAX_LENGTH}
         disabled={sending}

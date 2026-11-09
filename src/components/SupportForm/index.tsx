@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
+import { type FormEvent, type ReactElement, type ReactNode, useId, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -66,10 +66,18 @@ const SupportForm = ({
     ...(failure.field && { [failure.field.name]: failure.field.message }),
     ...problems,
   };
-  const pageNote =
-    errorCode === undefined
-      ? undefined
-      : `Opened from the Error ${errorCode} page${errorReference ? `, reference ${errorReference}` : ''}. You can change it.`;
+  const pageNote: ReactNode =
+    errorCode === undefined ? undefined : (
+      <>
+        Opened from the Error {errorCode} page
+        {errorReference && (
+          <>
+            , reference <code>{errorReference}</code>
+          </>
+        )}
+        . You can change it.
+      </>
+    );
 
   // The topic group's first radio stands for the group.
   function focusFirst(wrong: Problems) {
@@ -211,7 +219,11 @@ const SupportForm = ({
         multiline
         rows={6}
         placeholder="Write a message"
-        note="Don’t include passwords, payment details or other private information"
+        note={
+          <span className="field__warning">
+            Don’t include passwords, payment details or other private information.
+          </span>
+        }
         limit={MESSAGE_MAX_LENGTH}
         disabled={sending}
         value={message}
