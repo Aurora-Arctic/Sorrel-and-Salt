@@ -272,6 +272,15 @@ describe('SignInPanel, email and password', () => {
     expect(field('Email Address')).toHaveValue('someone@password-form.test');
   });
 
+  it('keeps a switch to creating an account made in the form when Back returns to the buttons', async () => {
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    await press(screen.getByRole('button', { name: 'Back' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Create an Account' })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
+  });
+
   it('links to the forgot-password page at sign-in, and not at sign-up', async () => {
     expect(screen.getByRole('link', { name: 'Forgot Password?' })).toHaveAttribute(
       'href',

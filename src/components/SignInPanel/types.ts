@@ -2,12 +2,23 @@ import type { ProviderId } from '../../lib/types';
 
 export type SignInAttempt = ProviderId | 'passkey';
 
+/** Signing in to an account, or creating one. */
+export type SignInMode = 'sign-in' | 'sign-up';
+
 export interface SignInPanelProps {
   /** Already run through safeReturnPath; absent, the landing is the account role's. */
   next?: string;
   /** A readable sentence for a failed callback, from signInErrorMessage — never a raw code. */
   error?: string;
   configured: readonly ProviderId[];
+  /** The mode it opens on; signing in when absent. */
+  mode?: SignInMode;
+  /** Told of each switch between the modes, so a dialog can retitle itself. */
+  onModeChange?: (mode: SignInMode) => void;
+  /** Inside a dialog: the dialog's title heads it, its headings sit a level under that title, and the email view is held here rather than in the address of the page beneath. */
+  inDialog?: boolean;
+  /** `next` itself tells a new, unverified account to check its inbox, so an email sign-up loads it directly rather than through the sign-in page, which would send the account to the email page. */
+  signUpLandsOnNext?: boolean;
 }
 
 export interface ProviderButtonProps {
@@ -21,6 +32,11 @@ export interface ProviderButtonProps {
 
 export interface PasswordFormProps {
   next?: string;
+  mode: SignInMode;
+  onModeChange: (mode: SignInMode) => void;
+  /** The level of the view's heading: h1 on the sign-in page, h3 under a dialog's title. */
+  headingLevel: 'h1' | 'h3';
+  signUpLandsOnNext?: boolean;
   /** Whether this browser last signed in with a password. */
   lastUsed: boolean;
   /** The address typed, held by the panel so it survives a trip back to the provider buttons. */
@@ -44,5 +60,11 @@ export interface PasskeyButtonProps {
 
 export interface TwoFactorStepProps {
   next?: string;
+  headingLevel?: 'h1' | 'h3';
   onRestart: (reason?: string) => void;
+}
+
+export interface ModeSwitchProps {
+  mode: SignInMode;
+  onSwitch: (mode: SignInMode) => void;
 }

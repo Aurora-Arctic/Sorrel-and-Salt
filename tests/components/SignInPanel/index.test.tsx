@@ -266,4 +266,47 @@ describe('SignInPanel', () => {
       container.remove();
     }
   });
+
+  // A passkey signs in an account that has one and cannot make one, so creating an account leaves it out.
+  it('switches between signing in and creating an account, retitling the panel and leaving the passkey out of creating one', async () => {
+    render(<SignInPanel configured={['google']} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Sign In' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign In with a Passkey' })).toBeInTheDocument();
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Create an Account' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Continue with Email' })).toBeEnabled();
+
+    await press(screen.getByRole('button', { name: 'Sign In Instead' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Sign In' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign In with a Passkey' })).toBeInTheDocument();
+  });
+
+  it('opens on creating an account when asked, and reports each switch to its owner', async () => {
+    const onModeChange = vi.fn();
+    render(<SignInPanel configured={['google']} mode="sign-up" onModeChange={onModeChange} />);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Create an Account' }),
+    ).toBeInTheDocument();
+    expect(onModeChange).not.toHaveBeenCalled();
+
+    await press(screen.getByRole('button', { name: 'Sign In Instead' }));
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(onModeChange.mock.calls).toEqual([['sign-in'], ['sign-up']]);
+  });
+
+  // In a dialog the dialog's own title heads the panel, so the panel draws no heading of its own.
+  it('draws no heading of its own in a dialog', () => {
+    render(<SignInPanel configured={['google']} inDialog />);
+
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
+  });
 });

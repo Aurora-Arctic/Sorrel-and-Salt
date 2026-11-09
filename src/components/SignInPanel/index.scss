@@ -14,6 +14,14 @@
   padding: space(5) space(6) space(6);
 }
 
+// In a dialog the modal's box is the ground and its body the padding, so the panel keeps only its
+// column.
+.sign-in-panel--dialog {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(4);
+}
+
 // The code step alone: with the buttons gone nothing sets the column's width, so it takes the
 // buttons' usual one, or the card's when that is narrower.
 .sign-in-panel--code.sign-in-panel {

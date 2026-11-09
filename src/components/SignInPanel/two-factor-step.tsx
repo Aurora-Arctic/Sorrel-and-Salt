@@ -43,7 +43,7 @@ function refusal(failure: Failure): Refusal | 'restart' {
   return { alert: GENERIC_CODE_ERROR };
 }
 
-const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement => {
+const TwoFactorStep = ({ next, headingLevel, onRestart }: TwoFactorStepProps): ReactElement => {
   const codeId = useId();
   const [method, setMethod] = useState<Method>('app');
   const [code, setCode] = useState('');
@@ -88,6 +88,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
       <PageHeader
         className="sign-in-panel__password-head"
         headingClassName="auth-title sign-in-panel__password-heading"
+        level={headingLevel}
         title="Enter Your Code"
       />
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}

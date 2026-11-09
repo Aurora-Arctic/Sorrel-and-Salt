@@ -8,11 +8,12 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import ModeSwitch from './mode-switch';
 import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
-import type { SignInAttempt, SignInPanelProps } from './types';
+import type { SignInAttempt, SignInMode, SignInPanelProps } from './types';
 import './index.scss';
 
 // A cookie announces no change, and only a callback, a full navigation away, writes this one:
@@ -37,7 +38,22 @@ export const EMAIL_VIEW_PARAM = 'method';
 export const EMAIL_VIEW = 'email';
 const PUSHED_MARK = 'signInEmailViewPushed';
 
-const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
+const SignInPanel = ({
+  next,
+  error,
+  configured,
+  mode: initialMode = 'sign-in',
+  onModeChange,
+  inDialog = false,
+  signUpLandsOnNext,
+}: SignInPanelProps): ReactElement => {
+  // Held here, not in the form, so a switch made in either view holds in the other.
+  const [mode, setMode] = useState<SignInMode>(initialMode);
+  const switchMode = (to: SignInMode): void => {
+    setMode(to);
+    onModeChange?.(to);
+  };
+  const signingUp = mode === 'sign-up';
   // The server-rendered callback error, the page's own, until a press starts
   // a new attempt. A failure of that press is said under its own button
   // instead (./provider-button.tsx).
@@ -55,19 +71,26 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // success it stays set until the browser goes; a return from the back-forward cache (the
   // page restored as it was left) clears it.
   const searchParams = useSearchParams();
-  const emailView = searchParams.get(EMAIL_VIEW_PARAM) === EMAIL_VIEW;
+  // In a dialog the address is the page's beneath, so the view is held here and Back is the form's own.
+  const [dialogEmailView, setDialogEmailView] = useState(false);
+  const emailView = inDialog ? dialogEmailView : searchParams.get(EMAIL_VIEW_PARAM) === EMAIL_VIEW;
   // Held here, not in the form, so the address survives a trip back to the buttons.
   const [email, setEmail] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
+  const emailButton = useRef<HTMLButtonElement>(null);
   const shown = useRef(emailView);
-  // On a switch of view, focus moves to the new view's heading; the first render leaves focus alone.
+  // On a switch of view, focus moves to the new view's heading, or in a dialog, whose buttons have
+  // none, back to Continue with Email; the first render leaves focus alone.
   useEffect(() => {
     if (shown.current === emailView) return;
     shown.current = emailView;
-    panelRef.current?.querySelector<HTMLElement>('[data-view-heading]')?.focus();
+    (
+      panelRef.current?.querySelector<HTMLElement>('[data-view-heading]') ?? emailButton.current
+    )?.focus();
   }, [emailView]);
 
   const showView = (toEmail: boolean): void => {
+    if (inDialog) return setDialogEmailView(toEmail);
     const params = new URLSearchParams(searchParams.toString());
     if (toEmail) params.set(EMAIL_VIEW_PARAM, EMAIL_VIEW);
     else params.delete(EMAIL_VIEW_PARAM);
@@ -113,17 +136,22 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     return undefined;
   };
 
+  const classes = [
+    // Its own card ground, `.panel`, on /sign-in, which holds nothing else; a dialog is its own
+    // (claude-docs/components/sign-in-panel.md, "Styling").
+    inDialog ? 'sign-in-panel sign-in-panel--dialog' : 'panel sign-in-panel',
+    codeStep && 'sign-in-panel--code',
+  ];
   return (
-    // Its own card ground, `.panel`, rather than the page's: /sign-in holds
-    // nothing else (claude-docs/components/sign-in-panel.md, "Styling").
-    <div
-      className={codeStep ? 'panel sign-in-panel sign-in-panel--code' : 'panel sign-in-panel'}
-      ref={panelRef}
-    >
+    <div className={classes.filter(Boolean).join(' ')} ref={panelRef}>
       {message && <Notice kind="error">{message}</Notice>}
       {emailView ? (
         <PasswordForm
           next={next}
+          mode={mode}
+          onModeChange={switchMode}
+          headingLevel={inDialog ? 'h3' : 'h1'}
+          signUpLandsOnNext={signUpLandsOnNext}
           lastUsed={lastUsedPassword}
           email={email}
           onEmailChange={setEmail}
@@ -133,13 +161,15 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
         />
       ) : (
         <>
-          <PageHeader
-            className="sign-in-panel__header"
-            headingClassName="auth-title"
-            focusable
-            title="Sign In"
-            lede="Sign in or create an account."
-          />
+          {!inDialog && (
+            <PageHeader
+              className="sign-in-panel__header"
+              headingClassName="auth-title"
+              focusable
+              title={signingUp ? 'Create an Account' : 'Sign In'}
+              lede="Sign in or create an account."
+            />
+          )}
           <div className="sign-in-panel__providers">
             {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (
               <ProviderButton
@@ -151,13 +181,17 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 onSignIn={signInWith}
               />
             ))}
-            <PasskeyButton
-              next={next}
-              lastUsed={passkeyLastUsed}
-              signingIn={signingIn}
-              onSigningIn={setSigningIn}
-            />
+            {/* A passkey signs in to an account that has one; it cannot make one. */}
+            {!signingUp && (
+              <PasskeyButton
+                next={next}
+                lastUsed={passkeyLastUsed}
+                signingIn={signingIn}
+                onSigningIn={setSigningIn}
+              />
+            )}
             <button
+              ref={emailButton}
               type="button"
               className="btn btn--solid"
               disabled={signingIn !== null}
@@ -166,6 +200,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
               Continue with Email
             </button>
           </div>
+          <ModeSwitch mode={mode} onSwitch={switchMode} />
         </>
       )}
     </div>
