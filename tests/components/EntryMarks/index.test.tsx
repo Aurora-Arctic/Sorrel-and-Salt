@@ -211,6 +211,13 @@ describe('the review mark', () => {
     expect(reviewed()).toBeNull();
   });
 
+  it('draws Needs Review in the warning palette, not the attention palette other badges keep', () => {
+    render(<EntryMarks kind="compendium" reviewedAt={null} />);
+
+    expect(needsReview()).toHaveClass('badge--needs-review');
+    expect(needsReview()).not.toHaveClass('badge--attention');
+  });
+
   it('is drawn on an entry a cupboard holds, beside Compendium', () => {
     render(<EntryMarks kind="cupboard" reviewedAt={AT} />);
 

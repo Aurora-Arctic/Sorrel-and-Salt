@@ -87,14 +87,14 @@ const EntryMarks = ({
       ),
     });
   }
-  // The curators' review mark: green with its day once reviewed, in the attention
-  // colour while not. A coven's own entry is never reviewed, so it has neither.
+  // The curators' review mark: green with its day once reviewed, in the warning
+  // ochre while not. A coven's own entry is never reviewed, so it has neither.
   if (kind !== 'own' && reviewedAt !== undefined) {
     if (reviewedAt === null) {
       marks.push({
         key: 'review',
         tone: 'red',
-        node: <output className="badge badge--attention">Needs Review</output>,
+        node: <output className="badge badge--needs-review">Needs Review</output>,
       });
     } else {
       reviewed = (

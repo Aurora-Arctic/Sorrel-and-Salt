@@ -259,7 +259,7 @@ test('the curator row fits the window at 642px, without overflowing', async ({ p
   // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
-  const more = nav.getByRole('button', { name: /More|Astrology|Deities/ });
+  const more = nav.getByRole('button', X);
   if ((await more.count()) > 0) {
     await expect(more).toBeVisible();
   } else {
@@ -294,14 +294,14 @@ test('at a tablet width, More carries the current page when its tab is hidden be
   // Why More could carry it: on a page whose tab is in the row it does not.
   await page.goto('/curator');
   let nav = await fittedAdminNav(page);
-  const more = nav.getByRole('button', { name: /More/ });
+  const more = nav.getByRole('button', { name: 'More', exact: true });
   await expect(more).toBeVisible();
   await expect(more).not.toHaveAttribute('aria-current');
 
   await page.goto('/curator/zodiac-signs');
   nav = await fittedAdminNav(page);
   await expect(rowLinks(nav).filter({ hasText: 'Astrology' })).toHaveCount(0);
-  await expect(nav.getByRole('button', { name: /Astrology/ })).toHaveAttribute(
+  await expect(nav.getByRole('button', { name: 'More', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );

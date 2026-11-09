@@ -55,7 +55,7 @@ A chip reads its group's colours from its `category_groups` row, a pair of hexes
 
 ## Badge palettes
 
-Nine palettes, deliberately not equals. Every hue not already reserved belongs to one of the eight category groups, so a palette reuses the safety, accent or muted inks rather than spend a new hue.
+Ten palettes, deliberately not equals. Every hue not already reserved belongs to one of the eight category groups, so a palette reuses the safety, accent or muted inks rather than spend a new hue.
 
 - **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette. It is the one alarming badge in the app.
 - **Low stock** is an inventory state, not an alarm (story 54): the muted ink, unsaturated.
@@ -67,6 +67,7 @@ Nine palettes, deliberately not equals. Every hue not already reserved belongs t
 - **Demo** marks the demo coven in its page heading (`badge--demo`): Local's inks through the same two tokens, tinted, as its own palette.
 - **Annotated** marks a compendium entry with the coven's own changes: Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens, tinted. It is its own palette, never `badge--local`.
 - **Retired** marks a compendium entry the curators have retired, on the ingredient page of a coven whose cupboard still names it. A fact about the entry, not a hazard, so it takes low stock's treatment and inks exactly (tinted, `$chalk-muted` dark, `$ink-muted` light), which needs no new contrast check. It is its own palette so the entry page does not name a retired entry after stock.
+- **Needs Review** marks a compendium entry no curator has reviewed. A caution to the reader, not an alarm, so it is the warning ochre as a tint (`$ochre-bright` dark, `$ochre-deep` darkened 4% light), leaving red to Safety, Caution and Attention. The light ink is darkened because `$ochre-deep` alone put the edge at 2.98:1 on the light page. Label on tint 5.85:1 dark and 5.69:1 light; edge 4.37:1 and 3.86:1 on the dark and light cards (4.81:1 and 3.47:1 on the pages).
 - **Muted** marks a plain fact beside a name that is no warning: a one-off ingredient in a spell's steps, and a picker row whose form is already in the jar. Same treatment and inks as Retired and Low, its own palette so neither use borrows a name about the compendium.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the treatment decides which parts it emits:
