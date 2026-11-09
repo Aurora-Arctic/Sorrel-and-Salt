@@ -156,16 +156,17 @@
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest` project's
   `json-summary` coverage reporter feed `.github/scripts/summarize-vitest.mjs`
   (beside `summarize-playwright.mjs` and shared `lib/coverage-table.mjs`) for the
-  merge job's two sections of the Vitest comment: the merged result's stat line,
-  and the final Coverage section, written by its own step, with the coverage
-  figure, the threshold verdict and the per-file table.
+  merge job's one section of the Vitest comment, the final Coverage and Slowest
+  Files: the coverage figure, the threshold verdict and the per-file table, then
+  the slowest files, with the total test count in the comment's heading and an
+  alert for a merge failure no part's row shows.
   Each part job writes its own section too, so the comment shows the parts as
   they finish ([`pr-comments.md`](pr-comments.md)). A part runs the JSON reporter
   beside its blob reporter, into `/app/.reports/vitest-part.json`, and the same
   script with `VITEST_PART=true` turns it into the part's Result: the counts, the
   duration and any over-budget count, with no coverage table, since a part covers
   only its own share of `src/`. A part that crashed before writing the file
-  shows that instead. The script also appends a "Slowest
+  shows that instead. For the merged run the script also writes a "Slowest
   files" block — the ten slowest files from the JSON reporter's per-file times, a
   ⚠ on any over the 10 s budget and the count in the stat line — as a warning
   only; it never fails the job, and the file is split along its owning layer

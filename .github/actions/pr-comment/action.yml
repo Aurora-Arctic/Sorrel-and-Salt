@@ -52,6 +52,18 @@ inputs:
     description: Optional longer markdown block (e.g. failing-test list or table), rendered above the log
     required: false
     default: ''
+  heading-note:
+    description: >-
+      With `section`, a short note this section adds to the comment's heading,
+      e.g. "2,800 tests"
+    required: false
+    default: ''
+  alert:
+    description: >-
+      With `section`, one line shown above the section's block that fails the
+      comment's heading whatever `outcome` is, for a failure no section reports
+    required: false
+    default: ''
   duration:
     description: Pre-formatted job duration (e.g. "12s", "1m 34s")
     required: false
@@ -87,6 +99,8 @@ runs:
         LOG_FILE: ${{ inputs.log-file }}
         SUMMARY: ${{ inputs.summary }}
         DETAILS: ${{ inputs.details }}
+        HEADING_NOTE: ${{ inputs.heading-note }}
+        ALERT: ${{ inputs.alert }}
         DURATION: ${{ inputs.duration }}
         PR_NUMBER: ${{ inputs.pr-number }}
         SECTION: ${{ inputs.section }}

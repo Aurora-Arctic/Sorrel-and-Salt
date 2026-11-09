@@ -430,7 +430,7 @@ jobs:
     uses: ./.github/workflows/pr-comments.yml
     with:
       pr-number: ${{ github.event.pull_request.number }}
-      vitest-skipped: ${{ (needs.gitflow.result != 'success' || needs.changes.outputs.vitest != 'true') && 'dom,node,db,result,coverage' || '' }}
+      vitest-skipped: ${{ (needs.gitflow.result != 'success' || needs.changes.outputs.vitest != 'true') && 'dom,node,db,coverage' || '' }}
       playwright-skipped: >-
         ${{ needs.gitflow.result != 'success' && 'gate,stories,coverage' || format('{0},{1},{2}',
         needs.changes.outputs.playwright != 'true' && 'gate' || '',

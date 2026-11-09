@@ -17,7 +17,10 @@ const STATUSES = {
 };
 
 // A `final` section has no row in the table: its summary heads its own block,
-// which comes after every other section's, whichever job writes first.
+// which comes after every other section's, whichever job writes first. Any
+// section's write may also carry a `note` for the comment's heading and an
+// `alert`, one line above its block that fails the heading whatever the
+// section's own status, for a failure that belongs to no section.
 const LAYOUTS = {
   vitest: {
     title: 'Vitest',
@@ -26,8 +29,7 @@ const LAYOUTS = {
       { key: 'dom', label: 'DOM (`dom`)' },
       { key: 'node', label: 'Node (`unit`, `rsc`)' },
       { key: 'db', label: 'Database (`db`, `db-mocking`, `workflow`)' },
-      { key: 'result', label: 'Merged Result' },
-      { key: 'coverage', label: 'Coverage', final: true },
+      { key: 'coverage', label: 'Coverage and Slowest Files', final: true },
     ],
   },
   playwright: {
@@ -52,9 +54,9 @@ const VERIFY_DELAY_MS = 3000;
 const VERIFY_JITTER_MS = 2000;
 const MAX_ATTEMPTS = 5;
 
-function heading(level, status, title) {
+function heading(level, status, title, notes = []) {
   const { mark, word } = STATUSES[status];
-  return `${'#'.repeat(level)} ${mark} ${title} · ${word}`;
+  return [`${'#'.repeat(level)} ${mark} ${title}`, word, ...notes].join(' · ');
 }
 
 function footer({ sha, duration, notes = [], runUrl } = {}) {
@@ -165,7 +167,17 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
   ].join('\n');
   return join([
     `${marker}\n${encodeState(state)}`,
-    heading(3, overallStatus(present.map(({ key }) => state.sections[key].status)), title),
+    heading(
+      3,
+      overallStatus(
+        present.flatMap(({ key }) => {
+          const { status, alert } = state.sections[key];
+          return alert ? [status, 'failed'] : [status];
+        }),
+      ),
+      title,
+      present.map(({ key }) => state.sections[key].note).filter(Boolean),
+    ),
     table,
     ...rows.filter(({ key }) => blocks[key]).map(({ key }) => wrapBlock(key, blocks[key])),
     ...finals.map((section) =>
@@ -177,8 +189,9 @@ function renderSectioned({ marker, layout, title, state, blocks }) {
   ]);
 }
 
-function sectionBlock({ label, final }, { status, summary, details, log }) {
+function sectionBlock({ label, final }, { status, summary, details, log, alert }) {
   const content = [
+    alert,
     final ? summary : '',
     capped(details, LIMITS.section.details, 'breakdown'),
     log ? logBlock(tail(log, LIMITS.section.log)) : '',
@@ -224,7 +237,9 @@ function planSectionWrite(
   } else {
     const section = layout.sections.find(({ key }) => key === write.key);
     if (!section) throw new Error(`The ${title} comment has no section "${write.key}".`);
-    if (mergeQueue && !body && write.status !== 'failed') return { action: 'none' };
+    if (mergeQueue && !body && write.status !== 'failed' && !write.alert) {
+      return { action: 'none' };
+    }
     if (sameRun) {
       state.reset = prior.reset;
       Object.assign(state.sections, prior.sections);
@@ -235,6 +250,8 @@ function planSectionWrite(
     state.sections[write.key] = {
       status: write.status,
       summary: write.summary ?? '',
+      ...(write.note ? { note: write.note } : {}),
+      ...(write.alert ? { alert: true } : {}),
       token,
       attempt: run.attempt,
       reported: true,
@@ -268,6 +285,8 @@ function inputsFromEnv(env) {
     successMode: env.SUCCESS_MODE || 'minimize',
     summary: env.SUMMARY ?? '',
     details: env.DETAILS ?? '',
+    headingNote: env.HEADING_NOTE ?? '',
+    alert: env.ALERT ?? '',
     duration: env.DURATION ?? '',
     section: env.SECTION ?? '',
     reset: env.RESET === 'true',
@@ -389,7 +408,9 @@ async function postSectioned(options) {
         status,
         summary: inputs.summary,
         details: inputs.details,
-        log: status === 'failed' ? readLog(readFile, inputs.logFile) : '',
+        note: inputs.headingNote,
+        alert: inputs.alert,
+        log: status === 'failed' || inputs.alert ? readLog(readFile, inputs.logFile) : '',
       };
   const token = crypto.randomUUID();
   const plan = (body) =>

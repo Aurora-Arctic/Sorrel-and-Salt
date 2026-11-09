@@ -322,7 +322,8 @@ jobs:
           set -o pipefail
           ls /app/.reports/blobs
           if [ "$(ls /app/.reports/blobs/blob-*.json | wc -l)" -ne 3 ]; then
-            echo "::error::A vitest part left no blob; see its job."
+            echo "::error::A vitest part left no blob; see its job." | tee /app/output.log
+            echo "blobs-missing=true" >> "$GITHUB_OUTPUT"
             exit 1
           fi
           npx vitest run --mergeReports /app/.reports/blobs --coverage --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
@@ -333,6 +334,8 @@ jobs:
         env:
           VITEST_OUTCOME: ${{ steps.run.outcome }}
           VITEST_LOG: /app/output.log
+          VITEST_BLOBS_MISSING: ${{ steps.run.outputs.blobs-missing }}
+          VITEST_PARTS_PASSED: ${{ needs.vitest-dom.result == 'success' && needs.vitest-node.result == 'success' && needs.vitest-db.result == 'success' }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.
@@ -355,28 +358,15 @@ jobs:
           details: |
             ${{ steps.summarize.outputs.details }}
 
-            **Coverage:** ${{ steps.summarize.outputs.coverage_summary }}
+            **Coverage and slowest files:** ${{ steps.summarize.outputs.final_summary }}
 
-            ${{ steps.summarize.outputs.coverage_details }}
+            ${{ steps.summarize.outputs.final_details }}
 
-      # The merged result's section of the Vitest comment. Its outcome leaves out
-      # the coverage thresholds, which the Coverage section reports; a summary
-      # that did not run falls back to the run's outcome.
+      # The comment's final section: coverage, then the slowest files, with the
+      # total test count for the heading. Its status is coverage's alone; a merge
+      # failure that no part's row shows comes as the alert, which fails the
+      # heading. A summary that did not run is that failure itself.
       - name: Comment on PR
-        if: ${{ !cancelled() && inputs.pr-number }}
-        uses: ./.github/actions/pr-comment
-        with:
-          check-name: Vitest
-          marker-slug: vitest
-          section: result
-          pr-number: ${{ inputs.pr-number }}
-          merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.summarize.outputs.result_outcome || steps.run.outcome }}
-          log-file: /app/output.log
-          summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}
-
-      - name: Comment coverage on PR
         if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
         with:
@@ -385,7 +375,9 @@ jobs:
           section: coverage
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.summarize.outputs.coverage_outcome || 'failure' }}
+          outcome: ${{ steps.summarize.outputs.final_outcome || 'skipped' }}
           log-file: /app/output.log
-          summary: ${{ steps.summarize.outputs.coverage_summary || 'No coverage was summarised, so see the log.' }}
-          details: ${{ steps.summarize.outputs.coverage_details }}
+          summary: ${{ steps.summarize.outputs.final_summary }}
+          details: ${{ steps.summarize.outputs.final_details }}
+          heading-note: ${{ steps.summarize.outputs.heading_note }}
+          alert: ${{ steps.summarize.outcome == 'success' && steps.summarize.outputs.alert || steps.summarize.outcome != 'success' && 'The merged run could not be summarised, so see the merge job.' || '' }}

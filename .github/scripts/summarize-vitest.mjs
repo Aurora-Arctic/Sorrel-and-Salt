@@ -1,9 +1,10 @@
 // Vitest's JSON reporter output, into the `summary` stat and `details` block
-// job-summary and pr-comment consume. The merged run also gets `coverage_*`
-// outputs for the comment's Coverage section, and `result_outcome`, its tests'
-// verdict without the coverage thresholds. With VITEST_PART=true it summarises
-// one part job's results for its row: no coverage, because a part covers only
-// its own share of src/, and no slowest-files block.
+// job-summary and pr-comment consume. With VITEST_PART=true it summarises one
+// part job's results for its row: no coverage, because a part covers only its
+// own share of src/, and no slowest-files block. The merged run instead writes
+// the comment's final section (`final_*`: coverage, then the slowest files),
+// the heading's test count (`heading_note`), and an `alert` for a failure of
+// its own that no part's row shows.
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
@@ -19,6 +20,10 @@ const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 const LOG_PATH = process.env.VITEST_LOG || '/app/output.log';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
+// Set by the merge job: the run step found a part with no blob, and whether
+// every part job passed.
+const BLOBS_MISSING = process.env.VITEST_BLOBS_MISSING === 'true';
+const PARTS_PASSED = process.env.VITEST_PARTS_PASSED === 'true';
 
 function setOutput(name, value) {
   const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
@@ -30,6 +35,22 @@ function setOutput(name, value) {
 if (PART && !fs.existsSync(RESULTS_PATH)) {
   setOutput('summary', 'No results: Vitest stopped before writing them.');
   setOutput('details', '');
+  process.exit(0);
+}
+
+if (!PART && (BLOBS_MISSING || !fs.existsSync(RESULTS_PATH))) {
+  setOutput('summary', 'No merged results.');
+  setOutput('details', '');
+  setOutput('heading_note', '');
+  setOutput(
+    'alert',
+    BLOBS_MISSING
+      ? "The merged run did not run, because a part left no results: see that part's row."
+      : 'The merged run wrote no results: see the log.',
+  );
+  setOutput('final_summary', 'Not measured, because the merged run wrote no results.');
+  setOutput('final_details', '');
+  setOutput('final_outcome', 'skipped');
   process.exit(0);
 }
 
@@ -114,30 +135,40 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-if (!PART && slowest?.block) details = details ? `${details}\n\n${slowest.block}` : slowest.block;
-
 setOutput('summary', summary);
 setOutput('details', details);
 
 if (!PART) {
-  // A run that failed only on coverage still passed its tests.
-  setOutput('result_outcome', failures.length > 0 || unexplained ? 'failure' : 'success');
+  const missedByParts = PARTS_PASSED && failures.length > 0;
+  let alert = '';
+  if (missedByParts) {
+    alert = `The merged run found ${failures.length} failed ${failures.length === 1 ? 'test' : 'tests'} that no part's row shows: see the log.`;
+  } else if (unexplained) {
+    alert = 'The merged run failed with no failed test and no missed threshold: see the log.';
+  }
   let coverageSummary;
-  let coverageOutcome;
+  let finalOutcome;
   if (coverage) {
     coverageSummary = violations.length
       ? `${coverage.stat}; below threshold: ${violations.join(', ')}`
       : `${coverage.stat}; every threshold met`;
-    coverageOutcome = violations.length ? 'failure' : 'success';
+    finalOutcome = violations.length ? 'failure' : 'success';
   } else if (failures.length > 0) {
     // Vitest's reportOnFailure is off, so a failed test means no report.
     coverageSummary = 'Not measured, because a test failed.';
-    coverageOutcome = 'skipped';
+    finalOutcome = 'skipped';
   } else {
     coverageSummary = 'No coverage report was written: see the log.';
-    coverageOutcome = 'failure';
+    finalOutcome = 'failure';
   }
-  setOutput('coverage_summary', coverageSummary);
-  setOutput('coverage_details', coverage?.table ?? '');
-  setOutput('coverage_outcome', coverageOutcome);
+  const total = data.numTotalTests ?? numPassedTests + numFailedTests;
+  setOutput('heading_note', `${total.toLocaleString('en-GB')} ${total === 1 ? 'test' : 'tests'}`);
+  setOutput('alert', alert);
+  setOutput('final_summary', `${coverageSummary}${overBudget}`);
+  // The failing tests only when no part's row lists them.
+  setOutput(
+    'final_details',
+    [missedByParts ? details : '', coverage?.table, slowest?.block].filter(Boolean).join('\n\n'),
+  );
+  setOutput('final_outcome', finalOutcome);
 }
