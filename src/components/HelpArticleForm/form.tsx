@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
 import { helpPath } from '../../lib/help-paths';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { slugify } from '../../lib/slugify';
 import { FieldError, FormActions, Required, SelectField, TextField } from '../Field';
@@ -286,17 +286,9 @@ const HelpArticleForm = ({
   };
 
   const confirmDelete = async (): Promise<void> => {
-    try {
-      await remove.mutateAsync();
-      setDone(true);
-    } catch (error) {
-      setDeleting(false);
-      setAlert(
-        readGraphqlIssues(error)
-          .map(({ message }) => message)
-          .join(' '),
-      );
-    }
+    setAlert(undefined);
+    await remove.mutateAsync();
+    setDone(true);
   };
 
   // A sub page goes last in a new guide, or back where it was in its own; a top-level page holds no place in the form.
@@ -567,6 +559,10 @@ const HelpArticleForm = ({
             busy={remove.isPending}
             onConfirm={confirmDelete}
             onKeep={() => setDeleting(false)}
+            onRefused={(refusal) => {
+              setDeleting(false);
+              setAlert(refusal);
+            }}
           />
         )}
       </form>
