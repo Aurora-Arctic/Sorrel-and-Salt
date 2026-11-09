@@ -4,10 +4,10 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { GripIcon } from '../../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
+import GripHandle from '../../GripHandle';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import OneOffBadge from '../../StepRow/one-off-badge';
@@ -28,33 +28,6 @@ export interface BuilderStepRowProps {
   onToggle: () => void;
   onRemove: () => void;
   look?: QuickLookCoven;
-}
-
-/**
- * The button a step is moved by: dnd-kit's attributes give it a button's
- * role, which it has already, and the instructions as its description.
- */
-function StepHandle({
-  name,
-  sortable,
-}: {
-  name: string;
-  sortable: ReturnType<typeof useSortable>;
-}): ReactElement {
-  const { setActivatorNodeRef, listeners, attributes } = sortable;
-  const { role: _role, ...rest } = attributes;
-  return (
-    <button
-      type="button"
-      ref={setActivatorNodeRef}
-      className="spell-step__handle"
-      {...rest}
-      {...listeners}
-      aria-label={`Move ${name}`}
-    >
-      <GripIcon />
-    </button>
-  );
 }
 
 export function BuilderStepRow({
@@ -103,7 +76,7 @@ export function BuilderStepRow({
       )
       ?.focus();
   }, [open]);
-  const handle = <StepHandle name={name} sortable={sortable} />;
+  const handle = <GripHandle sortable={sortable} name={name} className="spell-step__handle" />;
   const body = (
     <TextField<SpellStepsValues>
       name={`steps.${index}.body`}

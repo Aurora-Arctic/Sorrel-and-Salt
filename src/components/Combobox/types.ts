@@ -128,15 +128,6 @@ export interface FlowSlot {
   width: number;
 }
 
-export interface EntryHandleProps {
-  value: string;
-  sortable: ReturnType<typeof useSortable>;
-  describedBy?: string;
-  onFocus: () => void;
-  onBlur: () => void;
-  children: ReactNode;
-}
-
 export interface ComboboxSortableEntry extends Omit<ComboboxEntryProps, 'sortable'> {
   id: string;
 }

@@ -2,7 +2,7 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { useClickFeedback } from '../ClickFeedback';
 import { ReasonField } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
@@ -90,11 +90,7 @@ const ConfirmedAction = ({
       // No fields of its own, so the shared reader always answers an alert:
       // the service's refusal verbatim, or the one generic sentence, unless
       // the caller words the refusal itself.
-      report(
-        typeof refusal === 'function'
-          ? refusal(error)
-          : (refusal ?? readGraphqlFailure(error).alert),
-      );
+      report(typeof refusal === 'function' ? refusal(error) : (refusal ?? failureMessage(error)));
     }
   }
 

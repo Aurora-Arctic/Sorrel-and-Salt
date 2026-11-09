@@ -7,7 +7,7 @@ import { renderBusinessCards } from '../../lib/business-cards/pdf';
 import { fetchCardAssets } from '../../lib/invitation-cards/assets';
 import type { CardAssets } from '../../lib/invitation-cards/types';
 import { slugify } from '../../lib/slugify';
-import { saveFile } from '../AdminCards/save-file';
+import { saveFile } from '../../lib/save-file';
 import { FormActions, SwitchField, TextField } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';

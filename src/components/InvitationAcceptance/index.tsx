@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
@@ -93,7 +93,7 @@ const Accept = ({
     } catch (error) {
       setSending(false);
       // The fallback only satisfies the type: the reader always answers with an alert.
-      report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+      report(failureMessage(error));
     }
   }
 

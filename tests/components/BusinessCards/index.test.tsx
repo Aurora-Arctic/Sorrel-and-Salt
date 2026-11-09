@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderBusinessCards } from '@/lib/business-cards/pdf';
 import { fetchCardAssets } from '@/lib/invitation-cards/assets';
 import type { CardAssets } from '@/lib/invitation-cards/types';
-import { saveFile } from '@/components/AdminCards/save-file';
+import { saveFile } from '@/lib/save-file';
 import BusinessCards from '@/components/BusinessCards';
 
 vi.mock('@/lib/invitation-cards/assets', () => ({ fetchCardAssets: vi.fn() }));
 vi.mock('@/lib/business-cards/pdf', () => ({ renderBusinessCards: vi.fn() }));
-vi.mock('@/components/AdminCards/save-file', () => ({ saveFile: vi.fn() }));
+vi.mock('@/lib/save-file', () => ({ saveFile: vi.fn() }));
 
 const ASSETS = { salt: new Uint8Array([1]) } as unknown as CardAssets;
 const PDF = new Uint8Array([37, 80, 68, 70]);

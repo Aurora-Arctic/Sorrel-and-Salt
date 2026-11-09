@@ -6,7 +6,7 @@ import { requestPasswordReset } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
-import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import './index.scss';
 
 // Every address gets the same answer, so the page never says whether one has an account (claude-docs/components/forgot-password-form.md).
@@ -33,7 +33,7 @@ const ForgotPasswordForm = (): ReactElement => {
       redirectTo: '/reset-password',
     }).catch(() => ({ error: {} as { status?: number } }));
     setPending(false);
-    if (error) setAlert(error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR);
+    if (error) setAlert(rateLimited(error) ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR);
     else setSentTo(address.toLowerCase());
     settle();
   };

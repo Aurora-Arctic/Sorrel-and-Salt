@@ -4,7 +4,7 @@ import type {
   WorkspaceIngredientFacets,
 } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
-import { capitalise } from '../../lib/text';
+import { capitalise, fold } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type {
   CategoryFacetChoice,
@@ -69,7 +69,7 @@ export function compendiumFacetCounts(
       value,
       label: formLabel(value),
       count,
-      icon: formIcons.get(value.toLocaleLowerCase()) ?? null,
+      icon: formIcons.get(fold(value)) ?? null,
     })),
     deities: facets.deities.flatMap(({ value, count }): DeityFacetChoice[] => {
       const deity = deities.get(value);

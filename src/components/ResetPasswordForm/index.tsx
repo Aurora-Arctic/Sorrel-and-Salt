@@ -7,7 +7,7 @@ import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/passwo
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
-import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import type { ResetPasswordFormProps } from './types';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
@@ -54,7 +54,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
     const refusal = newPasswordRefusal(error);
     if (refusal) setFieldError(refusal);
     else if (error.code === 'INVALID_TOKEN') setSpent(true);
-    else if (error.status === 429) setAlert(TOO_MANY_ATTEMPTS);
+    else if (rateLimited(error)) setAlert(TOO_MANY_ATTEMPTS);
     // A 500 is the breached-password check unreachable, which refuses rather than waves through.
     else setAlert(error.status === 500 ? PASSWORD_CHECK_UNAVAILABLE : GENERIC_RESET_ERROR);
   };

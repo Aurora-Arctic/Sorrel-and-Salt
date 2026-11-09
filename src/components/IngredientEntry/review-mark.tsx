@@ -3,7 +3,7 @@
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
@@ -61,7 +61,7 @@ export default function ReviewMark({
       refresh();
     } catch (error) {
       setSent(undefined);
-      setRefusal(readGraphqlFailure(error).alert);
+      setRefusal(failureMessage(error));
     } finally {
       setBusy(false);
     }
