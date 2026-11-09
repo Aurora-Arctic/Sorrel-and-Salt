@@ -107,7 +107,6 @@
   display: flex;
   flex-direction: column;
   gap: space(3);
-  margin-top: space(4);
 
   // Prose and notices wrap at the column's width: a paragraph is capped at the reading measure and
   // would otherwise widen the column past the card.
