@@ -94,4 +94,4 @@ export interface Parsed {
 export type ReferenceTextField = Exclude<keyof CitationFields, 'kind'>;
 
 /** How one text field is tidied, the same on the form as it is left and in the schema. */
-export type FieldFormat = (text: string) => string;
+export type { FieldFormat } from '../../../lib/formats';

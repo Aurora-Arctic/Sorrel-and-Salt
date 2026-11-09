@@ -8,6 +8,7 @@ import {
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
+import { trimEnds } from '../../../lib/formats';
 import { RowId, optionalText, requiredText } from '../../../lib/validation';
 import { formatLocator } from './reference-format';
 import type {
@@ -192,14 +193,14 @@ const fields = {
   name: requiredText('Give the ingredient a name'),
   // No format regex: §5's formal names defeat one.
   canonicalName: optionalText(),
-  description: optionalText(),
+  description: optionalText(trimEnds),
   elements: elementList,
   // Free text lists like a form: the vocabularies suggest and nothing here refuses; the compendium service holds its tier to them, and a coven's stay free text.
   celestialBodies: textList,
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
-  safetyNotes: optionalText(),
+  safetyNotes: optionalText(trimEnds),
   // The ingredient's own flag, independent of each form's; absent on a create is off.
   toxic: z.boolean().nullish(),
   substitutes: z.array(substitute).nullish(),

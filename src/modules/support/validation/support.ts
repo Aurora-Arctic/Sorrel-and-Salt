@@ -6,6 +6,7 @@ import {
   isSitePage,
   normaliseIssueLink,
 } from '../../../lib/support-path';
+import { trimEnds } from '../../../lib/formats';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
@@ -17,7 +18,7 @@ export const ERROR_REFERENCE_MAX_LENGTH = 100;
 export { ISSUE_REPOSITORY };
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
-export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LENGTH, {
+export const SupportMessage = requiredText('Write a message', trimEnds).max(MESSAGE_MAX_LENGTH, {
   error: `Keep the message to ${MESSAGE_MAX_LENGTH} characters`,
 });
 

@@ -1,11 +1,36 @@
 'use client';
 
-import type { FocusEvent, ReactElement } from 'react';
-import { type FieldPath, type FieldValues, type PathValue, useFormContext } from 'react-hook-form';
+import { type FocusEvent, type ReactElement, useId } from 'react';
+import {
+  type FieldPath,
+  type FieldValues,
+  type PathValue,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
+import { limitMessage } from '../../lib/formats';
 import Spinner from '../Spinner';
+import { CharacterCount } from './character-count';
 import { FieldShell } from './shell';
+import { blurFormat, browserAttributes } from './text-control';
 import type { TextFieldProps } from './types';
 import { useField } from './use-field';
+
+function WatchedCount<V extends FieldValues>({
+  id,
+  name,
+  limit,
+}: {
+  id: string;
+  name: FieldPath<V>;
+  limit: number;
+}): ReactElement {
+  // Read here, not in TextField, so only a limited field re-renders on each keystroke.
+  const value: unknown = useWatch<V>({ name });
+  return (
+    <CharacterCount id={id} length={typeof value === 'string' ? value.length : 0} limit={limit} />
+  );
+}
 
 export function TextField<V extends FieldValues = FieldValues>({
   name,
@@ -26,18 +51,30 @@ export function TextField<V extends FieldValues = FieldValues>({
   after,
   action,
   format,
+  limit,
   autoComplete,
+  spellCheck,
+  autoCapitalize,
+  enterKeyHint,
   busy,
 }: TextFieldProps<V>): ReactElement {
-  const { register, setValue, getFieldState } = useFormContext<V>();
-  const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
+  const { register, setValue } = useFormContext<V>();
+  const countId = useId();
+  const { aria, ...field } = useField<V>(
+    name,
+    hint,
+    note,
+    [describedBy, limit && countId].filter(Boolean).join(' ') || undefined,
+    invalid,
+  );
+  const blurFormatter = blurFormat({ format, multiline });
   const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const text = event.target.value;
-    const formatted = format?.(text) ?? text;
+    const formatted = blurFormatter?.(text) ?? text;
     if (formatted === text) return;
     setValue(name, formatted as PathValue<V, FieldPath<V>>, {
       shouldDirty: true,
-      shouldValidate: getFieldState(name).invalid,
+      shouldValidate: true,
     });
   };
   // The attribute, not register's `disabled`, which would drop the value from validation and sending. And
@@ -46,13 +83,26 @@ export function TextField<V extends FieldValues = FieldValues>({
     id: field.controlId,
     disabled,
     placeholder,
-    autoComplete,
-    inputMode,
-    // Any decimal: the browser's default step is whole numbers, which would flag 2.5 as invalid.
-    step: type === 'number' ? 'any' : undefined,
+    ...browserAttributes({
+      type,
+      multiline,
+      inputMode,
+      autoComplete,
+      spellCheck,
+      autoCapitalize,
+      enterKeyHint,
+    }),
     'aria-required': required || undefined,
     ...aria,
-    ...register(name, { deps, onBlur: format ? tidy : undefined }),
+    ...register(name, {
+      deps,
+      onBlur: blurFormatter ? tidy : undefined,
+      // A form with a resolver ignores this: its schema carries the limit (claude-docs/components/field.md, "Text fields").
+      validate: limit
+        ? (value: unknown) =>
+            typeof value !== 'string' || value.length <= limit || limitMessage(limit)
+        : undefined,
+    }),
   };
   return (
     <FieldShell
@@ -61,7 +111,14 @@ export function TextField<V extends FieldValues = FieldValues>({
       hint={hint}
       note={note}
       required={required}
-      after={after}
+      after={
+        limit || after ? (
+          <>
+            {limit ? <WatchedCount<V> id={countId} name={name} limit={limit} /> : null}
+            {after}
+          </>
+        ) : undefined
+      }
       action={action}
       {...field}
     >

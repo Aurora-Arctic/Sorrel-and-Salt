@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { trimEnds } from '../../../lib/formats';
 import { optionalText } from '../../../lib/validation';
 import { INGREDIENT_ELEMENTS } from '../schema/ingredient-enums';
 
@@ -23,8 +24,8 @@ const elements = z
 export const CupboardEntryInput = z.object({
   // Blank text is null, so a cleared label field hands the name back.
   label: optionalText(),
-  description: optionalText(),
-  safetyNotes: optionalText(),
+  description: optionalText(trimEnds),
+  safetyNotes: optionalText(trimEnds),
   elements,
   celestialBodies: textList,
   zodiacSigns: textList,

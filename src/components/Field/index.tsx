@@ -6,6 +6,7 @@ export { FieldError, FieldShell, Required } from './shell';
 export { CharacterCount } from './character-count';
 export { fieldDescription } from './description';
 export { TextField } from './text-field';
+export { PlainTextField } from './plain-text-field';
 export { SelectField } from './select-field';
 export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';

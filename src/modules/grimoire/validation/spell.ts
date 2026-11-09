@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { trimEnds } from '../../../lib/formats';
 import { RowId, optionalText } from '../../../lib/validation';
 import type { SpellStatus, SpellVisibility } from '../types';
 import { SpellStepInput } from './spell-step';
@@ -18,8 +19,8 @@ const STATUSES = ['draft', 'complete'] as const satisfies readonly SpellStatus[]
 const SpellFields = z.object({
   // Required once the spell is complete (see `titleRule`).
   title: optionalText(),
-  intent: optionalText(),
-  jarDescription: optionalText(),
+  intent: optionalText(trimEnds),
+  jarDescription: optionalText(trimEnds),
   sealWaxColor: optionalText(),
   moonPhase: optionalText(),
   dayOfWeek: optionalText(),
@@ -27,7 +28,7 @@ const SpellFields = z.object({
   visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
   // Left out means the column's default on create, and unchanged on update.
   status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
-  note: optionalText(),
+  note: optionalText(trimEnds),
   steps: z.array(SpellStepInput).default([]),
   // The assigned categories, never the derived ones. The whole set when given; left out, unchanged on update and none on create.
   categoryIds: z.array(z.string().trim()).optional(),

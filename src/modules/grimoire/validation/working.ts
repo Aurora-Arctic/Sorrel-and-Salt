@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { trimEnds } from '../../../lib/formats';
 import { CalendarDay, RowId, optionalText, requiredText } from '../../../lib/validation';
 
 // Pure, like `spell.ts`. It mirrors spell_workings' and spell_working_participants' CHECKs and unique indexes.
@@ -50,7 +51,7 @@ export const WorkingInput = z
   .object({
     // The day it was made, which is not the day it was recorded.
     workedOn: CalendarDay,
-    note: optionalText(),
+    note: optionalText(trimEnds),
     // In order. Left out: on record, the recorder alone; on update, unchanged.
     participants: z.array(Participant).optional(),
     // Left out: the column's default on record (workspace, capped at the spell's), unchanged on update.

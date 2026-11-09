@@ -1,4 +1,4 @@
-import type { HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
+import type { AutoFill, HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 export interface FieldProps {
@@ -47,8 +47,11 @@ export interface FieldShellProps extends Omit<FieldProps, 'note'>, Omit<FieldDes
   className?: string;
 }
 
-export interface TextFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
-  name: FieldPath<V>;
+/**
+ * What a text control takes, whether it is the react-hook-form `TextField` or the plain-state
+ * `PlainTextField`.
+ */
+export interface TextControlProps extends FieldProps {
   placeholder?: string;
   multiline?: boolean;
   rows?: number;
@@ -56,19 +59,49 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
    * The input's type for a single line; a `number` takes any decimal and is read back as the text
    * typed.
    */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number' | 'email' | 'tel'>;
   /** The on-screen keyboard: `numeric` for a whole number, which a `number` type would take as any decimal. */
-  inputMode?: 'numeric';
+  inputMode?: 'numeric' | 'decimal' | 'email' | 'tel' | 'url';
   disabled?: boolean;
-  deps?: FieldPath<V>[];
+  /**
+   * Tidies the text when the person leaves the field. A single-line field defaults to `tidy`
+   * (src/lib/formats.ts); a multiline one to none. The server schema runs the same function.
+   */
+  format?: (text: string) => string;
+  /**
+   * A soft limit in characters: typing past it is allowed, a count shows from three quarters of it,
+   * and Save refuses. No `maxlength` is set. The schema states the same number, once.
+   */
+  limit?: number;
+  /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's; a real token for the person's own details. */
+  autoComplete?: AutoFill;
+  /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
+  spellCheck?: boolean;
+  /** `none` by default for email and url. */
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  /** The label on a phone keyboard's Enter key: `next` between fields, `done` or `send` on the last. */
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
   describedBy?: string;
   invalid?: boolean;
   after?: ReactNode;
-  busy?: boolean;
   action?: ReactNode;
-  format?: (text: string) => string;
-  /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's. */
-  autoComplete?: 'off';
+  busy?: boolean;
+}
+
+export interface TextFieldProps<V extends FieldValues = FieldValues> extends TextControlProps {
+  name: FieldPath<V>;
+  deps?: FieldPath<V>[];
+}
+
+/** A text field for a form that holds its values in state: the caller holds `value` and the `error` text. */
+export interface PlainTextFieldProps extends TextControlProps {
+  value: string;
+  onChange: (value: string) => void;
+  /** The control's `name`, where the form submits natively. */
+  name?: string;
+  /** The error text the caller's own check found, drawn and announced as TextField's is. */
+  error?: string;
+  onBlur?: () => void;
 }
 
 export interface SelectOption {

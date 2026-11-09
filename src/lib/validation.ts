@@ -1,5 +1,6 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
+import { type FieldFormat, tidy, trimEnds } from './formats';
 import type { ValidationIssue } from './types';
 
 // Apart from errors.ts so that stays schema-library-free (claude-docs/validation.md).
@@ -12,11 +13,12 @@ export const requiredRowId = (message: string) => z.guid({ error: message });
 
 export const CalendarDay = z.iso.date({ error: 'Give the day as YYYY-MM-DD' });
 
-export const requiredText = (message: string) =>
-  z.string({ error: message }).trim().min(1, { error: message });
+/** Tidied as the single-line field is on blur; a multiline field passes `trimEnds`, which keeps its line breaks. */
+export const requiredText = (message: string, format: FieldFormat = tidy) =>
+  z.string({ error: message }).overwrite(format).min(1, { error: message });
 
 /** '' is what a form sends for an untouched field, so it becomes null, which a non-blank CHECK accepts. A caller wanting `undefined`, such as a filter, maps null itself. */
-export const optionalText = (format: (text: string) => string = (text) => text.trim()) =>
+export const optionalText = (format: FieldFormat = tidy) =>
   z
     .string()
     .nullish()
@@ -30,7 +32,7 @@ export const optionalText = (format: (text: string) => string = (text) => text.t
 export const curatedValueInput = (noun: string) =>
   z.object({
     name: requiredText(`Give the ${noun} a name`),
-    description: requiredText(`Describe the ${noun}`),
+    description: requiredText(`Describe the ${noun}`, trimEnds),
   });
 
 export function toValidationIssues(error: z.ZodError): ValidationIssue[] {
