@@ -13,14 +13,14 @@ export function normaliseEmail(input: string): string {
 // the inbox refuses addresses that work. Replacing this function is the whole
 // of the v2 swap for a real validator (claude-docs/backlog.md).
 const SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_LENGTH = 254;
+export const EMAIL_MAX_LENGTH = 254;
 export const EMAIL_FORMAT_MESSAGE =
   'Enter an email address in the correct format, like name@example.com';
 
 export function validateEmailAddress(email: string): ValidationIssue | null {
   const path = ['email'];
   if (email.length === 0) return { path, message: 'Enter an email address' };
-  if (email.length > MAX_LENGTH || !SHAPE.test(email)) {
+  if (email.length > EMAIL_MAX_LENGTH || !SHAPE.test(email)) {
     return { path, message: EMAIL_FORMAT_MESSAGE };
   }
   if (email.endsWith('.invalid')) return { path, message: "That email address can't receive mail" };

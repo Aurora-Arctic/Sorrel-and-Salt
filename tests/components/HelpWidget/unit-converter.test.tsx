@@ -30,7 +30,7 @@ function drawn(element: HTMLElement): string {
 
 function convert(amount: string, from: Unit, to: Unit): HTMLElement {
   render(<UnitConverter />);
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Amount' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Amount' }), {
     target: { value: amount },
   });
   choose('From', unitLabel(from));
@@ -90,12 +90,24 @@ describe('UnitConverter', () => {
     expect(blank).not.toHaveTextContent(/\d/);
     expect(drawn(blank)).toBe('— g = —');
 
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Amount' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Amount' }), {
       target: { value: '-1' },
     });
     const negative = screen.getByRole('status', { name: 'Result' });
     expect(spoken(negative)).not.toMatch(/\d/);
     expect(drawn(negative)).toBe('-1 g = —');
+  });
+
+  it('reads an amount with thousands separators and refuses letters', () => {
+    const grouped = convert('1,000', 'g', 'kg');
+    expect(spoken(grouped)).toBe('1000 g is 1 kg.');
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Amount' }), {
+      target: { value: 'abc' },
+    });
+    const letters = screen.getByRole('status', { name: 'Result' });
+    expect(spoken(letters)).not.toMatch(/\d/);
+    expect(letters).not.toHaveTextContent('NaN');
   });
 
   it('offers every unit the app knows on both sides', () => {

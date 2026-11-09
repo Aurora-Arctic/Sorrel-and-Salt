@@ -931,7 +931,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add a formal name"
+                      placeholder="Add a name"
                       spellCheck={false}
                       autoComplete="off"
                       note={
@@ -964,7 +964,7 @@ const IngredientForm = ({
                       }}
                       legend="Folk Names"
                       entry="Folk Name"
-                      placeholder="Add a folk name"
+                      placeholder="Add a name"
                     />
                   </CollapsibleSection>
                   <CollapsibleSection
@@ -981,7 +981,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="safetyNotes"
                       label="Safety Notes"
-                      placeholder="Add safety notes"
+                      placeholder="Add notes"
                       multiline
                     />
                     {/* Its own flag: a toxic form says so on its own. */}

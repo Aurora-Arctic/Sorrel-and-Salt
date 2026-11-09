@@ -6,12 +6,15 @@ import {
   isSitePage,
   normaliseIssueLink,
 } from '../../../lib/support-path';
+import { EMAIL_MAX_LENGTH } from '../../../lib/email-address';
 import { trimEnds } from '../../../lib/formats';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
 import {
   ERROR_REFERENCE_MAX_LENGTH,
+  HTTP_STATUS_MAX,
+  HTTP_STATUS_MIN,
   MESSAGE_MAX_LENGTH,
   PATH_MAX_LENGTH,
   SUBJECT_MAX_LENGTH,
@@ -40,8 +43,8 @@ export const SupportRequestInput = z.object({
   errorCode: z
     .number()
     .int()
-    .min(100, { error: 'That is not an HTTP status' })
-    .max(599, { error: 'That is not an HTTP status' })
+    .min(HTTP_STATUS_MIN, { error: 'That is not an HTTP status' })
+    .max(HTTP_STATUS_MAX, { error: 'That is not an HTTP status' })
     .nullish(),
   errorReference: z
     .string()
@@ -76,13 +79,17 @@ export const SignedOutSupportRequestInput = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .max(254, { error: 'That address is too long' })
+    .max(EMAIL_MAX_LENGTH, { error: 'That address is too long' })
     .pipe(z.email({ error: 'Enter an email address' })),
   subject: SupportRequestInput.shape.subject,
   message: SupportMessage,
   path: SupportRequestInput.shape.path,
   errorCode: SupportRequestInput.shape.errorCode,
-  errorReference: z.string().trim().max(64, { error: 'That reference is too long' }).nullish(),
+  errorReference: z
+    .string()
+    .trim()
+    .max(ERROR_REFERENCE_MAX_LENGTH, { error: 'That error reference is too long' })
+    .nullish(),
   website: z.string().nullish(),
 });
 

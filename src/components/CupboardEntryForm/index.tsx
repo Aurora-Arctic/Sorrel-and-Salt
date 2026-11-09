@@ -77,7 +77,7 @@ const TEXT: Record<TextField, { label: string; hint?: string; placeholder: strin
   },
   safetyNotes: {
     label: 'Safety Notes',
-    placeholder: 'Add safety notes',
+    placeholder: 'Add notes',
   },
 };
 

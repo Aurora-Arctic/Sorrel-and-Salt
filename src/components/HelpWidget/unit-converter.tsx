@@ -2,8 +2,10 @@
 
 import { useId, useState, type ReactElement } from 'react';
 import { UNITS, type Unit } from '@/modules/ingredients/schema/units';
+import { formatQuantity, parseQuantity } from '@/lib/formats';
 import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
 import { ComboboxSelect } from '../Combobox';
+import { PlainTextField } from '../Field';
 import { unitLabel } from '../StockFields/units';
 import { CONVERSION_REFUSALS } from './conversion-refusals';
 
@@ -17,8 +19,8 @@ type Answer =
   { kind: 'asked' } | { kind: 'refused'; sentence: string } | { kind: 'converted'; value: number };
 
 function answer(amount: string, from: Unit, to: Unit): Answer {
-  const value = Number(amount);
-  if (amount.trim() === '' || !Number.isFinite(value) || value < 0) return { kind: 'asked' };
+  const value = parseQuantity(amount);
+  if (value === null || !Number.isFinite(value) || value < 0) return { kind: 'asked' };
   const converted = unitConvert(value, from, to);
   return converted.ok
     ? { kind: 'converted', value: converted.value }
@@ -34,18 +36,20 @@ const Dash = (): ReactElement => <span className="help-widget__none">—</span>;
  */
 const Result = ({ amount, from, to }: { amount: string; from: Unit; to: Unit }): ReactElement => {
   const result = answer(amount, from, to);
+  const typed = parseQuantity(amount);
+  const shown = typed !== null && Number.isFinite(typed) ? String(typed) : amount;
   const sentence =
     result.kind === 'asked'
       ? 'Type an amount to convert.'
       : result.kind === 'refused'
         ? result.sentence
-        : `${amount} ${unitLabel(from)} is ${result.value} ${unitLabel(to)}.`;
+        : `${shown} ${unitLabel(from)} is ${result.value} ${unitLabel(to)}.`;
   return (
     <output className="help-widget__result" aria-label="Result" role="status">
       <span className="visually-hidden">{sentence}</span>
       <span className="help-widget__equation" aria-hidden="true">
         <span className="help-widget__side">
-          {result.kind === 'asked' && amount.trim() === '' ? <Dash /> : amount} {unitLabel(from)}{' '}
+          {result.kind === 'asked' && amount.trim() === '' ? <Dash /> : shown} {unitLabel(from)}{' '}
           <span className="help-widget__equals">=</span>
         </span>{' '}
         <span className="help-widget__side">
@@ -69,21 +73,13 @@ const UnitConverter = (): ReactElement => {
   return (
     <figure className="figure help-widget">
       <div className="help-widget__fields">
-        <div className="field">
-          <label className="field__label" htmlFor={`${id}-amount`}>
-            Amount
-          </label>
-          <input
-            id={`${id}-amount`}
-            className="input"
-            type="number"
-            min="0"
-            step="any"
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-          />
-        </div>
+        <PlainTextField
+          label="Amount"
+          inputMode="decimal"
+          format={formatQuantity}
+          value={amount}
+          onChange={setAmount}
+        />
         <div className="field">
           <label className="field__label" id={`${id}-from-label`} htmlFor={`${id}-from`}>
             From
