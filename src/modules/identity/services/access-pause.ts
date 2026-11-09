@@ -6,8 +6,12 @@ import {
   findUserAccessPausePage,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
-import { parseRequiredPauseMessage } from '../../../lib/pause-message';
+import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import {
+  parsePauseEnd,
+  parsePauseNote,
+  parseRequiredPauseMessage,
+} from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -26,10 +30,6 @@ const REFUSAL = 'Only a site keeper may pause or lift a user’s access';
 const PRIMARY_REFUSAL = 'The primary keeper’s access cannot be paused';
 const SELF_REFUSAL = 'You cannot pause your own access';
 const STAND_IN_REFUSAL = 'This account is not a person, so its access cannot be paused';
-const NOTE_MAX_LENGTH = 500;
-const PAST_END = 'Choose a time in the future';
-const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
-const NO_NOTE = 'Write a note saying why';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
@@ -49,17 +49,8 @@ export async function pauseUserAccess(
 ): Promise<UserAccessPauseRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
-  const trimmed = note?.trim() ?? '';
-  if (
-    until != null &&
-    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
-  ) {
-    throw fieldRefusal('until', PAST_END);
-  }
-  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > NOTE_MAX_LENGTH) {
-    throw fieldRefusal('note', LONG_NOTE);
-  }
+  parsePauseEnd(until);
+  const trimmed = parsePauseNote(note, { required: true });
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
@@ -78,9 +69,7 @@ export async function pauseUserAccess(
     });
     // An empty answer is a pause another keeper set in the same moment, which took the one live slot.
     if (!row) {
-      throw new ValidationError([
-        { path: ['userId'], message: 'This user is already paused; lift the pause first' },
-      ]);
+      throw fieldRefusal('userId', ALREADY_PAUSED);
     }
     return row;
   });

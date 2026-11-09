@@ -1,8 +1,12 @@
 import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
-import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { parseRequiredPauseMessage } from '../../../lib/pause-message';
+import {
+  parsePauseEnd,
+  parsePauseNote,
+  parseRequiredPauseMessage,
+} from '../../../lib/pause-message';
 import { addressCountKey } from '../../../lib/send-count-key';
 import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -17,24 +21,6 @@ const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
 const NO_ADDRESS_REFUSAL =
   'This request was not sent without an account, so it has no address to time out';
-const NOTE_MAX_LENGTH = 500;
-const PAST_END = 'Choose a time in the future';
-const NO_NOTE = 'Write a note saying why';
-const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
-
-/** Checks a time-out's end and note, and returns the note trimmed. */
-function checkedNote(until: Date | null | undefined, note: string): string {
-  const trimmed = typeof note === 'string' ? note.trim() : '';
-  if (
-    until != null &&
-    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
-  ) {
-    throw fieldRefusal('until', PAST_END);
-  }
-  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
-  return trimmed;
-}
 
 /**
  * Stops a user sending support requests until `until`, or with no end date when `until` is `null`, for the reason `note`
@@ -56,7 +42,8 @@ export async function timeOutSupportSender(
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
-  const trimmed = checkedNote(until, note);
+  parsePauseEnd(until);
+  const trimmed = parsePauseNote(note, { required: true });
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
@@ -99,7 +86,8 @@ export async function timeOutSignedOutSender(
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, requestId);
-  const trimmed = checkedNote(until, note);
+  parsePauseEnd(until);
+  const trimmed = parsePauseNote(note, { required: true });
   const toSender = parseRequiredPauseMessage(message ?? '');
   const request = await findOneById(supportRequests, id);
   if (!request) throw new NotFound('No such request');
