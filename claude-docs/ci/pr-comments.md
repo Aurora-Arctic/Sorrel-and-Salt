@@ -1,6 +1,6 @@
 # PR comments
 
-Every comment CI posts on a pull request comes from one renderer, `.github/scripts/lib/pr-comment.cjs`, through the `pr-comment` composite action or, for the audit, `.github/scripts/audit-comment.cjs`. Its tests are `tests/github/scripts/lib/pr-comment.test.ts`.
+Every comment CI posts on a pull request comes from one renderer, `.github/scripts/lib/pr-comment.cjs`, through the `pr-comment` composite action or, for the audit, `.github/scripts/audit-comment.cjs`.
 
 ## The layout
 
