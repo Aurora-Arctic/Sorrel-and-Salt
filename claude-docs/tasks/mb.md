@@ -341,7 +341,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want to sign in to a hotfix preview, so that a fix to anything behind sign-in can be checked where it will ship, and MB.53's impersonation works there.
 
-**Post-launch, the owner's call.** It was minted into Wave 8 ahead of MB.53, but hotfixes are not needed until after launch, and the hotfix path needs infrastructure fixes before its branches work properly. It sits unscheduled at the end of Wave 15, and its trigger is the first hotfix after launch that needs a sign-in to check ([`waves/wave-15.md`](../waves/wave-15.md)).
+**Post-launch, the owner's call.** It was minted into Wave 8 ahead of MB.53, but hotfixes are not needed until after launch, and the hotfix path needs infrastructure fixes before its branches work properly. It sits unscheduled at the end of the Bugfixes milestone, and its trigger is the first hotfix after launch that needs a sign-in to check ([`waves/wave-15.md`](../waves/wave-15.md)).
 
 Every provider needs its redirect URI registered in advance, and a hotfix preview's `hotfix-<slug>.sorrelandsalt.com` does not exist until its PR does, so no hotfix preview can finish a sign-in today (`secrets.md`). Better Auth's `oAuthProxy` sends the provider's callback to a fixed `productionURL` whose URI is registered, where the code is exchanged and the profile encrypted, then redirects to the preview's own `/callback/:id/oauth-proxy`, which creates the user and session there. The redirect target must be a trusted origin, and `baseURL.allowedHosts` already names `hotfix-*.sorrelandsalt.com`. `productionURL` is staging's origin, which shares the Preview secret with every hotfix preview. The plugin is registered only at `VERCEL_ENV=preview`, the gate MB.53 uses, so at production and locally it is never constructed and its endpoint is absent rather than refusing. Two things to answer from running code: the preview completes on `/callback/:id/oauth-proxy`, which `src/lib/auth.ts`'s hooks do not match, so the provisional-account sweep and the promotion at sign-in do not run there; and staging's own callback also runs its hooks against a request it did not start. The record says what each means and whether either hook should also match the proxy path.
 
@@ -575,7 +575,7 @@ _Acceptance criteria:_
 
 _Story:_ As a site keeper, I want renaming a celestial body, zodiac sign, form or deity to return at once however many compendium entries hold it, so that fixing a typo in a list the whole compendium uses is not a request that times out.
 
-Minted during MB.162's scoping, on the owner's call ([`ingredients.md`, "The compendium holds curated values alone"](../design-decisions/ingredients.md#the-compendium-holds-curated-values-alone)); placed on Wave 17 (Fast follow) on the owner's call of 2026-11-03. **Post-launch, and unscheduled by design as M7.A.1 is:** it is not built now, it sits last in Wave 17's row, and only its trigger starts it. The trigger is a _measured_ rewrite time near the function's time limit, not a guess. Until it fires, the rewrite in the rename's own transaction is v1's behaviour. The trigger is unlikely to fire at the compendium's expected size: each rename's rewrite is one set-based `UPDATE` in the rename's transaction (`carryAstrologyRename`, `carryFormRename` and `carryDeityRename` in `src/db/repository/write.ts`). A form or a deity is matched through an index on `form_id` or `deity_id`. A celestial body or zodiac sign rename scans every live compendium entry's list, with no index. The cost is an estimate, not a measurement: under 50 ms at 5,000 compendium entries.
+Minted during MB.162's scoping, on the owner's call ([`ingredients.md`, "The compendium holds curated values alone"](../design-decisions/ingredients.md#the-compendium-holds-curated-values-alone)); it sits in the Deferred milestone, moved there from Wave 17 on the owner's call of 2026-11-08. **Post-launch, and unscheduled by design as M7.A.1 is:** it is not built now, and only its trigger starts it. The trigger is a _measured_ rewrite time near the function's time limit, not a guess. Until it fires, the rewrite in the rename's own transaction is v1's behaviour. The trigger is unlikely to fire at the compendium's expected size: each rename's rewrite is one set-based `UPDATE` in the rename's transaction (`carryAstrologyRename`, `carryFormRename` and `carryDeityRename` in `src/db/repository/write.ts`). A form or a deity is matched through an index on `form_id` or `deity_id`. A celestial body or zodiac sign rename scans every live compendium entry's list, with no index. The cost is an estimate, not a measurement: under 50 ms at 5,000 compendium entries.
 
 MB.162 holds a compendium entry's forms, celestial bodies, zodiac signs and deities to the live curated rows, and M5.6a, MB.95 and MB.132 keep that so by carrying a rename onto every live compendium entry holding the old spelling, in the rename's own transaction. MB.290 extends that rewrite and the delete check to each compendium variant's own `celestial_bodies` and `zodiac_signs` lists, so this task builds on MB.290 as well as on M5.6a, MB.95 and MB.132, and its job must cover the variants' lists too. A form rename moves no slug: since MB.215 a slug comes from the name and the formal name alone (DESIGN.md §5; `claude-docs/db/ingredient-slugs.md`), and a form is a variant's `form` text plus its `form_id` pick, so there is nothing to re-key or re-slug.
 
@@ -716,7 +716,9 @@ _Acceptance criteria:_
 
 _Story:_ As a visitor whose browser runs no JavaScript, or a search crawler that runs none, I want a missing or forbidden page to say so in the HTML the server sends, so that I see why the page did not load and how to get back.
 
-A page that answers 404 (not found) or 403 (not authorized) sends the right status code, but its HTML body holds only `<div hidden>`, 58 to 562 bytes, and the heading, message and links back appear only once JavaScript runs. The pages are drawn by `ErrorScreens` and `NotAuthorized` (`src/components/`). The cause is not yet established.
+A page that answers 404 (not found) or 403 (not authorized) sends the right status code, but its HTML body holds only `<div hidden>`, 58 to 562 bytes, and the heading, message and links back appear only once JavaScript runs. The pages are drawn by `ErrorScreens` and `NotAuthorized` (`src/components/`).
+
+**Deferred, the owner's call.** It sits in the Deferred milestone, and its trigger is a Next release that renders the not-found and forbidden boundaries into the server's HTML. The cause is Next, not this app: a dynamic page or layout that throws `notFound()` or `forbidden()` gets the right status, but the server renders Next's error payload, whose HTML is the empty error shell `<html id="__next_error__">`, and the screen exists only in the script payload. It holds for a bare page that only calls `notFound()`. A `Suspense` boundary around the thrower puts the screen in the HTML but locks the status at 200 (`loading.md`), and the other routes (the global not-found file, a rewrite in the proxy, a route handler) either miss the thrown cases or break rule 1.
 
 It happens locally and on staging, every time. Signed out for the 404, signed in as a non-keeper for the 403. Steps to reproduce:
 
@@ -732,3 +734,24 @@ _Acceptance criteria:_
 - The 404 for a missing compendium entry, the 404 for a coven the viewer is not a member of, and the 403 for a keeper page each carry their heading and links back in the server's HTML.
 - The status codes stay 404 and 403, and the 308 redirects are unchanged.
 - `claude-docs/loading.md`, or the error-page doc, is corrected wherever it describes how these pages render.
+
+**MB.292 — A Database Error in a Page Query Is Reported as "Invalid Cursor"** · 1.5h
+
+_Story:_ As a developer or keeper, I want a failed list query to report its real cause, so that a broken database or a bad value is not mistaken for a bad page cursor (the token that says where the next page of results starts).
+
+`selectFrom` in `src/db/repository/select.ts` treats every Postgres data exception (SQLSTATE class 22) raised by a page query as a cursor that names no position in the list, and throws `InvalidCursor`, even when the request sent no cursor.
+
+Found on 2026-11-09 on `/keepers/help/<id>`: the dev database lacked migration 0140, so `help_article_kind` had no `guide` value, `listKeeperHelpArticles` failed, and the page showed "Invalid cursor" instead of the refused enum value. Seen locally, signed in as a site keeper; it happens sometimes, whenever a page query hits a data exception that is not the cursor's. Steps to reproduce:
+
+1. Use a local database that lacks migration 0140, so `help_article_kind` has no `guide` value.
+2. Run the help branch's code and sign in as a site keeper.
+3. Open `/keepers/help/<id>` for any help article.
+
+Actual: the page errors with `InvalidCursor: Invalid cursor` from `selectFrom` (`select.ts:203`), though no cursor was sent. Expected: the real database error reaches the log and the error page; `InvalidCursor` is reported only when a cursor was sent and names no position in the list.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: a page query with no cursor that hits a data exception rethrows the original database error, not `InvalidCursor`.
+- A malformed cursor that Postgres rejects with a data exception still throws `InvalidCursor`, proved by a test.
+- With a cursor sent, a data exception that does not come from the cursor's values rethrows the original error.
+- The comment at `select.ts` above the check states the narrowed rule.
