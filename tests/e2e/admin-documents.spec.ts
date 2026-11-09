@@ -459,7 +459,14 @@ test('a bare address typed into the link dialog becomes an https link, and stays
   await page.waitForLoadState('networkidle');
 
   await appendTo(page, 'Changes to This Policy', ' Fixturelink');
+  await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
   for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  // The selection is read back, then given a beat: the editor copies the browser’s selection into its own on a throttle of about
+  // 100ms, and the Link button reads the editor’s copy, which would still be one letter short if it ran first.
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
+    .toBe('Fixturelink');
+  await page.waitForTimeout(300);
   await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add Link' });
   const address = dialog.getByRole('textbox', { name: 'Address' });
@@ -470,8 +477,16 @@ test('a bare address typed into the link dialog becomes an https link, and stays
   await expect(dialog).toHaveCount(0);
 
   const main = page.getByRole('main');
+  // The autosave can send part-way through the typing, and Save Draft is disabled while any save is in flight, so the
+  // test waits for the response to the save that carries the link, not for the button.
+  const saved = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/graphql') &&
+      Boolean(response.request().postData()?.includes('](https://example.com)')) &&
+      response.request().postDataJSON().operationName === 'SaveDocumentDraft',
+  );
   await main.getByRole('button', { name: 'Save Draft' }).click();
-  await expect(main.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+  await saved;
   await page.reload();
   await expect(editorOf(page).getByRole('link', { name: 'Fixturelink' })).toHaveAttribute(
     'href',
