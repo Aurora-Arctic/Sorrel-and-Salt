@@ -988,6 +988,13 @@
       "when": 1794194484491,
       "tag": "0140_help-guide-kind",
       "breakpoints": true
+    },
+    {
+      "idx": 141,
+      "version": "7",
+      "when": 1794195714620,
+      "tag": "0141_help-search-terms",
+      "breakpoints": true
     }
   ]
 }
