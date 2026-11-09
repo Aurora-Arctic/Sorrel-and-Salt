@@ -293,7 +293,7 @@ describe("the coven Ingredients page's edit dialog", () => {
     expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: 'a1' }), session);
     const dialog = editDialog()!;
-    expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+    expect(await within(dialog).findByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
   });
 
   it('opens nothing over a compendium entry the coven names', async () => {
@@ -626,7 +626,7 @@ describe("the coven Ingredients page's Annotate dialog", () => {
     expect(heldCompendiumEntry).toHaveBeenCalledWith(membership, 'b2');
     const dialog = annotateDialog()!;
     expect(
-      within(dialog).getByRole('form', { name: 'Annotate b2, Fixture Salt, House Salt' }),
+      await within(dialog).findByRole('form', { name: 'Annotate b2, Fixture Salt, House Salt' }),
     ).toBeInTheDocument();
   });
 
