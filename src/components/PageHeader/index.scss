@@ -41,3 +41,19 @@
     padding-block-end: 0.875rem;
   }
 }
+
+// The coven home's steward lede runs a line longer than the other pages' (four bars at phone width, three on a wide screen).
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .skeleton-lede--long .skeleton__line:nth-child(3) {
+    display: block;
+  }
+}
+
+// The extra bar is taller than the line it stands for, so the remainder beneath it is smaller.
+.skeleton-lede.skeleton-lede--long {
+  padding-block-end: 0.125rem;
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    padding-block-end: 0.5rem;
+  }
+}

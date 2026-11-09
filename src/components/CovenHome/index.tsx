@@ -85,8 +85,8 @@ const CovenHome = ({
           known ? (
             <>{bar(`You are ${ROLE_NAME[role]} of this coven. ${WORKSPACE_ROLE_ACCESS[role]}`)}</>
           ) : (
-            <span className="skeleton-lede">
-              <Skeleton shape="line" count={3} quiet />
+            <span className="skeleton-lede skeleton-lede--long">
+              <Skeleton shape="line" count={4} quiet />
             </span>
           )
         }
