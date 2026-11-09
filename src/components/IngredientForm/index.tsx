@@ -932,6 +932,8 @@ const IngredientForm = ({
                       name="canonicalName"
                       label="Formal Name"
                       placeholder="Add a formal name"
+                      spellCheck={false}
+                      autoComplete="off"
                       note={
                         kind === NAMELESS_KIND
                           ? 'A "none" entry records no formal name.'
@@ -973,7 +975,6 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="description"
                       label="Description"
-                      placeholder="What it is, where it comes from and how it is used"
                       multiline
                       rows={7}
                     />

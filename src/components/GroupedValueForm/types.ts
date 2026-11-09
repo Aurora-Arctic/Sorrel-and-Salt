@@ -54,7 +54,6 @@ export interface GroupedValueGroupField {
 export interface GroupedValueCopy {
   noun: string;
   descriptionHint?: string;
-  describe: string;
   group?: GroupedValueGroupField;
   deleteNote: string;
   renameNote?: string;

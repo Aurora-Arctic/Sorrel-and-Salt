@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { HEX_COLOR, MIN_CHIP_CONTRAST, chipContrast, formatRatio } from '../../../lib/contrast';
+import {
+  HEX_COLOR,
+  MIN_CHIP_CONTRAST,
+  chipContrast,
+  formatRatio,
+  hexColour,
+} from '../../../lib/contrast';
 import { MAX_HUE_DISTANCE, hueDistance, isAchromatic } from '../../../lib/group-colors';
 import type { GroupColorColumn } from '../../../lib/types';
 import { curatedValueInput } from '../../../lib/validation';
@@ -16,9 +22,11 @@ const WHERE: Record<GroupColorColumn, string> = {
 const color = (column: GroupColorColumn) =>
   z
     .string({ error: 'Choose a colour, as a hex like #4e8bc2' })
-    .regex(HEX_COLOR, { error: 'Choose a colour, as a hex like #4e8bc2' })
-    .transform((hex) => hex.toLowerCase())
+    .transform(hexColour)
+    .pipe(z.string().regex(HEX_COLOR, { error: 'Choose a colour, as a hex like #4e8bc2' }))
     .superRefine((hex, context) => {
+      // Zod runs this after a shape refusal too.
+      if (!HEX_COLOR.test(hex)) return;
       const ratio = chipContrast(column, hex);
       if (ratio >= MIN_CHIP_CONTRAST) return;
       context.addIssue({

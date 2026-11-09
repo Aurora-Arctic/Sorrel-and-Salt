@@ -176,4 +176,36 @@ describe('CupboardEntryForm', () => {
     expect(label()).toHaveAccessibleDescription(/another entry/i);
     expect(onDone).not.toHaveBeenCalled();
   });
+
+  it('lists a refused Save at the top, takes the focus there, and links to the field', async () => {
+    mockGraphQLError('AnnotateCupboardEntry', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['label'], message: 'Another entry in this coven has that label' }],
+    });
+    renderForm();
+
+    typeIn(label(), 'Fixture Wort');
+    await act(async () => fireEvent.click(save()));
+
+    const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
+    expect(summary).toHaveFocus();
+    expect(screen.getByRole('link', { name: /another entry/i })).toHaveAttribute(
+      'href',
+      `#${label().id}`,
+    );
+  });
+
+  it('tidies a label when it is left, and keeps a description’s line breaks', () => {
+    captureSaves();
+    renderForm();
+
+    typeIn(label(), '  Fixture   Wort ');
+    fireEvent.blur(label());
+    expect(label()).toHaveValue('Fixture Wort');
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One\n\nTwo');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One\n\nTwo');
+  });
 });

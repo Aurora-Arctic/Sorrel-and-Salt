@@ -256,6 +256,15 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
     });
 
+    it('turns spell-check off on the locator, since a page or a verse is not a word', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+
+      expect(locatorOf(HERBAL_SHORT)).toHaveAttribute('spellcheck', 'false');
+    });
+
     it("gives each row a locator, labelled and read with its source's citation and the tip beside it", async () => {
       renderField();
       const calls = offerReferences([HERBAL]);

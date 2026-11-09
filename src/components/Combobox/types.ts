@@ -64,6 +64,8 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   typedIcon?: ReactNode;
   icon?: ReactNode;
   placeholder?: string;
+  /** Turns the browser's spell-check off for a box whose words are names, not prose. */
+  spellCheck?: boolean;
   required?: boolean;
   qualifier?: ComboboxQualifier;
   listAnchor?: HTMLElement | null;

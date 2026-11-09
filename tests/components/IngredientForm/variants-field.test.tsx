@@ -70,6 +70,20 @@ describe('VariantsField', () => {
     ]);
   });
 
+  it('tidies a typed Form when the box is left, and keeps spell-check off it', async () => {
+    renderVariants({ workspaceId: WORKSPACE_ID });
+
+    addVariant('Oil');
+    const form = control(variant('Oil'), 'Form');
+    type(variant('Oil'), 'Form', '  Infused   oil ');
+    await act(async () => {
+      fireEvent.blur(form);
+    });
+
+    expect(form).toHaveValue('Infused oil');
+    expect(form).toHaveAttribute('spellcheck', 'false');
+  });
+
   it('refuses text the compendium’s New Form box has not picked, at Enter, adding nothing', () => {
     renderVariants({ workspaceId: null });
 

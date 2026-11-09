@@ -147,6 +147,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Medium. A Curator who types `4E8BC2` or pastes ` #4e8bc2` gets a refusal for a value that is obviously a colour.
 
+**Status:** Fixed — `hexColour` (src/lib/contrast.ts) tidies any loose hex to `#rrggbb` on blur and in the server schema, and expands `#abc`.
+
 **Where:** `ChipColorField/index.tsx:240` (light and dark inputs share the code; `spellCheck` is off at 245). The rule is `/^#[0-9a-f]{6}$/i` at `lib/contrast.ts:14`; the message is "Choose a colour, as a hex like #4e8bc2". Lower-casing happens on the server after the check.
 
 **Why it matters:** hex codes are copied from other tools with or without `#`, with stray spaces, in capitals. The refusal makes the person do work the form could do.
@@ -233,6 +235,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Low. A placeholder disappears once the person starts typing, so the guidance goes missing at the moment it is needed [S42].
 
+**Status:** Fixed — a placeholder is now a one- or two-word sample, and the rules it carried are hints or were dropped.
+
 **Where:** the reference panel specs (`IngredientForm/reference-panel.tsx:150-274`: for example "Shelley, Mary", "2nd ed.", "Vol. 2", "112–30", "Perseus Digital Library"); "Add a colour" on Seal Wax (`SpellBuilder/index.tsx:672`); "Add an amount" on stock quantity (`StockFields/index.tsx:22`); "Add a reason" in `Field/reason-field.tsx`. The reference panel is partly deliberate: a comment at `reference-panel.tsx:150` says a field whose format matters shows an example as its placeholder.
 
 **Why it matters:** an example in a placeholder is not kept after typing and does not tell the person the rule. The research recommends a visible hint stating the rule, linked to the input with `aria-describedby` (Field already does this), and an empty or short-sample placeholder [S15][S18][S42]. One study also reports that format specifications help in fields with format restrictions; only its abstract was read for this audit, so no figure is quoted [S43].
@@ -318,6 +322,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 15. Reference Dates Use the Browser's Date Input and Have No `max`
 
 **Severity:** Low. The rest of the app uses `DateField`; here the browser's date control appears, and a future date is refused only on Save.
+
+**Status:** Fixed — the reference days use `DateField` with `max` from `latestDay()`, and the server check stays.
 
 **Where:** `IngredientForm/reference-panel.tsx:222` (Last Modified) and `:225` (Accessed): `type: 'date'` only, no `max`. `latestDay` in `modules/ingredients/validation/reference-format.ts:119` is used only by `modules/ingredients/validation/reference.ts` ("That day is in the future").
 
