@@ -85,8 +85,6 @@ const FIELDS: readonly string[] = [
   'childIds',
 ];
 
-const WHOLE_NUMBER = /^\d+$/;
-
 const KINDS: readonly { value: HelpFormKind; label: string }[] = [
   { value: 'article', label: 'Article' },
   { value: 'guide', label: 'Guide' },
@@ -199,7 +197,7 @@ const HelpArticleForm = ({
       // A guide turned article sends its emptied list, so the service releases its sub pages in the same save.
       const where = {
         ...(values.kind !== 'term' && { audience: values.audience }),
-        ...((values.kind === 'faq' || parent) && { position: placed }),
+        ...(parent && { position: placed }),
         ...(isPage(values.kind) && { summary }),
         ...(values.kind === 'article' && { parentId: parent }),
         ...((values.kind === 'guide' || article?.kind === 'guide') && {
@@ -256,11 +254,6 @@ const HelpArticleForm = ({
 
   const send = async (values: HelpFormValues): Promise<void> => {
     setAlert(undefined);
-    const typed = values.position.trim();
-    if (values.kind === 'faq' && typed !== '' && !WHOLE_NUMBER.test(typed)) {
-      setError('position', { type: 'client', message: 'Give a whole number, 0 or more' });
-      return;
-    }
     // A new address breaks links that hold the old one: say which first, and save only on a yes.
     if (article && slugify(values.title) !== article.slug) {
       try {
@@ -376,7 +369,7 @@ const HelpArticleForm = ({
           <PendingLink
             className="help-article-form__reorder"
             href={keepersHelpHref(
-              { query: '', kind: '', audience: '', shown: 'shown' },
+              { query: '', kind: '', audience: '', shown: 'all' },
               { guide: parent.id },
             )}
           >
@@ -384,15 +377,6 @@ const HelpArticleForm = ({
           </PendingLink>
         )}
       </div>
-    ) : kind === 'faq' ? (
-      <TextField<HelpFormValues>
-        name="position"
-        label="Position"
-        placeholder="Add Number"
-        type="text"
-        inputMode="numeric"
-        note="Whole numbers only."
-      />
     ) : null;
 
   return (

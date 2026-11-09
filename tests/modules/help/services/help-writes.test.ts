@@ -849,6 +849,58 @@ describe('the position', () => {
     expect(created).toMatchObject({ parentId: null, position: 7 });
   });
 
+  it('puts a new FAQ entry given no position after every live FAQ entry, in creation order', async () => {
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Asked', slug: 'testwort-asked', position: 3 },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Hidden', slug: 'testwort-hidden', shown: false, position: 5 },
+      E.id,
+    );
+    // A deleted entry's number and a guide's higher number are not the live FAQ list's.
+    await insertHelpArticle(
+      sql,
+      {
+        kind: 'faq',
+        title: 'Testwort Gone',
+        slug: 'testwort-gone',
+        position: 20,
+        deleted_at: new Date('2026-01-02T00:00:00Z'),
+      },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { title: 'Testwort Guide', slug: 'testwort-guide', position: 30 },
+      E.id,
+    );
+
+    const first = await createHelpArticle(asUser(E), {
+      kind: 'faq',
+      title: 'Testwort First',
+      body: 'One.',
+    });
+    const second = await createHelpArticle(asUser(E), {
+      kind: 'faq',
+      title: 'Testwort Second',
+      body: 'Two.',
+    });
+    expect(first.position).toBe(6);
+    expect(second.position).toBe(7);
+  });
+
+  it('gives the first FAQ entry position 1 when none is live', async () => {
+    const created = await createHelpArticle(asUser(E), {
+      kind: 'faq',
+      title: 'Testwort Only',
+      body: 'One.',
+    });
+    expect(created.position).toBe(1);
+  });
+
   it('puts a sub page that leaves its guide, given no position, after every guide', async () => {
     const parentId = await insertHelpArticle(
       sql,

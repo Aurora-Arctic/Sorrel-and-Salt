@@ -299,13 +299,13 @@ describe('HelpArticleForm, its kinds', () => {
     const calls = captureCreate();
     renderForm();
 
-    // Precondition: an article has an audience and a parent, a guide sub pages, and an FAQ entry a position.
+    // Precondition: an article has an audience and a parent, a guide sub pages, and an FAQ entry only an audience.
     expect(group('Audience')).toBeInTheDocument();
     expect(combobox('Parent')).toBeInTheDocument();
     fireEvent.click(radio('Guide'));
     expect(group('Sub Pages')).toBeInTheDocument();
     fireEvent.click(radio('FAQ'));
-    expect(textbox('Position')).toBeInTheDocument();
+    expect(group('Audience')).toBeInTheDocument();
 
     fireEvent.click(radio('Term'));
     expect(queryGroup('Audience')).toBeNull();
@@ -324,7 +324,7 @@ describe('HelpArticleForm, its kinds', () => {
     }
   });
 
-  it('gives an FAQ entry an audience and a position, and no parent or sub pages', async () => {
+  it('gives an FAQ entry an audience and no position, parent or sub pages', async () => {
     const calls = captureCreate();
     renderForm();
 
@@ -334,11 +334,11 @@ describe('HelpArticleForm, its kinds', () => {
 
     fillNew('Does Testwort keep?');
     fireEvent.click(radio('Staff'));
-    type('Position', '4');
     press('Save FAQ Entry');
 
     await waitFor(left);
-    expect(calls[0]?.input).toMatchObject({ kind: 'faq', audience: 'staff', position: 4 });
+    expect(calls[0]?.input).toMatchObject({ kind: 'faq', audience: 'staff' });
+    expect(calls[0]?.input).not.toHaveProperty('position');
     expect(calls[0]?.input).not.toHaveProperty('parentId');
     expect(calls[0]?.input).not.toHaveProperty('childIds');
     expect(calls[0]?.input).not.toHaveProperty('summary');
@@ -379,7 +379,7 @@ describe('HelpArticleForm, its kinds', () => {
     expect(kindChip.getByRole('button', { name: /^Kind: ?FAQ$/ })).toBeDisabled();
     expect(kindChip.queryAllByRole('radio')).toHaveLength(0);
 
-    type('Position', '5');
+    type('Body', 'A changed body.');
     press('Save FAQ Entry');
 
     await waitFor(left);
@@ -689,40 +689,11 @@ describe('HelpArticleForm, its sub pages', () => {
 });
 
 describe('HelpArticleForm, its position', () => {
-  it('refuses a position that is not a whole number before asking the server', async () => {
-    const calls = captureCreate();
-    renderForm();
-
-    fireEvent.click(radio('FAQ'));
-    fillNew();
-    type('Position', '2.5');
-    press('Save FAQ Entry');
-
-    await waitFor(() => expect(textbox('Position')).toHaveAttribute('aria-invalid', 'true'));
-    expect(textbox('Position')).toHaveAccessibleDescription(/whole number/i);
-    expect(calls).toHaveLength(0);
-    expect(router.push).not.toHaveBeenCalled();
-  });
-
-  it('sends 0 as a whole number', async () => {
-    const calls = captureCreate();
-    renderForm();
-
-    fireEvent.click(radio('FAQ'));
-    fillNew();
-    type('Position', '0');
-    press('Save FAQ Entry');
-
-    await waitFor(left);
-    expect(calls[0]?.input).toMatchObject({ position: 0 });
-  });
-
-  it('draws no Position for a top-level page, new or saved, and sends none, as Reorder Mode orders the guides', async () => {
+  it('draws no Position for a top-level page or an FAQ entry, new or saved, and sends none, as Reorder Mode orders them', async () => {
     renderForm();
     expect(queryTextbox('Position')).toBeNull();
-    // Precondition: the same new form draws it for an FAQ entry.
     fireEvent.click(radio('FAQ'));
-    expect(textbox('Position')).toBeInTheDocument();
+    expect(queryTextbox('Position')).toBeNull();
     cleanup();
 
     const calls = captureUpdate();
@@ -734,13 +705,16 @@ describe('HelpArticleForm, its position', () => {
 
     await waitFor(left);
     expect(calls[0]?.input).not.toHaveProperty('position');
-  });
+    cleanup();
 
-  it('asks for the numeric keyboard', () => {
-    renderForm();
-    fireEvent.click(radio('FAQ'));
+    const faqCalls = captureUpdate();
+    renderForm({ article: FAQ });
+    expect(queryTextbox('Position')).toBeNull();
+    type('Body', 'A changed body.');
+    press('Save FAQ Entry');
 
-    expect(textbox('Position')).toHaveAttribute('inputmode', 'numeric');
+    await waitFor(() => expect(faqCalls).toHaveLength(1));
+    expect(faqCalls[0]?.input).not.toHaveProperty('position');
   });
 });
 
@@ -794,7 +768,7 @@ describe('HelpArticleForm, Shown', () => {
     const shown = captureShown();
     renderForm({ article: FAQ });
 
-    type('Position', '5');
+    type('Body', 'A changed body.');
     press('Save FAQ Entry');
 
     await waitFor(left);
@@ -903,7 +877,7 @@ describe("HelpArticleForm, the service's refusals", () => {
       label: 'Title',
       message: 'Another article has a title that makes the same address',
     },
-    { path: 'position', label: 'Position', message: 'Give the position as 0 or more' },
+    { path: 'body', label: 'Body', message: 'Give the body some text' },
   ])(
     'lands a refusal at `$path` beside $label, not above the form',
     async ({ path, label, message }) => {
@@ -977,12 +951,12 @@ describe('HelpArticleForm, saving and leaving', () => {
   it('asks before Cancel discards a change, and goes back on Discard Changes', async () => {
     renderForm({ article: FAQ });
 
-    type('Position', '5');
+    type('Body', 'A changed body.');
     press('Cancel');
 
     expect(router.push).not.toHaveBeenCalled();
     press(answer('Keep Editing'));
-    expect(textbox('Position')).toHaveValue('5');
+    expect(textbox('Body')).toHaveValue('A changed body.');
 
     press('Cancel');
     await act(async () => press(answer('Discard Changes')));
@@ -993,7 +967,7 @@ describe('HelpArticleForm, saving and leaving', () => {
     captureUpdate();
     renderForm({ article: FAQ });
 
-    type('Position', '5');
+    type('Body', 'A changed body.');
     press('Save FAQ Entry');
 
     await waitFor(left);

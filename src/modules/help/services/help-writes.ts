@@ -3,7 +3,7 @@ import {
   findAllHelpArticleChildren,
   findAllHelpOrdered,
   findHelpArticleHoldingSlug,
-  findLastTopLevelHelpPosition,
+  findLastHelpPosition,
   findManyByIds,
   findOneById,
   withAudit,
@@ -88,7 +88,10 @@ async function checkSlug(
 }
 
 /** A top-level page given no place goes after every guide, so last in its audience's group in the Guides bar. */
-const lastGuidePlace = async (): Promise<number> => (await findLastTopLevelHelpPosition()) + 1;
+const lastGuidePlace = async (): Promise<number> => (await findLastHelpPosition('guides')) + 1;
+
+/** A new FAQ entry given no place goes after every live FAQ entry. */
+const lastFaqPlace = async (): Promise<number> => (await findLastHelpPosition('faq')) + 1;
 
 /** Only a guide or an article carries a summary; the check reads the value sent, so a row saved before the rule still saves. */
 function checkSummary(kind: HelpArticleKind, summary: string | null | undefined): void {
@@ -209,7 +212,7 @@ async function placeChildren(
   for (const [index, childId] of childIds.entries())
     await write.updateById(helpArticles, childId, { parentId, position: index + 1 });
   if (released.length === 0) return;
-  const last = await findLastTopLevelHelpPosition();
+  const last = await findLastHelpPosition('guides');
   for (const [index, child] of released.entries())
     await write.updateById(helpArticles, child.id, { parentId: null, position: last + index + 1 });
 }
@@ -249,7 +252,11 @@ export async function createHelpArticle(
     slug,
     position:
       values.position ??
-      (isPage(values.kind) && values.parentId == null ? await lastGuidePlace() : null),
+      (isPage(values.kind) && values.parentId == null
+        ? await lastGuidePlace()
+        : values.kind === 'faq'
+          ? await lastFaqPlace()
+          : null),
     parentId: values.parentId ?? null,
     childIds: values.childIds ?? undefined,
   };
