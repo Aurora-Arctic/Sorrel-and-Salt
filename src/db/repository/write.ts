@@ -21,6 +21,7 @@ import { userAccessPauseWrites } from './user-access-pauses';
 import { userWrites } from './users';
 import { workingWrites } from './workings';
 import { workspaceMemberPauseWrites } from './workspace-member-pauses';
+import { workspaceSlugWrites } from './workspace-slugs';
 import { existsIn, selectFrom } from './select';
 import { runInWriteTransaction } from './unit-of-work';
 import { StaleWrite } from '@/lib/errors';
@@ -241,6 +242,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...userAccessPauseWrites(context),
     ...workingWrites(context),
     ...workspaceMemberPauseWrites(context),
+    ...workspaceSlugWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);

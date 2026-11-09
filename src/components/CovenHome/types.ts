@@ -6,6 +6,7 @@ export interface CovenHomeAccess {
   canDelete: boolean;
   canReadMembers: boolean;
   canInvite: boolean;
+  canRename: boolean;
 }
 
 export interface CovenHomeProps {
@@ -20,6 +21,8 @@ export interface CovenHomeProps {
   pending?: boolean;
   /** The Leave Coven button; a skeleton draws a button-shaped label instead. */
   leave?: ReactNode;
+  /** The rename form, drawn only where the role may rename and the coven is not the demo. */
+  rename?: ReactNode;
   /** The Delete Coven button, drawn only for a steward. */
   remove?: ReactNode;
 }

@@ -26,11 +26,19 @@ describe('RolePermissionTable', () => {
     expect(headers.slice(1)).toEqual(WORKSPACE_ROLE_LABELS.map(({ label }) => label));
   });
 
-  it('hides only statements the access check knows, holding workspace.update until a coven can be renamed', () => {
+  it('hides only statements the access check knows, and no longer hides workspace.update, now a coven can be renamed', () => {
     for (const { resource, action } of HIDDEN_STATEMENTS) {
       expect(WORKSPACE_STATEMENTS[resource] as readonly string[]).toContain(action);
     }
-    expect(HIDDEN_STATEMENTS).toEqual([{ resource: 'workspace', action: 'update' }]);
+    expect(WORKSPACE_STATEMENTS.workspace as readonly string[]).toContain('update');
+    expect(hidden('workspace', 'update')).toBe(false);
+  });
+
+  it('draws a row for workspace.update', () => {
+    render(<RolePermissionTable />);
+
+    const label = (STATEMENT_LABELS.workspace as Record<string, string>).update;
+    expect(screen.getByRole('rowheader', { name: label })).toBeInTheDocument();
   });
 
   it('has a row for every statement the access check knows but the hidden ones, and none for those', () => {
