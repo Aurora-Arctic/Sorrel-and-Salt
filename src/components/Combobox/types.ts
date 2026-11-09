@@ -66,6 +66,10 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   placeholder?: string;
   /** Turns the browser's spell-check off for a box whose words are names, not prose. */
   spellCheck?: boolean;
+  /** `none` for a box whose words are not sentences; unset, the browser decides. */
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  /** The label on a phone keyboard's Enter key. */
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
   required?: boolean;
   qualifier?: ComboboxQualifier;
   listAnchor?: HTMLElement | null;

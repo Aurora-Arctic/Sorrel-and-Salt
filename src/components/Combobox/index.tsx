@@ -188,6 +188,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   noun = 'suggestion',
   placeholder,
   spellCheck,
+  autoCapitalize,
+  enterKeyHint,
   required,
   qualifier,
   typedIcon,
@@ -426,6 +428,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   name,
                   placeholder,
                   spellCheck,
+                  autoCapitalize,
+                  enterKeyHint,
                   'aria-required': required || undefined,
                   // One character wide of its own, so that the slot, not the
                   // browser's default of twenty, decides how wide the text is.

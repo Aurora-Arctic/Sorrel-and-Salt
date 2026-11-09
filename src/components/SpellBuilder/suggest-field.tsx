@@ -51,6 +51,9 @@ export function SpellSuggestField({
         offerTyped
         icon={icon?.(text)}
         placeholder={placeholder}
+        spellCheck={false}
+        autoCapitalize="none"
+        enterKeyHint="next"
         inputRef={field.ref}
         name={field.name}
         {...aria}
