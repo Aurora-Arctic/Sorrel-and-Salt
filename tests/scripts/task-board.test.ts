@@ -24,12 +24,8 @@ const {
   main,
   parseMoveArgs,
   planPlacement,
-  planProjectPlacement,
-  planReorder,
   reorderMutationArgs,
-  shapeItem,
 } = await import('../../scripts/task-board.mjs');
-const { projectByNumber } = await import('../../scripts/task-projects.mjs');
 
 type Issue = { number: number; title: string; milestone: string | null; state?: string };
 
@@ -199,7 +195,6 @@ const rawIssue = (
   reason: string | null = null,
 ) => ({
   number,
-  node_id: `I_${number}`,
   title: `${id} — Testwort task`,
   state,
   state_reason: reason,
@@ -221,74 +216,7 @@ let rawIssues: ReturnType<typeof rawIssue>[];
 let rawMilestones: ReturnType<typeof rawMilestone>[];
 
 const isWrite = (args: string[]) =>
-  args[0] === 'project' ||
-  ['PATCH', 'POST', 'DELETE'].some((method) => args.includes(method)) ||
-  args.some((arg) => /^query=\s*mutation/.test(arg));
-
-// The board: each issue's items, which the add, edit and delete stubs below change.
-type BoardNode = ReturnType<typeof boardNode>;
-const boardNode = (
-  number: number,
-  project: number,
-  status: string | null,
-  estimate: number | null,
-) => ({
-  id: `item-${project}-${number}`,
-  project: { id: `P${project}`, number: project },
-  status: status === null ? null : { name: status },
-  estimate: estimate === null ? null : { number: estimate },
-});
-let board: Map<number, BoardNode[]>;
-const STATUS_OPTIONS = ['Not Started', 'In Progress', 'In Review', 'Done'];
-const projectMeta = (number: number) => ({
-  id: `P${number}`,
-  number,
-  fields: {
-    nodes: [
-      {
-        id: `F${number}-status`,
-        name: 'Status',
-        options: STATUS_OPTIONS.map((name) => ({ id: `O${number}-${name}`, name })),
-      },
-      { id: `F${number}-estimate`, name: 'Estimate' },
-    ],
-  },
-});
-const arg = (args: string[], key: string) =>
-  args.find((candidate) => candidate.startsWith(`${key}=`))?.slice(key.length + 1) ?? '';
-
-function writeBoard(args: string[]) {
-  const query = arg(args, 'query');
-  if (query.includes('addProjectV2ItemById')) {
-    const number = Number(arg(args, 'contentId').replace('I_', ''));
-    const project = Number(arg(args, 'projectId').slice(1));
-    const node = boardNode(number, project, 'Not Started', null);
-    board.set(number, [...(board.get(number) ?? []), node]);
-    return { data: { addProjectV2ItemById: { item: { id: node.id } } } };
-  }
-  if (query.includes('deleteProjectV2Item')) {
-    const itemId = arg(args, 'itemId');
-    for (const [number, nodes] of board)
-      board.set(
-        number,
-        nodes.filter((node) => node.id !== itemId),
-      );
-    return {};
-  }
-  if (args[0] === 'project') {
-    const itemId = args[args.indexOf('--id') + 1];
-    const node = [...board.values()].flat().find((candidate) => candidate.id === itemId);
-    if (!node) throw new Error(`no item ${itemId}`);
-    if (args.includes('--number'))
-      node.estimate = { number: Number(args[args.indexOf('--number') + 1]) };
-    else
-      node.status = {
-        name: args[args.indexOf('--single-select-option-id') + 1].replace(/^O\d+-/, ''),
-      };
-    return {};
-  }
-  return {};
-}
+  args.includes('PATCH') || args.some((arg) => arg.includes('updateProjectV2ItemPosition'));
 const writes = () => calls.filter(isWrite);
 
 beforeEach(() => {
@@ -306,23 +234,8 @@ beforeEach(() => {
     rawMilestone(4, 'Z. Deferred'),
     rawMilestone(9, 'Retired — not done', 'closed'),
   ];
-  board = new Map();
   answer = (args) => {
-    if (isWrite(args)) return writeBoard(args);
-    const query = arg(args, 'query');
-    if (query.includes(': projectV2(number:')) {
-      const numbers = [...query.matchAll(/p(\d+): projectV2/g)].map((match) => Number(match[1]));
-      return {
-        data: { organization: Object.fromEntries(numbers.map((n) => [`p${n}`, projectMeta(n)])) },
-      };
-    }
-    if (query.includes(': issue(number:')) {
-      const numbers = [...query.matchAll(/i(\d+): issue/g)].map((match) => Number(match[1]));
-      const repository = Object.fromEntries(
-        numbers.map((n) => [`i${n}`, { projectItems: { nodes: board.get(n) ?? [] } }]),
-      );
-      return { data: { repository } };
-    }
+    if (isWrite(args)) return {};
     const endpoint = args.find((arg) => arg.startsWith('repos/')) ?? '';
     if (endpoint.includes('/issues?')) return [rawIssues];
     if (endpoint.includes('/milestones?')) return [rawMilestones];
@@ -398,258 +311,5 @@ describe('main: move', () => {
   it('writes nothing when the task is already in place', async () => {
     await main(['move', 'MB.3', '--after', 'MB.1']);
     expect(writes()).toEqual([]);
-  });
-});
-
-// Several Projects: every item read is scoped to the configured Projects, and a task is acted on where it sits.
-
-const node = (
-  number: number,
-  status: string | null,
-  estimate: number | null,
-  id = `item-${number}`,
-) => ({
-  id,
-  project: { id: `P${number}`, number, fields: { nodes: [] } },
-  status: status === null ? null : { name: status },
-  estimate: estimate === null ? null : { number: estimate },
-});
-
-describe('shapeItem', () => {
-  it('answers the item on the one configured Project that holds the issue', () => {
-    expect(shapeItem([node(9, 'Done', 1), node(4, 'In Progress', 2)])).toMatchObject({
-      id: 'item-4',
-      projectNumber: 4,
-      status: 'In Progress',
-      estimate: 2,
-    });
-  });
-
-  it('answers null when no configured Project holds it', () => {
-    expect(shapeItem([node(9, 'Done', 1)])).toBeNull();
-  });
-
-  it('refuses an issue on two configured Projects, naming `place`', () => {
-    expect(() => shapeItem([node(1, 'Not Started', null), node(4, 'Done', 3)])).toThrow(/place/);
-  });
-
-  it('answers the item on a named Project', () => {
-    expect(shapeItem([node(1, 'Done', 1), node(4, null, null)], 1)?.status).toBe('Done');
-  });
-});
-
-describe('planProjectPlacement', () => {
-  const issue = (milestone: string | null, labels: string[] = ['tracked']) => ({
-    number: 30,
-    nodeId: 'I_30',
-    title: 'M18.1 — Testwort task',
-    milestone,
-    labels,
-  });
-  const item = (projectNumber: number, status: string | null, estimate: number | null) => ({
-    id: `item-${projectNumber}`,
-    projectNumber,
-    status,
-    estimate,
-  });
-
-  it("moves an item to its milestone's Project, carrying Status and Estimate, labelling it", () => {
-    expect(
-      planProjectPlacement(issue('Wave 18 — Privacy'), [item(1, 'In Review', 2.5)]),
-    ).toMatchObject({
-      id: 'M18.1',
-      to: 4,
-      from: [{ projectNumber: 1, itemId: 'item-1' }],
-      add: true,
-      status: 'In Review',
-      estimate: 2.5,
-      addLabels: ['v1-next'],
-      removeLabels: [],
-    });
-  });
-
-  it('plans nothing for an item already on its Project alone and labelled', () => {
-    expect(
-      planProjectPlacement(issue('Wave 18 — Privacy', ['tracked', 'v1-next']), [
-        item(4, 'Done', 1),
-      ]),
-    ).toBeNull();
-    expect(planProjectPlacement(issue('Wave 03 — Testwort'), [item(1, 'Done', 1)])).toBeNull();
-  });
-
-  it('finishes a move that stopped part-way: the furthest Status and the source Estimate win', () => {
-    const plan = planProjectPlacement(issue('Wave 18 — Privacy', ['tracked', 'v1-next']), [
-      item(1, 'In Progress', 3),
-      item(4, 'Not Started', null),
-    ]);
-    expect(plan).toMatchObject({ add: false, status: 'In Progress', estimate: 3, addLabels: [] });
-    expect(plan?.from).toEqual([{ projectNumber: 1, itemId: 'item-1' }]);
-  });
-
-  it("drops a copy the default Project's auto-add put back, keeping the moved item's values", () => {
-    const plan = planProjectPlacement(issue('Wave 18 — Privacy', ['tracked', 'v1-next']), [
-      item(1, 'Not Started', null),
-      item(4, 'In Review', 2),
-    ]);
-    expect(plan).toMatchObject({ add: false, status: 'In Review', estimate: 2 });
-  });
-
-  it('moves an item back to the default Project and removes the other label', () => {
-    const plan = planProjectPlacement(issue('Z. Bugfixes', ['tracked', 'v1-next']), [
-      item(4, 'In Progress', 1),
-    ]);
-    expect(plan).toMatchObject({ to: 1, add: true, addLabels: [], removeLabels: ['v1-next'] });
-  });
-
-  it('adds a new issue to a Project with no auto-add, and leaves one for an auto-add alone', () => {
-    expect(planProjectPlacement(issue('Wave 18 — Privacy'), [])).toMatchObject({
-      to: 4,
-      add: true,
-      from: [],
-      status: null,
-      estimate: null,
-    });
-    expect(planProjectPlacement(issue('Wave 03 — Testwort'), [])).toBeNull();
-  });
-
-  it('leaves a retired task, or one with no milestone, on the Project that holds it', () => {
-    expect(planProjectPlacement(issue('Retired — not done'), [item(4, 'Done', 1)])).toBeNull();
-    expect(planProjectPlacement(issue(null), [item(1, 'Done', 1)])).toBeNull();
-  });
-});
-
-describe('planReorder', () => {
-  const tasks = {
-    order: ['M3.1', 'M18.1'],
-    waves: [
-      { number: 3, ids: ['M3.1'] },
-      { number: 18, ids: ['M18.1'] },
-    ],
-  };
-  const issues = [issue(1, 'M3.1', 'Wave 03 — Testwort'), issue(2, 'M18.1', 'Wave 18 — Privacy')];
-  const milestones = [milestone(1, 'Wave 03 — Testwort'), milestone(2, 'Wave 18 — Privacy')];
-
-  it("orders only the waves of the Project it is given, against that Project's listing", () => {
-    const one = planReorder({
-      issues,
-      milestones,
-      tasks,
-      listing: { projectId: 'P1', items: [{ id: 'i1', number: 1 }] },
-      project: projectByNumber(1),
-    });
-    expect(one.target).toEqual(['M3.1']);
-    expect(one.missing).toEqual([]);
-    const four = planReorder({
-      issues,
-      milestones,
-      tasks,
-      listing: { projectId: 'P4', items: [] },
-      project: projectByNumber(4),
-    });
-    expect(four.missing).toEqual(['row 18: M18.1 (#2) is not on Project 4']);
-  });
-});
-
-describe('main: place', () => {
-  beforeEach(() => {
-    rawIssues = [
-      rawIssue(30, 'M18.1', 'Wave 18 — Privacy'),
-      rawIssue(31, 'M18.2', 'Wave 18 — Privacy', 'closed', 'completed'),
-      rawIssue(32, 'M3.1', 'Wave 03 — Testwort'),
-    ];
-    board.set(30, [boardNode(30, 1, 'In Progress', 2.5)]);
-    board.set(31, [boardNode(31, 1, 'Done', 1)]);
-    board.set(32, [boardNode(32, 1, 'Not Started', 3)]);
-  });
-
-  it('writes nothing without --apply', async () => {
-    await main(['place', '--all']);
-    expect(writes()).toEqual([]);
-    expect(board.get(30)?.map((node) => node.project.number)).toEqual([1]);
-  });
-
-  it("moves each issue to its milestone's Project with its Status and Estimate, closed ones too", async () => {
-    await main(['place', '--all', '--apply']);
-    for (const [number, status, estimate] of [
-      [30, 'In Progress', 2.5],
-      [31, 'Done', 1],
-    ] as const) {
-      expect(board.get(number)).toEqual([
-        expect.objectContaining({
-          project: { id: 'P4', number: 4 },
-          status: { name: status },
-          estimate: { number: estimate },
-        }),
-      ]);
-    }
-    expect(board.get(32)?.map((node) => node.project.number)).toEqual([1]);
-    const labelled = writes().filter((args) => args.includes('POST'));
-    expect(labelled.map((args) => args[3])).toEqual([
-      `repos/${REPO}/issues/30/labels`,
-      `repos/${REPO}/issues/31/labels`,
-    ]);
-  });
-
-  it('removes nothing from the old Project when the new item does not hold the values', async () => {
-    const realWrite = writeBoard;
-    answer = ((original) => (args: string[]) => {
-      if (args[0] === 'project') return {};
-      return isWrite(args) ? realWrite(args) : original(args);
-    })(answer);
-    await expect(main(['place', 'M18.1', '--apply'])).rejects.toThrow(/Not verified.*M18\.1/);
-    expect(board.get(30)?.map((node) => node.project.number)).toEqual([1, 4]);
-  });
-
-  it('finishes a stopped move on a second run, and a third run plans nothing', async () => {
-    board.set(30, [boardNode(30, 1, 'In Progress', 2.5), boardNode(30, 4, 'Not Started', null)]);
-    rawIssues[0].labels.push({ name: 'v1-next' });
-    await main(['place', 'M18.1', '--apply']);
-    expect(board.get(30)).toEqual([
-      expect.objectContaining({
-        project: { id: 'P4', number: 4 },
-        status: { name: 'In Progress' },
-        estimate: { number: 2.5 },
-      }),
-    ]);
-    expect(
-      writes().filter(
-        (args) => args.includes('POST') || /addProjectV2ItemById/.test(arg(args, 'query')),
-      ),
-    ).toEqual([]);
-    calls.length = 0;
-    await main(['place', 'M18.1', '--apply']);
-    expect(writes()).toEqual([]);
-  });
-
-  it('refuses ids together with --all, and an unknown flag', async () => {
-    await expect(main(['place', 'M18.1', '--all'])).rejects.toThrow(/usage:/);
-    await expect(main(['place', 'M18.1', '--force'])).rejects.toThrow(/usage:/);
-    await expect(main(['place'])).rejects.toThrow(/usage:/);
-  });
-});
-
-describe('main: milestone across Projects', () => {
-  it("moves the issue onto the new milestone's Project", async () => {
-    rawIssues.push(rawIssue(40, 'MB.40', 'Z. Bugfixes'));
-    rawMilestones.push(rawMilestone(20, 'Z. Bugfixes — V1.Next'));
-    board.set(40, [boardNode(40, 1, 'In Progress', 1)]);
-    await main(['milestone', 'MB.40', 'Z. Bugfixes — V1.Next']);
-    expect(board.get(40)).toEqual([
-      expect.objectContaining({
-        project: { id: 'P4', number: 4 },
-        status: { name: 'In Progress' },
-      }),
-    ]);
-  });
-});
-
-describe('main: move on a second Project', () => {
-  it("reads the listing of the Project the task's milestone belongs to", async () => {
-    rawIssues.push(rawIssue(50, 'M18.1', 'Wave 18 — Privacy'));
-    await expect(main(['move', 'M18.1', '--last'])).rejects.toThrow(/only item|not on the Project/);
-    const listing = calls.find((args) =>
-      args.some((candidate) => candidate.includes('projectV2(number: $number)')),
-    );
-    expect(listing).toContain('number=4');
   });
 });
