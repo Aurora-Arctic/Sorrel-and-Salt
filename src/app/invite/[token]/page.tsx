@@ -7,11 +7,17 @@ export const metadata: Metadata = {
   title: 'Your Invitation',
 };
 
-export default async function InvitePage({ params }: InvitePageProps) {
+export default async function InvitePage({ params, searchParams }: InvitePageProps) {
   const { token } = await params;
+  // Only whether a code came back: the code itself is never shown.
+  const { error } = await searchParams;
   return (
     <PageFrame narrow>
-      <InvitationPanel token={token} here={`/invite/${encodeURIComponent(token)}`} />
+      <InvitationPanel
+        token={token}
+        here={`/invite/${encodeURIComponent(token)}`}
+        linkFailed={error !== undefined}
+      />
     </PageFrame>
   );
 }

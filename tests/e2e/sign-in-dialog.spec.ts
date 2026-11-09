@@ -163,6 +163,14 @@ test.describe('the sign-in dialog', () => {
     await expect(page).toHaveURL(INVITATION);
     await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+    await expect(main.getByRole('alert')).toHaveCount(0);
+    await scanBothThemes(page);
+
+    // A refused link comes back with ?error=: the inbox state says so, beside the way to a new one.
+    await page.goto(`${INVITATION}?error=TOKEN_EXPIRED`);
+    await expect(main.getByRole('alert')).toBeVisible();
+    await expect(main).not.toContainText('TOKEN_EXPIRED');
+    await expect(main.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
     await scanBothThemes(page);
 
     const message = await latestMessageTo(INVITED);

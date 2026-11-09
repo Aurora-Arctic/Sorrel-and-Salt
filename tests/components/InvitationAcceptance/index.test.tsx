@@ -217,6 +217,26 @@ describe('InvitationAcceptance', () => {
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
   });
 
+  // A refused verification link comes back here; the way to a new one is the Confirm Your Email beside it.
+  it('shows an error in the inbox state when a verification link failed, and none when it did not', () => {
+    const { rerender } = render(
+      <InvitationAcceptance status="unverified" emailHref="/account/email?next=%2Finvite%2Fabc" />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    rerender(
+      <InvitationAcceptance
+        status="unverified"
+        emailHref="/account/email?next=%2Finvite%2Fabc"
+        linkFailed
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
+  });
+
   it('says why a link cannot be accepted, with no Accept, pointing an unverified match at the email page', () => {
     const { rerender } = render(
       <InvitationAcceptance

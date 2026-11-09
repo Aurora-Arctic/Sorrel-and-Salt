@@ -96,6 +96,25 @@ describe('the invitation panel page', () => {
     expect(recorded).toEqual([]);
   });
 
+  // A verification link refused on its way back lands here with ?error=; the page passes only that it failed.
+  it('tells the inbox state a verification link failed, and nothing else', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({
+      acceptable: false,
+      reason: 'unverified',
+      message: 'Unverified.',
+    });
+    getMe.mockResolvedValue({ email: 'someone@invitation.test' });
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc', linkFailed: true }));
+
+    expect(shown[0]).toEqual({
+      status: 'unverified',
+      emailHref: '/account/email?next=%2Finvite%2Fabc',
+      linkFailed: true,
+    });
+  });
+
   // An address stood in for a provider that gave none was never written to, so there is no inbox to check.
   it('keeps the refusal for an unverified account holding a stand-in address', async () => {
     getSession.mockResolvedValue({ userId: 'u', role: 'user' });

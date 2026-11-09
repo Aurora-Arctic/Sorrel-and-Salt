@@ -56,6 +56,10 @@ const CARD_SIGNED_OUT_GRANT =
 const UNVERIFIED_GRANT =
   "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
 
+/** Over the inbox state when a verification link came back refused, whatever the reason. */
+const LINK_FAILED =
+  "That link has expired or isn't valid. Press Confirm Your Email to get a new one.";
+
 /** What the heading says over a refusal. */
 const REFUSED_GRANT = "This invitation can't be used, and the reason is below.";
 
@@ -157,6 +161,9 @@ const InvitationAcceptance = ({
             />
           ))}
         </div>
+      )}
+      {props.status === 'unverified' && props.linkFailed && (
+        <Notice kind="error">{LINK_FAILED}</Notice>
       )}
       {props.status === 'unverified' && (
         <p className="invitation-acceptance__actions invitation-acceptance__row">

@@ -437,8 +437,9 @@ the tests [`tests.md`](tests.md).
   page uses `getSession()`, so a new account reaches Accept Invitation
   straight from the link, and meets the terms gate on the first protected
   page it opens after accepting. A refused link from an invitation lands on the
-  invitation with `?error=`, which that page does not read; its
-  unverified state offers Confirm Your Email for a new link.
+  invitation with `?error=`. The page reads only that a code is there,
+  never the code, and its unverified state shows one fixed error sentence
+  beside Confirm Your Email ([`invitation-acceptance.md`](../components/invitation-acceptance.md)).
 - **A refusal keeps the rest of the landing.** `refuseVerification` drops
   the flag before appending `?error=`, so the page never reads a refusal as
   a confirmation, and keeps `next`, so a link sent again from there still

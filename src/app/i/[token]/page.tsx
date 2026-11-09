@@ -55,7 +55,7 @@ const Early = (): ReactElement => (
   </section>
 );
 
-export default async function CardPage({ params }: InvitePageProps) {
+export default async function CardPage({ params }: Pick<InvitePageProps, 'params'>) {
   const { token } = await params;
   const card = await liveCard(token);
   const here = `/i/${encodeURIComponent(token)}`;

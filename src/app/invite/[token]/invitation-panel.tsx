@@ -27,9 +27,12 @@ export default async function InvitationPanel({
   token,
   here,
   headingLevel,
+  linkFailed = false,
 }: {
   token: string;
   here: string;
+  /** The page was reached with `?error=`, a verification link refused on its way back. */
+  linkFailed?: boolean;
   headingLevel?: PageHeaderProps['level'];
 }) {
   const session = await getSession();
@@ -51,7 +54,11 @@ export default async function InvitationPanel({
         ? (await getMe(session)).email
         : undefined;
     if (unverifiedEmail !== undefined && !isPlaceholderEmail(unverifiedEmail)) {
-      panel = { status: 'unverified', emailHref: emailPagePath(here) };
+      panel = {
+        status: 'unverified',
+        emailHref: emailPagePath(here),
+        ...(linkFailed && { linkFailed }),
+      };
     } else if (!standing.acceptable) {
       panel = {
         status: 'refused',
