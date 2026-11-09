@@ -25,11 +25,11 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-11  | e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`                                                             | high     | Tests         |     30 |   3.5 | Not yet fixed                                   |
 | D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Not yet fixed                                   |
 | D-13  | The "reduced motion" media-query check is copied into eight places                                                                                           | high     | Components    |     26 |  4.75 | Not yet fixed                                   |
-| D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Not yet fixed                                   |
+| D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Fixed in part                                   |
 | D-15  | Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`                                                                 | high     | Pages and lib |     16 |     4 | Not yet fixed                                   |
 | D-16  | Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)                                                                           | high     | Pages and lib |     15 |     3 | Not yet fixed                                   |
 | D-17  | Help kind and audience lists typed out in GraphQL, the repository and the components                                                                         | high     | Server        |     14 |   2.5 | Not yet fixed                                   |
-| D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Not yet fixed                                   |
+| D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Fixed in part                                   |
 | D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Not yet fixed                                   |
 | D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Not yet fixed                                   |
@@ -154,8 +154,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-140 | floating-ui `autoUpdate` wired by hand in four effects                                                                                                       | medium   | Components    |      1 |     3 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-141 | Unverified-email sentence exists in five places                                                                                                              | medium   | Components    |      1 |     1 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-142 | Invitation-path regex written three times                                                                                                                    | medium   | Components    |      1 |     1 | Not fixed: owner moved it to a Z. Cleanup task  |
-| D-143 | `Passkeys` keeps its own `GENERIC` failure text and a re-export used only by a test                                                                          | low      | Components    |      4 |   0.5 | Not yet fixed                                   |
-| D-144 | `downloadCodes` re-implements `AdminCards/save-file.ts`                                                                                                      | low      | Components    |      2 |   0.5 | Not yet fixed                                   |
+| D-143 | `Passkeys` keeps its own `GENERIC` failure text and a re-export used only by a test                                                                          | low      | Components    |      4 |   0.5 | Fixed                                           |
+| D-144 | `downloadCodes` re-implements `AdminCards/save-file.ts`                                                                                                      | low      | Components    |      2 |   0.5 | Fixed                                           |
 | D-145 | Exports used by nothing outside their own file, and exports under two spellings                                                                              | low      | Unused code   |     52 |  2.25 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-146 | Dead code, orphaned comments and pass-through wrappers                                                                                                       | low      | Components    |     18 |   4.5 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-147 | Coven role labels live in a keeper-only folder; site and coven role helpers are split across two folders                                                     | low      | Components    |     16 |  0.75 | Not fixed: owner moved it to a Z. Cleanup task  |
@@ -577,7 +577,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 `readGraphqlFailure(error).alert ?? GENERIC_FAILURE` also appears in `SpellRecipe/delete-spell.tsx`, `SpellRecipe/duplicate-spell.tsx`, `UserDetail/pause-panel.tsx:19` (`refusal`), `SupportRequestByLink/index.tsx:90` and `UserList/pause-control.tsx:75` (`.alert` only).
 
 - **Estimate:** 2.75 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. `failureMessage(error)` in `src/lib/graphql-failure.ts` gives the sentence a failed request shows, falling back to its first validation issue, and eight components use it; `tests/guards/failure-message.test.ts` refuses reading `.alert` or the first issue by hand in `src/components/`, with an allowlist of the twelve components still to move. The "undefined" sentence in the coven exit cannot happen, since a failure without fields always carries an alert.
 
 ### D-15: Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`
 
@@ -688,7 +688,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - `PASSWORD_CHECK_UNAVAILABLE` (ResetPasswordForm) and `SIGN_UP_UNAVAILABLE` (password-form) say the same refusal for a 500 from the breached-password check.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. `src/lib/auth-messages.ts` holds the too-many-attempts, wrong-code and wrong-credentials sentences and `rateLimited`, and `tests/guards/auth-messages.test.ts` requires each sentence once under `src/`. Still to move: ForgotPasswordForm and ResetPasswordForm import the too-many-attempts sentence through a re-export in `SignInPanel/password-form` and test the rate limit by hand.
 
 ### D-19: Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring
 
@@ -3455,7 +3455,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 - **Owner's call:** `Passkeys/refusal.ts` uses the shared `GENERIC_FAILURE`.
 - **Estimate:** 0.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. Passkeys shows the shared `GENERIC_FAILURE`.
 
 ### D-144: `downloadCodes` re-implements `AdminCards/save-file.ts`
 
@@ -3469,7 +3469,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/PasswordSection/`, `tests/components/AdminCards/`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `saveFile` in `src/lib/save-file.ts` revokes the download URL only after the browser has taken it, and two-factor recovery codes use it; regression test "keeps the download link alive after the click" in `tests/components/PasswordSection/two-factor.test.tsx`. `AdminCards/save-file.ts` remains as a re-export until its importers move.
 
 ### D-145: Exports used by nothing outside their own file, and exports under two spellings
 
