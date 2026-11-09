@@ -755,3 +755,25 @@ _Acceptance criteria:_
 - A malformed cursor that Postgres rejects with a data exception still throws `InvalidCursor`, proved by a test.
 - With a cursor sent, a data exception that does not come from the cursor's values rethrows the original error.
 - The comment at `select.ts` above the check states the narrowed rule.
+
+**MB.293 — Bug Bash: Fixes from Using the Site** · 5h
+
+_Story:_ As anyone using the site, I want the small faults found while using it fixed, so that the site looks and behaves as intended.
+
+A bug bash: six faults and one writing change, gathered into one task on the owner's call of 2026-11-09. Support in the user menu opening the Support dialog was raised too and is kept as it is, since `claude-docs/design-decisions/support.md` decides it.
+
+Found on 2026-11-09 by the owner while using the site. Steps to reproduce, one per fix:
+
+1. **Spell edit Delete.** Open a spell's edit page. Actual: the Delete Spell bin sits at the far end of the action row beside Save, Status, Visibility and the save status (`src/components/SpellBuilder/index.tsx`, `.form__aside` in `src/scss/_primitives.scss`), an awkward place. Expected: the bin sits apart from the save controls, in a place agreed with the owner before it is built.
+2. **Salt behind the footer on a phone.** On a phone, open `/i/<token>` for an invalid or used card. Actual: the salt backdrop slides behind the footer. Expected: the salt is hidden, as it already is for a live card; the hiding rule in `src/components/Backdrop/index.scss` keys on `.card-landing`, which that page lacks.
+3. **Curator page heading.** Open `/curator`. Actual: a group heading reads "Compendium" (`CURATOR_SECTIONS` in `src/components/AdminNav/sections.ts`). Expected: no "Compendium" heading on that page.
+4. **More loses its name.** Open a coven or admin page whose link sits behind More. Actual: the More button shows that page's icon and label in place of "More" (`src/components/SectionNav/section-links.tsx`). Expected: the button still reads "More" and is marked as the current section.
+5. **Signing out from a public page.** Sign out while on `/compendium`, `/help` or a legal page. Actual: the browser loads `/` (`src/components/AccountMenu/sign-out-button.tsx`). Expected: the same page loads again, signed out. Signing out from any other page still loads `/`.
+6. **Needs Review colour.** Open a compendium entry marked Needs Review. Actual: the badge uses the red attention palette. Expected: it uses the ochre warning colour through a new badge palette, so the other attention badges stay red.
+7. **Percent sign.** Prose writes "per cent" (`claude-docs/db/stock.md`, `claude-docs/design/data-model.md`). Expected: they use "%", and `.claude/rules/writing.md` says to use "%". The acknowledged migration sidecar is left as written.
+
+_Acceptance criteria:_
+
+- Each fix starts with a regression test that fails before it: a component test, or a Playwright test where the fault depends on layout or navigation; item 6 adds a `tokens.test.ts` row
+- The Delete placement in item 1 is agreed with the owner before it is built
+- Docs corrected: `claude-docs/components/section-nav.md` (item 4), `claude-docs/components/account-menu.md` (item 5), `claude-docs/styling.md` and `claude-docs/components/entry-marks.md` (item 6), `.claude/rules/writing.md` (item 7)
