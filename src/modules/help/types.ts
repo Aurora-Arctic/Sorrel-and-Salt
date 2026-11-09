@@ -11,6 +11,8 @@ export interface HelpArticle {
   title: string;
   slug: string;
   summary: string | null;
+  /** Words a keeper adds so a reader's own word finds the row; null when none. */
+  searchTerms: string | null;
   body: string;
   position: number | null;
   parentId: string | null;
@@ -28,6 +30,7 @@ export interface HelpArticleInput {
   body: string;
   audience?: HelpAudience | null;
   summary?: string | null;
+  searchTerms?: string | null;
   position?: number | null;
   parentId?: string | null;
   /** The articles this one holds, in order; left out, its children stay as they are. */
@@ -39,6 +42,7 @@ export interface HelpArticlePatch {
   body?: string | null;
   audience?: HelpAudience | null;
   summary?: string | null;
+  searchTerms?: string | null;
   position?: number | null;
   parentId?: string | null;
   childIds?: readonly string[] | null;

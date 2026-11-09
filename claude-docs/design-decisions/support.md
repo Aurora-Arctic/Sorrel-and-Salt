@@ -3662,3 +3662,23 @@ GDPR Article 7 and EDPB guidelines 05/2020 require the controller to demonstrate
 - A `mailto:` header only, a link that needs sign-in, a GraphQL mutation or a server action for unsubscribe.
 - A keeper-edited setting or a hard-coded address for the postal address.
 - Switching off security, pause or document mail.
+
+## Synonyms live in a keeper-edited column
+
+The help search has to answer a question phrased in words the page does not use ("poisonous" for a page that says "toxic"). The
+search ORs the question's words, ranks a row holding every word first, and indexes each row's `search_terms` beside its summary
+(weight B), so a keeper adds a synonym to the row it should find, in the Help editor.
+
+### Why a column
+
+- A custom synonym or thesaurus dictionary needs a file in the server's `tsearch_data` directory. Neon documents no way for a user
+  to place one, so it is treated as unavailable.
+- `dict_xsyn` is not in Neon's extension list and also reads a server file.
+- `lakebase_tokenizer` keeps synonyms in a table, but it replaces the `english` configuration, so the generated column would be
+  rebuilt on a new configuration, and it needs Postgres 16 or later.
+- `ts_rewrite` works in plain SQL, but each rule is a `tsquery` a keeper cannot write, and it checks every rule on every search.
+- A column needs no extension and no server file, and the database reindexes it when it changes.
+
+### Rules out
+
+- A site-wide synonym table or list in code: a synonym that fits one page would widen every other.

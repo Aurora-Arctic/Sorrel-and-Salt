@@ -12,6 +12,7 @@ export function toHelpArticle(row: HelpArticleRow, parentSlug: string | null): H
     title: row.title,
     slug: row.slug,
     summary: row.summary,
+    searchTerms: row.searchTerms,
     body: row.body,
     position: row.position,
     parentId: row.parentId,

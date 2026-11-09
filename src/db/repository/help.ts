@@ -238,9 +238,59 @@ export interface HelpScore {
   score: number;
 }
 
+// The share of a question's words a row's body alone must hold to be kept: a third keeps a row among three words and drops it among four.
+const MIN_COVERAGE = 0.3;
+
+// The most plain words of a question the search reads; the rest add cost and no meaning.
+const MOST_WORDS = 20;
+
+/**
+ * A question split into the words that find a row by any one of them, and the quoted phrases and `-word` exclusions, which
+ * keep `websearch_to_tsquery`'s meaning and must all hold.
+ */
+function readQuestion(query: string): { words: string[]; strict: string } {
+  const words = new Set<string>();
+  const strict: string[] = [];
+  for (const token of query.match(/-?"[^"]*"?|\S+/g) ?? []) {
+    if (token.startsWith('"') || token.startsWith('-"') || /^-\p{L}/u.test(token))
+      strict.push(token);
+    else words.add(token.replace(/"/g, ''));
+  }
+  return { words: [...words].filter(Boolean).slice(0, MOST_WORDS), strict: strict.join(' ') };
+}
+
+/**
+ * How a question matches the rows holding `vector`, a `search_vector` column of the table or of an alias of it: `pass` keeps a row, and `score` orders the kept ones.
+ * A row matches when its `search_vector` holds any word of the question and every phrase. It is kept when it holds every word,
+ * or a third of them, or any word in its title, summary or search terms; a word in a body alone, among many words, is too weak.
+ * The score puts the rows holding every word first, then those holding more of the words, then `ts_rank_cd`.
+ */
+function questionMatch(vector: AnyPgColumn, query: string): { pass: SQL; score: SQL<number> } {
+  const { words, strict } = readQuestion(query);
+  const perWord = words.map((word) => sql`plainto_tsquery('english', ${word})`);
+  const phrases = strict === '' ? undefined : sql`websearch_to_tsquery('english', ${strict})`;
+  const anyWord = perWord.length > 0 ? sql`(${sql.join(perWord, sql` || `)})` : undefined;
+  const tsquery =
+    anyWord && phrases ? sql`(${anyWord} && ${phrases})` : (anyWord ?? phrases ?? sql`''::tsquery`);
+
+  const sum = (parts: SQL[]): SQL =>
+    parts.length > 0 ? sql`(${sql.join(parts, sql` + `)})` : sql`0`;
+  const held = sum(perWord.map((word) => sql`(${vector} @@ ${word})::int`));
+  const asked = sum(perWord.map((word) => sql`(numnode(${word}) > 0)::int`));
+  const coverage = sql`(${held})::real / greatest(${asked}, 1)`;
+  const holdsAll = sql`${held} >= ${asked}`;
+
+  return {
+    pass: sql`(${vector} @@ ${tsquery} and (${holdsAll} or ${coverage} >= ${MIN_COVERAGE}
+      or ts_filter(${vector}, '{a,b}') @@ ${tsquery}))`,
+    score: sql<number>`(case when ${holdsAll} then 2 else 0 end + ${coverage}
+      + ts_rank_cd(${vector}, ${tsquery}, 32))::real`,
+  };
+}
+
 /**
  * One page of the live rows `reach` admits that `query` finds, best first, each carrying its score. A full-text match
- * (`websearch_to_tsquery`, ranked by `ts_rank` over the weighted `search_vector`) answers when any row matches; when none
+ * (any word of the question over the weighted `search_vector`; see {@link questionMatch}) answers when any row passes; when none
  * does, a word-similarity match on the title answers instead, so a typo still finds its page. Both arms hold the same reader scope,
  * so a hidden row's words neither answer nor stop the fallback.
  */
@@ -249,15 +299,14 @@ export function findHelpArticleSearchPage(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<HelpArticleRow, HelpScore>[]> {
-  const tsquery = sql`websearch_to_tsquery('english', ${query})`;
-  const fullText = sql`${helpArticles.searchVector} @@ ${tsquery}`;
+  const found = questionMatch(helpArticles.searchVector, query);
   const other = alias(helpArticles, 'full_text_match');
   const anyFullText = sql`exists (select 1 from ${helpArticles} as ${other}
     where ${isNull(other.deletedAt)} and ${readable(reach, other)}
-      and ${other.searchVector} @@ ${tsquery})`;
+      and ${questionMatch(other.searchVector, query).pass})`;
   const word = foldedWordMatch(query);
 
-  const score = sql<number>`case when ${fullText} then ts_rank(${helpArticles.searchVector}, ${tsquery})
+  const score = sql<number>`case when ${found.pass} then ${found.score}
     else ${word.similarity(helpArticles.title)} end`;
   const order: ListOrder<HelpScore> = {
     sort: [{ expression: sql`-${score}`, type: 'real' }],
@@ -270,7 +319,7 @@ export function findHelpArticleSearchPage(
     page,
     and(
       readable(reach),
-      sql`(${fullText} or (not ${anyFullText} and ${word.matches(helpArticles.title)}))`,
+      sql`(${found.pass} or (not ${anyFullText} and ${word.matches(helpArticles.title)}))`,
     ),
   );
 }

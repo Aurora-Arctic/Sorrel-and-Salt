@@ -89,6 +89,10 @@ const HelpArticleInputRef = builder.inputType('HelpArticleInput', {
     body: t.string({ required: true }),
     audience: t.field({ type: HelpAudienceEnum }),
     summary: t.string(),
+    searchTerms: t.string({
+      description:
+        'Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.',
+    }),
     position: t.int({ description: 'A whole number, 0 or more.' }),
     parentId: t.id(),
     childIds: t.idList({
@@ -99,12 +103,16 @@ const HelpArticleInputRef = builder.inputType('HelpArticleInput', {
 
 const HelpArticlePatchRef = builder.inputType('HelpArticlePatch', {
   description:
-    'Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.',
+    'Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.',
   fields: (t) => ({
     title: t.string(),
     body: t.string(),
     audience: t.field({ type: HelpAudienceEnum }),
     summary: t.string(),
+    searchTerms: t.string({
+      description:
+        'Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.',
+    }),
     position: t.int({ description: 'A whole number, 0 or more.' }),
     parentId: t.id(),
     childIds: t.idList(),

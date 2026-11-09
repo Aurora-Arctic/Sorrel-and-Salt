@@ -517,6 +517,8 @@ export interface SeedHelpArticle {
   audience: 'public' | 'staff' | 'keeper';
   title: string;
   summary: string | null;
+  /** Words that find the row though its text does not say them; see `help-content/search-terms.ts`. */
+  searchTerms?: string | null;
   body: string;
   /** The order of an FAQ question or article; a term has none. */
   position: number | null;

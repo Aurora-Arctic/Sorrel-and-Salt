@@ -141,6 +141,8 @@ export type HelpArticleInput = {
   parentId?: string | number | null | undefined;
   /** A whole number, 0 or more. */
   position?: number | null | undefined;
+  /** Words that make the row findable by a reader’s own word; the search reads them as it reads the summary. */
+  searchTerms?: string | null | undefined;
   summary?: string | null | undefined;
   title: string;
 };
@@ -151,7 +153,7 @@ export type HelpArticleKind =
   | 'faq'
   | 'term';
 
-/** Fields to change; one left out stays. A null `summary`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level. */
+/** Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level. */
 export type HelpArticlePatch = {
   audience?: HelpAudience | null | undefined;
   body?: string | null | undefined;
@@ -159,6 +161,8 @@ export type HelpArticlePatch = {
   parentId?: string | number | null | undefined;
   /** A whole number, 0 or more. */
   position?: number | null | undefined;
+  /** Words that make the row findable by a reader’s own word; the search reads them as it reads the summary. */
+  searchTerms?: string | null | undefined;
   summary?: string | null | undefined;
   title?: string | null | undefined;
 };

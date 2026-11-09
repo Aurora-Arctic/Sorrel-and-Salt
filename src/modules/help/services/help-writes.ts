@@ -218,6 +218,7 @@ export async function createHelpArticle(
       title: values.title,
       slug,
       summary: values.summary ?? null,
+      searchTerms: values.searchTerms ?? null,
       body: values.body,
       position: merged.position,
       parentId: merged.parentId,
@@ -230,7 +231,7 @@ export async function createHelpArticle(
 }
 
 /**
- * A title change moves the slug with it. A null `summary`, `position` or `parentId` clears it; `childIds` left out leaves the children as they are.
+ * A title change moves the slug with it. A null `summary`, `searchTerms`, `position` or `parentId` clears it; `childIds` left out leaves the children as they are.
  *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no live row holds the id.
@@ -279,6 +280,7 @@ export async function updateHelpArticle(
       title: values.title ?? current.title,
       body: values.body ?? current.body,
       summary: values.summary === undefined ? current.summary : values.summary,
+      searchTerms: values.searchTerms === undefined ? current.searchTerms : values.searchTerms,
       slug,
       audience: merged.audience,
       position: merged.position,

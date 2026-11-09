@@ -24,6 +24,7 @@ describe('help_articles schema', () => {
         'title',
         'slug',
         'summary',
+        'search_terms',
         'body',
         'position',
         'seed_key',
@@ -39,7 +40,7 @@ describe('help_articles schema', () => {
     for (const column of ['kind', 'audience', 'title', 'slug', 'body']) {
       expect(byName[column].notNull, column).toBe(true);
     }
-    for (const column of ['summary', 'position', 'seed_key', 'parent_id']) {
+    for (const column of ['summary', 'search_terms', 'position', 'seed_key', 'parent_id']) {
       expect(byName[column].notNull, column).toBe(false);
     }
     expect(byName.audience.default).toBe('public');
