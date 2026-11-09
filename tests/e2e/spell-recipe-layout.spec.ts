@@ -240,7 +240,7 @@ for (const [name, size] of [
   test(`the title takes the head's row with its action icons beside it on a ${name}`, async ({
     page,
   }) => {
-    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-head-${name}.test`, {
+    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-title-${name}.test`, {
       A: 'owner',
     });
     const { A } = coven.users;
