@@ -373,7 +373,10 @@ describe('the spell builder’s Add to Jar', () => {
 
     fireEvent.change(name(), { target: { value: '' } });
     fireEvent.blur(name());
-    await waitFor(() => expect(name()).toHaveAccessibleDescription('Give the ingredient a name'));
+    submit();
+    await waitFor(() =>
+      expect(name()).toHaveAccessibleDescription('Error: Give the ingredient a name'),
+    );
 
     fireEvent.change(name(), { target: { value: 'Mockwort' } });
     submit();
@@ -393,7 +396,7 @@ describe('the spell builder’s Add to Jar', () => {
     submit();
 
     await waitFor(() =>
-      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar.'),
+      expect(name()).toHaveAccessibleDescription('Error: This ingredient is already in the jar.'),
     );
   });
 
@@ -556,7 +559,7 @@ describe('the spell builder’s Add to Jar', () => {
 
     chooseUnit(row, 'ml');
     await waitFor(() => expect(unit).toHaveAttribute('aria-invalid', 'true'));
-    expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT);
+    expect(unit).toHaveAccessibleDescription(`Error: ${UNMEASURABLE_UNIT}`);
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     chooseUnit(row, 'kg');
@@ -688,7 +691,7 @@ describe('the spell builder’s Add to Jar', () => {
     submit();
 
     const unit = within(stepRow('Fixture Mockroot')).getByRole('combobox', { name: /^Unit/ });
-    await waitFor(() => expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT));
+    await waitFor(() => expect(unit).toHaveAccessibleDescription(`Error: ${UNMEASURABLE_UNIT}`));
   });
 });
 

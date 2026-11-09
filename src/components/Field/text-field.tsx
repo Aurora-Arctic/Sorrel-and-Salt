@@ -58,7 +58,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   enterKeyHint,
   busy,
 }: TextFieldProps<V>): ReactElement {
-  const { register, setValue } = useFormContext<V>();
+  const { register, setValue, getFieldState } = useFormContext<V>();
   const countId = useId();
   const { aria, ...field } = useField<V>(
     name,
@@ -74,7 +74,8 @@ export function TextField<V extends FieldValues = FieldValues>({
     if (formatted === text) return;
     setValue(name, formatted as PathValue<V, FieldPath<V>>, {
       shouldDirty: true,
-      shouldValidate: true,
+      // Tidied to nothing: the blur check ran on the text before it, so check again.
+      shouldValidate: getFieldState(name).invalid || formatted === '',
     });
   };
   // The attribute, not register's `disabled`, which would drop the value from validation and sending. And

@@ -465,7 +465,7 @@ describe('StockDialog', () => {
 
     const jar = await inDialog().findByRole('group', {
       name: 'Resin',
-      description: 'The coven already holds a jar of this form',
+      description: 'Error: The coven already holds a jar of this form',
     });
     expect(jar).toBeInTheDocument();
     expect(pick('Resin')).toHaveAccessibleName(/Needs a Fix/);

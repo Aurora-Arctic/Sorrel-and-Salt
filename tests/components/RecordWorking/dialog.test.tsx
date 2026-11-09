@@ -261,7 +261,7 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
     await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
-    expect(people).toHaveAccessibleDescription('Choose a member of this coven');
+    expect(people).toHaveAccessibleDescription('Error: Choose a member of this coven');
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {

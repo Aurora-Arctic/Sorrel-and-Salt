@@ -306,7 +306,7 @@ describe('SpellBuilder', () => {
 
     await waitFor(() => expect(field('Title')).toHaveAttribute('aria-invalid', 'true'));
     expect(field('Title')).toHaveAccessibleDescription(
-      'Give the spell a title before marking it complete',
+      'Error: Give the spell a title before marking it complete',
     );
     expect(
       screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
@@ -535,7 +535,7 @@ describe('SpellBuilder', () => {
 
       await waitFor(() => expect(when()).toHaveAttribute('aria-expanded', 'true'));
       expect(when()).toHaveAccessibleDescription('Has an error to fix');
-      expect(field('Moon Phase')).toHaveAccessibleDescription('Name a moon phase');
+      expect(field('Moon Phase')).toHaveAccessibleDescription('Error: Name a moon phase');
       expect(section('Purpose')).toHaveAttribute('aria-expanded', 'false');
       expect(section('Jar')).toHaveAttribute('aria-expanded', 'false');
     });

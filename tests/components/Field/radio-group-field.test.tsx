@@ -147,6 +147,6 @@ describe('RadioGroupField, cards', () => {
   it('reads an error with the group', () => {
     render(<Cards error="Choose one." />);
     const group = screen.getByRole('group', { name: 'About' });
-    expect(group).toHaveAccessibleDescription('Choose one.');
+    expect(group).toHaveAccessibleDescription('Error: Choose one.');
   });
 });

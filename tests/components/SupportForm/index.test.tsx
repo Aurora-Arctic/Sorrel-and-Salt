@@ -62,12 +62,12 @@ describe('SupportForm', () => {
     render(<SupportForm path="/a" />);
     fillText();
     fireEvent.click(send());
-    expect(aboutGroup()).toHaveAccessibleDescription('Choose what this is about.');
+    expect(aboutGroup()).toHaveAccessibleDescription('Error: Choose what this is about.');
     expect(calls).toHaveLength(0);
     expect(screen.queryByRole('status')).toBeNull();
 
     fireEvent.click(aboutRadio('Question'));
-    expect(aboutGroup()).not.toHaveAccessibleDescription('Choose what this is about.');
+    expect(aboutGroup()).not.toHaveAccessibleDescription('Error: Choose what this is about.');
   });
 
   it('shows what each about means inside its card', () => {

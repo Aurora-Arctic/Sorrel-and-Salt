@@ -218,7 +218,7 @@ describe('InviteDialog', () => {
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(emailField()).toHaveAccessibleDescription('That person is in this coven already');
+    expect(emailField()).toHaveAccessibleDescription('Error: That person is in this coven already');
     expect(send()).toBeEnabled();
     expect(router.refresh).not.toHaveBeenCalled();
   });
