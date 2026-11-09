@@ -14,11 +14,11 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- | -----: | ----: | ----------------------------------------------- |
 | D-1   | Two helpers for numbered pagination in the curator pages, and the keepers help page hand-builds a third                                                      | high     | Pages and lib |      8 |     2 | Not yet fixed                                   |
 | D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Not yet fixed                                   |
-| D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Not yet fixed                                   |
+| D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Fixed                                           |
 | D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
 | D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Fixed                                           |
 | D-6   | Help articles: duplicate audience rank map, missing id guard, repeated lookups                                                                               | high     | Server        |      1 |   1.5 | Fixed                                           |
-| D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Not yet fixed                                   |
+| D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Fixed                                           |
 | D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Not yet fixed                                   |
 | D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Not yet fixed                                   |
 | D-10  | fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL                                                              | high     | Tests         |     31 |     6 | Not yet fixed                                   |
@@ -34,7 +34,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Fixed                                           |
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
-| D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Not yet fixed                                   |
+| D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Fixed                                           |
 | D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
 | D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
 | D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Fixed                                           |
@@ -49,7 +49,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-35  | `textList` and the element-array schema are written twice and have drifted                                                                                   | high     | Server        |      2 |     2 | Fixed                                           |
 | D-36  | Recipient lookup and signed-out view token written three times in support mail builders                                                                      | high     | Server        |      1 |     2 | Fixed                                           |
 | D-37  | "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper                                     | medium   | Server        |     10 |   1.5 | Fixed                                           |
-| D-38  | The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places                                       | medium   | Components    |      9 |     4 | Not yet fixed                                   |
+| D-38  | The correspondence fields block is copied three times, with drifted labels, and its labels repeat in seven more places                                       | medium   | Components    |      9 |     4 | Fixed in part                                   |
 | D-39  | the `next/navigation` router mock is declared in about 80 dom and app test files                                                                             | medium   | Tests         |    178 |  3.25 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-40  | a `QueryClientProvider` render wrapper is rewritten in 61 component test files                                                                               | medium   | Tests         |     61 |     3 | Not fixed: owner moved it to a Z. Cleanup task  |
 | D-41  | `/coven/<slug>/...` hrefs built by hand in about 40 places                                                                                                   | medium   | Pages and lib |     55 |    10 | Not fixed: owner moved it to a Z. Cleanup task  |
@@ -286,7 +286,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** tests/components/Combobox/match.test.ts, Combobox, IngredientForm, SpellBuilder, CategoryPicker, FacetCombobox.
 
 - **Estimate:** 3 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. Pickers fold text through `src/lib/text.ts`, so a Turkish-locale browser matches a capital I as the others do (MoonPhaseIcon and JarShelf had copies too); regression tests in `tests/components/Combobox/typeahead.test.tsx` and `tests/components/SpellBuilder/steps.test.tsx`. `tests/guards/text-folding.test.ts` refuses a hand-written fold in `src/components/`, with an allowlist of EmailForm and CompendiumList facets still to move.
 
 ### D-4: AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted
 
@@ -359,7 +359,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** tests/components/AdminCards/*
 
 - **Estimate:** 0.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. One shared label reads "Used Up" everywhere.
 
 ### D-8: three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it
 
@@ -824,7 +824,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/IngredientForm/`, `tests/components/SpellBuilder/`, `tests/components/CategoryPicker/`.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. `CategoryPicker` holds `CategoriesField`, its query and `useCategoryIndex`, used by IngredientForm and SpellBuilder.
 
 ### D-24: `holdServerAnswers` is written seven times in e2e specs and the copies have drifted
 
@@ -1113,7 +1113,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 - **Owner's call:** The label is "Elements" everywhere.
 - **Estimate:** 4 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. The label reads "Elements" everywhere. The three correspondence blocks differ (one has deities, and the hints vary), so one shared component moves to a Z. Cleanup task.
 
 ### D-39: the `next/navigation` router mock is declared in about 80 dom and app test files
 
