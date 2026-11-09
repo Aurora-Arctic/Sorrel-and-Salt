@@ -10,6 +10,7 @@ import type { CompendiumFacets } from '@/modules/ingredients';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm, sent } from '../../support/filter-form';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
+import { WORKSPACE_ID } from '../../support/constants';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
@@ -83,8 +84,6 @@ const ENTRIES = [
   entry('Testwort', 'testwort-fixtura-alteralis', 'Fixtura alteralis', ['Fixture Herb']),
   entry('Fixture Salt', 'fixture-salt', null, []),
 ];
-
-const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 
 const props = (over: Partial<CompendiumCardsProps> = {}): CompendiumCardsProps => ({
   entries: ENTRIES,

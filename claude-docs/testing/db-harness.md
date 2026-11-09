@@ -32,11 +32,12 @@ there is never run as a test.
   const catalogue = useTestDatabase((client) => (sql = client));
   ```
 
-  `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`),
-  `updated-at-trigger.test.ts`, `test-database-isolation.test.ts` and
-  `tests/db/seed/*` open their own client: the isolation test's subject _is_ the
-  connection, and the others read the clone as the template built it or truncate
-  everything before a seed run they assert.
+  Every `db` file opens its client through it, `useRawClient` and `useProbeTables` in
+  `tests/support/db/probe-tables.ts` included. Two files open a second client on
+  purpose and end it themselves: `connection-under-msw.test.ts`, whose subject is
+  the connection, and `user-role.test.ts`, whose seed needs a client Drizzle has
+  not rewired. `tests/guards/test-database-client.test.ts` fails on any other
+  hand-opened client, and on a client no `.end()` closes.
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups schema tests share: `byName`,

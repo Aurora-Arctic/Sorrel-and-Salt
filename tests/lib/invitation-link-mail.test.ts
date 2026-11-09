@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { invitationLinkMessage } from '@/lib/invitation-link-mail';
+import { ORIGIN } from '../support/constants';
 
 // claude-docs/components/invitation-acceptance.md
 
-const ORIGIN = 'http://localhost:8000';
 const BASE = { to: 'someone@invitation-link.test', inviterName: 'Fixture Owner' };
 
 describe('invitationLinkMessage', () => {

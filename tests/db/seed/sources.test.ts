@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -12,20 +12,21 @@ import { loadCompendium } from '@/db/seed/compendium/load';
 import { citationText } from '@/lib/citation';
 import type { SeedWork } from '@/db/seed/types';
 import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 const byLink = (a: DocLink, b: DocLink) =>
   `${a.kind}|${a.name}|${a.locator}`.localeCompare(`${b.kind}|${b.name}|${b.locator}`);
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 async function seedAll(): Promise<void> {

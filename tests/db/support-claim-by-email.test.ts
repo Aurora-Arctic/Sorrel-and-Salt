@@ -14,6 +14,7 @@ import { failureOf } from '../support/db/database';
 import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // Through Better Auth's real endpoints.
 // (claude-docs/design-decisions/support.md, "Claim by verified email")
@@ -29,6 +30,11 @@ const AS_TYPED = `Claimer${DOMAIN.toUpperCase()}`;
 const PASSWORD = 'Testwort climbs the northern wall';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 
 const server = setupServer(pwnedRange([], []));
@@ -37,12 +43,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth(PROVIDER_CREDENTIALS);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

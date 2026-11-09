@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
+import { ORIGIN } from '../support/constants';
 
-const ORIGIN = 'http://localhost:8000';
 const AT = new Date('2026-10-30T14:05:00Z');
 
 describe('emailChangeNoticeMessage', () => {

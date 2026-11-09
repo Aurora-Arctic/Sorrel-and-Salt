@@ -13,13 +13,13 @@ import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { ingredientFormModule } from '@/components/IngredientEntry/lazy-forms';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/ingredient-entry.md
 
-const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
 const PAGE = `/coven/fixture-coven/ingredients/${ID}`;
 

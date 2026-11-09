@@ -1,12 +1,18 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seedForms } from '@/db/seed/forms';
 import type { FormRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 async function glyphs(): Promise<Record<string, string | null>> {
@@ -19,12 +25,7 @@ async function allForms(): Promise<FormRow[]> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('seedForms(db) over a database a keeper has edited', () => {

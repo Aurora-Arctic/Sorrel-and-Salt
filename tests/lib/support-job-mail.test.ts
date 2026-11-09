@@ -4,8 +4,8 @@ import {
   supportReplyMessage,
   supportStatusMessage,
 } from '@/lib/support-job-mail';
+import { ORIGIN } from '../support/constants';
 
-const ORIGIN = 'http://localhost:8000';
 const REPLY = {
   requestId: 'req-1',
   requestSubject: 'The jar will not open',

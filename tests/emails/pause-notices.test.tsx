@@ -3,8 +3,8 @@ import { accessPausedMessage } from '@/emails/access-paused';
 import { covenAccessPausedMessage } from '@/emails/coven-access-paused';
 import { supportTimedOutMessage } from '@/emails/support-timed-out';
 import { longMinuteInZone } from '@/lib/utc';
+import { ORIGIN } from '../support/constants';
 
-const ORIGIN = 'http://localhost:8000';
 const SUPPORT = `${ORIGIN}/support`;
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const UNTIL_WORDS = `${longMinuteInZone(UNTIL, 'UTC')} UTC`;

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ResetPasswordForm, { GENERIC_RESET_ERROR } from '@/components/ResetPasswordForm';
 import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
+import { PASSWORD } from '../../support/constants';
 
 // The second page of a password reset (@story-71). Better Auth's client is mocked at its one call, so each test sets the server's
 // answer; tests/db/password-reset.test.ts proves the server gives it.
@@ -11,8 +12,6 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   resetPassword: (...args: unknown[]) => resetPassword(...args),
 }));
-
-const PASSWORD = 'Testwort crowns the eastern hedge';
 
 const press = (element: Element) =>
   act(async () => {

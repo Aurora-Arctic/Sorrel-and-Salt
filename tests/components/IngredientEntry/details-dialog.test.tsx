@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { Navigating } from '../../support/navigating';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -392,7 +393,6 @@ describe('DetailsDialog from a compendium card', () => {
 });
 
 describe('DetailsDialog coven card controls', () => {
-  const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';
   const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
   const OWN_EDIT = `${COVEN_LIST}?entry=${ID}&edit=${ID}` as Route;

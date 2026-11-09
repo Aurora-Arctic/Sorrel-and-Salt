@@ -4,12 +4,7 @@ import { setupServer } from 'msw/node';
 import type { Message } from '@/lib/types';
 import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
 import { timeOutSupportSender } from '@/modules/support';
-import {
-  ORIGIN,
-  PROVIDER_CREDENTIALS,
-  cookieHeader,
-  signIn as signInThrough,
-} from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
 import { E, asUser } from '../support/as-user';
 import { asManualFix } from '../support/db/privileges';
@@ -19,6 +14,8 @@ import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN, PASSWORD } from '../support/constants';
 
 // A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
 // and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
@@ -32,9 +29,13 @@ const DOMAIN = '@access-pause-sign-in.test';
 const PROVIDER_USER = `provider${DOMAIN}`;
 const PASSWORD_USER = `password${DOMAIN}`;
 const PASSKEY_USER = `passkey${DOMAIN}`;
-const PASSWORD = 'Testwort crowns the eastern hedge';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 
 const server = setupServer(pwnedRange([], []));
@@ -43,12 +44,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth(PROVIDER_CREDENTIALS);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

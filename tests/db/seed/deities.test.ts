@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -7,8 +7,14 @@ import { seedAstrology } from '@/db/seed/astrology';
 import { DEITY_TRADITIONS, seedDeities } from '@/db/seed/deities';
 import { deitySlug } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 async function allTraditions(): Promise<DeityTraditionRow[]> {
@@ -25,12 +31,7 @@ async function countOf(table: string): Promise<number> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('seedDeities(db) over a database a keeper has edited', () => {

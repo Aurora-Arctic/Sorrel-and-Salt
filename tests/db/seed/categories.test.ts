@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { fromRoot } from '../../support/paths';
@@ -8,6 +8,7 @@ import { CATEGORIES, seedCategories } from '@/db/seed/categories';
 import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 // Every seeded group colour clears the contrast floor on its theme's page ground, read from the stylesheet that defines it; the seed wires each category to its group and leaves a keeper's colours alone.
 // The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/category-seed.md, "The category seed").
@@ -34,6 +35,11 @@ function contrastRatio(a: string, b: string): number {
 }
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 async function allGroups(): Promise<CategoryGroupRow[]> {
@@ -45,12 +51,7 @@ async function allCategories(): Promise<CategoryRow[]> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('the seeded group colours', () => {

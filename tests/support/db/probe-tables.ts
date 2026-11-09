@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, beforeEach } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { namedWrites } from '@/db/table-marks';
 import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
+import { useTestDatabase } from './database';
 
 // The repository's own tests run against scratch tables rather than real ones:
 // the contract is the audit columns and the table shapes, not any one table's
@@ -81,15 +82,15 @@ export const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
 export let sql: ReturnType<typeof postgres>;
 
 export function useRawClient() {
-  beforeAll(() => {
-    sql = postgres(process.env.DATABASE_URL as string);
+  useTestDatabase((client) => {
+    sql = client;
   });
-  afterAll(() => sql.end());
 }
 
 export function useProbeTables() {
+  useRawClient();
+
   beforeAll(async () => {
-    sql = postgres(process.env.DATABASE_URL as string);
     await sql`
       create table repository_probe_herbs (
         id uuid primary key default gen_random_uuid(),
@@ -150,7 +151,6 @@ export function useProbeTables() {
     await sql`drop table if exists repository_probe_pairs`;
     await sql`drop table if exists repository_probe_jars`;
     await sql`drop table if exists repository_probe_tinctures`;
-    await sql.end();
   });
 
   beforeEach(async () => {

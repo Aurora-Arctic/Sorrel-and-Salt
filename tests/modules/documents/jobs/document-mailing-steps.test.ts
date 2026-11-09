@@ -9,12 +9,11 @@ import {
   insertDocumentMailing,
   insertDocumentVersion,
 } from '../../../support/db/insert-document';
+import { MAILPIT_URL, ORIGIN } from '../../../support/constants';
 
 // Mail goes through the real `deliver` to a stand-in Mailpit answering fetch in this process; the daily cap counts every mailing's sends today, so each test starts with none.
 
 const DOMAIN = '@document-mailing-steps.test';
-const ORIGIN = 'http://localhost:3000';
-const MAILPIT_URL = 'http://mailpit.test';
 const SUMMARY = 'We now keep sign-in records for ninety days.';
 
 let sql: postgres.Sql;

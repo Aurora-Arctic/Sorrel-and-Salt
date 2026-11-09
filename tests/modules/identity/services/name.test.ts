@@ -1,21 +1,18 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { Forbidden, ValidationError } from '@/lib/errors';
 import { NAME_MAX_LENGTH } from '@/modules/identity/validation/name';
 import { setName } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 import type { NamedUserRow } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // `setName` takes no id, so the only row a caller can name is the session's own (claude-docs/auth/admin-bootstrap.md, "The account page").
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 async function userRow(id: string): Promise<NamedUserRow> {

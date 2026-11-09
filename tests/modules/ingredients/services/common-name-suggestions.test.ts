@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, InvalidCursor } from '@/lib/errors';
@@ -9,14 +9,15 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // DESIGN.md §9, "Entry-time lookups are permission-scoped": typing a common name suggests the names in use in the compendium and the caller's workspace (an entry's display name or any folk name), each naming by formal name the in-scope ingredients that answer to it.
 // There is no curated vocabulary of common names, so there is one bucket. The table is emptied per test, so every name a result could carry is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

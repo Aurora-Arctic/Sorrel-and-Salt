@@ -5,8 +5,7 @@ import type { auth as Auth } from '@/lib/auth';
 import { socialSignInTarget } from '@/lib/sign-in';
 import type { ProviderId } from '@/lib/types';
 import type { Profile } from './types';
-
-export const ORIGIN = 'http://localhost:8000';
+import { ORIGIN } from './constants';
 
 export const EMAIL_PAGE = '/account/email';
 
