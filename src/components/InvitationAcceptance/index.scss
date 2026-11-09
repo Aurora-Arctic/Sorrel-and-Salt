@@ -11,6 +11,16 @@
   margin-bottom: 0;
 }
 
+// Signed out only (the choices exist only then): the grant stands a step further from the title
+// and from the choices than the other states' lede does.
+.invitation-acceptance:has(> .invitation-acceptance__choices) {
+  row-gap: space(4);
+
+  > .header {
+    row-gap: space(3);
+  }
+}
+
 .invitation-acceptance__actions {
   margin: 0;
 }

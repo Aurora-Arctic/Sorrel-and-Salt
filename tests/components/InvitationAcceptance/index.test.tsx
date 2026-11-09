@@ -139,12 +139,14 @@ describe('InvitationAcceptance', () => {
   it('offers a signed-out visitor Create Account and Sign In, both back to the link, and no Accept', () => {
     render(<InvitationAcceptance status="signed-out" next="/invite/abc" configured={['google']} />);
 
-    for (const name of ['Create Account', 'Sign In']) {
-      expect(screen.getByRole('link', { name })).toHaveAttribute(
-        'href',
-        '/sign-in?next=%2Finvite%2Fabc',
-      );
-    }
+    expect(screen.getByRole('link', { name: 'Create Account' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Finvite%2Fabc&mode=sign-up',
+    );
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Finvite%2Fabc',
+    );
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
   });
 
