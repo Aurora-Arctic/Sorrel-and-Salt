@@ -31,7 +31,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-17  | Help kind and audience lists typed out in GraphQL, the repository and the components                                                                         | high     | Server        |     14 |   2.5 | Not yet fixed                                   |
 | D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Not yet fixed                                   |
 | D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Not yet fixed                                   |
-| D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Not yet fixed                                   |
+| D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Not yet fixed                                   |
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Not yet fixed                                   |
@@ -746,7 +746,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/FacetPanel/`, `MenuButton`, `AccountMenu`, `HelpTerm`, `Combobox`.
 
 - **Estimate:** 8 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. Outside-press dismissal goes through `useDismiss` in `src/lib/use-dismiss.ts`, used by AccountMenu, SectionNav, CategoryChips, HelpTerm, MenuButton, Combobox, FacetPanel and DateField, and `tests/guards/dismissal.test.ts` refuses a new hand-written `pointerdown` or `mousedown` listener in `src/components/`. The press listener now runs in the capture phase everywhere. Three sites stay as they are because they are not plain dismissals: SpellBuilder steps (a press paired with its release), ClickFeedback (it also closes on focus moving out) and Field pointer-held. Not yet shared: Escape handled in `onKeyDown` in MenuButton, FacetPanel and Combobox, and the Escape listeners in HelpOutline guides-bar and InfoTip `use-tip`.
 
 ### D-21: "assertMembership, swallow Forbidden" written at least six times
 
