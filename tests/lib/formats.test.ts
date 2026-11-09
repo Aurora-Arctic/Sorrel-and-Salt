@@ -29,9 +29,10 @@ describe('the server schemas store what the form showed', () => {
 });
 
 describe('parseQuantity', () => {
-  it('reads a point or a comma as the decimal mark', () => {
+  it('reads digits with at most one point', () => {
     expect(parseQuantity('2.5')).toBe(2.5);
-    expect(parseQuantity(' 2,5 ')).toBe(2.5);
+    expect(parseQuantity(' 2.5 ')).toBe(2.5);
+    expect(parseQuantity('2.')).toBe(2);
     expect(parseQuantity('.5')).toBe(0.5);
     expect(parseQuantity('0')).toBe(0);
   });
@@ -40,7 +41,19 @@ describe('parseQuantity', () => {
     expect(parseQuantity('   ')).toBeNull();
   });
   it('reads anything else as not a number, so the rule can refuse it', () => {
-    for (const text of ['abc', '1e3', '1,000.5', '1.2.3', '2,5,1', '0x10', '2 5', '.', '-']) {
+    for (const text of [
+      'abc',
+      '1e3',
+      '2,5',
+      '1,000',
+      '1,000.5',
+      '1.2.3',
+      '2,5,1',
+      '0x10',
+      '2 5',
+      '.',
+      '-',
+    ]) {
       expect(parseQuantity(text), text).toBeNaN();
     }
   });
@@ -51,14 +64,15 @@ describe('parseQuantity', () => {
 
 describe('formatQuantity', () => {
   it('shows an amount as its canonical number', () => {
-    expect(formatQuantity('2,5')).toBe('2.5');
     expect(formatQuantity(' 2.50 ')).toBe('2.5');
     expect(formatQuantity('007')).toBe('7');
     expect(formatQuantity('5.')).toBe('5');
   });
   it('leaves what it cannot read exactly as typed, for the rule to refuse', () => {
     expect(formatQuantity('abc')).toBe('abc');
-    expect(formatQuantity('1,000.5')).toBe('1,000.5');
+    expect(formatQuantity('2,5')).toBe('2,5');
+    expect(formatQuantity('1,000')).toBe('1,000');
+    expect(formatQuantity(' 1,000.5 ')).toBe('1,000.5');
   });
   it('empties blank text', () => {
     expect(formatQuantity('  ')).toBe('');

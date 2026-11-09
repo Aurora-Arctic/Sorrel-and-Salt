@@ -20,16 +20,16 @@ export const trimEnds: FieldFormat = (text) => text.trim();
 export const limitMessage = (limit: number): string =>
   `Keep this to ${limit.toLocaleString('en-US')} characters or fewer`;
 
-const AMOUNT = /^-?(\d+[.,]?\d*|[.,]\d+)$/;
+const AMOUNT = /^-?(\d+\.?\d*|\.\d+)$/;
 
-/** An amount typed with a point or a comma: its number, null for blank, NaN for anything else (letters, two marks, an exponent), which the quantity rule refuses. */
+/** An amount typed as digits with at most one point: its number, null for blank, NaN for anything else (a comma, letters, two points, an exponent), which the quantity rule refuses. */
 export function parseQuantity(text: string): number | null {
   const trimmed = text.trim();
   if (trimmed === '') return null;
-  return AMOUNT.test(trimmed) ? Number(trimmed.replace(',', '.')) : Number.NaN;
+  return AMOUNT.test(trimmed) ? Number(trimmed) : Number.NaN;
 }
 
-/** An amount shown as its canonical number ("2,5" becomes "2.5"); what it cannot read stays as typed. */
+/** An amount shown as its canonical number (" 2.50 " becomes "2.5"); what it cannot read, a comma included, stays as typed. */
 export const formatQuantity: FieldFormat = (text) => {
   const amount = parseQuantity(text);
   if (amount === null) return '';

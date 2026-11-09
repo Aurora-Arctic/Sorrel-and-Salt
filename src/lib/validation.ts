@@ -44,7 +44,7 @@ export const quantity = (label: string) =>
       error: `${label} can have up to three decimal places`,
     });
 
-/** `quantity` for the text a form holds: blank is no amount, a comma or a point is the decimal mark. */
+/** `quantity` for the text a form holds: blank is no amount, digits with at most one point, so a comma is refused. */
 export const quantityText = (label: string) =>
   z.string().transform(parseQuantity).pipe(quantity(label).nullable());
 

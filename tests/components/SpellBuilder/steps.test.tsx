@@ -342,7 +342,7 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
-  it('saves a comma quantity as the number it means, and refuses an unreadable one without sending', async () => {
+  it('saves a point quantity as the number it means, and refuses an unreadable or comma one without sending', async () => {
     suggest(ROSEWORT);
     const calls = acceptCreate();
     renderBuilder();
@@ -350,7 +350,7 @@ describe('the spell builder’s Add to Jar', () => {
     await add('Rose', /Fixture Rosewort/);
     const box = () =>
       within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
-    fireEvent.change(box(), { target: { value: 'lots' } });
+    fireEvent.change(box(), { target: { value: '1,000' } });
     fireEvent.blur(box());
     submit();
 
@@ -359,7 +359,7 @@ describe('the spell builder’s Add to Jar', () => {
     openRow('Fixture Rosewort (Dried Leaf)');
     expect(box()).toBeInvalid();
 
-    fireEvent.change(box(), { target: { value: '2,5' } });
+    fireEvent.change(box(), { target: { value: '2.50' } });
     fireEvent.blur(box());
     expect(box()).toHaveValue('2.5');
 

@@ -41,7 +41,7 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** High. A person can type a value the database refuses (more than three decimal places, a negative, an `e`) and learn only on Save, and the rule is written twice.
 
-**Status:** Fixed — amounts are text with a decimal keypad, tidy on blur, and share one client and server rule.
+**Status:** Fixed — amounts are text with a decimal keypad, tidy on blur, take digits and one point only (a comma is refused), and share one client and server rule.
 
 **Where:**
 
@@ -50,12 +50,12 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 - `AdminCards/mint-form.tsx:177` (Number of Sheets) is a whole-number field with its own live check and is the one number field that behaves well. It is the pattern to copy for whole numbers, not a defect.
 - The rule is written separately in `modules/grimoire/validation/spell-step.ts` and `modules/ingredients/validation/stock.ts` (both against `MAX_QUANTITY` in `lib/validation.ts`).
 
-**Why it matters:** Browsers with `type="number"` accept `e` and `-`, handle a comma as the decimal mark differently from browser to browser, and may show a phone keyboard without a decimal mark [S27][S28][S29]. A person who writes "2,5" may have it dropped or refused without a clear message. The client schema does not check decimal places or the maximum; the person finds out when the server answers.
+**Why it matters:** Browsers with `type="number"` accept `e` and `-`, handle a comma as the decimal mark differently from browser to browser (and a comma may also be a thousands separator), and may show a phone keyboard without a decimal mark [S27][S28][S29]. A person who writes "2,5" may have it dropped or refused without a clear message. The client schema does not check decimal places or the maximum; the person finds out when the server answers.
 
 **Recommended fix:**
 
-- **Format rule:** a non-negative decimal with up to three decimal places and at most `MAX_QUANTITY`. Accept a comma or a point as the decimal mark and ignore surrounding spaces. Refuse two marks or any letter with one message, for example "Enter an amount as a number, like 2.5" [S15][S27][S28][S29].
-- **Formats as you type:** no. It normalises on blur: trim, turn a comma into a point, and redisplay the canonical number [S8][S9][S10].
+- **Format rule:** a non-negative decimal with up to three decimal places and at most `MAX_QUANTITY`. Accept only digits and one decimal point, and ignore surrounding spaces. A comma is refused, because "1,000" read as a decimal mark would save 1. Refuse a comma, two points or any letter with one message, for example "Enter an amount as a number, like 2.5" [S15][S27][S28][S29].
+- **Formats as you type:** no. It normalises on blur: trim and redisplay the canonical number (text with a comma stays as typed) [S8][S9][S10].
 - **How to build it:** change these fields to `type="text"` with `inputMode="decimal"` (a new value in Field's `inputMode` union). Write one `quantity` function in `lib/validation.ts` that both server schemas and the client schema use, and pass it through Field's `format` prop. Keep `type="number"` only where a whole number is wanted with a stepper, as the sheets field does. If a field may ever be negative, drop `inputMode` so the minus sign is available on a phone keyboard [S28].
 
 **Follow-up task:** Replace Amount Number Inputs with One Shared Decimal Quantity Field.
@@ -565,7 +565,7 @@ These are the rules used to write the recommended fixes. They are condensed from
 5. **Labels and instructions.** A visible label above every input; a short hint that states the rule, not only an example [S15][S18].
 6. **Placeholders are not hints.** Leave them empty or give a short sample [S42].
 7. **No masks.** Do not reformat while typing, never auto-advance focus, never block characters silently, never disable paste. Format on blur and accept varied input [S8][S9][S10][S3][S12]. Baymard found 89% of test subjects entered data in a different format from the example shown [S8].
-8. **Amounts.** Use `type="text"` with `inputMode="decimal"`, not `type="number"`. Accept a comma or a point; show the unit next to the field [S15][S27][S28][S29].
+8. **Amounts.** Use `type="text"` with `inputMode="decimal"`, not `type="number"`. Accept digits and one point only, refusing a comma; show the unit next to the field [S15][S27][S28][S29].
 9. **Web addresses.** `type="url"`, `inputMode="url"`, `autocapitalize="none"`, `spellcheck="false"`. Accept an address with no scheme and add `https://`. Verify on the server [S30][S31].
 10. **Email.** `type="email"`, `autocapitalize="none"`, `spellcheck="false"`; trim; check on blur [S24][S32].
 11. **Dates.** One text field for a year; for a full date, three fields day, month, year with numeric keyboards; offer a calendar only as an extra [S12][S16]. This audit finds no typed full-date field in scope, so the rule is recorded and not used in a finding.

@@ -63,17 +63,21 @@ describe('StockFields', () => {
     expect(held).toMatchObject({ quantityOnHand: '12.5', lowStockThreshold: '2' });
   });
 
-  it('tidies a comma amount to a point on blur, in both amount fields', () => {
+  it('tidies an amount to its plain number on blur, and leaves a comma as typed', () => {
     render(<Harness start={EMPTY_STOCK} />);
 
-    typeIn(quantity(), ' 2,5 ');
+    typeIn(quantity(), ' 2.50 ');
     fireEvent.blur(quantity());
-    typeIn(threshold(), '0,25');
+    typeIn(threshold(), '0.250');
     fireEvent.blur(threshold());
 
     expect(quantity()).toHaveValue('2.5');
     expect(threshold()).toHaveValue('0.25');
     expect(held).toMatchObject({ quantityOnHand: '2.5', lowStockThreshold: '0.25' });
+
+    typeIn(quantity(), '1,000');
+    fireEvent.blur(quantity());
+    expect(quantity()).toHaveValue('1,000');
   });
 
   it('asks for a decimal keypad on both amount fields', () => {
@@ -83,9 +87,9 @@ describe('StockFields', () => {
     expect(threshold()).toHaveAttribute('inputmode', 'decimal');
   });
 
-  it('reads a comma amount as the number it means', () => {
+  it('reads a point amount as the number it means, and a comma amount as none', () => {
     expect(
-      stockAmountsOf({ quantityOnHand: '2,5', unit: '', lowStockThreshold: 'abc' }),
+      stockAmountsOf({ quantityOnHand: '2.5', unit: '', lowStockThreshold: '1,000' }),
     ).toMatchObject({ quantityOnHand: 2.5, lowStockThreshold: null });
   });
 

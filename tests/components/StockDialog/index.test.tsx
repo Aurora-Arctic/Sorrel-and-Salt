@@ -229,11 +229,11 @@ describe('StockDialog', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('sends a comma amount as the number it means', async () => {
+  it('sends a point amount as the number it means', async () => {
     const calls = mockSaving();
     open();
 
-    typeIn(quantity('Flower'), '2,5');
+    typeIn(quantity('Flower'), '2.5');
 
     expect((await sent(calls)).input.update?.[0]?.input.quantityOnHand).toBe(2.5);
   });

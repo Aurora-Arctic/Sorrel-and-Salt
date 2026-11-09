@@ -8,7 +8,7 @@ A fragment of three fields: they sit in the form's own gap like any fields, so t
 
 All optional: `prefix` (a row of a list, `rows.0`), `form` (passed to each field as `labelSuffix`, so two rows' fields are never named alike: "Quantity, Flower"; [`field.md`](field.md)) and `disabled` (the StockDialog's stand-in fields before a form is chosen). The generic parameter `V` is the caller's form values: the prefix is a row of a list the type cannot follow, so `V` vouches for it.
 
-The two amount boxes are text inputs with `inputMode="decimal"`, not `type="number"`. A comma or a point is accepted, and the value tidies on blur (`2,5` becomes `2.5`) through `formatQuantity` (`src/lib/formats.ts`). The rule (a non-negative number, at most three decimals, at most `MAX_QUANTITY`) is `quantity()` in `src/lib/validation.ts`, shared with the server. A `0` is a quantity, an empty box is none (`''` for Low Stock At is none, `0` turns it off).
+The two amount boxes are text inputs with `inputMode="decimal"`, not `type="number"`. Only digits and one decimal point are accepted: a comma is refused, as `1,000` would otherwise read as 1. A readable value tidies on blur (`2.50` becomes `2.5`) through `formatQuantity` (`src/lib/formats.ts`). The rule (a non-negative number, at most three decimals, at most `MAX_QUANTITY`) is `quantity()` in `src/lib/validation.ts`, shared with the server. A `0` is a quantity, an empty box is none (`''` for Low Stock At is none, `0` turns it off).
 
 ## Changing the unit converts nothing
 

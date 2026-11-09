@@ -170,7 +170,8 @@ describe('quantity', () => {
 describe('quantityText', () => {
   const rule = quantityText('Low Stock At');
   it('reads typed text through the same rule, blank as no amount', () => {
-    expect(rule.parse('2,5')).toBe(2.5);
+    expect(rule.parse('2.5')).toBe(2.5);
+    expect(() => rule.parse('1,000')).toThrow(/Enter an amount as a number, like 2.5/);
     expect(rule.parse('')).toBeNull();
   });
   it('refuses unreadable and out-of-range text with the rule’s messages', () => {
