@@ -102,6 +102,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Medium. Text is kept when a limit is exceeded and the server messages are clear, so nothing is lost. The cost is a late surprise on Save and constants that can drift apart.
 
+**Status:** Fixed (coven, invitation, keeper, support, document and help forms) — soft limits through Field, each exported once from its owning module, with a server rule of 500 for the reason note.
+
 **Where:**
 
 - Coven name, 80 characters: the server says "Keep the name to 80 characters" in `modules/identity/services/workspace-creation.ts:19` and again in `modules/identity/services/workspace-rename.ts:19`. The inputs have no `maxLength` (`CreateWorkspaceForm/index.tsx:79`, `RenameWorkspaceForm/index.tsx:83`), so the person learns only on Save.
@@ -125,6 +127,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 5. Email Addresses Follow Three Different Rules
 
 **Severity:** Medium. The same address can be accepted in one form and refused in another, and one form has no check until the server answers.
+
+**Status:** Fixed — one shared `EmailAddress` schema, tidied on blur, with `type="email"` and the new message.
 
 **Where:**
 
@@ -162,6 +166,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 7. Link Address in the Editor Disagrees with the Reference Address
 
 **Severity:** Medium. `example.com` is refused in the editor's link dialog and accepted, with `https://` added, in the reference panel.
+
+**Status:** Fixed — the link dialog adds `https://`, upgrades `http://`, and shares one rule with the page renderer and the link plugin.
 
 **Where:**
 
@@ -249,6 +255,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Low. Behaviour matches today, but wording and constants drift apart.
 
+**Status:** Fixed (coven, invitation, keeper, support, document and help forms) — the help form uses the server schema, and validation messages lose their trailing full stops.
+
 **Where:**
 
 - Help article title: "Give it a title" in `HelpArticleForm/form.tsx:399-401` and "Give the article a title" in `modules/help/validation/help.ts`; the body has two wordings the same way (form.tsx:432).
@@ -302,6 +310,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 14. The Support Issue Address Is Tidied Only on Save
 
 **Severity:** Low. The person sees the rewritten address only after submitting, and the field is `type="url"` for a value that can also be a board link.
+
+**Status:** Fixed — the support issue address is tidied on blur by the same `normaliseIssueLink` the server applies.
 
 **Where:** `SupportRequests/issue-panel.tsx:99`; the normaliser is `normaliseIssueLink` in `lib/support-path.ts`, which accepts a GitHub issue address or a board link with `issue=owner|repo|n`, with `ISSUE_LINK_EXPECTED` as the refusal.
 

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, type ReactNode, useEffect, useId, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
-import { z } from 'zod';
+import { HelpArticleInput } from '../../modules/help/validation/help';
 import { graphql } from '@/lib/graphql-document';
 import { helpPath } from '../../lib/help-paths';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -105,10 +105,8 @@ const AUDIENCES: readonly HelpFormAudience[] = ['public', 'staff', 'keeper'];
 /** A guide or an article: the two kinds that have a page, a summary, and change into each other. */
 const isPage = (kind: HelpFormKind): boolean => kind === 'article' || kind === 'guide';
 
-const Schema = z.looseObject({
-  title: z.string().trim().min(1, 'Give it a title'),
-  body: z.string().trim().min(1, 'Give it a body'),
-});
+// The server's own title and body rules, so the form refuses with the same words and the same tidying.
+const Schema = HelpArticleInput.pick({ title: true, body: true }).loose();
 
 interface RenameEffects {
   oldPath: string;
@@ -429,6 +427,7 @@ const HelpArticleForm = ({
             name="searchTerms"
             label="Search Terms"
             placeholder="Add Search Terms"
+            hint="Other words someone might search for, like login for Sign In"
           />
           <div className="field">
             <div className="field__label-row">

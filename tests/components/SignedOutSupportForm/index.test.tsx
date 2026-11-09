@@ -85,4 +85,37 @@ describe('SignedOutSupportForm', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/too many requests/));
     expect(screen.getByRole('textbox', { name: /Subject/ })).toHaveValue('Cannot sign in');
   });
+
+  it('tidies the address on leaving the field', () => {
+    render(<SignedOutSupportForm path="/support" />);
+    const email = screen.getByRole('textbox', { name: /Email/ });
+    fireEvent.change(email, { target: { value: '  Visitor@EXAMPLE.Test ' } });
+    fireEvent.blur(email);
+    expect(email).toHaveValue('Visitor@example.test');
+  });
+
+  it('refuses an address that is not one, and a subject past its limit, without sending', async () => {
+    const calls: SendSignedOutSupportRequestMutationVariables[] = [];
+    mockGraphQLMutation<
+      SendSignedOutSupportRequestMutation,
+      SendSignedOutSupportRequestMutationVariables
+    >('SendSignedOutSupportRequest', (variables) => {
+      calls.push(variables);
+      return { sendSignedOutSupportRequest: true };
+    });
+    render(<SignedOutSupportForm path="/support" />);
+    fill();
+    fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), {
+      target: { value: 'visitor' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: /Subject/ }), {
+      target: { value: 'a'.repeat(121) },
+    });
+
+    fireEvent.click(send());
+
+    await waitFor(() => expect(screen.getByRole('textbox', { name: /Email/ })).toBeInvalid());
+    expect(screen.getByRole('textbox', { name: /Subject/ })).toBeInvalid();
+    expect(calls).toHaveLength(0);
+  });
 });

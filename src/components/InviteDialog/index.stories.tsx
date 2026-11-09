@@ -32,9 +32,7 @@ const ADDRESS_REFUSED = [
     refusal({
       message: 'Validation failed',
       code: 'VALIDATION',
-      fieldErrors: [
-        { path: ['email'], message: 'That address is already a member of this coven.' },
-      ],
+      fieldErrors: [{ path: ['email'], message: 'That address is already a member of this coven' }],
     }),
   ),
 ];

@@ -4,13 +4,15 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { EMAIL_FORMAT_MESSAGE, EmailAddress, emailFormat } from '../../lib/email-address';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
 import type { Failure } from '../../lib/types';
-import { FieldShell } from '../Field/shell';
+import { PlainTextField } from '../Field/plain-text-field';
 import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
-import { fieldDescription } from '../Field/description';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SignedOutSupportFormProps } from './types';
@@ -23,9 +25,6 @@ const SendSignedOutSupportRequestDocument = graphql(`
   }
 `);
 
-const SUBJECT_LIMIT = 120;
-const MESSAGE_LIMIT = 4000;
-
 const SIGNED_OUT_TOPICS = SUPPORT_ABOUTS.filter(({ value }) =>
   ['accessibility', 'bug', 'account', 'privacy', 'question'].includes(value),
 );
@@ -37,9 +36,6 @@ const SignedOutSupportForm = ({
   path,
 }: SignedOutSupportFormProps): ReactElement => {
   const aboutId = useId();
-  const emailId = useId();
-  const subjectId = useId();
-  const messageId = useId();
   const [about, setAbout] = useState<SupportAbout | null>(
     SIGNED_OUT_TOPICS.find(({ value }) => value === initialAbout)?.value ?? null,
   );
@@ -53,23 +49,13 @@ const SignedOutSupportForm = ({
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
+  const [problems, setProblems] = useState<
+    Partial<Record<'email' | 'subject' | 'message', string>>
+  >({});
   const errorFor = (name: string) =>
     failure.field?.name === name ? failure.field.message : undefined;
-  const emailField = fieldDescription({
-    id: emailId,
-    note: 'We reply to this address.',
-    error: errorFor('email'),
-  });
-  const subjectField = fieldDescription({
-    id: subjectId,
-    note: `Up to ${SUBJECT_LIMIT} characters.`,
-    error: errorFor('subject'),
-  });
-  const messageField = fieldDescription({
-    id: messageId,
-    note: `Up to ${MESSAGE_LIMIT} characters.`,
-    error: errorFor('message'),
-  });
+  const edited = (name: keyof typeof problems) =>
+    setProblems((now) => ({ ...now, [name]: undefined }));
 
   const ready = email.trim() !== '' && subject.trim() !== '' && message.trim() !== '';
   const discard = useDiscardGuard(!sent && (email !== '' || subject !== '' || message !== ''));
@@ -80,6 +66,14 @@ const SignedOutSupportForm = ({
       setAboutMissing(true);
       return;
     }
+    const found: typeof problems = {};
+    if (!EmailAddress.safeParse(email).success) found.email = EMAIL_FORMAT_MESSAGE;
+    if (subject.trim().length > SUBJECT_MAX_LENGTH)
+      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
+    if (message.trim().length > MESSAGE_MAX_LENGTH)
+      found.message = limitMessage(MESSAGE_MAX_LENGTH);
+    setProblems(found);
+    if (Object.keys(found).length > 0) return;
     setSending(true);
     setFailure({});
     try {
@@ -123,66 +117,57 @@ const SignedOutSupportForm = ({
         error={aboutMissing && about === null ? ABOUT_REQUIRED : errorFor('about')}
         onChange={setAbout}
       />
-      <FieldShell label="Email" required note="We reply to this address." {...emailField}>
-        <input
-          id={emailField.controlId}
-          className="input"
-          type="email"
-          autoComplete="email"
-          placeholder="Add your email address"
-          aria-required
-          {...emailField.aria}
-          value={email}
-          disabled={sending}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </FieldShell>
-      <FieldShell
+      <PlainTextField
+        name="email"
+        label="Email"
+        required
+        note="We reply to this address"
+        type="email"
+        autoComplete="email"
+        autoCapitalize="none"
+        spellCheck={false}
+        placeholder="Add your email address"
+        format={emailFormat}
+        disabled={sending}
+        value={email}
+        error={problems.email ?? errorFor('email')}
+        onChange={(next) => {
+          setEmail(next);
+          edited('email');
+        }}
+      />
+      <PlainTextField
+        name="subject"
         label="Subject"
         required
-        note={`Up to ${SUBJECT_LIMIT} characters.`}
-        {...subjectField}
-      >
-        <input
-          id={subjectField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder="Add a subject"
-          maxLength={SUBJECT_LIMIT}
-          aria-required
-          {...subjectField.aria}
-          value={subject}
-          disabled={sending}
-          onChange={(event) => setSubject(event.target.value)}
-        />
-      </FieldShell>
-      <FieldShell
+        autoComplete="off"
+        placeholder="Add a subject"
+        limit={SUBJECT_MAX_LENGTH}
+        disabled={sending}
+        value={subject}
+        error={problems.subject ?? errorFor('subject')}
+        onChange={(next) => {
+          setSubject(next);
+          edited('subject');
+        }}
+      />
+      <PlainTextField
+        name="message"
         label="Message"
         required
-        note={
-          <>
-            {`Up to ${MESSAGE_LIMIT} characters. `}
-            <span className="field__warning">
-              Don’t include passwords, payment details or other private information.
-            </span>
-          </>
-        }
-        {...messageField}
-      >
-        <textarea
-          id={messageField.controlId}
-          className="textarea"
-          rows={6}
-          placeholder="Write a message"
-          maxLength={MESSAGE_LIMIT}
-          aria-required
-          {...messageField.aria}
-          value={message}
-          disabled={sending}
-          onChange={(event) => setMessage(event.target.value)}
-        />
-      </FieldShell>
+        multiline
+        rows={6}
+        note="Don’t include passwords, payment details or other private information"
+        placeholder="Write a message"
+        limit={MESSAGE_MAX_LENGTH}
+        disabled={sending}
+        value={message}
+        error={problems.message ?? errorFor('message')}
+        onChange={(next) => {
+          setMessage(next);
+          edited('message');
+        }}
+      />
       <div hidden>
         <input
           type="text"

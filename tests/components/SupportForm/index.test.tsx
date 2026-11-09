@@ -121,12 +121,10 @@ describe('SupportForm', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('states the limits without blocking typing', () => {
+  it('sets no hard limit on typing', () => {
     render(<SupportForm path="/a" />);
     expect(subject()).not.toHaveAttribute('maxlength');
     expect(message()).not.toHaveAttribute('maxlength');
-    expect(subject()).toHaveAccessibleDescription(/120/);
-    expect(message()).toHaveAccessibleDescription(/4000/);
   });
 
   it('counts the characters left only once a field passes 75% of its limit', () => {
@@ -159,7 +157,7 @@ describe('SupportForm', () => {
 
     fireEvent.click(send());
     await waitFor(() => expect(subject()).toHaveFocus());
-    expect(subject()).toHaveAccessibleDescription(/Keep the subject to 120 characters/);
+    expect(subject()).toHaveAccessibleDescription(/120 characters/);
     expect(calls).toHaveLength(0);
   });
 
