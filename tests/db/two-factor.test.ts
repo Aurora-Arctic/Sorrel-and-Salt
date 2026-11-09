@@ -9,6 +9,7 @@ import { totpCode, wrongTotpCode } from '../support/two-factor';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { PASSWORD } from '../support/constants';
 
 // Through Better Auth's real endpoints (DESIGN.md §8; claude-docs/auth/two-factor.md).
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -19,7 +20,6 @@ vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@two-factor.test';
 const OWNER = `owner${DOMAIN}`;
-const PASSWORD = 'Testwort crowns the eastern hedge';
 const OLD_SECRET = 'testwort-old-secret-0123456789abcdef0123456789';
 const NEW_SECRET = 'testwort-new-secret-0123456789abcdef0123456789';
 

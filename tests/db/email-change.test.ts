@@ -4,7 +4,6 @@ import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
 import {
   EMAIL_PAGE,
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -17,6 +16,7 @@ import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: an address becomes the account's only when the mailed change link is followed from a session holding the row,
 // so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").

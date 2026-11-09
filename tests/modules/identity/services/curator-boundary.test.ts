@@ -35,6 +35,7 @@ import {
 import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
+import { ORIGIN } from '../../../support/constants';
 
 // A curator curates the compendium and reaches nothing on the people page. Each row is called by direct id, as a forged request would call it, so the menu hiding People is not what refuses.
 // Each refusal is proven against the same call succeeding for the caller it is meant for, and F is proven to pass the curation check, so a row stays green only while the people page's own guard refuses a curator
@@ -50,7 +51,6 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@curator-boundary.test';
 const PLAIN = '00000000-0000-0000-0000-0000000000e1';
-const ORIGIN = 'http://localhost:8000';
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');

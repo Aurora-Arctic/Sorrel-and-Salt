@@ -5,6 +5,7 @@ import { GENERIC_SIGN_UP_ERROR, SIGN_UP_UNAVAILABLE } from '@/components/SignInP
 import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
+import { PASSWORD } from '../../support/constants';
 
 // The password sign-in form (@story-70). Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
@@ -24,7 +25,6 @@ vi.mock('next/navigation', async () => ({
 }));
 
 const assign = vi.fn();
-const PASSWORD = 'Testwort crowns the eastern hedge';
 
 const press = (element: Element) =>
   act(async () => {

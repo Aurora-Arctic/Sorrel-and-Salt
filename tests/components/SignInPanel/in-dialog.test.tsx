@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import type { SignInHeader } from '@/components/SignInPanel/types';
 import { installHistory, setQuery } from './search-params';
+import { PASSWORD } from '../../support/constants';
 
 // The panel inside a dialog (SignInDialog): the page beneath keeps its address, so the email view
 // is held by the panel, and the dialog's title heads it.
@@ -22,7 +23,6 @@ vi.mock('next/navigation', async () => ({
 }));
 
 const assign = vi.fn();
-const PASSWORD = 'Testwort crowns the eastern hedge';
 
 const press = (element: Element) =>
   act(async () => {

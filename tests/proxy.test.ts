@@ -7,6 +7,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
+import { ORIGIN, USER_ID } from './support/constants';
 
 // The session lookup is mocked; request-session.test.ts covers what it does with the answer.
 const sessionFromHeaders = vi.hoisted(() => vi.fn<(headers: Headers) => Promise<Session | null>>());
@@ -17,9 +18,6 @@ const { config, proxy } = await import('@/proxy');
 // Route protection is deny-by-default: the proxy names what is public, so a route nobody thought
 // about is protected rather than open. The proxy's check is optimistic (a cookie is present);
 // the page's requireSession() asks the database (claude-docs/auth/route-protection.md, "Route protection").
-
-const ORIGIN = 'http://localhost:8000';
-const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 beforeEach(() => {
   sessionFromHeaders.mockReset();

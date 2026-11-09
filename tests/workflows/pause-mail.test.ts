@@ -7,10 +7,9 @@ import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 const DOMAIN = '@pause-mail-run.test';
-const ORIGIN = 'http://localhost:3000';
-const MAILPIT_URL = 'http://mailpit.test';
 const NOTE = 'Staff only: never mailed.';
 const MESSAGE = 'A message written to the user.';
 

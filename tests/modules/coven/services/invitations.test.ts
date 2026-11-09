@@ -17,6 +17,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
+import { ORIGIN } from '../../../support/constants';
 
 // The transport is a test double; the failing transport is the real `send` over a failing `fetch` (claude-docs/db/invitations.md, "Inviting into a coven").
 
@@ -34,7 +35,6 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@coven-invitations.test';
 const INVITED = `invited${DOMAIN}`;
-const ORIGIN = 'http://localhost:8000';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 

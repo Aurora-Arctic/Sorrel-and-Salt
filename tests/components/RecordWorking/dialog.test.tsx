@@ -21,13 +21,13 @@ import {
 } from '../../support/msw/graphql';
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { server } from '../../support/msw/server';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/record-working.md
 
-const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
 const MEMBERS = [
   { id: 'u1', name: 'Testa Owner' },
@@ -46,7 +46,7 @@ function mockMembers(users: readonly { id: string; name: string | null }[] = MEM
       const edges = users
         .filter(({ name }) => name === null || name.toLowerCase().includes(text))
         .map((user) => ({ node: { user } }));
-      return { workspace: { id: WORKSPACE, members: { edges } } } as RecordWorkingMembersQuery;
+      return { workspace: { id: WORKSPACE_ID, members: { edges } } } as RecordWorkingMembersQuery;
     },
   );
   return asked;
@@ -94,7 +94,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
   render(
     wrap(
       <RecordWorkingButton
-        workspaceId={WORKSPACE}
+        workspaceId={WORKSPACE_ID}
         spellId={SPELL}
         spellName="Testwort Tonic"
         spellVisibility={visibility}
@@ -124,7 +124,7 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
-      workspaceId: WORKSPACE,
+      workspaceId: WORKSPACE_ID,
       spellId: SPELL,
       input: {
         note: 'Under the new moon',
@@ -152,7 +152,7 @@ describe('Record a Working', () => {
     const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
     for (const value of ['M', 'Mo', 'Moc']) fireEvent.change(people, { target: { value } });
     expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
-    expect(asked).toEqual([{ workspaceId: WORKSPACE, query: 'Moc', first: 10 }]);
+    expect(asked).toEqual([{ workspaceId: WORKSPACE_ID, query: 'Moc', first: 10 }]);
   });
 
   it('leaves the members already taking part out of the matches', async () => {
@@ -363,7 +363,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -382,7 +382,7 @@ describe('Edit Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
-      workspaceId: WORKSPACE,
+      workspaceId: WORKSPACE_ID,
       id: 'w9',
       input: { note: 'Second try', participants: [{ userId: 'u1' }] },
     });
@@ -393,7 +393,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -413,7 +413,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -438,7 +438,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}

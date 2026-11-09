@@ -3,18 +3,14 @@ import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import type { Message } from '@/lib/types';
-import {
-  ORIGIN,
-  PROVIDER_CREDENTIALS,
-  cookieHeader,
-  signIn as signInThrough,
-} from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
 import { asTouch } from '../support/db/touch-row';
 import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Passkey sign-in (@story-73) through Better Auth's real endpoints: a key enrolled on an account
 // signs that account in, and nothing else (claude-docs/auth/plugins.md, "Plugins").

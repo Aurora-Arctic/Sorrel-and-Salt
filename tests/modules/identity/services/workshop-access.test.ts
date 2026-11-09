@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 import { assertWorkshopAccess } from '@/modules/identity';
+import { USER_ID } from '../../../support/constants';
 
 // The staging workshop is admin-only (claude-docs/workshop.md, "On staging").
-
-const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 describe('assertWorkshopAccess', () => {
   it('admits an admin', () => {

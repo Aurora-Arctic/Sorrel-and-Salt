@@ -6,7 +6,6 @@ import { createEmailVerificationToken } from 'better-auth/api';
 import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
 import { seedDemoCoven } from '@/db/seed/demo-coven';
 import {
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -18,6 +17,7 @@ import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding

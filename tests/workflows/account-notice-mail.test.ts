@@ -6,14 +6,13 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { accountNoticeMail } from '@/modules/identity/jobs/account-notice-mail';
 import type { AccountNotice } from '@/modules/identity';
 import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 // The run holds the account id and the origin; the step reads `former_email` when it sends and clears it once the transport took the mail or every attempt failed, since nothing would send it again.
 
 const DOMAIN = '@account-notice-run.test';
 const LEFT = `left${DOMAIN}`;
 const NOW_AT = `now${DOMAIN}`;
-const ORIGIN = 'http://localhost:8000';
-const MAILPIT_URL = 'http://mailpit.test';
 
 let sql: ReturnType<typeof postgres>;
 

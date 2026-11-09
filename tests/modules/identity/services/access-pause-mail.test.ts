@@ -9,6 +9,7 @@ import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { accessPauseStep } from '@/modules/identity/jobs/access-pause-mail-steps';
 import { A, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -35,7 +36,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = 'Staff only: shared the account.';
 const MESSAGE = 'Your access is paused while we look into a report.';

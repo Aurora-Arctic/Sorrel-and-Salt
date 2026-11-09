@@ -7,12 +7,11 @@ import { documentMailing } from '@/modules/documents/jobs/document-mailing';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '@/modules/documents/mailing-pace';
 import { insertDocumentMailing, insertDocumentVersion } from '../support/db/insert-document';
 import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 // The run carries the mailing's id and the origin alone and mails the mailing's recipient rows, so each test writes exactly the rows it mails.
 
 const DOMAIN = '@document-mailing-run.test';
-const ORIGIN = 'http://localhost:3000';
-const MAILPIT_URL = 'http://mailpit.test';
 const RESEND_URL = 'https://api.resend.com/emails';
 const SUMMARY = 'We now keep sign-in records for ninety days.';
 

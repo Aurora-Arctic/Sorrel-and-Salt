@@ -4,7 +4,6 @@ import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import {
   LINK_LANDING,
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -16,6 +15,7 @@ import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // A second provider is added with /link-social, then signs in by its account id
 // (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").

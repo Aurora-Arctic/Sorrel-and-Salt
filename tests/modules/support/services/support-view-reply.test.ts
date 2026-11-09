@@ -21,6 +21,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
+import { ORIGIN } from '../../../support/constants';
 
 // Every way the token could be stale answers the same not-found (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply").
 
@@ -46,7 +47,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const mail: SupportNotifier = { origin: async () => ORIGIN };
 const VIEW_LINK = /\/support\/request#([A-Za-z0-9_-]{32,})/;
 const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');

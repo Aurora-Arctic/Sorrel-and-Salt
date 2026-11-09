@@ -2,14 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getAuthTables } from 'better-auth/db';
 import { IMPERSONATION_PATHS, impersonationEnabled } from '@/lib/impersonation';
 import { warmImport } from '../support/warm-import';
+import { ORIGIN } from '../support/constants';
 
 warmImport(() => import('@/lib/auth'));
 
 // Better Auth's `admin` plugin is registered for impersonation alone, and only where both hold:
 // the flag is set and the deploy target is not production. Elsewhere it is never constructed, so
 // its endpoints are absent rather than refusing (claude-docs/auth/impersonation.md).
-
-const ORIGIN = 'http://localhost:8000';
 
 afterEach(() => {
   vi.unstubAllEnvs();

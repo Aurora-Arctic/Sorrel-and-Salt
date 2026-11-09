@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes } from 'node:crypto';
 import postgres from 'postgres';
-import { ORIGIN } from '../support/oauth';
 import { B } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // The Sign Out button, through Better Auth's real endpoint: the session row goes, and the same cookie then
 // reads as no one. The Playwright server cannot make this call, since Better Auth refuses the plain-http

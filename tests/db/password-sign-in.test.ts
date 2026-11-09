@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import { ORIGIN, PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { asTouch } from '../support/db/touch-row';
 import { asManualFix } from '../support/db/privileges';
 import { importAuth } from '../support/auth-module';
@@ -17,6 +17,7 @@ import { BREACHED_CHECK_TIMEOUT_MS } from '@/lib/breached-password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Password sign-in (@story-70) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md.

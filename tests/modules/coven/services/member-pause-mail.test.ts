@@ -10,6 +10,7 @@ import { memberPauseStep } from '@/modules/coven/jobs/member-pause-mail-steps';
 import { A, B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -36,7 +37,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = "Owners only: edits other members' spells.";
 const MESSAGE = 'Taking a short break from the coven while we talk.';

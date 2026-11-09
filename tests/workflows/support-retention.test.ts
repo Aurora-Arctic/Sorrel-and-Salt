@@ -7,11 +7,11 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportRetention } from '@/modules/support/jobs/support-retention';
 import { supportRetentionBatch } from '@/modules/support/jobs/support-retention-batch';
 import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 // The stand-in Mailpit records the request's status as each mail arrives. No run sleeps, so none is woken.
 
 const DOMAIN = '@support-retention-run.test';
-const ORIGIN = 'http://localhost:3000';
 
 let sql: ReturnType<typeof postgres>;
 
@@ -24,7 +24,6 @@ const attempts: string[] = [];
 const received: { to: string; subject: string; text: string; status: string | undefined }[] = [];
 
 // The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
-const MAILPIT_URL = 'http://mailpit.test';
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);

@@ -1,12 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import {
-  ORIGIN,
-  PROVIDER_CREDENTIALS,
-  cookieHeader,
-  signIn as oauthSignIn,
-} from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader, signIn as oauthSignIn } from '../support/oauth';
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import { get, post, pwnedRange, pwnedUnreachable } from '../support/password';
@@ -19,6 +14,7 @@ import type { setPassword as SetPasswordService } from '@/modules/identity';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Password reset (@story-71) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md, "Reset and change".

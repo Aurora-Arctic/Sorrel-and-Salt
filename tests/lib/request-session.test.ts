@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
+import { USER_ID } from '../support/constants';
 
 // Better Auth is mocked: whether a cookie is a real session is its job (tests/e2e/route-protection.spec.ts proves it end to end).
 
@@ -59,8 +60,6 @@ const {
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
 const { AccessPaused, CovenMoved, Forbidden } = await import('@/lib/errors');
-
-const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 function betterAuthSession(
   role: unknown,

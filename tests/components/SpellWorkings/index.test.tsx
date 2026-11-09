@@ -9,11 +9,10 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { answer } from '../../support/discard-guard';
 import { press } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
-
-const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 
 const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingView => ({
   status: 'complete',

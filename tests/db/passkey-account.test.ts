@@ -2,17 +2,13 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import type { Message } from '@/lib/types';
-import {
-  ORIGIN,
-  PROVIDER_CREDENTIALS,
-  cookieHeader,
-  signIn as signInThrough,
-} from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
 import { softKey } from '../support/passkey-authenticator';
 import { enrol } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Passkey management (@story-74) through Better Auth's real endpoints: an account renames and removes its own passkeys, no other's, and
 // never the last way it has to sign in (claude-docs/auth/plugins.md, "Passkeys").

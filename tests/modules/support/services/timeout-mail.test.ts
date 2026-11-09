@@ -9,6 +9,7 @@ import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail'
 import { supportTimeoutStep } from '@/modules/support/jobs/support-timeout-mail-steps';
 import { C, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -35,7 +36,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = 'Staff only: a repeat caller.';
 const MESSAGE = 'Please keep each request to one problem.';

@@ -27,6 +27,7 @@ import {
   insertDocumentMailing,
   insertDocumentVersion,
 } from '../../../support/db/insert-document';
+import { ORIGIN } from '../../../support/constants';
 
 const { startJob, jobTokenActive } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
@@ -34,7 +35,6 @@ const { startJob, jobTokenActive } = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/jobs', () => ({ startJob, jobTokenActive }));
 
-const ORIGIN = 'http://localhost:3000';
 const notifier: DocumentMailingNotifier = { origin: async () => ORIGIN };
 const SUMMARY = 'We now keep sign-in records for ninety days.';
 
