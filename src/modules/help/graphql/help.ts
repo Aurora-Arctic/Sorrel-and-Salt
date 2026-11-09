@@ -1,4 +1,5 @@
 import { builder } from '../../../graphql/builder';
+import { helpArticleKind, helpAudience } from '../schema/help-articles';
 import { sessionOf } from '../../../graphql/context-helpers';
 import {
   createHelpArticle,
@@ -24,13 +25,13 @@ import type { HelpArticle, HelpRenameEffects } from '../types';
 const HelpArticleKindEnum = builder.enumType('HelpArticleKind', {
   description:
     'A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term.',
-  values: ['faq', 'article', 'guide', 'term'] as const,
+  values: helpArticleKind.enumValues,
 });
 
 const HelpAudienceEnum = builder.enumType('HelpAudience', {
   description:
     'Who reads a help row: everyone (`public`), curators and keepers (`staff`), or keepers alone (`keeper`).',
-  values: ['public', 'staff', 'keeper'] as const,
+  values: helpAudience.enumValues,
 });
 
 const HelpListingEnum = builder.enumType('HelpListing', {

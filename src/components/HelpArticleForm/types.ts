@@ -1,7 +1,8 @@
+import type { HelpArticleKind, HelpAudience } from '@/modules/help';
 import type { Route } from 'next';
 
-export type HelpFormKind = 'faq' | 'article' | 'guide' | 'term';
-export type HelpFormAudience = 'public' | 'staff' | 'keeper';
+export type HelpFormKind = HelpArticleKind;
+export type HelpFormAudience = HelpAudience;
 
 /** An article a guide may take as a sub page: one that holds none of its own. */
 export interface HelpSubPageChoice {
