@@ -63,12 +63,15 @@ const unkeyed = (cells: readonly ReactNode[]) =>
 describe('HelpOutline order rows', () => {
   it.each([
     ['a guide’s sub pages', { kind: 'guide', guide: CHOSEN } as const],
-    ['the FAQ', { kind: 'faq', rows: SUB_PAGES, order: ['s1', 's2'] } as const],
+    [
+      'the FAQ',
+      { kind: 'faq', rows: SUB_PAGES, order: ['s1', 's2'], address: '/help#faq' } as const,
+    ],
   ])('keys every cell element of %s', (_, pane) => {
     handed.rows = [];
     render(
       <HelpOutline
-        filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
+        filter={{ query: '', kind: '', audience: '', shown: 'all' }}
         guides={[]}
         others={[]}
         order={[]}

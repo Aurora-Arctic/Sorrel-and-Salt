@@ -31,11 +31,12 @@ import './index.scss';
 
 const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', guide: 'Guide', term: 'Term' } as const;
 
-/** The audience, drawn only when it is not Public, which every reader may read. */
-export const AudienceBadge = ({ audience }: Pick<HelpOutlineRow, 'audience'>): ReactNode =>
-  audience === 'public' ? null : (
-    <span className="badge badge--muted">{HELP_AUDIENCE_LABELS[audience]}</span>
-  );
+/** The audience as a badge: green for Public, which every reader may read, muted for Staff and Keeper. */
+export const AudienceBadge = ({ audience }: Pick<HelpOutlineRow, 'audience'>): ReactNode => (
+  <span className={audience === 'public' ? 'badge badge--public' : 'badge badge--muted'}>
+    {HELP_AUDIENCE_LABELS[audience]}
+  </span>
+);
 
 const Title = ({ row, children }: { row: HelpOutlineRow; children?: ReactNode }): ReactElement => (
   <span className={row.shown ? 'help-outline__title' : 'help-outline__title is-hidden'}>
@@ -67,8 +68,7 @@ function corner<Row extends HelpOutlineRow>(): StackColumn<Row> {
   };
 }
 
-const audienceCell = (row: HelpOutlineRow): ReactNode =>
-  row.audience === 'public' ? 'Public' : <AudienceBadge audience={row.audience} />;
+const audienceCell = (row: HelpOutlineRow): ReactNode => <AudienceBadge audience={row.audience} />;
 
 /** A sortable table's columns after Order and Position: the row's title, its audience and its corner. */
 const orderColumns = (title: string): HelpOrderColumn[] => [
@@ -147,17 +147,26 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
   </>
 );
 
+const ReaderAddress = ({ address }: { address: string }): ReactElement => (
+  <p className="help-outline__facts">
+    <PendingLink href={address as Route}>{address}</PendingLink>
+  </p>
+);
+
 const FaqPane = ({
   rows,
   order,
+  address,
 }: {
   rows: readonly HelpOutlineSubPage[];
   order: readonly string[];
+  address: string;
 }): ReactElement => (
   <>
     <div className="help-outline__head">
       <h2 id="help-outline-pane">FAQ</h2>
     </div>
+    <ReaderAddress address={address} />
     <HelpOrderTable
       aria-label="FAQ"
       list={{ kind: 'faq' }}
@@ -169,11 +178,18 @@ const FaqPane = ({
   </>
 );
 
-const GlossaryPane = ({ rows }: { rows: readonly HelpOutlineRow[] }): ReactElement => (
+const GlossaryPane = ({
+  rows,
+  address,
+}: {
+  rows: readonly HelpOutlineRow[];
+  address: string;
+}): ReactElement => (
   <>
     <div className="help-outline__head">
       <h2 id="help-outline-pane">Glossary</h2>
     </div>
+    <ReaderAddress address={address} />
     <StackTable
       aria-label="Glossary"
       columns={[{ heading: 'Term', cell: (row: HelpOutlineRow) => <Title row={row} /> }, corner()]}
@@ -242,8 +258,10 @@ const HelpOutline = ({ filter, guides, others, order, pane }: HelpOutlineProps):
         />
         <section className="help-outline__pane" aria-labelledby="help-outline-pane">
           {pane.kind === 'guide' && <GuidePane guide={pane.guide} />}
-          {pane.kind === 'faq' && <FaqPane rows={pane.rows} order={pane.order} />}
-          {pane.kind === 'glossary' && <GlossaryPane rows={pane.rows} />}
+          {pane.kind === 'faq' && (
+            <FaqPane rows={pane.rows} order={pane.order} address={pane.address} />
+          )}
+          {pane.kind === 'glossary' && <GlossaryPane rows={pane.rows} address={pane.address} />}
           {pane.kind === 'search' && (
             <SearchPane
               rows={pane.rows}

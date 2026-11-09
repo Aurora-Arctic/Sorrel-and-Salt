@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
 import HelpOutline from '@/components/HelpOutline';
@@ -60,11 +61,11 @@ const guideLink = (title: string) =>
   });
 
 describe('HelpOutline sub page counts', () => {
-  it('carries no count or position on a guide’s link in the Guides list', () => {
+  it('counts a guide’s sub pages at the end of its link in the Guides list, and a guide with none shows no count', () => {
     outline();
 
-    expect(guideLink('Testwort Roots')).not.toHaveTextContent(/\d/);
-    expect(guideLink('Testwort Basics')).not.toHaveTextContent(/\d/);
+    expect(guideLink('Testwort Roots')).toHaveAccessibleName('Testwort Roots 3 Sub Pages');
+    expect(guideLink('Testwort Basics')).toHaveAccessibleName('Testwort Basics');
   });
 
   it('lists the phone’s Guide choices by title under their audience, with no count', () => {
@@ -113,6 +114,65 @@ describe('HelpOutline top-level article pane', () => {
     expect(screen.getByRole('link', { name: 'Edit Article' })).toHaveAttribute(
       'href',
       '/keepers/help/empty',
+    );
+  });
+});
+
+describe('HelpOutline audience column', () => {
+  it('names a Public row’s audience in its row, as it does a Staff row’s', () => {
+    const term = (id: string, title: string, audience: 'public' | 'staff') => ({
+      ...GUIDES[0],
+      id,
+      title,
+      kind: 'term' as const,
+      audience,
+      guideTitle: null,
+    });
+    render(
+      <HelpOutline
+        filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
+        guides={GUIDES}
+        others={[]}
+        order={[]}
+        pane={{
+          kind: 'search',
+          rows: [term('a', 'Testwort Open', 'public'), term('b', 'Testwort Closed', 'staff')],
+        }}
+      />,
+    );
+
+    const open = screen.getByRole('row', { name: /Testwort Open/ });
+    expect(within(open).getByText('Public')).toBeTruthy();
+    const closed = screen.getByRole('row', { name: /Testwort Closed/ });
+    expect(within(closed).getByText('Staff')).toBeTruthy();
+    expect(within(closed).queryByText('Public')).toBeNull();
+  });
+});
+
+describe('HelpOutline FAQ and glossary panes', () => {
+  const view = (pane: ComponentProps<typeof HelpOutline>['pane']) =>
+    render(
+      <HelpOutline
+        filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
+        guides={GUIDES}
+        others={[]}
+        order={GUIDES.map(({ id, title, audience, shown }) => ({ id, title, audience, shown }))}
+        pane={pane}
+      />,
+    );
+
+  it('links the FAQ’s reader page under its title', () => {
+    view({ kind: 'faq', rows: [], order: [], address: '/help#faq' });
+
+    expect(screen.getByRole('link', { name: '/help#faq' })).toHaveAttribute('href', '/help#faq');
+  });
+
+  it('links the glossary’s reader page under its title', () => {
+    view({ kind: 'glossary', rows: [], address: '/help/glossary' });
+
+    expect(screen.getByRole('link', { name: '/help/glossary' })).toHaveAttribute(
+      'href',
+      '/help/glossary',
     );
   });
 });

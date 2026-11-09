@@ -64,13 +64,15 @@ export const EditButton = ({
   </IconTip>
 );
 
-/** Opens a list's Reorder Mode: named and tipped Reorder alone, since the list is the one beside it. */
+/** Toggles a list's Reorder Mode: named and tipped Reorder alone, since the list is the one beside it; pressed while the mode is on. */
 export const ReorderButton = ({
   onClick,
+  pressed,
   className,
   ref,
 }: {
   onClick: () => void;
+  pressed: boolean;
   className?: string;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
@@ -79,6 +81,7 @@ export const ReorderButton = ({
       ref={ref}
       type="button"
       className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+      aria-pressed={pressed}
       onClick={onClick}
     >
       <ReorderIcon />

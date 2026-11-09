@@ -38,7 +38,7 @@ const NEW_PATH = '/keepers/help/new';
 
 const KINDS = ['article', 'faq', 'term'] as const;
 const AUDIENCES = ['public', 'staff', 'keeper'] as const;
-const LISTINGS = ['hidden', 'all'] as const;
+const LISTINGS = ['shown', 'hidden'] as const;
 
 /** The kinds with a page, which the top level mixes and the filter's Article admits. */
 const PAGE_KINDS = ['guide', 'article'] as const;
@@ -123,7 +123,7 @@ export default async function KeepersHelpPage({
     query: single(params.q)?.trim() ?? '',
     kind: pick(KINDS, single(params.kind)) ?? '',
     audience: pick(AUDIENCES, single(params.audience)) ?? '',
-    shown: pick(LISTINGS, single(params.shown)) ?? 'shown',
+    shown: pick(LISTINGS, single(params.shown)) ?? 'all',
   };
   const { audience, shown } = filter;
   const wants = (kind: HelpArticle['kind']) => filter.kind === '' || filter.kind === kind;
@@ -207,10 +207,12 @@ export default async function KeepersHelpPage({
       return {
         kind: 'faq',
         order,
+        address: '/help#faq',
         rows: faq.map((entry) => ({ ...toRow(entry), index: at.get(entry.id) ?? 0 })),
       };
     }
-    if (view === 'glossary') return { kind: 'glossary', rows: terms.map(toRow) };
+    if (view === 'glossary')
+      return { kind: 'glossary', rows: terms.map(toRow), address: '/help/glossary' };
     if (!chosenId) return { kind: 'empty' };
     // The guide's whole order, hidden sub pages and those the filter leaves out among them, is what a move writes back.
     const guide = await readKeeperHelpArticle(session, chosenId);

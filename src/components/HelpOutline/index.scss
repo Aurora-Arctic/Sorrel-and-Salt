@@ -89,7 +89,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   text-transform: uppercase;
 }
 
-// An audience's run sits under a quieter heading than "Guides", and the FAQ and the glossary under a hairline.
+// An audience's run sits under a quieter heading than "Guides".
 .help-outline__group--sub {
   color: $text-muted;
   font-weight: 400;
@@ -109,13 +109,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-.help-outline__nav ul.help-outline__others {
-  margin-block-start: space(2);
-  padding-block-start: space(2);
-  border-block-start: 1px solid $hairline;
-}
-
-// A row's marks, the Hidden eye then the audience badge, sit at its far end.
+// A row's marks, the Hidden eye then the sub page count badge, sit at its far end.
 .help-outline__marks {
   display: inline-flex;
   flex: none;
@@ -170,6 +164,11 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   min-width: 2ch;
   color: $text-muted;
   font-variant-numeric: tabular-nums;
+
+  // The saving spinner is 1em of the row's text, which reads large beside a digit.
+  .spinner {
+    font-size: type-size('small');
+  }
 }
 
 // A grip, unboxed as the spell steps' handle is, with its hit area grown to the control floor; `touch-action` is
@@ -209,22 +208,8 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-.help-outline__unsaved {
-  margin-block: 0 space(3);
-  padding-inline-start: space(3);
-  color: $text-muted;
-  font-size: type-size('small');
-}
-
 .help-outline__mode .notice {
   margin-block-end: space(3);
-}
-
-.help-outline__mode-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3);
-  padding-inline-start: space(3);
 }
 
 // Below two panes the Guide select stands for the bar, with its own Reorder beside it; there Reorder Mode opens the
@@ -293,6 +278,8 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 
 .help-outline__facts {
   @include dotted-row('*');
+  // A paragraph is capped at the reading measure (_typography.scss); a row of facts runs the pane's width.
+  max-inline-size: none;
   margin-block: space(2) space(5);
   color: $text-muted;
 
@@ -335,6 +322,27 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   box-shadow: $shadow-lifted;
 }
 
+// The grip and the title stay top-aligned with matching padding, so the grip sits on the title's first line
+// while the row reads centred.
+.help-outline__order-table > tbody > .help-outline__order-row > :is(td, th) {
+  vertical-align: middle;
+}
+
+// Above the stacking width only: a card sets its cells' padding to nothing and stacks them.
+@container data-table (width > #{$table-stack-width}) {
+  .help-outline__order-table
+    > tbody
+    > .help-outline__order-row
+    > :is(.help-outline__grip-cell, [scope='row']) {
+    padding-block: calc(#{space(2)} + max(0px, (#{$icon-size-large} - 1lh) / 2));
+    vertical-align: top;
+  }
+}
+
+.help-outline__order-row .help-outline__grip {
+  block-size: 1lh;
+}
+
 // The corner's two controls, the grip and the position take only the room they need, rather than a share of the
 // table; above the stacking width only, as a card is full width.
 @container data-table (width > #{$table-stack-width}) {
@@ -358,4 +366,8 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 
 .help-outline__add {
   margin-block-start: space(5);
+}
+
+.help-outline__count {
+  font-variant-numeric: tabular-nums;
 }

@@ -15,7 +15,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const BARE: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'shown' };
+const BARE: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'all' };
 
 function row(filter: HelpOutlineFilter): ReturnType<typeof vi.fn> {
   const go = vi.fn();
@@ -58,24 +58,47 @@ describe('HelpOutlineFilterRow', () => {
     expect(String(go.mock.calls[0][0])).toContain('audience=staff');
   });
 
-  it('offers Shown as a chip of Shown, Hidden and All, resting on Shown with a bare address', () => {
+  it('offers Shown as a chip of Shown, Hidden and All, resting on All with a bare address', () => {
     const go = row({ ...BARE, shown: 'hidden' });
 
     expect(radios('Shown')).toEqual(['Shown', 'Hidden', 'All']);
     expect(radio('Shown', 'Hidden')).toBeChecked();
 
-    fireEvent.click(radio('Shown', 'Shown'));
+    fireEvent.click(radio('Shown', 'All'));
 
     expect(go).toHaveBeenCalledWith(keepersHelpHref(BARE), 'soft');
     expect(String(go.mock.calls[0][0])).not.toContain('shown=');
   });
 
-  it('applies Hidden and All as the shown parameter', () => {
+  it('rests on All when the address has no shown parameter', () => {
+    row(BARE);
+
+    expect(radio('Shown', 'All')).toBeChecked();
+  });
+
+  it('applies Shown and Hidden as the shown parameter', () => {
     const go = row(BARE);
 
-    fireEvent.click(radio('Shown', 'All'));
+    fireEvent.click(radio('Shown', 'Shown'));
+    fireEvent.click(radio('Shown', 'Hidden'));
 
-    expect(go).toHaveBeenCalledWith(keepersHelpHref({ ...BARE, shown: 'all' }), 'soft');
-    expect(String(go.mock.calls[0][0])).toContain('shown=all');
+    expect(String(go.mock.calls[0][0])).toContain('shown=shown');
+    expect(String(go.mock.calls[1][0])).toContain('shown=hidden');
+  });
+});
+
+describe('HelpOutlineFilterRow search clear', () => {
+  it('runs the search again with an empty query when the search box is cleared, keeping the chips', () => {
+    const go = row({ ...BARE, query: 'orders', audience: 'staff' });
+    const box = screen.getByRole('searchbox', { name: 'Search Help' });
+
+    // The browser's own clear control empties the box with an input event, then fires a search event.
+    fireEvent.change(box, { target: { value: '' } });
+    fireEvent(box, new Event('search'));
+
+    expect(box).toHaveValue('');
+    expect(go).toHaveBeenCalledTimes(1);
+    expect(go).toHaveBeenCalledWith(keepersHelpHref({ ...BARE, audience: 'staff' }), 'soft');
+    expect(String(go.mock.calls[0][0])).not.toContain('q=');
   });
 });

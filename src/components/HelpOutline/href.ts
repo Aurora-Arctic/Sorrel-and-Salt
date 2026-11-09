@@ -4,7 +4,7 @@ import type { HelpOutlineFilter, HelpOutlineView } from './types';
 
 export const KEEPERS_HELP = '/keepers/help';
 
-/** The list's address under `filter`, showing `view`; the defaults (any kind or audience, Shown, the first guide) are left out. */
+/** The list's address under `filter`, showing `view`; the defaults (any kind, audience or visibility, the first guide) are left out. */
 export function keepersHelpHref(
   filter: HelpOutlineFilter,
   view?: HelpOutlineView,
@@ -14,7 +14,7 @@ export function keepersHelpHref(
     q: filter.query.trim() || undefined,
     kind: filter.kind || undefined,
     audience: filter.audience || undefined,
-    shown: filter.shown === 'shown' ? undefined : filter.shown,
+    shown: filter.shown === 'all' ? undefined : filter.shown,
     guide: typeof view === 'object' ? view.guide : undefined,
     view: typeof view === 'string' ? view : undefined,
     ...cursor,

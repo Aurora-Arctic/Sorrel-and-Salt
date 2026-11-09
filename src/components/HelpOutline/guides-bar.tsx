@@ -7,11 +7,10 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { byAudience, HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink, usePendingNavigation } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { ReorderButton } from '../IconTip';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import Spinner from '../Spinner';
 import HiddenEye from './eye';
 import HelpGuideSelect from './guide-select';
 import { HelpSortable, useHelpSortableRow } from './sortable';
@@ -19,7 +18,7 @@ import type { HelpGuidesBarProps, HelpOutlineAudience, HelpOutlineOrderGuide } f
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each. At rest it
 // lists those the filter admits; in Reorder Mode every live guide, each moved by its grip among its own audience's
-// alone, saved whole by Save Order (claude-docs/components/help-outline.md, "The Guides bar").
+// alone, the whole order saved at every move (claude-docs/components/help-outline.md, "The Guides bar").
 
 export const OrderHelpGuidesDocument = graphql(`
   mutation OrderHelpGuides($ids: [ID!]!) {
@@ -28,8 +27,6 @@ export const OrderHelpGuidesDocument = graphql(`
     }
   }
 `);
-
-const FAILED = 'Could not save the order. Your order is still here; try again or cancel.';
 
 const AUDIENCES: readonly HelpOutlineAudience[] = ['public', 'staff', 'keeper'];
 
@@ -40,13 +37,25 @@ const byGroup = <Entry extends { audience: HelpOutlineAudience }>(entries: reado
     entries: entries.filter((entry) => entry.audience === audience),
   })).filter((group) => group.entries.length > 0);
 
+interface Move {
+  id: string;
+  title: string;
+  /** Where it lands among its audience's, from 1. */
+  place: number;
+  /** The whole order before the move, to spring back to, and after it, to send. */
+  from: string[];
+  to: string[];
+}
+
 const ReorderRow = ({
   entry,
   place,
+  busy,
   disabled,
 }: {
   entry: HelpOutlineOrderGuide;
   place: number;
+  busy: boolean;
   disabled: boolean;
 }): ReactElement => {
   const { setNodeRef, style, dragging, grip } = useHelpSortableRow(entry.id, entry.title, disabled);
@@ -56,8 +65,10 @@ const ReorderRow = ({
       style={style}
       className={dragging ? 'help-outline__reorder-row is-dragging' : 'help-outline__reorder-row'}
     >
-      <span className="help-outline__place">{place}.</span>
       {grip}
+      <span className="help-outline__place" aria-busy={busy || undefined}>
+        {busy ? <Spinner /> : `${place}.`}
+      </span>
       <span className={entry.shown ? 'help-outline__label' : 'help-outline__label is-hidden'}>
         {entry.title}
       </span>
@@ -85,19 +96,16 @@ const HelpGuidesBar = ({
   const grouped = byAudience(order).map((entry) => entry.id);
   const orderKey = grouped.join(' ');
 
-  // The order last saved: the page's until a save, then the saved one until the page's catches up.
-  const [base, setBase] = useState(grouped);
+  // The order shown: the page's, or a moved one from the move until the page's catches up.
+  const [ids, setIds] = useState<string[]>(grouped);
   const [seenKey, setSeenKey] = useState(orderKey);
   if (seenKey !== orderKey) {
     setSeenKey(orderKey);
-    setBase(grouped);
+    setIds(grouped);
   }
-  const [ids, setIds] = useState<string[]>(base);
   const [reordering, setReordering] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const dirty = reordering && ids.join(' ') !== base.join(' ');
-  const guard = useDiscardGuard(dirty);
+  const [saving, setSaving] = useState<string>();
+  const [failed, setFailed] = useState<Move>();
 
   const modeRef = useRef<HTMLDivElement>(null);
   const barButton = useRef<HTMLButtonElement>(null);
@@ -112,72 +120,87 @@ const HelpGuidesBar = ({
 
   const byId = new Map(order.map((entry) => [entry.id, entry]));
   const rows = ids.flatMap((key) => byId.get(key) ?? []);
-  /** Moves a guide within its audience's run of the whole order, leaving every other audience's as it is. */
-  const moveWithin = (audience: HelpOutlineAudience, from: number, to: number) =>
-    setIds((now) => {
-      const audienceOf = (key: string) => byId.get(key)?.audience;
-      const moved = arrayMove(
-        now.filter((key) => audienceOf(key) === audience),
-        from,
-        to,
-      );
-      return AUDIENCES.flatMap((each) =>
-        each === audience ? moved : now.filter((key) => audienceOf(key) === each),
-      );
-    });
+  /** The whole order with a guide moved within its audience's run, every other audience's left as it is. */
+  const moved = (
+    now: readonly string[],
+    audience: HelpOutlineAudience,
+    from: number,
+    to: number,
+  ) => {
+    const audienceOf = (key: string) => byId.get(key)?.audience;
+    const run = arrayMove(
+      now.filter((key) => audienceOf(key) === audience),
+      from,
+      to,
+    );
+    return AUDIENCES.flatMap((each) =>
+      each === audience ? run : now.filter((key) => audienceOf(key) === each),
+    );
+  };
 
   const open = (from: 'bar' | 'phone') => {
-    setIds(base);
-    setFailed(false);
+    setFailed(undefined);
     setFocusBack(from);
     setReordering(true);
     announce('Reorder mode. Drag a guide by its handle, or focus it and press Space.');
   };
-  const cancel = () => {
-    setIds(base);
-    setFailed(false);
+  const close = () => {
+    setFailed(undefined);
     setReordering(false);
-    announce('Reordering cancelled. The order is as it was.');
+    announce('Reorder mode ended.');
   };
-  // Escape leaves the mode as Cancel does, since on a phone the mode is a sheet; not mid-drag, where Escape puts the
-  // guide back, nor while a save runs or the leave question is open.
-  const cancelRef = useRef(cancel);
+  // Escape leaves the mode as the Reorder button does, since on a phone the mode is a sheet; not mid-drag, where
+  // Escape puts the guide back, nor while a save runs.
+  const closeRef = useRef(close);
   useEffect(() => {
-    cancelRef.current = cancel;
+    closeRef.current = close;
   });
-  const asking = guard.asking;
   useEffect(() => {
-    if (!reordering || saving || asking) return;
+    if (!reordering || saving) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return;
       if (modeRef.current?.querySelector('.is-dragging')) return;
-      cancelRef.current();
+      closeRef.current();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [reordering, saving, asking]);
+  }, [reordering, saving]);
 
-  const save = async () => {
-    setSaving(true);
-    setFailed(false);
+  // A move saves at once, in the whole order; a failure puts the order back as it was.
+  const save = async (move: Move) => {
+    setIds(move.to);
+    setSaving(move.id);
+    setFailed(undefined);
     try {
-      await graphqlRequest(OrderHelpGuidesDocument, { ids });
-      setBase(ids);
-      setReordering(false);
-      announce('Order saved.');
+      await graphqlRequest(OrderHelpGuidesDocument, { ids: move.to });
+      announce(`Moved ${move.title} to position ${move.place}.`);
       refresh();
     } catch {
-      setFailed(true);
+      setIds(move.from);
+      setFailed(move);
     } finally {
-      setSaving(false);
+      setSaving(undefined);
     }
+  };
+  const onMove = (audience: HelpOutlineAudience, from: number, to: number) => {
+    const run = rows.filter((row) => row.audience === audience);
+    const move = run[from];
+    if (!move) return;
+    void save({
+      id: move.id,
+      title: move.title,
+      place: to + 1,
+      from: ids,
+      to: moved(ids, audience, from, to),
+    });
   };
 
   const reorderButton = (from: 'bar' | 'phone') => (
     <ReorderButton
       ref={from === 'bar' ? barButton : phoneButton}
       className={`help-outline__reorder-open help-outline__reorder-open--${from}`}
-      onClick={() => open(from)}
+      pressed={reordering}
+      onClick={() => (reordering ? close() : open(from))}
     />
   );
   const canReorder = order.length > 1;
@@ -197,11 +220,32 @@ const HelpGuidesBar = ({
   return (
     <div className={reordering ? 'help-outline__side is-reordering' : 'help-outline__side'}>
       <nav className="help-outline__nav" aria-label="Help Outline">
+        {others.length > 0 && (
+          <>
+            <div className="help-outline__heading">
+              <p id={`${id}-others`} className="help-outline__group">
+                Reference
+              </p>
+            </div>
+            <ul aria-labelledby={`${id}-others`}>
+              {others.map((other) => (
+                <li key={other.label}>
+                  <PendingLink href={other.href} aria-current={other.current ? 'page' : undefined}>
+                    <span className="help-outline__label">{other.label}</span>
+                  </PendingLink>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {(guides.length > 0 || canReorder) && (
+          <div className="help-outline__heading">
+            <p className="help-outline__group">Guides</p>
+            {canReorder && reorderButton('bar')}
+          </div>
+        )}
         {reordering ? (
           <div className="help-outline__mode" ref={modeRef}>
-            <div className="help-outline__heading">
-              <p className="help-outline__group">Guides</p>
-            </div>
             {byGroup(rows).map(({ audience, entries }) => (
               <div key={audience} className="help-outline__run">
                 <p
@@ -214,54 +258,37 @@ const HelpGuidesBar = ({
                 <HelpSortable
                   ids={entries.map((entry) => entry.id)}
                   names={entries.map((entry) => entry.title)}
-                  onMove={(from, to) => moveWithin(audience, from, to)}
+                  onMove={(from, to) => onMove(audience, from, to)}
                 >
                   <ul
                     className="help-outline__reorder"
                     aria-labelledby={`${id}-mode-${audience}`}
-                    aria-busy={saving || undefined}
+                    aria-busy={saving !== undefined || undefined}
                   >
                     {entries.map((entry, at) => (
-                      <ReorderRow key={entry.id} entry={entry} place={at + 1} disabled={saving} />
+                      <ReorderRow
+                        key={entry.id}
+                        entry={entry}
+                        place={at + 1}
+                        busy={saving === entry.id}
+                        disabled={saving !== undefined}
+                      />
                     ))}
                   </ul>
                 </HelpSortable>
               </div>
             ))}
-            {dirty && !failed && (
-              <p className="help-outline__unsaved">The order is not saved yet.</p>
-            )}
             {failed && (
               <Notice kind="error" block>
-                {FAILED}{' '}
-                <button type="button" className="btn btn--small" onClick={() => void save()}>
+                Could not move {failed.title}. It is back where it was.{' '}
+                <button type="button" className="btn btn--small" onClick={() => void save(failed)}>
                   Try Again
                 </button>
               </Notice>
             )}
-            <div className="help-outline__mode-actions">
-              <BusyButton
-                className="btn btn--solid"
-                busy={saving}
-                busyLabel="Saving Order"
-                disabled={!dirty || saving}
-                onClick={() => void save()}
-              >
-                Save Order
-              </BusyButton>
-              <button type="button" className="btn" disabled={saving} onClick={cancel}>
-                Cancel
-              </button>
-            </div>
           </div>
         ) : (
           <>
-            {(guides.length > 0 || canReorder) && (
-              <div className="help-outline__heading">
-                <p className="help-outline__group">Guides</p>
-                {canReorder && reorderButton('bar')}
-              </div>
-            )}
             {byGroup(guides).map(({ audience, entries }) => (
               <div key={audience} className="help-outline__run">
                 <p
@@ -279,11 +306,20 @@ const HelpGuidesBar = ({
                         className={guide.shown ? undefined : 'is-hidden'}
                       >
                         <span className="help-outline__label">{guide.title}</span>
-                        {!guide.shown && (
+                        {(!guide.shown || guide.subPages > 0) && (
                           <>
                             {' '}
                             <span className="help-outline__marks">
-                              <HiddenEye />
+                              {!guide.shown && <HiddenEye />}
+                              {!guide.shown && guide.subPages > 0 && ' '}
+                              {guide.subPages > 0 && (
+                                <span className="badge help-outline__count">
+                                  {`${guide.subPages} `}
+                                  <span className="visually-hidden">
+                                    {guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}
+                                  </span>
+                                </span>
+                              )}
                             </span>
                           </>
                         )}
@@ -293,20 +329,6 @@ const HelpGuidesBar = ({
                 </ul>
               </div>
             ))}
-            {others.length > 0 && (
-              <ul className="help-outline__others">
-                {others.map((other) => (
-                  <li key={other.label}>
-                    <PendingLink
-                      href={other.href}
-                      aria-current={other.current ? 'page' : undefined}
-                    >
-                      <span className="help-outline__label">{other.label}</span>
-                    </PendingLink>
-                  </li>
-                ))}
-              </ul>
-            )}
           </>
         )}
       </nav>
@@ -316,7 +338,6 @@ const HelpGuidesBar = ({
           {canReorder && !reordering && reorderButton('phone')}
         </div>
       )}
-      {guard.asking && <DiscardQuestion guard={guard} />}
     </div>
   );
 };

@@ -82,8 +82,8 @@ export interface HelpOutlineHit extends HelpOutlineRow {
 
 export type HelpOutlinePane =
   | { kind: 'guide'; guide: HelpOutlineChosen }
-  | { kind: 'faq'; rows: readonly HelpOutlineSubPage[]; order: readonly string[] }
-  | { kind: 'glossary'; rows: readonly HelpOutlineRow[] }
+  | { kind: 'faq'; rows: readonly HelpOutlineSubPage[]; order: readonly string[]; address: string }
+  | { kind: 'glossary'; rows: readonly HelpOutlineRow[]; address: string }
   | {
       kind: 'search';
       rows: readonly HelpOutlineHit[];

@@ -55,7 +55,7 @@ export const HelpOutlineBodySkeleton = (): ReactElement => (
 /** The keepers' help outline's placeholder: its filter row, at the defaults, over the body. */
 export const HelpOutlineSkeleton = (): ReactElement => (
   <ListFilterFrame
-    filter={<HelpOutlineFilterRow filter={{ query: '', kind: '', audience: '', shown: 'shown' }} />}
+    filter={<HelpOutlineFilterRow filter={{ query: '', kind: '', audience: '', shown: 'all' }} />}
   >
     <HelpOutlineBodySkeleton />
   </ListFilterFrame>

@@ -11,7 +11,7 @@ import { allPages } from '../../../../lib/pagination';
 import type { Session } from '../../../../lib/session';
 import { type HelpArticle, listKeeperHelpArticles } from '@/modules/help';
 
-const NO_FILTER: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'shown' };
+const NO_FILTER: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'all' };
 
 /**
  * What the help form offers: every live guide, in reading order, with how many sub pages it holds; and every live article,

@@ -7,7 +7,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Ordering on Keepers › Help: Reorder Mode moves a guide among its own audience's and saves the whole order once;
+// Ordering on Keepers › Help: Reorder Mode moves a guide among its own audience's and saves the whole order at each move;
 // a guide's sub pages and the FAQ save each drop at once (claude-docs/components/help-outline.md, "Reorder Mode" and
 // "Ordering").
 
@@ -37,17 +37,29 @@ test.beforeAll(async () => {
     });
     const ash = await insertHelpArticle(
       sql,
-      { title: ASH, slug: 'testwort-ash-guide', audience: 'public', position: 101 },
+      { kind: 'guide', title: ASH, slug: 'testwort-ash-guide', audience: 'public', position: 101 },
       author,
     );
     await insertHelpArticle(
       sql,
-      { title: BIRCH, slug: 'testwort-birch-guide', audience: 'public', position: 102 },
+      {
+        kind: 'guide',
+        title: BIRCH,
+        slug: 'testwort-birch-guide',
+        audience: 'public',
+        position: 102,
+      },
       author,
     );
     await insertHelpArticle(
       sql,
-      { title: CEDAR, slug: 'testwort-cedar-guide', audience: 'staff', position: 103 },
+      {
+        kind: 'guide',
+        title: CEDAR,
+        slug: 'testwort-cedar-guide',
+        audience: 'staff',
+        position: 103,
+      },
       author,
     );
     await insertHelpArticle(
@@ -99,7 +111,7 @@ async function moveUp(page: Page, grip: Locator, name: string): Promise<void> {
   await expect(said(page, `${name} put down at`)).toBeAttached();
 }
 
-test('a keeper reorders the guides within their audience, cancels once, then saves the order', async ({
+test('a keeper reorders the guides within their audience, and each move saves at the drop', async ({
   page,
 }) => {
   await signInAs(page, 'e@admin-help-order.test', ['discord'], 'admin');
@@ -112,15 +124,16 @@ test('a keeper reorders the guides within their audience, cancels once, then sav
 
   await nav(page).getByRole('button', { name: 'Reorder' }).click();
   await expect(said(page, 'Reorder mode.')).toBeAttached();
-  const save = nav(page).getByRole('button', { name: 'Save Order' });
-  await expect(save).toBeDisabled();
+  await expect(nav(page).getByRole('button', { name: 'Reorder' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(nav(page).getByRole('button', { name: /Save Order|Cancel/ })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 
-  // Cancel puts the saved order back.
-  await moveUp(page, nav(page).getByRole('button', { name: `Move ${BIRCH}` }), BIRCH);
-  await expect(nav(page).getByText('The order is not saved yet.')).toBeVisible();
-  await nav(page).getByRole('button', { name: 'Cancel' }).click();
-  await expect(said(page, 'Reordering cancelled.')).toBeAttached();
+  // Pressing Reorder again leaves the mode with the saved order as it was.
+  await nav(page).getByRole('button', { name: 'Reorder' }).click();
+  await expect(said(page, 'Reorder mode ended.')).toBeAttached();
   await expect
     .poll(async () => mine(await audienceList(page, 'Public').getByRole('link').allTextContents()))
     .toEqual([ASH, BIRCH]);
@@ -133,7 +146,11 @@ test('a keeper reorders the guides within their audience, cancels once, then sav
   await expect(said(page, `Picked up ${CEDAR}`)).toBeAttached();
   await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
   await page.keyboard.press('Home');
+  await expect(said(page, `${CEDAR} moved to`)).toBeAttached();
   await page.keyboard.press('Space');
+  // The drop saves at once, and the grips are off until it lands.
+  await expect(said(page, `Moved ${CEDAR}`)).toBeAttached();
+  await expect(nav(page).getByRole('button', { name: `Move ${BIRCH}` })).toBeEnabled();
   await expect(
     audienceList(page, 'Staff').getByRole('button', { name: `Move ${CEDAR}` }),
   ).toBeVisible();
@@ -141,11 +158,10 @@ test('a keeper reorders the guides within their audience, cancels once, then sav
     audienceList(page, 'Public').getByRole('button', { name: `Move ${CEDAR}` }),
   ).toHaveCount(0);
 
-  // Birch above Ash, saved in one write; the page read afresh holds it.
+  // Birch above Ash saves at the drop, with no Save to press; the page read afresh holds it.
   await moveUp(page, nav(page).getByRole('button', { name: `Move ${BIRCH}` }), BIRCH);
-  await expect(save).toBeEnabled();
-  await save.click();
-  await expect(said(page, 'Order saved.')).toBeAttached();
+  await expect(said(page, 'Moved ' + BIRCH)).toBeAttached();
+  await nav(page).getByRole('button', { name: 'Reorder' }).click();
   await expect(nav(page).getByRole('button', { name: 'Reorder' })).toBeFocused();
   await page.reload();
   await expect

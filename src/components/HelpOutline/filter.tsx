@@ -29,13 +29,12 @@ const AUDIENCE_OPTIONS: readonly { value: HelpOutlineAudience | ''; label: strin
   { value: 'keeper', label: 'Keeper' },
 ];
 
-// Shown is the default, so it is the empty choice and leaves the address bare.
-const SHOWN_OPTIONS: readonly { value: Exclude<HelpOutlineShown, 'shown'> | ''; label: string }[] =
-  [
-    { value: '', label: 'Shown' },
-    { value: 'hidden', label: 'Hidden' },
-    { value: 'all', label: 'All' },
-  ];
+// All is the default, so it is the empty choice and leaves the address bare.
+const SHOWN_OPTIONS: readonly { value: Exclude<HelpOutlineShown, 'all'> | ''; label: string }[] = [
+  { value: 'shown', label: 'Shown' },
+  { value: 'hidden', label: 'Hidden' },
+  { value: '', label: 'All' },
+];
 
 const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactElement => {
   const [query, setQuery] = useState(filter.query);
@@ -52,7 +51,7 @@ const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactE
         filter.query,
         filter.kind,
         filter.audience,
-        filter.shown === 'shown' ? '' : filter.shown,
+        filter.shown === 'all' ? '' : filter.shown,
       ]}
     >
       <SearchField
@@ -80,8 +79,8 @@ const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactE
         legend="Shown"
         name="shown"
         options={SHOWN_OPTIONS}
-        value={filter.shown === 'shown' ? '' : filter.shown}
-        onChange={(shown) => apply(next({ shown: shown || 'shown' }))}
+        value={filter.shown === 'all' ? '' : filter.shown}
+        onChange={(shown) => apply(next({ shown: shown || 'all' }))}
       />
     </FilterForm>
   );
