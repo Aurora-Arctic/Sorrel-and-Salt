@@ -162,7 +162,7 @@ const InvitationAcceptance = ({
         </div>
       )}
       {props.status === 'unverified' && (
-        <p className="invitation-acceptance__actions invitation-acceptance__choices">
+        <p className="invitation-acceptance__actions invitation-acceptance__row">
           <a className="btn btn--quiet" href={props.emailHref}>
             Confirm Your Email
           </a>

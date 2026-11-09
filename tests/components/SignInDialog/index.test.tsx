@@ -66,10 +66,13 @@ describe('SignInDialog', () => {
     );
   });
 
-  // Coming back to an auth page would show its form again.
-  it('asks for no return path from an auth page, in the link and in the dialog alike', async () => {
+  // Coming back to an auth page would show its form again, and a path that leaves the site is an open redirect.
+  it.each([
+    ['an auth page', '/forgot-password'],
+    ['another site', '//evil.example'],
+  ])('asks for no return path to %s, in the link and in the dialog alike', async (_, next) => {
     social.mockReturnValue(new Promise(() => undefined));
-    render(<SignInDialog next="/forgot-password" configured={['google']} label="Sign In" />);
+    render(<SignInDialog next={next} configured={['google']} label="Sign In" />);
     expect(trigger()).toHaveAttribute('href', '/sign-in');
     await press(trigger());
 
@@ -81,6 +84,7 @@ describe('SignInDialog', () => {
         additionalData: { noReturnPath: true },
       }),
     );
+    expect(JSON.stringify(social.mock.lastCall)).not.toContain(next);
   });
 
   it.each([

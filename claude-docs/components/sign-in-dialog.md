@@ -15,7 +15,7 @@
 
 ## Styling
 
-The trigger's class is the caller's, `.btn.btn--solid.btn--medium` by default. The panel inside is `.sign-in-panel--dialog`, its column without `.panel`'s ground and padding, which the modal's box already gives.
+The trigger's class is the caller's, `.btn.btn--solid.btn--medium` by default. The panel inside is a bare `.sign-in-panel`, its column without `.panel`'s ground and padding, which the modal's box already gives.
 
 ## Stories and tests
 

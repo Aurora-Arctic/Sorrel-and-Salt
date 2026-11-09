@@ -5,14 +5,8 @@ import { PendingLink } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
-import SignInPanel from '../SignInPanel';
-import type { SignInMode } from '../SignInPanel/types';
+import SignInPanel, { SIGN_IN_TITLES } from '../SignInPanel';
 import type { SignInDialogProps } from './types';
-
-const TITLES: Record<SignInMode, string> = {
-  'sign-in': 'Sign In',
-  'sign-up': 'Create an Account',
-};
 
 /**
  * Sign In over the page it is on. A link to the sign-in page, so a press for a new tab and a
@@ -48,7 +42,7 @@ const SignInDialog = ({
       </PendingLink>
       {open && (
         <Modal
-          title={TITLES[mode]}
+          title={SIGN_IN_TITLES[mode]}
           under={ledes?.[mode] && <p className="lede">{ledes[mode]}</p>}
           // Nothing typed here is kept, so nothing is asked before it closes.
           onClose={() => setOpen(false)}

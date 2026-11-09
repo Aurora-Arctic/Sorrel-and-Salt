@@ -16,6 +16,12 @@ import type { ProviderId } from '../../lib/types';
 import type { SignInAttempt, SignInMode, SignInPanelProps } from './types';
 import './index.scss';
 
+/** Each mode's title, read by the page header here and by the dialog around a panel. */
+export const SIGN_IN_TITLES: Record<SignInMode, string> = {
+  'sign-in': 'Sign In',
+  'sign-up': 'Create an Account',
+};
+
 // A cookie announces no change, and only a callback, a full navigation away, writes this one:
 // there is nothing to subscribe to.
 const noSubscription = () => () => {};
@@ -139,7 +145,7 @@ const SignInPanel = ({
   const classes = [
     // Its own card ground, `.panel`, on /sign-in, which holds nothing else; a dialog is its own
     // (claude-docs/components/sign-in-panel.md, "Styling").
-    inDialog ? 'sign-in-panel sign-in-panel--dialog' : 'panel sign-in-panel',
+    inDialog ? 'sign-in-panel' : 'panel sign-in-panel',
     codeStep && 'sign-in-panel--code',
   ];
   return (
@@ -166,7 +172,7 @@ const SignInPanel = ({
               className="sign-in-panel__header"
               headingClassName="auth-title"
               focusable
-              title={signingUp ? 'Create an Account' : 'Sign In'}
+              title={SIGN_IN_TITLES[mode]}
               lede="Sign in or create an account."
             />
           )}

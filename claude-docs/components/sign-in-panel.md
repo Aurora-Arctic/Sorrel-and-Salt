@@ -57,7 +57,7 @@ A visitor who is already signed in never sees the panel. The page redirects on t
 - The panel draws no head of its own: the dialog's title is the head, so the email form's heading is an `h3` (`PageHeader` `level`, [`page-header.md`](page-header.md)), as is the two-factor step's.
 - The page beneath keeps its address, so Continue with Email opens the form in place, held in the panel's state, with no history entry and no `?method=email`. Back returns the focus to Continue with Email.
 - `signUpLandsOnNext`: a new email account with a session loads `next` itself rather than `/sign-in?next=`, which would send an unverified account to the email page. The invitation sets it, so its own page says to check the inbox. A sign-in, a passkey and the two-factor step still go through `/sign-in?next=`.
-- The class is `.sign-in-panel--dialog`, with no `.panel`: the modal's box is the ground and its body the padding, so the panel keeps only its column.
+- The class is a bare `.sign-in-panel`, with no `.panel`: the modal's box is the ground and its body the padding, so the panel keeps only its column.
 
 **Two views**
 

@@ -41,12 +41,32 @@ const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
 describe('InvitationAcceptance, for a card', () => {
-  it('tells a signed-out visitor any account will do, with no address to match', () => {
-    render(<InvitationAcceptance status="signed-out" card next="/i/abc" configured={['google']} />);
+  // An address invitation's dialog says which address to use under its title; a card's has no address to name.
+  it.each(['Create Account', 'Sign In'])(
+    'gives the dialog from %s no lede under its title, where an address invitation gives one',
+    async (choice) => {
+      const paragraphsInDialog = async (card: boolean): Promise<number> => {
+        render(
+          <InvitationAcceptance
+            status="signed-out"
+            card={card}
+            next="/invite/abc"
+            configured={['google']}
+          />,
+        );
+        await act(async () => fireEvent.click(screen.getByRole('link', { name: choice })));
+        const count = within(screen.getByRole('dialog')).queryAllByRole('paragraph').length;
+        cleanup();
+        return count;
+      };
 
-    expect(screen.getByText(/any you have/i)).toBeVisible();
-    expect(screen.queryByText(/the one this invitation was sent to/i)).toBeNull();
-  });
+      const forAnAddress = await paragraphsInDialog(false);
+      const forACard = await paragraphsInDialog(true);
+
+      expect(forAnAddress).toBeGreaterThan(0);
+      expect(forACard).toBe(forAnAddress - 1);
+    },
+  );
 
   it('accepts, and lands where the account starts a coven', async () => {
     mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(

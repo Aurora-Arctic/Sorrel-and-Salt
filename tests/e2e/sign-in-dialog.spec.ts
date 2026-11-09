@@ -182,5 +182,18 @@ test.describe('the sign-in dialog', () => {
     const a = await main.getByRole('link', { name: 'Create Account' }).boundingBox();
     const b = await main.getByRole('link', { name: 'Sign In' }).boundingBox();
     expect(b!.y).toBeGreaterThanOrEqual(a!.y + a!.height);
+
+    // The email form is the dialog's widest content; it still fits the phone with a gutter each side.
+    await main.getByRole('link', { name: 'Create Account' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Create an Account' });
+    await dialog.getByRole('button', { name: 'Continue with Email' }).click();
+    await expect(field(dialog, 'Password')).toBeVisible();
+    const box = (await dialog.boundingBox())!;
+    const rem = await page.evaluate(() =>
+      parseFloat(getComputedStyle(document.documentElement).fontSize),
+    );
+    expect(box.x).toBeCloseTo(rem, -1);
+    expect(375 - (box.x + box.width)).toBeCloseTo(rem, -1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
   });
 });
