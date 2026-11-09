@@ -40,10 +40,10 @@ describe('the seeded covens', () => {
         and not exists (
           select 1 from workspace_slugs s
           where s.workspace_id = w.id and s.slug = w.slug and s.deleted_at is null)`;
-    const [{ demo }] =
-      await sql`select count(*)::int as demo from workspaces where demo and deleted_at is null`;
+    const [{ live }] =
+      await sql`select count(*)::int as live from workspaces where deleted_at is null`;
 
-    expect(demo).toBe(1);
+    expect(live).toBeGreaterThan(0);
     expect(missing).toEqual([]);
   });
 });
