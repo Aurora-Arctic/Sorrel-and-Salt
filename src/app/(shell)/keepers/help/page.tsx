@@ -14,7 +14,7 @@ import type {
 } from '../../../../components/HelpOutline/types';
 import PageHeader from '../../../../components/PageHeader';
 import { helpPath, keeperHelpEditPath } from '../../../../lib/help-paths';
-import { byAudience } from '../../../../lib/help-audience';
+import { byAudience, placeInAudience } from '../../../../lib/help-audience';
 import { listHref, pagerHrefs } from '../../../../lib/list-href';
 import { readPageCursors } from '../../../../lib/numbered-page';
 import { allPages, resolvePage } from '../../../../lib/pagination';
@@ -135,7 +135,7 @@ export default async function KeepersHelpPage({
   // The bar lists the guides by audience, then by position, as a reorder places them.
   const everyGuide = byAudience(allGuides);
   const guides = byAudience(someGuides);
-  const place = new Map(everyGuide.map((guide, at) => [guide.id, at + 1]));
+  const place = placeInAudience(everyGuide);
   const guideTitle = new Map(everyGuide.map((guide) => [guide.id, guide.title]));
   const subPageCount = new Map<string, number>();
   for (const { parentId } of articles) {
@@ -161,7 +161,7 @@ export default async function KeepersHelpPage({
 
   const outlineGuides: HelpOutlineGuide[] = guides.map((guide) => ({
     ...toRow(guide),
-    position: place.get(guide.id) ?? null,
+    position: place.get(guide.id)?.place ?? null,
     subPages: subPageCount.get(guide.id) ?? 0,
     href: keepersHelpHref(filter, { guide: guide.id }),
     current: browsing && guide.id === chosenId,
@@ -216,8 +216,8 @@ export default async function KeepersHelpPage({
       guide: {
         ...toRow(guide),
         address: helpPath(guide),
-        place: place.get(guide.id) ?? 0,
-        of: everyGuide.length,
+        place: place.get(guide.id)?.place ?? 0,
+        of: place.get(guide.id)?.of ?? 0,
         order: guide.children.map(({ id }) => id),
         subPages: guide.children
           .map((child, index) => ({ ...toRow(child), index }))
