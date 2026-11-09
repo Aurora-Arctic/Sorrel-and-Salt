@@ -155,7 +155,7 @@ item where it belongs.
 
 **A milestone with no wave row is placed by hand, one task at a time.**
 `reorder` orders only the milestones the wave table names, so a task on
-`Z. Bugfixes`, `Z. Deferred` or `Z. Outside the Website` is placed with
+`Z. Bugfixes`, `N · Z. Deferred` or `N · Z. Outside the Website` is placed with
 `node scripts/task-board.mjs move <ID> --after <ID>` or `--last`. It makes
 the same `updateProjectV2ItemPosition` mutation, once, with no dry run, and
 places a task only among its own milestone's items.

@@ -61,7 +61,7 @@ const TAIL = new RegExp(String.raw`\((${ID})\)\s*$`);
 // the task's entry, or a PR that only corrected it. Listed by hash, not by id, so
 // the merge that does finish the task still counts.
 const NOT_COMPLETIONS = new Set([
-  'd6fd2b5219afd53a6f043916ab66991787c21352', // MB.163: the PR corrected its entry
+  'd6fd2b5219afd53a6f043916ab66991787c21352', // ND.2: the PR corrected its entry
   'a8ef62e23cd846e8b323972e74712cc65dc5b9d4', // MB.175: glossary added to its entry
   'f821420471d675a9aaefeb754b930d669203f7c1', // MB.175: scope recorded in its entry
   'b49a9168b2d28aaf24ba0db4809993283eaabd6c', // MB.175: seed term added to its entry

@@ -114,7 +114,7 @@ The owner chose Vercel Workflows on 2026-10-31, for M15.46 and every later job. 
 
 - **Money:** nil at this scale. Hobby includes 50,000 events a month, and extra events cost $0.02 per 1,000.
 - **Hours:** Workflows would cost about 6h for M15.46 alone against about 5h for the crons. The work is split into M15.49 (the mechanism) and M15.46 (its use), so the mechanism is paid once.
-- **Reused by:** M15.46, M15.48, MB.163 and the M17 billing webhooks and timers.
+- **Reused by:** M15.46, M15.48, ND.2 and the M17 billing webhooks and timers.
 - **Kept as predicates:** invitations, retired slugs, lockouts and Better Auth's own expiries. A date check is enough where nothing must happen on time.
 - **Moved onto jobs:** the MB.67 provisional-account sweep (to M15.49) and mail retries (to M15.50).
 - **Day 5** is when the closing-soon notice goes out; the close is day 7.
@@ -1465,8 +1465,8 @@ The version and date live in `src/lib/terms-version.ts`: `TERMS_VERSION`, a date
 
 Each item is a decision I took conservatively, or a fact I could not establish. Nothing here blocks the code; every one changes a sentence of the text. Items answered on 2 November 2026 are kept with the answer, so the text can be read against them.
 
-1. **How strong "anything you do after an update is bound by the updated terms" is, and why the click matters.** I could fetch no court opinion at first hand (CourtListener and FindLaw refused), so this rests on three Wikipedia articles and is for M15.62 to confirm. What they report: United States courts have "usually" upheld terms a person accepted by clicking, a **clickwrap** ("Clickwrap": _Feldman v. Google_, E.D. Pa. 2007, a forum clause; _Meyer v. Uber Technologies_, 2d Cir. 2017, "The user is still on inquiry notice" where the terms were linked), while terms a person is meant to accept merely by using a site, a **browsewrap**, turn on "whether a website user has actual or constructive notice" and have failed where the terms sat behind a link nobody was made to see (_Specht v. Netscape_, 2d Cir. 2002: "a consumer's clicking on a download button does not communicate assent to contractual terms"; _Nguyen v. Barnes & Noble_, 9th Cir. 2014, hyperlinked terms gave no reasonable notice; _In re Zappos.com_, D. Nev., no year given) and succeeded where exposure to the terms was "repeated, conspicuous" (_Hubbert v. Dell_, Ill. App. 2005). On changing terms, "Terms of service" reports _In re Zappos.com_ (2012) holding terms "worded to allow unilateral amendment, where one party can change the agreement at any time" unenforceable. So, plainly: on its own, a sentence that binds by continued use is the weak kind of clause, the browsewrap kind, and a clause that lets the site change the terms at will has been struck down. What makes this site's version strong is the gate: an account cannot reach a page that needs an account after an update without being sent to `/account/terms` and clicking to agree to the new version, which the site records with its date. That click is a clickwrap for each version, the kind courts have usually upheld, and the "bound by the updated terms" sentence then describes what the click already did rather than doing the work itself. Two limits, for the lawyer: the API is not gated, so an account that never loads a page could act under an old version with no click, and the sentence is all that covers that; and no Washington opinion was fetched, so whether Washington courts follow the pattern above is unconfirmed.
-2. **Five clauses for M15.62, every sentence of them: the governing law, the courts, the arbitration with its cost and hardship terms, and the limitation of liability, with the continued-use sentence above.** The courts clause states only the owner's choice of forum; the owner did not say where they live, and the sentence that said so, with its venue-law citation, was removed (2 November 2026). "Which Law Applies" names the State of Washington and, on the owner's answer (2 November 2026), the state courts of Washington in Spokane County, worded as both sides consenting to that court; "What the Site Is Not Liable For" is the limitation of liability the owner asked for, written to be read: what the site is not liable for, a cap of what you paid, and what no limitation can remove. All of it was drafted by Claude, not a lawyer. The questions to put to a lawyer: does the choice-of-law wording do what it says; should the forum clause be exclusive, and does it bind a reader outside Washington; is "what you paid" an enforceable cap, both while the site charges nothing and once it charges (the owner removed "which is nothing" on 2 November 2026, since the site will not stay free); which categories of liability Washington law does not let a site exclude (I could not fetch the gross-negligence case, see the claims table), so the clause can name them; and whether citing RCW 62A.2-719, a rule for sales of goods, as an example of Washington treating unconscionable limitations as invalid is fair or should go. Nothing in the clause claims more than its sources say. On the arbitration's cost: the clause now says whoever asks for arbitration pays the arbitrator, with a hardship exception that lets a person who meets GR 34's indigency guidelines skip arbitration and go to court, checking themselves against the guidelines with no order first. Ask the lawyer whether claimant-pays plus that exception keeps the clause enforceable, given that Washington courts have struck arbitration terms whose costs block a claim. The coordinator named _Adler v. Fred Lind Manor_ (Washington Supreme Court, 2004) from memory as such a case; Justia refused the fetch (403), so it is **unverified** here and cited nowhere, and the lawyer should check it. Also ask whether the "false claim of hardship" sentence needs more than it says, since GR 34 itself is silent on a false declaration. The terms deliberately carry no loser-pays clause: the frivolous-claim sentence states what RCW 4.84.185 already lets a court do, in either direction, and adds nothing to it. A one-sided attorney-fee clause was left out because RCW 4.84.330 would turn it against the owner as readily as for them: "In any action on a contract … where such contract … specifically provides that attorneys' fees and costs … shall be awarded to one of the parties, the prevailing party, whether he or she is the party specified in the contract or lease or not, shall be entitled to reasonable attorneys' fees", the fees "shall not be subject to waiver", and "Any provision in any such contract or lease which provides for a waiver of attorneys' fees is void" (fetched 2 November 2026). Ask the lawyer to confirm that leaving the clause out is the right call for a free service, and that the frivolous-claim sentence, which names a statute on the page, reads as information rather than as a fee clause RCW 4.84.330 would reach.
+1. **How strong "anything you do after an update is bound by the updated terms" is, and why the click matters.** I could fetch no court opinion at first hand (CourtListener and FindLaw refused), so this rests on three Wikipedia articles and is for NO.1 to confirm. What they report: United States courts have "usually" upheld terms a person accepted by clicking, a **clickwrap** ("Clickwrap": _Feldman v. Google_, E.D. Pa. 2007, a forum clause; _Meyer v. Uber Technologies_, 2d Cir. 2017, "The user is still on inquiry notice" where the terms were linked), while terms a person is meant to accept merely by using a site, a **browsewrap**, turn on "whether a website user has actual or constructive notice" and have failed where the terms sat behind a link nobody was made to see (_Specht v. Netscape_, 2d Cir. 2002: "a consumer's clicking on a download button does not communicate assent to contractual terms"; _Nguyen v. Barnes & Noble_, 9th Cir. 2014, hyperlinked terms gave no reasonable notice; _In re Zappos.com_, D. Nev., no year given) and succeeded where exposure to the terms was "repeated, conspicuous" (_Hubbert v. Dell_, Ill. App. 2005). On changing terms, "Terms of service" reports _In re Zappos.com_ (2012) holding terms "worded to allow unilateral amendment, where one party can change the agreement at any time" unenforceable. So, plainly: on its own, a sentence that binds by continued use is the weak kind of clause, the browsewrap kind, and a clause that lets the site change the terms at will has been struck down. What makes this site's version strong is the gate: an account cannot reach a page that needs an account after an update without being sent to `/account/terms` and clicking to agree to the new version, which the site records with its date. That click is a clickwrap for each version, the kind courts have usually upheld, and the "bound by the updated terms" sentence then describes what the click already did rather than doing the work itself. Two limits, for the lawyer: the API is not gated, so an account that never loads a page could act under an old version with no click, and the sentence is all that covers that; and no Washington opinion was fetched, so whether Washington courts follow the pattern above is unconfirmed.
+2. **Five clauses for NO.1, every sentence of them: the governing law, the courts, the arbitration with its cost and hardship terms, and the limitation of liability, with the continued-use sentence above.** The courts clause states only the owner's choice of forum; the owner did not say where they live, and the sentence that said so, with its venue-law citation, was removed (2 November 2026). "Which Law Applies" names the State of Washington and, on the owner's answer (2 November 2026), the state courts of Washington in Spokane County, worded as both sides consenting to that court; "What the Site Is Not Liable For" is the limitation of liability the owner asked for, written to be read: what the site is not liable for, a cap of what you paid, and what no limitation can remove. All of it was drafted by Claude, not a lawyer. The questions to put to a lawyer: does the choice-of-law wording do what it says; should the forum clause be exclusive, and does it bind a reader outside Washington; is "what you paid" an enforceable cap, both while the site charges nothing and once it charges (the owner removed "which is nothing" on 2 November 2026, since the site will not stay free); which categories of liability Washington law does not let a site exclude (I could not fetch the gross-negligence case, see the claims table), so the clause can name them; and whether citing RCW 62A.2-719, a rule for sales of goods, as an example of Washington treating unconscionable limitations as invalid is fair or should go. Nothing in the clause claims more than its sources say. On the arbitration's cost: the clause now says whoever asks for arbitration pays the arbitrator, with a hardship exception that lets a person who meets GR 34's indigency guidelines skip arbitration and go to court, checking themselves against the guidelines with no order first. Ask the lawyer whether claimant-pays plus that exception keeps the clause enforceable, given that Washington courts have struck arbitration terms whose costs block a claim. The coordinator named _Adler v. Fred Lind Manor_ (Washington Supreme Court, 2004) from memory as such a case; Justia refused the fetch (403), so it is **unverified** here and cited nowhere, and the lawyer should check it. Also ask whether the "false claim of hardship" sentence needs more than it says, since GR 34 itself is silent on a false declaration. The terms deliberately carry no loser-pays clause: the frivolous-claim sentence states what RCW 4.84.185 already lets a court do, in either direction, and adds nothing to it. A one-sided attorney-fee clause was left out because RCW 4.84.330 would turn it against the owner as readily as for them: "In any action on a contract … where such contract … specifically provides that attorneys' fees and costs … shall be awarded to one of the parties, the prevailing party, whether he or she is the party specified in the contract or lease or not, shall be entitled to reasonable attorneys' fees", the fees "shall not be subject to waiver", and "Any provision in any such contract or lease which provides for a waiver of attorneys' fees is void" (fetched 2 November 2026). Ask the lawyer to confirm that leaving the clause out is the right call for a free service, and that the frivolous-claim sentence, which names a statute on the page, reads as information rather than as a fee clause RCW 4.84.330 would reach.
 3. **Thirteen, from COPPA.** Answered: the United States, Washington state. The age sentence now rests on 15 U.S.C. § 6501(1) and 16 C.F.R. part 312 (the figure, and the parental-consent mechanism), and says the site asks no parent's consent. It makes no claim that COPPA reaches the site: whether it is an "operator" of a "commercial" service is a lawyer's question, and the age is a sensible floor either way. The earlier sentence "the site relies on your consent", a statement about a lawful basis under the GDPR, is gone, and nothing else on the four pages assumed the United Kingdom: I checked `/privacy`, `/disclaimer` and `/code-of-ethics` and their notes, and found no UK law, no "consent" basis and no UK assumption in them. The privacy policy's notes still point the questions of controller, lawful basis and supervisory authority at M15.58, which is right. The owner chose (2 November 2026) to keep the sentence with no age screen: COPPA reaches a general-audience site only once it has "actual knowledge" that a user is under thirteen, and commentary on the FTC's guidance says it does not require a site to ask (https://paulhastings.com/insights/caveat-vendor/blog-ftc-releases-second-set-of-coppa-faqs-here-are-some-highlights, fetched 2 November 2026). If a screen is ever added, it is a neutral date-of-birth field, never an "I am over 13" box, which the FTC does not treat as neutral. An account the site learns belongs to someone under thirteen is erased. A question for a lawyer: is a stated minimum age in the agreed terms enough for COPPA, with no age screen?
 4. **Whether the GDPR applies to EU visitors is not settled here.** The terms say nothing about the GDPR, and these notes do not claim it does or does not apply to a site run from Washington with visitors in the EU. That is M15.58's question (`claude-docs/tasks/v1/m15.md`, M15.58: "Lawful basis and retention"), and the terms should be re-read when it answers.
 5. **Washington's My Health My Data Act (RCW 19.373): no, on its definitions, and a lawyer should confirm.** The Act regulates "consumer health data", defined in RCW 19.373.010(8)(a) as "personal information that is linked or reasonably linkable to a consumer" that identifies the consumer's past, present or future physical or mental health status, with examples in (8)(b) such as health conditions, treatments, medication, reproductive or sexual health, biometric and genetic data, and health-related inferences drawn from non-health data; a "regulated entity" (19.373.010(23)) is one that conducts business in Washington or targets Washington consumers and "alone or jointly with others, determines the purpose and means of collecting, processing, sharing, or selling" such data. The site stores what a person writes about ingredients, stock and spells, their name, address and sign-in details, and support requests holding what the sender chose to write (the section "The privacy policy's working notes"); none of it identifies a person's health status, and the compendium's safety notes are about the ingredient, not the reader. I did not stretch the Act to the case of a member writing about their own health in a spell or a support request; a lawyer should say whether that edge makes the site a regulated entity. I looked at no other Washington statute, and the terms cite none.
@@ -1475,7 +1475,7 @@ Each item is a decision I took conservatively, or a fact I could not establish. 
 8. **Enforcement is named, not reserved.** "How to Treat Each Other" lists the tools the code has (remove from a coven, pause a member in a coven, support time-out, revoke coven creation, pause an account's site access) and says accounts are never closed. It does not reserve a general right to suspend or ban, because no such mechanism exists and the owner's instruction is not to claim what the code does not do. M15.52 named the site access pause in it, and M15.55 the coven access pause.
 9. **"Agreeing to These Terms" and "Updates to These Terms" now describe the built gate** at `/account/terms`, from the coordinator's statement of it (2 November 2026), and name the route in plain text rather than as a link, since the route lives in the gate's code. Two things still to check against the code before the PR is ready: that the acceptance page shows the terms or links `/terms`, and whether existing accounts are seeded as agreed (if so, "right after you sign up" is true for new accounts and "whenever the version you last agreed to is not the current one" for the rest, which the text already says).
 10. **The version is a date.** `TERMS_VERSION` is `'2026-11-02'`, the day the text was drafted, so a reader can tell versions apart without a counter and so the gate's comparison is a plain string equality. A bump means setting both constants in `src/lib/terms-version.ts` to the day the new text takes effect. If you prefer a counter (`'1'`, `'2'`), it is the one constant. The text was revised on 2 November 2026 before any account agreed to it, so the version was not bumped.
-11. **What other people write on the site, for M15.62.** On the owner's decision (2 November 2026) the liability list says "anything other people write on the site, such as the ingredients and spells a coven's members add", replacing "anything a coven's members write to one another": v1 has no messaging, since notes are v2. In the United States, 47 U.S.C. § 230(c)(1) says no provider of an interactive computer service "shall be treated as the publisher or speaker of any information provided by another information content provider" (Sources, 15), so the law gives this protection whatever the terms say. It does not reach federal criminal law, intellectual property law, communications privacy law or sex trafficking law (§ 230(e)), or writing the site itself creates or develops (§ 230(f)(3)), such as the compendium. Questions for the lawyer: does the sentence add anything to § 230 or risk overstating it, and does the intellectual property exception mean the site needs its own process for a copyright complaint? Other countries' law is not checked.
+11. **What other people write on the site, for NO.1.** On the owner's decision (2 November 2026) the liability list says "anything other people write on the site, such as the ingredients and spells a coven's members add", replacing "anything a coven's members write to one another": v1 has no messaging, since notes are v2. In the United States, 47 U.S.C. § 230(c)(1) says no provider of an interactive computer service "shall be treated as the publisher or speaker of any information provided by another information content provider" (Sources, 15), so the law gives this protection whatever the terms say. It does not reach federal criminal law, intellectual property law, communications privacy law or sex trafficking law (§ 230(e)), or writing the site itself creates or develops (§ 230(f)(3)), such as the compendium. Questions for the lawyer: does the sentence add anything to § 230 or risk overstating it, and does the intellectual property exception mean the site needs its own process for a copyright complaint? Other countries' law is not checked.
 
 12. **RCW 7.06.050 is off the page.** On your decision (2 November 2026) it left the page's Sources list, since no sentence on the page cites it: it covers arbitration a court orders, not one the parties agree to. It stays in these notes for the claim at "Washington already uses non-binding arbitration with a right to trial afterwards".
 
@@ -1490,13 +1490,13 @@ Written on 2 November 2026. This is a scope: it says what the law asks, what the
 ### Decisions for the owner
 
 1. **Nothing is needed from the owner to merge this PR.** It records decisions; it asks for none to be made before then.
-2. **The site stays on Vercel Hobby for now** (the owner, 2 November 2026). Vercel offers a data processing agreement only on Pro and Enterprise, not on Hobby (see "Processors and transfers"), so the site has none with its host, and Hobby keeps runtime logs for 1 hour. The privacy policy must not claim a processing agreement with Vercel (M15.74 carries this). Moving to Pro would add the agreement and also settle the non-commercial-use risk already noted in `DESIGN.md` §4; if the owner moves, the policy's Vercel row changes with it.
-3. **The last-used sign-in method cookie stays, set only with consent** (the owner, 2 November 2026). M15.76 adds an unticked "Remember my sign-in method on this device" box to the sign-in page, and the cookie is set only when the person ticks it. Consent asked where the cookie is used works under both the EU rule (ePrivacy Directive article 5(3)) and the UK rule (PECR regulation 6), so the site still needs no consent banner. The UK's rules from 5 February 2026 might exempt the cookie anyway (PECR Schedule A1 paragraph 6, if the site says so and gives a way to object), but the EU's have no such exemption.
+2. **The site stays on Vercel Hobby for now** (the owner, 2 November 2026). Vercel offers a data processing agreement only on Pro and Enterprise, not on Hobby (see "Processors and transfers"), so the site has none with its host, and Hobby keeps runtime logs for 1 hour. The privacy policy must not claim a processing agreement with Vercel (N1.13 carries this). Moving to Pro would add the agreement and also settle the non-commercial-use risk already noted in `DESIGN.md` §4; if the owner moves, the policy's Vercel row changes with it.
+3. **The last-used sign-in method cookie stays, set only with consent** (the owner, 2 November 2026). N1.2 adds an unticked "Remember my sign-in method on this device" box to the sign-in page, and the cookie is set only when the person ticks it. Consent asked where the cookie is used works under both the EU rule (ePrivacy Directive article 5(3)) and the UK rule (PECR regulation 6), so the site still needs no consent banner. The UK's rules from 5 February 2026 might exempt the cookie anyway (PECR Schedule A1 paragraph 6, if the site says so and gives a way to object), but the EU's have no such exemption.
 4. **No EU or UK representative, no ICO fee and no processing register are needed on the facts as they stand** (see "Does GDPR apply?"). This holds only while the site stays invite-gated and does nothing to attract EU or UK users. The owner must tell whoever scopes any change that adds that (a marketing push, an EU language, a `.eu` or `.de` domain, euro prices) to re-read the next section first.
 
 ### Does GDPR apply?
 
-**Short answer: probably not by law, and the site should behave as if it did.** I recommend the second half because the Terms and the privacy policy already promise erasure, because invited people may live in the EU or UK, and because the cost is small (M15.73 to M15.76).
+**Short answer: probably not by law, and the site should behave as if it did.** I recommend the second half because the Terms and the privacy policy already promise erasure, because invited people may live in the EU or UK, and because the cost is small (N1.12 to N1.2).
 
 #### What decides it
 
@@ -1521,7 +1521,7 @@ On these facts neither test is met, so the site is outside article 3(2), and als
 | Pay the UK data protection fee                                 | The fee regulations say a "data controller" must pay unless all its processing is exempt (Data Protection (Charges and Information) Regulations 2018, reg. 2). The smallest charge is £52 a year (reg. 3). Whether the duty reaches a controller the UK GDPR does not cover is **my inference** from the UK GDPR's reach; I could not read the ICO's own statement (its site refused automated access). | Do not pay now. Check the ICO's fee page before launch if the owner has any UK-resident members.    |
 | Keep a record of processing (article 30)                       | Only if the GDPR applies. Its small-organisation exemption (30(5)) does not cover processing that is not occasional.                                                                                                                                                                                                                                                                                    | Keep the table in "What the site holds" below up to date. It serves as the record at no extra cost. |
 | Answer requests for access, erasure and portability            | Only if the GDPR applies.                                                                                                                                                                                                                                                                                                                                                                               | Answer them anyway, as set out below.                                                               |
-| Tell people the lawful basis, their rights and how to complain | Only if the GDPR applies.                                                                                                                                                                                                                                                                                                                                                                               | Add it to the privacy policy (M15.74).                                                              |
+| Tell people the lawful basis, their rights and how to complain | Only if the GDPR applies.                                                                                                                                                                                                                                                                                                                                                                               | Add it to the privacy policy (N1.13).                                                               |
 
 #### Transfers from the EU or UK
 
@@ -1529,30 +1529,30 @@ If the GDPR did apply, the site would be a controller outside the EU. The EDPB s
 
 ### What the site holds
 
-This table is the record of processing for the purposes of this scope. "Basis" is explained in the next section. "Erased" is what M15.74 does to the row when a keeper erases an account.
+This table is the record of processing for the purposes of this scope. "Basis" is explained in the next section. "Erased" is what N1.13 does to the row when a keeper erases an account.
 
-| Data                                                                                           | Where                                                               | Why it is held                               | Basis                                                           | How long                                                                                                                           | Erased by M15.74                                                  |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Name, email address, avatar, role, terms version and acceptance time                           | `users` (`src/modules/identity/schema/users.ts`)                    | The account                                  | Contract                                                        | While the account exists                                                                                                           | Name, avatar and address blanked; the row stays                   |
-| Password hash, provider tokens                                                                 | `accounts` (`schema/auth.ts`)                                       | Signing in                                   | Contract                                                        | While the account exists                                                                                                           | Deleted                                                           |
-| Sign-in sessions: IP address, browser description, impersonation marker                        | `sessions`                                                          | Keeping a person signed in; spotting misuse  | Contract; legitimate interests                                  | 7 days from last use (Better Auth default; `claude-docs/auth/README.md`, line 21). Rows are not swept today; M15.75 adds the sweep | Deleted                                                           |
-| Passkeys, two-factor secrets                                                                   | `passkeys`, `two_factors`                                           | Signing in                                   | Contract                                                        | While the account exists                                                                                                           | Deleted                                                           |
-| Pending verification and reset tokens                                                          | `verifications`                                                     | Verifying an address or resetting a password | Contract                                                        | Token lives 15 minutes (reset), 1 hour (verification); rows are not swept today; M15.75 adds the sweep                             | Deleted                                                           |
-| Failed sign-in counts                                                                          | `sign_in_failures`                                                  | Slowing password guessing                    | Legitimate interests                                            | Short, until cleared                                                                                                               | Deleted                                                           |
-| Request counters keyed by IP address                                                           | `rate_limits`                                                       | Slowing abuse                                | Legitimate interests                                            | Not swept today; M15.75 adds the sweep                                                                                             | Not linked to an account                                          |
-| Requests for a copy of a person’s data, with the built zip parts, a hashed link token and code | `privacy_requests` (M18.1)                                          | Giving a person their copy                   | Contract; legitimate interests                                  | Parts, code and grant cleared 7 days after the build; the row stays (M15.61)                                                       |
-| Who wrote or changed each row                                                                  | The `*_by` audit columns, all with a foreign key to `users`         | The audit trail                              | Legitimate interests                                            | Permanent                                                                                                                          | Kept, credited to no name once the row is blanked                 |
-| Pauses, role changes (the privilege ledger), coven memberships                                 | `user_access_pauses`, `user_privilege_changes`, `workspace_members` | Running the site and its covens              | Contract; legitimate interests                                  | Permanent (the ledger is append-only)                                                                                              | Kept; they hold ids, and the account row they point at is blanked |
-| Coven invitations: address, note                                                               | `invitations`                                                       | Inviting a person                            | Contract (steps at the invitee's request); legitimate interests | 7 days to accept; the row stays                                                                                                    | The address is cleared                                            |
-| Support requests and replies: subject, message, page, sender address (signed-out senders only) | `support_requests`, `support_replies`                               | Answering the sender                         | Legitimate interests; contract for account users                | Anonymised 12 months after closing (M15.46)                                                                                        | Anonymised with the same anonymiser                               |
-| Support send counters and time-out keys                                                        | `support_send_counts`, `support_timeouts`                           | Rate limiting                                | Legitimate interests                                            | Hashed (M15.46)                                                                                                                    | Deleted with the account (they cascade)                           |
-| Spell working names and notes                                                                  | `spell_working_participants.name`, `spell_workings.note`            | The coven's own record                       | Contract                                                        | Until the coven or spell is deleted                                                                                                | A participant name that is the account's is cleared               |
-| What a person writes into a coven (ingredients, spells)                                        | Coven tables                                                        | The service itself                           | Contract                                                        | Until deleted; deletes are soft                                                                                                    | Stays with the coven, credited to no name                         |
+| Data                                                                                           | Where                                                               | Why it is held                               | Basis                                                           | How long                                                                                                                         | Erased by N1.13                                                   |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Name, email address, avatar, role, terms version and acceptance time                           | `users` (`src/modules/identity/schema/users.ts`)                    | The account                                  | Contract                                                        | While the account exists                                                                                                         | Name, avatar and address blanked; the row stays                   |
+| Password hash, provider tokens                                                                 | `accounts` (`schema/auth.ts`)                                       | Signing in                                   | Contract                                                        | While the account exists                                                                                                         | Deleted                                                           |
+| Sign-in sessions: IP address, browser description, impersonation marker                        | `sessions`                                                          | Keeping a person signed in; spotting misuse  | Contract; legitimate interests                                  | 7 days from last use (Better Auth default; `claude-docs/auth/README.md`, line 21). Rows are not swept today; N1.1 adds the sweep | Deleted                                                           |
+| Passkeys, two-factor secrets                                                                   | `passkeys`, `two_factors`                                           | Signing in                                   | Contract                                                        | While the account exists                                                                                                         | Deleted                                                           |
+| Pending verification and reset tokens                                                          | `verifications`                                                     | Verifying an address or resetting a password | Contract                                                        | Token lives 15 minutes (reset), 1 hour (verification); rows are not swept today; N1.1 adds the sweep                             | Deleted                                                           |
+| Failed sign-in counts                                                                          | `sign_in_failures`                                                  | Slowing password guessing                    | Legitimate interests                                            | Short, until cleared                                                                                                             | Deleted                                                           |
+| Request counters keyed by IP address                                                           | `rate_limits`                                                       | Slowing abuse                                | Legitimate interests                                            | Not swept today; N1.1 adds the sweep                                                                                             | Not linked to an account                                          |
+| Requests for a copy of a person’s data, with the built zip parts, a hashed link token and code | `privacy_requests` (N1.3)                                           | Giving a person their copy                   | Contract; legitimate interests                                  | Parts, code and grant cleared 7 days after the build; the row stays (M15.61)                                                     |
+| Who wrote or changed each row                                                                  | The `*_by` audit columns, all with a foreign key to `users`         | The audit trail                              | Legitimate interests                                            | Permanent                                                                                                                        | Kept, credited to no name once the row is blanked                 |
+| Pauses, role changes (the privilege ledger), coven memberships                                 | `user_access_pauses`, `user_privilege_changes`, `workspace_members` | Running the site and its covens              | Contract; legitimate interests                                  | Permanent (the ledger is append-only)                                                                                            | Kept; they hold ids, and the account row they point at is blanked |
+| Coven invitations: address, note                                                               | `invitations`                                                       | Inviting a person                            | Contract (steps at the invitee's request); legitimate interests | 7 days to accept; the row stays                                                                                                  | The address is cleared                                            |
+| Support requests and replies: subject, message, page, sender address (signed-out senders only) | `support_requests`, `support_replies`                               | Answering the sender                         | Legitimate interests; contract for account users                | Anonymised 12 months after closing (M15.46)                                                                                      | Anonymised with the same anonymiser                               |
+| Support send counters and time-out keys                                                        | `support_send_counts`, `support_timeouts`                           | Rate limiting                                | Legitimate interests                                            | Hashed (M15.46)                                                                                                                  | Deleted with the account (they cascade)                           |
+| Spell working names and notes                                                                  | `spell_working_participants.name`, `spell_workings.note`            | The coven's own record                       | Contract                                                        | Until the coven or spell is deleted                                                                                              | A participant name that is the account's is cleared               |
+| What a person writes into a coven (ingredients, spells)                                        | Coven tables                                                        | The service itself                           | Contract                                                        | Until deleted; deletes are soft                                                                                                  | Stays with the coven, credited to no name                         |
 
 Three more points about the holding:
 
 - **Soft delete is not erasure.** The site marks rows deleted and keeps them (`claude-docs/db/soft-delete.md`). The ICO's erasure guidance says nothing that treats a deleted flag as erasure, and I read none in the regulation; the conclusion that it is not is my own, because the data stays readable to anyone with database access. So the privacy policy must keep saying that a person's own deletes are "marked deleted rather than erased", and that erasure is a separate request.
-- **Hard deletes exist only** for the lapsed provisional account sweep (`src/db/repository/provisional-users.ts`), the failed-sign-in counter, passkey removal, the sessions removed when a pause is set, and the category join tables. M15.75 adds the expired-row sweep as a further named exception.
+- **Hard deletes exist only** for the lapsed provisional account sweep (`src/db/repository/provisional-users.ts`), the failed-sign-in counter, passkey removal, the sessions removed when a pause is set, and the category join tables. N1.1 adds the expired-row sweep as a further named exception.
 - **The breached-password check** sends only the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com` (`src/lib/breached-password.ts`, lines 13 and 32 to 36). It sends no address or account id. I did not read the provider's own terms, so I do not call it a processor; I call it a recipient of a hash prefix that cannot identify a person.
 
 ### Lawful basis for each kind of data
@@ -1572,12 +1572,12 @@ Sign-in providers (Discord, Google, Microsoft, and Facebook, which is hidden tod
 
 Each right below needs the site to act within **one month** of the request. The EU text allows two more months when requests are many or complex, but the person must be told of the delay within the first month (article 12(3)) [EUR-Lex was blocked, so I read the adopted text on legislation.gov.uk]. The request is free unless it is manifestly unfounded or excessive (12(5)). A request may come in any form; it need not mention the GDPR.
 
-| Right                                                                                                      | Source                  | What the site does                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Be told what is held, and get a copy (access)                                                              | Article 15              | Today a keeper gathers it by hand. M15.61 scoped a machine-readable copy of everything that names the person, built by M18.3 to M18.6 (see "A way for people to take their own writing with them"). Article 15(4) says the copy must not harm other people's rights, so rows that name other people (a coven's other members) are left out or reduced to what is the requester's. |
-| Take their own data elsewhere (portability)                                                                | Article 20              | Applies to data the person _provided_, held on the basis of contract or consent, processed automatically. It covers their own writing but not the audit trail or security data. The format must be structured, commonly used and machine-readable. M15.61 scoped it, and M18.3 to M18.6 build it.                                                                                 |
-| Have their data erased                                                                                     | Article 17              | M15.74 builds it (see below). Article 17(3) lists exceptions, among them legal claims and freedom of expression. The site needs none today.                                                                                                                                                                                                                                       |
-| Correct wrong data (rectification), restrict use, object to use, not be judged by automated decision alone | Articles 16, 18, 21, 22 | **I did not read these articles for this scope.** The site's account page already lets a person change their name and, with verification, their address. Nothing on the site makes automated decisions about people. Whoever writes M15.74's policy text must read articles 16, 18, 21 and 22 first and list them honestly.                                                       |
+| Right                                                                                                      | Source                  | What the site does                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Be told what is held, and get a copy (access)                                                              | Article 15              | Today a keeper gathers it by hand. M15.61 scoped a machine-readable copy of everything that names the person, built by N1.5 to N1.8 (see "A way for people to take their own writing with them"). Article 15(4) says the copy must not harm other people's rights, so rows that name other people (a coven's other members) are left out or reduced to what is the requester's. |
+| Take their own data elsewhere (portability)                                                                | Article 20              | Applies to data the person _provided_, held on the basis of contract or consent, processed automatically. It covers their own writing but not the audit trail or security data. The format must be structured, commonly used and machine-readable. M15.61 scoped it, and N1.5 to N1.8 build it.                                                                                 |
+| Have their data erased                                                                                     | Article 17              | N1.13 builds it (see below). Article 17(3) lists exceptions, among them legal claims and freedom of expression. The site needs none today.                                                                                                                                                                                                                                      |
+| Correct wrong data (rectification), restrict use, object to use, not be judged by automated decision alone | Articles 16, 18, 21, 22 | **I did not read these articles for this scope.** The site's account page already lets a person change their name and, with verification, their address. Nothing on the site makes automated decisions about people. Whoever writes N1.13's policy text must read articles 16, 18, 21 and 22 first and list them honestly.                                                      |
 
 #### How the site knows who is asking
 
@@ -1592,25 +1592,25 @@ The plan's rule stands: **a request counts as verified when the account sends it
 - **UK:** since 5 February 2026, article 12A of the UK GDPR (inserted by the 2025 Act, section 76) says the one-month period starts when the controller has received the information it reasonably needs to confirm identity. [read on legislation.gov.uk]
 - **EU:** article 12(3) says "within one month of receipt of the request", and article 12(6) lets the controller ask for more information on reasonable doubt. The adopted text I read has no sentence that starts the clock later.
 
-**Decision for M15.74: act as if the clock runs from receipt in both.** A signed-in request is verified on arrival, so the later start rarely matters, and a signed-out request gets its first reply (asking the person to sign in) well inside the month. This costs nothing and does not rely on the UK reading.
+**Decision for N1.13: act as if the clock runs from receipt in both.** A signed-in request is verified on arrival, so the later start rarely matters, and a signed-out request gets its first reply (asking the person to sign in) well inside the month. This costs nothing and does not rely on the UK reading.
 
 #### Erasure and "an account is never closed"
 
 The owner's rule is that an account is paused, never closed (`DESIGN.md` line 1451; Terms line 117). The rule exists because every audited row has a non-null foreign key to the user, and the privilege ledger is append-only by trigger (`claude-docs/design-decisions/auth.md`, "One privilege ledger, written by the database"), so a real user row cannot be deleted. The two fit together like this:
 
-- **Erasure is the removal of everything that identifies the person, not the removal of the row.** M15.74 blanks name, avatar and address (the address becomes `erased-<id>@invalid`), deletes sessions, provider links, passkeys, two-factor secrets and failed-sign-in counts, anonymises the account's support threads, clears invitation addresses and working names, sets `erased_at` (M15.73), and sets an open-ended pause no one can lift. What is left is an id and the audit trail's credit to that id, which no longer leads to a person.
+- **Erasure is the removal of everything that identifies the person, not the removal of the row.** N1.13 blanks name, avatar and address (the address becomes `erased-<id>@invalid`), deletes sessions, provider links, passkeys, two-factor secrets and failed-sign-in counts, anonymises the account's support threads, clears invitation addresses and working names, sets `erased_at` (N1.12), and sets an open-ended pause no one can lift. What is left is an id and the audit trail's credit to that id, which no longer leads to a person.
 - **Whether a blanked row is "erased" in the law's sense** turns on whether the remaining data can still be linked to the person. The ids in audit columns can be linked back only by someone who holds the old name, and the site no longer does. **This is my reading; no regulator has said so.** Recital 26 of the GDPR (which I did not read for this scope) is the place to check.
 - **Content the person wrote in shared covens stays with each coven, credited to no name.** The coven's other members have an interest in their own records. The policy must say so.
 - **Backups.** The ICO's erasure guidance (read only from a search excerpt) says backups that cannot be overwritten at once may be kept "beyond use" and the person told. The site relies on Neon's own backups and restore window. **I did not look up Neon's backup retention**, so the policy must not state a period until someone does.
 - **The person can sign up again with the same address** and gets a new, empty account.
-- **Refusals.** M15.74 refuses to erase a keeper, a curator, the System account, the signed-out sender account, or the sole steward of a coven. A keeper or curator must have the role removed first so the ledger records it; a sole steward must hand the coven on or delete it.
-- **Both the privacy policy and the Terms of Use must say this** (M15.74 carries both edits). The Terms' "Leaving" section (lines 242 to 247) and the policy's "How to Ask for Removal" (lines 352 to 363) currently promise that a keeper erases on request, by hand, and say nothing about the pause.
+- **Refusals.** N1.13 refuses to erase a keeper, a curator, the System account, the signed-out sender account, or the sole steward of a coven. A keeper or curator must have the role removed first so the ledger records it; a sole steward must hand the coven on or delete it.
+- **Both the privacy policy and the Terms of Use must say this** (N1.13 carries both edits). The Terms' "Leaving" section (lines 242 to 247) and the policy's "How to Ask for Removal" (lines 352 to 363) currently promise that a keeper erases on request, by hand, and say nothing about the pause.
 
 ### Retention
 
 The principle (article 5(1)(e)) is to keep personal data no longer than needed. The ICO expects a schedule; for occasional, low-risk processing a regular review is the lowest bar (ICO, read from a search excerpt only). The table above is the schedule. Two gaps:
 
-- Expired sessions, verification rows and rate-limit counters are never deleted. **M15.75** adds a daily sweep (the job system is M15.49) and the policy states each period exactly as coded.
+- Expired sessions, verification rows and rate-limit counters are never deleted. **N1.1** adds a daily sweep (the job system is M15.49) and the policy states each period exactly as coded.
 - Vercel keeps the server's runtime logs for **1 hour on Hobby** and 1 day on Pro, and keeps build logs "indefinitely" (Vercel's limits page, fetched 2 November 2026). The code has no logger library; `auth.ts` logs refusals by user id and never by address. The policy states these two periods. The 1-hour figure is Vercel's, and it changes if the owner moves to Pro.
 
 ### Cookies and browser storage
@@ -1624,11 +1624,11 @@ Since 5 February 2026 the UK list of exemptions sits in PECR Schedule A1: paragr
 | Session cookie                                                                                                                          | Keeps a person signed in              | Strictly necessary                                                                                                                                                 |
 | Short-lived handshake and two-factor cookies, and the two-factor "trust this device" cookie (30 days; `claude-docs/auth/two-factor.md`) | Sign-in security                      | Strictly necessary. The trust cookie is a closer call: a person turns it on themselves.                                                                            |
 | `admin_session`                                                                                                                         | A keeper's impersonation              | Strictly necessary for that admin's own task                                                                                                                       |
-| `better-auth.last_used_login_method` (`src/lib/sign-in.ts`)                                                                             | A hint on the sign-in page            | Not strictly necessary. UK paragraph 6 might cover it. EU: needs consent. M15.76 sets it only with consent.                                                        |
+| `better-auth.last_used_login_method` (`src/lib/sign-in.ts`)                                                                             | A hint on the sign-in page            | Not strictly necessary. UK paragraph 6 might cover it. EU: needs consent. N1.2 sets it only with consent.                                                          |
 | `autosave:*` in local storage, 24 hours (`src/lib/autosave/mirror.ts`)                                                                  | Keeps an unsaved draft after a reload | Arguably strictly necessary: it protects work the person is doing.                                                                                                 |
 | `theme`, `card-density` in local storage                                                                                                | Remembers display settings            | Not strictly necessary. UK paragraph 6 covers it if the policy says so and a way to object is offered. EU: needs consent, or is arguably the person's own request. |
 
-**Finding the research did not have:** the `theme` and `card-density` entries are the same class as the last-used cookie, which M15.76 puts behind consent, and M15.76 does not touch them. I recommend leaving them and stating them in the policy under paragraph 6, because no consent banner is needed for them under the UK rule and the site does not target the EU. I did not find a source that settles whether the EU treats a theme preference as "strictly necessary", so I have not claimed that it does. The owner may overrule this.
+**Finding the research did not have:** the `theme` and `card-density` entries are the same class as the last-used cookie, which N1.2 puts behind consent, and N1.2 does not touch them. I recommend leaving them and stating them in the policy under paragraph 6, because no consent banner is needed for them under the UK rule and the site does not target the EU. I did not find a source that settles whether the EU treats a theme preference as "strictly necessary", so I have not claimed that it does. The owner may overrule this.
 
 The ICO's own "storage and access technologies" guidance is not cited here: its site refused automated access, and the legislation is the authority.
 
@@ -1654,14 +1654,14 @@ A person in the EU or UK has the right to complain to their national supervisory
 
 ### The privacy policy: corrections and additions
 
-These belong to M15.74. The policy is `src/app/(public)/privacy/page.tsx`. This scope does not edit it.
+These belong to N1.13. The policy is `src/app/(public)/privacy/page.tsx`. This scope does not edit it.
 
 **Wrong or missing today**
 
-1. **Cookies (section "How You Sign In").** It names the session and last-used-method cookies only. The cookie table above adds the handshake and two-factor cookies, the 30-day trust cookie, `admin_session`, and the three local-storage items. M15.76 sets the last-used cookie only with consent; the policy must say so in the same release.
-2. **Erasure by hand.** It says a keeper erases "by hand in the database" in the owner's words; M15.74 replaces that with the new button and the identity rule.
+1. **Cookies (section "How You Sign In").** It names the session and last-used-method cookies only. The cookie table above adds the handshake and two-factor cookies, the 30-day trust cookie, `admin_session`, and the three local-storage items. N1.2 sets the last-used cookie only with consent; the policy must say so in the same release.
+2. **Erasure by hand.** It says a keeper erases "by hand in the database" in the owner's words; N1.13 replaces that with the new button and the identity rule.
 3. **Vercel logs.** It states no period. Add 1 hour for runtime logs on Hobby (1 day on Pro).
-4. **Retention of sessions, verification rows and counters.** M15.75 supplies the periods.
+4. **Retention of sessions, verification rows and counters.** N1.1 supplies the periods.
 5. **Facebook** appears in the provider list though the sign-in screens hide it. Drop it, or keep it with "when offered".
 6. **"The site sells nothing about you."** This is a promise about the future, and the owner's. Keep it only if the owner is willing to hold to it.
 7. **Content in shared covens after erasure** is not mentioned. Add it.
@@ -1692,11 +1692,11 @@ These belong to M15.74. The policy is `src/app/(public)/privacy/page.tsx`. This 
 
 | Task   | What it builds                                                                                                         |
 | ------ | ---------------------------------------------------------------------------------------------------------------------- |
-| M15.73 | The `erased_at` column and its check.                                                                                  |
-| M15.74 | `eraseAccount`, the admin button, the identity rule, and the privacy policy and Terms edits listed above.              |
-| M15.75 | The daily sweep of expired sessions, verifications and counters.                                                       |
-| M15.76 | Consent for the last-used sign-in cookie.                                                                              |
-| M15.61 | Scopes the article 15 copy and the article 20 export; its builds are M18.1 to M18.9 in Wave 18, with M15.73 to M15.76. |
+| N1.12  | The `erased_at` column and its check.                                                                                  |
+| N1.13  | `eraseAccount`, the admin button, the identity rule, and the privacy policy and Terms edits listed above.              |
+| N1.1   | The daily sweep of expired sessions, verifications and counters.                                                       |
+| N1.2   | Consent for the last-used sign-in cookie.                                                                              |
+| M15.61 | Scopes the article 15 copy and the article 20 export; its builds are N1.3 to N1.11 in N · Wave 01, with N1.12 to N1.2. |
 
 ### Sources
 
@@ -1745,7 +1745,7 @@ Access date for every web page: 2 November 2026. "Fetched" means I read the page
 
 The owner's decision of 2 November 2026: the build tasks that came out of the M15.58 research are minted now, and nothing else is done. M15.58 stays `Not Started`, and no branch or worktree is created. The scope document (the section "What GDPR asks of Sorrel & Salt") and the privacy-policy changes wait for M15.58 itself, which waits for #1479 to merge. If writing the scope later shows a task here is wrong, that task is corrected in place.
 
-**Ids.** The highest M15 id in any branch's git log is M15.72, so the new tasks are numbered from **M15.73**. I recheck the board and `git log --all` immediately before minting, because other sessions mint ids in parallel.
+**Ids.** The highest M15 id in any branch's git log is M15.72, so the new tasks are numbered from **N1.12**. I recheck the board and `git log --all` immediately before minting, because other sessions mint ids in parallel.
 
 ### Your question: how a person's identity is checked
 
@@ -1759,18 +1759,18 @@ The owner's decision of 2 November 2026: the build tasks that came out of the M1
 3. **The site never asks for an identity document.** The ICO says a check should be proportionate, and asking for a passport here would collect more data than the account itself holds.
 4. **The one-month clock (Art. 12(3)) starts once identity is confirmed.** This is the ICO's reading. The writer confirms it against the ICO's subject-access guidance, which changed in July 2026 under the Data (Use and Access) Act 2025, before the scope cites it.
 
-This needs no extra task. It becomes criteria on M15.74 below and a paragraph in the privacy policy.
+This needs no extra task. It becomes criteria on N1.13 below and a paragraph in the privacy policy.
 
 ### Tasks to mint (Wave 15 — Launch, `claude-docs/tasks/v1/m15.md`)
 
-**M15.73 — Mark an Account as Erased** · 1h _(the schema half; the behaviour follows in M15.74)_
+**N1.12 — Mark an Account as Erased** · 1h _(the schema half; the behaviour follows in N1.13)_
 _Story:_ As the site, I want an erased account marked as erased, so that nothing can lift the pause on it or show it as a person.
 
 - `users` gains a nullable `erased_at` timestamp, added in an expand-only migration with no destructive DDL.
 - A CHECK ensures an erased row's email is the placeholder form `erased-<id>@invalid`.
 - No service writes the column yet. The migration test covers both the column and the check.
 
-**M15.74 — Erase an Account in Place When Its Holder Asks** · 6h
+**N1.13 — Erase an Account in Place When Its Holder Asks** · 6h
 _Story:_ As a keeper answering a privacy request, I want to erase everything that identifies the person behind an account while keeping the account, so that the site honours erasure under the rule that an account is paused, never closed.
 
 - An admin-only `eraseAccount(userId, supportRequestId, note)` runs through `assertSiteAdmin`. A curator or member is refused, by direct id as well, and the test shows what the refusal stops.
@@ -1794,7 +1794,7 @@ _Story:_ As a keeper answering a privacy request, I want to erase everything tha
 - The privacy policy's "How to Ask for Removal" and the Terms of Use's "Leaving" section are updated to describe exactly this. The policy also gains the identity paragraph.
 - Proved by a browser story: a keeper erases an account from its signed-in request, the person can no longer sign in, and nothing shows the old name.
 
-**M15.75 — Sweep Expired Sign-In Rows** · 2h
+**N1.1 — Sweep Expired Sign-In Rows** · 2h
 _Story:_ As the person running the site, I want expired sessions, verifications and rate-limit counters removed on a schedule, so that the site keeps security data no longer than it needs.
 
 - The existing daily job (`src/lib/jobs`, M15.49) hard-deletes:
@@ -1805,7 +1805,7 @@ _Story:_ As the person running the site, I want expired sessions, verifications 
 - A test seeds rows on both sides of each cut-off.
 - The privacy policy states each period: sessions 7 days, plus each other period exactly as coded.
 
-**M15.76 — Drop the Last-Used Sign-In Method Cookie** · 1h
+**N1.2 — Drop the Last-Used Sign-In Method Cookie** · 1h
 _Story:_ As a visitor, I want the site to set only the cookies it strictly needs, so that it never needs a consent banner.
 
 - The `better-auth.last_used_login_method` cookie (`src/lib/sign-in.ts:78`) and the "last used" hint on the sign-in page are removed.
@@ -2289,7 +2289,7 @@ Each task gets a story, acceptance criteria and an estimate in the record, and i
 
 ### New Wave 17 scoping task (minted in this PR)
 
-The id is the next free M17.x: M17.5, since M17.4 is #1482. I recheck it at minting.
+The id is the next free M17.x: M17.5, since ND.1 is #1482. I recheck it at minting.
 
 **M17.5 — Scope a Better Editing Experience for Ingredients and Spells** · 2h
 
@@ -2346,8 +2346,8 @@ and which tasks build it. It builds nothing. The plan the owner approved is
 (see "Scope a way for people to take their own writing with them (plan)"), which is not maintained; this record is.
 It is not legal advice and no lawyer has read it.
 
-The privacy work moves to a new wave, **Wave 18 — Privacy**, run after launch.
-It takes M15.61 and M15.73 to M15.76 from Wave 15 and adds M18.1 to M18.9.
+The privacy work moves to a new wave, **N · Wave 01 — Privacy**, run after launch.
+It takes M15.61 and N1.12 to N1.2 from Wave 15 and adds N1.3 to N1.11.
 
 ### Decisions for the owner
 
@@ -2369,10 +2369,10 @@ decide before this PR merges.
 9. A second request inside the week is queued, not refused.
 10. The download page asks for an emailed code first.
 11. The code-of-ethics change goes live when the person's export lands
-    (M18.5). This scope edits only the seed file.
+    (N1.7). This scope edits only the seed file.
 12. Only keepers may send a copy to an account that cannot sign in. A
     curator's own copy and their own coven's export work like anyone's.
-13. The data-copy code is built so erasure (M15.74) can reuse its pieces.
+13. The data-copy code is built so erasure (N1.13) can reuse its pieces.
 14. The copies stay in Postgres, not Vercel Blob (see "Storage").
 
 ### What the person's copy holds
@@ -2509,7 +2509,7 @@ Alternatives weighed:
 4. **The cron limit.** Vercel's Hobby plan allows 100 cron jobs per project,
    each running at most once a day, and the time is only accurate to the hour
    (Vercel, "Usage & Pricing for Cron Jobs"). The site has three cron routes
-   in `vercel.json`, so a fourth daily route is allowed. M18.5 adds its own
+   in `vercel.json`, so a fourth daily route is allowed. N1.7 adds its own
    route, and no task to merge the routes is needed.
 5. **The download page, `/data-copy/[token]`, with an emailed code.**
    - **Sending the code is limited.** Each copy has one live code at a time,
@@ -2529,7 +2529,7 @@ Alternatives weighed:
      signed-out sender account, as `sendSignedOutSupportRequest` does. The
      sentence in CLAUDE.md rule 3 that names the one mutation open to a
      signed-out caller, and the "one public surface of data" line under the
-     domain invariants, are both amended in M18.6. The case for the exception:
+     domain invariants, are both amended in N1.8. The case for the exception:
      the page carries no application data until the emailed code is checked,
      and what it then returns is the one copy that belongs to the mailbox that
      received the link.
@@ -2540,7 +2540,7 @@ Alternatives weighed:
    nested in it, so it is not a list on `Query` and
    `tests/guards/pagination.test.ts` has nothing to fail.
 7. **Expiry and erasure.** After 7 days the daily job clears the parts, the
-   code and the grant, and keeps the row. M15.74's erasure transaction gains
+   code and the grant, and keeps the row. N1.13's erasure transaction gains
    "clear any `privacy_requests` parts and waiting requests for the account".
    M15.58's "What the site holds" table gains a `privacy_requests` row with
    its 7-day retention, and the privacy policy text names it.
@@ -2562,7 +2562,7 @@ The copies stay in Postgres, in `bytea` columns of `privacy_requests`.
 - **Size.** Every column is text, numbers or dates. A very large coven, about
   2,000 spells and 2,000 ingredients, comes to about 16 MB of JSON, roughly
   2 MB zipped. Both figures are my estimates, from the size of one row of each
-  kind and a compression of about tenfold on JSON; M18.4 measures them.
+  kind and a compression of about tenfold on JSON; N1.6 measures them.
 - **The limit that matters** is the 4.5 MB cap on a Vercel Function's request
   or response body (Vercel, "Limits"). Parts travel base64-encoded, a third
   larger than their raw size. So the batch splits at **2.5 MB**: 2.5 MB × 4/3
@@ -2570,7 +2570,7 @@ The copies stay in Postgres, in `bytea` columns of `privacy_requests`.
 - **The database.** Neon's Free plan allows 1 GB per project (Neon, "Plans"),
   and a copy lives for 7 days, so a handful of copies at about 2 MB each is
   not near it.
-- **The column.** Drizzle has no `bytea` column builder, so M18.1 declares one
+- **The column.** Drizzle has no `bytea` column builder, so N1.3 declares one
   with `customType`.
 
 **Why not Vercel Blob.** Private Blob storage exists on every plan, Hobby
@@ -2592,13 +2592,13 @@ handler already exists; the copies can move there at the cost of one task.
 ### A person who cannot sign in
 
 A keeper, from the People page's user dialog, queues a copy and names the
-support request that asked for it (M18.7).
+support request that asked for it (N1.9).
 
 - The mail goes only to a verified, non-placeholder held address, with the
   same refusal as `src/modules/identity/services/secret-link-mail.ts`.
 - The action is refused for an erased account and refused to curators. The
   keeper never sees the contents.
-- This fits M15.74's rule that erasure "acts once that mailbox replies":
+- This fits N1.13's rule that erasure "acts once that mailbox replies":
   mailing the link and the code to the held address is itself the proof of the
   mailbox, because only its owner can finish the download.
 
@@ -2609,40 +2609,40 @@ coven's export work like anyone's.
 
 `src/emails/access-paused.ts` and `src/emails/support-timed-out.ts` carry a
 comment saying the keeper's note is never shown to the person. With the copy,
-the note reaches the person. M18.2 corrects those comments and the M15.52 and
+the note reaches the person. N1.4 corrects those comments and the M15.52 and
 M15.46 records, and puts a hint on every staff note field.
 
 ### Built for reuse by erasure
 
-Erasure (M15.74) is decided in its own task. This set builds each shared piece
+Erasure (N1.13) is decided in its own task. This set builds each shared piece
 in a shape erasure can use and holds nothing erasure-specific.
 
-| Piece                                  | Built in | Shape that allows reuse                                                                                                                                                                                                                                                      | What M15.74 can do with it                                                                                |
+| Piece                                  | Built in | Shape that allows reuse                                                                                                                                                                                                                                                      | What N1.13 can do with it                                                                                 |
 | -------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Classification map                     | M18.3    | One module in `src/modules/identity/services/`, with one entry per table and per column that refers to a user. Each entry is an object, so a field can be added. The catalogue test checks the entries, not one particular field.                                            | Add an erasure action to each entry. The same catalogue test then fails when a new table escapes erasure. |
-| Subject-scoped finders                 | M18.3    | Each finds the rows that name one account. They return ids as well as content, and sit behind the named rule 5 exception.                                                                                                                                                    | Find the rows to blank or delete, through the same exception.                                             |
-| "Fill every table" fixtures            | M18.3    | A shared test helper under `tests/`, not inside the leak test.                                                                                                                                                                                                               | Prove that nothing identifies an erased person.                                                           |
-| Request table                          | M18.1    | Named `privacy_requests`, not a name tied to copies. Its `kind` is checked text (person copy, coven copy), so a new kind is an expand-only migration (one that adds and never drops). The part, token, code and grant columns are nullable, so a kind may leave them unused. | Add an `erasure` kind.                                                                                    |
-| Link-and-code confirmation             | M18.6    | A service that proves control of an account's held mailbox, separate from downloading. It mints the link, mails and checks the code, and issues the grant. The download page is its first user.                                                                              | Confirm an erasure for a person who cannot sign in.                                                       |
-| Keeper action naming a support request | M18.7    | A helper that checks the request and the held address, shared by any keeper action taken on a person's behalf.                                                                                                                                                               | Run its Erase Account button through the same checks.                                                     |
+| Classification map                     | N1.5     | One module in `src/modules/identity/services/`, with one entry per table and per column that refers to a user. Each entry is an object, so a field can be added. The catalogue test checks the entries, not one particular field.                                            | Add an erasure action to each entry. The same catalogue test then fails when a new table escapes erasure. |
+| Subject-scoped finders                 | N1.5     | Each finds the rows that name one account. They return ids as well as content, and sit behind the named rule 5 exception.                                                                                                                                                    | Find the rows to blank or delete, through the same exception.                                             |
+| "Fill every table" fixtures            | N1.5     | A shared test helper under `tests/`, not inside the leak test.                                                                                                                                                                                                               | Prove that nothing identifies an erased person.                                                           |
+| Request table                          | N1.3     | Named `privacy_requests`, not a name tied to copies. Its `kind` is checked text (person copy, coven copy), so a new kind is an expand-only migration (one that adds and never drops). The part, token, code and grant columns are nullable, so a kind may leave them unused. | Add an `erasure` kind.                                                                                    |
+| Link-and-code confirmation             | N1.8     | A service that proves control of an account's held mailbox, separate from downloading. It mints the link, mails and checks the code, and issues the grant. The download page is its first user.                                                                              | Confirm an erasure for a person who cannot sign in.                                                       |
+| Keeper action naming a support request | N1.9     | A helper that checks the request and the held address, shared by any keeper action taken on a person's behalf.                                                                                                                                                               | Run its Erase Account button through the same checks.                                                     |
 
-**Order.** M15.73 and M15.74 move after the M18 tasks they may reuse. M15.74's
+**Order.** N1.12 and N1.13 move after the N1 tasks they may reuse. N1.13's
 entry gains a paragraph pointing at these pieces and leaving the choice to that
 task. It also gains the criterion that erasure clears the account's
 `privacy_requests` rows and stored parts.
 
 ### Proposed stories
 
-The specs in M18.5, M18.6, M18.7 and M18.9 walk user flows, so they are
+The specs in N1.7, N1.8, N1.9 and N1.11 walk user flows, so they are
 stories (CLAUDE.md, Testing). I propose these for DESIGN.md's list, numbered
 from 92 because 35 to 46 are never reused and 91 is the last in use:
 
 | Story | Flow                                                                  | Built in |
 | ----- | --------------------------------------------------------------------- | -------- |
-| 92    | A member asks for a copy of their data and receives the link by mail. | M18.5    |
-| 93    | A person opens the link, asks for a code, and downloads the copy.     | M18.6    |
-| 94    | A keeper sends a copy to an account that cannot sign in.              | M18.7    |
-| 95    | A coven steward exports the whole coven.                              | M18.9    |
+| 92    | A member asks for a copy of their data and receives the link by mail. | N1.7     |
+| 93    | A person opens the link, asks for a code, and downloads the copy.     | N1.8     |
+| 94    | A keeper sends a copy to an account that cannot sign in.              | N1.9     |
+| 95    | A coven steward exports the whole coven.                              | N1.11    |
 
 Each build adds its story to DESIGN.md and moves CLAUDE.md's count line ("v1 is
 74 stories…") in its own PR.
@@ -2651,17 +2651,17 @@ Each build adds its story to DESIGN.md and moves CLAUDE.md's count line ("v1 is
 
 Nothing is to be published now. The seed sentence in
 `documents/code-of-ethics.md` changes in this PR to say the export is planned
-as M18.5; the live document changes only when M18.5 ships. Each task delivers
+as N1.7; the live document changes only when N1.7 ships. Each task delivers
 its exact text, in its PR, for the owner to publish in the admin editor:
 
 | Document              | Change                                                                                        | Delivered by |
 | --------------------- | --------------------------------------------------------------------------------------------- | ------------ |
-| Code of ethics        | The sentence about taking writing away says the export exists, and where.                     | M18.5        |
-| Privacy policy        | The data copy, what it holds, the mailed link, and the 7-day retention of `privacy_requests`. | M18.5        |
-| Terms of use          | A "Leaving" paragraph pointing to Your Data.                                                  | M18.5        |
-| Privacy policy        | The emailed code and the sessionless download.                                                | M18.6        |
-| Privacy policy        | The coven export.                                                                             | M18.9        |
-| Privacy policy, Terms | Erasure and its interaction with copies.                                                      | M15.74       |
+| Code of ethics        | The sentence about taking writing away says the export exists, and where.                     | N1.7         |
+| Privacy policy        | The data copy, what it holds, the mailed link, and the 7-day retention of `privacy_requests`. | N1.7         |
+| Terms of use          | A "Leaving" paragraph pointing to Your Data.                                                  | N1.7         |
+| Privacy policy        | The emailed code and the sessionless download.                                                | N1.8         |
+| Privacy policy        | The coven export.                                                                             | N1.11        |
+| Privacy policy, Terms | Erasure and its interaction with copies.                                                      | N1.13        |
 
 ### DESIGN.md sections the builds change
 
@@ -2675,31 +2675,31 @@ its exact text, in its PR, for the owner to publish in the admin editor:
   rule 3 exceptions.
 - **User stories:** 92 to 95, and the v1 count in CLAUDE.md.
 
-CLAUDE.md changes in M18.3 (rule 5 exception), M18.6 (rule 3 and the public
+CLAUDE.md changes in N1.5 (rule 5 exception), N1.8 (rule 3 and the public
 surface line) and each story-adding build (the count).
 
 ### Build tasks
 
-Minted 2026-11-03 in [`tasks/v1-next/m18.md`](../tasks/v1-next/m18.md), in
-[Wave 18](../waves/v1-next/wave-18.md). Estimates are mine.
+Minted 2026-11-03 in [`tasks/v1-next/n1.md`](../tasks/v1-next/n1.md), in
+[N · Wave 01](../waves/v1-next/wave-01.md). Estimates are mine.
 
 | Id    | Name                                                         | Estimate |
 | ----- | ------------------------------------------------------------ | -------- |
-| M18.1 | Add the Privacy Requests Table                               | 4h       |
-| M18.2 | Tell Staff Their Notes Can Reach the Person They Describe    | 3h       |
-| M18.3 | Assemble a Person's Copy of Their Data                       | 18h      |
-| M18.4 | Package a Copy as a Zip With Readable Spells                 | 5h       |
-| M18.5 | Ask for a Copy of Your Data and Receive a Link               | 8h       |
-| M18.6 | Download a Copy With an Emailed Code                         | 8h       |
-| M18.7 | An Admin Sends a Data Copy to an Account That Cannot Sign In | 4h       |
-| M18.8 | Remind a Member to Ask for Their Data Before Leaving a Coven | 1h       |
-| M18.9 | A Coven Owner Downloads the Whole Coven                      | 7h       |
+| N1.3  | Add the Privacy Requests Table                               | 4h       |
+| N1.4  | Tell Staff Their Notes Can Reach the Person They Describe    | 3h       |
+| N1.5  | Assemble a Person's Copy of Their Data                       | 18h      |
+| N1.6  | Package a Copy as a Zip With Readable Spells                 | 5h       |
+| N1.7  | Ask for a Copy of Your Data and Receive a Link               | 8h       |
+| N1.8  | Download a Copy With an Emailed Code                         | 8h       |
+| N1.9  | An Admin Sends a Data Copy to an Account That Cannot Sign In | 4h       |
+| N1.10 | Remind a Member to Ask for Their Data Before Leaving a Coven | 1h       |
+| N1.11 | A Coven Owner Downloads the Whole Coven                      | 7h       |
 
-Total 58h. Row order in Wave 18:
-`M15.61 · M15.75 · M15.76 · M18.1 → M18.9 · M15.73 · M15.74`. Why there:
-M18.1 is a table task and goes first (CLAUDE.md, "A table task, then a
-behaviour task"); M18.3 and M18.4 build the copy before M18.5 and M18.6 deliver
-it; M18.9 reuses all of them; erasure comes last so it can reuse the pieces.
+Total 58h. Row order in N · Wave 01:
+`M15.61 · N1.1 · N1.2 · N1.3 → N1.11 · N1.12 · N1.13`. Why there:
+N1.3 is a table task and goes first (CLAUDE.md, "A table task, then a
+behaviour task"); N1.5 and N1.6 build the copy before N1.7 and N1.8 deliver
+it; N1.11 reuses all of them; erasure comes last so it can reuse the pieces.
 
 ### What I could not read
 
@@ -2780,13 +2780,13 @@ Fable reviewed the previous version of this plan. All of its must-fix and should
 4. **A whole-coven export for coven stewards is part of this set.**
 5. **A low-priority job builds the copy and mails a link to it. Requests are rate limited.** A keeper can queue a copy for an account that cannot sign in.
 6. **Copies are built in the once-a-day batch.**
-7. **The GDPR work goes in its own wave, Wave 18 — Privacy, run after launch.** It takes M15.61 and M15.73 to M15.76 from Wave 15.
+7. **The GDPR work goes in its own wave, N · Wave 01 — Privacy, run after launch.** It takes M15.61 and N1.12 to N1.2 from Wave 15.
 8. **You get changes to the live documents as exact text** to publish in the admin editor.
 9. **A second request inside the week is queued, not refused.**
 10. **The download page asks for an emailed code first.**
-11. **The code-of-ethics change goes live when the person's export lands (M18.5).** This scope edits only the seed file.
+11. **The code-of-ethics change goes live when the person's export lands (N1.7).** This scope edits only the seed file.
 12. **Only keepers may send a copy to an account that cannot sign in.** A curator's own copy and their own coven's export work like anyone's.
-13. **The data-copy code is structured so erasure (M15.74) can reuse it.** The shared pieces are the classification map, the "fill every table" test fixtures, the request table, and the link-and-code confirmation. This set builds those pieces in a shape erasure can use and decides nothing about erasure. M15.74 decides how it uses them.
+13. **The data-copy code is structured so erasure (N1.13) can reuse it.** The shared pieces are the classification map, the "fill every table" test fixtures, the request table, and the link-and-code confirmation. This set builds those pieces in a shape erasure can use and decides nothing about erasure. N1.13 decides how it uses them.
 
 ### What the record decides (each with its reason and the alternatives weighed)
 
@@ -2862,7 +2862,7 @@ It uses `fflate` (MIT licence, no dependencies), added as a runtime dependency. 
    - `not_before` is set to a week after the last build, and the screen shows that date.
 3. **The batch runs from the daily cron.** For each due request it builds the copy, stores the zip parts, mints the link token, and mails the link to the held address.
    - **It skips an erased account (review).**
-   - **The cron count (review).** The record checks Vercel Hobby's limit from source. If a fourth daily cron route is refused, the batch does not borrow another task's route. A small task, "Start Every Daily Job From One Cron Route", is minted before M18.5 instead.
+   - **The cron count (review).** The record checks Vercel Hobby's limit from source. If a fourth daily cron route is refused, the batch does not borrow another task's route. A small task, "Start Every Daily Job From One Cron Route", is minted before N1.7 instead.
 4. **The download page, `/data-copy/[token]`, with an emailed code.**
    - **Send Code is limited (review).** Each copy has one live code at a time, and pressing again before it expires mails nothing new. A copy gets at most 5 code mails in the link's 7 days. Sends also share the IP window that `src/modules/support/services/signed-out.ts:21-23` uses.
    - **The code is hashed with HMAC (review),** a hash keyed with a server secret, as `cron-request.ts` hashes, because a plain SHA-256 of 6 digits is guessed in milliseconds by anyone who reads the database. The code lasts 15 minutes and allows 5 tries.
@@ -2872,14 +2872,14 @@ It uses `fflate` (MIT licence, no dependencies), added as a runtime dependency. 
 5. **Lists (review).** `myDataCopy` returns a single object with `parts: [DataCopyPart!]!` nested in it, so it is not a list on `Query`, and `tests/guards/pagination.test.ts` has nothing to fail.
 6. **Expiry and erasure (review).**
    - After 7 days the daily job clears the parts, the code and the grant, and keeps the row.
-   - M15.74's erasure transaction gains "clear any `data_copies` parts and waiting requests for the account".
+   - N1.13's erasure transaction gains "clear any `data_copies` parts and waiting requests for the account".
    - M15.58's "What the site holds" table gains a `data_copies` row with its 7-day retention, and the privacy policy text names it.
 
 #### Storage: Postgres, not Vercel Blob
 
 - **Size.** Every column is text, numbers or dates. A very large coven, about 2,000 spells and 2,000 ingredients, comes to about 16 MB of JSON, roughly 2 MB zipped.
 - **The real limit is Vercel's response cap,** about 4.5 MB; the record cites its source. Parts travel base64-encoded, a third larger than their raw size. So the batch splits at **2.5 MB (review)**: 2.5 MB × 4/3 is about 3.3 MB, which leaves room for the response envelope.
-- **The column.** Drizzle has no `bytea` column builder, so M18.1 declares one with `customType` **(review)**.
+- **The column.** Drizzle has no `bytea` column builder, so N1.3 declares one with `customType` **(review)**.
 - **Why not Blob.** Blob adds a dependency and a second store of personal data, and public Blob URLs would bypass the code. The record names the trigger for switching: the site starting to store uploaded files.
 
 #### A person who cannot sign in
@@ -2888,15 +2888,15 @@ A keeper, from the People page's user dialog, queues a copy naming the support r
 
 - **The mail goes only to a verified, non-placeholder held address,** with the same refusal as `src/modules/identity/services/secret-link-mail.ts:46-59` **(review)**.
 - The action is refused for an erased account and refused to curators. The keeper never sees the contents.
-- The record says in one sentence why this fits M15.74's "acts once that mailbox replies" rule: mailing the link and the code to the held address is itself the proof of the mailbox.
+- The record says in one sentence why this fits N1.13's "acts once that mailbox replies" rule: mailing the link and the code to the held address is itself the proof of the mailbox.
 
 #### Staff-note comments that become wrong (review)
 
-`src/emails/access-paused.ts:10` and `support-timed-out.ts:11` say "never the keeper's note". M18.2 corrects those comments, and the M15.52 and M15.46 records, because the note now reaches the person through the copy.
+`src/emails/access-paused.ts:10` and `support-timed-out.ts:11` say "never the keeper's note". N1.4 corrects those comments, and the M15.52 and M15.46 records, because the note now reaches the person through the copy.
 
 #### Stories (review)
 
-The specs in M18.5, M18.6, M18.7 and M18.9 walk user flows, so they are stories. The record proposes new stories 92 and up for DESIGN.md's list, one per flow:
+The specs in N1.7, N1.8, N1.9 and N1.11 walk user flows, so they are stories. The record proposes new stories 92 and up for DESIGN.md's list, one per flow:
 
 - ask for and receive a copy;
 - download with the code;
@@ -2909,40 +2909,40 @@ Each build adds its story to DESIGN.md and moves CLAUDE.md's count line ("v1 is 
 
 Each shared piece is built in a shape erasure can use, and holds nothing erasure-specific.
 
-| Piece                                  | Built in | Shape that allows reuse                                                                                                                                                                                                                                                         | What M15.74 can do with it                                                                                |
+| Piece                                  | Built in | Shape that allows reuse                                                                                                                                                                                                                                                         | What N1.13 can do with it                                                                                 |
 | -------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Classification map                     | M18.3    | One module, `src/modules/identity/services/personal-data-map.ts` or wherever the record places it. One entry per table and per column that refers to a user. Each entry is an object, so a field can be added. The catalogue test checks the entries, not one particular field. | Add an erasure action to each entry. The same catalogue test then fails when a new table escapes erasure. |
-| Subject-scoped finders                 | M18.3    | Each finds the rows that name one account. They return ids as well as content, and sit behind the named rule 5 exception.                                                                                                                                                       | Find the rows to blank or delete, through the same exception.                                             |
-| "Fill every table" fixtures            | M18.3    | A shared test helper under `tests/`, not inside the leak test.                                                                                                                                                                                                                  | Prove that nothing identifies an erased person.                                                           |
-| Request table                          | M18.1    | Named `privacy_requests`, not `data_copies`. Its `kind` is checked text (person copy, coven copy), so a new kind is an expand-only migration (one that adds and never drops). The part, token, code and grant columns are nullable, so a kind may leave them unused.            | Add an `erasure` kind.                                                                                    |
-| Link-and-code confirmation             | M18.6    | A service that proves control of an account's held mailbox, separate from downloading. It mints the link, mails and checks the code, and issues the grant. The download page is its first user.                                                                                 | Confirm an erasure for a person who cannot sign in.                                                       |
-| Keeper action naming a support request | M18.7    | A helper that checks the request and the held address. It is shared by any keeper action taken on a person's behalf.                                                                                                                                                            | Run its Erase Account button through the same checks.                                                     |
+| Classification map                     | N1.5     | One module, `src/modules/identity/services/personal-data-map.ts` or wherever the record places it. One entry per table and per column that refers to a user. Each entry is an object, so a field can be added. The catalogue test checks the entries, not one particular field. | Add an erasure action to each entry. The same catalogue test then fails when a new table escapes erasure. |
+| Subject-scoped finders                 | N1.5     | Each finds the rows that name one account. They return ids as well as content, and sit behind the named rule 5 exception.                                                                                                                                                       | Find the rows to blank or delete, through the same exception.                                             |
+| "Fill every table" fixtures            | N1.5     | A shared test helper under `tests/`, not inside the leak test.                                                                                                                                                                                                                  | Prove that nothing identifies an erased person.                                                           |
+| Request table                          | N1.3     | Named `privacy_requests`, not `data_copies`. Its `kind` is checked text (person copy, coven copy), so a new kind is an expand-only migration (one that adds and never drops). The part, token, code and grant columns are nullable, so a kind may leave them unused.            | Add an `erasure` kind.                                                                                    |
+| Link-and-code confirmation             | N1.8     | A service that proves control of an account's held mailbox, separate from downloading. It mints the link, mails and checks the code, and issues the grant. The download page is its first user.                                                                                 | Confirm an erasure for a person who cannot sign in.                                                       |
+| Keeper action naming a support request | N1.9     | A helper that checks the request and the held address. It is shared by any keeper action taken on a person's behalf.                                                                                                                                                            | Run its Erase Account button through the same checks.                                                     |
 
-**Order.** M15.73 and M15.74 move after the M18 tasks they may reuse. M15.74's entry gains a paragraph pointing at these pieces and leaving the choice to that task. It also gains the criterion that erasure clears the account's `privacy_requests` rows and stored parts. The entry is synced to its issue.
+**Order.** N1.12 and N1.13 move after the N1 tasks they may reuse. N1.13's entry gains a paragraph pointing at these pieces and leaving the choice to that task. It also gains the criterion that erasure clears the account's `privacy_requests` rows and stored parts. The entry is synced to its issue.
 
 #### Text for the live documents
 
-There is nothing to publish now. The seed sentence names M18.5. M18.5 delivers the exact text for the code of ethics, the privacy policy (export, and `data_copies` retention) and the Terms ("Leaving"). M18.6, M18.9 and M15.74 deliver theirs where their changes touch the documents.
+There is nothing to publish now. The seed sentence names N1.7. N1.7 delivers the exact text for the code of ethics, the privacy policy (export, and `data_copies` retention) and the Terms ("Leaving"). N1.8, N1.11 and N1.13 deliver theirs where their changes touch the documents.
 
-### Wave 18 — Privacy
+### N · Wave 01 — Privacy
 
-- **Placement.** A new `TASKS.md` row after Wave 15, a new `waves/v1-next/wave-18.md`, and a milestone "Wave 18 — Privacy".
-- **Moved tasks.** M15.61 and M15.73 to M15.76 keep their ids and entries but move milestone, and leave Wave 15's row, Wave 15's milestone description and `wave-15.md`. M15.74's entry gains the `data_copies` criterion, synced with `task-board.mjs sync`.
-- **New tasks.** M18.n, in a new `claude-docs/tasks/v1-next/m18.md`.
-- **Row order.** M15.61 · M15.75 · M15.76 · M18.1 → M18.9 · M15.73 · M15.74. Erasure comes last, after the pieces it may reuse.
+- **Placement.** A new `TASKS.md` row after Wave 15, a new `waves/v1-next/wave-01.md`, and a milestone "N · Wave 01 — Privacy".
+- **Moved tasks.** M15.61 and N1.12 to N1.2 keep their ids and entries but move milestone, and leave Wave 15's row, Wave 15's milestone description and `wave-15.md`. N1.13's entry gains the `data_copies` criterion, synced with `task-board.mjs sync`.
+- **New tasks.** N1.n, in a new `claude-docs/tasks/v1-next/n1.md`.
+- **Row order.** M15.61 · N1.1 · N1.2 · N1.3 → N1.11 · N1.12 · N1.13. Erasure comes last, after the pieces it may reuse.
 - **The table's name.** Below, "`data_copies`" means the table named `privacy_requests` (decision 13).
 
 | Id    | Title                                                        | Est. | Outline of the criteria                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ----- | ------------------------------------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M18.1 | Add the Privacy Requests Table                               | 4h   | A table task only. `privacy_requests` holds, with `kind` as checked text open to later kinds: <ul><li>kind, subject, coven, status;</li><li>parts as `bytea` through `customType`;</li><li>link token hash; HMAC code hash, code expiry, tries and send count; grant hash and grant expiry;</li><li>`not_before` and the lifecycle times;</li><li>`auditColumns`.</li></ul>Checks tie the coven to the coven kind. A partial unique index allows one waiting request per subject. Forward-only migration, with a catalogue test. |
-| M18.2 | Tell Staff Their Notes Can Reach the Person They Describe    | 3h   | A hint on every staff note field. Corrects the two "never the keeper's note" comments and the M15.52 and M15.46 records. Component tests find each hint by its label.                                                                                                                                                                                                                                                                                                                                                            |
-| M18.3 | Assemble a Person's Copy of Their Data                       | 18h  | The copy service across the modules, with: <ul><li>the named soft-delete and rule 5 exceptions, and the reachability guard;</li><li>the name and label rule, including the three closed gaps;</li><li>the left-coven and deleted-coven rules;</li><li>the classification map with its catalogue test;</li><li>the leak test and the direct-id tests;</li><li>`data-copy.md`.</li></ul>                                                                                                                                           |
-| M18.4 | Package a Copy as a Zip With Readable Spells                 | 5h   | Adds `fflate`. Renders `data.json`, the spell markdown and `INDEX.md`, and splits at 2.5 MB. Tests unzip and parse the result, and cover the split.                                                                                                                                                                                                                                                                                                                                                                              |
-| M18.5 | Ask for a Copy of Your Data and Receive a Link               | 8h   | <ul><li>The `/account/data` tab, added to `PAUSED_VIEW_PAGES`.</li><li>`requestDataCopy` and `myDataCopy`, both on the paused allowlist.</li><li>The queued weekly limit, with the date shown.</li><li>The daily batch: skip erased accounts, build, store, mint, mail.</li><li>Expiry clearing.</li><li>Its story spec, with mailpit (the test mail inbox).</li><li>"Text to publish" for the code of ethics, privacy policy and Terms.</li></ul>                                                                               |
-| M18.6 | Download a Copy With an Emailed Code                         | 8h   | <ul><li>The `/data-copy/[token]` page and the send-code and check-code mutations, written as the signed-out sender.</li><li>Send limits, HMAC codes and tries, and the grant-gated `dataCopyPart`.</li><li>The headers, and the CLAUDE.md rule 3 and public-surface amendments with their record.</li><li>Tests that the token alone fetches nothing, that sends are capped and that tries run out.</li><li>Its story spec, with axe checks.</li></ul>                                                                           |
-| M18.7 | An Admin Sends a Data Copy to an Account That Cannot Sign In | 4h   | Admin only, naming the support request. Mails only a verified, non-placeholder held address and refuses an erased account. Authorization tests show a curator and a member are refused, each with its precondition. Its story spec.                                                                                                                                                                                                                                                                                              |
-| M18.8 | Remind a Member to Ask for Their Data Before Leaving a Coven | 1h   | The leave dialog's text and link to "Your Data". A component test.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| M18.9 | A Coven Owner Downloads the Whole Coven                      | 7h   | `requestCovenCopy`, owner-only through a new per-role statement in `access-control.ts` (code, no migration). Same table, batch, zip and code. Its own map entries and leak test, and direct-id refusals for a member, a viewer and D. Its story spec.                                                                                                                                                                                                                                                                            |
+| N1.3  | Add the Privacy Requests Table                               | 4h   | A table task only. `privacy_requests` holds, with `kind` as checked text open to later kinds: <ul><li>kind, subject, coven, status;</li><li>parts as `bytea` through `customType`;</li><li>link token hash; HMAC code hash, code expiry, tries and send count; grant hash and grant expiry;</li><li>`not_before` and the lifecycle times;</li><li>`auditColumns`.</li></ul>Checks tie the coven to the coven kind. A partial unique index allows one waiting request per subject. Forward-only migration, with a catalogue test. |
+| N1.4  | Tell Staff Their Notes Can Reach the Person They Describe    | 3h   | A hint on every staff note field. Corrects the two "never the keeper's note" comments and the M15.52 and M15.46 records. Component tests find each hint by its label.                                                                                                                                                                                                                                                                                                                                                            |
+| N1.5  | Assemble a Person's Copy of Their Data                       | 18h  | The copy service across the modules, with: <ul><li>the named soft-delete and rule 5 exceptions, and the reachability guard;</li><li>the name and label rule, including the three closed gaps;</li><li>the left-coven and deleted-coven rules;</li><li>the classification map with its catalogue test;</li><li>the leak test and the direct-id tests;</li><li>`data-copy.md`.</li></ul>                                                                                                                                           |
+| N1.6  | Package a Copy as a Zip With Readable Spells                 | 5h   | Adds `fflate`. Renders `data.json`, the spell markdown and `INDEX.md`, and splits at 2.5 MB. Tests unzip and parse the result, and cover the split.                                                                                                                                                                                                                                                                                                                                                                              |
+| N1.7  | Ask for a Copy of Your Data and Receive a Link               | 8h   | <ul><li>The `/account/data` tab, added to `PAUSED_VIEW_PAGES`.</li><li>`requestDataCopy` and `myDataCopy`, both on the paused allowlist.</li><li>The queued weekly limit, with the date shown.</li><li>The daily batch: skip erased accounts, build, store, mint, mail.</li><li>Expiry clearing.</li><li>Its story spec, with mailpit (the test mail inbox).</li><li>"Text to publish" for the code of ethics, privacy policy and Terms.</li></ul>                                                                               |
+| N1.8  | Download a Copy With an Emailed Code                         | 8h   | <ul><li>The `/data-copy/[token]` page and the send-code and check-code mutations, written as the signed-out sender.</li><li>Send limits, HMAC codes and tries, and the grant-gated `dataCopyPart`.</li><li>The headers, and the CLAUDE.md rule 3 and public-surface amendments with their record.</li><li>Tests that the token alone fetches nothing, that sends are capped and that tries run out.</li><li>Its story spec, with axe checks.</li></ul>                                                                           |
+| N1.9  | An Admin Sends a Data Copy to an Account That Cannot Sign In | 4h   | Admin only, naming the support request. Mails only a verified, non-placeholder held address and refuses an erased account. Authorization tests show a curator and a member are refused, each with its precondition. Its story spec.                                                                                                                                                                                                                                                                                              |
+| N1.10 | Remind a Member to Ask for Their Data Before Leaving a Coven | 1h   | The leave dialog's text and link to "Your Data". A component test.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| N1.11 | A Coven Owner Downloads the Whole Coven                      | 7h   | `requestCovenCopy`, owner-only through a new per-role statement in `access-control.ts` (code, no migration). Same table, batch, zip and code. Its own map entries and leak test, and direct-id refusals for a member, a viewer and D. Its story spec.                                                                                                                                                                                                                                                                            |
 
 Total: 58h, plus 2h if the daily-cron task has to be minted.
 
@@ -2965,16 +2965,16 @@ The main session coordinates. One Sonnet agent does the edits, briefed with thes
 
 3. **Write the record**, `claude-docs/design-decisions/support.md`, "A way for people to take their own writing with them", in M15.59's shape. It includes "Alternatives weighed" for every decision, the proposed stories, "DESIGN.md sections the builds change", "Text to publish", "Build tasks", "What I could not read" and "Sources".
 4. **Copy the plan** to `claude-docs/design-decisions/support.md`, "Scope a way for people to take their own writing with them (plan)", under a one-line note that it is not maintained.
-5. **Set up the wave.** Write `waves/v1-next/wave-18.md` and add the `TASKS.md` row. Take the moved tasks out of Wave 15. Add the M15.74 criterion and sync it. Create the milestone as `claude-docs/task-tracking.md` sets out.
+5. **Set up the wave.** Write `waves/v1-next/wave-01.md` and add the `TASKS.md` row. Take the moved tasks out of Wave 15. Add the N1.13 criterion and sync it. Create the milestone as `claude-docs/task-tracking.md` sets out.
 6. **Mint the tasks.**
-   1. Re-check that M18.1 is free.
-   2. Write `tasks/v1-next/m18.md`.
-   3. For each task, run `gh issue create --type Task --label tracked --milestone "Wave 18 — Privacy"`, then `estimate`.
+   1. Re-check that N1.3 is free.
+   2. Write `tasks/v1-next/n1.md`.
+   3. For each task, run `gh issue create --type Task --label tracked --milestone "N · Wave 01 — Privacy"`, then `estimate`.
    4. Move the five existing issues to the new milestone.
    5. Update both milestones' first lines.
    6. Run `reorder` as a dry run, then with `--apply`.
 
-   If the cron source shows the count is capped at three, mint the daily-cron task before M18.5.
+   If the cron source shows the count is capped at three, mint the daily-cron task before N1.7.
 
 7. **Update the documents.** Point M15.58's rows and its build table at the new tasks, and add the `data_copies` row to its "What the site holds" table. Edit the code-of-ethics seed sentence.
 8. **Check.** Run `npm run format:check` and `npm run lint`; this is a prose diff, so no tests. Comment progress on the task, then stop at ready. No commit or PR until you ask.
@@ -2982,10 +2982,10 @@ The main session coordinates. One Sonnet agent does the edits, briefed with thes
 ### Verification
 
 - `npm run format:check` and `npm run lint` pass in the worktree.
-- `task-board.mjs find` prints one issue in "Wave 18 — Privacy", with an estimate, for M18.1 to M18.9 and for M15.61 and M15.73 to M15.76.
+- `task-board.mjs find` prints one issue in "N · Wave 01 — Privacy", with an estimate, for N1.3 to N1.11 and for M15.61 and N1.12 to N1.2.
 - `reorder` prints no moves.
 - Wave 15 no longer lists the moved tasks.
-- The record meets every M15.61 criterion, and the code-of-ethics seed sentence names M18.5.
+- The record meets every M15.61 criterion, and the code-of-ethics seed sentence names N1.7.
 
 ## Agreeing to the terms covers the disclaimer and the code of ethics
 
@@ -3138,51 +3138,51 @@ The owner answered every question on 2026-11-06 (this session); the answers are 
 
 **The rule.** The compendium holds no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays, even where a preparation of it would be a controlled substance (the owner's call, 2026-11-06). The governing law is the federal Controlled Substances Act schedules (21 U.S.C. § 812; 21 CFR Part 1308, which names peyote and marihuana in Schedule I and opium poppy and poppy straw and coca leaves in Schedule II: https://www.govinfo.gov/content/pkg/USCODE-2011-title21/html/USCODE-2011-title21-chap13-subchapI-partB-sec812.htm, current text to be checked at law.cornell.edu) and Washington's Uniform Controlled Substances Act (RCW 69.50.204 Schedule I names psilocybin, psilocyn and tetrahydrocannabinols "naturally contained in a plant of the genera Cannabis": https://lawfilesext.leg.wa.gov/Law/RCWPDF/RCW%20%2069%20%20TITLE/RCW%20%2069%20.%2050%20%20CHAPTER/RCW%20%2069%20.%2050%20.204.pdf), with alcohol under RCW Title 66 and cannabis under RCW 69.50 even where Washington licenses adult sale. International control is not the test: the INCB holds that no plant is controlled under the 1971 Convention (E/INCB/2010/1 para. 287, as reported by Tupper and Labate 2012), so a treaty rule would remove only the opium poppy, coca and cannabis. A coven may still add any of these as its own ingredient; the rule is about what the site publishes. **The reason, in the record's words:** the owner's caution about carrying that information on a public site. The record also says, labelled as the lane's understanding and not legal advice, that the Act controls possession, manufacture and supply and not description, so the rule is a choice, not a found requirement.
 
-**The test, per entry:** a source read says the plant, fungus or substance itself is named in 21 CFR 1308 or RCW 69.50 (peyote, marihuana, opium poppy, coca leaves), or that growing or possessing it is unlawful there (a fungus containing psilocybin is treated as the substance), or it is an alcoholic drink, cannabis or tobacco. A plant lawful to grow stays, whatever a preparation of it would be. Its entry says nothing that instructs preparation or dosing, but it errs on the side of safety: where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is (the owner's call, 2026-11-06). M19.1 checks every kept candidate for both: it removes any instructing sentence, and adds a sourced `safetyNotes` line (and `toxic` where the source says so) to a kept entry that lacks one, on the pattern yopo's and peyote's already use. Peyote's dosing sentence goes with its entry. Each removal is recorded in an ethics file with the citation, as the endangered removals were (`compendium/ethics/endangered-removals.md`, `claude-docs/design-decisions/ingredients.md`, "No endangered species in the compendium"), and listed in `compendium/left-out.md`.
+**The test, per entry:** a source read says the plant, fungus or substance itself is named in 21 CFR 1308 or RCW 69.50 (peyote, marihuana, opium poppy, coca leaves), or that growing or possessing it is unlawful there (a fungus containing psilocybin is treated as the substance), or it is an alcoholic drink, cannabis or tobacco. A plant lawful to grow stays, whatever a preparation of it would be. Its entry says nothing that instructs preparation or dosing, but it errs on the side of safety: where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is (the owner's call, 2026-11-06). N2.1 checks every kept candidate for both: it removes any instructing sentence, and adds a sourced `safetyNotes` line (and `toxic` where the source says so) to a kept entry that lacks one, on the pattern yopo's and peyote's already use. Peyote's dosing sentence goes with its entry. Each removal is recorded in an ethics file with the citation, as the endangered removals were (`compendium/ethics/endangered-removals.md`, `claude-docs/design-decisions/ingredients.md`, "No endangered species in the compendium"), and listed in `compendium/left-out.md`.
 
-**Candidates today** (from the file names, unverified until the content task reads each entry's sources). Removed under the test: peyote (Schedule I by name), hemp (`botanical/hemp-cannabis-sativa`, cannabis), opium poppy (Schedule II by name; growing it is manufacture under the Act), coca (Schedule II by name), the two Psilocybe entries (`fungal/psilocybe-mushrooms-psilocybe`, `fungal/koae-ea-lekhoaba-psilocybe-maluti`), tobacco (`botanical/tobacco-nicotiana`, the owner's call), and the alcohol entries `whiskey`, `rum` and `palm-wine`. Kept, as plants lawful to grow, pending the check: San Pedro cactus, chacruna, yopo, iboga, ololiuqui and morning glory, Salvia divinorum, ayahuasca vine, Syrian rue, kava, fly agaric, datura, belladonna, henbane, mandrake, nutmeg, areca and betel, ephedra. Iboga is the doubtful one (ibogaine is Schedule I and the plant's status is unsettled): M19.1 decides it from a source and records why.
+**Candidates today** (from the file names, unverified until the content task reads each entry's sources). Removed under the test: peyote (Schedule I by name), hemp (`botanical/hemp-cannabis-sativa`, cannabis), opium poppy (Schedule II by name; growing it is manufacture under the Act), coca (Schedule II by name), the two Psilocybe entries (`fungal/psilocybe-mushrooms-psilocybe`, `fungal/koae-ea-lekhoaba-psilocybe-maluti`), tobacco (`botanical/tobacco-nicotiana`, the owner's call), and the alcohol entries `whiskey`, `rum` and `palm-wine`. Kept, as plants lawful to grow, pending the check: San Pedro cactus, chacruna, yopo, iboga, ololiuqui and morning glory, Salvia divinorum, ayahuasca vine, Syrian rue, kava, fly agaric, datura, belladonna, henbane, mandrake, nutmeg, areca and betel, ephedra. Iboga is the doubtful one (ibogaine is Schedule I and the plant's status is unsettled): N2.1 decides it from a source and records why.
 
-**Where it lands:** a second record, `claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"; a "No controlled substances" section in the seed README beside "No endangered species"; the Code of Ethics' sourcing section gains the rule in the content task's PR; two build tasks open Wave 19 (table below). M17.2 itself deletes no entry.
+**Where it lands:** a second record, `claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"; a "No controlled substances" section in the seed README beside "No endangered species"; the Code of Ethics' sourcing section gains the rule in the content task's PR; two build tasks open N · Wave 02 (table below). M17.2 itself deletes no entry.
 
-**The build is a new wave (the owner's call, 2026-11-06), not Wave 17.** M17.2's entry and issue say "minted as `M17.n` tasks on Wave 17"; that line is corrected in place in `claude-docs/tasks/v1/m17.md`, synced to #1467, and the record says why: the build is eight tasks with its own trigger (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. Proposed name **Wave 19 — Compendium ethics**, after Wave 18 (Privacy); the tasks are `M19.1 → M19.10` in a new `claude-docs/tasks/v1-next/m19.md` and `claude-docs/waves/v1-next/wave-19.md`, registered in `scripts/tasks-md.mjs` (one added path line, as Wave 18's commit `78a55cc7b` did; the "only Markdown" criterion is amended to allow it, as M17.1's already does). The milestone `Wave 19 — Compendium ethics` is created on GitHub (`gh api -X POST repos/Aurora-Arctic/Sorrel-and-Salt/milestones`) with its first line the id list and the wave-file link, before minting. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision, named in the wave file.
+**The build is a new wave (the owner's call, 2026-11-06), not Wave 17.** M17.2's entry and issue say "minted as `M17.n` tasks on Wave 17"; that line is corrected in place in `claude-docs/tasks/v1/m17.md`, synced to #1467, and the record says why: the build is eight tasks with its own trigger (M17.2 done), the size of N · Wave 01, and Wave 17 is a holding wave for scoping and audits. Proposed name **N · Wave 02 — Compendium ethics**, after N · Wave 01 (Privacy); the tasks are `N2.1 → N2.10` in a new `claude-docs/tasks/v1-next/n2.md` and `claude-docs/waves/v1-next/wave-02.md`, registered in `scripts/tasks-md.mjs` (one added path line, as N · Wave 01's commit `78a55cc7b` did; the "only Markdown" criterion is amended to allow it, as M17.1's already does). The milestone `N · Wave 02 — Compendium ethics` is created on GitHub (`gh api -X POST repos/Aurora-Arctic/Sorrel-and-Salt/milestones`) with its first line the id list and the wave-file link, before minting. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision, named in the wave file.
 
 ### Deliverables (all Markdown, `compendium/ethics/`, `scripts/tasks-md.mjs`, and the board)
 
 0. **`claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"**: the rule, jurisdiction, citations, test, candidate list, reason, and the two tasks; plus the seed README section and a line in `compendium/ethics/checked.md`'s heading rules if the format changes (it does not; removals use ethics files as before).
 1. **`claude-docs/design-decisions/ingredients.md`, "The closed-practice warning"** with sections: the data today (stacte on Wikipedia; after the decisions, peyote and white sage) with file and source per entry; which sources may establish a closed practice and why Wikipedia alone may not (rule above, with the authorities); how an entry records the tradition of each piece of lore (nullable `tradition_id` on `reference_links`, the later pair of tasks); the data model (table below); what the warning shows and who sets it; the owner's answers per file; the build tasks and their order. Written plainly per `.claude/rules/writing.md`, British spelling, no versions.
 2. **`compendium/ethics/` updates:** README table in `claude-docs/compendium/compendium-seed/README.md` gains `closedPractice[].kind` (`closed` | `asked-not-to-use`). White sage and peyote get `closedPractice` rows with new source files under `compendium/ethics/sources/` (`hcn-sage-advice`, `narf-ncnac-2016`, `ict-ncnac-2016`, `ipci-public-statements`, Chicago form, accessed dates) and go `approved`. Stacte loses its row and records the answer; stacte, onycha, yopo, cowrie, lava stone, Strychnos icaja each get "Answered by the owner 2026-11-06: …" under their question (costus's pattern) and go `approved`.
-3. **Task entries** in a new `claude-docs/tasks/v1-next/m19.md` (header, sequencing paragraph, ten entries with estimates and "Tests are written first" lines), a new `claude-docs/waves/v1-next/wave-19.md` (why the wave exists, its row, its trigger), a new **TASKS.md** row `| **19 — Compendium ethics** | M19.1 → M19.10 |`; MB.175's entry in `tasks/v1/mb.md` amended so a help article may have a parent article (sub pages), synced to #690; after Wave 18 and the wave count where TASKS.md states it, `claude-docs/tasks/v1/m17.md` M17.2's corrected criterion and wave-17.md's M17.2 paragraph saying the build went to Wave 19, and **`claude-docs/backlog.md`** line 38 naming the tasks.
-4. **Board minting** per `.claude/rules/task-tracking.md`: create the milestone, re-check that no `M19.n` issue exists, `gh issue create --type Task --label tracked --milestone "Wave 19 — Compendium ethics"`, `estimate`, the milestone description's first line, then `reorder` dry-run and `--apply` from the branch holding the row; `sync M17.2` and `sync MB.175` for the corrected entries.
+3. **Task entries** in a new `claude-docs/tasks/v1-next/n2.md` (header, sequencing paragraph, ten entries with estimates and "Tests are written first" lines), a new `claude-docs/waves/v1-next/wave-02.md` (why the wave exists, its row, its trigger), a new **TASKS.md** row `| **19 — Compendium ethics** | N2.1 → N2.10 |`; MB.175's entry in `tasks/v1/mb.md` amended so a help article may have a parent article (sub pages), synced to #690; after N · Wave 01 and the wave count where TASKS.md states it, `claude-docs/tasks/v1/m17.md` M17.2's corrected criterion and wave-17.md's M17.2 paragraph saying the build went to N · Wave 02, and **`claude-docs/backlog.md`** line 38 naming the tasks.
+4. **Board minting** per `.claude/rules/task-tracking.md`: create the milestone, re-check that no `N2.n` issue exists, `gh issue create --type Task --label tracked --milestone "N · Wave 02 — Compendium ethics"`, `estimate`, the milestone description's first line, then `reorder` dry-run and `--apply` from the branch holding the row; `sync M17.2` and `sync MB.175` for the corrected entries.
 5. Progress comments on #1467 via `task-board.mjs comment` (names, never values).
 
-### The build tasks, Wave 19 (order as listed)
+### The build tasks, N · Wave 02 (order as listed)
 
-| Id     | Title                                                                                             | Est. | Depends on                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------ | ------------------------------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M19.1  | Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed | 3h   | — Checks each candidate against 21 CFR 1308 and RCW 69.50 by its sources, keeps every plant lawful to grow and gives each kept candidate a sourced safety note where a source names a harm, with no preparation or dosing sentence left, writes the ethics file per removal, deletes the entry files and the sources only they cite, lists each in `compendium/left-out.md`, updates the Code of Ethics' sourcing section in the same PR. |
-| M19.2  | Retire the removed entries from seeded databases                                                  | 2h   | M19.1. A forward-only data migration on the M14.30 pattern (`0090_retire-endangered-entries.sql`): soft-deletes by seed key, keeps variants a coven holds; `tests/db/` test; later seed runs report `retired`.                                                                                                                                                                                                                            |
-| M19.3  | Call the deity traditions "Traditions" on screen, as the vocabulary of peoples and religions      | 1h   | — (`GroupList/kinds.ts`, the curator tab, docs; the table name stays)                                                                                                                                                                                                                                                                                                                                                                     |
-| M19.4  | `ingredient_closed_practices` table                                                               | 1h   | M19.3. One migration: `id`, `ingredient_id`, `tradition_id` → `deity_traditions`, `kind` enum (`closed`, `asked-not-to-use`), `statement` text, `seed_key`, audit columns, partial unique on (`ingredient_id`, `tradition_id`); `reference_links.ingredient_closed_practice_id` as a seventh sourced target (the `reference_links_one_row` CHECK widened). Catalogue test in `tests/db/`. No service uses it yet.                         |
-| M19.5  | A curator sets, changes and clears an entry's closed-practice mark                                | 3h   | M19.4. Service in `src/modules/ingredients/services/compendium.ts` (`assertCurator`, `withAudit`, `expireCompendium`), GraphQL mutations, a section in `IngredientForm` with tradition pick, kind, statement (length-limited, no ceremony description by rule) and sources.                                                                                                                                                               |
-| M19.6  | The warning shows on the entry page and the compendium list, and the Code of Ethics says so       | 4h   | M19.5. Notice + `EntryMarks` mark + facet; a story spec. Criterion: edit `documents/code-of-ethics.md` lines 13, 54 and 55 in the same PR, restoring the promise that an entry from a closed practice says so, names the people and does not describe the ceremony, and a keeper republishes it.                                                                                                                                          |
-| M19.7  | Seed the closed-practice marks from `compendium/closed-practices/`                                | 2h   | M19.5. Files per marked entry (white sage; peyote only if it survives M19.1, which it will not under the rule, so the record says the peyote mark is written to its ethics file as the finding and seeded for no entry) with `seedKey`, sources copied into `compendium/sources/`; the seed never revives a cleared mark.                                                                                                                 |
-| M19.8  | Help pages on closed practices: one general, one per marked practice                              | 3h   | M19.6 and MB.175's build tasks (the parent article MB.175's amended entry adds). `/help/closed-practices` and `/help/closed-practices/<practice>` seeded, written in the people's words with sources; each entry's notice links its practice's page.                                                                                                                                                                                      |
-| M19.9  | `reference_links.tradition_id` column                                                             | 1h   | M19.3. Nullable, → `deity_traditions`; catalogue test.                                                                                                                                                                                                                                                                                                                                                                                    |
-| M19.10 | A citation says which tradition its lore comes from                                               | 3h   | M19.9. Source panel pick; references list shows it; the Code of Ethics line 54 updated in the same PR.                                                                                                                                                                                                                                                                                                                                    |
+| Id    | Title                                                                                             | Est. | Depends on                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----- | ------------------------------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N2.1  | Remove the entries unlawful to grow, and the alcohol, cannabis and tobacco entries, from the seed | 3h   | — Checks each candidate against 21 CFR 1308 and RCW 69.50 by its sources, keeps every plant lawful to grow and gives each kept candidate a sourced safety note where a source names a harm, with no preparation or dosing sentence left, writes the ethics file per removal, deletes the entry files and the sources only they cite, lists each in `compendium/left-out.md`, updates the Code of Ethics' sourcing section in the same PR. |
+| N2.2  | Retire the removed entries from seeded databases                                                  | 2h   | N2.1. A forward-only data migration on the M14.30 pattern (`0090_retire-endangered-entries.sql`): soft-deletes by seed key, keeps variants a coven holds; `tests/db/` test; later seed runs report `retired`.                                                                                                                                                                                                                             |
+| N2.3  | Call the deity traditions "Traditions" on screen, as the vocabulary of peoples and religions      | 1h   | — (`GroupList/kinds.ts`, the curator tab, docs; the table name stays)                                                                                                                                                                                                                                                                                                                                                                     |
+| N2.4  | `ingredient_closed_practices` table                                                               | 1h   | N2.3. One migration: `id`, `ingredient_id`, `tradition_id` → `deity_traditions`, `kind` enum (`closed`, `asked-not-to-use`), `statement` text, `seed_key`, audit columns, partial unique on (`ingredient_id`, `tradition_id`); `reference_links.ingredient_closed_practice_id` as a seventh sourced target (the `reference_links_one_row` CHECK widened). Catalogue test in `tests/db/`. No service uses it yet.                          |
+| N2.5  | A curator sets, changes and clears an entry's closed-practice mark                                | 3h   | N2.4. Service in `src/modules/ingredients/services/compendium.ts` (`assertCurator`, `withAudit`, `expireCompendium`), GraphQL mutations, a section in `IngredientForm` with tradition pick, kind, statement (length-limited, no ceremony description by rule) and sources.                                                                                                                                                                |
+| N2.6  | The warning shows on the entry page and the compendium list, and the Code of Ethics says so       | 4h   | N2.5. Notice + `EntryMarks` mark + facet; a story spec. Criterion: edit `documents/code-of-ethics.md` lines 13, 54 and 55 in the same PR, restoring the promise that an entry from a closed practice says so, names the people and does not describe the ceremony, and a keeper republishes it.                                                                                                                                           |
+| N2.7  | Seed the closed-practice marks from `compendium/closed-practices/`                                | 2h   | N2.5. Files per marked entry (white sage; peyote only if it survives N2.1, which it will not under the rule, so the record says the peyote mark is written to its ethics file as the finding and seeded for no entry) with `seedKey`, sources copied into `compendium/sources/`; the seed never revives a cleared mark.                                                                                                                   |
+| N2.8  | Help pages on closed practices: one general, one per marked practice                              | 3h   | N2.6 and MB.175's build tasks (the parent article MB.175's amended entry adds). `/help/closed-practices` and `/help/closed-practices/<practice>` seeded, written in the people's words with sources; each entry's notice links its practice's page.                                                                                                                                                                                       |
+| N2.9  | `reference_links.tradition_id` column                                                             | 1h   | N2.3. Nullable, → `deity_traditions`; catalogue test.                                                                                                                                                                                                                                                                                                                                                                                     |
+| N2.10 | A citation says which tradition its lore comes from                                               | 3h   | N2.9. Source panel pick; references list shows it; the Code of Ethics line 54 updated in the same PR.                                                                                                                                                                                                                                                                                                                                     |
 
-Total 23h. The wave's row: `M19.1 → M19.10`. Trigger: M17.2 done; it runs after Wave 18 in board order. M19.1 and M19.2 lead because the removal is the owner's priority.
+Total 23h. The wave's row: `N2.1 → N2.10`. Trigger: M17.2 done; it runs after N · Wave 01 in board order. N2.1 and N2.2 lead because the removal is the owner's priority.
 
 ### Steps
 
 1. `/create-feature` flow via start-task: branch `feature/m17.2-closed-practice-warning` off fresh `staging`; set #1467 `In Progress`.
 2. Write the record; update the ethics files, README table, backlog, m17.md, wave-17.md, TASKS.md.
-3. Create the Wave 19 milestone; mint M19.1–M19.10 (ids re-checked), estimates, milestone first line, `reorder --apply`, `task-board.mjs sync` for each and for M17.2 and MB.175, from the branch.
+3. Create the N · Wave 02 milestone; mint N2.1–N2.10 (ids re-checked), estimates, milestone first line, `reorder --apply`, `task-board.mjs sync` for each and for M17.2 and MB.175, from the branch.
 4. Comment progress on #1467. Stop before any commit; `/create-pr` is the owner's call.
 
 ### Verification
 
 - `npm run format:check` and `npm run lint` (doc-only diff plus one path line in `scripts/tasks-md.mjs`: no tests; `node scripts/tasks-md.mjs` runs clean so the new file is read).
-- `node scripts/task-board.mjs find M19.1` … `M19.10` each print one issue; `reorder` prints no moves after `--apply`.
+- `node scripts/task-board.mjs find N2.1` … `N2.10` each print one issue; `reorder` prints no moves after `--apply`.
 - `git diff --stat` shows only `claude-docs/`, `compendium/ethics/`, `scripts/tasks-md.mjs`; nothing under `src/` or `documents/`.
 - Every URL in the record opened once in a browser by the lane, and the UNDRIP quote checked against the UN text.
 
@@ -3190,9 +3190,9 @@ Total 23h. The wave's row: `M19.1 → M19.10`. Trigger: M17.2 done; it runs afte
 
 Nothing beyond approving this plan, unless one of these assumptions is wrong, in which case say so:
 
-- The wave is named **Wave 19 — Compendium ethics** and sits after Wave 18, with the two removal tasks first.
+- The wave is named **N · Wave 02 — Compendium ethics** and sits after N · Wave 01, with the two removal tasks first.
 - The help pages are MB.175 help articles (a general one and one per practice), not legal documents.
-- The removal test is "the plant, fungus or substance itself is unlawful to grow or possess under US federal or Washington law, or is alcohol, cannabis or tobacco"; plants lawful to grow stay; each entry is decided from its sources in M19.1, not in M17.2.
+- The removal test is "the plant, fungus or substance itself is unlawful to grow or possess under US federal or Washington law, or is alcohol, cannabis or tobacco"; plants lawful to grow stay; each entry is decided from its sources in N2.1, not in M17.2.
 
 Plan file: /home/node/.claude/plans/m17-2-do-thorough-research-logical-haven.md (the `code` command is not installed in this container, so I could not open it in the editor).
 
@@ -3223,7 +3223,7 @@ The work happens in `/home/node/worktrees/m17.3`, on branch `feature/m17.3-ethic
 
 2. **Animal parts:** a notice quoting the gathered statement with its source, plus an "Animal Part" card mark and filter. Nothing is inferred beyond the statement.
 3. **Exceptions for Indigenous peoples' religious and cultural use:** a field on the warning row, holding an exception statement with its own sources. The entry-page notice shows it.
-4. **Where the tasks go:** their own wave, **Wave 20 — Ethical warnings**, numbered M20.n.
+4. **Where the tasks go:** their own wave, **N · Wave 03 — Ethical warnings**, numbered N3.n.
 5. **The needs-review questions:** they come out of M17.3 and become their own tasks, one per group, plus a task to re-review the 22 the survey marked already decided. When each of those tasks runs, it puts its questions to you on a review page, one question at a time. The page has a Copy Table button.
 
 A default I am taking without asking, because it matches M17.2: a curator or keeper sets, changes and clears a warning, through `assertCurator`.
@@ -3232,8 +3232,8 @@ A default I am taking without asking, because it matches M17.2: a curator or kee
 
 Two acceptance criteria in `claude-docs/tasks/v1/m17.md` conflict with these decisions. I rewrite them and sync the issue:
 
-- "Each `needs-review` question … is put to the owner, and the owner's answer is recorded" becomes "Each `needs-review` question is assigned to a Wave 20 question task, named in the record."
-- "minted as `M17.n` tasks on Wave 17" becomes "minted as `M20.n` tasks on Wave 20."
+- "Each `needs-review` question … is put to the owner, and the owner's answer is recorded" becomes "Each `needs-review` question is assigned to a N · Wave 03 question task, named in the record."
+- "minted as `M17.n` tasks on Wave 17" becomes "minted as `N3.n` tasks on N · Wave 03."
 
 The record lists the entries the data marks **as it stands today**. It also says that the question tasks may change that list.
 
@@ -3246,14 +3246,14 @@ The record lists the entries the data marks **as it stands today**. It also says
    - every entry the data marks today, with its file and source, taken from the survey's `rowsB.tsv`, live entries only;
    - what the notice shows on the entry page, and what the mark and filter show in the compendium list;
    - who sets a warning;
-   - the Wave 20 task list.
+   - the N · Wave 03 task list.
 
    The shape mirrors M17.2's `ingredient_closed_practices`:
    - one table;
    - sources through `reference_links`, as a further kind of row;
    - a seed keyed on `seed_key` that never revives a mark someone cleared.
 
-2. **Mint Wave 20** with estimates. Each task names its prerequisite.
+2. **Mint N · Wave 03** with estimates. Each task names its prerequisite.
    - **Question tasks.** Each one asks you its questions on a one-at-a-time review page, then records each answer and `status` in its files.
      - A: a Wikipedia rating whose assessment was not found (25 questions).
      - B: an assessment of another name or taxon (10).
@@ -3273,8 +3273,8 @@ The record lists the entries the data marks **as it stands today**. It also says
      - The seed from `compendium/ethics/`, placed after every question task.
      - The help page, which waits on MB.175's build tasks.
    - **Files:**
-     - new: `claude-docs/waves/v1-next/wave-20.md` and `claude-docs/tasks/v1-next/m20.md`;
-     - updated: the Execution order row in `claude-docs/TASKS.md`, the "Ethical warnings around ingredients" item in `claude-docs/backlog.md` (it names the tasks), and `claude-docs/tasks/v1/m17.md` and `claude-docs/waves/v1/wave-17.md`, which point to Wave 20.
+     - new: `claude-docs/waves/v1-next/wave-03.md` and `claude-docs/tasks/v1-next/n3.md`;
+     - updated: the Execution order row in `claude-docs/TASKS.md`, the "Ethical warnings around ingredients" item in `claude-docs/backlog.md` (it names the tasks), and `claude-docs/tasks/v1/m17.md` and `claude-docs/waves/v1/wave-17.md`, which point to N · Wave 03.
    - **Board:** create the milestone and the issues as `.claude/rules/task-tracking.md` says, then run `node scripts/task-board.mjs sync` from the worktree.
 3. **Copy this plan** to `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 4. **Commit each green step** in the worktree. I do not push or open a PR until you run `/create-pr`. The PR body will name the MB.175 retitle.
@@ -3285,7 +3285,7 @@ The diff is prose only, so the checks are `npm run format:check` and `npm run li
 
 - `git diff --stat origin/staging` shows only Markdown files.
 - Every needs-review file in the survey is assigned to exactly one question task. I check this with a count script against the survey's lists.
-- `task-board.mjs find` returns exactly one issue for each new M20.n id.
+- `task-board.mjs find` returns exactly one issue for each new N3.n id.
 
 ## Help and FAQ articles, and a glossary, as rows a keeper edits
 
@@ -3383,7 +3383,7 @@ where a definition needs it.
 
 An `article` may have a parent `article` through a nullable `parent_id`,
 one level deep, and its page sits under its parent's address:
-`/help/closed-practices/<practice>`. M19.8's closed-practice pages need this:
+`/help/closed-practices/<practice>`. N2.8's closed-practice pages need this:
 one general page and one per practice.
 
 - **One level, not a tree.** A tree needs breadcrumbs, a depth limit and
@@ -3534,7 +3534,7 @@ Both are lines in `CLAUDE.md`, amended in the same PR as this record.
 MB.175 and its five build tasks were first Wave 15 (Launch) work, "v1 scope"
 by the decision of 2026-11-03. On 2026-11-06 the owner moved them to Wave 17
 (Fast follow), before M17.6. The help pages therefore ship after launch.
-Two things follow. Wave 15's axe sweep (M11.16, M11.8) no longer scans these
+Two things follow. Wave 15's axe sweep (NO.2, M11.8) no longer scans these
 pages, and the Wave 17 accessibility audit (M17.9) does. And the links from
 `Welcome`, the public frame, `AppShell` and M11.10's 404 page land with the
 public pages (M17.16), not before.
@@ -3586,7 +3586,7 @@ MB.175 (#690, Not Started, milestone Wave 15) is a scoping task: it records the 
 You asked for two things this session:
 
 - **Placement:** move MB.175 out of Wave 15 and into Wave 17, **before M17.6**.
-- **Order with M17.3:** MB.175 runs before M17.3 finishes. M17.3's branch (`/home/node/worktrees/m17.3`, unpushed) already holds a copy of MB.175's retitle commit (`5bfc4273f`). Its M20.15 (the help page for the warnings) depends on "MB.175's build tasks", which do not have ids yet. MB.175 mints those ids first. Then M17.3 rebases onto staging, the duplicate retitle commit drops out, and M20.15 names the new ids.
+- **Order with M17.3:** MB.175 runs before M17.3 finishes. M17.3's branch (`/home/node/worktrees/m17.3`, unpushed) already holds a copy of MB.175's retitle commit (`5bfc4273f`). Its N3.15 (the help page for the warnings) depends on "MB.175's build tasks", which do not have ids yet. MB.175 mints those ids first. Then M17.3 rebases onto staging, the duplicate retitle commit drops out, and N3.15 names the new ids.
 
 M17.2 is merged (#1554). The `parent_id` amendment it asked for is already in #690's body.
 
@@ -3599,10 +3599,10 @@ M17.2 is merged (#1554). The `parent_id` amendment it asked for is already in #6
 ### Changes (docs only)
 
 1. **Placement**
-   - `claude-docs/TASKS.md`: remove MB.175 from Wave 15's row. Wave 17's row becomes `M17.1 → M17.3 · M17.5 · M17.4 · MB.175 · M17.13 → M17.17 · M17.6 → M17.12 · MB.163`. Correct the "Unscheduled by design" paragraph (line 66).
+   - `claude-docs/TASKS.md`: remove MB.175 from Wave 15's row. Wave 17's row becomes `M17.1 → M17.3 · M17.5 · ND.1 · MB.175 · M17.13 → M17.17 · M17.6 → M17.12 · ND.2`. Correct the "Unscheduled by design" paragraph (line 66).
    - `claude-docs/waves/v1/wave-15.md` line 27: say MB.175 moved to Wave 17.
-   - `claude-docs/waves/v1/wave-17.md` line 21: replace the "stay on Wave 15" paragraph with the move. It gives the date (the owner's call of 2026-11-06) and says MB.175 and its five tasks sit after M17.4 and before the M17.6 audits, so the accessibility audit (M17.9) scans the help pages. MB.78 stays on Wave 15.
-   - **What the move changes, stated in the docs:** the help pages ship after launch, not in v1. Wave 15's axe sweep (M11.16, M11.8) no longer covers them; M17.9 does. "v1 scope" becomes "fast follow" in the mb.md entry, the waves and DESIGN.md.
+   - `claude-docs/waves/v1/wave-17.md` line 21: replace the "stay on Wave 15" paragraph with the move. It gives the date (the owner's call of 2026-11-06) and says MB.175 and its five tasks sit after ND.1 and before the M17.6 audits, so the accessibility audit (M17.9) scans the help pages. MB.78 stays on Wave 15.
+   - **What the move changes, stated in the docs:** the help pages ship after launch, not in v1. Wave 15's axe sweep (NO.2, M11.8) no longer covers them; M17.9 does. "v1 scope" becomes "fast follow" in the mb.md entry, the waves and DESIGN.md.
    - Move the issue's milestone to Wave 17 by the method `claude-docs/task-tracking.md` gives (sync, or the script's milestone command).
 2. **The model**, as #690's body sets it out, recorded in DESIGN.md §5 (the `help_articles` table: `kind` `faq`/`article`/`term`, nullable `parent_id`, one level deep, pointing at an `article`; `slug` unique among live rows; `glossary` reserved), §7 (services: `assertSiteAdmin` writes, a sessionless finder cached under tag `help`), §9 (`/keepers/help`, `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`, PUBLIC_ROUTES, sitemap, links) and §10 ("Help and FAQ articles").
 3. **The record:** `claude-docs/design-decisions/support.md`, "Help and FAQ articles, and a glossary, as rows a keeper edits". It weighs rows against files in the repo and names the two invariants it widens. **Module: I recommend a sixth module, `help`.** The articles have no tie to identity, and `claude-docs/modules.md` "Adding a module" gives the steps. Copy this plan in as `design-decisions/support.md`, "Scope Help and FAQ articles (plan)".
@@ -3628,11 +3628,11 @@ This diff is prose only, so I run `npm run format:check` and `npm run lint`, and
 
 ### After MB.175
 
-M17.3 rebases onto staging and names M17.16 (the public pages) as M20.15's prerequisite. Nothing in this PR edits the M17.3 branch.
+M17.3 rebases onto staging and names M17.16 (the public pages) as N3.15's prerequisite. Nothing in this PR edits the M17.3 branch.
 
 ## Promotional email needs recorded consent, withdrawn in one click
 
-The site sends no promotional mail; every template is transactional. This decides how consent is gathered and recorded before the first one. The law, the provider rules and the class of every template are in [`../email/promotional-consent.md`](../email/promotional-consent.md); the build work is Wave 22 ([`../waves/v1-next/wave-22.md`](../waves/v1-next/wave-22.md)).
+The site sends no promotional mail; every template is transactional. This decides how consent is gathered and recorded before the first one. The law, the provider rules and the class of every template are in [`../email/promotional-consent.md`](../email/promotional-consent.md); the build work is N · Wave 05 ([`../waves/v1-next/wave-05.md`](../waves/v1-next/wave-05.md)).
 
 ### The decision
 

@@ -1,10 +1,24 @@
-## MB — Bugfixes and gap tasks
+## ND — Deferred
 
-The MB tasks that belong to the Sorrel & Salt V1.Next Project; the rest are in [`v1/mb.md`](../v1/mb.md).
+The tasks on the **N · Z. Deferred** milestone: each waits for a trigger, named in its entry, and starts only when it fires.
 
-_2 tasks · 8 hours_
+_3 tasks · 11 hours_
 
-**MB.163 — Rewrite a renamed curated value in a background job** · 4h
+**ND.1 — Move the Account Expiry and the Address-Change Lapse to Hourly Cron Jobs on Vercel Pro** · 3h
+
+_Story:_ As the site's owner, once the site is on Vercel Pro, I want lapsed unverified accounts and lapsed address changes cleared by hourly Vercel Cron Jobs, so that no run sleeps for an hour or more.
+
+Today `provisionalAccountExpiry` starts one run per sign-up that sleeps until the account lapses (up to 3 hours), and `secretLinkMail` sleeps an hour after a change-of-address mail before clearing the pending address. Vercel Hobby refuses a cron job that runs more than once a day, so these stay until the project moves to Pro, on the owner's call of 2026-11-02. M15.68 has moved the daily cleanup to the cron route and the coordinator pattern this task reuses. It sits in the Deferred milestone, not Wave 17, on the owner's call of 2026-11-08, and only its trigger starts it.
+
+_Acceptance criteria:_
+
+- Prerequisite: the project is on Vercel Pro, and `DESIGN.md` §4 says so
+- An hourly cron job deletes each unverified account within an hour of its window lapsing: 1 hour after its last verification mail, and never more than 3 hours after sign-up
+- An hourly cron job clears each pending new address whose change link has lapsed
+- Each job is a coordinator that starts a batch run for each page of ids; a re-run or an overlap does no harm
+- `provisionalAccountExpiry`'s run per sign-up and `secretLinkMail`'s one-hour wait are removed, so no job sleeps
+
+**ND.2 — Rewrite a renamed curated value in a background job** · 4h
 
 _Story:_ As a site keeper, I want renaming a celestial body, zodiac sign, form or deity to return at once however many compendium entries hold it, so that fixing a typo in a list the whole compendium uses is not a request that times out.
 
@@ -31,7 +45,7 @@ _Acceptance criteria:_
 - A rewrite that fails is retried or surfaced to a keeper, never dropped, asserted by forcing one to fail
 - A coven's ingredients and variants are still never rewritten
 
-**MB.291 — Error Pages Are Blank Without JavaScript** · 4h
+**ND.3 — Error Pages Are Blank Without JavaScript** · 4h
 
 _Story:_ As a visitor whose browser runs no JavaScript, or a search crawler that runs none, I want a missing or forbidden page to say so in the HTML the server sends, so that I see why the page did not load and how to get back.
 

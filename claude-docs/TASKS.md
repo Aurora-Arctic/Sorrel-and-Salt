@@ -68,15 +68,15 @@ Each Project on the board has its own table, and `scripts/task-board.mjs reorder
 
 #### Sorrel & Salt V1.Next (`v1-next`)
 
-| Wave                                     | Tasks                                                      | Why here                               |
-| ---------------------------------------- | ---------------------------------------------------------- | -------------------------------------- |
-| **18 — Privacy**                         | M15.61 · M15.75 · M15.76 · M18.1 → M18.9 · M15.73 · M15.74 | [wave-18.md](waves/v1-next/wave-18.md) |
-| **19 — Compendium ethics**               | M19.1 → M19.10                                             | [wave-19.md](waves/v1-next/wave-19.md) |
-| **20 — Ethical warnings**                | M20.1 → M20.16                                             | [wave-20.md](waves/v1-next/wave-20.md) |
-| **21 — Billing and memberships**         | M21.1 → M21.20                                             | [wave-21.md](waves/v1-next/wave-21.md) |
-| **22 — Email consent and notifications** | M22.1 → M22.7                                              | [wave-22.md](waves/v1-next/wave-22.md) |
+| Wave                                         | Tasks                                               | Why here                               |
+| -------------------------------------------- | --------------------------------------------------- | -------------------------------------- |
+| **N · 01 — Privacy**                         | M15.61 · N1.1 · N1.2 · N1.3 → N1.11 · N1.12 · N1.13 | [wave-01.md](waves/v1-next/wave-01.md) |
+| **N · 02 — Compendium ethics**               | N2.1 → N2.10                                        | [wave-02.md](waves/v1-next/wave-02.md) |
+| **N · 03 — Ethical warnings**                | N3.1 → N3.16                                        | [wave-03.md](waves/v1-next/wave-03.md) |
+| **N · 04 — Billing and memberships**         | N4.1 → N4.20                                        | [wave-04.md](waves/v1-next/wave-04.md) |
+| **N · 05 — Email consent and notifications** | N5.1 → N5.7                                         | [wave-05.md](waves/v1-next/wave-05.md) |
 
-**Milestones without a row:** four milestones hold tasks outside the wave order, and none has a row in either table; each title starts "Z." so the board lists them after the waves. **Z. Bugfixes** holds Sorrel & Salt's bug and gap tasks ([`tasks/v1/mb.md`](tasks/v1/mb.md)), and **Z. Bugfixes — V1.Next** holds Sorrel & Salt V1.Next's ([`tasks/v1-next/mb.md`](tasks/v1-next/mb.md)); MB.78 (the OAuth proxy for hotfix previews) sits last in it, since it is trigger-based. **Z. Deferred** and **Z. Outside the Website** are on Sorrel & Salt V1.Next. **Z. Deferred** holds M17.4 (hourly cron jobs, whose trigger is the move to Vercel Pro) and MB.163 (a curated rename's rewrite in a background job, whose trigger is a measured rewrite time near the function's time limit) and MB.291 (error pages blank without JavaScript, whose trigger is a Next release that renders the not-found and forbidden boundaries into the server's HTML); each starts only when its trigger fires. **Z. Outside the Website** holds M15.62 (a Washington lawyer reviews the terms' legal clauses) and M11.16 (the site's images, licensed or made, after M11.8 and MB.124), whose main part happens outside the site's code; both come after the v1 release, and either can be pulled earlier. All six moved there on the owner's call of 2026-11-08. M7.A.1 (require merge queue) is trigger-based too, and sits last in Wave 17's row, after M11.14, only so it has a place ([wave-17.md](waves/v1/wave-17.md)).
+**Milestones without a row:** four milestones hold tasks outside the wave order, and none has a row in either table; each title has "Z." after its Project's prefix, so the board lists them after the waves. **Z. Bugfixes** holds Sorrel & Salt's bug and gap tasks ([`tasks/v1/mb.md`](tasks/v1/mb.md)); MB.78 (the OAuth proxy for hotfix previews) sits last in it, since it is trigger-based. The other three are Sorrel & Salt V1.Next's. **N · Z. Bugfixes** holds its bug tasks ([`tasks/v1-next/nb.md`](tasks/v1-next/nb.md)), none yet. **N · Z. Deferred** ([`tasks/v1-next/nd.md`](tasks/v1-next/nd.md)) holds ND.1 (hourly cron jobs, whose trigger is the move to Vercel Pro) and ND.2 (a curated rename's rewrite in a background job, whose trigger is a measured rewrite time near the function's time limit) and ND.3 (error pages blank without JavaScript, whose trigger is a Next release that renders the not-found and forbidden boundaries into the server's HTML); each starts only when its trigger fires. **N · Z. Outside the Website** ([`tasks/v1-next/no.md`](tasks/v1-next/no.md)) holds NO.1 (a Washington lawyer reviews the terms' legal clauses) and NO.2 (the site's images, licensed or made, after M11.8 and MB.124), whose main part happens outside the site's code; both come after the v1 release, and either can be pulled earlier. M7.A.1 (require merge queue) is trigger-based too, and sits last in Wave 17's row, after M11.14, only so it has a place ([wave-17.md](waves/v1/wave-17.md)).
 
 ### Ordering rules
 
@@ -118,14 +118,13 @@ The `## M… —` sections that followed the execution order live in [`tasks/`](
 
 #### Sorrel & Salt V1.Next (`v1-next`)
 
-| File                                           | Section                                                      |
-| ---------------------------------------------- | ------------------------------------------------------------ |
-| [`tasks/v1-next/m11.md`](tasks/v1-next/m11.md) | M11 — Hardening and launch · _1 task · 3 hours_              |
-| [`tasks/v1-next/m15.md`](tasks/v1-next/m15.md) | M15 — Launch additions · _6 tasks · 17 hours_                |
-| [`tasks/v1-next/m17.md`](tasks/v1-next/m17.md) | M17 — Fast follow · _1 task · 3 hours_                       |
-| [`tasks/v1-next/m18.md`](tasks/v1-next/m18.md) | M18 — Privacy · _9 tasks · 58 hours_                         |
-| [`tasks/v1-next/m19.md`](tasks/v1-next/m19.md) | M19 — Compendium ethics · _10 tasks · 23 hours_              |
-| [`tasks/v1-next/m20.md`](tasks/v1-next/m20.md) | M20 — Ethical warnings · _16 tasks · 41 hours_               |
-| [`tasks/v1-next/m21.md`](tasks/v1-next/m21.md) | M21 — Billing and memberships · _20 tasks · 93 hours_        |
-| [`tasks/v1-next/m22.md`](tasks/v1-next/m22.md) | M22 — Email consent and notifications · _7 tasks · 25 hours_ |
-| [`tasks/v1-next/mb.md`](tasks/v1-next/mb.md)   | MB — Bugfixes and gap tasks · _2 tasks · 8 hours_            |
+| File                                         | Section                                                     |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| [`tasks/v1-next/n1.md`](tasks/v1-next/n1.md) | N1 — Privacy · _14 tasks · 73 hours_                        |
+| [`tasks/v1-next/n2.md`](tasks/v1-next/n2.md) | N2 — Compendium ethics · _10 tasks · 23 hours_              |
+| [`tasks/v1-next/n3.md`](tasks/v1-next/n3.md) | N3 — Ethical warnings · _16 tasks · 41 hours_               |
+| [`tasks/v1-next/n4.md`](tasks/v1-next/n4.md) | N4 — Billing and memberships · _20 tasks · 93 hours_        |
+| [`tasks/v1-next/n5.md`](tasks/v1-next/n5.md) | N5 — Email consent and notifications · _7 tasks · 25 hours_ |
+| [`tasks/v1-next/nd.md`](tasks/v1-next/nd.md) | ND — Deferred · _3 tasks · 11 hours_                        |
+| [`tasks/v1-next/no.md`](tasks/v1-next/no.md) | NO — Outside the Website · _2 tasks · 5 hours_              |
+| [`tasks/v1-next/nb.md`](tasks/v1-next/nb.md) | NB — Bugfixes · _no tasks yet_                              |

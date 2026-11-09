@@ -1,16 +1,35 @@
-## M11 — Hardening and launch
+## NO — Outside the Website
 
-The M11 tasks that belong to the Sorrel & Salt V1.Next Project; the rest are in [`v1/m11.md`](../v1/m11.md).
+The tasks on the **N · Z. Outside the Website** milestone: the main part of each happens outside the site's code.
 
-_1 task · 3 hours_
+_2 tasks · 5 hours_
 
-### Launch readiness
+**NO.1 — Have a Washington Lawyer Review the Terms' Legal Clauses** · 2h
 
-**M11.16 — License or create the site's images** · 3h
+_Story:_ As the owner, I want a lawyer licensed in Washington to confirm that the terms' legal clauses do what they say, so that they hold if they are ever needed.
+
+The clauses are:
+
+- the choice of Washington law
+- Spokane County courts
+- non-binding arbitration before court
+- the limitation of liability
+- the clause that binds an account to updated terms by its use after an update
+- the clause excluding liability for what other people write on the site, and how it sits with Section 230 (47 U.S.C. § 230)
+
+The work is done mostly outside the repo, by the owner and a lawyer. The questions to put are listed in `claude-docs/design-decisions/support.md`, "For the owner".
+
+_Acceptance criteria:_
+
+- The lawyer's answer to each clause is recorded as a section in `design-decisions/support.md`. It names the advice and no personal details
+- Any wording the lawyer changes is corrected in a PR, and a change to the terms is published as a new terms version
+- If the task merges no code, its id is added to the tally's hand-kept done list
+
+**NO.2 — License or create the site's images** · 3h
 
 _Story:_ As the site owner, I want every image the site ships to be one we made or hold a licence for, and to be able to say which, so that no public page shows a picture whose terms nobody checked.
 
-Minted on request during Wave 6. M11.16 rather than M11.15, which is a retired id.
+Minted on request during Wave 6. NO.2 rather than M11.15, which is a retired id.
 
 The site ships no images today: no favicon or app icons, and every page is type on a surface. The social-share image is not this task's: it is generated, as a card drawn from the entry and the site's typefaces, by M12.34 in Wave 14, which lands first. Decide what imagery the site needs and source each piece by licensing it or by making it. The likely set: favicon and app icons plus the web manifest; a mark for the front door (`/`, MB.57); and the illustrations the empty and error states want — M2.8's invite-only explanation, M5.4's not-authorized page, M11.9's skeletons, M11.10's 404/500 pages. The set is the task's first output, not its input: an inventory of which pages need what, agreed before anything is bought or drawn.
 
