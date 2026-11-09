@@ -52,7 +52,7 @@ vi.mock('@/modules/help', () => ({
   searchHelp,
 }));
 
-type Kind = 'faq' | 'article' | 'term';
+type Kind = 'faq' | 'article' | 'guide' | 'term';
 type Audience = 'public' | 'staff' | 'keeper';
 
 let next = 0;
@@ -169,6 +169,7 @@ describe('/help/staff', () => {
       entries([
         row('testwort-vocabularies'),
         row('testwort-keeper-duties', { audience: 'keeper' }),
+        row('testwort-staff-grove', { kind: 'guide' }),
         row('testwort-forms', { parentSlug: 'testwort-vocabularies' }),
         row('testwort-public-guide', { audience: 'public' }),
         row('testwort-staff-question', { kind: 'faq', body: 'The **staff** answer.' }),
@@ -190,6 +191,7 @@ describe('/help/staff', () => {
       expect.arrayContaining([
         '/help/staff/testwort-vocabularies',
         '/help/staff/testwort-keeper-duties',
+        '/help/staff/testwort-staff-grove',
       ]),
     );
     // A public row is linked only at its public address, so the staff index leaves it out; a sub page is reached
@@ -273,6 +275,21 @@ describe('/help/staff/[slug]', () => {
 
     await expect(Page(article('testwort-keeper-duties'))).rejects.toThrow('NEXT_NOT_FOUND');
     expect(readStaffHelpArticle).toHaveBeenCalledWith(CURATOR, 'testwort-keeper-duties');
+  });
+
+  it('draws a staff guide, its own body above the sub pages it holds', async () => {
+    readStaffHelpArticle.mockResolvedValue({
+      ...row('testwort-grove', { kind: 'guide', body: 'The guide’s own words.' }),
+      children: [row('testwort-leaf', { parentSlug: 'testwort-grove' })],
+    });
+    const { default: Page } = await loadArticle();
+
+    render((await Page(article('testwort-grove'))) as React.ReactElement);
+
+    const words = screen.getByText('The guide’s own words.');
+    const nav = screen.getByRole('navigation', { name: 'In This Guide' });
+    expect(words.compareDocumentPosition(nav)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(linkHrefs()).toContain('/help/staff/testwort-grove/testwort-leaf');
   });
 
   it.each(['faq', 'term'] as const)(

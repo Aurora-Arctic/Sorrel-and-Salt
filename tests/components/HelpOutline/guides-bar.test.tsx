@@ -43,7 +43,7 @@ const ORDER = [
 
 const guide = (at: number): HelpOutlineGuide => ({
   ...ORDER[at],
-  kind: 'article',
+  kind: 'guide',
   position: at + 1,
   editHref: `/keepers/help/${ORDER[at].id}` as Route,
   subPages: 2,

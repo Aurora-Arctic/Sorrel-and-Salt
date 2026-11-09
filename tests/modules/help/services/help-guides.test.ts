@@ -5,6 +5,7 @@ import { slugify } from '@/lib/slugify';
 import type { PageRequest } from '@/lib/types';
 import {
   createHelpArticle,
+  listKeeperHelpArticles,
   readHelpArticle,
   readHelpArticleIndex,
   updateHelpArticle,
@@ -210,5 +211,26 @@ describe('the reader’s pages', () => {
     const page = await readHelpArticle('testwort-grove');
     expect(page).toMatchObject({ kind: 'guide', body: 'The guide’s own words.' });
     expect(page.children.map((child) => child.title)).toEqual(['Testwort Leaf']);
+  });
+});
+
+describe('the keeper’s list', () => {
+  it('reads the top-level guides and articles together in position order, by the kinds asked for', async () => {
+    const guide = await guideRow('Testwort Grove', { position: 2 });
+    await articleRow('Testwort Standalone', { position: 1 });
+    await articleRow('Testwort Leaf', { parent_id: guide, position: 1 });
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Asked', slug: 'testwort-asked', position: 0 },
+      E.id,
+    );
+    const read = async (kinds: ('guide' | 'article')[]) =>
+      (
+        await listKeeperHelpArticles(asUser(E), { kinds, topLevel: true, order: 'position' }, PAGE)
+      ).map(({ node }) => node.title);
+
+    // Precondition: one kind alone reads only its own rows.
+    expect(await read(['guide'])).toEqual(['Testwort Grove']);
+    expect(await read(['guide', 'article'])).toEqual(['Testwort Standalone', 'Testwort Grove']);
   });
 });

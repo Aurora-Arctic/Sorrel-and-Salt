@@ -43,7 +43,7 @@ vi.mock('@/modules/help', () => ({
   searchHelp,
 }));
 
-type Kind = 'faq' | 'article' | 'term';
+type Kind = 'faq' | 'article' | 'guide' | 'term';
 type Audience = 'public' | 'staff' | 'keeper';
 
 let next = 0;
@@ -290,7 +290,23 @@ describe('/help/[slug]', () => {
     expect(permanentRedirect).not.toHaveBeenCalled();
   });
 
-  // The public finder answers by slug for every kind; only an article has a page of its own.
+  it('draws a public guide, its own body above the sub pages it holds', async () => {
+    readHelpArticle.mockResolvedValue({
+      ...row('testwort-grove', { kind: 'guide', body: 'The guide’s own words.' }),
+      children: [row('testwort-leaf', { parentSlug: 'testwort-grove' })],
+    });
+    const { default: Page } = await load();
+
+    render((await Page(article('testwort-grove'))) as React.ReactElement);
+
+    expect(notFound).not.toHaveBeenCalled();
+    const words = screen.getByText('The guide’s own words.');
+    const nav = screen.getByRole('navigation', { name: 'In This Guide' });
+    expect(words.compareDocumentPosition(nav)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(linkHrefs()).toContain('/help/testwort-grove/testwort-leaf');
+  });
+
+  // The public finder answers by slug for every kind; only an article or a guide has a page of its own.
   it.each(['faq', 'term'] as const)(
     'is a 404 for a %s, which has no page of its own',
     async (kind) => {

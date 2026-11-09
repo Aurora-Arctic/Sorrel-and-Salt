@@ -21,7 +21,9 @@ export default async function Page() {
       heading="Staff Help"
       back={{ href: '/help', title: 'Help' }}
       faq={staff.filter((row) => row.kind === 'faq')}
-      articles={staff.filter((row) => row.kind === 'article' && !row.parentSlug).map(linkTo)}
+      articles={staff
+        .filter((row) => (row.kind === 'article' || row.kind === 'guide') && !row.parentSlug)
+        .map(linkTo)}
     />
   );
 }

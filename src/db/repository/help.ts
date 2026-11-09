@@ -113,6 +113,7 @@ export function findHelpArticleKeeperPage(
     and(
       listing === 'all' ? undefined : eq(helpArticles.shown, listing === 'shown'),
       filter.kind ? eq(helpArticles.kind, filter.kind) : undefined,
+      filter.kinds ? inArray(helpArticles.kind, [...filter.kinds]) : undefined,
       filter.audience ? eq(helpArticles.audience, filter.audience) : undefined,
       filter.topLevel ? isNull(helpArticles.parentId) : undefined,
       query === ''

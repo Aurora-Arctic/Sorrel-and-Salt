@@ -55,8 +55,10 @@ export interface HelpKeeperFilter {
   /** Words the title or the body contains, in any case. */
   query?: string | null;
   kind?: HelpArticleKind | null;
+  /** Rows of any of these kinds, as the top level mixes guides and articles; with `kind` too, a row passes both. */
+  kinds?: readonly HelpArticleKind[] | null;
   audience?: HelpAudience | null;
-  /** Top-level rows alone: the guides, with no sub page among them. */
+  /** Top-level rows alone: the guides and articles with no parent, and no sub page among them. */
   topLevel?: boolean | null;
   /** A to Z by title, the default, or in position order, as readers meet them. */
   order?: 'title' | 'position' | null;

@@ -15,7 +15,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const found = await orNotFound(() => readStaffHelpArticle(session, slug));
   // A public row lives under /help; a question or a term has no page of its own.
-  if (found.kind !== 'article' || found.audience === 'public') notFound();
+  if ((found.kind !== 'article' && found.kind !== 'guide') || found.audience === 'public') {
+    notFound();
+  }
   if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return (
     <HelpArticleView
@@ -23,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       heading="Staff Help"
       title={found.title}
       body={found.body}
+      editName={found.kind === 'guide' ? 'Guide' : 'Article'}
       parent={{ title: 'Staff Help', href: '/help/staff' }}
       subpages={found.children.map(linkTo)}
       editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}

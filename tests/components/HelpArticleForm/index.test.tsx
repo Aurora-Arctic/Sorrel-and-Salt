@@ -136,7 +136,7 @@ const CANDIDATES = [PUBLIC_SUB_A, PUBLIC_SUB_B, STAFF_SUB, LONE_PUBLIC, LONE_KEE
 /** The public guide, holding its two sub pages. */
 const GUIDE: HelpArticleFormValue = {
   id: PUBLIC_GUIDE.id,
-  kind: 'article',
+  kind: 'guide',
   title: PUBLIC_GUIDE.title,
   slug: PUBLIC_GUIDE.slug,
   summary: 'A guide the test holds',
@@ -159,6 +159,21 @@ const SUB_PAGE: HelpArticleFormValue = {
   audience: 'staff',
   parentId: STAFF_GUIDE.id,
   position: 1,
+  shown: true,
+  subPages: [],
+};
+
+/** A top-level article, which holds no sub pages. */
+const ARTICLE: HelpArticleFormValue = {
+  id: LONE_PUBLIC.id,
+  kind: 'article',
+  title: LONE_PUBLIC.title,
+  slug: 'fixture-lone-public-page',
+  summary: null,
+  body: 'Fixture article body.',
+  audience: 'public',
+  parentId: null,
+  position: 4,
   shown: true,
   subPages: [],
 };
@@ -284,9 +299,10 @@ describe('HelpArticleForm, its kinds', () => {
     const calls = captureCreate();
     renderForm();
 
-    // Precondition: an article has an audience, a parent and sub pages, and an FAQ entry a position.
+    // Precondition: an article has an audience and a parent, a guide sub pages, and an FAQ entry a position.
     expect(group('Audience')).toBeInTheDocument();
     expect(combobox('Parent')).toBeInTheDocument();
+    fireEvent.click(radio('Guide'));
     expect(group('Sub Pages')).toBeInTheDocument();
     fireEvent.click(radio('FAQ'));
     expect(textbox('Position')).toBeInTheDocument();
@@ -328,10 +344,12 @@ describe('HelpArticleForm, its kinds', () => {
     expect(calls[0]?.input).not.toHaveProperty('summary');
   });
 
-  it('draws Summary for an article alone, as it draws Parent', () => {
+  it('draws Summary for an article and a guide alone', () => {
     renderForm();
 
     // Precondition: a new article has the field, so its absence below is the kind's.
+    expect(textbox('Summary')).toBeInTheDocument();
+    fireEvent.click(radio('Guide'));
     expect(textbox('Summary')).toBeInTheDocument();
     fireEvent.click(radio('FAQ'));
     expect(queryTextbox('Summary')).toBeNull();
@@ -345,6 +363,7 @@ describe('HelpArticleForm, its kinds', () => {
     { article: FAQ, summary: false },
     { article: TERM, summary: false },
     { article: GUIDE, summary: true },
+    { article: ARTICLE, summary: true },
   ])('draws Summary on an opened $article.kind: $summary', ({ article, summary }) => {
     renderForm({ article });
 
@@ -372,12 +391,74 @@ describe('HelpArticleForm, its kinds', () => {
   it.each([
     { article: TERM, noun: 'Term' },
     { article: FAQ, noun: 'FAQ Entry' },
-    { article: GUIDE, noun: 'Article' },
+    { article: GUIDE, noun: 'Guide' },
+    { article: ARTICLE, noun: 'Article' },
   ])('names a $noun in its Save and Delete', ({ article, noun }) => {
     renderForm({ article });
 
     expect(button(`Save ${noun}`)).toBeInTheDocument();
     expect(button(`Delete ${noun}`)).toBeInTheDocument();
+  });
+});
+
+describe('HelpArticleForm, a change of kind', () => {
+  it('makes a top-level article a guide, which then takes sub pages, and sends the kind', async () => {
+    const calls = captureUpdate();
+    renderForm({ article: ARTICLE });
+
+    // Precondition: an article draws Parent and no Sub Pages.
+    expect(combobox('Parent')).toBeInTheDocument();
+    expect(queryGroup('Sub Pages')).toBeNull();
+
+    expect(radio('FAQ')).toBeDisabled();
+    expect(radio('Term')).toBeDisabled();
+    fireEvent.click(radio('Guide'));
+
+    expect(queryCombobox('Parent')).toBeNull();
+    pickSubPage(STAFF_SUB);
+    press('Save Guide');
+
+    await waitFor(left);
+    expect(calls[0]?.input).toMatchObject({ kind: 'guide', childIds: [STAFF_SUB.id] });
+    expect(calls[0]?.input).not.toHaveProperty('parentId');
+  });
+
+  it('holds Guide for a sub page until its parent is removed', () => {
+    renderForm({ article: SUB_PAGE });
+
+    expect(radio('Guide')).toBeDisabled();
+    expect(group('Kind')).toHaveAccessibleDescription(/No Parent/);
+
+    choose('Parent', 'No Parent');
+
+    expect(radio('Guide')).toBeEnabled();
+  });
+
+  it('holds Guide for a new row while a parent is chosen', () => {
+    renderForm({ presetParentId: STAFF_GUIDE.id });
+
+    expect(radio('Guide')).toBeDisabled();
+    choose('Parent', 'No Parent');
+    expect(radio('Guide')).toBeEnabled();
+  });
+
+  it('holds Article for a guide holding sub pages, says why, and frees it once they are removed', async () => {
+    const calls = captureUpdate();
+    renderForm({ article: GUIDE });
+
+    expect(radio('Article')).toBeDisabled();
+    expect(group('Kind')).toHaveAccessibleDescription(/sub pages/);
+
+    fireEvent.click(button(`Remove Sub Page: ${PUBLIC_SUB_A.title}`));
+    fireEvent.click(button(`Remove Sub Page: ${PUBLIC_SUB_B.title}`));
+    fireEvent.click(radio('Article'));
+
+    expect(queryGroup('Sub Pages')).toBeNull();
+    press('Save Article');
+
+    await waitFor(left);
+    // The emptied list goes with it, so the service releases the sub pages in the same save.
+    expect(calls[0]?.input).toMatchObject({ kind: 'article', parentId: null, childIds: [] });
   });
 });
 
@@ -409,32 +490,30 @@ describe('HelpArticleForm, opening a row', () => {
       parentId: STAFF_GUIDE.id,
       audience: 'staff',
       position: 3,
-      childIds: [],
     });
+    expect(calls[0]?.input).not.toHaveProperty('childIds');
   });
 });
 
 describe('HelpArticleForm, its parent', () => {
-  it('offers No Parent and every guide, never the row itself', () => {
+  it('offers No Parent and every guide', () => {
+    renderForm({ article: SUB_PAGE });
+
+    expectOffered('Parent', [
+      'No Parent',
+      PUBLIC_GUIDE.title,
+      STAFF_GUIDE.title,
+      KEEPER_GUIDE.title,
+    ]);
+  });
+
+  it('draws no Parent for a guide, which is always a top-level page', () => {
     renderForm({ article: { ...GUIDE, subPages: [] } });
 
-    // Precondition: the row is among the guides the page handed over.
-    expect(GUIDES.map(({ id }) => id)).toContain(GUIDE.id);
-    expectOffered(
-      'Parent',
-      ['No Parent', STAFF_GUIDE.title, KEEPER_GUIDE.title],
-      [PUBLIC_GUIDE.title],
-    );
+    expect(queryCombobox('Parent')).toBeNull();
   });
 
-  it('holds a guide with sub pages at No Parent', () => {
-    renderForm({ article: GUIDE });
-
-    expect(combobox('Parent')).toHaveTextContent('No Parent');
-    expect(combobox('Parent')).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('makes a chosen guide the parent, takes Sub Pages away, and places the row last in it', async () => {
+  it('makes a chosen guide the parent and places the row last in it', async () => {
     const calls = captureCreate();
     renderForm();
 
@@ -448,11 +527,8 @@ describe('HelpArticleForm, its parent', () => {
     press('Save Article');
 
     await waitFor(left);
-    expect(calls[0]?.input).toMatchObject({
-      parentId: PUBLIC_GUIDE.id,
-      position: 3,
-      childIds: [],
-    });
+    expect(calls[0]?.input).toMatchObject({ parentId: PUBLIC_GUIDE.id, position: 3 });
+    expect(calls[0]?.input).not.toHaveProperty('childIds');
   });
 
   it("narrows a wider audience to the guide's, and holds every wider one", () => {
@@ -499,7 +575,7 @@ describe('HelpArticleForm, its parent', () => {
     choose('Parent', 'No Parent');
 
     expect(queryTextbox('Position')).toBeNull();
-    expect(group('Sub Pages')).toBeInTheDocument();
+    expect(queryGroup('Sub Pages')).toBeNull();
 
     press('Save Article');
 
@@ -528,7 +604,7 @@ describe('HelpArticleForm, its sub pages', () => {
     expect(button(`Remove Sub Page: ${PUBLIC_SUB_B.title}`)).toBeInTheDocument();
 
     fireEvent.click(button(`Remove Sub Page: ${PUBLIC_SUB_A.title}`));
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(left);
     expect(calls[0]?.input).toMatchObject({ childIds: [PUBLIC_SUB_B.id] });
@@ -549,7 +625,7 @@ describe('HelpArticleForm, its sub pages', () => {
       ),
     ).toBeInTheDocument();
 
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(left);
     expect(calls[0]?.input).toMatchObject({
@@ -579,6 +655,7 @@ describe('HelpArticleForm, its sub pages', () => {
 
   it("holds every audience narrower than its widest sub page's", () => {
     renderForm();
+    fireEvent.click(radio('Guide'));
 
     // Precondition: every audience is open to a row with no sub pages.
     for (const audience of ['Public', 'Staff', 'Keeper']) expect(radio(audience)).toBeEnabled();
@@ -594,15 +671,20 @@ describe('HelpArticleForm, its sub pages', () => {
     expect(radio('Keeper')).toBeDisabled();
   });
 
-  it('holds Parent at No Parent once a sub page is chosen', () => {
+  it('draws Sub Pages for a guide alone, and saves a new guide with its sub pages', async () => {
+    const calls = captureCreate();
     renderForm();
 
-    // Precondition: a row with no sub pages may choose a parent.
-    expect(combobox('Parent')).not.toHaveAttribute('aria-disabled', 'true');
-
+    // Precondition: a new article has no Sub Pages.
+    expect(queryGroup('Sub Pages')).toBeNull();
+    fireEvent.click(radio('Guide'));
+    fillNew('Fixture New Guide');
     pickSubPage(LONE_PUBLIC);
+    press('Save Guide');
 
-    expect(combobox('Parent')).toHaveAttribute('aria-disabled', 'true');
+    await waitFor(left);
+    expect(calls[0]?.input).toMatchObject({ kind: 'guide', childIds: [LONE_PUBLIC.id] });
+    expect(calls[0]?.input).not.toHaveProperty('parentId');
   });
 });
 
@@ -648,7 +730,7 @@ describe('HelpArticleForm, its position', () => {
     renderForm({ article: GUIDE });
     expect(queryTextbox('Position')).toBeNull();
     fireEvent.click(shownSwitch());
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(left);
     expect(calls[0]?.input).not.toHaveProperty('position');
@@ -743,7 +825,7 @@ describe('HelpArticleForm, renaming', () => {
     renderForm({ article: GUIDE });
 
     type('Title', 'Fixture Renamed Guide');
-    press('Save Article');
+    press('Save Guide');
 
     expect(await screen.findByText(LONE_PUBLIC.title, { selector: 'li' })).toBeInTheDocument();
     expect(screen.getByText(/Fixture Quick Link/, { selector: 'li' })).toBeInTheDocument();
@@ -763,7 +845,7 @@ describe('HelpArticleForm, renaming', () => {
     renderForm({ article: GUIDE });
 
     type('Title', 'Fixture Renamed Guide');
-    press('Save Article');
+    press('Save Guide');
     await screen.findByText(LONE_PUBLIC.title, { selector: 'li' });
 
     // On a page the form stays live behind the question, so its own Cancel is pressable too: the question's is the one meant.
@@ -781,7 +863,7 @@ describe('HelpArticleForm, renaming', () => {
     renderForm({ article: GUIDE });
 
     type('Title', 'Fixture Renamed Guide');
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(left);
     expect(calls).toHaveLength(1);
@@ -793,7 +875,7 @@ describe('HelpArticleForm, renaming', () => {
     renderForm({ article: GUIDE });
 
     type('Summary', 'A changed summary');
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(left);
     expect(asked).toHaveLength(0);
@@ -850,7 +932,7 @@ describe("HelpArticleForm, the service's refusals", () => {
     renderForm({ article: GUIDE });
 
     type('Summary', 'A changed summary');
-    press('Save Article');
+    press('Save Guide');
 
     await waitFor(() =>
       expect(group('Audience')).toHaveAccessibleDescription(/wider than a sub page/),
@@ -863,11 +945,11 @@ describe('HelpArticleForm, saving and leaving', () => {
   it('keeps Save off on an edit until something changes, and off again once it is put back', () => {
     renderForm({ article: GUIDE });
 
-    expect(button('Save Article')).toBeDisabled();
+    expect(button('Save Guide')).toBeDisabled();
     type('Summary', 'A changed summary');
-    expect(button('Save Article')).toBeEnabled();
+    expect(button('Save Guide')).toBeEnabled();
     type('Summary', GUIDE.summary ?? '');
-    expect(button('Save Article')).toBeDisabled();
+    expect(button('Save Guide')).toBeDisabled();
   });
 
   it('refuses a blank title and body before asking the server', async () => {
@@ -951,11 +1033,11 @@ describe('HelpArticleForm, deleting', () => {
     });
     renderForm({ article: GUIDE });
 
-    press('Delete Article');
+    press('Delete Guide');
     press(answer('Delete'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/sub pages first/);
-    expect(button('Delete Article')).toBeInTheDocument();
+    expect(button('Delete Guide')).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
   });
 });

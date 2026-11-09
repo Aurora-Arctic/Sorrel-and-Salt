@@ -175,6 +175,24 @@ describe('HelpArticleView', () => {
     );
   });
 
+  it('names the pencil for the kind it edits, Edit Guide on a guide', () => {
+    render(
+      <HelpArticleView
+        title="Testwort Grove"
+        body="Body."
+        subpages={[]}
+        editHref="/keepers/help/fixture-id"
+        editName="Guide"
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Edit Guide' })).toHaveAttribute(
+      'href',
+      '/keepers/help/fixture-id',
+    );
+    expect(screen.queryByRole('link', { name: 'Edit Article' })).not.toBeInTheDocument();
+  });
+
   it('draws no Edit Article for a reader who is not a keeper', () => {
     view('Body.');
 

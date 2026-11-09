@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
 import HelpOutline from '@/components/HelpOutline';
@@ -21,7 +21,7 @@ const guide = (
 ): HelpOutlineGuide => ({
   id,
   title,
-  kind: 'article',
+  kind: 'guide',
   audience: 'public',
   position,
   shown: true,
@@ -43,14 +43,14 @@ const CHOSEN: HelpOutlineChosen = {
   addSubPageHref: '/keepers/help/new?parent=empty' as Route,
 };
 
-const outline = () =>
+const outline = (chosen: HelpOutlineChosen = CHOSEN) =>
   render(
     <HelpOutline
       filter={{ query: '', kind: '', audience: '', shown: 'shown' }}
       guides={GUIDES}
       others={[]}
       order={GUIDES.map(({ id, title, audience, shown }) => ({ id, title, audience, shown }))}
-      pane={{ kind: 'guide', guide: CHOSEN }}
+      pane={{ kind: 'guide', guide: chosen }}
     />,
   );
 
@@ -92,6 +92,25 @@ describe('HelpOutline guide pane', () => {
     outline();
 
     expect(screen.getByRole('link', { name: 'Edit Guide' })).toHaveAttribute(
+      'href',
+      '/keepers/help/empty',
+    );
+  });
+});
+
+describe('HelpOutline top-level article pane', () => {
+  it('offers an article no sub pages, as only a guide holds them', () => {
+    outline();
+    // Precondition: a guide's pane offers its sub pages and Add Sub Page.
+    expect(screen.getByRole('link', { name: 'Add Sub Page' })).toBeInTheDocument();
+    expect(screen.getByText('Testwort Basics has no sub pages.')).toBeInTheDocument();
+    cleanup();
+
+    outline({ ...CHOSEN, kind: 'article' });
+
+    expect(screen.queryByRole('link', { name: 'Add Sub Page' })).toBeNull();
+    expect(screen.queryByText('Testwort Basics has no sub pages.')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Edit Article' })).toHaveAttribute(
       'href',
       '/keepers/help/empty',
     );

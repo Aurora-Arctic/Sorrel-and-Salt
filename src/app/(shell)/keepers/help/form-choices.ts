@@ -14,26 +14,23 @@ import { type HelpArticle, listKeeperHelpArticles } from '@/modules/help';
 const NO_FILTER: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'shown' };
 
 /**
- * What the help form offers: every live guide, in reading order, with how many sub pages it holds; and every live article
- * that holds none, a guide's sub pages grouped under it in order, as the Sub Pages field offers them.
+ * What the help form offers: every live guide, in reading order, with how many sub pages it holds; and every live article,
+ * each guide's sub pages grouped under it in order and the top-level articles after them, as the Sub Pages field offers them.
  */
 export const readHelpFormChoices = cache(
   async (
     session: Session,
   ): Promise<{ guides: HelpGuideChoice[]; candidates: HelpSubPageChoice[] }> => {
-    const articles = await allPages((request) =>
-      listKeeperHelpArticles(
-        session,
-        { kind: 'article', listing: 'all', order: 'position' },
-        request,
-      ),
-    );
+    const read = (kind: 'guide' | 'article') =>
+      allPages((request) =>
+        listKeeperHelpArticles(session, { kind, listing: 'all', order: 'position' }, request),
+      );
+    const [tops, articles] = await Promise.all([read('guide'), read('article')]);
     const subPages = new Map<string, HelpArticle[]>();
     for (const article of articles) {
       if (!article.parentId) continue;
       subPages.set(article.parentId, [...(subPages.get(article.parentId) ?? []), article]);
     }
-    const tops = articles.filter(({ parentId }) => parentId === null);
     const guides = tops.map(({ id, title, slug, audience }) => ({
       id,
       title,
@@ -41,17 +38,17 @@ export const readHelpFormChoices = cache(
       audience,
       subPages: subPages.get(id)?.length ?? 0,
     }));
-    const candidates = tops.flatMap((top) => {
-      const held = subPages.get(top.id) ?? [];
-      const choice = (article: HelpArticle, parent: HelpArticle | null): HelpSubPageChoice => ({
-        id: article.id,
-        title: article.title,
-        audience: article.audience,
-        parentId: parent?.id ?? null,
-        parentTitle: parent?.title ?? null,
-      });
-      return held.length === 0 ? [choice(top, null)] : held.map((sub) => choice(sub, top));
+    const choice = (article: HelpArticle, parent: HelpArticle | null): HelpSubPageChoice => ({
+      id: article.id,
+      title: article.title,
+      audience: article.audience,
+      parentId: parent?.id ?? null,
+      parentTitle: parent?.title ?? null,
     });
+    const candidates = [
+      ...tops.flatMap((guide) => (subPages.get(guide.id) ?? []).map((sub) => choice(sub, guide))),
+      ...articles.filter(({ parentId }) => parentId === null).map((lone) => choice(lone, null)),
+    ];
     return { guides, candidates };
   },
 );

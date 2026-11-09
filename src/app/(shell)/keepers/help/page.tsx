@@ -40,14 +40,18 @@ const KINDS = ['article', 'faq', 'term'] as const;
 const AUDIENCES = ['public', 'staff', 'keeper'] as const;
 const LISTINGS = ['hidden', 'all'] as const;
 
+/** The kinds with a page, which the top level mixes and the filter's Article admits. */
+const PAGE_KINDS = ['guide', 'article'] as const;
+
 const pick = <Value extends string>(values: readonly Value[], raw: string | undefined) =>
   values.find((value) => value === raw);
 
-// Every row of one kind the filter admits, in reading order. Keyed by plain arguments, so React's cache matches a repeat.
+// Every row of one kind the filter admits, in reading order, where 'page' is a guide or an article. Keyed by plain
+// arguments, so React's cache matches a repeat.
 const readAll = cache(
   (
     session: Session,
-    kind: HelpArticle['kind'],
+    kind: HelpArticle['kind'] | 'page',
     audience: HelpAudience | '',
     listing: HelpOutlineShown,
     topLevel: boolean,
@@ -56,7 +60,7 @@ const readAll = cache(
       listKeeperHelpArticles(
         session,
         {
-          kind,
+          ...(kind === 'page' ? { kinds: PAGE_KINDS } : { kind }),
           audience: audience || null,
           listing,
           topLevel: topLevel || null,
@@ -76,7 +80,7 @@ const readSearch = cache(
           session,
           {
             query: filter.query,
-            kind: filter.kind || null,
+            ...(filter.kind === 'article' ? { kinds: PAGE_KINDS } : { kind: filter.kind || null }),
             audience: filter.audience || null,
             listing: filter.shown,
           },
@@ -126,8 +130,8 @@ export default async function KeepersHelpPage({
 
   // Every guide, whatever the filter, numbers the guides, names a search hit's guide and is what Reorder Mode moves.
   const [allGuides, someGuides, articles, faq, terms] = await Promise.all([
-    readAll(session, 'article', '', 'all', true),
-    wants('article') ? readAll(session, 'article', audience, shown, true) : [],
+    readAll(session, 'page', '', 'all', true),
+    wants('article') ? readAll(session, 'page', audience, shown, true) : [],
     wants('article') ? readAll(session, 'article', audience, shown, false) : [],
     wants('faq') ? readAll(session, 'faq', audience, shown, false) : [],
     wants('term') ? readAll(session, 'term', audience, shown, false) : [],

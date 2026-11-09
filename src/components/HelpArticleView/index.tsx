@@ -28,6 +28,7 @@ const HelpArticleView = ({
   terms = [],
   steps = {},
   editHref,
+  editName = 'Article',
 }: HelpArticleViewProps): ReactElement => {
   const { content, entries } = renderMarkdown(
     body,
@@ -52,7 +53,7 @@ const HelpArticleView = ({
         {parent && <HelpBackLink href={parent.href} title={parent.title} />}
         <div className="help-article__title">
           <h2>{title}</h2>
-          {editHref && <EditLink href={editHref as Route} name="Article" />}
+          {editHref && <EditLink href={editHref as Route} name={editName} />}
         </div>
       </div>
       {withMenu && <PageNav label="On This Page" entries={entries} collapsible />}

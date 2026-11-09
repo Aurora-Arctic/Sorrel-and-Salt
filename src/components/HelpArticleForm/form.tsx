@@ -89,11 +89,15 @@ const WHOLE_NUMBER = /^\d+$/;
 
 const KINDS: readonly { value: HelpFormKind; label: string }[] = [
   { value: 'article', label: 'Article' },
+  { value: 'guide', label: 'Guide' },
   { value: 'faq', label: 'FAQ' },
   { value: 'term', label: 'Term' },
 ];
 
 const AUDIENCES: readonly HelpFormAudience[] = ['public', 'staff', 'keeper'];
+
+/** A guide or an article: the two kinds that have a page, a summary, and change into each other. */
+const isPage = (kind: HelpFormKind): boolean => kind === 'article' || kind === 'guide';
 
 const Schema = z.looseObject({
   title: z.string().trim().min(1, 'Give it a title'),
@@ -175,7 +179,8 @@ const HelpArticleForm = ({
 
   const parent = guides.find(({ id }) => id === parentId);
   const savedParent = guides.find(({ id }) => id === article?.parentId);
-  const holdsSubPages = kind === 'article' && childIds.length > 0;
+  const holdsSubPages = kind === 'guide' && childIds.length > 0;
+  const isSubPage = kind === 'article' && parentId !== '';
   // Every candidate, with the row's own sub pages among them so their chips can be drawn.
   const choices: HelpSubPageChoice[] = [
     ...(article?.subPages ?? []),
@@ -191,13 +196,14 @@ const HelpArticleForm = ({
       const parent = values.kind === 'article' ? values.parentId || null : null;
       const placed = typed === '' ? null : Number(typed);
       // A top-level page sends no place: Reorder Mode in the Guides bar orders the guides, and the service puts a new one last.
+      // A guide turned article sends its emptied list, so the service releases its sub pages in the same save.
       const where = {
         ...(values.kind !== 'term' && { audience: values.audience }),
         ...((values.kind === 'faq' || parent) && { position: placed }),
-        ...(values.kind === 'article' && {
-          summary,
-          parentId: parent,
-          childIds: parent ? [] : values.childIds,
+        ...(isPage(values.kind) && { summary }),
+        ...(values.kind === 'article' && { parentId: parent }),
+        ...((values.kind === 'guide' || article?.kind === 'guide') && {
+          childIds: values.kind === 'guide' ? values.childIds : [],
         }),
       };
       if (!article) {
@@ -215,7 +221,12 @@ const HelpArticleForm = ({
       }
       await graphqlRequest(UpdateHelpArticleDocument, {
         id: article.id,
-        input: { title: values.title, body: values.body, ...where },
+        input: {
+          title: values.title,
+          body: values.body,
+          ...(isPage(article.kind) && { kind: values.kind }),
+          ...where,
+        },
       });
       if (values.shown !== article.shown) {
         await graphqlRequest(SetHelpArticleShownDocument, { id: article.id, shown: values.shown });
@@ -317,15 +328,25 @@ const HelpArticleForm = ({
 
   const guideOptions = [
     { value: '', label: 'No Parent' },
-    ...guides
-      .filter(({ id }) => id !== article?.id)
-      .map(({ id, title }) => ({ value: id, label: title })),
+    ...guides.map(({ id, title }) => ({ value: id, label: title })),
   ];
-  const parentNote = holdsSubPages
-    ? 'A guide with sub pages cannot become a sub page. Remove its sub pages first.'
-    : parent
-      ? 'Guides only: a sub page, an FAQ entry or a term is never offered.'
-      : 'Choosing a guide makes this a sub page and takes the Sub Pages field away.';
+  const parentNote = parent
+    ? 'Guides only: an article, an FAQ entry or a term is never offered.'
+    : 'Choosing a guide makes this one of its sub pages.';
+
+  // An edited FAQ entry or term keeps its kind; an article and a guide change into each other while help stays one level deep.
+  const kindOptions = KINDS.map((option) => ({
+    ...option,
+    disabled:
+      (article !== undefined && !isPage(option.value)) ||
+      (option.value === 'guide' && isSubPage) ||
+      (option.value === 'article' && holdsSubPages),
+  }));
+  const kindNote = holdsSubPages
+    ? 'A guide holding sub pages cannot be an article. Remove its sub pages first.'
+    : article && isSubPage
+      ? 'A sub page cannot be a guide. Choose No Parent first to make it one.'
+      : undefined;
 
   const audienceOptions = AUDIENCES.map((value) => ({
     value,
@@ -397,7 +418,7 @@ const HelpArticleForm = ({
               )
             }
           />
-          {kind === 'article' && (
+          {isPage(kind) && (
             <TextField<HelpFormValues> name="summary" label="Summary" placeholder="Add Summary" />
           )}
           <div className="field">
@@ -429,16 +450,21 @@ const HelpArticleForm = ({
             legend="Kind"
             name="kind"
             spacer={false}
-            options={KINDS}
+            options={kindOptions}
             value={kind}
-            disabled={Boolean(article)}
-            hint={article ? 'A row keeps its kind once saved.' : undefined}
+            disabled={article !== undefined && !isPage(article.kind)}
+            hint={
+              article
+                ? isPage(article.kind)
+                  ? 'An article and a guide change into each other; an FAQ entry or a term keeps its kind.'
+                  : 'An FAQ entry or a term keeps its kind once saved.'
+                : undefined
+            }
+            note={kindNote}
             onChange={(value) => {
               setValue('kind', value, { shouldDirty: true });
-              if (value !== 'article') {
-                setValue('parentId', '');
-                setValue('childIds', []);
-              }
+              if (value !== 'article') setValue('parentId', '');
+              if (value !== 'guide') setValue('childIds', []);
               if (value === 'term') setValue('audience', 'public');
             }}
           />
@@ -458,12 +484,11 @@ const HelpArticleForm = ({
               name="parentId"
               label="Parent"
               options={guideOptions}
-              disabled={holdsSubPages}
               note={parentNote}
               onChange={changeParent}
             />
           )}
-          {kind === 'article' && !parent && (
+          {kind === 'guide' && (
             <HelpSubPagesField
               guideId={article?.id ?? null}
               audience={audience}

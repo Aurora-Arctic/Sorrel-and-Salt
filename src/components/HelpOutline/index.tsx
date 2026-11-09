@@ -102,7 +102,7 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
       </h2>
       <span className="help-outline__head-actions">
         <HelpShownSwitch id={guide.id} title={guide.title} shown={guide.shown} label="Shown" />
-        <EditLink href={guide.editHref} name="Guide" />
+        <EditLink href={guide.editHref} name={KIND_LABELS[guide.kind]} />
       </span>
     </div>
     <p className="help-outline__facts">
@@ -121,23 +121,29 @@ const GuidePane = ({ guide }: { guide: HelpOutlineChosen }): ReactElement => (
         <span>{guide.address}</span>
       )}
     </p>
-    <HelpOrderTable
-      aria-label={`Sub Pages of ${guide.title}`}
-      list={{ kind: 'subPages', guideId: guide.id }}
-      order={guide.order}
-      columns={orderColumns('Sub Page')}
-      rows={orderRows(guide.subPages)}
-      empty={
-        guide.order.length === 0
-          ? `${guide.title} has no sub pages.`
-          : 'No sub page of this guide matches the filter.'
-      }
-    />
-    <p className="help-outline__add">
-      <PendingLink className="btn" href={guide.addSubPageHref}>
-        Add Sub Page
-      </PendingLink>
-    </p>
+    {guide.kind === 'guide' ? (
+      <>
+        <HelpOrderTable
+          aria-label={`Sub Pages of ${guide.title}`}
+          list={{ kind: 'subPages', guideId: guide.id }}
+          order={guide.order}
+          columns={orderColumns('Sub Page')}
+          rows={orderRows(guide.subPages)}
+          empty={
+            guide.order.length === 0
+              ? `${guide.title} has no sub pages.`
+              : 'No sub page of this guide matches the filter.'
+          }
+        />
+        <p className="help-outline__add">
+          <PendingLink className="btn" href={guide.addSubPageHref}>
+            Add Sub Page
+          </PendingLink>
+        </p>
+      </>
+    ) : (
+      <p>An article holds no sub pages. To give it some, make it a guide in its editor.</p>
+    )}
   </>
 );
 

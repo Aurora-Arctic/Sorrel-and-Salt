@@ -10,10 +10,12 @@ import { readHelpArticle } from '@/modules/help';
 
 type Props = { params: Promise<{ slug: string }> };
 
-// A page for a top-level public article only: a sub page has one address, under its parent's.
+// A page for a top-level public article or guide only: a sub page has one address, under its parent's.
 async function topLevel(slug: string) {
   const found = await orNotFound(() => readHelpArticle(slug));
-  if (found.kind !== 'article' || found.audience !== 'public') notFound();
+  if ((found.kind !== 'article' && found.kind !== 'guide') || found.audience !== 'public') {
+    notFound();
+  }
   if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return found;
 }
@@ -36,6 +38,7 @@ export default async function Page({ params }: Props) {
       terms={await readGlossaryTerms()}
       title={found.title}
       body={found.body}
+      editName={found.kind === 'guide' ? 'Guide' : 'Article'}
       parent={{ title: 'Help', href: '/help' }}
       subpages={found.children.map(linkTo)}
       editHref={(await helpViewerOffers()).edit ? keeperHelpEditPath(found.id) : undefined}

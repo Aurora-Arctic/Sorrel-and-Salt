@@ -48,6 +48,7 @@ const SUB_PAGES = [
 
 const CHOSEN: HelpOutlineChosen = {
   ...sub('g1', 'Testwort Basics', 0, 'public'),
+  kind: 'guide',
   address: '/help/testwort-basics',
   place: 1,
   of: 1,

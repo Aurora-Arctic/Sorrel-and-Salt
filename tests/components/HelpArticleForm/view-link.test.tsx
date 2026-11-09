@@ -17,6 +17,15 @@ describe('HelpViewLink', () => {
     );
   });
 
+  it('links a shown guide, which has a page of its own as an article does', () => {
+    render(<HelpViewLink article={{ ...guide, kind: 'guide' }} parent={null} />);
+
+    expect(screen.getByRole('link', { name: 'View' })).toHaveAttribute(
+      'href',
+      '/help/testwort-basics',
+    );
+  });
+
   it('links a shown sub page beneath its shown guide', () => {
     render(
       <HelpViewLink

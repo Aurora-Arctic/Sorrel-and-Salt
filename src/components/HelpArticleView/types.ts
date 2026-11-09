@@ -24,4 +24,6 @@ export interface HelpArticleViewProps {
   steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };
   /** The article's edit page, handed only to a keeper (`helpViewerOffers`), drawn as the Edit Article pencil beside the article title. */
   editHref?: string;
+  /** The kind the pencil is named for: Article, or Guide on a guide. */
+  editName?: 'Article' | 'Guide';
 }
