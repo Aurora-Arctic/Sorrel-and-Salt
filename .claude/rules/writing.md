@@ -24,6 +24,7 @@ Everything written here is read by developers with very different amounts of exp
 - **Give an example where a mechanism is abstract.** One concrete case, with real values, often does more than another sentence of explanation.
 - **Keep the sentences short and the structure visible.** One idea per sentence. Steps as a numbered list, options as bullets, several facts of the same shape as a table.
 - **Use the Oxford comma.** In a list of three or more, a comma goes before the last "and" or "or": "the compendium, the ingredients, and the grimoire". This holds for docs, replies, PR bodies, comments, commit messages, and text on screens. It is wording, so no test checks it; code that joins a list for a screen uses `joinList` (`src/lib/join-list.ts`) or `Intl.ListFormat` in `en-US`, since `en-GB` leaves the comma out. Existing text gains it when that passage is next edited.
+- **Write "%", not "per cent".** A number and its percent sign, as in "about 4%".
 - **Read it back as a developer six months into their career.** Anything that would make that reader open a search engine gets a clause of explanation or a plainer word.
 
 ## Code comments

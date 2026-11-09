@@ -37,7 +37,7 @@ imports no `drizzle-orm` carries none in. It sits in `schema/` rather than
 drizzle-kit loads.
 
 `fl oz` is stored as two values, **`fl_oz_uk`** and **`fl_oz_us`**, because the
-two fluid ounces differ by about four per cent (28.413 ml and 29.574 ml); a
+two fluid ounces differ by about 4% (28.413 ml and 29.574 ml); a
 single `fl_oz` would force `unitConvert()` to guess which a recipe means. The
 stored label must survive a Postgres enum, a GraphQL enum (no spaces allowed) and
 a URL query parameter (the filter chips). How the unit is _displayed_ is a UI
