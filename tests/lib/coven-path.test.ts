@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { NEW_COVEN_PATH, covenSlugOf, isReservedCovenSlug, pathInCoven } from '@/lib/coven-path';
+import {
+  NEW_COVEN_PATH,
+  covenSlugOf,
+  isReservedCovenSlug,
+  movedCovenPath,
+  pathInCoven,
+} from '@/lib/coven-path';
 
 describe('covenSlugOf', () => {
   it.each([
@@ -78,4 +84,30 @@ describe('pathInCoven from a page the coven registered', () => {
   it('ignores the registration outside a coven', () => {
     expect(pathInCoven('/account', 'b', { opens: ['b'] })).toBe('/coven/b');
   });
+});
+
+describe('movedCovenPath', () => {
+  it.each([
+    ['/coven/old-thorn', '/coven/whitethorn'],
+    ['/coven/old-thorn/', '/coven/whitethorn/'],
+    ['/coven/old-thorn/ingredients', '/coven/whitethorn/ingredients'],
+    ['/coven/old-thorn/grimoire/spell-id', '/coven/whitethorn/grimoire/spell-id'],
+    ['/coven/old-thorn/grimoire?new=spell', '/coven/whitethorn/grimoire?new=spell'],
+    ['/coven/old-thorn?tab=members#roles', '/coven/whitethorn?tab=members#roles'],
+  ])('moves %s to %s, keeping every segment beneath the coven and the query', (path, expected) => {
+    expect(movedCovenPath(path, 'whitethorn')).toBe(expected);
+  });
+
+  it('replaces only the coven segment, though a later segment repeats the old address', () => {
+    expect(movedCovenPath('/coven/old-thorn/ingredients/old-thorn', 'whitethorn')).toBe(
+      '/coven/whitethorn/ingredients/old-thorn',
+    );
+  });
+
+  it.each(['/account', '/coven', '/compendium/coven/x'])(
+    'answers a path outside a coven, %s, with the current coven page',
+    (path) => {
+      expect(movedCovenPath(path, 'whitethorn')).toBe('/coven/whitethorn');
+    },
+  );
 });

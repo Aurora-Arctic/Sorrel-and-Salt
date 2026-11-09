@@ -4,6 +4,7 @@ import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { supportReplies } from '../../modules/support/schema/support-replies';
 import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
+import type { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
@@ -524,6 +525,21 @@ export interface AuditWriter {
    * Membership rows are untouched. An empty result means the workspace was already deleted.
    */
   softDeleteWorkspace(membership: Membership): Promise<(typeof workspaces.$inferSelect)[]>;
+  /**
+   * Record an address for a coven named by id, stamped from the session: the writer for a coven being made, whose proof does not exist
+   * yet. It first soft-deletes any other coven's live old-address row for that address, without that coven's proof; another coven's
+   * current address is left, so the unique index refuses the claim.
+   */
+  insertWorkspaceSlug(workspaceId: string, slug: string): Promise<WorkspaceSlugRow[]>;
+  /**
+   * Set the proof's coven's name and address. It claims the new address as `insertWorkspaceSlug` does, records the previous one, and
+   * soft-deletes the coven's other live rows, so the previous address is its one old address. An empty result means the coven is deleted.
+   * The caller has checked `workspace: update`.
+   */
+  updateWorkspaceName(
+    membership: Membership,
+    values: { name: string; slug: string },
+  ): Promise<(typeof workspaces.$inferSelect)[]>;
   /**
    * Seat a user in a workspace at a role, under no proof: the row a proof is minted from, so a workspace's creator and an invitee accepting
    * have none to write it under. The caller has decided the user may be seated; stamped from the session.
@@ -1080,6 +1096,10 @@ export interface UserAccessPauseInput {
   note: string;
   message?: string | null;
 }
+
+export type WorkspaceRow = typeof workspaces.$inferSelect;
+
+export type WorkspaceSlugRow = typeof workspaceSlugs.$inferSelect;
 
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 

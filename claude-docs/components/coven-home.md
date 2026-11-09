@@ -8,22 +8,23 @@ The coven page (`src/app/(shell)/coven/[slug]/page.tsx`) and its skeleton (`skel
 
 `CovenHomeProps` (`types.ts`).
 
-| Prop      | What it is                                                                                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `slug`    | The coven's URL segment; the Contents links go to `/coven/<slug>/<page>`                                                                                     |
-| `role`    | `owner`, `member` or `viewer`; the page says Steward, Practitioner or Observer                                                                               |
-| `access`  | `CovenHomeAccess`: `canDelete`, `canReadMembers` and `canInvite`. The caller reads them from the access statements, because a skeleton in the browser cannot |
-| `name`    | Optional: the coven's name. A skeleton that does not know it leaves it out, and the title and the lede become bars                                           |
-| `demo`    | Optional: adds the Demo badge beside the title                                                                                                               |
-| `pending` | Optional: draws the skeleton (see below)                                                                                                                     |
-| `leave`   | Optional: the Leave Coven button. The page passes its dialog button; a skeleton draws a button-shaped label instead                                          |
-| `remove`  | Optional: the Delete Coven button, drawn only when `access.canDelete`                                                                                        |
+| Prop      | What it is                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`    | The coven's URL segment; the Contents links go to `/coven/<slug>/<page>`                                                                                                  |
+| `role`    | `owner`, `member` or `viewer`; the page says Steward, Practitioner or Observer                                                                                            |
+| `access`  | `CovenHomeAccess`: `canDelete`, `canReadMembers`, `canInvite` and `canRename`. The caller reads them from the access statements, because a skeleton in the browser cannot |
+| `name`    | Optional: the coven's name. A skeleton that does not know it leaves it out, and the title and the lede become bars                                                        |
+| `demo`    | Optional: adds the Demo badge beside the title                                                                                                                            |
+| `pending` | Optional: draws the skeleton (see below)                                                                                                                                  |
+| `leave`   | Optional: the Leave Coven button. The page passes its dialog button; a skeleton draws a button-shaped label instead                                                       |
+| `rename`  | Optional: the rename form, drawn only when `access.canRename` and the coven is not the demo                                                                               |
+| `remove`  | Optional: the Delete Coven button, drawn only when `access.canDelete`                                                                                                     |
 
 ## Contracts
 
-- **`access` decides what is drawn.** The jump menu lists Contents and Your Membership, and Delete Coven when `canDelete`. Contents lists Ingredients and Grimoire, and Members only when `canReadMembers`; its description changes with `canInvite`. The role lede is `You are <Role> of this coven.` followed by the role's access sentence from `MemberList/role-access`.
+- **`access` decides what is drawn.** The jump menu lists Contents and Your Membership, Rename Coven when `canRename` outside the demo coven, and Delete Coven when `canDelete`. Contents lists Ingredients and Grimoire, and Members only when `canReadMembers`; its description changes with `canInvite`. The role lede is `You are <Role> of this coven.` followed by the role's access sentence from `MemberList/role-access`.
 - **`pending` changes the draw, not the layout.** Every word is wrapped in `SkeletonText` ([`skeleton.md`](skeleton.md)), so each line of text paints its own bar at the width of its words. There are no links, no section ids, no `aria-describedby` and no `aria-labelledby`. The buttons become `btn btn--pending` and `btn btn--destructive btn--pending` spans, the demo badge `badge--pending`, and the root is a `div`, not a `main`, because the layout's body already holds the `main`.
-- **An unknown name makes two bars of title and three of lede.** The title uses `pendingTitle={2}`; the lede uses `skeleton-lede` bars.
+- **An unknown name makes two bars of title and four of lede.** The title uses `pendingTitle={2}`; the lede uses `skeleton-lede skeleton-lede--long` bars, one more than other pages, because a steward's access sentence is long (three of the four show on a wide screen).
 - **A skeleton uses real words when it has them.** The coven layout supplies the name, the role and the access through [`CovenFacts`](coven-facts.md). When the move ends in that same coven, `CovenHomeSkeleton` passes them in. For any other move it passes no name and a steward's `access`, the longest page a coven shows, so the skeleton is never shorter than the page.
 - **It uses `PageHeader`, `PageNav`, `PageWithNav` and `PendingLink`** ([`page-nav.md`](page-nav.md), [`page-with-nav.md`](page-with-nav.md)), so the menu and the page frame are the ones other pages use.
 

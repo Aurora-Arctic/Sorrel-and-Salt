@@ -24,9 +24,11 @@ const CovenHome = ({
   demo,
   pending = false,
   leave,
+  rename,
   remove,
 }: CovenHomeProps): ReactElement => {
-  const { canDelete, canReadMembers, canInvite } = access;
+  const { canDelete, canReadMembers, canInvite, canRename } = access;
+  const showRename = canRename && !demo;
 
   // Only the pages the caller can open are listed, so none is a link to a 404. Every role can open
   // Ingredients and the Grimoire; Members is listed only for a role that may read it. The section and
@@ -34,6 +36,7 @@ const CovenHome = ({
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
+    ...(showRename ? [{ href: '#coven-rename' as const, label: 'Rename Coven' }] : []),
     ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete Coven' }] : []),
   ];
 
@@ -82,8 +85,8 @@ const CovenHome = ({
           known ? (
             <>{bar(`You are ${ROLE_NAME[role]} of this coven. ${WORKSPACE_ROLE_ACCESS[role]}`)}</>
           ) : (
-            <span className="skeleton-lede">
-              <Skeleton shape="line" count={3} quiet />
+            <span className="skeleton-lede skeleton-lede--long">
+              <Skeleton shape="line" count={4} quiet />
             </span>
           )
         }
@@ -135,6 +138,16 @@ const CovenHome = ({
           {pending ? <span className="btn btn--pending">{bar('Leave Coven')}</span> : leave}
         </div>
       </section>
+      {showRename && (
+        <section
+          id={pending ? undefined : 'coven-rename'}
+          className="page-frame__section"
+          aria-labelledby={pending ? undefined : 'coven-rename-heading'}
+        >
+          <h2 id={pending ? undefined : 'coven-rename-heading'}>{bar('Rename Coven')}</h2>
+          {pending ? <SkeletonText>Name</SkeletonText> : rename}
+        </section>
+      )}
       {canDelete && (
         <section
           id={pending ? undefined : 'coven-delete'}

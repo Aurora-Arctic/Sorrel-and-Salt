@@ -69,6 +69,17 @@ describe('the demo coven seed', () => {
     ]);
   });
 
+  it("records the coven's address in workspace_slugs, once however often it runs", async () => {
+    await run();
+    await run();
+
+    expect(
+      await sql<Row[]>`
+        select slug from workspace_slugs
+        where workspace_id = ${DEMO_WORKSPACE_ID} and deleted_at is null`,
+    ).toEqual([{ slug: 'sorrel-and-salt-demo' }]);
+  });
+
   it('seats the system user and every keeper as owner and everyone but the signed-out sender and the job actor as viewer', async () => {
     // Preconditions: a keeper, a curator and plain users exist to be told apart.
     const everyone = await sql<{ id: string; role: string }[]>`

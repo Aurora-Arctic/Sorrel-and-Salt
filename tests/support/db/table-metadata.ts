@@ -69,6 +69,7 @@ export const AUDITED_TABLES = [
   'workspace_compendium_entries',
   'workspace_member_pauses',
   'workspace_members',
+  'workspace_slugs',
   'workspaces',
   'zodiac_signs',
 ].sort();

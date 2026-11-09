@@ -1,6 +1,6 @@
 {
-  "id": "0f3afc11-35d3-432a-a880-33edebe1ed51",
-  "prevId": "bdb3c9f5-5003-4376-a319-cb49f3be8511",
+  "id": "d51494a1-b5d4-432b-8e5d-7c190c35a9f2",
+  "prevId": "0f3afc11-35d3-432a-a880-33edebe1ed51",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -640,6 +640,130 @@
           "value": "(\"workspace_member_pauses\".\"lifted_at\" is null) = (\"workspace_member_pauses\".\"lifted_by\" is null)"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.workspace_slugs": {
+      "name": "workspace_slugs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "workspace_slugs_slug_unique": {
+          "name": "workspace_slugs_slug_unique",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"workspace_slugs\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "workspace_slugs_workspace_id_workspaces_id_fk": {
+          "name": "workspace_slugs_workspace_id_workspaces_id_fk",
+          "tableFrom": "workspace_slugs",
+          "tableTo": "workspaces",
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "workspace_slugs_created_by_users_id_fk": {
+          "name": "workspace_slugs_created_by_users_id_fk",
+          "tableFrom": "workspace_slugs",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_slugs_updated_by_users_id_fk": {
+          "name": "workspace_slugs_updated_by_users_id_fk",
+          "tableFrom": "workspace_slugs",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_slugs_deleted_by_users_id_fk": {
+          "name": "workspace_slugs_deleted_by_users_id_fk",
+          "tableFrom": "workspace_slugs",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.workspace_members": {

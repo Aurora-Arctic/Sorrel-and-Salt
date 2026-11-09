@@ -287,7 +287,7 @@ Rules:
 
 **A form asks over itself.** Every question a form asks before it acts, the unsaved changes' and each Delete's, is one card, `ConfirmOverlay`: the modal's raised surface at the floating elevation, `$narrow-column` wide, over a scrim of the page's ground at 75%, fading in over `$motion-short`. How it is placed, held and focused is [`components/modal.md`](components/modal.md#asking-over-the-form).
 
-**A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too.
+**A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too. A form whose row holds only Save and Cancel opts out with `form--inline-actions` and keeps them on one line (the rename-coven form, whose column is always under 28rem).
 
 Pieces around a field and a form's buttons that more than one form shares are each written once in `_primitives.scss`:
 

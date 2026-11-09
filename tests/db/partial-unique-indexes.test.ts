@@ -348,6 +348,11 @@ const ROWS: Record<string, PartialIndexRow> = {
   workspace_member_pauses_one_live: {
     row: async () => stamped({ workspace_id: WORKSPACE_W_ID, user_id: FIXTURE_USERS.B.id }),
   },
+  // An address of coven W; the clash is the address alone, so an old address held by any coven refuses it.
+  workspace_slugs_slug_unique: {
+    row: async () => stamped({ workspace_id: WORKSPACE_W_ID, slug: `fixture-address-${token()}` }),
+    clash: ['slug'],
+  },
   zodiac_signs_seed_key_unique: { row: zodiacSign },
   zodiac_signs_slug_unique: { row: zodiacSign },
 };

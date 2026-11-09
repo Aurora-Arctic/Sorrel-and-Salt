@@ -1444,6 +1444,12 @@
       display: flex;
       flex-direction: column;
     }
+
+    // A form whose row holds only Save and Cancel keeps them on one line; wrapping still catches a narrower row.
+    .form.form--inline-actions .form__actions {
+      flex-direction: row;
+      align-items: normal;
+    }
   }
 
   .form__actions {

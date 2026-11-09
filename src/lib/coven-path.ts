@@ -78,3 +78,13 @@ export function pathInCoven(
   if (opens?.includes(slug)) return `${home}/${parts.slice(3).join('/')}`;
   return `${home}/${section}`;
 }
+
+/**
+ * The same address under a coven's current slug: only the coven segment changes, so the section, the query and the hash
+ * stay. A path outside a coven has no section to keep and gives the coven's page.
+ */
+export function movedCovenPath(path: string, slug: string): string {
+  const match = /^\/coven\/([^/?#]+)(.*)$/s.exec(path);
+  if (!match || isReservedCovenSlug(match[1]!)) return `/${COVEN}/${slug}`;
+  return `/${COVEN}/${slug}${match[2]}`;
+}

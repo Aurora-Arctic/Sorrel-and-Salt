@@ -51,6 +51,44 @@ describe('WorkspaceSwitcher', () => {
     ]);
   });
 
+  it("shows each coven's address beside a name two of the member's covens share, and none beside a unique one", () => {
+    const workspaces = [
+      WORKSPACES[0]!,
+      { ...WORKSPACES[0]!, slug: 'fixture-coven-2' },
+      WORKSPACES[1]!,
+    ];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    fireEvent.click(box());
+
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(3);
+    expect(options[0]).toHaveAccessibleName(/^Fixture Coven\b.*fixture-coven(?!-)/);
+    expect(options[1]).toHaveAccessibleName(/^Fixture Coven\b.*fixture-coven-2/);
+    expect(options[2]).toHaveAccessibleName('Testwort Circle');
+  });
+
+  it('shows no address when every name is unique', () => {
+    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
+
+    fireEvent.click(box());
+
+    expect(screen.getByRole('option', { name: /Fixture Coven/ })).toHaveAccessibleName(
+      'Fixture Coven',
+    );
+    expect(screen.queryByRole('option', { name: /fixture-coven/ })).toBeNull();
+  });
+
+  it('goes to the coven chosen by address, of two with one name', () => {
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[0]!, slug: 'fixture-coven-2' }];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole('option', { name: /fixture-coven-2/ }));
+
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2/ingredients');
+  });
+
   it('marks a coven whose access is paused, with when the pause ends', () => {
     const workspaces = [
       { ...WORKSPACES[0]!, paused: { until: new Date('2099-01-01T00:00:00Z') } },

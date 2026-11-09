@@ -25,7 +25,9 @@ export const CovenHomeSkeleton = () => {
       name={facts?.name}
       demo={facts?.demo}
       role={facts?.role ?? 'owner'}
-      access={facts?.access ?? { canDelete: true, canReadMembers: true, canInvite: true }}
+      access={
+        facts?.access ?? { canDelete: true, canReadMembers: true, canInvite: true, canRename: true }
+      }
     />
   );
 };

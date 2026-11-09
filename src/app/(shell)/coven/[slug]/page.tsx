@@ -1,6 +1,7 @@
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
 import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
+import RenameWorkspaceForm from '../../../../components/RenameWorkspaceForm';
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
@@ -16,6 +17,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   const { workspace, membership } = await requireCovenMembership(slug);
   const canDelete = rolePermits(membership.role, { workspace: ['delete'] });
   const canReadMembers = rolePermits(membership.role, { member: ['read'] });
+  const canRename = rolePermits(membership.role, { workspace: ['update'] });
   const canInvite = rolePermits(membership.role, { member: ['invite'] });
 
   // The last-steward guard stops only a steward, and only when they are the sole one, so only then is
@@ -43,7 +45,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
     <CovenHome
       slug={slug}
       role={membership.role}
-      access={{ canDelete, canReadMembers, canInvite }}
+      access={{ canDelete, canReadMembers, canInvite, canRename }}
       name={workspace.name}
       demo={workspace.demo}
       leave={
@@ -53,6 +55,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           successors={successors}
         />
       }
+      rename={<RenameWorkspaceForm workspaceId={workspace.id} name={workspace.name} />}
       remove={<DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />}
     />
   );
