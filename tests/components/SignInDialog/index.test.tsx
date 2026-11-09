@@ -47,6 +47,34 @@ describe('SignInDialog', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('names creating an account in the link of a trigger that opens on it, and nothing for one that opens on signing in', () => {
+    render(
+      <>
+        <SignInDialog
+          next="/compendium"
+          configured={['google']}
+          label="Create Account"
+          mode="sign-up"
+        />
+        <SignInDialog configured={['google']} label="Sign Up Here" mode="sign-up" />
+        <SignInDialog next="/compendium" configured={['google']} label="Sign In" mode="sign-in" />
+      </>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Create Account' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Fcompendium&mode=sign-up',
+    );
+    expect(screen.getByRole('link', { name: 'Sign Up Here' })).toHaveAttribute(
+      'href',
+      '/sign-in?mode=sign-up',
+    );
+    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Fcompendium',
+    );
+  });
+
   it('opens the sign-in dialog over the page on a plain press, without navigating', async () => {
     window.history.replaceState(null, '', '/compendium?q=rose');
     render(<SignInDialog next="/compendium?q=rose" configured={['google']} label="Sign In" />);

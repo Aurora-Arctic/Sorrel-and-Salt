@@ -7,6 +7,7 @@ import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
 import SignInPanel, { LastUsedMark, SignInBack, signInHeader } from '../SignInPanel';
+import { withMode } from '../SignInPanel/address';
 import type { SignInHeader } from '../SignInPanel/types';
 import type { SignInDialogProps } from './types';
 import './index.scss';
@@ -56,7 +57,12 @@ const SignInDialog = ({
 
   return (
     <>
-      <PendingLink ref={link} className={className} href={signInPath(next)} onClick={openDialog}>
+      <PendingLink
+        ref={link}
+        className={className}
+        href={withMode(signInPath(next), openingMode)}
+        onClick={openDialog}
+      >
         {label}
       </PendingLink>
       {open && (

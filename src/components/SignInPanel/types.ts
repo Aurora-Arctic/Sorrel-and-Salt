@@ -5,6 +5,9 @@ export type SignInAttempt = ProviderId | 'passkey';
 /** Signing in to an account, or creating one. */
 export type SignInMode = 'sign-in' | 'sign-up';
 
+/** The page's address, bare or with a query. */
+export type SignInAddress = '/sign-in' | `/sign-in?${string}`;
+
 /** One sentence per mode, under the title, on the sign-in page and in a dialog alike. */
 export type SignInLedes = Partial<Record<SignInMode, string>>;
 
