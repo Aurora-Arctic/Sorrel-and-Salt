@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransiti
 import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // What a component test cannot prove: where the browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
 
@@ -46,22 +47,14 @@ async function seedFixtures(page: Page): Promise<void> {
     });
     const owner = users.multi.id;
     for (const coven of [ALPHA, BETA]) {
-      const [row] = await sql`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${coven.name}, ${coven.slug}, ${owner}, ${owner})
-        returning id`;
-      const members =
+      const members: [string, 'owner' | 'member'][] =
         coven === ALPHA
           ? [
               [owner, 'owner'],
               [users.member.id, 'member'],
             ]
           : [[owner, 'owner']];
-      for (const [userId, role] of members) {
-        await sql`
-          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-          values (${row.id}, ${userId}, ${role}, ${owner}, ${owner})`;
-      }
+      await insertWorkspace(sql, coven.name, members, { slug: coven.slug, author: owner });
     }
     const rows = await sql`
       select count(*)::int as n from workspace_members m

@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // An owner pauses a member's access to one coven (claude-docs/components/member-detail.md, "Coven Access").
 
@@ -130,14 +131,18 @@ test('a member paused in the coven they would land in is taken to their next cov
   const ownerId = alder.users.Owner!;
   await withSql((sql) =>
     sql.begin(async (tx) => {
-      const [birch] = await tx<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values ('Fixture Birch Coven', 'fixture-birch-coven', ${ownerId}, ${ownerId})
-        returning id`;
-      await tx`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${birch!.id}, ${ownerId}, 'owner', ${ownerId}, ${ownerId}),
-               (${birch!.id}, ${memberId}, 'member', ${ownerId}, ${ownerId})`;
+      await insertWorkspace(
+        tx,
+        'Fixture Birch Coven',
+        [
+          [ownerId, 'owner'],
+          [memberId, 'member'],
+        ],
+        {
+          slug: 'fixture-birch-coven',
+          author: ownerId,
+        },
+      );
       await tx`
         insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
         values (${alder.id}, ${memberId}, null, ${ownerId}, ${ownerId})`;

@@ -7,6 +7,7 @@ import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
 import { newToken } from '@/lib/invitation-token';
 import { slugify } from '@/lib/slugify';
+import { insertWorkspace } from '../../support/db/insert-workspace';
 
 // A refusal is proved twice: the control is absent, and the same request by hand to `/api/graphql` is refused too.
 // Serial, as every test shares the one coven and its roll counts are read before and after.
@@ -213,16 +214,12 @@ test.beforeAll(async ({ browser }) => {
     await page.close();
   }
   await withE2eSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${COVEN_NAME}, ${COVEN_SLUG}, ${people.owner.id}, ${people.owner.id})
-      returning id`;
-    covenId = coven.id as string;
-    for (const role of ['owner', 'member', 'viewer'] as const) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${covenId}, ${people[role].id}, ${role}, ${people.owner.id}, ${people.owner.id})`;
-    }
+    covenId = await insertWorkspace(
+      sql,
+      COVEN_NAME,
+      (['owner', 'member', 'viewer'] as const).map((role) => [people[role].id, role] as const),
+      { slug: COVEN_SLUG, author: people.owner.id },
+    );
   });
 });
 

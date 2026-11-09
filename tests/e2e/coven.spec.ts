@@ -5,6 +5,7 @@ import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // The coven page and its section nav against the built server. A stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
@@ -36,18 +37,18 @@ async function seedFixtureCoven(page: Page): Promise<void> {
   }
 
   await withE2eSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${COVEN_NAME}, ${COVEN_SLUG}, ${users.owner.id}, ${users.owner.id})
-      returning id`;
-    for (const role of ['owner', 'viewer'] as const) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${users[role].id}, ${role}, ${users.owner.id}, ${users.owner.id})`;
-    }
+    const covenId = await insertWorkspace(
+      sql,
+      COVEN_NAME,
+      [
+        [users.owner.id, 'owner'],
+        [users.viewer.id, 'viewer'],
+      ],
+      { slug: COVEN_SLUG, author: users.owner.id },
+    );
     const members = await sql`
       select user_id, role::text from workspace_members
-      where workspace_id = ${coven.id} and deleted_at is null`;
+      where workspace_id = ${covenId} and deleted_at is null`;
     expect(members.map((row) => [row.user_id, row.role]).sort()).toEqual(
       (['owner', 'viewer'] as const).map((role) => [users[role].id, role]).sort(),
     );

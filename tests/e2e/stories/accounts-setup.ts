@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { UserRole } from '@/lib/session';
-import { slugify } from '@/lib/slugify';
+import { insertWorkspaceWithSlug } from '../../support/db/insert-workspace';
 import { withE2eSql } from '../database';
 import { signInAs } from '../session';
 
@@ -33,20 +33,8 @@ export async function makeCoven(
   name: string,
   seats: readonly (readonly [string, CovenRole])[],
 ): Promise<{ id: string; slug: string }> {
-  const slug = slugify(name);
-  const maker = seats[0][0];
-  return withE2eSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${name}, ${slug}, ${maker}, ${maker})
-      returning id`;
-    for (const [userId, role] of seats) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${userId}, ${role}, ${maker}, ${maker})`;
-    }
-    return { id: coven.id as string, slug };
-  });
+  // The first seat's user stamps the rows: the e2e database holds no fixture user A.
+  return withE2eSql((sql) => insertWorkspaceWithSlug(sql, name, seats, { author: seats[0][0] }));
 }
 
 export async function seatsOf(covenId: string): Promise<Record<string, CovenRole>> {

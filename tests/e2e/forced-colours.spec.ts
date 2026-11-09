@@ -10,6 +10,7 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ADD, HELD_MARK } from '../support/cupboard-wording';
 import { ingredientSlug, slugify } from '@/lib/slugify';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // The compendium section under forced colours: every surface keeps an edge, and every state a mark, in the system colours (claude-docs/styling.md, "Forced colours").
 // A system colour is compared by what this browser resolves it to, read from a probe in the same page, so no assertion is tied to one palette.
@@ -297,14 +298,10 @@ test.describe('under forced colours', () => {
     const second = await withSql((sql) =>
       sql.begin(async (tx) => {
         await tx`select set_config('app.current_user_id', ${member}, true)`;
-        const [workspace] = await tx<{ id: string }[]>`
-          insert into workspaces (name, slug, created_by, updated_by)
-          values (${SECOND}, 'fixture-coven-prism-two', ${member}, ${member})
-          returning id`;
-        await tx`
-          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-          values (${workspace.id}, ${member}, 'owner', ${member}, ${member})`;
-        return workspace.id;
+        return insertWorkspace(tx, SECOND, [[member, 'owner']], {
+          slug: 'fixture-coven-prism-two',
+          author: member,
+        });
       }),
     );
     const author = await authorOf(browser, baseURL, 'author@forced-colours-menu.test');

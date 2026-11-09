@@ -7,29 +7,11 @@ import { recreateE2eDatabase, withE2eSql } from '../database';
 import { test, expect } from '../fixtures';
 import { holdSaves } from './ingredient-dialogs';
 import { signInAgainAs, signInAs } from '../session';
+import { makeCoven } from './accounts-setup';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-type Role = 'owner' | 'member' | 'viewer';
-
-async function makeCoven(name: string, members: [userId: string, role: Role][]): Promise<string> {
-  const slug = slugify(name);
-  const [creator] = members[0];
-  await withE2eSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${name}, ${slug}, ${creator}, ${creator})
-      returning id`;
-    for (const [userId, role] of members) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${userId}, ${role}, ${creator}, ${creator})`;
-    }
-  });
-  return slug;
-}
 
 async function expectNotAuthorized(page: Page, path: string) {
   const response = await page.goto(path);
@@ -82,7 +64,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
 
       // The highest seat a coven has, so nothing but the site role is left to refuse it.
       const { userId } = await signInAs(page, 'owner@story-17.test');
-      const slug = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
+      const { slug } = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
@@ -126,7 +108,7 @@ test.describe('story 17: everyone but a keeper is kept from editing the compendi
       await expect(editing.getByRole('button', { name: 'Delete Ingredient' })).toBeVisible();
 
       const { userId } = await signInAs(page, 'holder@story-17.test');
-      const coven = await makeCoven('Fixture Guarded Coven', [[userId, 'owner']]);
+      const { slug: coven } = await makeCoven('Fixture Guarded Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${coven}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
@@ -207,7 +189,7 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
       async ({ page }) => {
         const tag = slugify(visitor);
         const { userId: ownerId } = await signInAs(page, `owner-${tag}@story-19.test`);
-        const slug = await makeCoven(`${W} ${tag}`, [[ownerId, 'owner']]);
+        const { slug } = await makeCoven(`${W} ${tag}`, [[ownerId, 'owner']]);
         // Why a refusal below is the guard's: W's owner opens every one of them.
         for (const path of covenPages(slug)) {
           expect((await page.goto(path))?.status(), path).toBe(200);
@@ -216,7 +198,9 @@ test.describe('story 19: a keeper sees a user’s covens but reaches none of the
 
         if (visitor === 'a member of another coven') {
           const { userId } = await signInAs(page, `visitor-${tag}@story-19.test`);
-          const other = await makeCoven(`Fixture Elsewhere Coven ${tag}`, [[userId, 'member']]);
+          const { slug: other } = await makeCoven(`Fixture Elsewhere Coven ${tag}`, [
+            [userId, 'member'],
+          ]);
           // A live seat of their own, so the 404 is W's alone.
           expect((await page.goto(`/coven/${other}`))?.status()).toBe(200);
         } else {

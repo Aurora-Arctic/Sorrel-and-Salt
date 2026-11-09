@@ -16,6 +16,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 import { holdServerAnswers } from './hold-server-answers';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // Every loading wait looks the same (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
@@ -40,21 +41,18 @@ test.beforeAll(async ({ browser, slot }) => {
     viewer = hollow.users.A;
     admin = (await signInAs(setup, 'admin@navigation-wait.test', ['discord'], 'admin')).userId;
     const willowId = await withSql(async (sql) => {
-      const [workspace] = await sql<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${WILLOW}, ${slugify(WILLOW)}, ${viewer}, ${viewer})
-        returning id`;
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${workspace.id}, ${viewer}, 'owner', ${viewer}, ${viewer})`;
+      const workspaceId = await insertWorkspace(sql, WILLOW, [[viewer, 'owner']], {
+        slug: slugify(WILLOW),
+        author: viewer,
+      });
       // The switcher offers Create Coven only to a holder of the right.
       await sql.begin(async (tx) => {
         await tx`select set_config('app.privilege_route', 'manual', true)`;
         await tx`update users set can_create_workspace = true where id = ${viewer}`;
       });
       await localIngredient(sql, hollow.id, viewer, { name: HOLLOW_ENTRY });
-      await localIngredient(sql, workspace.id, viewer, { name: WILLOW_ENTRY });
-      return workspace.id;
+      await localIngredient(sql, workspaceId, viewer, { name: WILLOW_ENTRY });
+      return workspaceId;
     });
     willow = { id: willowId, slug: slugify(WILLOW), users: { A: viewer } };
   } finally {

@@ -6,23 +6,11 @@ import { LastOwner, leaveWorkspace, removeMember, updateMemberRole } from '@/mod
 import { createWorkspaceIngredient } from '@/modules/ingredients';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
 type Role = 'owner' | 'member' | 'viewer';
-
-async function insertCoven(name: string, members: [string, Role][]): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
 
 async function seat(covenId: string, userId: string) {
   const [row] = await sql`
@@ -33,7 +21,7 @@ async function seat(covenId: string, userId: string) {
 
 describe('removeMember', () => {
   it('soft-deletes the member’s row, stamped from the session, and no one else’s', async () => {
-    const covenId = await insertCoven('Fixture Removal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Removal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -52,7 +40,7 @@ describe('removeMember', () => {
   });
 
   it('refuses a member or a viewer, who do belong to the coven, by direct id', async () => {
-    const covenId = await insertCoven('Fixture Removal Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Removal Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -68,7 +56,7 @@ describe('removeMember', () => {
   });
 
   it('refuses a stranger, an id naming no user, and a person who is not a member', async () => {
-    const covenId = await insertCoven('Fixture Removal Stranger Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Removal Stranger Coven', [[A.id, 'owner']]);
     await expect(findWorkspaceRole(D.id, covenId)).resolves.toBeUndefined();
 
     await expect(removeMember(asUser(D), covenId, A.id)).rejects.toThrow(Forbidden);
@@ -79,7 +67,7 @@ describe('removeMember', () => {
   });
 
   it('refuses removing the last owner, with the remedy, and removes one of two', async () => {
-    const covenId = await insertCoven('Fixture Removal Owners Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Removal Owners Coven', [
       [A.id, 'owner'],
       [B.id, 'owner'],
     ]);
@@ -94,7 +82,7 @@ describe('removeMember', () => {
   });
 
   it('never overwrites who made an earlier removal', async () => {
-    const covenId = await insertCoven('Fixture Removal Twice Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Removal Twice Coven', [
       [A.id, 'owner'],
       [D.id, 'owner'],
       [B.id, 'member'],
@@ -106,7 +94,7 @@ describe('removeMember', () => {
     expect((await seat(covenId, B.id)).deleted_by).toBe(A.id);
   });
   it('refuses to remove the system user, though another owner exists', async () => {
-    const covenId = await insertCoven('Fixture System Seat Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture System Seat Coven', [
       [A.id, 'owner'],
       [BOOTSTRAP_USER_ID, 'owner'],
     ]);
@@ -126,7 +114,7 @@ describe('leaveWorkspace', () => {
   it.each<Role>(['viewer', 'member'])(
     'lets a %s leave, soft-deleting only their own row',
     async (role) => {
-      const covenId = await insertCoven(`Fixture Leave ${role} Coven`, [
+      const covenId = await insertWorkspace(sql, `Fixture Leave ${role} Coven`, [
         [A.id, 'owner'],
         [C.id, role],
         [B.id, 'member'],
@@ -145,7 +133,7 @@ describe('leaveWorkspace', () => {
   );
 
   it('refuses a stranger and an id naming no workspace', async () => {
-    const covenId = await insertCoven('Fixture Leave Stranger Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Leave Stranger Coven', [[A.id, 'owner']]);
     await expect(findWorkspaceRole(D.id, covenId)).resolves.toBeUndefined();
 
     await expect(leaveWorkspace(asUser(D), covenId)).rejects.toThrow(Forbidden);
@@ -155,7 +143,7 @@ describe('leaveWorkspace', () => {
   });
 
   it('refuses the only owner leaving, offering promotion or deletion, and lets one of two go', async () => {
-    const covenId = await insertCoven('Fixture Leave Owners Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Leave Owners Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -164,7 +152,7 @@ describe('leaveWorkspace', () => {
     expect(refusal.remedy).toBe('promote');
     expect((await seat(covenId, A.id)).deleted_at).toBeNull();
 
-    const alone = await insertCoven('Fixture Leave Alone Coven', [[A.id, 'owner']]);
+    const alone = await insertWorkspace(sql, 'Fixture Leave Alone Coven', [[A.id, 'owner']]);
     const aloneRefusal = await leaveWorkspace(asUser(A), alone).catch((error) => error);
     expect(aloneRefusal).toBeInstanceOf(LastOwner);
     expect(aloneRefusal.remedy).toBe('delete');
@@ -187,7 +175,7 @@ describe('leaveWorkspace', () => {
       });
 
     it('lets a paused member leave by the coven id, and still refuses them every other write', async () => {
-      const covenId = await insertCoven('Fixture Leave Paused Coven', [
+      const covenId = await insertWorkspace(sql, 'Fixture Leave Paused Coven', [
         [A.id, 'owner'],
         [C.id, 'member'],
       ]);
@@ -205,7 +193,7 @@ describe('leaveWorkspace', () => {
     });
 
     it('lets a member leave with a dated pause standing, and with a pause lifted or run out, as any member', async () => {
-      const dated = await insertCoven('Fixture Leave Dated Coven', [
+      const dated = await insertWorkspace(sql, 'Fixture Leave Dated Coven', [
         [A.id, 'owner'],
         [C.id, 'viewer'],
       ]);
@@ -213,7 +201,7 @@ describe('leaveWorkspace', () => {
       await leaveWorkspace(asUser(C), dated);
       expect((await seat(dated, C.id)).deleted_at).toBeInstanceOf(Date);
 
-      const lifted = await insertCoven('Fixture Leave Lifted Coven', [
+      const lifted = await insertWorkspace(sql, 'Fixture Leave Lifted Coven', [
         [A.id, 'owner'],
         [C.id, 'member'],
       ]);
@@ -223,7 +211,7 @@ describe('leaveWorkspace', () => {
       await leaveWorkspace(asUser(C), lifted);
       expect((await seat(lifted, C.id)).deleted_at).toBeInstanceOf(Date);
 
-      const runOut = await insertCoven('Fixture Leave Run Out Coven', [
+      const runOut = await insertWorkspace(sql, 'Fixture Leave Run Out Coven', [
         [A.id, 'owner'],
         [C.id, 'member'],
       ]);
@@ -234,12 +222,12 @@ describe('leaveWorkspace', () => {
     });
 
     it('still refuses a stranger the leave, and a paused member another coven they are not in', async () => {
-      const covenId = await insertCoven('Fixture Leave Paused Stranger Coven', [
+      const covenId = await insertWorkspace(sql, 'Fixture Leave Paused Stranger Coven', [
         [A.id, 'owner'],
         [C.id, 'member'],
       ]);
       await pause(covenId, C.id, null);
-      const other = await insertCoven('Fixture Leave Other Coven', [[A.id, 'owner']]);
+      const other = await insertWorkspace(sql, 'Fixture Leave Other Coven', [[A.id, 'owner']]);
 
       await expect(leaveWorkspace(asUser(D), covenId)).rejects.toThrow(Forbidden);
       await expect(leaveWorkspace(asUser(C), other)).rejects.toThrow(Forbidden);
@@ -248,7 +236,7 @@ describe('leaveWorkspace', () => {
   });
 
   it('refuses a second leave from the same seat', async () => {
-    const covenId = await insertCoven('Fixture Leave Twice Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Leave Twice Coven', [
       [A.id, 'owner'],
       [C.id, 'viewer'],
     ]);
@@ -260,7 +248,7 @@ describe('leaveWorkspace', () => {
 
 describe('reviveMembership', () => {
   it('restores a removed member at the given role, deletion cleared and joinedAt restarted', async () => {
-    const covenId = await insertCoven('Fixture Revive Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Revive Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -283,11 +271,11 @@ describe('reviveMembership', () => {
   });
 
   it('touches no live row, and no other workspace’s removed row', async () => {
-    const covenId = await insertCoven('Fixture Revive Live Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Revive Live Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    const other = await insertCoven('Fixture Revive Other Coven', [
+    const other = await insertWorkspace(sql, 'Fixture Revive Other Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -307,7 +295,7 @@ describe('reviveMembership', () => {
 
 describe('handing a coven over, then leaving', () => {
   it('promotes first, so the leave that follows finds a second owner and the coven keeps one', async () => {
-    const covenId = await insertCoven('Fixture Handover Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Handover Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -322,7 +310,7 @@ describe('handing a coven over, then leaving', () => {
   });
 
   it('keeps both owners when the leave does not happen after the promotion', async () => {
-    const covenId = await insertCoven('Fixture Handover Halfway Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Handover Halfway Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);

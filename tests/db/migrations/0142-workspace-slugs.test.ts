@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { useTestDatabase } from '../../support/db/database';
-import { makeWorkspace, workspaceColumns } from '../../support/fixtures';
 import { A } from '../../support/as-user';
 import { fromRoot } from '../../support/paths';
+import { insertWorkspaceWithSlug } from '../../support/db/insert-workspace';
 
 // A migration test, retired once `0142` is in production's journal. `0142` gives every live coven one address row: its
 // current address. The test database is already migrated, so the hand-written statements run again over rows the case
@@ -23,13 +23,6 @@ let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
-
-const insertCoven = async (name: string) =>
-  (
-    await sql`
-      insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-      returning id, slug`
-  )[0]! as { id: string; slug: string };
 
 describe('the seeded covens', () => {
   it('each hold their current address in the table before any backfill runs again', async () => {
@@ -50,8 +43,8 @@ describe('the seeded covens', () => {
 
 describe('0142', () => {
   it("gives each live coven one row for its current address, stamped with the coven's creator, and none for a deleted coven", async () => {
-    const live = await insertCoven('Fixture Backfilled Coven');
-    const deleted = await insertCoven('Fixture Deleted Backfill Coven');
+    const live = await insertWorkspaceWithSlug(sql, 'Fixture Backfilled Coven', []);
+    const deleted = await insertWorkspaceWithSlug(sql, 'Fixture Deleted Backfill Coven', []);
     await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${deleted.id}`;
     // Precondition: the statements are there to run, and neither coven holds an address before them.
     expect(STATEMENTS.length).toBeGreaterThan(0);

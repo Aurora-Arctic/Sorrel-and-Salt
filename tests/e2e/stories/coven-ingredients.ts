@@ -7,6 +7,7 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import type { IngredientFixture, Overrides } from '../../support/fixtures/types';
 import { withE2eSql } from '../database';
 import { signInAs } from '../session';
+import { insertWorkspace } from '../../support/db/insert-workspace';
 
 // Rows go in through the raw client so setup does not depend on the code a story proves (CLAUDE.md, Testing).
 
@@ -42,19 +43,12 @@ export async function seedCoven(
       for (const [key, userId] of Object.entries(users)) {
         await tx`update users set name = ${`Fixture ${key}`} where id = ${userId}`;
       }
-      const [workspace] = await tx<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${name}, ${slug}, ${creator}, ${creator})
-        returning id`;
-      await tx`
-        insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
-        values (${workspace.id}, ${slug}, ${creator}, ${creator})`;
-      for (const [key, role] of Object.entries(roles)) {
-        await tx`
-          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-          values (${workspace.id}, ${users[key]}, ${role}, ${creator}, ${creator})`;
-      }
-      return workspace.id;
+      return insertWorkspace(
+        tx,
+        name,
+        Object.entries(roles).map(([key, role]) => [users[key]!, role] as const),
+        { slug, author: creator, address: true },
+      );
     }),
   );
 

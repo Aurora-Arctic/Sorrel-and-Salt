@@ -61,6 +61,13 @@ there is never run as a test.
   transaction, with a variant row for each of the fixture's forms (`insertVariant`
   writes one more). Why setup avoids `withAudit` is under
   ["Fixture factories"](fixture-factories.md). It has no test of its own.
+- **`insert-workspace.ts` — `insertWorkspace(sql, name, members, options)`** is the
+  setup inserter for a coven: its row, its seats and, with `address`, its current
+  address in `workspace_slugs`, all stamped from `options.author` (`A` by default).
+  `insertWorkspaceWithSlug` also returns the slug and `addMembers` adds seats to a
+  coven that exists. A test never writes its own coven insert;
+  `tests/guards/workspace-inserts.test.ts` refuses a local `insertCoven` or
+  `makeCoven`.
 - **`insert-spell.ts` — `insertSpell(sql, fixture, author)`** is the same for a
   spell: its row, layers and assigned categories. `author` is `created_by`,
   whom a private spell is readable by, and a layer's ingredient id is written as

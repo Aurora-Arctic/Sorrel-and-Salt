@@ -6,6 +6,7 @@ import { latestMessageTo } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 const COVEN_NAME = 'Fixture Invite Coven';
 const DOMAIN = '@workspace-invitation.test';
@@ -27,13 +28,10 @@ test.beforeAll(async ({ browser, slot }) => {
     await setup.close();
   }
   await withE2eSql(async (sql) => {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
-    covenId = coven.id as string;
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${covenId}, ${ownerId}, 'owner', ${ownerId}, ${ownerId})`;
+    covenId = await insertWorkspace(sql, COVEN_NAME, [[ownerId, 'owner']], {
+      slug: COVEN_SLUG,
+      author: ownerId,
+    });
   });
 });
 

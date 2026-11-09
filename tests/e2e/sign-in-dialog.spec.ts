@@ -6,6 +6,7 @@ import { VERIFY_LINK, latestMessageTo } from './mailpit';
 import { PASSWORD, field, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Locator, Page } from '@playwright/test';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 // Sign In and Create Account opened over the page they are on: from the public bar, and as the two
 // equal choices on a signed-out invitation (claude-docs/components/sign-in-dialog.md).
@@ -31,15 +32,13 @@ test.beforeAll(async ({ browser, slot }) => {
   await withE2eSql((sql) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${ownerId}, true)`;
-      const [coven] = await tx`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
-      await tx`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${ownerId}, 'owner', ${ownerId}, ${ownerId})`;
+      const covenId = await insertWorkspace(tx, COVEN_NAME, [[ownerId, 'owner']], {
+        slug: COVEN_SLUG,
+        author: ownerId,
+      });
       await tx`
         insert into invitations (workspace_id, email, role, token_hash, created_by, updated_by)
-        values (${coven.id}, ${INVITED}, 'viewer',
+        values (${covenId}, ${INVITED}, 'viewer',
           ${createHash('sha256').update(TOKEN).digest('hex')}, ${ownerId}, ${ownerId})`;
     }),
   );
