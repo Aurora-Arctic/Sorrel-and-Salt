@@ -70,7 +70,7 @@
     margin-left: auto;
   }
 
-  @media (max-width: $shell-phone-width) {
+  @include phone-down {
     .#{$block}__bar-inner {
       gap: space(2);
       padding-inline: space(2);
@@ -78,7 +78,7 @@
   }
 
   // Narrower than the phone width: the initials stand in for the name, which stays for a screen reader.
-  @media (max-width: $shell-brand-width) {
+  @include width-to($shell-brand-width) {
     .#{$block}__brand {
       justify-content: center;
       min-width: $control-height;

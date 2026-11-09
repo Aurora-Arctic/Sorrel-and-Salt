@@ -1,5 +1,6 @@
 'use client';
 
+import { prefersReducedMotion } from '@/lib/motion';
 import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -248,9 +249,6 @@ const rowsFor = (rows: readonly Row[], matches: readonly Duplicate[], covered = 
   ...rows.slice(matches.length).map((was): Row => ({ match: was.match, phase: 'leaving' })),
 ];
 
-const reducedMotion = () =>
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-
 /**
  * Where the list's bottom will be once its leaving rows are gone: the foot
  * of its last row that stays. The leaving rows are the trailing ones, still
@@ -374,11 +372,11 @@ function useSlidingRows(
     const to = settledHeightOf(list);
     // Every row leaving: the region closes round the whole notice instead (index.scss).
     if (to === 0) return;
-    if (reducedMotion() || Math.abs(from - to) < 0.5) {
+    if (prefersReducedMotion() || Math.abs(from - to) < 0.5) {
       // Nothing to slide: the rows fade on their own, or, reduced, swap at
       // the next frame rather than in this effect.
       restHeight.current = to;
-      if (!reducedMotion()) return;
+      if (!prefersReducedMotion()) return;
       const frame = window.requestAnimationFrame(settle);
       return () => window.cancelAnimationFrame(frame);
     }

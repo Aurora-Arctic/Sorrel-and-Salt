@@ -25,7 +25,7 @@
 
   // Beside the mark where there is room; a phone keeps it below, as 18rem to the right would run
   // off the screen.
-  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  @include above-tablet {
     --tip-placement: right;
   }
 }

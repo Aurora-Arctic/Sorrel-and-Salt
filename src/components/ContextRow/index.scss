@@ -64,7 +64,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   white-space: nowrap;
 }
 
-@media (max-width: $shell-phone-width) {
+@include phone-down {
   // A half step of air for the phone: between the scale's first two steps, so derived from them.
   $phone-air: calc(#{space(3)} / 2);
 

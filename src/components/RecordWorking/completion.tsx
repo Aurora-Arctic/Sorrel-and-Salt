@@ -13,7 +13,7 @@ import JarLine from '../JarLine';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
-import { withUnit } from '../StockBadge/stock-words';
+import { formatQuantity } from '@/lib/quantity';
 import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
@@ -66,7 +66,8 @@ type Taken = Plan['deductions'][number];
 type Skipped = Plan['warnings'][number];
 type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
-const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
+const amount = (quantity: number, unit: string) =>
+  formatQuantity(Number(quantity.toFixed(3)), unit);
 const holds = (quantity: number, unit: string) => (quantity > 0 ? amount(quantity, unit) : 'none');
 
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {

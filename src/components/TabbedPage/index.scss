@@ -40,14 +40,14 @@ $track-inset: calc(1px + 0.125rem);
   padding-inline: space(4);
 }
 
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+@include above-phone {
   .tabbed-page--framed > .page-header {
     max-width: $narrow-column;
     margin-inline-start: calc(50% + (#{space(8)} * 3 + #{space(6)} - #{$narrow-column}) / 2);
   }
 }
 
-@media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+@include width-from(calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
   .tabbed-page--framed > .page-header {
     margin-inline-start: calc(50% - #{$narrow-column} / 2);
   }

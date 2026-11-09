@@ -74,7 +74,7 @@
   }
 }
 
-@media (max-width: $shell-phone-width) {
+@include phone-down {
   .app-shell__nav a {
     padding: 0 space(2);
   }
@@ -84,7 +84,7 @@
   display: inline-flex;
 }
 
-@media (max-width: $shell-tablet-width) {
+@include tablet-down {
   .app-shell__nav {
     display: none;
   }

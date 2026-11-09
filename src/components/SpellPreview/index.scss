@@ -35,7 +35,7 @@ $preview-foot: 2.5rem;
     background: $drawer-slot;
   }
 
-  @media (max-width: $shell-phone-width) {
+  @include phone-down {
     padding-top: calc(#{$preview-edge-phone} + env(safe-area-inset-top, 0px));
     padding-inline: calc(#{$preview-edge-phone} + env(safe-area-inset-left, 0px))
       calc(#{$preview-edge-phone} + env(safe-area-inset-right, 0px));
@@ -498,7 +498,7 @@ $preview-hearth-duration: 11s;
   max-width: $recipe-sheet-width;
   margin-inline: auto;
 
-  @media (max-width: $shell-tablet-width) {
+  @include tablet-down {
     @include recipe-columns('.spell-preview__title', $columns: false);
   }
 }

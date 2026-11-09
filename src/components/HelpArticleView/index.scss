@@ -105,7 +105,7 @@
   padding-block-start: space(4);
   border-block-start: 1px solid $hairline;
 
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     grid-template-columns: 1fr;
   }
 }
@@ -134,7 +134,7 @@
   justify-content: flex-end;
   text-align: end;
 
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     grid-column: 1;
   }
 }

@@ -179,7 +179,7 @@
     }
   }
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     // The menu stands open from a tablet up, so its fold has no label, card or slide.
     .page-nav__fold {
       border: 0;
@@ -274,7 +274,7 @@
   }
 }
 
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .page-nav .page-nav__narrow {
     display: none;
   }

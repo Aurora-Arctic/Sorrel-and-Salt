@@ -1,19 +1,11 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import { useCallback, useEffect, useState } from 'react';
 import type { AnimationEvent } from 'react';
 
 // The callout's and the badge's fade out: the piece stays drawn, marked closing, until its animation ends. Whether it
 // is open (`aria-expanded`, the focus going back) never waits for it (claude-docs/components/click-feedback.md, "Fades").
-
-// Past the longest fade (`$motion-short`), so a fade that never reports its
-// end, in a background tab or a browser that skipped it, still ends.
-const FADE_LIMIT_MS = 400;
-
-// Under reduced motion the stylesheet draws no fade, so nothing would end one.
-const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface Fade {
   drawn: boolean;
@@ -31,7 +23,7 @@ export function useFade(shown: boolean): Fade {
   if (shown !== was) {
     setWas(shown);
     if (shown) setDrawn(true);
-    else if (fadesAreOff()) setDrawn(false);
+    else if (prefersReducedMotion()) setDrawn(false);
   }
 
   useEffect(() => {

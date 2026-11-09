@@ -29,7 +29,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
 
   // On a phone the folded menu sits one stack step above the text, so the first heading's own top
   // margin, which would add four steps more, is dropped.
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     > .page-nav + .document-page__body > :first-child {
       margin-block-start: 0;
     }
@@ -38,7 +38,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // The menu scrolls inside itself, capped at the room under its unstuck top (the bar plus the
   // frame's padding), and starts on the head's row: placed lower, its box overran the window before
   // it stuck. The focus ring is inset because the scrolling edge clips one drawn outside.
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     > .page-nav {
       grid-row: 1 / span 3;
       max-height: calc(100dvh - #{$shell-bar-height} - #{space(6)} - #{space(4)});
@@ -177,7 +177,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     }
 
     // On a phone the mark sits above the words instead of beside them.
-    @media (max-width: #{$shell-phone-width}) {
+    @include phone-down {
       padding-inline-start: 0;
       padding-block-start: calc(#{space(7)} + #{space(1)});
 

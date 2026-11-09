@@ -69,7 +69,7 @@
     --salt-rest: 0px;
     --salt-lift: #{$footer-height};
 
-    @media (max-width: #{$shell-phone-width}) {
+    @include phone-down {
       --salt-lift: #{$footer-height-phone};
     }
 
@@ -82,7 +82,7 @@
   }
 }
 
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   body:has(.section-nav) .backdrop--salt {
     --salt-rest: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
 
@@ -101,7 +101,7 @@ body:has(.card-landing) .backdrop {
 
 // The card landing page has no room beside its card on a phone, so the salt stays off it there, and off
 // the page of a card that is invalid or used.
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   body:has(.card-landing, .card-landing--closed) .backdrop--salt {
     display: none;
   }

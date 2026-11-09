@@ -140,7 +140,7 @@ html:has(:is(.app-shell, .public-frame) .ingredient-search) {
 
 // Under the narrow column the row is two controls tall plus its gap, so the root leaves one more
 // control and gap of room.
-@media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
+@include width-to(calc(#{$narrow-column} + 2 * #{space(4)})) {
   html:has(:is(.app-shell, .public-frame) .ingredient-search) {
     scroll-padding-top: calc(
       #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} +

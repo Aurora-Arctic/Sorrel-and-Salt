@@ -110,7 +110,7 @@
     display: grid;
     gap: space(3);
 
-    @media (min-width: 40rem) {
+    @include width-from(40rem) {
       grid-template-columns: 1fr 1fr;
     }
   }

@@ -43,7 +43,7 @@
 
     @include sorrel-follows-scroll;
 
-    @media (max-width: #{$shell-phone-width}) {
+    @include phone-down {
       --sorrel-lift: calc(#{$context-row-height-phone} + 1px);
     }
   }

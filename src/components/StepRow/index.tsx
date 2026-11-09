@@ -1,18 +1,11 @@
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
+import { plainQuantity } from '@/lib/quantity';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
 
 // One step of a spell. Presentational: the spell builder hands it editing controls and the recipe page none
 // (claude-docs/components/step-row.md).
-
-/**
- * The quantity as the person typed it rather than as the column stores it: "1.000" is "1" and
- * "2.500" is "2.5", so only the decimals that carry information show. A plain string edit, not a
- * Number round trip, which would lose a quantity past 15 digits.
- */
-const plainQuantity = (quantity: string): string =>
-  quantity.includes('.') ? quantity.replace(/0+$/, '').replace(/\.$/, '') : quantity;
 
 /**
  * The amount and unit as one phrase, "2 tsp", or null where there is neither. A unit with no

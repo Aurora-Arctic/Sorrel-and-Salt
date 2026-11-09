@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -17,7 +18,6 @@ import { useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
-import { fadesAreOff } from './choice-chip';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
@@ -25,9 +25,6 @@ import './index.scss';
 // The Filters button and the panel it opens, a native `<dialog>`: `show()` from the tablet width
 // up, `showModal()` below it. Before the script it is drawn inline and open, and every control
 // submits through the GET form (claude-docs/components/facet-panel.md).
-
-/** How long a leaving sheet waits for its slide out before it closes anyway (longer than `$sheet-slide` in index.scss), for a browser that never reports the end. */
-const LEAVE_LIMIT_MS = 400;
 
 /** The tablet width and up, where the panel drops down over the results instead of being a sheet. Repeats `$shell-tablet-width` (`_variables.scss`), as a script cannot read Sass; a test fails if the two part. */
 export const WIDE = '(min-width: 56rem)';
@@ -60,7 +57,7 @@ export function FacetShell({
   // happens when it is already shut. `snap` shuts with no motion; otherwise the sheet slides out
   // right and the panel up, and motion turned down (or no way to ask) closes either at once.
   const leave = () => {
-    if (!modal.current || fadesAreOff()) {
+    if (!modal.current || prefersReducedMotion()) {
       slide.close(modal.current);
       return;
     }
@@ -112,7 +109,7 @@ export function FacetShell({
   // The net for a slide whose end the browser never reports.
   useEffect(() => {
     if (!leaving) return undefined;
-    const limit = setTimeout(finishLeaving, LEAVE_LIMIT_MS);
+    const limit = setTimeout(finishLeaving, FADE_LIMIT_MS);
     return () => clearTimeout(limit);
   });
 
