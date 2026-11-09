@@ -8,7 +8,7 @@ const meta: Meta<typeof HelpIndex> = {
     faq: [
       {
         slug: 'who-can-see-my-spells',
-        title: 'Who Can See My Spells?',
+        title: 'Who can see my spells?',
         body: 'Your **coven**, unless private.',
       },
     ],
