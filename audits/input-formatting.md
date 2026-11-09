@@ -41,6 +41,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** High. A person can type a value the database refuses (more than three decimal places, a negative, an `e`) and learn only on Save, and the rule is written twice.
 
+**Status:** Fixed — amounts are text with a decimal keypad, tidy on blur, and share one client and server rule.
+
 **Where:**
 
 - `SpellBuilder/steps/step-row.tsx:220` (Quantity); the value is read with `Number()` at `SpellBuilder/steps/values.ts:183`.
@@ -270,6 +272,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 12. Suggest-Only Fields Accept Any Text
 
 **Severity:** Low. Data fragments (for example "Waxing Crescent", "waxing crescent", "Waxing crescent moon") but nothing breaks.
+
+**Status:** Fixed — the suggest-only fields tidy on blur and say in a hint that other values are allowed.
 
 **Where:** Moon Phase and Day (`SpellBuilder/index.tsx:697,704`, via `SpellBuilder/suggest-field.tsx`; the server uses `optionalText` with no list); Form on spell steps (`SpellBuilder/steps/step-row.tsx:207`) and variants (`IngredientForm/variants.tsx:254`); Seal Wax (`SpellBuilder/index.tsx:672`); Search Terms (`HelpArticleForm/form.tsx:418-420`).
 
