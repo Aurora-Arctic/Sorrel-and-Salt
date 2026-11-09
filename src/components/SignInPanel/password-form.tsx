@@ -200,7 +200,7 @@ const PasswordForm = ({
         lastUsed &&
         !signingUp &&
         headerNote &&
-        createPortal(<p className="sign-in-panel__last-used">{lastUsedMark}</p>, headerNote)
+        createPortal(<p className="sign-in-panel__last-used-note">{lastUsedMark}</p>, headerNote)
       )}
       {problem.alert && (
         <Notice kind="error" result>
