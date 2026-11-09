@@ -5,7 +5,7 @@
 ## Contracts
 
 - **The skip link** ("Skip to Content") targets `#main`: an empty `span` with `tabindex="-1"` just before the page's wrapper, as in [`AppShell`](app-shell.md), which says why it is not the wrapper itself. `.skip-link` and `.skip-target` come from AppShell's stylesheet, which the layout always loads.
-- **The bar** holds the site name linking to `/`, a `nav` named "Site", a Sign In link (`/sign-in`, `.btn--solid.btn--medium`) and the inline theme toggle.
+- **The bar** holds the site name linking to `/`, a `nav` named "Site", a Sign In link (`sign-in-link.tsx`, `.btn--solid.btn--medium`) to `/sign-in?next=<the page's path and query>`, so signing in by any method comes back to the page; on an auth page, or inside the Suspense fallback before the query is read, it is a bare `/sign-in` and the inline theme toggle.
   - The nav holds the Compendium link, a `PendingLink`, so a press draws the list's skeleton. `aria-current="page"` at or beneath `/compendium`, not on a path that only begins with its letters.
   - At or under `$shell-brand-width` the brand reads "S&S" (the full name stays for a screen reader), so the bar holds at 375px. Both frames draw it with `BrandName` (`src/components/AppShell/brand-name.tsx`).
 - **The frame does not own the `main` landmark.** The `(public)` layout renders `<main>` round the page, in `.page-column` (the top-left wide column `/curator/compendium` uses). The frame draws `.app-shell__main`, a `div` with the shell's [`MainBody`](app-shell.md) inside it; a frame-owned `main` would nest with the one `MainBody` swaps in for the skeleton's during a wait. The wrapper has no id and no `tabIndex`.

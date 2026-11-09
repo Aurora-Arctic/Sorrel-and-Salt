@@ -249,6 +249,33 @@ describe('Keyset pagination through the repository', () => {
     await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
   });
 
+  // A data exception the query itself raises (here a name that is not a number) is a fault, not a cursor.
+  const NAME_AS_NUMBER = fragment`${leaves.name}::int > 0`;
+  const VALID_CURSOR = {
+    key: ['Leaf 01'],
+    id: '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60',
+  };
+
+  it('rethrows a data exception from a page sent without a cursor', async () => {
+    await seedLeaves();
+    const attempt = resolvePage({}, (request) =>
+      findPage(leaves, [leaves.name], request, NAME_AS_NUMBER),
+    );
+
+    await expect(attempt).rejects.toThrow();
+    await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
+  });
+
+  it('rethrows a data exception that does not come from a valid cursor', async () => {
+    await seedLeaves();
+    const attempt = resolvePage({ after: encodeCursor(VALID_CURSOR) }, (request) =>
+      findPage(leaves, [leaves.name], request, NAME_AS_NUMBER),
+    );
+
+    await expect(attempt).rejects.toThrow();
+    await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
+  });
+
   it('refuses a cursor whose id is not an id', async () => {
     await expect(
       leafPage({ after: encodeCursor({ key: ['Leaf 07'], id: 'seven' }) }),

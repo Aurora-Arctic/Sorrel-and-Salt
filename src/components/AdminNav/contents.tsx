@@ -19,13 +19,15 @@ const Contents = ({ sections, pending = false }: ContentsProps): ReactElement =>
   <div className="admin-contents" aria-hidden={pending || undefined}>
     {sections.map(({ name, pages }, at) => (
       <section
-        key={name}
+        key={name ?? at}
         className="page-frame__section"
-        aria-labelledby={pending ? undefined : `admin-section-${at}`}
+        aria-labelledby={pending || !name ? undefined : `admin-section-${at}`}
       >
-        <h2 id={pending ? undefined : `admin-section-${at}`}>
-          {pending ? <SkeletonText>{name}</SkeletonText> : name}
-        </h2>
+        {name && (
+          <h2 id={pending ? undefined : `admin-section-${at}`}>
+            {pending ? <SkeletonText>{name}</SkeletonText> : name}
+          </h2>
+        )}
         <ul className="admin-contents__list">
           {pages.map(({ label, description, tabs: [{ href }] }) => (
             // Each page at its first tab, as the nav links it.

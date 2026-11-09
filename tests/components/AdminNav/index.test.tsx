@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
-const { default: AdminNav, CuratorNav } = await import('@/components/AdminNav');
+const { default: AdminNav, CuratorNav, CuratorContents } = await import('@/components/AdminNav');
 
 // claude-docs/components/admin-nav.md
 
@@ -131,5 +131,14 @@ describe('AdminNav support count', () => {
     expect(within(keepersNav()).getByRole('link', { name: /Support/ })).toHaveTextContent(
       /^Support$/,
     );
+  });
+});
+
+describe('CuratorContents, the curator index', () => {
+  it('lists every curation page under no group heading named Compendium, then the guides', () => {
+    render(<CuratorContents />);
+
+    expect(screen.queryByRole('heading', { name: 'Compendium' })).not.toBeInTheDocument();
+    expect(hrefs(screen.getAllByRole('link'))).toEqual([...CURATION, '/help/staff']);
   });
 });

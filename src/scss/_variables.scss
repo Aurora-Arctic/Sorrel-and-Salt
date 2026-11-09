@@ -238,6 +238,13 @@ $badge-palettes: (
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
+  // A compendium entry waiting on a curator: the warning ochre as a tint, so it reads as a caution and the red palettes stay for
+  // alarms. Dark is the theme's `--warning`; light is it darkened 4%, as its own edge on the light page was 2.98:1.
+  'needs-review': (
+      treatment: tinted,
+      dark: $ochre-bright,
+      light: color.adjust($ochre-deep, $lightness: -4%),
+    ),
   // Last-used's solid accent inks.
   'new': (
       treatment: solid,

@@ -14,7 +14,7 @@ answer.
 | `requireAdminSession()`, `/keepers` people pages                     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`                                              | The redirect, or a 403 page for a non-keeper (["The admin guard"](admin-guard.md)) |
 
 - **An address nothing answers is a 404, not a sign-in.** The proxy redirects only an address that matches a page pattern or a `public/` file in `src/lib/page-routes.ts` (generated from `src/app` by `npm run generate:routes`, `scripts/page-routes.ts`; `tests/guards/page-routes.test.ts` fails when it is stale), plus `/workshop/*` and any path with `//`. Anything else passes to the `(unmatched)` catch-all, which draws the 404 in the public frame for a signed-out visitor and in the shell for a signed-in one ([`mb.124-signed-out-404-route-list.md`](../design-decisions/mb.124-signed-out-404-route-list.md)).
-- **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of the
+- **Deny by default.** `PUBLIC_ROUTES` in `src/lib/public-routes.ts` (which `src/proxy.ts` and Sign Out read) is a plain list of the
   pages a signed-out visitor may reach: `/`, the general entry page;
   `/sign-in`; `/forgot-password` and `/reset-password`, since a person who has
   forgotten their password has no session ([`passwords.md`](passwords.md));
@@ -98,9 +98,12 @@ so a page directly in the shell calls `requireSession()` itself; it must
 anyway, since a layout does not re-run on client-side navigation.
 
 - **The return path round trip.** The proxy builds `next` from the request's
-  pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which runs
+  pathname and query, and the public frame's Sign In link builds it from the page
+  the visitor is on (password, passkey and OAuth all end at `/sign-in` or
+  the callback, which read it back), through `signInPath()` (`src/lib/sign-in.ts`), which runs
   `safeReturnPath` first, since a request can really carry a pathname of
-  `//evil.example`. `/sign-in` reads `next` back through the same guard and
+  `//evil.example`. The guard refuses anything not starting with a single `/`,
+  any backslash or line break, and the auth pages themselves. `/sign-in` reads `next` back through the same guard and
   hands it to `SignInPanel` as Better Auth's `callbackURL`, and its
   `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
   destination too. One guard on the way out and on the way back is what makes

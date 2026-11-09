@@ -259,7 +259,7 @@ test('the curator row fits the window at 642px, without overflowing', async ({ p
   // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
-  const more = nav.getByRole('button', { name: /More|Astrology|Deities/ });
+  const more = nav.getByRole('button', { name: 'More', exact: true });
   if ((await more.count()) > 0) {
     await expect(more).toBeVisible();
   } else {
@@ -285,7 +285,7 @@ const rowOverflows = (nav: Locator) =>
     .first()
     .evaluate((list) => list.scrollWidth > list.clientWidth + 1);
 
-test('at a tablet width, More carries the current page when its tab is hidden behind it', async ({
+test('at a tablet width, More stays More and carries the current page when its tab is hidden behind it', async ({
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
@@ -294,14 +294,14 @@ test('at a tablet width, More carries the current page when its tab is hidden be
   // Why More could carry it: on a page whose tab is in the row it does not.
   await page.goto('/curator');
   let nav = await fittedAdminNav(page);
-  const more = nav.getByRole('button', { name: /More/ });
+  const more = nav.getByRole('button', { name: 'More', exact: true });
   await expect(more).toBeVisible();
   await expect(more).not.toHaveAttribute('aria-current');
 
   await page.goto('/curator/zodiac-signs');
   nav = await fittedAdminNav(page);
   await expect(rowLinks(nav).filter({ hasText: 'Astrology' })).toHaveCount(0);
-  await expect(nav.getByRole('button', { name: /Astrology/ })).toHaveAttribute(
+  await expect(nav.getByRole('button', { name: 'More', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -427,3 +427,31 @@ for (const [who, label, path] of [
     expect(tucked).toBeGreaterThan(0);
   });
 }
+
+test('Sign Out on the public compendium loads it again signed out', async ({ page }) => {
+  await signInAgainAs(page, users.member.id);
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/compendium');
+
+  const banner = page.getByRole('banner');
+  await banner.getByRole('button', { name: 'Fixture Person' }).click();
+  await banner.getByRole('button', { name: 'Sign Out', exact: true }).click();
+
+  // The signed-out bar first, so the URL is read after the full load and not before it starts.
+  await expect(banner.getByRole('link', { name: 'Sign In' }).first()).toBeVisible();
+  await expect(banner.getByRole('button', { name: 'Fixture Person' })).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === '/compendium');
+});
+
+test('Sign Out on a coven page loads the landing page', async ({ page }) => {
+  await signInAgainAs(page, users.member.id);
+  await page.setViewportSize(DESKTOP);
+  await page.goto(`/coven/${ALPHA.slug}`);
+
+  const banner = page.getByRole('banner');
+  await banner.getByRole('button', { name: 'Fixture Person' }).click();
+  await banner.getByRole('button', { name: 'Sign Out', exact: true }).click();
+
+  await expect(page).toHaveURL((url) => url.pathname === '/');
+  await expect(banner.getByRole('button', { name: 'Fixture Person' })).toHaveCount(0);
+});

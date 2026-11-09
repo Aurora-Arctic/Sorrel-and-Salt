@@ -4,7 +4,7 @@ import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
-import type { Cursor, PageCount, PageEntry } from '../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
 import { currentWriteTransaction } from './unit-of-work';
 import { hidesColumns, readColumns } from './unread-columns';
@@ -198,9 +198,9 @@ export async function selectFrom(
   try {
     rows = await readKeyed(keyset, page);
   } catch (error) {
-    // The only client text in a page query is the cursor's, so a data
-    // exception here is a cursor that names no position in this list.
-    if (isDataException(error)) throw new InvalidCursor();
+    // A data exception is a bad cursor only when the cursor's own values fail their casts; any other one is the query's fault.
+    if (isDataException(error) && (await cursorWillNotCast(keyset, keyset.request)))
+      throw new InvalidCursor();
     throw error;
   }
   return rows.map(({ row, key, keyId, ...carried }) => ({
@@ -319,6 +319,23 @@ export function existsInIncludingSoftDeleted<TTable extends PgTable>(
 function isDataException(error: unknown): boolean {
   const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;
   return typeof code === 'string' && code.startsWith('22');
+}
+
+/**
+ * Whether a cursor on the request carries a value that will not cast to its part's type. The casts run alone, on the
+ * pool, so the failed page read's aborted transaction is not reused.
+ */
+async function cursorWillNotCast(order: KeyOrder, request: PageRequest): Promise<boolean> {
+  for (const cursor of [request.after, request.before]) {
+    if (!cursor || cursor.key.length !== order.sort.length) continue;
+    try {
+      await db.execute(sql`select ${cursorKey(order, cursor)}`);
+    } catch (error) {
+      if (isDataException(error)) return true;
+      throw error;
+    }
+  }
+  return false;
 }
 
 /**

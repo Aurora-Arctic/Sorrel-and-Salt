@@ -70,10 +70,14 @@ test('a signed-out visitor at an unknown address gets a 404 in the public frame'
   expect(response?.status()).toBe(404);
   expect(new URL(page.url()).pathname).toBe('/nothing-here');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toHaveAttribute(
-    'href',
-    '/sign-in',
-  );
+  // The bar's Sign In carries the address the visitor is on, so signing in comes back to it.
+  const signInHref = await page
+    .getByRole('banner')
+    .getByRole('link', { name: 'Sign In' })
+    .getAttribute('href');
+  const signIn = new URL(signInHref!, 'http://localhost');
+  expect(signIn.pathname).toBe('/sign-in');
+  expect(signIn.searchParams.get('next')).toBe('/nothing-here');
   await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
 });
 

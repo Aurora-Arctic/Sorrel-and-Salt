@@ -103,6 +103,30 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/\\evil.example')).toBeUndefined();
   });
 
+  it('is no return path for a backslash anywhere in the path', () => {
+    expect(safeReturnPath('/compendium\\evil')).toBeUndefined();
+  });
+
+  it.each(['/sign-in', '/sign-in?next=%2Fcoven', '/forgot-password', '/reset-password?token=x'])(
+    'is no return path for an auth page: %s',
+    (path) => {
+      expect(safeReturnPath(path)).toBeUndefined();
+    },
+  );
+
+  it('keeps a path that only starts like an auth page', () => {
+    expect(safeReturnPath('/sign-in-help')).toBe('/sign-in-help');
+  });
+
+  it.each([
+    '/compendium/ingredients/achiote-bixa-orellana',
+    '/help/glossary',
+    '/privacy',
+    '/compendium?q=rose&page=2',
+  ])('keeps a public page: %s', (path) => {
+    expect(safeReturnPath(path)).toBe(path);
+  });
+
   it('is no return path for a path with no leading slash', () => {
     expect(safeReturnPath('coven/hearth')).toBeUndefined();
   });

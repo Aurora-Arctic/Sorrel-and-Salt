@@ -131,12 +131,12 @@ describe('SectionNav', () => {
       expect(more()).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('takes the page you are on, marked current, when it is one of the hidden sections', () => {
+    it('keeps its own name, marked current, when the page you are on is one of the hidden sections', () => {
       pathname.mockReturnValue('/curator/celestial-bodies');
 
       render(<SectionNav label="Test" sections={ITEMS} />);
 
-      expect(more()).toHaveAccessibleName('More: Astrology');
+      expect(more()).toHaveAccessibleName('More');
       expect(more()).toHaveAttribute('aria-current', 'page');
     });
 

@@ -19,6 +19,20 @@ test('a signed-out visit to a protected route lands on /sign-in, keeping its pat
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 });
 
+// The header's Sign In from a public page, then back: the sign-in page sends a signed-in visitor on to `next`.
+test('Sign In from a public page returns to it, query string kept, once signed in', async ({
+  page,
+}) => {
+  await page.goto('/help/glossary?x=1');
+  await page.getByRole('link', { name: 'Sign In' }).click();
+  await expect(page).toHaveURL('/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'));
+
+  await signInAs(page, 'return-to-page@route-protection.test');
+  await page.goto('/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'));
+
+  await expect(page).toHaveURL('/help/glossary?x=1');
+});
+
 // The second layer, by client-side navigation: a cookie the proxy still lets
 // through, for a session revoked since the page loaded, is sent to sign in
 // by the shell layout as a link into it is followed.

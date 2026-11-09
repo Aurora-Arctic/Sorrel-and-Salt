@@ -719,24 +719,19 @@ const SpellBuilder = ({
               </>,
             )}
           </div>
+          <div className="spell-builder__share">
+            <SpellVisibilityField
+              name={name}
+              created={opened !== undefined || createdId !== null}
+              flush={flush}
+            />
+          </div>
           <FormActions
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
             saveReason={saveReason ?? undefined}
-            aside={
-              deletedHrefOf && spellId ? (
-                <BinButton
-                  verb="Delete Spell"
-                  name={name}
-                  onClick={() => {
-                    clearErrors('root');
-                    setDeleting(true);
-                  }}
-                />
-              ) : undefined
-            }
           >
             <SpellStatusField
               name={name}
@@ -744,11 +739,6 @@ const SpellBuilder = ({
               workspaceId={workspaceId}
               spellId={spellId}
               copiedHrefOf={copiedHrefOf}
-            />
-            <SpellVisibilityField
-              name={name}
-              created={opened !== undefined || createdId !== null}
-              flush={flush}
             />
             <SaveStatus
               status={autosave.status}
@@ -760,6 +750,18 @@ const SpellBuilder = ({
               onReload={() => void reloadLatest()}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
+            {deletedHrefOf && spellId && (
+              <div className="form__aside spell-builder__delete">
+                <BinButton
+                  verb="Delete Spell"
+                  name={name}
+                  onClick={() => {
+                    clearErrors('root');
+                    setDeleting(true);
+                  }}
+                />
+              </div>
+            )}
           </FormActions>
           <ConfirmQuestion
             asked={deleting}

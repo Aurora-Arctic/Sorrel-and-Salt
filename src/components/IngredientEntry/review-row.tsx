@@ -32,7 +32,7 @@ export default function ReviewRow({
       <div className="review-row__line">
         <span className="review-row__standing">
           {!standing ? (
-            <output className="badge badge--attention">Needs Review</output>
+            <output className="badge badge--needs-review">Needs Review</output>
           ) : reviewedAt !== null ? (
             // The day is the badge's tip, never drawn beside it.
             <TipMark

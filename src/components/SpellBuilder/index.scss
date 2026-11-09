@@ -2,23 +2,22 @@
 @use '../../scss/mixins' as *;
 @use './panels';
 
-// The Shared switch in the footer's row, beside Mark Complete: the toggle first, its label to the
-// right and the short note under the label, a control's height in all so it stands level with the
-// buttons. A grid rather than the primitive's column, which centres the toggle under its label.
-.spell-builder .form__actions > .switch {
+// The Shared switch on its own line above the footer row, as one left-aligned column: the label,
+// the toggle under it, then the short note with its tip under the toggle. The primitive centres the
+// label and note, so this resets them to the start edge.
+.spell-builder__share > .switch {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   grid-template-areas:
-    'control label'
-    'control note';
-  place-content: center start;
-  align-items: center;
-  gap: 0 space(2);
-  min-block-size: $control-height;
+    'label'
+    'control'
+    'note';
+  justify-content: start;
+  place-items: center start;
+  gap: 0;
 
   .switch__control {
     grid-area: control;
-    min-block-size: 0;
   }
 
   .field__label {
@@ -30,7 +29,16 @@
   .field__hint {
     grid-area: note;
     margin: 0;
+    text-align: start;
   }
+}
+
+// Delete Spell's bin at the footer row's far end, its centre on the buttons' line. `.form__aside`
+// already pushes it to the end; the row's items stretch only when the form stacks them.
+.spell-builder__delete {
+  display: flex;
+  align-items: center;
+  align-self: center;
 }
 
 // A step's handle: a button unboxed as the combobox's chip handle is. `touch-action` is dnd-kit's ask, so a drag by

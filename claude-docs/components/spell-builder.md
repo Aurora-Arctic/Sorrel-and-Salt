@@ -13,7 +13,7 @@
 
 ## Delete
 
-On a saved spell, `SpellDialog` given `canDelete` passes the builder a `deletedHrefOf(title)` (`SpellRecipe/deleted-href.ts`, shared with the card and Quick Look), and the builder draws Delete Spell as the bin icon in `FormActions`' `aside` slot. It asks with a `ConfirmQuestion` using the recipe page's words (`DeleteSpellWords`), since a second `Modal` cannot stack over this one.
+On a saved spell, `SpellDialog` given `canDelete` passes the builder a `deletedHrefOf(title)` (`SpellRecipe/deleted-href.ts`, shared with the card and Quick Look), and the builder draws Delete Spell as the bin icon at the far end of the footer's button row, after Save Status, as a child of `FormActions` in a `.form__aside` wrapper (`.spell-builder__delete`) that pushes it to the end and centres it on the buttons' line. It asks with a `ConfirmQuestion` using the recipe page's words (`DeleteSpellWords`), since a second `Modal` cannot stack over this one.
 
 Confirmed, `useDeleteSpell` sends `deleteSpell` and replaces the address with the list plus `?deleted=<name>` (from `deletedFromHref` when given, else `closeHref`). A refusal shows in the `Notice`. The hook's `pending` is `removed`, which turns off the autosave (timers, focus-out and page-hide flushes) and the save on close so nothing writes to the deleted spell; a refusal lifts it.
 
@@ -50,7 +50,7 @@ There is no merge, diff or history. A conflict is settled by a button, never a p
 
 ## Visibility
 
-`SpellVisibilityField` (`visibility-field.tsx`) is in the footer's row after Mark Complete, so it is in reach with every section shut. It wraps `VisibilitySwitch` (shared with the Record a Working dialog, [`field.md`](field.md)) in its `brief` form, labelled **Shared** (`VISIBILITY_LABELS.workspace` in `GrimoireList/params.ts`, the one constant the tests read). On is the coven (`workspace`), off is private.
+`SpellVisibilityField` (`visibility-field.tsx`) stands on its own line above the footer's button row, so it is in reach with every section shut. It wraps `VisibilitySwitch` (shared with the Record a Working dialog, [`field.md`](field.md)) in its `brief` form, labelled **Shared** (one left-aligned column: the label, the switch under it, the note and its tip under the switch) (`VISIBILITY_LABELS.workspace` in `GrimoireList/params.ts`, the one constant the tests read). On is the coven (`workspace`), off is private.
 
 The rule is DESIGN.md §5's: a complete spell's visibility only widens, and a draft's moves either way ([`grimoire.md`, "A draft's visibility moves either way; a complete spell's only widens"](../design-decisions/grimoire.md#a-drafts-visibility-moves-either-way-a-complete-spells-only-widens)).
 

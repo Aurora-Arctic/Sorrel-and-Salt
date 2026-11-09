@@ -99,9 +99,10 @@ body:has(.card-landing) .backdrop {
   --backdrop-width: clamp(13.333rem, 31.667vw, 30rem);
 }
 
-// The card landing page has no room beside its card on a phone, so the salt stays off it there.
+// The card landing page has no room beside its card on a phone, so the salt stays off it there, and off
+// the page of a card that is invalid or used.
 @media (max-width: #{$shell-phone-width}) {
-  body:has(.card-landing) .backdrop--salt {
+  body:has(.card-landing, .card-landing--closed) .backdrop--salt {
     display: none;
   }
 }
