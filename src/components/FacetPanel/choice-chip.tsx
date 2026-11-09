@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { pressFeedback } from '../../lib/press-feedback';
 import { FieldError } from '../Field/shell';
@@ -121,14 +122,11 @@ export function ChoiceChip<T extends string>({
     return () => window.clearTimeout(limit);
   }, [phase]);
 
-  useEffect(() => {
-    if (phase === 'closed') return undefined;
-    const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) close(false);
-    };
-    document.addEventListener('pointerdown', outside);
-    return () => document.removeEventListener('pointerdown', outside);
-  }, [phase]);
+  useDismiss({
+    active: phase !== 'closed',
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: () => close(false),
+  });
 
   const shown = phase === 'opening' || phase === 'open';
 

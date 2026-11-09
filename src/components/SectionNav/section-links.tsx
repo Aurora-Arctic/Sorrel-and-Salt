@@ -12,6 +12,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { isAtPath } from '../../lib/at-path';
 import { FacetCount } from '../FacetPanel/facet-count';
 import { ChevronIcon } from '../IconTip/icons';
@@ -160,23 +161,15 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
   );
   const hidden = measuring ? undefined : extras.find((section) => isCurrent(pathname, section));
 
-  useEffect(() => {
-    if (!open) return;
-    const away = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpenAt(null);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+  useDismiss({
+    active: open,
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: () => setOpenAt(null),
+    onEscape: () => {
       setOpenAt(null);
       button.current?.focus();
-    };
-    document.addEventListener('pointerdown', away);
-    document.addEventListener('keydown', escape);
-    return () => {
-      document.removeEventListener('pointerdown', away);
-      document.removeEventListener('keydown', escape);
-    };
-  }, [open]);
+    },
+  });
 
   const apart = (section: SectionNavItem) => (section.apart ? ' section-nav__item--apart' : '');
 
