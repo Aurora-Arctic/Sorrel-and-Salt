@@ -716,10 +716,13 @@ test(
     const opened = await visitor.goto(path);
     expect(opened?.status()).toBe(200);
     expect(new URL(visitor.url()).pathname).toBe(path);
-    for (const name of ['Create Account', 'Sign In']) {
+    for (const [name, mode] of [
+      ['Create Account', '&mode=sign-up'],
+      ['Sign In', ''],
+    ]) {
       await expect(visitor.getByRole('main').getByRole('link', { name })).toHaveAttribute(
         'href',
-        `/sign-in?next=${encodeURIComponent(path)}`,
+        `/sign-in?next=${encodeURIComponent(path)}${mode}`,
       );
     }
     await expect(visitor.getByRole('main').getByText(/keeper/i)).toHaveCount(0);

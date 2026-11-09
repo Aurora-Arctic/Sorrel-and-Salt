@@ -41,10 +41,12 @@ const UNVERIFIED =
 const PAUSED =
   "Keeper changes are paused, so this invitation can't be accepted until they are resumed.";
 
-const SignedOutView = () => <Page status="signed-out" next={INVITATION} configured={PROVIDERS} />;
+const SignedOutView = () => (
+  <Page status="signed-out" lead="sign-in" next={INVITATION} configured={PROVIDERS} />
+);
 
 const signedOutCardNode = (
-  <Page status="signed-out" next="/i/workshop" configured={PROVIDERS} card />
+  <Page status="signed-out" lead="sign-up" next="/i/workshop" configured={PROVIDERS} card />
 );
 
 const checkYourInboxNode = <Page status="unverified" emailHref={EMAIL_PAGE} />;

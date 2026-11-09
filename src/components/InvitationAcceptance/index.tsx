@@ -143,13 +143,16 @@ const InvitationAcceptance = ({
       {props.status === 'signed-out' && (
         // A `div`: each choice draws its dialog beside it, and a dialog in a `p` is invalid HTML.
         <div className="invitation-acceptance__actions invitation-acceptance__choices">
-          {(['sign-up', 'sign-in'] as const).map((mode) => (
+          {(props.lead === 'sign-up'
+            ? (['sign-up', 'sign-in'] as const)
+            : (['sign-in', 'sign-up'] as const)
+          ).map((mode) => (
             <SignInDialog
               key={mode}
               next={props.next}
               configured={props.configured}
               label={mode === 'sign-up' ? 'Create Account' : 'Sign In'}
-              className="btn btn--solid"
+              className={mode === props.lead ? 'btn btn--solid' : 'btn'}
               mode={mode}
               ledes={props.card ? undefined : ADDRESS_LEDES}
               signUpLandsOnNext

@@ -74,7 +74,17 @@ describe('the invitation panel page', () => {
       next: '/invite/abc',
       configured: ['google'],
       card: false,
+      lead: 'sign-in',
     });
+  });
+
+  // A printed card is handed to someone new, so it leads with Create Account; an address invitation leads with Sign In.
+  it('leads a card with Create Account', async () => {
+    getSession.mockResolvedValue(null);
+
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+
+    expect(shown[0]).toMatchObject({ status: 'signed-out', card: true, lead: 'sign-up' });
   });
 
   // The address matched before the verification check, so the account is the invitee's, waiting on its message.

@@ -1,7 +1,10 @@
 import type { Route } from 'next';
 import { cache } from 'react';
 import InvitationAcceptance from '../../../components/InvitationAcceptance';
-import type { InvitationAcceptanceProps } from '../../../components/InvitationAcceptance/types';
+import type {
+  InvitationAcceptanceProps,
+  SignedOutLead,
+} from '../../../components/InvitationAcceptance/types';
 import type { PageHeaderProps } from '../../../components/PageHeader/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { getSession } from '../../../lib/request-session';
@@ -23,6 +26,9 @@ const CARD_LANDING = '/coven/new' satisfies Route;
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
 // `getSession()`, not `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect would drop the reason (claude-docs/auth/admin-users.md, "Inviting a keeper").
+// The one place a signed-out invitation's leading choice is decided (claude-docs/components/invitation-acceptance.md).
+const leadOf = (card: boolean): SignedOutLead => (card ? 'sign-up' : 'sign-in');
+
 export default async function InvitationPanel({
   token,
   here,
@@ -40,11 +46,13 @@ export default async function InvitationPanel({
   let panel: InvitationAcceptanceProps;
   if (!session) {
     // Nothing of the invitation is read until a session holds the link.
+    const card = here.startsWith('/i/');
     panel = {
       status: 'signed-out',
       next: here,
       configured: configuredProviders(),
-      card: here.startsWith('/i/'),
+      card,
+      lead: leadOf(card),
     };
   } else {
     const standing = await standingOf(session, token);

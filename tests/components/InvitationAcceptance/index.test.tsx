@@ -49,6 +49,7 @@ describe('InvitationAcceptance, for a card', () => {
         render(
           <InvitationAcceptance
             status="signed-out"
+            lead={card ? 'sign-up' : 'sign-in'}
             card={card}
             next="/invite/abc"
             configured={['google']}
@@ -137,7 +138,14 @@ describe('InvitationAcceptance', () => {
   // Two equal choices, each a link to the sign-in page back to the invitation, for a press meant for
   // a new tab or a browser without the script.
   it('offers a signed-out visitor Create Account and Sign In, both back to the link, and no Accept', () => {
-    render(<InvitationAcceptance status="signed-out" next="/invite/abc" configured={['google']} />);
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
 
     expect(screen.getByRole('link', { name: 'Create Account' })).toHaveAttribute(
       'href',
@@ -150,8 +158,36 @@ describe('InvitationAcceptance', () => {
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
   });
 
+  // The choice the invitation leads with comes first in the document, so the tab order matches what is seen.
+  it.each([
+    ['sign-up', 'Create Account', 'Sign In'],
+    ['sign-in', 'Sign In', 'Create Account'],
+  ] as const)('puts the %s choice first', (lead, first, second) => {
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead={lead}
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+
+    const firstLink = screen.getByRole('link', { name: first });
+    const secondLink = screen.getByRole('link', { name: second });
+    expect(
+      firstLink.compareDocumentPosition(secondLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('opens the dialog over the invitation in the mode each choice names', async () => {
-    render(<InvitationAcceptance status="signed-out" next="/invite/abc" configured={['google']} />);
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
 
     await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Create Account' })));
 
@@ -180,7 +216,14 @@ describe('InvitationAcceptance', () => {
     vi.stubGlobal('location', { assign });
     signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
     getSession.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-    render(<InvitationAcceptance status="signed-out" next="/invite/abc" configured={['google']} />);
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
     await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Create Account' })));
     const dialog = screen.getByRole('dialog');
     await act(async () =>
@@ -430,7 +473,15 @@ describe('InvitationAcceptance, recording a refused open', () => {
         return { recordCardAttempt: true };
       },
     );
-    render(<InvitationAcceptance status="signed-out" card next="/i/abc" configured={['google']} />);
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-up"
+        card
+        next="/i/abc"
+        configured={['google']}
+      />,
+    );
 
     await act(async () => {});
     expect(sent).toBe(0);

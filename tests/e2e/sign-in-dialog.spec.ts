@@ -146,12 +146,11 @@ test.describe('the sign-in dialog', () => {
     const main = page.getByRole('main');
     const createAccount = main.getByRole('link', { name: 'Create Account' });
     const signIn = main.getByRole('link', { name: 'Sign In' });
-    for (const choice of [createAccount, signIn]) {
-      await expect(choice).toHaveAttribute(
-        'href',
-        `/sign-in?next=${encodeURIComponent(INVITATION)}`,
-      );
-    }
+    await expect(createAccount).toHaveAttribute(
+      'href',
+      `/sign-in?next=${encodeURIComponent(INVITATION)}&mode=sign-up`,
+    );
+    await expect(signIn).toHaveAttribute('href', `/sign-in?next=${encodeURIComponent(INVITATION)}`);
     // Equal choices: the same size, side by side on this desktop width.
     const [a, b] = [await createAccount.boundingBox(), await signIn.boundingBox()];
     expect(a!.width).toBeCloseTo(b!.width, 0);
@@ -228,8 +227,9 @@ test.describe('the sign-in dialog', () => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(INVITATION);
     const main = page.getByRole('main');
-    const a = await main.getByRole('link', { name: 'Create Account' }).boundingBox();
-    const b = await main.getByRole('link', { name: 'Sign In' }).boundingBox();
+    // An address invitation leads with Sign In.
+    const a = await main.getByRole('link', { name: 'Sign In' }).boundingBox();
+    const b = await main.getByRole('link', { name: 'Create Account' }).boundingBox();
     expect(b!.y).toBeGreaterThanOrEqual(a!.y + a!.height);
 
     // The email form is the dialog's widest content; it still fits the phone with a gutter each side.
