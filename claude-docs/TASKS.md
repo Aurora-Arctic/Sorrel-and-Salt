@@ -111,7 +111,7 @@ The `## M… —` sections that followed the execution order live in [`tasks/`](
 | [`tasks/v1/m14.md`](tasks/v1/m14.md) | M14 — Sweep close-out additions · _13 tasks · 59.5 hours_                                                     |
 | [`tasks/v1/m15.md`](tasks/v1/m15.md) | M15 — Launch additions · _79 tasks · 309 hours_                                                               |
 | [`tasks/v1/m16.md`](tasks/v1/m16.md) | M16 — More login options · _11 tasks · 30 hours_                                                              |
-| [`tasks/v1/m17.md`](tasks/v1/m17.md) | M17 — Fast follow · _27 live tasks · 157.5 hours · 1 retired (M17.5)_                                         |
+| [`tasks/v1/m17.md`](tasks/v1/m17.md) | M17 — Fast follow · _27 live tasks · 167.5 hours · 1 retired (M17.5)_                                         |
 | [`tasks/v1/m7a.md`](tasks/v1/m7a.md) | M7.A — PR gates · _1 task · 1 hour · unscheduled by design_                                                   |
 | [`tasks/v1/mb.md`](tasks/v1/mb.md)   | MB — Bugfixes and gap tasks                                                                                   |
 | [`tasks/v1/mw.md`](tasks/v1/mw.md)   | MW — Wave close-out · _2 done, 12 retired, 1 live: MW.15 at 3 hours_                                          |
