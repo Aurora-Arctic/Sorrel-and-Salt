@@ -4,25 +4,11 @@ import type { Route } from 'next';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { usePendingNavigation, PendingLink } from '../../lib/navigation';
 import { longMinuteInZone } from '../../lib/utc';
-import { CollapsibleSection } from '../CollapsibleSection';
-import IconTip from '../IconTip';
-import { HistoryIcon } from '../IconTip/icons';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
-import ConfirmedAction from '../ConfirmedAction';
-import {
-  Ledger,
-  PauseFields,
-  Until,
-  endOf,
-  pauseReady,
-  stands,
-} from '../UserDetail/access-pause-parts';
-import type { PauseSpan } from '../UserDetail/types';
-import { LocalDay } from './day-range';
+import { stands } from '../UserDetail/access-pause-parts';
+import PausePanel from '../UserDetail/pause-panel';
+import type { PausePanelCopy } from '../UserDetail/types';
 import type { SupportTimeoutEntry } from './types';
-import './timeout-panel.scss';
 
 // A keeper's time-out of a sender: barred from the support form until an end, or with no end date until lifted. One panel
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
@@ -56,132 +42,34 @@ const LiftDocument = graphql(`
   }
 `);
 
-const NOTE_HINT = 'Seen by staff only, up to 500 characters.';
-
-const LiftButton = ({
-  timeout,
-  name,
-}: {
-  timeout: SupportTimeoutEntry;
-  name: string;
-}): ReactElement => (
-  <ConfirmedAction
-    label="Lift"
-    accessibleName="Lift"
-    confirmLabel="Lift Time-Out"
-    openClass="btn btn--quiet btn--small"
-    title="Lift the Time-Out?"
-    question={
-      <>
-        <strong>{name}</strong> will be able to send support requests again once you confirm.
-      </>
-    }
-    busy="Lifting"
-    confirmClass="btn btn--destructive"
-    announcement="Time-out lifted."
-    inModal
-    send={() => graphqlRequest(LiftDocument, { id: timeout.id })}
-  />
-);
-
-const StandingCard = ({
-  timeout,
-  name,
-}: {
-  timeout: SupportTimeoutEntry;
-  name: string;
-}): ReactElement => (
-  <div className="timeout-panel__card">
-    <p className="timeout-panel__head">
-      <span className="badge badge--caution">Timed Out</span>
-      <span>
-        <Until until={timeout.until} />
-      </span>
-    </p>
-    <p className="timeout-panel__muted">{timeout.note}</p>
-    <p className="timeout-panel__muted">
-      {timeout.setBy ? `Set by ${timeout.setBy.name}, ` : 'Set '}
-      <LocalDay at={timeout.createdAt} />
-    </p>
-    <LiftButton timeout={timeout} name={name} />
-  </div>
-);
+const copyFor = (name: string): PausePanelCopy => ({
+  noteHint: 'Seen by staff only, up to 500 characters.',
+  notePlaceholder: 'Why',
+  messageLabel: 'Message to User',
+  messagePlaceholder: 'For them',
+  pauseQuestion: (end) =>
+    end
+      ? `They cannot send a support request until ${longMinuteInZone(end)}. You can lift it sooner.`
+      : 'They cannot send a support request until you lift the time-out.',
+  liftQuestion: () => (
+    <>
+      <strong>{name}</strong> will be able to send support requests again once you confirm.
+    </>
+  ),
+  paused: 'Sender timed out.',
+  lifted: 'Time-out lifted.',
+  badge: 'Timed Out',
+  pauseLabel: 'Time Out Sender',
+  pauseConfirm: 'Time Out',
+  pauseTitle: (who) => `Time Out ${who}?`,
+  pauseBusy: 'Timing Out',
+  liftLabel: 'Lift',
+  liftConfirm: 'Lift Time-Out',
+  liftTitle: 'Lift the Time-Out?',
+  earlierTitle: 'Earlier Time-Outs',
+});
 
 type TimeoutTarget = { userId: string } | { requestId: string };
-
-const TimeoutForm = ({ target, name }: { target: TimeoutTarget; name: string }): ReactElement => {
-  const { refresh } = usePendingNavigation();
-  const [span, setSpan] = useState<PauseSpan>('day');
-  const [day, setDay] = useState('');
-  const [note, setNote] = useState('');
-  const [message, setMessage] = useState('');
-  const discard = useDiscardGuard(
-    span !== 'day' || day !== '' || note.trim() !== '' || message.trim() !== '',
-  );
-
-  // The end is worked out when the question opens or the answer is sent, never kept in state.
-  const end = endOf(span, day, new Date());
-  const ready = pauseReady(span, day) && note.trim() !== '' && message.trim() !== '';
-
-  return (
-    <div className="form">
-      <PauseFields
-        span={span}
-        onSpan={setSpan}
-        day={day}
-        onDay={setDay}
-        note={note}
-        onNote={setNote}
-        noteHint={NOTE_HINT}
-        notePlaceholder="Why"
-        noteRequired
-        message={message}
-        onMessage={setMessage}
-        messageLabel="Message to User"
-        messagePlaceholder="For them"
-      />
-      <div className="form__actions">
-        <ConfirmedAction
-          label="Time Out Sender"
-          accessibleName="Time Out Sender"
-          confirmLabel="Time Out"
-          openClass="btn btn--quiet"
-          disabled={!ready}
-          title={`Time Out ${name}?`}
-          question={
-            end
-              ? `They cannot send a support request until ${longMinuteInZone(end)}. You can lift it sooner.`
-              : 'They cannot send a support request until you lift the time-out.'
-          }
-          busy="Timing Out"
-          confirmClass="btn btn--destructive"
-          announcement="Sender timed out."
-          inModal
-          send={() => {
-            const until = endOf(span, day, new Date());
-            if (until === undefined) return Promise.reject(new Error('No end chosen'));
-            const fields = {
-              until: until?.toISOString() ?? null,
-              note: note.trim(),
-              message: message.trim(),
-            };
-            return 'requestId' in target
-              ? graphqlRequest(TimeOutSignedOutDocument, { requestId: target.requestId, ...fields })
-              : graphqlRequest(TimeOutDocument, { userId: target.userId, ...fields });
-          }}
-          onSent={() => {
-            setSpan('day');
-            setDay('');
-            setNote('');
-            setMessage('');
-            refresh();
-          }}
-        />
-      </div>
-      {discard.asking && <DiscardQuestion guard={discard} />}
-    </div>
-  );
-};
 
 const TimeoutPanel = ({
   target,
@@ -197,50 +85,32 @@ const TimeoutPanel = ({
   // Read once per render of the panel: a time-out that lapses while it is open shows as past
   // on the next.
   const [now] = useState(() => Date.now());
-  const [folded, setFolded] = useState(false);
   const standing = timeouts.find((timeout) => stands(timeout, now));
   const earlier = timeouts.filter((timeout) => timeout !== standing);
 
   return (
-    <div className="timeout-panel">
-      <CollapsibleSection
-        title="Time-Out"
-        summary={
-          <span className="timeout-panel__summary">
-            {standing && <span className="badge badge--caution">Timed Out</span>}
-            <span className="timeout-panel__muted">
-              {standing ? (
-                <>
-                  · <Until until={standing.until} />
-                </>
-              ) : (
-                '· none'
-              )}
-            </span>
-          </span>
-        }
-        info={
-          earlier.length > 0 && earlierHref ? (
-            <IconTip tip="Earlier Time-Outs">
-              <PendingLink className="timeout-panel__icon" href={earlierHref}>
-                <HistoryIcon />
-                <span className="visually-hidden">Earlier Time-Outs</span>
-              </PendingLink>
-            </IconTip>
-          ) : undefined
-        }
-        fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
-      >
-        {standing ? (
-          <StandingCard timeout={standing} name={name} />
-        ) : (
-          <TimeoutForm target={target} name={name} />
-        )}
-        {earlier.length > 0 && !earlierHref && (
-          <Ledger pauses={earlier} title="Earlier Time-Outs" />
-        )}
-      </CollapsibleSection>
-    </div>
+    <PausePanel
+      title="Time-Out"
+      name={name}
+      standing={standing}
+      earlier={earlier}
+      copy={copyFor(name)}
+      noteRequired
+      earlierHref={earlierHref}
+      pause={(until, note, message) => {
+        const fields = {
+          until: until?.toISOString() ?? null,
+          note: note ?? '',
+          message: message ?? '',
+        };
+        return 'requestId' in target
+          ? graphqlRequest(TimeOutSignedOutDocument, { requestId: target.requestId, ...fields })
+          : graphqlRequest(TimeOutDocument, { userId: target.userId, ...fields });
+      }}
+      lift={() =>
+        standing ? graphqlRequest(LiftDocument, { id: standing.id }) : Promise.resolve()
+      }
+    />
   );
 };
 

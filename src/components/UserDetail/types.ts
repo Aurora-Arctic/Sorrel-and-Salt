@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { WorkspaceRole } from '@/modules/coven';
 import type { SupportTimeoutEntry } from '../SupportRequests/types';
@@ -101,6 +102,17 @@ export interface PausePanelCopy {
   liftQuestion: (until: Date | null) => ReactNode;
   paused: string;
   lifted: string;
+  /** The badge on a standing pause. */
+  badge: string;
+  pauseLabel: string;
+  pauseConfirm: string;
+  pauseTitle: (name: string) => string;
+  pauseBusy: string;
+  liftLabel: string;
+  liftConfirm: string;
+  liftTitle: string;
+  /** The heading over the earlier pauses. */
+  earlierTitle: string;
 }
 
 export interface PausePanelProps {
@@ -117,4 +129,6 @@ export interface PausePanelProps {
   pause: (until: Date | null, note: string | undefined, message: string | null) => Promise<unknown>;
   lift: () => Promise<unknown>;
   onChanged?: () => void;
+  /** Where the earlier pauses are read in full; they are then not listed beneath the panel. */
+  earlierHref?: Route;
 }

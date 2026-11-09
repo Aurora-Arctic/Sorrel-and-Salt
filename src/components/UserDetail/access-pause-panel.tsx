@@ -4,7 +4,7 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { longMinuteInZone } from '../../lib/utc';
-import { stands } from './access-pause-parts';
+import { stands, PAUSE_WORDS } from './access-pause-parts';
 import PausePanel from './pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from './types';
 
@@ -42,6 +42,7 @@ const copyFor = (name: string): PausePanelCopy => ({
       <strong>{name}</strong> will reach the whole site again once you confirm.
     </>
   ),
+  ...PAUSE_WORDS,
   paused: 'Access paused.',
   lifted: 'Pause lifted.',
 });
