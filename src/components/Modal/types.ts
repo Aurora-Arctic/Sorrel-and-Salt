@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ReactNode, Ref, RefObject } from 'react';
+import type { PreloadHandlers } from '../../lib/types';
 
 /** What a modal's head says: a title alone for an add dialog, an eyebrow over the entry's saved name for an edit dialog (claude-docs/components/modal.md, "An edit dialog's head"). */
 export interface ModalHeading {
@@ -52,6 +53,8 @@ export interface ModalButtonProps {
   size?: ModalProps['size'];
   ref?: Ref<HTMLButtonElement>;
   onOpen?: () => void;
+  /** Starts loading what the modal holds as a person reaches for the button (claude-docs/components/modal.md). */
+  preload?: PreloadHandlers;
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
 }

@@ -20,7 +20,7 @@ import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
-import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';

@@ -21,6 +21,7 @@ export default function ModalButton({
   size,
   ref,
   onOpen,
+  preload,
   children,
 }: ModalButtonProps): ReactElement {
   const [open, setOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function ModalButton({
       className={className}
       type="button"
       aria-label={ariaLabel}
+      {...preload}
       onClick={() => {
         onOpen?.();
         setOpen(true);

@@ -31,7 +31,6 @@ import './index.scss';
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
 export { ComboboxSelect } from './select';
-export { ComboboxSortableEntries } from './sortable';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`: the hook owns the ARIA and the keyboard, the markup and Sass are ours (claude-docs/components/combobox.md).
 // It changes no text itself, and free text is the default; see claude-docs/components/combobox.md.

@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ReactNode, Ref } from 'react';
+import type { PreloadHandlers } from '../../lib/types';
 import type { ModalHeading } from '../Modal/types';
 
 export interface IconTipProps {
@@ -17,6 +18,8 @@ export interface EditLinkProps {
   heading: ModalHeading;
   /** The link's element, for a caller that returns the focus to it once a dialog it opened closes. */
   ref?: Ref<HTMLAnchorElement>;
+  /** Starts the dialog's late-loading parts when the pointer, focus or a press reaches the link. */
+  preload?: PreloadHandlers;
 }
 
 export interface LiddedEyeIconProps {

@@ -2,6 +2,7 @@
 
 `src/components/Field/` draws one form field's block once, tied together by id. Props are in `types.ts`; this page holds the rules the types do not.
 
+- **Import a part from its own file** (`Field/shell`, `Field/text-field`, …), not from the barrel, in any component a page loads first. A barrel counts every re-export, and `tests/guards/first-load-scripts.test.ts` fails a first-load file that reaches react-hook-form or zod through it.
 - **The shell** (`FieldShell`, `fieldDescription`) knows no form library and has no hook, so a plain-state form (NameForm, EmailForm) or a server component renders it around its own control. `TextField` and `SelectField` need a `<FormProvider>`.
 - `SuggestField`, `MultiSelectField`, `ListField` and `ToggleField` stay in `IngredientForm/fields.tsx` on the same shell, and `CupboardEntryForm` imports two of them from there. The date field is [`date-field.md`](date-field.md).
 - Field has no size prop: the StockDialog's shorter Add Form wears `.field--compact` itself (`_primitives.scss`). Field has no stylesheet; the primitives are in [`styling.md`](../styling.md), "Form fields".

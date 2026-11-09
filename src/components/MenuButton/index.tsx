@@ -91,6 +91,7 @@ export default function MenuButton({
   menuLabel,
   ref,
   state,
+  preload,
   ...choices
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
@@ -215,6 +216,7 @@ export default function MenuButton({
         type="button"
         className={className}
         data-state={state}
+        {...preload}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

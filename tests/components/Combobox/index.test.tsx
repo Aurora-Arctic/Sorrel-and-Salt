@@ -5,8 +5,8 @@ import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
   ComboboxSelect,
-  ComboboxSortableEntries,
 } from '@/components/Combobox';
+import { ComboboxSortableEntries } from '@/components/Combobox/sortable';
 import type {
   ComboboxOption,
   ComboboxSortableEntry,
