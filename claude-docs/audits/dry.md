@@ -286,7 +286,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** tests/components/Combobox/match.test.ts, Combobox, IngredientForm, SpellBuilder, CategoryPicker, FacetCombobox.
 
 - **Estimate:** 3 hours
-- **Status:** Fixed. Pickers fold text through `src/lib/text.ts`, so a Turkish-locale browser matches a capital I as the others do (MoonPhaseIcon and JarShelf had copies too); regression tests in `tests/components/Combobox/typeahead.test.tsx` and `tests/components/SpellBuilder/steps.test.tsx`. `tests/guards/text-folding.test.ts` refuses a hand-written fold in `src/components/`, with an allowlist of EmailForm and CompendiumList facets still to move.
+- **Status:** Fixed. Pickers fold text through `src/lib/text.ts`, so a Turkish-locale browser matches a capital I as the others do (MoonPhaseIcon and JarShelf had copies too); regression tests in `tests/components/Combobox/typeahead.test.tsx` and `tests/components/SpellBuilder/steps.test.tsx`. `tests/guards/text-folding.test.ts` refuses a hand-written fold in `src/components/`.
 
 ### D-4: AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted
 
@@ -3469,7 +3469,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/PasswordSection/`, `tests/components/AdminCards/`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Fixed. `saveFile` in `src/lib/save-file.ts` revokes the download URL only after the browser has taken it, and two-factor recovery codes use it; regression test "keeps the download link alive after the click" in `tests/components/PasswordSection/two-factor.test.tsx`. `AdminCards/save-file.ts` remains as a re-export until its importers move.
+- **Status:** Fixed. `saveFile` in `src/lib/save-file.ts` revokes the download URL only after the browser has taken it, and two-factor recovery codes use it; regression test "keeps the download link alive after the click" in `tests/components/PasswordSection/two-factor.test.tsx`. Business and keeper cards use it too.
 
 ### D-145: Exports used by nothing outside their own file, and exports under two spellings
 
@@ -5143,46 +5143,6 @@ These ideas were looked at and not recorded as findings, because the code shows 
 - Error and not-found boundaries copied across route groups: Next.js needs one file per route segment, so the files cannot be shared; each is a few lines.
 - Email templates repeating support-title and pause-end copy-building: each template is the text of one email, and the shared parts are already one line each.
 
-## Draft rules
+## Rules from this audit
 
-Drafts for the owner to review. None of these binds yet. An accepted rule moves to the home named beside it, and its guard, where it has one, is already on this branch. Each rule comes from a pattern the audit found more than once.
-
-### Before writing code
-
-1. **Search for the shared piece before writing one.** Before adding a helper, hook, component, mixin or test helper, grep `src/lib/`, `src/components/`, `src/scss/_mixins.scss`, `tests/support/` and `tests/e2e/` for its job, not only its name. Most findings were a second copy of something that already existed (D-3, D-14, D-18, D-144). Home: `CLAUDE.md`, "Conventions".
-2. **One name, one meaning.** Never export a function from `src/lib` under a name another file already exports. Two `covenSlugOf` functions did different jobs, and the wrong one, which compiled, sent a pause error on `/coven/new` to `/coven-paused/new` (D-32). Guard: `tests/guards/lib-names.test.ts`. Home: `CLAUDE.md`, "Conventions".
-3. **The second copy is the time to share.** When a block is about to be written a second time, and both copies would have to change together, move it into a shared piece instead. A third copy is never written. Copies drifted in every high finding: one copy got a fix and the others did not (D-1, D-24, D-28). Home: `CLAUDE.md`, "Conventions".
-
-### The shared pieces to use
-
-4. **Pages** build metadata with `publicPageMetadata` (public pages) or `pageTitle` (signed-in pages) from `src/lib/page-metadata.ts`, turn a missing row into a 404 with `orNotFound` from `src/lib/or-not-found.ts`, and read a numbered list with `readNumberedPage` or `readCursorPage` from `src/lib/numbered-page.ts`. Guards: `page-metadata`, `not-found`, `pagination`. Home: `.claude/rules/components.md` (or a pages section beside it).
-5. **Failure text** comes from `failureMessage` in `src/lib/graphql-failure.ts`, and the sign-in sentences come from `src/lib/auth-messages.ts`. A component never maps a GraphQL error code to a sentence itself. Guards: `failure-message`, `auth-messages`. Home: `.claude/rules/components.md`.
-6. **Browser behaviour has one home each:**
-   - outside-press dismissal: `useDismiss` (`src/lib/use-dismiss.ts`)
-   - reduced motion and the 400 ms fade limit: `prefersReducedMotion` and `FADE_LIMIT_MS` (`src/lib/motion.ts`)
-   - matching typed text: `fold` (`src/lib/text.ts`)
-   - showing a quantity: `formatQuantity` (`src/lib/quantity.ts`)
-   - downloading a file: `saveFile` (`src/lib/save-file.ts`)
-   - a drag handle: `GripHandle` (`src/components/GripHandle/`)
-
-   Guards: `dismissal`, `reduced-motion`, `text-folding`, `sortable-wiring`. Home: `.claude/rules/components.md`.
-
-7. **Breakpoints** are written with the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`), never as a hand-written `@media` width query. Guard: `breakpoints`. Home: `.claude/rules/components.md`.
-8. **Tests:**
-   - the shared values (`ORIGIN`, `MAILPIT_URL`, `WORKSPACE_ID`, `USER_ID`, `PASSWORD`) come from `tests/support/constants.ts`
-   - a Vitest database client opens through `useTestDatabase` (`tests/support/db/database.ts`)
-   - an e2e client opens through `withE2eSql` (`tests/e2e/database.ts`)
-   - a coven is inserted with `insertWorkspace` (`tests/support/db/insert-workspace.ts`)
-   - a held server answer uses `holdServerAnswers` (`tests/e2e/hold-server-answers.ts`)
-
-   Guards: `test-constants`, `test-database-client`, `workspace-inserts`, `e2e-shared-helpers`. Home: `.claude/rules/testing.md`.
-
-### When adding a shared piece
-
-9. **A shared piece lands with its guard, in the same commit.** The guard is seen failing once with a copy put back. If some callers can't move yet, they go in an allowlist inside the guard, and the allowlist is empty before the task's PR opens. Each guard this branch added was seen failing that way before its lane committed. Home: `CLAUDE.md`, "The sweep-task rule" (as its code-sweep half).
-10. **Move every caller, not only the ones in the files at hand.** When several agents fix one finding, the plan gives the whole finding, every caller included, to one agent. Five findings here were left half-done because their callers fell in another agent's files (D-3, D-14, D-18, D-19, D-144). Home: `claude-docs/agent-skills.md`, or the audit skill if one is written.
-
-### When writing an audit
-
-11. **A consequence is stated only once it is checked.** An audit's "why it matters" says what the copies are and how they differ. A consequence for users (a crash, a 404, a wrong figure) is written only when the entry or the code shows it. Two in three of the first-draft reasons here had to be corrected. Home: `.claude/rules/writing.md`.
-12. **An estimate is calibrated against finished tasks of the same kind.** Before giving hours, find two or three Done tasks of similar size (for de-duplication, MB.206 → MB.226) and scale to them. The first estimates here were about four times too high, for this task and its clean-up tasks alike. Home: `.claude/rules/task-tracking.md`.
+The rules that keep these findings from coming back live in `CLAUDE.md` ("Share, never copy" and "The sweep-task rule"), `.claude/rules/components.md` ("Shared pieces"), `.claude/rules/testing.md` ("Fixtures"), `.claude/rules/writing.md` ("Audits"), `.claude/rules/task-tracking.md` ("Estimating an audit's findings") and `claude-docs/agent-skills.md` ("Splitting work among agents").

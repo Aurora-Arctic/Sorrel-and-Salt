@@ -32,6 +32,22 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 - **No print styles anywhere except the spell recipe view.** `_print.scss` is scoped to that one view.
 - **A category group's colours are data, not tokens**: `color` are hexes on the row, contrast-checked on write, as DESIGN.md §5 argues; the seeded pairs live only in `src/db/seed/category-groups.ts`, and no Sass token restates them (claude-docs/styling.md, "Category-group colours").
 
+## Shared pieces
+
+Each job below has one shared piece, and a component or page uses it, never a copy of its own. Where a guard is named, a test in `tests/guards/` fails a copy.
+
+- **Page metadata**: `publicPageMetadata` for a public page, `pageTitle` for a signed-in one (`src/lib/page-metadata.ts`). Guard: `page-metadata`.
+- **A missing row becomes a 404** through `orNotFound` (`src/lib/or-not-found.ts`). Guard: `not-found`.
+- **A list page read from the URL**: `readNumberedPage` or `readCursorPage` (`src/lib/numbered-page.ts`). Guard: `pagination`.
+- **Failure text**: `failureMessage` (`src/lib/graphql-failure.ts`). A component never turns a GraphQL error code into a sentence itself. The sign-in sentences are in `src/lib/auth-messages.ts`. Guards: `failure-message`, `auth-messages`.
+- **Closing on a press outside**: `useDismiss` (`src/lib/use-dismiss.ts`). Guard: `dismissal`.
+- **Reduced motion and the 400 ms fade limit**: `prefersReducedMotion` and `FADE_LIMIT_MS` (`src/lib/motion.ts`). Guard: `reduced-motion`.
+- **Matching typed text**: `fold` (`src/lib/text.ts`). Guard: `text-folding`.
+- **Showing a quantity**: `formatQuantity` (`src/lib/quantity.ts`).
+- **Downloading a file**: `saveFile` (`src/lib/save-file.ts`).
+- **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Guard: `sortable-wiring`.
+- **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`), never a hand-written `@media` width query. Guard: `breakpoints`.
+
 ## Destructive controls
 
 - **A thing's Delete or Remove lives in its edit dialog, where it has one**: nowhere on its row or card, and not in its Quick Look, as a bin or as a button beside Edit. A thing with no edit dialog keeps a lone bin that asks before it acts. The rule is about a lone bin on a row or card: a More menu that already holds other choices may still list Delete or Remove among them, asking in place (claude-docs/components/icon-tip.md, "Contracts"; claude-docs/components/coven-cards.md).

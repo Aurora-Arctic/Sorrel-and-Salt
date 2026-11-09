@@ -40,6 +40,10 @@ A comment is read in the editor, by someone with the code and nothing else open.
 - **A schema name, a Postgres term in a migration note, a GraphQL type** keeps its proper name, with a plain clause beside it the first time.
 - **A test's `describe` and `it` strings** name the behaviour; they follow the Testing rules, not this one.
 
+## Audits
+
+An audit's finding says what it found and how sure that is. Its "why it matters" says what the copies are and how they differ. A consequence for users, such as a crash, a 404 or a wrong figure, goes in only when the code or a test shows it.
+
 ## What this does not change
 
 - A doc still stands on its own and gives the reason for a constraint in a clause (claude-docs/README.md, "One home per fact").

@@ -71,14 +71,14 @@ sentences, the domain invariants, the testing and convention rules, a
 summary of task tracking, and the token-spending rules. It stays within 20 KB. The long forms are
 `.claude/rules/<area>.md`, one per area:
 
-| Rule file       | Loads for                                                                                    | Carries                                                                                                    |
-| --------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `database`      | `src/db/`, the modules' `schema/` and `services/`, `tests/db/`, `tests/modules/`, the seed   | Rules 2–5 and 10 in full: the exemptions, audit columns, `updated_at`, hard deletes, `sql`                 |
-| `graphql`       | `src/graphql/`, the modules' `graphql/` and `loaders/`, `src/gql/`, `tests/graphql/`         | Rules 8 and 9 in full, the SDL snapshot, codegen, error mapping                                            |
-| `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.storybook/`, `tests/components/` | Component layout, stories and docs, Sass, the measure, design-review scope, the browser floor, button case |
-| `testing`       | `tests/`, the Vitest and Playwright configs                                                  | The Testing section in full, the harness, fixtures, the coverage `jq` line                                 |
-| `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`     | Board layout, the status table, the lookup rule, PR bodies, comments, minting                              |
-| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s    | Plain language for readers of every experience level: who reads, how, where precision wins                 |
+| Rule file       | Loads for                                                                                    | Carries                                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `database`      | `src/db/`, the modules' `schema/` and `services/`, `tests/db/`, `tests/modules/`, the seed   | Rules 2–5 and 10 in full: the exemptions, audit columns, `updated_at`, hard deletes, `sql`                                    |
+| `graphql`       | `src/graphql/`, the modules' `graphql/` and `loaders/`, `src/gql/`, `tests/graphql/`         | Rules 8 and 9 in full, the SDL snapshot, codegen, error mapping                                                               |
+| `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.storybook/`, `tests/components/` | Component layout, stories and docs, the shared pieces, Sass, the measure, design-review scope, the browser floor, button case |
+| `testing`       | `tests/`, the Vitest and Playwright configs                                                  | The Testing section in full, the harness, fixtures and shared test helpers, the coverage `jq` line                            |
+| `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`     | Board layout, the status table, the lookup rule, PR bodies, comments, minting, audit estimates                                |
+| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s    | Plain language for readers of every experience level: who reads, how, where precision wins                                    |
 
 **How one loads.** Claude Code reads a rule file's `paths:` frontmatter, a list
 of globs from the repo root, and adds the file to the session once the **Read
@@ -102,3 +102,7 @@ it can never load); `CLAUDE.md` stays under 20 KB and names every rule file; an
 architecture rule is never renumbered or gutted, since code cites them by
 number (`CLAUDE.md rule 4`); and a rule file's citation into `claude-docs/`
 resolves.
+
+## Splitting work among agents
+
+When several agents fix one audit's findings, each finding goes to one agent with every one of its callers, even where a caller sits in another agent's files. An agent given only the callers in its own files leaves the finding half done, and another agent has to finish it.
