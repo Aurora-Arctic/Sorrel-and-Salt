@@ -6,7 +6,7 @@ import { invitations } from '../../modules/coven/schema/invitations';
 import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
-import { containsText, notSoftDeleted, scopedTo, startsWithText } from './predicates';
+import { containsText, newestFirst, notSoftDeleted, scopedTo, startsWithText } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
@@ -161,9 +161,7 @@ export function findInvitationInWorkspace(
  * The pending lists' order, newest first: the key is ascending, so the instant is negated, as `numeric` to keep
  * the microseconds a `Date` drops. Invitations of one instant follow by id.
  */
-const PENDING_INVITATION_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
-];
+const PENDING_INVITATION_ORDER: readonly SortPart[] = [newestFirst(invitations.createdAt)];
 
 function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL | undefined {
   return pendingInvitation(
@@ -326,9 +324,7 @@ export async function findReceivedInvitationInviters(
   return rows.map(({ id, name }) => ({ id, name }));
 }
 
-const CARD_ARRIVAL_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${invitations.acceptedAt})`, type: 'numeric' },
-];
+const CARD_ARRIVAL_ORDER: readonly SortPart[] = [newestFirst(invitations.acceptedAt)];
 
 function arrivedByCard(): SQL {
   return and(
@@ -380,9 +376,7 @@ export function findCardArrivalCount(
   );
 }
 
-const CARD_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
-];
+const CARD_ORDER: readonly SortPart[] = [newestFirst(invitations.createdAt)];
 
 function cardsOf(batchId: string | undefined): SQL {
   return and(cardKind(), batchId ? eq(invitations.batchId, batchId) : undefined) as SQL;
@@ -502,10 +496,7 @@ export function findCardPositions(
 }
 
 const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
-  {
-    expression: sql`-extract(epoch from ${cardInvitationAttempts.lastAttemptedAt})`,
-    type: 'numeric',
-  },
+  newestFirst(cardInvitationAttempts.lastAttemptedAt),
 ];
 
 function attemptsOnBatch(batchId: string): SQL {

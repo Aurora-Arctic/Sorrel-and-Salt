@@ -12,7 +12,7 @@ import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
-import { containsText, notSoftDeleted } from './predicates';
+import { containsText, newestFirst, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
 import { timeoutStands } from './support';
 import { pauseStands } from './user-access-pauses';
@@ -129,9 +129,7 @@ export async function findCoMemberNamesIncludingSoftDeleted(
  * The ledger's order, newest first: the key is ascending, so the descending part is negated (`types.ts`, `SortPart`), as
  * `numeric` to keep a `Date`'s dropped microseconds. Rows of one instant (a role grant and its flag) follow by id.
  */
-const LEDGER_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${userPrivilegeChanges.createdAt})`, type: 'numeric' },
-];
+const LEDGER_ORDER: readonly SortPart[] = [newestFirst(userPrivilegeChanges.createdAt)];
 
 /**
  * One page of the privilege ledger under `filter`, newest first:

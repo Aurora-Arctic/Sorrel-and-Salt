@@ -24,7 +24,7 @@ import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-send
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
-import { noEndOrAhead, notSoftDeleted } from './predicates';
+import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
@@ -101,7 +101,7 @@ const REQUEST_ORDER: readonly SortPart[] = [
     expression: sql`case when ${supportRequests.status} = 'open' then 0 else 1 end`,
     type: 'integer',
   },
-  { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
+  newestFirst(supportRequests.createdAt),
 ];
 
 // The sender's list: still open (open, waiting on the sender) ahead of done (resolved, closed), then newest first.
@@ -110,7 +110,7 @@ const OWN_ORDER: readonly SortPart[] = [
     expression: sql`case when ${supportRequests.status} in ('open', 'waiting_on_sender') then 0 else 1 end`,
     type: 'integer',
   },
-  { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
+  newestFirst(supportRequests.createdAt),
 ];
 
 // The queue views: the oldest sender activity first, which a request with none dates from its sending.

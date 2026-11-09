@@ -9,6 +9,7 @@ import {
   deleteWorking,
   getWorking,
   listWorkings,
+  listWorkingsPage,
   recordWorking,
   updateWorking,
 } from '@/modules/grimoire';
@@ -394,6 +395,25 @@ describe('reading', () => {
     } finally {
       await sql`update workspace_members set deleted_at = null, deleted_by = null where user_id = ${B.id} and workspace_id = ${WORKSPACE_W_ID}`;
     }
+  });
+});
+
+describe('the order of a spell’s workings', () => {
+  it('lists the same order the pages walk, when two workings were recorded within one millisecond', async () => {
+    const spell = await spellBy(A);
+    const first = (await record(A, spell)).working.id;
+    const second = (await record(A, spell)).working.id;
+    // A Date keeps milliseconds and the column keeps microseconds, so only the database can tell these two apart.
+    await sql`update spell_workings set created_at = '2026-10-01 12:00:00.000100+00' where id = ${first}`;
+    await sql`update spell_workings set created_at = '2026-10-01 12:00:00.000200+00' where id = ${second}`;
+
+    const listed = (await listWorkings(asUser(A), WORKSPACE_W_ID, spell)).map((r) => r.working.id);
+    const paged = (
+      await listWorkingsPage(asUser(A), WORKSPACE_W_ID, spell, { limit: 10, inverted: false })
+    ).map((entry) => entry.node.working.id);
+
+    expect(paged).toEqual([second, first]);
+    expect(listed).toEqual(paged);
   });
 });
 
