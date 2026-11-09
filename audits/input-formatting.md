@@ -104,7 +104,7 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Medium. Text is kept when a limit is exceeded and the server messages are clear, so nothing is lost. The cost is a late surprise on Save and constants that can drift apart.
 
-**Status:** Fixed (coven, invitation, keeper, support, document and help forms) — soft limits through Field, each exported once from its owning module, with a server rule of 500 for the reason note.
+**Status:** Fixed — soft limits through Field, each exported once from its owning module, with a server rule of 500 for the reason note.
 
 **Where:**
 
@@ -261,7 +261,7 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 
 **Severity:** Low. Behaviour matches today, but wording and constants drift apart.
 
-**Status:** Fixed (coven, invitation, keeper, support, document and help forms) — the help form uses the server schema, and validation messages lose their trailing full stops.
+**Status:** Fixed — the spell step and stock schemas share one `quantity` rule, the help form uses the server schema, and validation messages lose their trailing full stops.
 
 **Where:**
 
@@ -302,6 +302,8 @@ Fifteen findings: 2 High, 7 Medium, 6 Low.
 ### 13. Server Rules for Fields No Form Sends (Owner Decision)
 
 **Severity:** Low. Nothing is shown to a person, so no one is hurt today; the cost is rules that can never be reached from the app and so can rot unnoticed.
+
+**Status:** Not changed, on the owner's call — stock source and acquired date are shown nowhere, and the document title and lede stay seeded.
 
 **Where:**
 
