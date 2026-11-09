@@ -1,30 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The title and a keeper's Edit Article pencil share one row at every width, the pencil at its right end as the
-// help index's Staff Help link ends its title row; when the title wraps, the title takes the room left of the pencil,
-// which stays on its first line, centred on it.
-.help-article__title {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: space(2);
-  align-items: start;
-  margin-block-end: space(4);
-
-  > h2 {
-    margin: 0;
-  }
-
-  > :not(h2) {
-    margin-block-start: max(0px, calc((#{heading-size(2)} * 1.15 - #{$icon-size-large}) / 2));
-  }
-}
-
-// The step clear of the search box that a bare title takes (HelpSearchForm/index.scss).
-.help-search + .help-article__title {
-  margin-block-start: space(6);
-}
-
 .help-article__body {
   margin-block-start: space(6);
 

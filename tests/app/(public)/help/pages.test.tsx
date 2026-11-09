@@ -27,7 +27,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 const getSession = vi.fn<() => Promise<Session | null>>();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+const sessionIsVerified = vi.fn<() => Promise<boolean>>();
+vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
 
 const readHelpFaq = vi.fn();
 const readHelpArticleIndex = vi.fn();
@@ -88,6 +89,10 @@ const CURATOR: Session = {
   userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
   role: 'curator',
 } as Session;
+const KEEPER: Session = {
+  userId: '7a2d3e5f-0c9b-4d4e-9f80-1b2c3d4e5f60',
+  role: 'admin',
+} as Session;
 
 type Mod = { default: (props?: unknown) => Promise<unknown> } & {
   metadata?: Metadata;
@@ -113,6 +118,7 @@ const linkHrefs = () => hrefs(screen.queryAllByRole('link'));
 beforeEach(() => {
   vi.clearAllMocks();
   getSession.mockResolvedValue(null);
+  sessionIsVerified.mockResolvedValue(true);
 });
 
 describe('/help', () => {
@@ -179,7 +185,23 @@ describe('/help/glossary', () => {
     ]);
     for (const term of terms) expect(document.getElementById(term.slug), term.slug).not.toBeNull();
     expect(screen.getByRole('search')).toBeInTheDocument();
-    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  // The glossary text is cached for every reader; who is asking is read beside it, per request, for the pencil alone.
+  it.each([
+    ['a verified keeper', KEEPER, ['/keepers/help?view=glossary']],
+    ['a curator', CURATOR, []],
+    ['a signed-out reader', null, []],
+  ] as const)('hands Edit Glossary to %s alone', async (_, session, edit) => {
+    getSession.mockResolvedValue(session);
+    readHelpGlossary.mockResolvedValue(entries([row('steward', { kind: 'term' })]));
+    const { default: Page } = await load();
+
+    render((await Page()) as React.ReactElement);
+
+    // Precondition: the page drew its title, so a missing pencil is the viewer's, not an empty page's.
+    expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
+    expect(hrefs(screen.queryAllByRole('link', { name: 'Edit Glossary' }))).toEqual(edit);
   });
 
   it('has a title, a description and its canonical address', async () => {

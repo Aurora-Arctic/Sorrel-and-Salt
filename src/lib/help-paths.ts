@@ -15,6 +15,10 @@ export const publicGuidePath = (slug: string): string =>
 /** A help row's edit page under Keepers › Help. */
 export const keeperHelpEditPath = (id: string): string => `/keepers/help/${id}`;
 
+/** Keepers › Help opened on its FAQ or its glossary, where their entries are added, ordered and edited. */
+export const keeperHelpViewPath = (view: 'faq' | 'glossary'): string =>
+  `/keepers/help?view=${view}`;
+
 export function helpPath({ kind, audience, slug, parentSlug }: HelpAddressed): string {
   if (kind === 'term') return `/help/glossary#${slug}`;
   const base = audience === 'public' ? '/help' : STAFF_HELP;

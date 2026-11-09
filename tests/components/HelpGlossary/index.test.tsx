@@ -102,3 +102,34 @@ describe('HelpGlossary links to self', () => {
     }
   });
 });
+
+describe('HelpGlossary head', () => {
+  it('links back to Help between the search box and the Glossary title, for every reader', () => {
+    render(<HelpGlossary terms={TERMS} />);
+
+    const back = screen.getByRole('link', { name: 'Back to Help' });
+    expect(back).toHaveAttribute('href', '/help');
+    expect(screen.getByRole('search').compareDocumentPosition(back)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      back.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'Glossary' })),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('hands a keeper Edit Glossary after the Glossary title', () => {
+    render(<HelpGlossary terms={TERMS} editHref="/keepers/help?view=glossary" />);
+
+    const edit = screen.getByRole('link', { name: 'Edit Glossary' });
+    expect(edit).toHaveAttribute('href', '/keepers/help?view=glossary');
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Glossary' }).compareDocumentPosition(edit),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('draws no Edit Glossary when handed no edit address', () => {
+    render(<HelpGlossary terms={TERMS} />);
+
+    expect(screen.queryByRole('link', { name: 'Edit Glossary' })).not.toBeInTheDocument();
+  });
+});

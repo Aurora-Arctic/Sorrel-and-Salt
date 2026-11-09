@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
@@ -14,12 +15,14 @@ const ROWS = [
   [1, 10],
 ] as const;
 
-// The glossary with its terms still to come, in the page's own frame: the heading, the search box and the title, then
-// the ruled rows, the term beside its definition from 40rem, each as bars of about its length.
+// The glossary with its terms still to come, in the page's own frame: the heading, the search box, the way back to Help
+// and the title, then the ruled rows, the term beside its definition from 40rem, each as bars of about its length. A
+// keeper's pencil is left out: it sits within the title's line, so the row is the same height without it.
 export const HelpGlossarySkeleton = (): ReactElement => (
   <div className="help-page help-glossary">
     <PageHeader title="Help" />
     <HelpSearchForm />
+    <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
     <h2>Glossary</h2>
     <dl>
       {ROWS.map(([term, definition], n) => (
