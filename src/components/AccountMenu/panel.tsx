@@ -134,6 +134,13 @@ export default function AccountMenuPanel({
           );
         })}
       {verified && (
+        <li className="account-menu__link">
+          <PendingLink href="/help" className="account-menu__item" onClick={close}>
+            Help
+          </PendingLink>
+        </li>
+      )}
+      {verified && (
         <li
           className={
             senderCount > 0

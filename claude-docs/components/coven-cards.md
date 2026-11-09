@@ -30,10 +30,10 @@
 
 With no card to show, the list draws one of two `role="status"` regions. Each has its own name, so a test tells them apart by which is present, not by its words.
 
-| Region           | When                                         | What it holds                                                                                                                                        |
-| ---------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `No Ingredients` | No filter is in force: the cupboard is empty | "There are no ingredients here yet." and, when `canAdd`, an Add Ingredient button; otherwise "A practitioner or steward of this coven can add them." |
-| `No Matches`     | A filter is in force and matched nothing     | "Change or clear the filter to see more." and, when the filter has a search, Search the Compendium                                                   |
+| Region           | When                                         | What it holds                                                                                                                                                                                                                                                        |
+| ---------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `No Ingredients` | No filter is in force: the cupboard is empty | "There are no ingredients here yet." and, when `canAdd`, an Add Ingredient button; otherwise "A practitioner or steward of this coven can add them." Then a Learn More link to the Ingredients guide, at `publicGuidePath('ingredients')` (`src/lib/help-paths.ts`). |
+| `No Matches`     | A filter is in force and matched nothing     | "Change or clear the filter to see more." and, when the filter has a search, Search the Compendium                                                                                                                                                                   |
 
 - **Which state** is the search sentence's own test, `buildSearchSentence(...).hasFilter`. It counts the coven's own filters too (Source, In Stock, Low Stock Only), so an In Stock filter over a cupboard with nothing in stock reads as no match, and the region never disagrees with the sentence above it.
 - **No Matches says only what to do.** The search sentence already names every filter, so the region uses `NO_MATCH_HINT` (`src/lib/text.ts`) and not `noMatchText`, which always opens by naming them. The advice points at the filter row's own clears; the region draws none.

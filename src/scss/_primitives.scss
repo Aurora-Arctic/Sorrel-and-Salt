@@ -53,6 +53,19 @@
   }
 }
 
+// A screenshot's light picture shown and its dark one hidden, under the light theme's selectors.
+@mixin light-screenshot {
+  .screenshot {
+    > .screenshot__light {
+      display: block;
+    }
+
+    > .screenshot__dark {
+      display: none;
+    }
+  }
+}
+
 @mixin primitives-base {
   // Not modal-surface(): its shadow and radius would read as a dialog.
   .panel {
@@ -514,6 +527,12 @@
     }
   }
 
+  @keyframes target-arrive {
+    from {
+      background-color: $fill-highlight-field;
+    }
+  }
+
   @keyframes skeleton-shimmer {
     from {
       background-position: 100% 0;
@@ -745,6 +764,106 @@
     .page-with-nav--headless > .page-nav {
       grid-row: 1 / span 3;
     }
+  }
+
+  // A block on the quiet button's surface, edge and hover pair, for a card that is a way in rather than a control.
+  // A card holding a whole-card link positions itself, which `card-link` needs.
+  .card--quiet {
+    padding: space(4);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+
+    &:hover,
+    &:focus-within {
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+    }
+  }
+
+  // A help screenshot's light and dark pictures, never wider than what holds them. The theme's own selectors pick
+  // one, as a reader's chosen theme outranks the system's (claude-docs/components/help-pages.md, "Screenshots").
+  .screenshot {
+    display: block;
+    max-width: 100%;
+
+    > img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: radius('control');
+    }
+
+    > .screenshot__light {
+      display: none;
+    }
+  }
+
+  @include color-scheme-light {
+    html:not([data-theme='dark']) & {
+      @include light-screenshot;
+    }
+  }
+
+  html[data-theme='light'] & {
+    @include light-screenshot;
+  }
+
+  // One frame for a screenshot or a widget in running text, with its caption beneath (claude-docs/styling.md).
+  .figure {
+    max-width: $measure;
+    margin: space(5) 0;
+    padding: space(3);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+
+    > img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: radius('control');
+    }
+
+    > figcaption {
+      margin-block-start: space(2);
+      color: $text-muted;
+      font-size: type-size('caption');
+    }
+  }
+
+  // The help centre's one reading column, public and staff alike, so the two cannot differ: everything on a help
+  // page shares the text's edges. A primitive, as a route loads a component's stylesheet only when it draws the
+  // component, and the public layout's `.page-column` is the wide box (claude-docs/components/help-pages.md, "Layout").
+  .help-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $measure;
+    margin-inline: auto;
+  }
+
+  // A callout in any help body (an article, an answer, a definition): a `.notice` named by its label.
+  .help-page .notice[role='note'] {
+    margin-block: space(4);
+
+    > p {
+      margin: 0;
+    }
+
+    > p + p {
+      margin-block-start: space(2);
+    }
+
+    // The notice underlines its links solid; a glossary term keeps its dotted mark.
+    .help-term__link {
+      text-decoration-style: dotted;
+    }
+  }
+
+  // An article with a contents menu takes the document pages' pair instead, which centres on its own.
+  .help-page.page-with-nav {
+    max-width: none;
+    @include page-with-nav-grid($document-menu-column, $measure);
   }
 
   .provider-mark {
@@ -1142,6 +1261,18 @@
 
   .notice--success {
     color: $accent-hover;
+  }
+
+  // A help callout's gift: the accent's hover ink as the bar, so it is neither the plain note nor a warning.
+  .notice--tip {
+    --notice-bar: #{$accent-hover};
+  }
+
+  // The word a help callout is named by (Note, Tip, Take Care), so the kind never rests on colour alone. It is an
+  // .eyebrow too, which draws it; this stands it on its own line, after typography so its margin wins.
+  .notice__label {
+    display: block;
+    margin-block-end: space(1);
   }
 
   // In the notice's padding rather than a flex row, so a link in the text stays inline.

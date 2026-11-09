@@ -5,6 +5,7 @@ import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
 import { CompendiumListSkeleton } from '../CompendiumList/skeleton';
 import { DocumentEditorSkeleton } from '../DocumentEditor/skeleton';
 import { GroupListSkeleton } from '../GroupList/skeleton';
+import { HelpOutlineSkeleton } from '../HelpOutline/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
 import ActionFace, { ButtonFace } from '../ActionFace';
 import { impersonationEnabled } from '../../lib/impersonation';
@@ -47,6 +48,7 @@ const panels = (): Record<string, ReactNode> => ({
   '/keepers/documents/code-of-ethics': documentPanel,
   '/keepers/documents/privacy': documentPanel,
   '/keepers/documents': <PanelSkeleton fields={2} />,
+  '/keepers/help': <HelpOutlineSkeleton />,
 });
 
 // The header action each tab carries, drawn with nothing to press: the Add of the curator tabs, and the
@@ -70,6 +72,7 @@ const ACTIONS: Record<string, ReactNode> = {
   '/keepers/invitations': <ButtonFace link>New Invitation</ButtonFace>,
   '/keepers/invitation-cards': <ButtonFace link>Mint Cards</ButtonFace>,
   '/keepers/card-sign-ups': <ButtonFace>Download CSV</ButtonFace>,
+  '/keepers/help': <ActionFace>Add Help Article</ActionFace>,
 };
 
 /** The tabs of an admin page with each one's panel placeholder, for its tabbed layout. */

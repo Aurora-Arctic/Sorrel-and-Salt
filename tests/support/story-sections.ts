@@ -65,4 +65,5 @@ export const STORY_SECTIONS: Readonly<Record<number, string>> = {
   85: 'Coven - Spells - Preview',
   86: 'Coven - Spells - Preview',
   81: 'Coven - Spells',
+  92: 'Help',
 };

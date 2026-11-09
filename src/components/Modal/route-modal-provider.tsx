@@ -42,11 +42,11 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 
 export function useOpenModalClick(
   href: Route,
-  heading: ModalHeading,
+  heading: ModalHeading | undefined,
   place?: string,
 ): ((event: MouseEvent<HTMLAnchorElement>) => void) | undefined {
   const opener = useRouteModalOpener();
-  if (!opener) return undefined;
+  if (!opener || !heading) return undefined;
   return (event) => {
     const { button, metaKey, ctrlKey, shiftKey, altKey, defaultPrevented } = event;
     if (defaultPrevented || button !== 0 || metaKey || ctrlKey || shiftKey || altKey) return;

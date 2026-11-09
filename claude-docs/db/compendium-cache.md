@@ -90,6 +90,11 @@ Not cached, deliberately:
   traditions), which only the admin pages list, and the suggestion reads,
   which draw on the current coven as well as the compendium.
 
+The help articles open to everyone are cached apart from this, in `src/lib/help-cache.ts`
+under the tag `help`, and every help write expires it. The staff and keeper reads and
+the search are not cached, because they differ by viewer (`claude-docs/design/graphql.md`,
+"Help articles").
+
 ### The public pages' ISR
 
 A page rendered statically collects the tags of every `unstable_cache` read

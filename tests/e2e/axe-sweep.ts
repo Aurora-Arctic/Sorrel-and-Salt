@@ -36,6 +36,8 @@ export interface World {
   local: { name: string; ingredientId: string };
   spell: { id: string; title: string };
   draftId: string;
+  /** A shipped help guide, which the keeper's edit page opens. */
+  helpArticleId: string;
   /** Who the test signs in as, made by `signIn`. */
   userId?: string;
   email?: string;
@@ -97,6 +99,10 @@ export async function seedWorld(page: Page): Promise<World> {
       'draft',
     );
 
+    const [guide] = await sql<{ id: string }[]>`
+      select id from help_articles
+      where kind = 'guide' and slug = 'getting-started' and deleted_at is null`;
+
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${steward}, true)`;
       await tx`
@@ -122,6 +128,7 @@ export async function seedWorld(page: Page): Promise<World> {
       local: { name: 'Fixture Axewort', ingredientId: local.ingredientId },
       spell: { id: spellId, title: 'Fixture Working' },
       draftId,
+      helpArticleId: guide.id,
       tokens: {
         invite: randomBytes(32).toString('base64url'),
         card: randomBytes(32).toString('base64url'),
@@ -276,10 +283,16 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/sign-in': () => '/sign-in',
   '/forgot-password': () => '/forgot-password',
   '/reset-password': () => '/reset-password?token=fixture-not-a-token',
-  '/help': () => null,
-  '/help/glossary': () => null,
-  '/help/[slug]': () => null,
-  '/help/[parent]/[slug]': () => null,
+  // The shipped help, which the standard seed loads.
+  '/help': () => '/help',
+  '/help/glossary': () => '/help/glossary',
+  '/help/search': () => '/help/search?q=coven',
+  '/help/[slug]': () => '/help/getting-started',
+  '/help/[slug]/[child]': () => '/help/getting-started/signing-in',
+  '/help/staff': () => '/help/staff',
+  '/help/staff/[slug]': () => '/help/staff/curating-a-compendium-entry',
+  '/help/staff/[slug]/[child]': () =>
+    '/help/staff/curating-a-compendium-entry/source-an-entry-with-references',
   '/coven': () => '/coven',
   '/coven/new': () => '/coven/new',
   '/invite/[token]': (w) => `/invite/${w.tokens.invite}`,
@@ -320,7 +333,9 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/keepers/business-cards': () => '/keepers/business-cards',
   '/keepers/documents': () => '/keepers/documents',
   '/keepers/documents/[key]': () => '/keepers/documents/terms',
-  '/keepers/help': () => null,
+  '/keepers/help': () => '/keepers/help',
+  '/keepers/help/new': () => '/keepers/help/new',
+  '/keepers/help/[id]': (w) => `/keepers/help/${w.helpArticleId}`,
 };
 
 const dialogNamed = (page: Page, name: string | RegExp) => page.getByRole('dialog', { name });
@@ -381,6 +396,14 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
   'my-request': async (page, w) => {
     await visit(page, `/account/support?request=${w.supportRequestId}`);
     return page.getByRole('dialog', { name: /Fixture question/ });
+  },
+  'help-screenshot': async (page) => {
+    await visit(page, '/help/grimoire/build-a-spell');
+    await page
+      .getByRole('button', { name: /^Enlarge: / })
+      .first()
+      .click();
+    return dialogNamed(page, 'Screenshot');
   },
   member: async (page, w) => {
     await visit(page, `/coven/${w.coven.slug}/members?member=${w.members.practitioner}`);

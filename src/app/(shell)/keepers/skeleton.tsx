@@ -10,6 +10,7 @@ import SkeletonText from '@/components/Skeleton/text';
 import PageHeader from '@/components/PageHeader';
 import { AdminContentsPending } from '@/components/AdminNav/contents';
 import Skeleton from '@/components/Skeleton';
+import { HelpArticlePageSkeleton } from '@/components/HelpArticleForm/skeleton';
 
 // The curator's lede and sections whatever the role, since the skeleton cannot know it.
 export const KeepersSkeleton = () => (
@@ -27,6 +28,9 @@ export const KeepersSkeleton = () => (
   </div>
 );
 
+export const KeepersHelpSkeleton = () => <AdminPageSkeleton page="help" open="/keepers/help" />;
+export const KeepersHelpNewSkeleton = () => <HelpArticlePageSkeleton editing={false} />;
+export const KeepersHelpEditSkeleton = () => <HelpArticlePageSkeleton editing />;
 export const UsersSkeleton = () => <AdminPageSkeleton page="people" open="/keepers/users" />;
 export const PrivilegeChangesSkeleton = () => (
   <AdminPageSkeleton page="people" open="/keepers/privilege-changes" />

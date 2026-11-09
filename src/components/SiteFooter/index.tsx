@@ -28,6 +28,9 @@ const SiteFooter = (): ReactElement => (
           <PendingLink href="/privacy" className="site-footer__link">
             Privacy
           </PendingLink>
+          <PendingLink href="/help" className="site-footer__link">
+            Help
+          </PendingLink>
           <IconTip tip="Support">
             <SupportLink className="site-footer__support">
               <SupportIcon />

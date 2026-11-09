@@ -198,6 +198,24 @@ export {
   findUnsentDocumentMailingRecipientPage,
 } from './documents';
 export {
+  findAllHelpArticleChildren,
+  findHelpArticleBySlug,
+  findHelpArticleChildren,
+  findHelpArticlePathPage,
+  findHelpArticleSlugsByIds,
+  findHelpArticleHoldingSlug,
+  findHelpArticleIndexPage,
+  findHelpArticleKeeperPage,
+  findHelpArticlesWhoseBodyHolds,
+  findHelpArticleSearchPage,
+  findHelpArticleStaffPage,
+  findHelpFaqPage,
+  findHelpGlossaryPage,
+  findLastHelpPosition,
+  findAllHelpOrdered,
+} from './help';
+export type { HelpArticleRow } from './help';
+export {
   findStandingUserAccessPause,
   findStandingUserAccessPausesFor,
   findUserAccessPausePage,

@@ -16,6 +16,7 @@ const ALLOWED = {
   grimoire: ['identity', 'coven', 'vocabulary', 'ingredients'],
   support: ['identity'],
   documents: ['identity'],
+  help: ['identity'],
 };
 const moduleOf = (path) => /^src\/modules\/([^/]+)\/?(.*)$/.exec(path);
 

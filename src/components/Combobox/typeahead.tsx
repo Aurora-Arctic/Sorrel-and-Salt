@@ -25,6 +25,7 @@ export function ComboboxTypeahead({
   placeholder,
   required,
   clearable,
+  match,
   inputRef,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
@@ -42,17 +43,20 @@ export function ComboboxTypeahead({
   // A qualified row shows its qualifier in brackets; the pick's text and query match the label.
   const suggestions = useMemo(
     () => ({
-      options: choices
-        .filter((choice) => choice.label.toLocaleLowerCase().includes(query))
-        .map((choice): ComboboxOption => ({
-          value: choice.label,
-          label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
-          key: choice.value,
-          icon: choice.icon,
-        })),
+      options: (query === ''
+        ? choices
+        : match
+          ? match(query)
+          : choices.filter((choice) => choice.label.toLocaleLowerCase().includes(query))
+      ).map((choice): ComboboxOption => ({
+        value: choice.label,
+        label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
+        key: choice.value,
+        icon: choice.icon,
+      })),
       pending: false,
     }),
-    [choices, query],
+    [choices, query, match],
   );
 
   const type = (next: string) => {

@@ -33,7 +33,7 @@ import type {
 
 // The session's verified address admits (claude-docs/db/invitations.md, "Invitation acceptance details"). No message names a workspace, as the reader is not yet a member.
 
-const MESSAGES: Record<InvitationRefusal, string> = {
+export const INVITATION_REFUSAL_MESSAGES: Readonly<Record<InvitationRefusal, string>> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
   accepted: 'This invitation has already been accepted.',
   'used-by-you': "You've already used this card. You can start a coven from your account.",
@@ -54,14 +54,14 @@ const MESSAGES: Record<InvitationRefusal, string> = {
 const JOIN_BY_INVITATION = 'You can still join by invitation: ask a coven to invite you.';
 
 // A card has no email and no sender, so the three refusals that point at either are worded for a printed card.
-const CARD_MESSAGES: Partial<Record<InvitationRefusal, string>> = {
+export const CARD_REFUSAL_MESSAGES: Readonly<Partial<Record<InvitationRefusal, string>>> = {
   invalid: `That code doesn't match a card. Check the link or the QR code printed on the card and try again. ${JOIN_BY_INVITATION}`,
   revoked: `This card has been withdrawn. ${JOIN_BY_INVITATION}`,
   expired: `This card has expired. ${JOIN_BY_INVITATION}`,
 };
 
 function messageOf(reason: InvitationRefusal, card: boolean | undefined): string {
-  return (card && CARD_MESSAGES[reason]) || MESSAGES[reason];
+  return (card && CARD_REFUSAL_MESSAGES[reason]) || INVITATION_REFUSAL_MESSAGES[reason];
 }
 
 function refused(reason: InvitationRefusal, card?: boolean): InvitationStanding {

@@ -14,6 +14,7 @@ import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
 import { seedDocuments } from '@/db/seed/documents';
+import { seedHelp } from '@/db/seed/help';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
@@ -192,6 +193,12 @@ const SEED_ENTRIES: SeedEntry[] = (
       seed: seedDocuments,
       tables: ['documents', 'document_versions'],
     },
+    {
+      // The help articles and the glossary, the real list: a few dozen rows, few enough for every sweep.
+      name: 'the help seed',
+      seed: seedHelp,
+      tables: ['help_articles'],
+    },
   ] satisfies Omit<SeedEntry, 'run'>[]
 ).map((entry: Omit<SeedEntry, 'run'>) => ({
   ...entry,
@@ -274,12 +281,19 @@ describe('the shape every seed shares', () => {
       const deletable = own.filter((table) => tombstoned.has(table));
       // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
       expect(deletable.length).toBeGreaterThan(0);
+      // A seed revives a row its own identity deleted (the help seed retires and revives its own rows), so the
+      // deleter is a person, a different user from the seed's own.
+      const keeper = '00000000-0000-4000-8000-0000000000a1';
+      await sql`
+        insert into users (id, name, email, created_by, updated_by)
+        values (${keeper}, 'Testwort Keeper', 'keeper@example.test', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})`;
       for (const table of deletable) {
         // The bootstrap user is every seed's own identity, written back by
-        // design; the victim is any other row.
-        const victim = table === 'users' ? `where id <> '${BOOTSTRAP_USER_ID}'` : '';
+        // design; the victim is any other row, bar the keeper just added.
+        const victim =
+          table === 'users' ? `where id not in ('${BOOTSTRAP_USER_ID}', '${keeper}')` : '';
         const deleted = await sql.unsafe(`
-          update "${table}" set deleted_at = now(), deleted_by = '${BOOTSTRAP_USER_ID}'
+          update "${table}" set deleted_at = now(), deleted_by = '${keeper}'
           where ctid = (select ctid from "${table}" ${victim} limit 1)
         `);
         expect(deleted.count, table).toBe(1);

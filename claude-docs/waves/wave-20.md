@@ -2,7 +2,7 @@
 
 **This wave exists on the owner's call of 2026-11-06**, made while M17.3 was scoped: the build for the ethical warnings on ingredients, and the questions it leaves in `compendium/ethics/`, are fifteen tasks, so they get a wave instead of sitting on Wave 17 (Fast follow), which holds scoping and audits. They are `M20.1 → M20.15` ([`tasks/m20.md`](../tasks/m20.md)). The decision record is [`ingredients.md`, "The ethical warnings on ingredients"](../design-decisions/ingredients.md#the-ethical-warnings-on-ingredients).
 
-**The row is** `M20.1 → M20.15`.
+**The row is** `M20.1 → M20.16`.
 
 **M20.1 → M20.9 are question tasks.** Each puts one group of the `needs-review` questions in `compendium/ethics/` to the owner and records each answer in the file's `status`. The groups are:
 
@@ -25,3 +25,5 @@
 **The data marks 33 entries today, and 32 once peyote leaves under M19.1.** The question tasks may change the list.
 
 **The help page waits on M17.16.** M20.15 documents the warning in the help pages, which M17.16 builds from MB.175's scope. It also follows M20.13.
+
+**M20.16 confirms before a toxic ingredient is used**, minted on the owner's call of 2026-11-09: a confirmation when a toxic ingredient goes into a spell, and when a working of such a spell is recorded. It builds on the toxic flag, which already exists, and waits on nothing else in the wave.

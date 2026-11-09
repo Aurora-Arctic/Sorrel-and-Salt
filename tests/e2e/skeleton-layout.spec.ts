@@ -298,6 +298,14 @@ const navigations: Navigation[] = [
     from: () => '/keepers/documents',
     to: () => /^\/keepers\/documents\/[a-z-]+$/,
   },
+  { name: 'keepers-help', as: 'keeper', from: () => '/keepers', to: () => '/keepers/help' },
+  {
+    name: 'help',
+    as: 'steward',
+    from: () => '/compendium',
+    to: () => '/help',
+    inAccountMenu: true,
+  },
 ];
 
 /**

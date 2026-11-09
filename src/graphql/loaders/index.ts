@@ -26,6 +26,7 @@ import {
   substitutesByVariant,
   variantsByIngredient,
 } from '@/modules/ingredients';
+import { helpChildrenByParent } from '@/modules/help';
 import {
   repliesByRequest,
   tierBySender,
@@ -78,6 +79,7 @@ const LOADERS = {
   workingCountBySpell,
   assignedCategoriesBySpell,
   derivedCategoriesBySpell,
+  helpChildrenByParent,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 export type Loaders = Built<typeof LOADERS>;

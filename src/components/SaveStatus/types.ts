@@ -17,6 +17,11 @@ export interface SaveStatusProps {
    */
   conflictInto?: HTMLElement | null;
   className?: string;
+  /**
+   * A picture of the line on a page that explains it: nothing announces, no notice alerts and the time is read as
+   * text, since nothing is saving.
+   */
+  example?: boolean;
 }
 
 export interface RecoveryNoticeProps {

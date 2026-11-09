@@ -157,6 +157,12 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   );
 }
 
+// A help screenshot at its full size: as wide as the capture (`tests/e2e/help-screenshots/`), and the screen's width
+// less the gap where that is narrower.
+.modal-dialog--picture {
+  width: min(calc(1024px + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+}
+
 // The × stands out of the header's flow, so the head's first line is level with it, and stays at
 // the top as a long form scrolls beneath. A control the contents put in the header goes in a row of
 // its own under the heading at every width (claude-docs/components/modal.md, "The × and the toolbar row").

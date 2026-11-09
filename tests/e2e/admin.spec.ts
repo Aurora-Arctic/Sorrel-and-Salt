@@ -17,6 +17,7 @@ const CURATION = [
   ['Forms', '/curator/forms'],
   ['Deities', '/curator/deities'],
   ['Astrology', '/curator/celestial-bodies'],
+  ['Staff Help', '/help/staff'],
 ];
 
 test('an admin sees the curator area and its nav at /curator, and the keepers area and its nav at /keepers', async ({
@@ -45,7 +46,9 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
     ['Documents', '/keepers/documents/terms'],
+    ['Help', '/keepers/help'],
     ['Business Cards', '/keepers/business-cards'],
+    ['Staff Help', '/help/staff'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   for (const [name, href] of pages) {
@@ -218,11 +221,17 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
   const keepers = await page.goto('/keepers');
   expect(keepers?.status()).toBe(200);
   const keepersNav = page.getByRole('navigation', { name: 'Keepers' });
-  await expect(keepersNav.getByRole('link')).toHaveCount(1);
+  // Support is the one Keepers page a curator works in; Staff Help ends both navs for every curator and keeper.
+  await expect(keepersNav.getByRole('link')).toHaveCount(2);
   await expect(keepersNav.getByRole('link', { name: /^Support( \d+)?$/ })).toHaveAttribute(
     'href',
     '/keepers/support',
   );
+  await expect(keepersNav.getByRole('link', { name: 'Staff Help', exact: true })).toHaveAttribute(
+    'href',
+    '/help/staff',
+  );
+  await expect(keepersNav.getByRole('link', { name: 'Help', exact: true })).toHaveCount(0);
   await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
   await expect(page.getByRole('main').getByRole('link', { name: 'Invitations' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);

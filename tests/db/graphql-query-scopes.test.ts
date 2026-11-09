@@ -92,6 +92,37 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ documentMailings { accountCount } }',
     outcome: 'refuses',
   },
+  // The public help reads and search take no session; the staff reads refuse one.
+  helpFaq: { source: '{ helpFaq(first: 1) { edges { node { id } } } }', outcome: 'answers' },
+  helpArticles: {
+    source: '{ helpArticles(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
+  helpArticle: { source: '{ helpArticle(slug: "nowhere") { id } }', outcome: 'not-found' },
+  helpGlossary: {
+    source: '{ helpGlossary(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
+  helpSearch: {
+    source: '{ helpSearch(query: "fixture", first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
+  staffHelpArticle: {
+    source: '{ staffHelpArticle(slug: "nowhere") { id } }',
+    outcome: 'refuses',
+  },
+  staffHelpArticles: {
+    source: '{ staffHelpArticles(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  keeperHelpArticles: {
+    source: '{ keeperHelpArticles(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  helpRenameEffects: {
+    source: `{ helpRenameEffects(id: "${NOWHERE}", title: "Testwort") { oldPath } }`,
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -418,6 +449,18 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { resumeDocumentMailing(mailingId: "${NOWHERE}") { accountCount } }`,
   ),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
+  createHelpArticle: write(
+    'mutation { createHelpArticle(input: { kind: article, title: "Fixture Scope Probe", body: "Fixture" }) { id } }',
+  ),
+  updateHelpArticle: write(
+    `mutation { updateHelpArticle(id: "${NOWHERE}", input: { title: "Fixture" }) { id } }`,
+  ),
+  deleteHelpArticle: write(`mutation { deleteHelpArticle(id: "${NOWHERE}") }`),
+  setHelpArticleShown: write(
+    `mutation { setHelpArticleShown(id: "${NOWHERE}", shown: false) { id } }`,
+  ),
+  orderHelpGuides: write(`mutation { orderHelpGuides(ids: ["${NOWHERE}"]) { id } }`),
+  orderHelpFaq: write(`mutation { orderHelpFaq(ids: ["${NOWHERE}"]) { id } }`),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   agreeToTerms: write(
     'mutation { agreeToTerms(version: { terms: 1, disclaimer: 1, ethics: 1 }) { id } }',
@@ -694,6 +737,12 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   updateDocument: { governs: 'documents' },
   emailDocumentsToEveryAccount: { governs: 'documents' },
   resumeDocumentMailing: { governs: 'documents' },
+  createHelpArticle: { governs: 'help' },
+  updateHelpArticle: { governs: 'help' },
+  deleteHelpArticle: { governs: 'help' },
+  setHelpArticleShown: { governs: 'help' },
+  orderHelpGuides: { governs: 'help' },
+  orderHelpFaq: { governs: 'help' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -825,7 +874,7 @@ describe('a signed-in non-keeper at every keeper write', () => {
   });
 });
 
-// The people page's writes, and the site's documents, are a keeper's alone; every other keeper write is curation, which a curator's
+// The people page's writes, the site's documents and the help articles are a keeper's alone; every other keeper write is curation, which a curator's
 // scope admits. A write added to ADMIN_WRITES lands on one side or the other.
 const PEOPLE_PAGE: readonly Governed[] = [
   'workspace creation',
@@ -833,6 +882,7 @@ const PEOPLE_PAGE: readonly Governed[] = [
   'site access',
   'support',
   'documents',
+  'help',
 ];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
@@ -859,6 +909,12 @@ describe('a curator at every keeper write, and at the people page’s reads', ()
         'grantWorkspaceCreation',
         'createAdminInvitation',
         'publishDocumentDraft',
+        'createHelpArticle',
+        'updateHelpArticle',
+        'deleteHelpArticle',
+        'setHelpArticleShown',
+        'orderHelpGuides',
+        'orderHelpFaq',
       ]),
     );
   });

@@ -10,6 +10,7 @@ import '@/modules/ingredients';
 import '@/modules/grimoire';
 import '@/modules/support';
 import '@/modules/documents';
+import '@/modules/help';
 
 // `ok` mirrors Better Auth's `/api/auth/ok`: a probe that answers without a
 // session or the database, which the route's tests and e2e spec query.

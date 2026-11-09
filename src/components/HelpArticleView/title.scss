@@ -1,0 +1,29 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A help page's title and a keeper's pencil (Edit Article, Edit Glossary) share one row, the pencil at its right end as
+// the help index's Staff Help link ends its title row. The title takes the room left of the pencil and wraps within it,
+// the pencil staying on its first line, centred on it, until the room would hold fewer than 14 characters of the
+// title a line (about three lines for a long title); past that the pencil wraps to its own line below, at the right.
+.help-article__title {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: space(2);
+  align-items: flex-start;
+  margin-block-end: space(4);
+
+  > h2 {
+    flex: 1 1 14ch;
+    margin: 0;
+  }
+
+  > :not(h2) {
+    margin-block-start: max(0px, calc((#{heading-size(2)} * 1.15 - #{$icon-size-large}) / 2));
+    margin-inline-start: auto;
+  }
+}
+
+// The step clear of the search box that a bare title takes (HelpSearchForm/index.scss).
+.help-search + .help-article__title {
+  margin-block-start: space(6);
+}

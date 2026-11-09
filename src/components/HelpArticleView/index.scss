@@ -1,0 +1,145 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.help-article__body {
+  margin-block-start: space(6);
+
+  // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s.
+  // A short hairline beneath each section heading marks the break without a full rule.
+  h3 {
+    position: relative;
+    margin-block: space(8) space(3);
+    padding-block-end: space(2);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    &::after {
+      @include short-hairline;
+      inset-block-end: 0;
+      inset-inline-start: 0;
+    }
+  }
+
+  // A heading still to come is a bar already; a hairline under the bar reads as an underline.
+  .help-article__pending-heading::after {
+    content: none;
+  }
+
+  h4 {
+    margin-block: space(6) space(2);
+  }
+
+  ul,
+  ol {
+    max-width: $measure;
+    margin-block: space(2) space(4);
+  }
+}
+
+// A numbered list of the pages beneath this one, each number in the heading face, on the article column's edges with no
+// frame: it stands a body section's step below the text, and the steps' rule stands as far below its last entry as
+// below a body with no list.
+.help-article__subpages {
+  max-width: $measure;
+  margin-block-start: space(8);
+
+  .eyebrow {
+    margin-block-end: space(3);
+  }
+
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: guide-step;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0 space(2);
+    padding-block: space(2);
+    counter-increment: guide-step;
+
+    &::before {
+      grid-row: span 2;
+      content: counter(guide-step);
+      font-family: $font-heading;
+      font-size: heading-size(4);
+      font-weight: 700;
+      line-height: 1.25;
+      color: $text-muted;
+    }
+  }
+
+  li + li {
+    border-block-start: 1px solid $hairline;
+  }
+
+  li:last-child {
+    padding-block-end: 0;
+  }
+
+  // A page's link, or its skeleton's stand-in title.
+  a,
+  li > span {
+    font-size: $nav-link-size;
+  }
+
+  p {
+    grid-column: 2;
+    margin: 0;
+    font-size: type-size('small');
+    color: $text-muted;
+  }
+}
+
+// The previous and next pages of the guide, at the foot: the back link's look and motion, each label above its
+// page's title, Next held to the end of the row even alone; on a narrow phone Next drops beneath Previous.
+// Two halves, so a long title wraps inside its own half; on a phone each step takes the full width, Next still at the end.
+.help-article__steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: space(4);
+  max-width: $measure;
+  margin-block-start: space(7);
+  padding-block-start: space(4);
+  border-block-start: 1px solid $hairline;
+
+  @media (max-width: #{$shell-phone-width}) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// The chevron sits on the label's line rather than the middle of a wrapped title: its box is that line's height, and
+// the drawing stays 1em, centred in it.
+.help-article__step {
+  align-items: flex-start;
+  min-width: 0;
+
+  > svg {
+    block-size: 1lh;
+  }
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+// Above `.back-link--forward`’s own margins, which would otherwise undo the hang past the end.
+.help-article__steps > .help-article__step--next {
+  grid-column: 2;
+  justify-content: flex-end;
+  text-align: end;
+
+  @media (max-width: #{$shell-phone-width}) {
+    grid-column: 1;
+  }
+}
+
+.help-article__step-title {
+  font-size: $nav-link-size;
+  color: $text-primary;
+}

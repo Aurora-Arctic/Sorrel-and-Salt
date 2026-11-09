@@ -13,6 +13,7 @@ import {
   MysticEyeIcon,
   PencilIcon,
   PreviewIcon,
+  ReorderIcon,
 } from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
@@ -60,6 +61,32 @@ export const EditButton = ({
     >
       <PencilIcon />
       <span className="visually-hidden">Edit {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** Toggles a list's Reorder Mode: named and tipped Reorder alone, since the list is the one beside it; pressed while the mode is on. */
+export const ReorderButton = ({
+  onClick,
+  pressed,
+  className,
+  ref,
+}: {
+  onClick: () => void;
+  pressed: boolean;
+  className?: string;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Reorder">
+    <button
+      ref={ref}
+      type="button"
+      className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+      aria-pressed={pressed}
+      onClick={onClick}
+    >
+      <ReorderIcon />
+      <span className="visually-hidden">Reorder</span>
     </button>
   </IconTip>
 );

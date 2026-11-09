@@ -93,7 +93,12 @@ function Dialog(): ReactElement | null {
               <PendingLink href={emailPagePath(undefined)}>Go to Your Email</PendingLink>
             </Notice>
           ) : (
-            <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />
+            <>
+              <p>
+                <PendingLink href="/help">Search Help</PendingLink>
+              </p>
+              <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />
+            </>
           ),
       }}
     />

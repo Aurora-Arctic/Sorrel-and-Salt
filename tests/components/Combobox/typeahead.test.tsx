@@ -15,10 +15,12 @@ function Harness({
   initial = '',
   clearable,
   onSettle,
+  match,
 }: {
   initial?: string;
   clearable?: boolean;
   onSettle?: (value: string) => void;
+  match?: (query: string) => readonly (typeof TRADITIONS)[number][];
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -33,6 +35,7 @@ function Harness({
         placeholder="Choose a tradition"
         required
         clearable={clearable}
+        match={match}
       />
       <output aria-label="Value">{value}</output>
     </>
@@ -250,5 +253,20 @@ describe('ComboboxTypeahead', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear Tradition' }));
     expect(onSettle).toHaveBeenLastCalledWith('');
     expect(onSettle).toHaveBeenCalledTimes(4);
+  });
+  it('lists what a given match returns, in its order, for the typed text alone', () => {
+    const match = vi.fn((query: string) => (query === 'q' ? [TRADITIONS[2], TRADITIONS[0]] : []));
+    render(<Harness initial="mockish" match={match} />);
+
+    // A box reading its choice opens on every choice, without asking the match.
+    fireEvent.click(box());
+    expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
+    expect(match).not.toHaveBeenCalled();
+
+    type('Q');
+    expect(match).toHaveBeenLastCalledWith('q');
+    expect(options()).toEqual(['Old Testic', 'Fixtural']);
+    fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
+    expect(value()).toHaveTextContent('fixtural');
   });
 });

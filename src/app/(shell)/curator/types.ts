@@ -146,8 +146,8 @@ export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
 
 export interface AddActionProps {
   href: Route;
-  /** The head of the modal it opens, "Add Category", shown at once while the form loads. */
-  heading: ModalHeading;
+  /** The head of the modal it opens, "Add Category", shown at once while the form loads; left out, the Add opens a full page. */
+  heading?: ModalHeading;
   /** True when the dialog draws its form from the address in the browser: a press uses `pushState`. */
   drawnHere?: boolean;
   /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */

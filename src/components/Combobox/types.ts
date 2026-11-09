@@ -216,6 +216,8 @@ export interface ComboboxTypeaheadProps {
   required?: boolean;
   /** A clear on the control's right, "Clear Tradition", offered while the box holds text or a choice, its room kept otherwise. */
   clearable?: boolean;
+  /** The choices for typed text, in the order to list them, in place of those whose label holds it; never asked for blank text or the chosen label (claude-docs/components/combobox.md, "The type-ahead box"). */
+  match?: (query: string) => readonly ComboboxChoice[];
   /** The text box, which takes the focus. */
   inputRef?: Ref<HTMLInputElement>;
   'aria-describedby'?: string;

@@ -127,6 +127,13 @@ describe('AccountMenu', () => {
     );
   });
 
+  it('links the help pages', async () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
+    fireEvent.click(button());
+
+    expect(await screen.findByRole('link', { name: 'Help' })).toHaveAttribute('href', '/help');
+  });
+
   it('has no count while no invitation waits', async () => {
     render(<AccountMenu name="Fixture Owner" verified pendingInvitations={0} />);
     await openPanel(button());

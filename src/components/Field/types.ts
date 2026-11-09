@@ -57,6 +57,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
    * typed.
    */
   type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
+  /** The on-screen keyboard: `numeric` for a whole number, which a `number` type would take as any decimal. */
+  inputMode?: 'numeric';
   disabled?: boolean;
   deps?: FieldPath<V>[];
   describedBy?: string;
@@ -115,6 +117,8 @@ export interface RadioOption<T extends string> {
   icon?: ReactNode;
   /** How many entries choosing it would leave, read with its name in the segmented layout: "Toxic (4)". */
   count?: number;
+  /** Offered but not choosable now: kept in place, so the group keeps its shape. */
+  disabled?: boolean;
 }
 
 export interface RadioGroupFieldProps<T extends string> {
