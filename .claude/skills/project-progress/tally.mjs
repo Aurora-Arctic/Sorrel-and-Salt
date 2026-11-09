@@ -6,35 +6,42 @@
 // tracker stays the source of truth for status: this trades exactness for zero API
 // calls; the skill's verify mode is where the two are compared.
 //
-// usage: node tally.mjs [--ref origin/staging]
+// usage: node tally.mjs [--ref origin/staging] [--project N | --task ID]
+// With neither, it prints every Project in scripts/task-projects.mjs.
 
 import { execFileSync } from 'node:child_process';
 
 import { idsNamedByMerge } from '../../../scripts/task-ids.mjs';
-import { HEADING, ID, TASKS_FILES } from '../../../scripts/tasks-md.mjs';
+import {
+  ID_LETTERS,
+  PROJECTS,
+  projectByNumber,
+  projectOfId,
+} from '../../../scripts/task-projects.mjs';
+import { HEADING, ID, orderTaskFiles, projectOfDocPath } from '../../../scripts/tasks-md.mjs';
 
 const args = process.argv.slice(2);
-const ref = args.includes('--ref') ? args[args.indexOf('--ref') + 1] : 'origin/staging';
+const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+const ref = option('--ref') ?? 'origin/staging';
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 // Resolved first, so a ref that does not exist fails here rather than reading as
 // a breakdown with no files.
 const sha = git('rev-parse', '--short', ref).trim();
 
-// A ref from before the split (MB.143) holds the whole breakdown in TASKS.md and
-// none of the other files, so a file the ref lacks contributes nothing.
-function existsAt(path) {
-  try {
-    execFileSync('git', ['cat-file', '-e', `${ref}:${path}`], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-}
+// Every breakdown file at the ref. A ref from before the split by Project holds its files
+// directly under `tasks/`, so the Project of an id comes from where it sits at the ref, or from its prefix.
+const files = orderTaskFiles(
+  git('ls-tree', '-r', '--name-only', ref, '--', 'claude-docs').split('\n'),
+);
 const plan = new Map();
-for (const path of TASKS_FILES.filter(existsAt)) {
+const projectOf = new Map();
+for (const path of files) {
+  const filed = projectOfDocPath(path);
   for (const line of git('show', `${ref}:${path}`).split('\n')) {
     const m = HEADING.exec(line);
-    if (m) plan.set(m[1], m[2] === undefined ? { retired: true } : { hours: Number(m[2]) });
+    if (!m) continue;
+    plan.set(m[1], m[2] === undefined ? { retired: true } : { hours: Number(m[2]) });
+    projectOf.set(m[1], path.split('/').length === 4 ? filed : projectOfId(m[1]));
   }
 }
 const canonical = new Map([...plan.keys()].map((id) => [id.toUpperCase(), id]));
@@ -59,6 +66,8 @@ const NOT_COMPLETIONS = new Set([
   'f821420471d675a9aaefeb754b930d669203f7c1', // MB.175: scope recorded in its entry
   'b49a9168b2d28aaf24ba0db4809993283eaabd6c', // MB.175: seed term added to its entry
   '30b5c5c25541d5d1ac7a27e8e1dbffe5a7a5bce1', // M17.1: a line added to its entry
+  'c8d63d987b7c51eb9503c8cf2ae7e8c8f3bf9f96', // two Project 4 entries corrected
+  '740ea66a94418c0ce6ba883451f993f50cc05933', // a Project 4 entry filed
 ]);
 const done = new Set();
 const RECORD = '\x1e';
@@ -140,52 +149,63 @@ for (const id of [
 // Task branches, local or pushed, whose id has not merged: work under way, PR or not.
 const open = new Set();
 for (const branch of git('branch', '-a', '--format=%(refname:short)').split('\n')) {
-  const m = /(?:^|\/)(?:feature|hotfix)\/(?:backlog-)?(m[a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-/i.exec(
-    branch,
-  );
+  const m = new RegExp(
+    String.raw`(?:^|\/)(?:feature|hotfix)\/(?:backlog-)?([${ID_LETTERS}][a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-`,
+    'i',
+  ).exec(branch);
   if (m && !done.has(norm(m[1])) && !plan.get(norm(m[1]))?.retired) open.add(norm(m[1]));
 }
 
-const t = { done: 0, doneH: 0, left: 0, leftH: 0, retired: 0 };
-for (const id of new Set([...plan.keys(), ...done])) {
-  const p = plan.get(id);
-  if (p?.retired) {
-    t.retired++;
-    continue;
-  }
-  // A merged id with no `· Nh` heading counts as a task at 0h.
-  const hours = p?.hours ?? 0;
-  if (done.has(id)) {
-    t.done++;
-    t.doneH += hours;
-  } else {
-    t.left++;
-    t.leftH += hours;
-  }
-}
-
-const total = t.done + t.left;
-const totalH = t.doneH + t.leftH;
+const chosen = option('--project')
+  ? [projectByNumber(option('--project'))]
+  : option('--task')
+    ? [projectOf.get(norm(option('--task'))) ?? projectOfId(norm(option('--task')))]
+    : PROJECTS;
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const h = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)}h`;
 const bar = (n, d, width = 24) => {
   const filled = d ? Math.round((n / d) * width) : 0;
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 };
-const out = [
-  `**Sorrel & Salt progress** · \`${ref}\` @ \`${sha}\``,
-  '',
-  '|               | Tasks | Hours |',
-  '| ------------- | ----: | ----: |',
-  `| ✅ Completed  | **${t.done}** | **${h(t.doneH)}** |`,
-  `| ⏳ Remaining  | **${t.left}** | **${h(t.leftH)}** |`,
-  `| Σ Total       | **${total}** | **${h(totalH)}** |`,
-  '',
-  '```',
-  `Hours  ${bar(t.doneH, totalH)}  ${pct(t.doneH, totalH)}%`,
-  `Tasks  ${bar(t.done, total)}  ${pct(t.done, total)}%`,
-  '```',
-  '',
-  `▶ Under way (branch exists): ${open.size ? [...open].join(', ') : 'none'} · ${t.retired} retired tasks excluded`,
-];
-process.stdout.write(out.join('\n') + '\n');
+const ofProject = (id) => projectOf.get(id) ?? projectOfId(id);
+
+const reports = chosen.map((project) => {
+  const t = { done: 0, doneH: 0, left: 0, leftH: 0, retired: 0 };
+  for (const id of new Set([...plan.keys(), ...done])) {
+    if (ofProject(id) !== project) continue;
+    const p = plan.get(id);
+    if (p?.retired) {
+      t.retired++;
+      continue;
+    }
+    // A merged id with no `· Nh` heading counts as a task at 0h.
+    const hours = p?.hours ?? 0;
+    if (done.has(id)) {
+      t.done++;
+      t.doneH += hours;
+    } else {
+      t.left++;
+      t.leftH += hours;
+    }
+  }
+  const under = [...open].filter((id) => ofProject(id) === project);
+  const total = t.done + t.left;
+  const totalH = t.doneH + t.leftH;
+  return [
+    `**${project.title} progress** (Project ${project.number}) · \`${ref}\` @ \`${sha}\``,
+    '',
+    '|               | Tasks | Hours |',
+    '| ------------- | ----: | ----: |',
+    `| ✅ Completed  | **${t.done}** | **${h(t.doneH)}** |`,
+    `| ⏳ Remaining  | **${t.left}** | **${h(t.leftH)}** |`,
+    `| Σ Total       | **${total}** | **${h(totalH)}** |`,
+    '',
+    '```',
+    `Hours  ${bar(t.doneH, totalH)}  ${pct(t.doneH, totalH)}%`,
+    `Tasks  ${bar(t.done, total)}  ${pct(t.done, total)}%`,
+    '```',
+    '',
+    `▶ Under way (branch exists): ${under.length ? under.join(', ') : 'none'} · ${t.retired} retired tasks excluded`,
+  ].join('\n');
+});
+process.stdout.write(reports.join('\n\n') + '\n');

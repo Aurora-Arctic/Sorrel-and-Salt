@@ -47,8 +47,8 @@ export { DEFAULT_PROJECT };
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
 // `**<id> — Title** · 2h …` or `**<id> — ~~Title~~** · **RETIRED …**`
 export const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
-// `| **7 — GraphQL** | <id> → <id> · <id> · … |` in the execution-order table.
-export const WAVE_ROW = /^\| \*\*(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
+// `| **7 — GraphQL** | <id> → <id> · <id> · … |` in the execution-order table; `**N · 01 — Privacy**` names another Project's wave by its prefix.
+export const WAVE_ROW = /^\| \*\*(?:([A-Z]) · )?(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
 export const ID_ONLY = new RegExp(String.raw`^(${ID})$`);
 export const ID_RANGE = new RegExp(String.raw`^(${ID})\s*→\s*(${ID})$`);
 
@@ -84,7 +84,8 @@ export function readTasksMd(text) {
       continue;
     }
     const row = WAVE_ROW.exec(line);
-    if (row) waves.push({ number: Number(row[1]), name: row[2].trim(), cell: row[3] });
+    if (row)
+      waves.push({ letter: row[1], number: Number(row[2]), name: row[3].trim(), cell: row[4] });
   }
   const unresolved = [];
   for (const wave of waves) {

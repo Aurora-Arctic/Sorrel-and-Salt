@@ -1,5 +1,6 @@
 // The board's GitHub Projects, the one place a Project number is written (claude-docs/task-tracking.md, "The board").
-// A milestone belongs to the Project that lists it, or else to the one Project marked `default`.
+// A milestone belongs to the Project whose `milestonePrefix` starts its title, or else to the one Project marked `default`.
+// A task id belongs to the Project whose `prefix` letter starts it.
 
 export const PROJECTS = [
   {
@@ -7,30 +8,25 @@ export const PROJECTS = [
     title: 'Sorrel & Salt',
     // The directory under claude-docs/tasks/ and claude-docs/waves/ holding this Project's entries.
     slug: 'v1',
+    // Its ids: M<milestone>.<n>, MB.<n> for bugs and gaps, MW.<n> for wave close-outs.
+    prefix: 'M',
+    milestonePrefix: '',
     bugfixes: 'Z. Bugfixes',
     default: true,
     // Its own auto-add workflow places a `tracked` issue; the script never adds one here.
     autoAdd: true,
-    milestones: [],
   },
   {
     number: 4,
     title: 'Sorrel & Salt V1.Next',
     slug: 'v1-next',
-    bugfixes: 'Z. Bugfixes — V1.Next',
+    // Its ids: N<wave>.<n>, ND.<n> on N · Z. Deferred, NO.<n> on N · Z. Outside the Website, NB.<n> for bugs.
+    prefix: 'N',
+    milestonePrefix: 'N · ',
+    bugfixes: 'N · Z. Bugfixes',
     // Project 1's auto-add filter excludes this label, the only qualifier it can tell the two apart by.
     label: 'v1-next',
     autoAdd: false,
-    milestones: [
-      'Wave 18 — Privacy',
-      'Wave 19 — Compendium ethics',
-      'Wave 20 — Ethical warnings',
-      'Wave 21 — Billing and memberships',
-      'Wave 22 — Email consent and notifications',
-      'Z. Deferred',
-      'Z. Outside the Website',
-      'Z. Bugfixes — V1.Next',
-    ],
   },
 ];
 
@@ -54,22 +50,34 @@ export function projectBySlug(slug, projects = PROJECTS) {
   return projects.find((candidate) => candidate.slug === slug) ?? null;
 }
 
+const byPrefix = (projects, test) => {
+  const listed = projects.filter((project) => project.milestonePrefix && test(project));
+  return listed[0] ?? projects.find((project) => project.default);
+};
+
 /** The Project a milestone's issues sit on; null for no milestone or a neutral one. */
 export function projectOfMilestone(title, projects = PROJECTS) {
   if (!title || NEUTRAL_MILESTONES.includes(title)) return null;
-  const listed = projects.filter((project) => project.milestones.includes(title));
-  if (listed.length > 1) {
-    throw new ProjectConfigError(`"${title}" is listed under more than one Project.`);
-  }
-  return listed[0] ?? projects.find((project) => project.default);
+  return byPrefix(projects, (project) => title.startsWith(project.milestonePrefix));
 }
 
-const WAVE = /^Wave (\d+) /;
-
-/** The Project a wave row's milestone, `Wave NN — …`, belongs to. */
-export function projectOfWave(number, projects = PROJECTS) {
-  const listed = projects.find((project) =>
-    project.milestones.some((title) => Number(WAVE.exec(title)?.[1]) === Number(number)),
+/** The Project a task id belongs to, by its first letter. */
+export function projectOfId(id, projects = PROJECTS) {
+  const letter = id.slice(0, 1).toUpperCase();
+  return (
+    projects.find((project) => project.prefix === letter) ??
+    projects.find((project) => project.default)
   );
-  return listed ?? projects.find((project) => project.default);
 }
+
+/** The Project of a wave row in TASKS.md: `**7 — …**` is the default's, `**N · 01 — …**` the Project whose prefix is N. */
+export function projectOfWave(wave, projects = PROJECTS) {
+  return byPrefix(projects, (project) => project.prefix === wave.letter);
+}
+
+/** The milestone title a wave row names, up to its own name: `Wave 07`, `N · Wave 01`. */
+export const waveTitle = (wave, project = projectOfWave(wave)) =>
+  `${project.milestonePrefix}Wave ${String(wave.number).padStart(2, '0')}`;
+
+/** The letters every Project's ids and branches start with, for a pattern. */
+export const ID_LETTERS = PROJECTS.map((project) => project.prefix).join('');

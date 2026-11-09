@@ -12,6 +12,7 @@ import {
   projectByNumber,
   projectOfMilestone,
   projectOfWave,
+  waveTitle,
   ProjectConfigError,
 } from './task-projects.mjs';
 import { ID, expandIds, findEntry, loadTasksMd } from './tasks-md.mjs';
@@ -331,8 +332,6 @@ export function planMoves(target) {
   return moves;
 }
 
-const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
-
 /**
  * The plan: the waves left where they sit, every disagreement between rows and board, the target order of the open waves, and the moves. A wave whose milestone has no open issue is done;
  * an issue on a wave's milestone that its row does not name is appended to the wave and reported.
@@ -365,11 +364,12 @@ export function planReorder({ issues, milestones, listing, tasks, project }) {
     entries.push({ id, ...onBoard.get(issue.number) });
     placed.add(id);
   };
-  for (const wave of tasks.waves.filter((row) => projectOfWave(row.number) === project)) {
-    const prefix = waveTitle(wave.number);
+  for (const wave of tasks.waves.filter((row) => projectOfWave(row) === project)) {
+    const prefix = waveTitle(wave, project);
+    const row = `row ${wave.letter ? `${wave.letter} · ` : ''}${wave.number}`;
     const milestone = milestones.find((candidate) => candidate.title.startsWith(`${prefix} `));
     if (!milestone) {
-      plan.skipped.push(`row ${wave.number}: no milestone titled "${prefix} — …"`);
+      plan.skipped.push(`${row}: no milestone titled "${prefix} — …"`);
       continue;
     }
     if (milestone.openIssues === 0) {
@@ -379,18 +379,14 @@ export function planReorder({ issues, milestones, listing, tasks, project }) {
     for (const id of wave.ids) {
       const issue = byId.get(id);
       if (!issue) {
-        plan.missing.push(`row ${wave.number}: ${id} has no tracked issue`);
+        plan.missing.push(`${row}: ${id} has no tracked issue`);
       } else if (!onBoard.has(issue.number)) {
-        plan.missing.push(
-          `row ${wave.number}: ${id} (#${issue.number}) is not on Project ${project.number}`,
-        );
+        plan.missing.push(`${row}: ${id} (#${issue.number}) is not on Project ${project.number}`);
       } else if (placed.has(id)) {
-        plan.misplaced.push(`row ${wave.number}: ${id} was already placed by an earlier row`);
+        plan.misplaced.push(`${row}: ${id} was already placed by an earlier row`);
       } else {
         if (issue.milestone !== milestone.title) {
-          plan.misplaced.push(
-            `row ${wave.number}: ${id} sits on "${issue.milestone ?? 'no milestone'}"`,
-          );
+          plan.misplaced.push(`${row}: ${id} sits on "${issue.milestone ?? 'no milestone'}"`);
         }
         place(id, issue);
       }
@@ -403,13 +399,13 @@ export function planReorder({ issues, milestones, listing, tasks, project }) {
       )
       .sort((a, b) => (headingIndex.get(a.id) ?? Infinity) - (headingIndex.get(b.id) ?? Infinity));
     for (const { id, issue } of members) {
-      plan.unlisted.push(`${milestone.title}: ${id} is not in row ${wave.number}, appended`);
+      plan.unlisted.push(`${milestone.title}: ${id} is not in ${row}, appended`);
       place(id, issue);
     }
     const listed = expandIds(milestone.description.split('\n')[0], tasks.order).ids;
     if (listed.join(' ') !== wave.ids.join(' ')) {
       plan.descriptions.push(
-        `${milestone.title}: the description's first line differs from row ${wave.number}`,
+        `${milestone.title}: the description's first line differs from ${row}`,
       );
     }
   }
@@ -967,6 +963,8 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   comment <ID> "<text>"      comment on the issue; refused if the text looks like a value
   sync <ID> [<ID> …]         bring each issue's title, body and Estimate to its entry
   list                       every tracked issue, as a JSON array
+  renumber <OLD> <NEW> [<OLD> <NEW> …]
+                             retitle each open issue from its old id to the new one its entry is headed by, then sync it
   reorder [--project N] [--apply] [--limit N]
                              the moves that put each Project's open waves in execution order; --apply makes them
   move <ID> --after <ID> | --last
@@ -1023,6 +1021,30 @@ const COMMANDS = {
   },
   list() {
     console.log(JSON.stringify(listTracked(), null, 2));
+  },
+  // A closed task keeps its id: its merged PR's title names the old one, and the tally counts it by that.
+  renumber(args) {
+    if (args.length === 0 || args.length % 2) throw new BoardError(USAGE);
+    const issues = listTracked();
+    for (let i = 0; i < args.length; i += 2) {
+      const [from, to] = [args[i].toUpperCase(), args[i + 1].toUpperCase()];
+      const entry = findEntry(to);
+      if (!entry)
+        throw new BoardError(`No entry in claude-docs/tasks/ is headed "${titlePrefix(to)}…".`);
+      const renamed = issues.some((issue) => matchesId(issue.title, to));
+      const issue = findIssue(renamed ? to : from, issues);
+      if (issue.state === 'CLOSED') {
+        throw new BoardError(`#${issue.number} is closed; a closed task keeps its id.`);
+      }
+      const { title, body, estimate } = syncIssue(issue, entry);
+      const changed = [
+        title && 'title',
+        body && 'body',
+        estimate?.changed && `estimate ${estimate.to}h`,
+      ];
+      const note = changed.filter(Boolean).join(', ') || 'already in sync';
+      console.log(`${from} → ${to}: #${issue.number} ${note}`);
+    }
   },
   async reorder(args) {
     const at = args.indexOf('--limit');
