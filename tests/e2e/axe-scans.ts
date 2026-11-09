@@ -128,6 +128,9 @@ export const MODAL_SCANS = [
     as: 'steward',
   },
 
+  // Signed out, over any public page.
+  { id: 'sign-in', source: 'src/components/SignInDialog/index.tsx', as: 'signedOut' },
+
   // The account.
   { id: 'unlink-provider', source: 'src/components/SignInMethods/provider-row.tsx', as: 'user' },
   { id: 'passkey', source: 'src/components/Passkeys/passkey-row.tsx', as: 'user' },

@@ -24,8 +24,15 @@ test('Sign In from a public page returns to it, query string kept, once signed i
   page,
 }) => {
   await page.goto('/help/glossary?x=1');
-  await page.getByRole('link', { name: 'Sign In' }).click();
-  await expect(page).toHaveURL('/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'));
+  // The bar's Sign In opens a dialog over the page; its address is what a new tab gets.
+  const signIn = page.getByRole('banner').getByRole('link', { name: 'Sign In' });
+  await expect(signIn).toHaveAttribute(
+    'href',
+    '/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'),
+  );
+  await signIn.click();
+  await expect(page.getByRole('dialog', { name: 'Sign In' })).toBeVisible();
+  await expect(page).toHaveURL('/help/glossary?x=1');
 
   await signInAs(page, 'return-to-page@route-protection.test');
   await page.goto('/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'));

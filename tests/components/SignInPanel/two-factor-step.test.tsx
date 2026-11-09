@@ -166,11 +166,13 @@ describe('SignInPanel, the two-factor step', () => {
 
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Passkey/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Back to Sign-In Options' }),
+    ).not.toBeInTheDocument();
 
     await press(screen.getByRole('button', { name: 'Start Again' }));
 
-    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to Sign-In Options' })).toBeInTheDocument();
   });
 
   it('offers the code field an action placeholder', async () => {

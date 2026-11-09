@@ -19,7 +19,8 @@ const Page = (props: InvitationAcceptanceProps) => (
   </main>
 );
 
-const SIGN_IN = '/sign-in?next=%2Finvite%2Fworkshop';
+const INVITATION = '/invite/workshop';
+const PROVIDERS = ['discord', 'google', 'facebook', 'microsoft'] as const;
 const EMAIL_PAGE = '/account/email?next=%2Finvite%2Fworkshop';
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
@@ -40,7 +41,15 @@ const UNVERIFIED =
 const PAUSED =
   "Keeper changes are paused, so this invitation can't be accepted until they are resumed.";
 
-const SignedOutView = () => <Page status="signed-out" signInHref={SIGN_IN} />;
+const SignedOutView = () => (
+  <Page status="signed-out" lead="sign-in" next={INVITATION} configured={PROVIDERS} />
+);
+
+const signedOutCardNode = (
+  <Page status="signed-out" lead="sign-up" next="/i/workshop" configured={PROVIDERS} card />
+);
+
+const checkYourInboxNode = <Page status="unverified" emailHref={EMAIL_PAGE} />;
 
 export const SignedOut: Story = { render: SignedOutView };
 
@@ -105,10 +114,12 @@ const pausedNode = <Page status="refused" message={PAUSED} />;
 
 const STATES_STATES: Record<string, ReactNode> = {
   'Signed Out': <SignedOutView />,
+  'Signed Out Card': signedOutCardNode,
+  'Check Your Inbox': checkYourInboxNode,
   Default: defaultNode,
   'Acceptable Curator': acceptableCuratorNode,
   'Acceptable Coven': acceptableCovenNode,
-  Unverified: unverifiedNode,
+  'Unverified Stand-In Address': unverifiedNode,
   Invalid: invalidNode,
   Accepted: acceptedNode,
   Revoked: revokedNode,

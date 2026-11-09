@@ -18,34 +18,35 @@
       min-height: $hero-control-height;
       font-size: type-size('lead');
     }
-
-    .btn {
-      min-height: $hero-control-height;
-    }
   }
 
-  // Centred on the box's first line, so it stays put when the button drops beneath on a narrow phone.
-  &__magnifier {
+  // The magnifier is the one submit, centred on the box's first line at its start, like the compendium's.
+  &__submit {
     position: absolute;
-    inset-block-start: calc((#{$control-height} - 1.25rem) / 2);
+    inset-block-start: 0;
     inset-inline-start: space(3);
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    block-size: $control-height;
+    padding: 0;
+    border: 0;
+    background: none;
     color: $text-muted;
-    pointer-events: none;
-  }
+    cursor: pointer;
 
-  &--hero &__magnifier {
-    inset-block-start: calc((#{$hero-control-height} - 1.25rem) / 2);
-  }
-
-  // Below a narrow phone the button drops beneath the box rather than squeezing it.
-  @media (max-width: 20rem) {
-    flex-wrap: wrap;
-
-    .btn {
-      flex-basis: 100%;
+    svg {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
     }
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  &--hero &__submit {
+    block-size: $hero-control-height;
   }
 }
 

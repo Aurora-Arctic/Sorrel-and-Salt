@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({
 const frame = () =>
   render(
     <Navigating push={router.push}>
-      <PublicFrame>
+      <PublicFrame configured={['google']}>
         <main>
           <h1>The page</h1>
         </main>
@@ -103,6 +103,23 @@ describe('PublicFrame', () => {
       '/sign-in?next=' +
         encodeURIComponent('/compendium/ingredients/achiote-bixa-orellana?entry=2&q=rose'),
     );
+  });
+
+  it('opens the sign-in dialog over the page from Sign In, with the providers the server has', async () => {
+    frame();
+
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Sign In' })));
+
+    const dialog = screen.getByRole('dialog', { name: 'Sign In' });
+    expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(router.push).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'The page', hidden: true }),
+    ).toBeInTheDocument();
   });
 
   it('has Sign In carry no return path from an auth page', () => {

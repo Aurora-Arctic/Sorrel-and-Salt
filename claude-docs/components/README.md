@@ -27,6 +27,7 @@ design is in [`ui.md`, "The navigation shell is a slim bar, a context row and a 
 
 - [`app-shell.md`](app-shell.md) — The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone.
 - [`public-frame.md`](public-frame.md) — The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait.
+- [`sign-in-dialog.md`](sign-in-dialog.md) — A link to sign in that opens the sign-in panel in a dialog over the current page, from the bar and from an invitation.
 - [`account-menu.md`](account-menu.md) — The disclosure in the bar offering Your Account and Sign Out, with a dot and a count linking to the pending coven invitations.
 - [`context-row.md`](context-row.md) — The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it.
 - [`section-nav.md`](section-nav.md) — The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone.
