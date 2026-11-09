@@ -21,8 +21,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-7   | Status label 'Used Up' versus 'Used up' has drifted                                                                                                          | high     | Components    |      1 |   0.5 | Fixed                                           |
 | D-8   | three ways to open the per-file `sql` client in `db` tests; 89 files hand-roll it, 18 never end it                                                           | high     | Tests         |    224 |     5 | Fixed                                           |
 | D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Fixed                                           |
-| D-10  | fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL                                                              | high     | Tests         |     31 |     6 | Not yet fixed                                   |
-| D-11  | e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`                                                             | high     | Tests         |     30 |   3.5 | Not yet fixed                                   |
+| D-10  | fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL                                                              | high     | Tests         |     31 |     6 | Fixed                                           |
+| D-11  | e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`                                                             | high     | Tests         |     30 |   3.5 | Fixed                                           |
 | D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Fixed                                           |
 | D-13  | The "reduced motion" media-query check is copied into eight places                                                                                           | high     | Components    |     26 |  4.75 | Fixed                                           |
 | D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Fixed                                           |
@@ -35,7 +35,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Fixed                                           |
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Fixed                                           |
 | D-23  | Categories field written twice (SpellBuilder and IngredientForm), including 20 lines of error flattening                                                     | high     | Components    |      7 |   3.5 | Fixed                                           |
-| D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Not yet fixed                                   |
+| D-24  | `holdServerAnswers` is written seven times in e2e specs and the copies have drifted                                                                          | high     | Tests         |      7 |     2 | Fixed                                           |
 | D-25  | Pause validation (end time, note length) written out three times, constants four times                                                                       | high     | Server        |      6 |     2 | Fixed in part                                   |
 | D-26  | Retention predicates repeated between the finders and the writers                                                                                            | high     | Server        |      5 |   1.5 | Fixed                                           |
 | D-27  | Two category filters are the same function; the grimoire copy has already dropped one term                                                                   | high     | Server        |      4 |     2 | Fixed                                           |
@@ -416,7 +416,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** every file listed; all in the `db` project.
 
 - **Estimate:** 6 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-11: e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`
 
@@ -456,7 +456,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - D-24: `holdServerAnswers` still in `tests/e2e/skeleton-layout.spec.ts` (now `:262`, used `:524`). No new copy.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-12: Breakpoints written by hand in three spellings, plus literal widths
 
@@ -838,7 +838,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** the seven specs.
 
 - **Estimate:** 2 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-25: Pause validation (end time, note length) written out three times, constants four times
 
