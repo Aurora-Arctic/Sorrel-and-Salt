@@ -3,8 +3,12 @@
 // produces.
 import fs from 'node:fs';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
+import { collectFailures, formatFailures } from './lib/playwright-failures.mjs';
 
-const RESULTS_PATH = '/app/stories.json';
+const RESULTS_PATH = process.env.STORIES_JSON || '/app/stories.json';
+// Playwright's own report of the same run, for each failure's spec file and error.
+const PLAYWRIGHT_RESULTS_PATH =
+  process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || '/app/playwright-results.json';
 // This run's own report. The gate suite's is merged with it by
 // merge-playwright-coverage.mjs, in a comment of its own; Vitest's never is.
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage-e2e/coverage-summary.json';
@@ -15,11 +19,21 @@ function setOutput(name, value) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
 }
 
+const failures = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
+  ? collectFailures(JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8')), {
+      includeFlaky: true,
+    })
+  : [];
+const failureBlock = formatFailures(failures, {
+  heading: 'Failing stories',
+  tagPattern: /^@story-/,
+});
+
 // The run may have died before writing the file; job-summary's log tail says why.
 if (!fs.existsSync(RESULTS_PATH)) {
   setOutput('summary', 'no checklist was written');
-  setOutput('details', '');
-  setOutput('flaky', 'false');
+  setOutput('details', failureBlock);
+  setOutput('flaky', failures.some((failure) => failure.flaky) ? 'true' : 'false');
   process.exit(0);
 }
 
@@ -77,7 +91,7 @@ if (unknown.length > 0 || untagged.length > 0) {
 }
 lines.push('', '</details>');
 
-const details = lines.join('\n');
+const details = [failureBlock, lines.join('\n')].filter(Boolean).join('\n\n');
 
 setOutput('summary', summary);
 setOutput('details', details);

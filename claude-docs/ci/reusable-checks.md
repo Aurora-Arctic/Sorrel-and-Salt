@@ -176,7 +176,9 @@
   input switches the run command (`npm run test:stories` with
   `STORIES_JSON=/app/stories.json`), the summariser
   (`.github/scripts/summarize-stories.mjs`: "3 of 63 stories passing" and a
-  markdown checklist), the Playwright comment's section it writes
+  markdown checklist, under the failing and flaky stories it reads from the
+  JSON report through `lib/playwright-failures.mjs`, as
+  `summarize-playwright.mjs` reads the gate's failing tests), the Playwright comment's section it writes
   (`stories` rather than `gate`), the report artifact's name (`stories-report`, since
   one workflow run may not upload two artifacts under one name) and the coverage
   artifact's (`playwright-coverage-stories`). The summariser adds this run's own
