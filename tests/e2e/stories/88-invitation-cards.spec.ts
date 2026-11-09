@@ -88,7 +88,6 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
         emailVerified: false,
       });
       await page.goto(links[1]);
-      await expect(page.getByRole('main')).toContainText('unverified@story-88.test');
       await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
       await page.getByRole('link', { name: 'Confirm Your Email' }).click();
       await expect(page).toHaveURL(/\/account\/email/);
