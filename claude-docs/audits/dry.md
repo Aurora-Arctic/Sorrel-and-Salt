@@ -13,7 +13,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | Id    | Title                                                                                                                                                        | Severity | Area          | Copies | Hours | Status                                          |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- | -----: | ----: | ----------------------------------------------- |
 | D-1   | Two helpers for numbered pagination in the curator pages, and the keepers help page hand-builds a third                                                      | high     | Pages and lib |      8 |     2 | Fixed                                           |
-| D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Not yet fixed                                   |
+| D-2   | Quantity formatting has drifted across three components                                                                                                      | high     | Components    |      5 |     3 | Fixed                                           |
 | D-3   | Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)                                                                             | high     | Components    |      4 |     3 | Fixed                                           |
 | D-4   | AdminInvitations/invite-form and InviteDialog are near-identical invite forms, and the validation has drifted                                                | high     | Components    |      2 |     4 | Fixed                                           |
 | D-5   | Signed-out support input repeats the signed-in input and has drifted                                                                                         | high     | Server        |      1 |     2 | Fixed                                           |
@@ -23,8 +23,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-9   | `const ORIGIN = ...` is redefined in 27 test files, with two different values; `tests/support/oauth.ts` already exports one                                  | high     | Tests         |     33 |     2 | Fixed                                           |
 | D-10  | fourteen `insertCoven`/`makeCoven` helpers each insert a workspace and its members with raw SQL                                                              | high     | Tests         |     31 |     6 | Not yet fixed                                   |
 | D-11  | e2e specs open a raw `postgres` client inline 36 times, and six files define their own `withSql`                                                             | high     | Tests         |     30 |   3.5 | Not yet fixed                                   |
-| D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Not yet fixed                                   |
-| D-13  | The "reduced motion" media-query check is copied into eight places                                                                                           | high     | Components    |     26 |  4.75 | Not yet fixed                                   |
+| D-12  | Breakpoints written by hand in three spellings, plus literal widths                                                                                          | high     | Styles        |     30 |     4 | Fixed                                           |
+| D-13  | The "reduced motion" media-query check is copied into eight places                                                                                           | high     | Components    |     26 |  4.75 | Fixed                                           |
 | D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Fixed in part                                   |
 | D-15  | Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`                                                                 | high     | Pages and lib |     16 |     4 | Fixed                                           |
 | D-16  | Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)                                                                           | high     | Pages and lib |     15 |     3 | Fixed                                           |
@@ -272,7 +272,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 - **Owner's call:** One string-based quantity formatter in `src/lib` replaces all three.
 - **Estimate:** 3 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-3: Text folding for matching has drifted (`toLowerCase` versus `toLocaleLowerCase`)
 
@@ -473,7 +473,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** none for CSS directly; the e2e responsive specs and `tests/e2e/stories` run the layouts. Run the specs of touched components.
 
 - **Estimate:** 4 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-13: The "reduced motion" media-query check is copied into eight places
 
@@ -532,7 +532,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 - **Owner's call:** One shared reduced-motion hook, an exported fade-limit constant, and a guard test that refuses a new inline reduced-motion `matchMedia`.
 - **Estimate:** 4.75 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed.
 
 ### D-14: The failure message is read three different ways from `readGraphqlFailure`
 
