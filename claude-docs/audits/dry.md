@@ -5150,7 +5150,7 @@ Drafts for the owner to review. None of these binds yet. An accepted rule moves 
 ### Before writing code
 
 1. **Search for the shared piece before writing one.** Before adding a helper, hook, component, mixin or test helper, grep `src/lib/`, `src/components/`, `src/scss/_mixins.scss`, `tests/support/` and `tests/e2e/` for its job, not only its name. Most findings were a second copy of something that already existed (D-3, D-14, D-18, D-144). Home: `CLAUDE.md`, "Conventions".
-2. **One name, one meaning.** Never export a function from `src/lib` under a name another file already exports. Two `covenSlugOf` functions took different arguments, and the wrong import compiled (D-32). Guard: `tests/guards/lib-names.test.ts`. Home: `CLAUDE.md`, "Conventions".
+2. **One name, one meaning.** Never export a function from `src/lib` under a name another file already exports. Two `covenSlugOf` functions did different jobs, and importing the wrong one compiled and sent a paused coven member to a page that does not exist (D-32). Guard: `tests/guards/lib-names.test.ts`. Home: `CLAUDE.md`, "Conventions".
 3. **The second copy is the time to share.** When a block is about to be written a second time, and both copies would have to change together, move it into a shared piece instead. A third copy is never written. Copies drifted in every high finding: one copy got a fix and the others did not (D-1, D-24, D-28). Home: `CLAUDE.md`, "Conventions".
 
 ### The shared pieces to use
@@ -5179,7 +5179,7 @@ Drafts for the owner to review. None of these binds yet. An accepted rule moves 
 
 ### When adding a shared piece
 
-9. **A shared piece lands with its guard, in the same commit.** The guard is seen failing once with a copy put back. If some callers can't move yet, they go in an allowlist inside the guard, and the allowlist is empty before the task's PR opens. Every guard this branch added follows that shape. Home: `CLAUDE.md`, "The sweep-task rule" (as its code-sweep half).
+9. **A shared piece lands with its guard, in the same commit.** The guard is seen failing once with a copy put back. If some callers can't move yet, they go in an allowlist inside the guard, and the allowlist is empty before the task's PR opens. Each guard this branch added was seen failing that way before its lane committed. Home: `CLAUDE.md`, "The sweep-task rule" (as its code-sweep half).
 10. **Move every caller, not only the ones in the files at hand.** When several agents fix one finding, the plan gives the whole finding, every caller included, to one agent. Five findings here were left half-done because their callers fell in another agent's files (D-3, D-14, D-18, D-19, D-144). Home: `claude-docs/agent-skills.md`, or the audit skill if one is written.
 
 ### When writing an audit
