@@ -1,3 +1,4 @@
+import type { FieldFormat } from './formats';
 import type { GroupColorColumn } from './types';
 
 // WCAG 2.1 contrast for the floor a category group's colours are held to on write: each against the harder of its theme's two surfaces, as a chip's label
@@ -12,6 +13,15 @@ export const CHIP_GROUNDS: Record<'dark' | 'light', string> = {
 export const MIN_CHIP_CONTRAST = 4.5;
 
 export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+const LOOSE_HEX = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** A hex as `#` and six lower-case digits, read from any spacing, case, a missing `#` or three-digit shorthand (`abc` is `#aabbcc`); text it cannot read stays as typed. The form and the schema both run it. */
+export const hexColour: FieldFormat = (text) => {
+  const digits = LOOSE_HEX.exec(text.replace(/\s+/g, ''))?.[1].toLowerCase();
+  if (!digits) return text;
+  return `#${digits.length === 3 ? [...digits].map((digit) => digit + digit).join('') : digits}`;
+};
 
 export const channels = (hex: string): number[] =>
   [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);

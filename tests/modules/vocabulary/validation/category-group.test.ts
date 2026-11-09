@@ -38,10 +38,21 @@ describe('CategoryGroupInput', () => {
   });
 
   it('requires each colour as a six-digit hex, at its column', () => {
-    for (const value of [undefined, '', 'blue', '#abc', '4e8bc2', '#4e8bc2ff', '#gggggg']) {
+    for (const value of [undefined, '', 'blue', '#ab', '#4e8bc2ff', '#gggggg']) {
       expect(failedPaths({ ...VALID, colorDark: value }), String(value)).toEqual([['colorDark']]);
     }
-    expect(failedPaths({ ...VALID, colorLight: '#abc' })).toEqual([['colorLight']]);
+    expect(failedPaths({ ...VALID, colorLight: '#ab' })).toEqual([['colorLight']]);
+  });
+
+  // The form shows the same tidied hex on blur, so the server stores what the form showed.
+  it('stores a colour typed without #, with spaces, or as three digits, as #rrggbb', () => {
+    for (const value of ['4e8bc2', ' 4E8BC2 ', '# 4e 8b c2', '#4E8BC2']) {
+      expect(CategoryGroupInput.parse({ ...VALID, colorDark: value }).colorDark, value).toBe(
+        '#4e8bc2',
+      );
+    }
+    const short = CategoryGroupInput.parse({ ...VALID, colorDark: '8cf', colorLight: '#06c' });
+    expect([short.colorDark, short.colorLight]).toEqual(['#88ccff', '#0066cc']);
   });
 
   // The pair is one family, as every seeded pair is.

@@ -131,6 +131,40 @@ describe('ChipColorField', () => {
     await waitFor(() => expect(channel('red')).toHaveValue(0x35));
   });
 
+  it('shows a hex typed loosely as # and six lower-case digits when it is left', () => {
+    const onBlur = vi.fn();
+    render(<Controlled initial="" onBlur={onBlur} />);
+
+    for (const [typed, shown] of [
+      [' 4E8BC2', '#4e8bc2'],
+      ['abc', '#aabbcc'],
+      ['#4E8BC2 ', '#4e8bc2'],
+    ]) {
+      fireEvent.change(hex(), { target: { value: typed } });
+      // Left alone while it is being typed.
+      expect(hex()).toHaveValue(typed);
+      fireEvent.blur(hex());
+      expect(hex()).toHaveValue(shown);
+    }
+    expect(onBlur).toHaveBeenCalledTimes(3);
+  });
+
+  it('leaves a hex it cannot read as typed when it is left', () => {
+    render(<Controlled initial="" />);
+
+    fireEvent.change(hex(), { target: { value: '#4e8b' } });
+    fireEvent.blur(hex());
+
+    expect(hex()).toHaveValue('#4e8b');
+  });
+
+  it('takes no spell-check or capital letters on the hex', () => {
+    render(<Controlled />);
+
+    expect(hex()).toHaveAttribute('spellcheck', 'false');
+    expect(hex()).toHaveAttribute('autocapitalize', 'none');
+  });
+
   describe('Match', () => {
     it('sets the colour from its partner, fitted to this ground', () => {
       const onChange = vi.fn();

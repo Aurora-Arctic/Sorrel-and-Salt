@@ -9,6 +9,7 @@ import {
   MIN_CHIP_CONTRAST,
   chipContrast,
   formatRatio,
+  hexColour,
 } from '../../lib/contrast';
 import {
   contrastBoundary,
@@ -235,7 +236,8 @@ const ChipColorField = ({
             ))}
             {/* From the top of the inputs to the foot of the buttons under them. */}
             <span className="chip-color-field__divider" aria-hidden="true" />
-            {/* The hex the form validates: the box its label names. */}
+            {/* The hex the form validates: the box its label names. It stays a plain input and not a PlainTextField, which draws a label and an
+                error of its own and takes neither this `id`, `ref` nor the ratio's description. */}
             <div className="chip-color-field__channel">
               <input
                 id={id}
@@ -243,9 +245,14 @@ const ChipColorField = ({
                 className="input chip-color-field__hex"
                 value={value}
                 spellCheck={false}
+                autoCapitalize="none"
                 autoComplete="off"
                 placeholder={placeholder}
                 onChange={(event) => onChange(event.currentTarget.value)}
+                onBlur={(event) => {
+                  const shown = hexColour(event.currentTarget.value);
+                  if (shown !== event.currentTarget.value) onChange(shown);
+                }}
                 aria-invalid={invalid}
                 aria-required={required}
                 aria-describedby={

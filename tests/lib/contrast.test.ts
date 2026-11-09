@@ -6,6 +6,7 @@ import {
   chipContrast,
   contrastRatio,
   formatRatio,
+  hexColour,
   relativeLuminance,
 } from '@/lib/contrast';
 
@@ -65,5 +66,25 @@ describe('formatRatio', () => {
   // A refused ratio must never read as the floor it missed.
   it('cuts rather than rounds', () => {
     expect(formatRatio(4.4996)).toBe('4.49');
+  });
+});
+
+describe('hexColour', () => {
+  it('shows a hex as # and six lower-case digits, however it was typed', () => {
+    for (const typed of ['#4e8bc2', '4E8BC2', ' 4E8BC2', '#4E8BC2 ', '# 4e 8b c2', '\t#4e8bc2\n']) {
+      expect(hexColour(typed), typed).toBe('#4e8bc2');
+    }
+  });
+
+  it('expands three-digit shorthand by doubling each digit', () => {
+    expect(hexColour('abc')).toBe('#aabbcc');
+    expect(hexColour(' #ABC ')).toBe('#aabbcc');
+    expect(hexColour('#06c')).toBe('#0066cc');
+  });
+
+  it('leaves text it cannot read as a hex as it was typed', () => {
+    for (const typed of ['', 'blue', '#ab', '#4e8bc', '#4e8bc2ff', '#gggggg', '4e8b']) {
+      expect(hexColour(typed), typed).toBe(typed);
+    }
   });
 });
