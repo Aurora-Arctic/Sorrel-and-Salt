@@ -3,7 +3,7 @@
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -87,7 +87,7 @@ const SupportRequestByLink = (): ReactElement => {
         writeStored(null);
         return { phase: 'missing' };
       }
-      return { phase: 'failed', message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE };
+      return { phase: 'failed', message: failureMessage(error) };
     }
   }, []);
 

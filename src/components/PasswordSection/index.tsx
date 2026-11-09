@@ -6,13 +6,13 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
+import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
-import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
 import { GENERIC_RESET_REQUEST_ERROR } from '../ForgotPasswordForm';
 import type { PasswordSectionProps } from './types';
 import './index.scss';
@@ -45,7 +45,7 @@ function changeRefusal(failure: Failure): Refusal {
   const chosen = newPasswordRefusal(failure);
   if (chosen) return { chosen };
   if (failure.code === 'INVALID_PASSWORD') return { current: WRONG_CURRENT_PASSWORD };
-  if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
+  if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   // A 500 is the breached-password check unreachable, which refuses rather than waves through.
   return { alert: failure.status === 500 ? PASSWORD_CHECK_UNAVAILABLE : GENERIC_CHANGE_ERROR };
 }
@@ -95,7 +95,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     }).catch(() => ({ error: {} as { status?: number } }));
     setSending(false);
     if (error) {
-      setProblem({ alert: error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR });
+      setProblem({ alert: rateLimited(error) ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR });
     } else {
       setSaved('link');
     }

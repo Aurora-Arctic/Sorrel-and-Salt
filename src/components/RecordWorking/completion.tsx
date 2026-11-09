@@ -6,7 +6,7 @@ import { graphql } from '@/lib/graphql-document';
 import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { GENERIC_FAILURE, failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import JarLine from '../JarLine';
@@ -160,7 +160,7 @@ export default function WorkingCompletion({
       refresh();
       onCompleted?.();
     },
-    onError: (error) => setFailure(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
+    onError: (error) => setFailure(failureMessage(error)),
   });
 
   if (preview.isError) {

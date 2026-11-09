@@ -3,7 +3,9 @@
 import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
+import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
+import { saveFile } from '../../lib/save-file';
 import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
@@ -14,8 +16,6 @@ import Modal from '../Modal';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import QrCode from '../QrCode';
-import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
-import { WRONG_CODE } from '../SignInPanel/two-factor-step';
 import type { TwoFactorSettingsProps } from './types';
 
 // Turning two-factor on and off, inside its own section of the account page. Turning on takes the password, then
@@ -53,7 +53,7 @@ function refusal(failure: Failure): Refusal {
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
   if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
-  if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
+  if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   return { alert: GENERIC_TWO_FACTOR_ERROR };
 }
 
@@ -77,16 +77,6 @@ const TURN_ON_WARNING = {
 };
 
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
-
-/** Hands the codes to the browser as a text file, one per line. */
-function downloadCodes(text: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = CODES_FILE;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 // The print window has none of the app's stylesheets, so the page carries its own: two equal
 // columns with each code centred, as on screen.
@@ -341,7 +331,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                   icon={<DownloadIcon />}
                   onClick={() => {
                     setKept(true);
-                    downloadCodes(codesText(enrolment));
+                    saveFile(new Blob([codesText(enrolment)], { type: 'text/plain' }), CODES_FILE);
                   }}
                 />
                 <CodeAction

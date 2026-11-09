@@ -6,7 +6,7 @@ import TwoFactorSettings, {
   STALE_SESSION,
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
-import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { makeQueryClient } from '@/lib/graphql-client';
 
 // The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;
@@ -223,6 +223,20 @@ describe('TwoFactorSettings', () => {
       expect(click).toHaveBeenCalledOnce();
       expect(blobs).toHaveLength(1);
       expect(await blobs[0].text()).toBe(EXPECTED);
+      click.mockRestore();
+    });
+
+    it('keeps the download link alive after the click so the browser can read it', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:codes');
+      const revoke = vi.fn();
+      URL.revokeObjectURL = revoke;
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      await startEnrolment();
+
+      await press(button('Download'));
+
+      expect(click).toHaveBeenCalledOnce();
+      expect(revoke).not.toHaveBeenCalled();
       click.mockRestore();
     });
 

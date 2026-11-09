@@ -5,7 +5,7 @@ import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
 import DeleteWorkspaceButton from '../DeleteWorkspaceButton';
@@ -123,7 +123,7 @@ const Options = ({
       });
     } catch (error) {
       setSending(false);
-      report(readGraphqlFailure(error).alert);
+      report(failureMessage(error));
       return;
     }
     try {
@@ -132,7 +132,7 @@ const Options = ({
       setSending(false);
       // Said plainly: the first half happened and stands.
       report(
-        `${successor?.name ?? 'They'} is now a steward, but you did not leave. ${readGraphqlFailure(error).alert}`,
+        `${successor?.name ?? 'They'} is now a steward, but you did not leave. ${failureMessage(error)}`,
       );
       return;
     }

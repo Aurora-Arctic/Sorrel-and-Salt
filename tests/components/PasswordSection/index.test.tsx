@@ -6,7 +6,7 @@ import PasswordSection, {
   GENERIC_CHANGE_ERROR,
   WRONG_CURRENT_PASSWORD,
 } from '@/components/PasswordSection';
-import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import type { SetPasswordMutation, SetPasswordMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';

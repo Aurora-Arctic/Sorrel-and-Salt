@@ -2,7 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import Passkeys, { ADD_FAILED, LAST_WAY_IN } from '@/components/Passkeys';
+import Passkeys, { ADD_FAILED } from '@/components/Passkeys';
+import { LAST_WAY_IN } from '@/components/Passkeys/refusal';
 import type { AccountPasskey } from '@/lib/types';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));

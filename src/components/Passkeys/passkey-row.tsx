@@ -5,7 +5,7 @@ import { ModalButton } from '../Modal';
 import ConfirmedAction from '../ConfirmedAction';
 import { RenameFields } from './rename-fields';
 import { passkeyAdded, passkeyLabel } from './label';
-import { GENERIC } from './refusal';
+import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import type { PasskeyRowProps } from './types';
 
 // A refused removal is a callout under Remove (claude-docs/components/passkeys.md).
@@ -39,7 +39,7 @@ export function PasskeyRow({ passkey, onRename, onRemove }: PasskeyRowProps): Re
         confirmClass="btn btn--destructive"
         send={onRemove}
         onSent={() => undefined}
-        refusal={(error) => (error instanceof Error ? error.message : GENERIC)}
+        refusal={(error) => (error instanceof Error ? error.message : GENERIC_FAILURE)}
       />
     </li>
   );

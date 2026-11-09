@@ -9,7 +9,8 @@ import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { passkeyLabel } from './label';
 import { PasskeyRow } from './passkey-row';
-import { GENERIC, LAST_WAY_IN, refusal } from './refusal';
+import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import { refusal } from './refusal';
 import type { PasskeysProps } from './types';
 import './index.scss';
 
@@ -17,7 +18,6 @@ import './index.scss';
 
 const ADD = 'Add a Passkey';
 export const ADD_FAILED = 'No passkey was added. Try again, or add one from another device.';
-export { LAST_WAY_IN };
 
 const listed = (rows: readonly { id: string; name?: string | null; createdAt: Date | string }[]) =>
   rows.map(({ id, name, createdAt }): AccountPasskey => ({
@@ -46,7 +46,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
       : await passkeyActions.listUserPasskeys().catch(() => undefined);
     setAdding(false);
     if (!fresh?.data) {
-      add.report(result?.error ? ADD_FAILED : GENERIC);
+      add.report(result?.error ? ADD_FAILED : GENERIC_FAILURE);
       return;
     }
     setRows(listed(fresh.data));

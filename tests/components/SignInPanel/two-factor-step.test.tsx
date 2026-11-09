@@ -1,11 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import {
-  CHALLENGE_EXPIRED,
-  CODE_LOCKED,
-  WRONG_CODE,
-} from '@/components/SignInPanel/two-factor-step';
+import { CHALLENGE_EXPIRED, CODE_LOCKED } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { setQuery } from './search-params';
 
 // The second sign-in step (@story-75). Better Auth's client is mocked at the calls the step makes, so each test sets
