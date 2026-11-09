@@ -1,15 +1,19 @@
 name: PR Check Comment
 description: >-
-  Posts or updates a single marked PR comment reporting a CI check's
-  pass/fail result, with distinct pr-gate (minimize-on-success) and
-  merge-queue (fail-only, separate thread) behavior.
+  Posts or updates one marked PR comment for a CI check, in the layout every
+  CI comment shares (.github/scripts/lib/pr-comment.cjs). A single-result
+  comment has pr-gate (minimize-on-success) and merge-queue (fail-only,
+  separate thread) behaviour; a sectioned one (Vitest, Playwright) is written
+  one section at a time by the jobs that share it.
 
 inputs:
   check-name:
-    description: Human-readable check name for the comment heading, e.g. "Vitest"
+    description: Human-readable check name for the comment heading, in Title Case, e.g. "Vitest"
     required: true
   marker-slug:
-    description: Lowercase slug for the comment's hidden marker, e.g. "vitest" -> <!-- ci-vitest -->
+    description: >-
+      Lowercase slug for the comment's hidden marker, e.g. "vitest" -> <!-- ci-vitest -->.
+      With `section` or `reset`, it names the sectioned layout: `vitest` or `playwright`.
     required: true
   pr-number:
     description: Pull request number to comment on
@@ -23,29 +27,49 @@ inputs:
     required: false
     default: 'false'
   outcome:
-    description: Outcome of the check step (e.g. steps.run.outcome) — anything other than 'success' is treated as a failure
-    required: true
+    description: >-
+      Outcome of the check step (e.g. steps.run.outcome) — anything other than
+      'success' (or 'skipped', for a section) is treated as a failure. Unused with `reset`.
+    required: false
+    default: ''
   log-file:
-    description: Path to the check's captured output log, read for the failure comment body
-    required: true
+    description: Path to the check's captured output log, tailed into the comment on failure
+    required: false
+    default: ''
   success-mode:
     description: >-
-      pr-gate (merge-queue: false) behavior on success. 'minimize' resolves a
-      prior open failure comment via GitHub's resolve mechanism and otherwise
-      does nothing (lint/format/typecheck). 'comment' always posts/updates a
-      passing comment (vitest/playwright).
+      pr-gate (merge-queue: false) behaviour on success of a single-result
+      comment. 'minimize' resolves a prior open failure comment via GitHub's
+      resolve mechanism and otherwise does nothing (lint/format/typecheck).
+      'comment' always posts/updates a passing comment. Unused with `section`.
     required: false
     default: minimize
   summary:
-    description: Short single-line markdown stat (e.g. "3 errors across 2 files"), rendered inline in the callout
+    description: Short single-line markdown stat (e.g. "3 errors across 2 files"); a section's goes in its table row
     required: false
     default: ''
   details:
-    description: Optional longer markdown block (e.g. failing-test list or table), rendered between the callout and the log
+    description: Optional longer markdown block (e.g. failing-test list or table), rendered above the log
     required: false
     default: ''
   duration:
     description: Pre-formatted job duration (e.g. "12s", "1m 34s")
+    required: false
+    default: ''
+  section:
+    description: >-
+      The one section of a sectioned comment this call writes, e.g. `dom`. The
+      other sections are left as the comment has them.
+    required: false
+    default: ''
+  reset:
+    description: >-
+      'true' to start a sectioned comment for this run: every section shows as
+      running, except those in `skipped-sections`.
+    required: false
+    default: 'false'
+  skipped-sections:
+    description: With `reset`, a comma-separated list of the sections the path filter skipped
     required: false
     default: ''
 
@@ -65,89 +89,18 @@ runs:
         DETAILS: ${{ inputs.details }}
         DURATION: ${{ inputs.duration }}
         PR_NUMBER: ${{ inputs.pr-number }}
+        SECTION: ${{ inputs.section }}
+        RESET: ${{ inputs.reset }}
+        SKIPPED_SECTIONS: ${{ inputs.skipped-sections }}
       with:
+        # A local action resolves from the workspace checkout, so the module is
+        # there too, in a container job as on the runner.
         script: |
-          const fs = require('fs');
-          const isMergeQueue = process.env.MERGE_QUEUE === 'true';
-          const checkName = process.env.CHECK_NAME;
-          const slug = process.env.MARKER_SLUG;
-          const successMode = process.env.SUCCESS_MODE;
-          const outcome = process.env.OUTCOME;
-          const logFile = process.env.LOG_FILE;
-          const summary = process.env.SUMMARY;
-          const details = process.env.DETAILS;
-          const duration = process.env.DURATION;
-          const marker = isMergeQueue ? `<!-- ci-${slug}-mergequeue -->` : `<!-- ci-${slug} -->`;
-          const label = isMergeQueue ? `${checkName} (merge queue)` : checkName;
-          const { owner, repo } = context.repo;
-          const prNumber = Number(process.env.PR_NUMBER);
-
-          const shortSha = context.sha.slice(0, 7);
-          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-          const metaParts = [`\`${shortSha}\``];
-          if (duration) metaParts.push(duration);
-          metaParts.push(`[view run](${runUrl})`);
-          const meta = metaParts.join(' · ');
-
-          const comments = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber });
-          const existing = comments.data.find((c) => c.body.includes(marker));
-
-          if (outcome === 'success' && isMergeQueue) {
-            return;
-          }
-
-          if (outcome === 'success' && successMode === 'minimize') {
-            if (!existing) {
-              return;
-            }
-            const statLine = summary ? ` — ${summary} (previously failed)` : ' (previously failed)';
-            const body = `${marker}\n> [!NOTE]\n> ✅ **${label} passed**${statLine} · ${meta}`;
-            await github.rest.issues.updateComment({
-              owner,
-              repo,
-              comment_id: existing.id,
-              body,
-            });
-            await github.graphql(
-              `mutation($id: ID!) {
-                minimizeComment(input: { subjectId: $id, classifier: RESOLVED }) {
-                  minimizedComment { isMinimized }
-                }
-              }`,
-              { id: existing.node_id },
-            );
-            return;
-          }
-
-          // Remaining cases: success with successMode 'comment' (pr-gate vitest/playwright),
-          // or any failure — always upsert, defensively un-minimizing first so the latest
-          // result is never left hidden by an earlier minimize.
-          const verb = outcome === 'success' ? 'passed' : 'failed';
-          const callout = outcome === 'success' ? '[!NOTE]' : '[!CAUTION]';
-          const emoji = outcome === 'success' ? '✅' : '❌';
-          const statLine = summary ? ` — ${summary}` : '';
-
-          let body = `${marker}\n> ${callout}\n> ${emoji} **${label} ${verb}**${statLine} · ${meta}`;
-          if (details) body += `\n\n${details}`;
-          if (outcome !== 'success') {
-            const log = fs.readFileSync(logFile, 'utf8').split('\n').slice(-100).join('\n');
-            body += `\n\n<details><summary>Output</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`;
-          }
-
-          if (existing) {
-            try {
-              await github.graphql(
-                `mutation($id: ID!) {
-                  unminimizeComment(input: { subjectId: $id }) {
-                    unminimizedComment { isMinimized }
-                  }
-                }`,
-                { id: existing.node_id },
-              );
-            } catch {
-              // wasn't minimized — nothing to undo
-            }
-            await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
-          } else {
-            await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
-          }
+          const lib = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/lib/pr-comment.cjs`);
+          const result = await lib.postComment({
+            github,
+            context,
+            core,
+            inputs: lib.inputsFromEnv(process.env),
+          });
+          core.info(`PR comment: ${result}`);

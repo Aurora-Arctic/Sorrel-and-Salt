@@ -364,7 +364,7 @@ jobs:
           github.event_name == 'pull_request'
         uses: ./.github/actions/pr-comment
         with:
-          check-name: Hotfix preview
+          check-name: Hotfix Preview
           marker-slug: hotfix-preview
           pr-number: ${{ github.event.pull_request.number }}
           outcome: ${{ steps.deploy.outcome }}

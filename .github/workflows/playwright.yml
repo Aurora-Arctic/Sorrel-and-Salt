@@ -245,17 +245,17 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # .github/actions/pr-comment has the modes.
+      # This suite's section of the one Playwright comment (.github/actions/pr-comment).
       - name: Comment on PR
         if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
         with:
-          check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
-          marker-slug: ${{ inputs.suite == 'stories' && 'stories' || 'playwright' }}
+          check-name: Playwright
+          marker-slug: playwright
+          section: ${{ inputs.suite == 'stories' && 'stories' || 'gate' }}
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
-          success-mode: comment
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}

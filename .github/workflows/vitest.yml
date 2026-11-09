@@ -76,10 +76,11 @@ jobs:
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (dom)
+        id: run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
-          npx vitest run --project dom --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-dom.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+          npx vitest run --project dom --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-dom.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 2>&1 | tee /app/output.log
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
@@ -90,6 +91,19 @@ jobs:
           path: /app/.reports/blobs/
           if-no-files-found: error
           retention-days: 1
+
+      # This part's own section of the Vitest comment (.github/actions/pr-comment).
+      - name: Comment on PR
+        if: ${{ !cancelled() && inputs.pr-number }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Vitest
+          marker-slug: vitest
+          section: dom
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
 
   vitest-node:
     if: inputs.should-run
@@ -119,10 +133,11 @@ jobs:
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (unit rsc)
+        id: run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
-          npx vitest run --project unit --project rsc --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-node.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+          npx vitest run --project unit --project rsc --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-node.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 2>&1 | tee /app/output.log
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
@@ -133,6 +148,19 @@ jobs:
           path: /app/.reports/blobs/
           if-no-files-found: error
           retention-days: 1
+
+      # This part's own section of the Vitest comment (.github/actions/pr-comment).
+      - name: Comment on PR
+        if: ${{ !cancelled() && inputs.pr-number }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Vitest
+          marker-slug: vitest
+          section: node
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
 
   vitest-db:
     if: inputs.should-run
@@ -180,10 +208,11 @@ jobs:
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (db db-mocking workflow)
+        id: run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
-          npx vitest run --project db --project db-mocking --project workflow --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-db.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+          npx vitest run --project db --project db-mocking --project workflow --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-db.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 2>&1 | tee /app/output.log
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
@@ -194,6 +223,19 @@ jobs:
           path: /app/.reports/blobs/
           if-no-files-found: error
           retention-days: 1
+
+      # This part's own section of the Vitest comment (.github/actions/pr-comment).
+      - name: Comment on PR
+        if: ${{ !cancelled() && inputs.pr-number }}
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Vitest
+          marker-slug: vitest
+          section: db
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
 
   # The required check, "vitest / vitest": the caller's job name, a slash, this
   # one. Keep this job named `vitest`; renaming it needs the ruleset changed.
@@ -267,17 +309,17 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # .github/actions/pr-comment has the modes.
+      # The merged result's section of the Vitest comment, coverage with it.
       - name: Comment on PR
         if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
         with:
           check-name: Vitest
           marker-slug: vitest
+          section: result
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
-          success-mode: comment
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
