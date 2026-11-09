@@ -1,7 +1,7 @@
 import { and, eq, gt, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
-import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
+import type { SoftDeletable, SortPart, VariantScoped, WordMatch, WorkspaceScoped } from './types';
 
 // Nothing here builds a query; `readableIngredientParent` lives in `ingredient-parent.ts` because `select.ts` imports this file.
 
@@ -145,3 +145,12 @@ export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
 export function naturally(value: SQL | AnyPgColumn): SQL {
   return sql`${value} collate ${NATURAL_COLLATION}`;
 }
+
+/**
+ * An instant, newest first, as a cursor key part: a page's key is ascending, so the instant is negated. `numeric` keeps
+ * the microseconds a `Date` would drop from a cursor. Rows of one instant follow by id, which the pager adds.
+ */
+export const newestFirst = (column: AnyPgColumn): SortPart => ({
+  expression: sql`-extract(epoch from ${column})`,
+  type: 'numeric',
+});

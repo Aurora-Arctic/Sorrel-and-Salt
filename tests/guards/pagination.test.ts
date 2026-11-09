@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { getNamedType, getNullableType, isListType, isObjectType } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { schema } from '@/graphql/schema';
@@ -37,5 +39,20 @@ describe('every list query paginates through the one helper', () => {
     expect(connections.length).toBeGreaterThan(5);
 
     expect(unsized).toEqual([]);
+  });
+});
+
+describe('the newest-first cursor key is spelled once', () => {
+  it('writes the negated epoch key only in the one helper', () => {
+    const dir = join(process.cwd(), 'src/db/repository');
+    const files = readdirSync(dir).filter((name) => name.endsWith('.ts'));
+    // Precondition: the sweep found the repository it reads.
+    expect(files.length).toBeGreaterThan(20);
+
+    const spelling = files.filter((name) =>
+      readFileSync(join(dir, name), 'utf8').includes('-extract(epoch from'),
+    );
+
+    expect(spelling).toEqual(['predicates.ts']);
   });
 });

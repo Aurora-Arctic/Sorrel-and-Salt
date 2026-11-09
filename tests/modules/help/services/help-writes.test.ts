@@ -626,6 +626,13 @@ describe('a soft-deleted article reaches no writer', () => {
     );
     await expect(deleteHelpArticle(asUser(E), NOWHERE)).rejects.toThrow(NotFound);
   });
+
+  it('answers NotFound for an id that is not a uuid, rather than a database cast error', async () => {
+    await expect(updateHelpArticle(asUser(E), 'not-a-uuid', { title: 'Testwort' })).rejects.toThrow(
+      NotFound,
+    );
+    await expect(deleteHelpArticle(asUser(E), 'not-a-uuid')).rejects.toThrow(NotFound);
+  });
 });
 
 describe('the glossary marks in a body', () => {
