@@ -1,20 +1,10 @@
 import { z } from 'zod';
 import { type FieldFormat, trimEnds } from '../../../lib/formats';
-import { requiredText } from '../../../lib/validation';
-import { MAX_QUANTITY } from '../../ingredients/schema/quantities';
+import { quantity, requiredText } from '../../../lib/validation';
 import { UNITS } from '../../ingredients/schema/units';
 
 // Mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts) one for one, so the database refuses nothing a user
 // could have been told about; the CHECK each rule mirrors is named beside it.
-
-// Not a CHECK: a negative amount says something, so it is said here, in the
-// words the stock schema uses (claude-docs/db/stock.md).
-const quantity = z
-  .number({ error: 'Quantity must be a number' })
-  .nonnegative({ error: 'Quantity cannot be negative' })
-  .max(MAX_QUANTITY, {
-    error: `Quantity is too large — the most it can be is ${MAX_QUANTITY.toLocaleString('en', { maximumFractionDigits: 3 })}`,
-  });
 
 // A present-but-blank field is refused (the *_not_blank CHECKs), unlike
 // `optionalText`, which reads blank as absent: a step with a blank
@@ -32,7 +22,7 @@ export const SpellStepInput = z
     variantId: z.guid({ error: 'Choose a form from the list' }).nullish(),
     name: present('Give the ingredient a name'),
     form: present('Give the form a name, or remove it'),
-    quantity: quantity.nullish(),
+    quantity: quantity('Quantity').nullish(),
     // The units module's list, never a second one here.
     unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
   })

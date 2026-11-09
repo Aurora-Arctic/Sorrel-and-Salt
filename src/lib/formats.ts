@@ -19,3 +19,20 @@ export const trimEnds: FieldFormat = (text) => text.trim();
 /** What a form says when text runs past a soft limit; the schema's `.max` carries the same words, so the form and the server agree. */
 export const limitMessage = (limit: number): string =>
   `Keep this to ${limit.toLocaleString('en-US')} characters or fewer`;
+
+const AMOUNT = /^-?(\d+[.,]?\d*|[.,]\d+)$/;
+
+/** An amount typed with a point or a comma: its number, null for blank, NaN for anything else (letters, two marks, an exponent), which the quantity rule refuses. */
+export function parseQuantity(text: string): number | null {
+  const trimmed = text.trim();
+  if (trimmed === '') return null;
+  return AMOUNT.test(trimmed) ? Number(trimmed.replace(',', '.')) : Number.NaN;
+}
+
+/** An amount shown as its canonical number ("2,5" becomes "2.5"); what it cannot read stays as typed. */
+export const formatQuantity: FieldFormat = (text) => {
+  const amount = parseQuantity(text);
+  if (amount === null) return '';
+  const canonical = String(amount);
+  return Number.isNaN(amount) || canonical.includes('e') ? text.trim() : canonical;
+};
