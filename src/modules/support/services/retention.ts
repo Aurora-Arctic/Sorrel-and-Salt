@@ -11,9 +11,8 @@ import {
 import { MailNotSent, deliver } from '../../../lib/mail-transport';
 import { supportClosingNoticeMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
-import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
-import { mintSupportViewToken } from './view-link';
+import { supportRecipientFor } from './recipient';
 import { RETENTION_PAGE_SIZE } from '../jobs/support-retention-pages';
 import type { Message } from '../../../lib/types';
 import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types';
@@ -46,16 +45,15 @@ async function closingNoticeFor(
   closeAt: number,
   now: Date,
 ): Promise<Message | null> {
-  const signedOut = row.senderEmail !== null;
-  const to = row.senderEmail ?? (await findOneById(users, row.createdBy))?.email;
-  if (!to) return null;
+  const recipient = await supportRecipientFor(row);
+  if (!recipient) return null;
   return supportClosingNoticeMessage(
     origin,
-    to,
+    recipient.to,
     row.subject,
-    signedOut ? null : row.id,
+    recipient.signedOut ? null : row.id,
     closeAt - now.getTime(),
-    signedOut ? await mintSupportViewToken(row.id) : undefined,
+    recipient.viewToken,
   );
 }
 

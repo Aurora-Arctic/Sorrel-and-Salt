@@ -3,9 +3,8 @@ import { findOneById, findReplyAwaitingNotice, withAudit } from '../../../db/rep
 import { deliver } from '../../../lib/mail-transport';
 import { supportReplyMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
-import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
-import { mintSupportViewToken } from './view-link';
+import { supportRecipientFor } from './recipient';
 import type { Message } from '../../../lib/types';
 
 // The mail that tells a sender of a staff reply, sent by its job's step as the System account. The step reads the reply, the
@@ -19,14 +18,14 @@ async function replyMailFor(replyId: string, origin: string): Promise<Message | 
   if (!reply) return null;
   const request = await findOneById(supportRequests, reply.requestId);
   if (!request || request.createdBy === SYSTEM_ACTOR_ID) return null;
-  const to = request.senderEmail ?? (await findOneById(users, request.createdBy))?.email;
-  if (!to) return null;
-  return supportReplyMessage(origin, to, {
+  const recipient = await supportRecipientFor(request);
+  if (!recipient) return null;
+  return supportReplyMessage(origin, recipient.to, {
     requestId: request.id,
     requestSubject: request.subject,
     body: reply.body,
-    signedOut: request.senderEmail !== null,
-    viewToken: request.senderEmail !== null ? await mintSupportViewToken(request.id) : undefined,
+    signedOut: recipient.signedOut,
+    viewToken: recipient.viewToken,
   });
 }
 
