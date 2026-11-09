@@ -3,15 +3,16 @@ import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { A, B, asUser } from '../../../support/as-user';
+import { A, B, D, asUser } from '../../../support/as-user';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { findWorkspaceHoldingSlug, findWorkspaceSlugs, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { violatedUniqueIndex } from '@/lib/unique-violation';
 import { assertMembership } from '@/modules/coven';
 import { workspaceSlugs } from '@/modules/coven/schema/workspace-slugs';
 
-// Every address a coven has had, its current one and its old ones together, so one partial index refuses an address
-// that two live covens would share (claude-docs/tasks/m17.md, M17.22).
+// A coven's live addresses, its current one and its one old one together, so one partial index refuses an address that
+// two live covens would share (claude-docs/tasks/m17.md, M17.22, M17.23).
 
 const OWN_COLUMNS = ['id', 'workspace_id', 'slug'];
 const SLUG_UNIQUE = 'workspace_slugs_slug_unique';
@@ -308,5 +309,152 @@ describe('the address writers', () => {
     // The index admits the freed addresses for another coven.
     await address(bystander.id, old);
     expect(await liveAddresses(bystander.id)).toEqual([bystander.slug, old].sort());
+  });
+});
+
+const liveHolders = async (slug: string) =>
+  (
+    await sql<{ workspace_id: string }[]>`
+      select workspace_id from workspace_slugs where slug = ${slug} and deleted_at is null`
+  ).map(({ workspace_id }) => workspace_id);
+
+const rowOf = async (workspaceId: string, slug: string) =>
+  (
+    await sql<{ deleted_at: Date | null; deleted_by: string | null }[]>`
+      select deleted_at, deleted_by from workspace_slugs
+      where workspace_id = ${workspaceId} and slug = ${slug} order by created_at desc limit 1`
+  )[0];
+
+// A coven another coven may claim an address from: its current address and one old address, both live.
+async function movedCoven(name: string) {
+  const coven = await insertCoven(name);
+  const old = `fixture-claimable-${token()}`;
+  await address(coven.id, coven.slug);
+  await address(coven.id, old);
+  // Precondition: the old address resolves to this coven, as not its current one.
+  const held = await findWorkspaceHoldingSlug(old);
+  expect(held?.workspace.id).toBe(coven.id);
+  expect(held?.current).toBe(false);
+  return { ...coven, old };
+}
+
+// Another coven's old address is free to take. The claimer's writer retires the old holder's row itself, under no proof of
+// the old holder, so no service ever handles another coven's row (claude-docs/tasks/m17.md, M17.23).
+describe("the address writers and another coven's old address", () => {
+  it("insertWorkspaceSlug retires another live coven's old-address row, stamped from the session, so one live row holds it", async () => {
+    const holder = await movedCoven(`Fixture Old Holder ${token()}`);
+    const claimer = await insertCoven(`Fixture Claimer ${token()}`, [[D.id, 'owner']]);
+    // Why the claim could leave the holder's row: D holds no seat in the holder's coven, so no proof of it exists.
+    const [seat] = await sql`
+      select 1 from workspace_members where workspace_id = ${holder.id} and user_id = ${D.id}`;
+    expect(seat).toBeUndefined();
+
+    const [row] = await withAudit(asUser(D), (write) =>
+      write.insertWorkspaceSlug(claimer.id, holder.old),
+    );
+
+    expect(row).toMatchObject({ workspaceId: claimer.id, slug: holder.old, deletedAt: null });
+    expect(await liveHolders(holder.old)).toEqual([claimer.id]);
+    const retired = await rowOf(holder.id, holder.old);
+    expect(retired?.deleted_at).not.toBeNull();
+    expect(retired?.deleted_by).toBe(D.id);
+    expect(await liveAddresses(holder.id)).toEqual([holder.slug]);
+    expect((await findWorkspaceHoldingSlug(holder.old))?.workspace.id).toBe(claimer.id);
+  });
+
+  it("retires the old holder's row in the claimer's transaction, so a write that fails after the claim leaves it live", async () => {
+    const holder = await movedCoven(`Fixture Kept Holder ${token()}`);
+    const claimer = await insertCoven(`Fixture Failed Claimer ${token()}`);
+
+    await expect(
+      withAudit(asUser(A), async (write) => {
+        await write.insertWorkspaceSlug(claimer.id, holder.old);
+        throw new Error('fixture failure after the claim');
+      }),
+    ).rejects.toThrow('fixture failure after the claim');
+
+    expect(await liveHolders(holder.old)).toEqual([holder.id]);
+    expect(await liveAddresses(claimer.id)).toEqual([]);
+  });
+
+  it("insertWorkspaceSlug leaves another live coven's current address alone, and the index refuses the claim", async () => {
+    const holder = await movedCoven(`Fixture Current Holder ${token()}`);
+    const claimer = await insertCoven(`Fixture Current Claimer ${token()}`);
+
+    const refused = await withAudit(asUser(A), (write) =>
+      write.insertWorkspaceSlug(claimer.id, holder.slug),
+    ).catch((error: unknown) => error);
+
+    expect(violatedUniqueIndex(refused)).toBe(SLUG_UNIQUE);
+    expect(await liveHolders(holder.slug)).toEqual([holder.id]);
+  });
+
+  it("updateWorkspaceName takes another live coven's old address and retires that coven's row", async () => {
+    const holder = await movedCoven(`Fixture Renamed Away ${token()}`);
+    const claimer = await insertCoven(`Fixture Renamer ${token()}`, [[D.id, 'owner']]);
+    await address(claimer.id, claimer.slug);
+    const membership = await assertMembership(asUser(D), claimer.id, { workspace: ['update'] });
+
+    const [row] = await withAudit(asUser(D), (write) =>
+      write.updateWorkspaceName(membership, { name: 'Fixture Claimed Name', slug: holder.old }),
+    );
+
+    expect(row).toMatchObject({ id: claimer.id, slug: holder.old });
+    expect(await liveHolders(holder.old)).toEqual([claimer.id]);
+    expect((await rowOf(holder.id, holder.old))?.deleted_by).toBe(D.id);
+    expect(await liveAddresses(holder.id)).toEqual([holder.slug]);
+    expect(await liveAddresses(claimer.id)).toEqual([claimer.slug, holder.old].sort());
+  });
+});
+
+// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/m17.md, M17.23).
+describe('updateWorkspaceName and the one old address', () => {
+  async function renamedTwice() {
+    const coven = await insertCoven(`Fixture Twice Renamed ${token()}`);
+    await address(coven.id, coven.slug);
+    const second = `fixture-second-${token()}`;
+    const third = `fixture-third-${token()}`;
+    const membership = await assertMembership(asUser(A), coven.id, { workspace: ['update'] });
+    const rename = (name: string, slug: string) =>
+      withAudit(asUser(A), (write) => write.updateWorkspaceName(membership, { name, slug }));
+    await rename('Fixture Second', second);
+    // Precondition: after one rename the first address is the coven's one old address.
+    expect(await liveAddresses(coven.id)).toEqual([coven.slug, second].sort());
+    await rename('Fixture Third', third);
+    return { ...coven, first: coven.slug, second, third, rename };
+  }
+
+  it('retires the address before the previous one, stamped from the session, and keeps the previous one', async () => {
+    const coven = await renamedTwice();
+
+    expect(await liveAddresses(coven.id)).toEqual([coven.second, coven.third].sort());
+    const retired = await rowOf(coven.id, coven.first);
+    expect(retired?.deleted_at).not.toBeNull();
+    expect(retired?.deleted_by).toBe(A.id);
+    expect(await findWorkspaceHoldingSlug(coven.first)).toBeUndefined();
+    expect((await findWorkspaceHoldingSlug(coven.second))?.workspace.id).toBe(coven.id);
+  });
+
+  it('back to the previous address reuses its row and leaves no live row for an earlier one', async () => {
+    const coven = await renamedTwice();
+
+    await coven.rename('Fixture Second Again', coven.second);
+
+    expect(await liveAddresses(coven.id)).toEqual([coven.second, coven.third].sort());
+    const rows = await sql`
+      select id from workspace_slugs where workspace_id = ${coven.id} and slug = ${coven.second}`;
+    expect(rows).toHaveLength(1);
+    const [current] = await sql`select slug from workspaces where id = ${coven.id}`;
+    expect(current.slug).toBe(coven.second);
+  });
+
+  it('takes back an address it dropped, with a new row, and drops the address before the previous one', async () => {
+    const coven = await renamedTwice();
+
+    await coven.rename('Fixture First Again', coven.first);
+
+    expect(await liveAddresses(coven.id)).toEqual([coven.first, coven.third].sort());
+    const [current] = await sql`select slug from workspaces where id = ${coven.id}`;
+    expect(current.slug).toBe(coven.first);
   });
 });

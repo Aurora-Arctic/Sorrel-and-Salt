@@ -1,15 +1,17 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { type Coven, seedCoven, withSql } from './stories/coven-ingredients';
 
-// For what story 96 does not walk: a path beneath an old address, and a non-member at one.
+// For what story 96 does not walk: a path beneath an old address, a non-member at one, another coven taking one, and a
+// second rename dropping the first address.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// `seedCoven` writes the coven's first address; a renamed coven holds that one and its new one.
+// `seedCoven` writes the coven's first address; a coven renamed once holds that one and its new one.
 async function renameByHand(coven: Coven, name: string, slug: string): Promise<void> {
   await withSql(async (sql) => {
     await sql`
@@ -69,4 +71,66 @@ test('a non-member at an old address is told the page does not exist', async ({ 
 
   const current = await page.goto('/coven/fixture-rename-gate-after');
   expect(current?.status()).toBe(404);
+});
+
+// Renames through the coven page, so the service picks the address and the writer retires what it must.
+async function renameInPage(page: Page, slug: string, name: string): Promise<void> {
+  await page.goto(`/coven/${slug}`);
+  await page.getByRole('textbox', { name: 'Name' }).fill(name);
+  await page.getByRole('button', { name: /^Save/ }).click();
+}
+
+test("once another coven takes an old address, the old coven's member there is told the page does not exist", async ({
+  page,
+}) => {
+  const moved = await seedCoven(page, 'Fixture Rename Left', 'rename-left.test', {
+    A: 'owner',
+    C: 'viewer',
+  });
+  const claimer = await seedCoven(page, 'Fixture Rename Arriving', 'rename-arriving.test', {
+    D: 'owner',
+  });
+  const old = moved.slug;
+  await signInAgainAs(page, moved.users.A);
+  await renameInPage(page, old, 'Fixture Rename Left Behind');
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-left-behind$/);
+
+  // Why the page could have been served: before the claim, the old address takes C to the moved coven.
+  await signInAgainAs(page, moved.users.C);
+  await page.goto(`/coven/${old}`);
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-left-behind$/);
+
+  await signInAgainAs(page, claimer.users.D);
+  await renameInPage(page, claimer.slug, 'Fixture Rename Left');
+  await expect(page).toHaveURL(new RegExp(`/coven/${old}$`));
+  const taken = await page.goto(`/coven/${old}`);
+  expect(taken?.status()).toBe(200);
+  await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Fixture Rename Left');
+
+  await signInAgainAs(page, moved.users.C);
+  const refused = await page.goto(`/coven/${old}`);
+  expect(refused?.status()).toBe(404);
+  await expect(page).toHaveURL(new RegExp(`/coven/${old}$`));
+});
+
+test('after a second rename, the first address is told not to exist and the second still redirects', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Rename First', 'rename-twice.test', { A: 'owner' });
+  const first = coven.slug;
+  await signInAgainAs(page, coven.users.A);
+  await renameInPage(page, first, 'Fixture Rename Second');
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-second$/);
+
+  // Why the first address could still lead somewhere: after one rename it redirects.
+  await page.goto(`/coven/${first}`);
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-second$/);
+
+  await renameInPage(page, 'fixture-rename-second', 'Fixture Rename Third');
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-third$/);
+
+  const dropped = await page.goto(`/coven/${first}`);
+  expect(dropped?.status()).toBe(404);
+  await page.goto('/coven/fixture-rename-second');
+  await expect(page).toHaveURL(/\/coven\/fixture-rename-third$/);
 });

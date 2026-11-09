@@ -87,3 +87,99 @@ describe('membershipBySlug at an old address', () => {
     );
   });
 });
+
+const token = () => crypto.randomUUID().slice(0, 8);
+
+async function covenWith(name: string, members: [string, string][]): Promise<string> {
+  const [row] = await sql`
+    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
+    returning id, slug`;
+  await sql`
+    insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
+    values (${row.id}, ${row.slug}, ${A.id}, ${A.id})`;
+  for (const [userId, role] of members) {
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
+  }
+  return row.id as string;
+}
+
+// Another coven may take an old address, and the redirect it gave ends (claude-docs/tasks/m17.md, M17.23).
+describe('membershipBySlug once another coven takes the old address', () => {
+  it("refuses the old coven's member there as an unknown address, and admits the new holder's member", async () => {
+    const t = token();
+    const oldSlug = `fixture-left-${t}`;
+    const moved = await covenWith(`Fixture Left ${t}`, [
+      [A.id, 'owner'],
+      [C.id, 'viewer'],
+    ]);
+    await renameWorkspace(asUser(A), moved, { name: `Fixture Gone On ${t}` });
+    const claimer = await covenWith(`Fixture Arriving ${t}`, [[D.id, 'owner']]);
+    // Precondition: before the claim the old address took C to the moved coven, and C holds no seat in the claimer.
+    expect(await failureOf(membershipBySlug(asUser(C), oldSlug))).toBeInstanceOf(CovenMoved);
+    await expect(findWorkspaceRole(C.id, claimer)).resolves.toBeUndefined();
+    await expect(findWorkspaceRole(D.id, moved)).resolves.toBeUndefined();
+
+    const claimed = await renameWorkspace(asUser(D), claimer, { name: `Fixture Left ${t}` });
+    expect(claimed.slug).toBe(oldSlug);
+
+    const refused = await failureOf(membershipBySlug(asUser(C), oldSlug));
+    const unknown = await failureOf(membershipBySlug(asUser(C), `fixture-never-${t}`));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect(refused).not.toBeInstanceOf(CovenMoved);
+    expect(refused).toEqual(unknown);
+    expect((await membershipBySlug(asUser(D), oldSlug)).workspace.id).toBe(claimer);
+  });
+
+  it("keeps the old coven's member out after the new holder moves on, and sends the new holder's member on", async () => {
+    const t = token();
+    const oldSlug = `fixture-passed-${t}`;
+    const moved = await covenWith(`Fixture Passed ${t}`, [
+      [A.id, 'owner'],
+      [C.id, 'viewer'],
+    ]);
+    await renameWorkspace(asUser(A), moved, { name: `Fixture Passed On ${t}` });
+    expect(await failureOf(membershipBySlug(asUser(C), oldSlug))).toBeInstanceOf(CovenMoved);
+    const claimer = await covenWith(`Fixture Borrower ${t}`, [[D.id, 'owner']]);
+    expect((await renameWorkspace(asUser(D), claimer, { name: `Fixture Passed ${t}` })).slug).toBe(
+      oldSlug,
+    );
+
+    const away = await renameWorkspace(asUser(D), claimer, { name: `Fixture Borrower Again ${t}` });
+
+    const refused = await failureOf(membershipBySlug(asUser(C), oldSlug));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect(refused).not.toBeInstanceOf(CovenMoved);
+    const sent = await failureOf(membershipBySlug(asUser(D), oldSlug));
+    expect(sent).toBeInstanceOf(CovenMoved);
+    expect((sent as CovenMoved).slug).toBe(away.slug);
+  });
+});
+
+// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/m17.md, M17.23).
+describe('membershipBySlug after a second rename', () => {
+  it('refuses a member at the first address as an unknown address, and still sends them on from the second', async () => {
+    const t = token();
+    const first = `fixture-first-${t}`;
+    const second = `fixture-second-${t}`;
+    const coven = await covenWith(`Fixture First ${t}`, [
+      [A.id, 'owner'],
+      [C.id, 'viewer'],
+    ]);
+    await renameWorkspace(asUser(A), coven, { name: `Fixture Second ${t}` });
+    // Precondition: after one rename the first address took the member to the coven.
+    expect(await failureOf(membershipBySlug(asUser(C), first))).toBeInstanceOf(CovenMoved);
+
+    const third = await renameWorkspace(asUser(A), coven, { name: `Fixture Third ${t}` });
+
+    const refused = await failureOf(membershipBySlug(asUser(C), first));
+    const unknown = await failureOf(membershipBySlug(asUser(C), `fixture-never-${t}`));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect(refused).not.toBeInstanceOf(CovenMoved);
+    expect(refused).toEqual(unknown);
+    const sent = await failureOf(membershipBySlug(asUser(C), second));
+    expect(sent).toBeInstanceOf(CovenMoved);
+    expect((sent as CovenMoved).slug).toBe(third.slug);
+  });
+});

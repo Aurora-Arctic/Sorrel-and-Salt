@@ -46,6 +46,12 @@ const addressesOf = async (id: string) =>
       select slug from workspace_slugs where workspace_id = ${id} and deleted_at is null order by slug`
   ).map(({ slug }) => slug);
 
+const liveHoldersOf = async (slug: string) =>
+  (
+    await sql<{ workspace_id: string }[]>`
+      select workspace_id from workspace_slugs where slug = ${slug} and deleted_at is null`
+  ).map(({ workspace_id }) => workspace_id);
+
 describe('renameWorkspace', () => {
   it('renames the coven for a steward, moving its address and keeping the old one, stamped from the session', async () => {
     const t = token();
@@ -221,7 +227,7 @@ describe("renameWorkspace and the coven's address", () => {
     expect(renamed.name).toBe(`Fixture Holder ${t}`);
   });
 
-  it('numbers the address when another live coven holds it as an old address', async () => {
+  it("takes another live coven's old address plain, and that coven no longer holds it", async () => {
     const t = token();
     const holder = await insertCoven(`Fixture Once ${t}`);
     await renameWorkspace(asUser(A), holder.id, { name: `Fixture Since ${t}` });
@@ -234,7 +240,9 @@ describe("renameWorkspace and the coven's address", () => {
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Once ${t}` });
 
-    expect(renamed.slug).toBe(`fixture-once-${t}-2`);
+    expect(renamed.slug).toBe(`fixture-once-${t}`);
+    expect(await addressesOf(holder.id)).toEqual([`fixture-since-${t}`]);
+    expect(await liveHoldersOf(`fixture-once-${t}`)).toEqual([coven.id]);
   });
 
   it("takes an address a deleted coven held, once that coven's addresses are freed", async () => {
@@ -274,6 +282,56 @@ describe("renameWorkspace and the coven's address", () => {
     expect(await addressesOf(coven.id)).toEqual([coven.slug]);
   });
 
+  it('keeps one old address: a second rename drops the first', async () => {
+    const t = token();
+    const coven = await insertCoven(`Fixture Start ${t}`);
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture Middle ${t}` });
+    // Precondition: after one rename the first address is the coven's old address.
+    expect(await addressesOf(coven.id)).toEqual([`fixture-middle-${t}`, coven.slug].sort());
+
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture End ${t}` });
+
+    expect(await addressesOf(coven.id)).toEqual([`fixture-end-${t}`, `fixture-middle-${t}`].sort());
+  });
+
+  it('takes an address it dropped back plain, keeping one old address', async () => {
+    const t = token();
+    const coven = await insertCoven(`Fixture Dropped ${t}`);
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture Between ${t}` });
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture Latest ${t}` });
+
+    const back = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Dropped ${t}` });
+
+    expect(back.slug).toBe(coven.slug);
+    expect(await addressesOf(coven.id)).toEqual([coven.slug, `fixture-latest-${t}`].sort());
+  });
+
+  it('takes an address another coven dropped plain', async () => {
+    const t = token();
+    const dropper = await insertCoven(`Fixture Shed ${t}`);
+    await renameWorkspace(asUser(A), dropper.id, { name: `Fixture Shed Then ${t}` });
+    await renameWorkspace(asUser(A), dropper.id, { name: `Fixture Shed Now ${t}` });
+    const coven = await insertCoven(`Fixture Finder ${t}`);
+
+    const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Shed ${t}` });
+
+    expect(renamed.slug).toBe(dropper.slug);
+  });
+
+  it('back to the previous address leaves no live row for an earlier one', async () => {
+    const t = token();
+    const coven = await insertCoven(`Fixture Earliest ${t}`);
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture Prior ${t}` });
+    await renameWorkspace(asUser(A), coven.id, { name: `Fixture Present ${t}` });
+
+    const back = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Prior ${t}` });
+
+    expect(back.slug).toBe(`fixture-prior-${t}`);
+    expect(await addressesOf(coven.id)).toEqual(
+      [`fixture-present-${t}`, `fixture-prior-${t}`].sort(),
+    );
+  });
+
   it('takes its own old address back plain, without a second row for it', async () => {
     const t = token();
     const coven = await insertCoven(`Fixture Round ${t}`);
@@ -293,17 +351,20 @@ describe('createWorkspace and the addresses other covens hold', () => {
     expect(await addressesOf(created.id)).toEqual([created.slug]);
   });
 
-  it("never takes another live coven's old address", async () => {
+  it("takes another live coven's old address plain, and that coven no longer holds it", async () => {
     const t = token();
     const holder = await insertCoven(`Fixture Former ${t}`);
     await renameWorkspace(asUser(A), holder.id, { name: `Fixture Latter ${t}` });
-    // Precondition: no coven's current address is the old one, so only the old address can refuse it.
+    // Precondition: the holder holds the old address, and no coven's current address is it.
+    expect(await addressesOf(holder.id)).toContain(`fixture-former-${t}`);
     expect(await sql`select id from workspaces where slug = ${`fixture-former-${t}`}`).toHaveLength(
       0,
     );
 
     const created = await createWorkspace(asUser(A), { name: `Fixture Former ${t}` });
 
-    expect(created.slug).toBe(`fixture-former-${t}-2`);
+    expect(created.slug).toBe(`fixture-former-${t}`);
+    expect(await addressesOf(holder.id)).toEqual([`fixture-latter-${t}`]);
+    expect(await liveHoldersOf(`fixture-former-${t}`)).toEqual([created.id]);
   });
 });
