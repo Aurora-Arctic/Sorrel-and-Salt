@@ -162,6 +162,7 @@ const EmailForm = ({
           type="email"
           // A new address: "email" would fill in the one the account has now.
           autoComplete="off"
+          ignorePasswordManagers
           placeholder="name@example.com"
           value={value}
           onChange={setValue}

@@ -45,6 +45,12 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveAttribute('autocomplete', 'off');
   });
 
+  it('tells password managers not to offer a saved login for the new address', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    expect(emailField()).toHaveAttribute('data-1p-ignore');
+  });
+
   it('embedded, shows no heading of its own and never the confirmed view', () => {
     renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
 
