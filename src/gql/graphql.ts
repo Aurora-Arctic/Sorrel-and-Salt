@@ -1424,6 +1424,14 @@ export type RecordWorkingMembersQueryVariables = Exact<{
 
 export type RecordWorkingMembersQuery = { workspace: { id: string, members: { edges: Array<{ node: { user: { id: string, name: string | null } } }> } } };
 
+export type RenameWorkspaceMutationVariables = Exact<{
+  workspaceId: string | number;
+  name: string;
+}>;
+
+
+export type RenameWorkspaceMutation = { renameWorkspace: { id: string, name: string, slug: string } };
+
 export type SendSignedOutSupportRequestMutationVariables = Exact<{
   input: SignedOutSupportRequestInput;
 }>;
@@ -2980,6 +2988,15 @@ export const RecordWorkingMembersDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RecordWorkingMembersQuery, RecordWorkingMembersQueryVariables>;
+export const RenameWorkspaceDocument = new TypedDocumentString(`
+    mutation RenameWorkspace($workspaceId: ID!, $name: String!) {
+  renameWorkspace(workspaceId: $workspaceId, name: $name) {
+    id
+    name
+    slug
+  }
+}
+    `) as unknown as TypedDocumentString<RenameWorkspaceMutation, RenameWorkspaceMutationVariables>;
 export const SendSignedOutSupportRequestDocument = new TypedDocumentString(`
     mutation SendSignedOutSupportRequest($input: SignedOutSupportRequestInput!) {
   sendSignedOutSupportRequest(input: $input)

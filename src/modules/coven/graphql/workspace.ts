@@ -8,6 +8,7 @@ import { updateMemberRole } from '../services/member-role';
 import { listMembers } from '../services/members';
 import { createWorkspace } from '../services/workspace-creation';
 import { deleteWorkspace } from '../services/workspace-deletion';
+import { renameWorkspace } from '../services/workspace-rename';
 import { workspaceById } from '../services/workspace-by-id';
 import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
@@ -153,5 +154,20 @@ builder.mutationField('leaveWorkspace', (t) =>
       await leaveWorkspace(sessionOf(context), workspaceId);
       return true;
     },
+  }),
+);
+
+builder.mutationField('renameWorkspace', (t) =>
+  t.field({
+    type: WorkspaceRef,
+    description:
+      'Renames a coven, and moves its address to follow the name; the old address still reaches it for its members. Owners only; refused for the demo coven.',
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      name: t.arg.string({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: (_root, { workspaceId, name }, context) =>
+      renameWorkspace(sessionOf(context), workspaceId, { name }),
   }),
 );

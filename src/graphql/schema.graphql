@@ -1390,6 +1390,11 @@ type Mutation {
   removeMember(userId: ID!, workspaceId: ID!): Boolean!
 
   """
+  Renames a coven, and moves its address to follow the name; the old address still reaches it for its members. Owners only; refused for the demo coven.
+  """
+  renameWorkspace(name: String!, workspaceId: ID!): Workspace!
+
+  """
   Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
   """
   replyToSupportRequest(

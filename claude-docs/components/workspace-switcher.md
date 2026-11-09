@@ -32,6 +32,7 @@
   - A switcher still mounted when the move ends (a refusal) clears it. A superseded switch (Compendium clicked mid-switch) leaves its slug behind, and a switcher that mounts at any other address reads it as stale, clears it and takes no focus.
   - That focus returns here is a judgement, checked in the design review.
 - **The route is cast to `Route`**: `typedRoutes` has no `/coven/…` page for it.
+- **A name two of the viewer's covens share shows its address beside it**, as the option's note (`repeatedCovenNames`, `src/lib/coven-names.ts`), because names are not unique, only addresses are. A unique name shows none. A paused coven's note follows the address.
 - **The demo coven reads as its name alone**; the Demo badge sits in the coven page heading.
 
 ## Styling

@@ -1,15 +1,14 @@
 import 'server-only';
 import { z } from 'zod';
-import { findOneById, findOneBySlug, withAudit } from '../../../db/repository';
-import { isReservedCovenSlug } from '../../../lib/coven-path';
+import { findOneById, withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { slugify } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { parseInput, requiredText } from '../../../lib/validation';
 import { users } from '../../identity/schema/users';
 import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRow } from '../types';
+import { freeCovenSlug } from './coven-slug';
 
 // The right is `users.can_create_workspace` alone (every keeper holds it), so `role` is never read
 // (claude-docs/auth/admin-users.md, "Approving workspace creation").
@@ -22,22 +21,8 @@ const CreateWorkspaceInput = z.object({
   }),
 });
 
-const FALLBACK_SLUG = 'coven';
-
 /** Each retry of a slug race sees the winner and takes the next number. */
 const SLUG_ATTEMPTS = 5;
-
-/**
- * A segment the router already answers (`new`) counts as taken. Free as of this read; the unique index decides a race.
- */
-async function freeSlug(name: string): Promise<string> {
-  const base = slugify(name) || FALLBACK_SLUG;
-  for (let n = 1; ; n++) {
-    const candidate = n === 1 ? base : `${base}-${n}`;
-    if (isReservedCovenSlug(candidate)) continue;
-    if (!(await findOneBySlug(workspaces, candidate))) return candidate;
-  }
-}
 
 /**
  * The flag is read from the row, not the session, since accepting an invitation sets it mid-session. Making one does not spend it.
@@ -55,10 +40,11 @@ export async function createWorkspace(
   const { name } = parseInput(CreateWorkspaceInput, input);
 
   for (let attempt = 1; ; attempt++) {
-    const slug = await freeSlug(name);
+    const slug = await freeCovenSlug(name);
     try {
       return await withAudit(session, async (write) => {
         const [workspace] = await write.insert(workspaces, { name, slug });
+        await write.insertWorkspaceSlug(workspace.id, slug);
         await write.insertMembership(workspace.id, session.userId, 'owner');
         return workspace;
       });

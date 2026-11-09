@@ -50,13 +50,8 @@ type Statement = {
   [R in keyof Statements]: { resource: R; action: Statements[R][number] };
 }[keyof Statements];
 
-/**
- * Statements no screen offers yet, left out of the table so it lists nothing a reader cannot do. Renaming a coven has
- * no screen; the task that builds one takes `workspace.update` off this list and brings the row back.
- */
-export const HIDDEN_STATEMENTS: readonly Statement[] = [
-  { resource: 'workspace', action: 'update' },
-];
+/** Statements no screen offers, left out of the table so it lists nothing a reader cannot do. */
+export const HIDDEN_STATEMENTS: readonly Statement[] = [];
 
 const hidden = (resource: string, action: string): boolean =>
   HIDDEN_STATEMENTS.some((each) => each.resource === resource && each.action === action);

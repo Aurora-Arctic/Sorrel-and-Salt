@@ -77,10 +77,11 @@ DESIGN.md §8 specifies the proof (`{ workspaceId, userId, role }`, branded, `wr
 
 **Where it is weaker than a database policy.** A hand-written `where` naming another workspace's ids under a valid proof satisfies the type; the direct-id denial tests catch it. A table with no `workspace_id` takes the parent's shape: a `spell_id` table is reached through `findManyInSpell`, and `ingredient_folk_names` and `ingredient_categories` through `findManyOfIngredients` (claude-docs/db/membership-proof.md, "Where the proof is weaker than a policy").
 
-**Named exceptions take no proof.** There are two.
+**Named exceptions take no proof.** There are three.
 
 - **`rotateInvitationToken(invitationId)`** in `src/db/repository/write.ts`. The invitation mail's job step holds ids alone. It runs through `withAudit` as the System account, swaps a fresh token's hash onto a pending address invitation (never a card) and returns the plaintext token to the step only. It is on no `AuditWriter` method. `tests/guards/invitation-token-rotation.test.ts` fails if any file other than its definition, the repository index, `src/modules/identity/services/secret-link-mail.ts` and its own tests names it (claude-docs/design-decisions/auth.md, "The invitation mail mints its token in the job step").
 - **`findWorkspaceMemberPauseForMail(pauseId)`** in `src/db/repository/workspace-member-pauses.ts` reads one live pause with the names the email needs; the mail job carries only the pause id (claude-docs/design-decisions/auth.md, "The coven pause mail step reads a pause without a Membership proof").
+- **`findWorkspaceHoldingSlug(slug)`** in `src/db/repository/workspace-slugs.ts` reads the live coven that holds an address, current or old, and says whether it is the current one. A request arrives with an address and no coven id, so no `Membership` can exist until this read has named the coven; the caller (`membershipBySlug`) then checks membership before saying anything about it (claude-docs/design-decisions/auth.md, "A coven address resolves without a Membership proof"). `tests/guards/workspace-slug-lookup.test.ts` fails if any file other than its definition, the repository index, `src/modules/coven/services/workspace-by-slug.ts` and its own tests names it.
 
 **RLS (row-level security) waits for the public launch** (MB.29, DESIGN.md §8); its specification is claude-docs/design-decisions/auth.md, "RLS role split, `FORCE`, and identity on the read path".
 

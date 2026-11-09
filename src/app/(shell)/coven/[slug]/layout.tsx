@@ -45,6 +45,7 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
       canDelete: rolePermits(membership.role, { workspace: ['delete'] }),
       canReadMembers: rolePermits(membership.role, { member: ['read'] }),
       canInvite: rolePermits(membership.role, { member: ['invite'] }),
+      canRename: rolePermits(membership.role, { workspace: ['update'] }),
     },
   };
 

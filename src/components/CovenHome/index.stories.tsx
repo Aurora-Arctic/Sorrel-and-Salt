@@ -15,20 +15,30 @@ const STEWARD = {
   canDelete: true,
   canReadMembers: true,
   canInvite: true,
+  canRename: true,
 } satisfies CovenHomeAccess;
 const PRACTITIONER = {
   canDelete: false,
   canReadMembers: true,
   canInvite: false,
+  canRename: false,
 } satisfies CovenHomeAccess;
 const OBSERVER = {
   canDelete: false,
   canReadMembers: false,
   canInvite: false,
+  canRename: false,
 } satisfies CovenHomeAccess;
 
 // The two buttons the page passes in, drawn plain: the real ones open dialogs that call the API.
 const leave = <button className="btn">Leave Coven</button>;
+const rename = (
+  <form>
+    <label>
+      Name <input defaultValue="Testwort Coven" />
+    </label>
+  </form>
+);
 const remove = <button className="btn btn--destructive">Delete Coven</button>;
 
 const SLUG = 'fixture-coven';
@@ -40,6 +50,7 @@ const asStewardNode = (
     role="owner"
     access={STEWARD}
     leave={leave}
+    rename={rename}
     remove={remove}
   />
 );

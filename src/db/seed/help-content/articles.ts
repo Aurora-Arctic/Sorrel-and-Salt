@@ -132,13 +132,13 @@ const yourCovenPages = [
     'What each coven role can do.',
     `- **[[Observer]]**: reads ingredients, stock, spells and workings, and the [[Coven|coven]] itself. Writes nothing.
 - **[[Practitioner]]**: adds, edits and removes ingredients, spells and workings, reads and updates stock, and sees the other members.
-- **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and deleting the coven.
+- **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, renaming the coven, inviting, changing and removing members, pausing a member, and deleting the coven.
 
 The table shows each thing a role may do, from the rules the app checks:
 
 ::widget[role-permission-table]
 
-A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
+A Steward renames a coven in the "Rename Coven" section of its page. The address follows the new name, and the old address still opens the coven. The [[Demo Coven]] cannot be renamed. A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
   ),
   subPage(
     yourCoven,
@@ -193,9 +193,7 @@ If you are the only Steward and other members remain, leaving opens a choice tit
 
 > **Take Care:** Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: "Nothing is destroyed, but only an administrator with database access can restore it."
 
-The [[Demo Coven]] cannot be deleted.
-
-> **Note:** A coven has no rename, so to change its name you create a new one.`,
+The [[Demo Coven]] cannot be deleted.`,
   ),
 ];
 

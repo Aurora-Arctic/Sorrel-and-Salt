@@ -21,6 +21,17 @@ export class AccessPaused extends Forbidden {
   }
 }
 
+/** A member followed a coven's old address: not a refusal, so it carries the current slug for the redirect. */
+export class CovenMoved extends Error {
+  readonly slug: string;
+
+  constructor(slug: string) {
+    super('This coven has a new address.');
+    this.name = 'CovenMoved';
+    this.slug = slug;
+  }
+}
+
 /** No such row, or none this reader may know about, which reads the same. */
 export class NotFound extends Error {
   constructor(message = 'Not found') {

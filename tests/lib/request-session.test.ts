@@ -58,7 +58,7 @@ const {
   sessionIsVerified,
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
-const { AccessPaused, Forbidden } = await import('@/lib/errors');
+const { AccessPaused, CovenMoved, Forbidden } = await import('@/lib/errors');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -581,6 +581,26 @@ describe('requireCovenMembership', () => {
 
     membershipBySlugMock.mockRejectedValueOnce(new Forbidden());
     await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('not-found');
+  });
+
+  it('sends a member at an old address to the same path and query at the current one', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven/old-thorn/grimoire/spell-id?tab=steps');
+    membershipBySlugMock.mockRejectedValueOnce(new CovenMoved('whitethorn-coven'));
+
+    await expect(requireCovenMembership('old-thorn')).rejects.toThrow(
+      'redirect:/coven/whitethorn-coven/grimoire/spell-id?tab=steps',
+    );
+  });
+
+  it('sends a member at an old address to the current coven page when no return path was forwarded', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    requestHeaders.delete(RETURN_PATH_HEADER);
+    membershipBySlugMock.mockRejectedValueOnce(new CovenMoved('whitethorn-coven'));
+
+    await expect(requireCovenMembership('old-thorn')).rejects.toThrow(
+      'redirect:/coven/whitethorn-coven',
+    );
   });
 
   it('lets any other failure through as itself', async () => {

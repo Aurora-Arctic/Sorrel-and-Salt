@@ -3135,3 +3135,11 @@ Reads over `GET` are unchanged. Long form: `claude-docs/graphql/endpoint.md`.
 
 Anything calling the endpoint outside the site's pages adds the header (curl, the
 Node-side Playwright `request`).
+
+## A coven address resolves without a Membership proof
+
+**Decision (owner, 2026-11-09).** `findWorkspaceHoldingSlug(slug)` is the third repository read that takes no `Membership` proof, beside `rotateInvitationToken` and `findWorkspaceMemberPauseForMail` (`.claude/rules/database.md`, Rule 5).
+
+**Why no proof can exist.** `/coven/[slug]` receives an address, and a proof needs a coven id and a seat. The address may be a coven's old one, left behind by a rename (M17.23), so the lookup cannot be the `workspaces.slug` read alone. The read returns the live coven holding the address, and whether that address is its current one.
+
+**What stops it leaking.** `membershipBySlug` is the only caller. A non-member, and an address held by a deleted coven or by nobody, get the same bare `Forbidden`, which the page turns into a 404. Only a member is told the coven moved (`CovenMoved`, carrying the current address). A guard test limits which files may name the function.

@@ -5,6 +5,7 @@ import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
 import { covenPausedPath, pausedCovenSlugOf } from '../../lib/access-paused';
+import { repeatedCovenNames } from '../../lib/coven-names';
 import { pauseNote } from '../../lib/pause-note';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
@@ -34,11 +35,14 @@ export default function WorkspaceSwitcher({
   const box = useRef<HTMLDivElement>(null);
   // A paused coven stays pickable: its layout sends the viewer on to the paused page, which
   // says the same.
-  const choices = workspaces.map(({ slug, name, paused }) => ({
-    value: slug,
-    label: name,
-    ...(paused && { note: pauseNote(paused) }),
-  }));
+  // Names are not unique, so a name two covens share shows each one's address beside it.
+  const repeated = repeatedCovenNames(workspaces);
+  const choices = workspaces.map(({ slug, name, paused }) => {
+    const note = [repeated.has(name) ? slug : undefined, paused ? pauseNote(paused) : undefined]
+      .filter(Boolean)
+      .join(' · ');
+    return { value: slug, label: name, ...(note && { note }) };
+  });
 
   useEffect(() => {
     if (focusAfterSwitch === undefined) return;

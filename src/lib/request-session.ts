@@ -7,8 +7,9 @@ import { assertCurator, assertSiteAdmin, standingAccessPause } from '@/modules/i
 import { agreementIsCurrent } from './agreement-version';
 import { auth } from './auth';
 import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
-import { AccessPaused, Forbidden } from './errors';
+import { AccessPaused, CovenMoved, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
+import { movedCovenPath } from './coven-path';
 import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
@@ -194,6 +195,8 @@ export async function requireCovenMembership(slug: string): Promise<CovenMembers
   } catch (error) {
     // First, since AccessPaused is a Forbidden too.
     if (error instanceof AccessPaused) redirect(covenPausedPath(slug));
+    if (error instanceof CovenMoved)
+      redirect(movedCovenPath((await forwardedReturnPath()) ?? '', error.slug));
     if (error instanceof Forbidden) notFound();
     throw error;
   }

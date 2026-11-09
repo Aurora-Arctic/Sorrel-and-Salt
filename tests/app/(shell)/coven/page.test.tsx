@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
@@ -20,6 +21,7 @@ vi.mock('@/modules/coven', async () => ({
 }));
 
 const { default: CovenPage } = await import('@/app/(shell)/coven/[slug]/page');
+const { makeQueryClient } = await import('@/lib/graphql-client');
 
 const params = (slug: string) => Promise.resolve({ slug });
 
@@ -28,7 +30,11 @@ async function renderAs(role: WorkspaceRole, demo = false) {
     workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven', demo },
     membership: { workspaceId: 'w', userId: 'u', role },
   });
-  render(await CovenPage({ params: params('fixture-coven') }));
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {await CovenPage({ params: params('fixture-coven') })}
+    </QueryClientProvider>,
+  );
 }
 
 beforeEach(() => {
@@ -67,6 +73,31 @@ describe('the /coven/[slug] page', () => {
 
     expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Delete Coven' })).not.toBeInTheDocument();
+  });
+
+  describe('the rename control', () => {
+    const renameField = () => screen.queryByRole('textbox', { name: 'Name' });
+
+    it("offers a steward the coven's name to change", async () => {
+      await renderAs('owner');
+
+      expect(renameField()).toHaveValue('Fixture Coven');
+    });
+
+    it.each<WorkspaceRole>(['member', 'viewer'])('offers a %s no rename', async (role) => {
+      await renderAs(role);
+
+      // Why its absence is the role's: the page drew for this caller, Leave and all.
+      expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+      expect(renameField()).toBeNull();
+    });
+
+    it('offers a steward of the demo coven no rename, as the service refuses it', async () => {
+      await renderAs('owner', true);
+
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Demo');
+      expect(renameField()).toBeNull();
+    });
   });
 
   it('offers an owner Leave and Delete', async () => {
