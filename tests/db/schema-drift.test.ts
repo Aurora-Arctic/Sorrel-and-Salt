@@ -13,6 +13,7 @@ import * as helpArticles from '@/modules/help/schema/help-articles';
 import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaceMemberPauses from '@/modules/coven/schema/workspace-member-pauses';
+import * as workspaceSlugs from '@/modules/coven/schema/workspace-slugs';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as supportRequests from '@/modules/support/schema/support-requests';
 import * as supportReplies from '@/modules/support/schema/support-replies';
@@ -76,6 +77,7 @@ const MODULES = [
   cardInvitationAttempts,
   invitations,
   workspaceMemberPauses,
+  workspaceSlugs,
   workspaces,
   supportRequests,
   supportReplies,

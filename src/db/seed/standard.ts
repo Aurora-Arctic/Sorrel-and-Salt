@@ -3,6 +3,7 @@ import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
+import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -635,6 +636,15 @@ async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
     columns: ['id'],
     toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
   });
+  await insertMissingBy(
+    tx,
+    workspaceSlugs,
+    FIXTURE_WORKSPACES.map((workspace) => ({
+      workspaceId: workspace.id,
+      slug: slugify(workspace.name),
+    })),
+    { columns: ['slug'], toRow: (address) => address },
+  );
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {

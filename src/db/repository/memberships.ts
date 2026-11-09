@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
+import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import { users } from '../../modules/identity/schema/users';
 // Type-only, so it is erased and no runtime cycle forms with the service that
@@ -172,8 +173,17 @@ export function workspaceWrites({
   softDelete,
 }: WriterContext): Pick<AuditWriter, 'softDeleteWorkspace'> {
   return {
-    softDeleteWorkspace: (membership) =>
-      softDelete(workspaces, eq(workspaces.id, membership.workspaceId)),
+    // The coven's addresses go with it, which frees them for another coven.
+    softDeleteWorkspace: async (membership) => {
+      const rows: unknown[] = await softDelete(
+        workspaces,
+        eq(workspaces.id, membership.workspaceId),
+      );
+      if (rows.length > 0) {
+        await softDelete(workspaceSlugs, eq(workspaceSlugs.workspaceId, membership.workspaceId));
+      }
+      return rows as never;
+    },
   };
 }
 

@@ -542,6 +542,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { liftMemberAccessPause(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id") { id } }`,
   ),
   deleteWorkspace: write('mutation { deleteWorkspace(workspaceId: "not-an-id") }'),
+  renameWorkspace: write(
+    'mutation { renameWorkspace(workspaceId: "not-an-id", name: "Fixture Renamed") { id } }',
+  ),
   createInvitation: write(
     `mutation { createInvitation(workspaceId: "${WORKSPACE_W_ID}", email: "not-an-address", role: viewer) { id } }`,
   ),
@@ -782,6 +785,7 @@ const OPEN_WRITES = [
   'pauseMemberAccess',
   'liftMemberAccessPause',
   'deleteWorkspace',
+  'renameWorkspace',
   'createInvitation',
   'revokeInvitation',
   'removeMember',

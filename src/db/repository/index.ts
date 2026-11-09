@@ -111,6 +111,7 @@ export {
   findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
+export { findWorkspaceHoldingSlug, findWorkspaceSlugs } from './workspace-slugs';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findHoldsPasskey,
@@ -301,4 +302,9 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';
+export type {
+  DocumentMailingItem,
+  DocumentMailingRow,
+  PendingDocumentVersion,
+  WorkspaceSlugRow,
+} from './types';

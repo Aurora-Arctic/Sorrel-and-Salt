@@ -36,6 +36,8 @@ let promotableId: string;
 let folkNameId: string;
 // A coven of its own for the delete probe's admitted call, which would take W down.
 let deletableWorkspaceId: string;
+// A coven of its own for the rename probe's admitted call, so W keeps its name and address.
+let renamableWorkspaceId: string;
 // Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
 let removableWorkspaceId: string;
 let leavableWorkspaceId: string;
@@ -157,6 +159,7 @@ export function useProbeRows(): void {
       return id;
     };
     deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
+    renamableWorkspaceId = await insertCoven('Fixture Renamable Coven');
     removableWorkspaceId = await insertCoven('Fixture Removable Coven');
     leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
     pausableWorkspaceId = await insertCoven('Fixture Pausable Coven');
@@ -374,6 +377,13 @@ export const PROBES: Record<string, WorkspaceIdProbe> = {
       leaveWorkspace(workspaceId: $workspaceId)
     }`,
     admittedTo: () => leavableWorkspaceId,
+  },
+  renameWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      renameWorkspace(workspaceId: $workspaceId, name: "Fixture Probe Renamed") { id }
+    }`,
+    asOwner: true,
+    admittedTo: () => renamableWorkspaceId,
   },
   deleteWorkspace: {
     source: `mutation ($workspaceId: ID!) {
