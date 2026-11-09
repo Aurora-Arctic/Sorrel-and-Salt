@@ -9,10 +9,9 @@ import { SoleStewardNotice } from '../sole-steward-notice';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
-import { resolvePage } from '../../../../../../lib/pagination';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
-import { readPageCursors } from '../../../../../../lib/numbered-page';
+import { readCursorPage, readPageCursors } from '../../../../../../lib/numbered-page';
 import { single } from '../../../../../../lib/search-params';
 import type { PagerCursor } from '../../../../../../lib/types';
 import { displayNamesOf } from '@/modules/identity';
@@ -47,9 +46,8 @@ export default async function MembersPage({
 
   let page;
   try {
-    page = await resolvePage(
-      after === undefined && before !== undefined ? { last: 25, before } : { first: 25, after },
-      (request) => listMembers(session, workspace, request),
+    page = await readCursorPage({ after, before }, (request) =>
+      listMembers(session, workspace, request),
     );
   } catch (error) {
     if (error instanceof Forbidden) notFound();

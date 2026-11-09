@@ -1,5 +1,6 @@
 import { getNamedType, getNullableType, isListType, isObjectType } from 'graphql';
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { describe, expect, inject, it } from 'vitest';
 import { schema } from '@/graphql/schema';
 
 // CLAUDE.md rule 8's guard (claude-docs/graphql/pagination.md, "Pagination"), read off the built schema: a list query declared without the helper fails here, in its own diff.
@@ -37,5 +38,21 @@ describe('every list query paginates through the one helper', () => {
     expect(connections.length).toBeGreaterThan(5);
 
     expect(unsized).toEqual([]);
+  });
+});
+
+// A page that calls the raw resolvers hand-builds its cursor and errors on a stale one, where readNumberedPage and readCursorPage (src/lib/numbered-page.ts) land on page 1.
+describe('a page reads its list through the numbered-page helpers', () => {
+  const PAGE_FILE = /^src\/app\/.*(?:^|[/-])page\.tsx$/;
+  const RAW_RESOLVER = /\b(?:resolvePage|resolveNumberedPage)\b/;
+
+  it('never calls resolvePage or resolveNumberedPage itself', () => {
+    const files = inject('repoFiles').filter((file) => PAGE_FILE.test(file));
+    // Preconditions: the scan found the pages, and the pattern matches a call it should refuse.
+    expect(files.length).toBeGreaterThan(20);
+    expect(files).toContain('src/app/(shell)/curator/group-page.tsx');
+    expect('await resolvePage(args, fetch)').toMatch(RAW_RESOLVER);
+
+    expect(files.filter((file) => RAW_RESOLVER.test(readFileSync(file, 'utf8')))).toEqual([]);
   });
 });
