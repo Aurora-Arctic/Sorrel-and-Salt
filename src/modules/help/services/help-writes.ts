@@ -29,6 +29,7 @@ import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
 } from '../validation/help';
+import { requireHelpArticle } from './help-reads';
 import { assertMarksExist, assertWidgetsKnown } from './marks';
 import { toHelpArticles } from './rows';
 
@@ -36,8 +37,6 @@ import { toHelpArticles } from './rows';
 
 // A slug is always slugify(title), never typed: a title change moves the address. Slugs the routes beneath /help take for themselves.
 const RESERVED_SLUGS = ['glossary', 'staff', 'search'];
-
-const WIDTH: Record<HelpAudience, number> = { public: 0, staff: 1, keeper: 2 };
 
 interface Merged {
   kind: HelpArticleRow['kind'];
@@ -128,13 +127,17 @@ async function checkStructure(row: Merged, selfId: string | null): Promise<void>
       throw fieldRefusal('parentId', 'An article with children cannot become a child');
   }
 
-  if (parent && WIDTH[row.audience] < WIDTH[parent.audience])
+  if (parent && HELP_AUDIENCE_RANK[row.audience] < HELP_AUDIENCE_RANK[parent.audience])
     throw fieldRefusal('audience', 'A child is as wide as its parent or narrower, never wider');
 
   // A save that names its children is checked on those; the ones it leaves out are released, so their width no longer binds.
   if (selfId !== null && row.childIds === undefined) {
     const children = await findAllHelpArticleChildren(selfId);
-    if (children.some((child) => WIDTH[child.audience] < WIDTH[row.audience]))
+    if (
+      children.some(
+        (child) => HELP_AUDIENCE_RANK[child.audience] < HELP_AUDIENCE_RANK[row.audience],
+      )
+    )
       throw fieldRefusal('audience', 'A parent cannot be narrower than a child it holds');
   }
 }
@@ -161,7 +164,7 @@ async function checkChildren(row: Merged, selfId: string | null): Promise<HelpAr
       'childIds',
       'Choose articles as the sub pages, not guides, FAQ entries or terms',
     );
-  if (rows.some((child) => WIDTH[child.audience] < WIDTH[row.audience]))
+  if (rows.some((child) => HELP_AUDIENCE_RANK[child.audience] < HELP_AUDIENCE_RANK[row.audience]))
     throw fieldRefusal('childIds', 'A child is as wide as its parent or narrower, never wider');
   for (const child of rows) {
     if ((await findAllHelpArticleChildren(child.id)).length > 0)
@@ -300,8 +303,7 @@ export async function updateHelpArticle(
 ): Promise<HelpArticle> {
   assertSiteAdmin(session);
   const values = parseSaying(PatchSchema, patch);
-  const current = await findOneById(helpArticles, id);
-  if (!current) throw new NotFound('Help article not found');
+  const current = await requireHelpArticle(id);
 
   const slug = values.title == null ? current.slug : slugify(values.title);
   const merged: Merged = {
@@ -359,8 +361,7 @@ export async function updateHelpArticle(
  */
 export async function deleteHelpArticle(session: Session, id: string): Promise<string> {
   assertSiteAdmin(session);
-  const current = await findOneById(helpArticles, id);
-  if (!current) throw new NotFound('Help article not found');
+  await requireHelpArticle(id);
   if ((await findAllHelpArticleChildren(id)).length > 0)
     throw new ValidationError(
       [{ path: ['id'], message: 'Delete or move this article’s children first' }],

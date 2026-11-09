@@ -28,6 +28,13 @@ import { toHelpArticles } from './rows';
 // Every read but the keeper's two answers shown rows alone, a keeper's included: a keeper sees a hidden row only in the list and the editor.
 // The staff reads and the search are never cached, since what they answer depends on who asks.
 
+/** One live row by id; a malformed id is the same NotFound as a missing one, so Postgres never sees it. */
+export async function requireHelpArticle(id: string): Promise<HelpArticleRow> {
+  const row = RowId.safeParse(id).success ? await findOneById(helpArticles, id) : undefined;
+  if (!row) throw new NotFound('Help article not found');
+  return row;
+}
+
 async function mapPage(
   entries: PageEntry<HelpArticleRow>[],
   reach: HelpReach,
@@ -175,8 +182,7 @@ export async function readKeeperHelpArticle(
   id: string,
 ): Promise<HelpArticleWithChildren> {
   assertSiteAdmin(session);
-  const row = RowId.safeParse(id).success ? await findOneById(helpArticles, id) : undefined;
-  if (!row) throw new NotFound('Help article not found');
+  const row = await requireHelpArticle(id);
   const children = await findAllHelpArticleChildren(row.id);
   const [article, ...answered] = await toHelpArticles([row, ...children], 'keeper');
   return { ...article, children: answered };
