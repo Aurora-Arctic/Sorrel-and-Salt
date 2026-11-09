@@ -7,7 +7,8 @@ import { NotFound } from '@/lib/errors';
 import { orNotFound } from '@/lib/or-not-found';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { UNVERSIONED_DOCUMENT_KEYS } from '@/lib/unversioned-documents';
-import { siteUrl } from '@/lib/site';
+import { publicPageMetadata } from '@/lib/page-metadata';
+import { SITE_NAME } from '@/lib/site';
 import { listDocumentVersions, readDocument, readDocumentVersion } from '@/modules/documents';
 import type { DocumentKey } from '@/modules/documents';
 
@@ -77,10 +78,8 @@ export async function versionDocumentMetadata(
       readDocument(key),
     ]);
     const path = version.number === current.number ? `/${key}` : `/${key}/versions/${address}`;
-    return {
-      title: `${version.title}, Version ${version.number}`,
-      alternates: { canonical: siteUrl(path) },
-    };
+    const title = `${version.title}, Version ${version.number}`;
+    return publicPageMetadata(title, `${title}, as published on ${SITE_NAME}.`, path);
   } catch (error) {
     if (error instanceof NotFound) return {};
     throw error;

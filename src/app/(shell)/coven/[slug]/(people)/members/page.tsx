@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
@@ -27,9 +28,7 @@ import MemberDialog from './member-dialog';
 import { memberHeading } from './member-heading';
 import type { MembersPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Members',
-};
+export const metadata: Metadata = pageTitle('Members');
 
 // Who is in the coven; a name opens the member's modal. An observer gets the stranger's 404. An address is a steward's
 // alone, asked only when the role holds `member: readEmail` and checked again by `memberEmails`.

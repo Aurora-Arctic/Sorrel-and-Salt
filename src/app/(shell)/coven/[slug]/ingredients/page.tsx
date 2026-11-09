@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import CovenCards from '../../../../../components/CovenCards';
 import { covenCardActions } from '../../../../../components/CovenCards/actions';
 import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
@@ -43,7 +44,7 @@ import { stockDialogOf } from '@/app/coven-stock';
 // draws its own `<main>` and is its own RouteModalProvider; one page of 24 is read under `COVEN_PARAMS`.
 // Card actions and Quick Look: claude-docs/components/coven-cards.md.
 
-export const metadata: Metadata = { title: 'Ingredients' };
+export const metadata: Metadata = pageTitle('Ingredients');
 
 export default async function CovenIngredientsPage({
   params,

@@ -5,28 +5,17 @@ import { getSession, sessionIsVerified } from '../lib/request-session';
 import { websiteJsonLd } from '../lib/json-ld';
 import { emailPagePath } from '../lib/account-email';
 import { signedInLanding } from '../lib/landing';
-import { SITE_NAME, siteUrl } from '../lib/site';
-import { TWITTER_CARD } from '../lib/page-metadata';
+import { SITE_NAME } from '../lib/site';
+import { publicPageMetadata } from '../lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
 // unverified account gets the email page. See claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives".
 const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
 
-// Absolute, so the layout's template does not add the site's name twice.
-export const metadata: Metadata = {
-  title: { absolute: SITE_NAME },
-  description: DESCRIPTION,
-  alternates: { canonical: siteUrl('/') },
-  openGraph: {
-    title: SITE_NAME,
-    description: DESCRIPTION,
-    url: siteUrl('/'),
-    siteName: SITE_NAME,
-    type: 'website',
-  },
-  twitter: { card: TWITTER_CARD, title: SITE_NAME, description: DESCRIPTION },
-};
+export const metadata: Metadata = publicPageMetadata(SITE_NAME, DESCRIPTION, '/', {
+  absolute: true,
+});
 
 async function continueTarget(session: Session): Promise<Route> {
   const landing = await signedInLanding(session);

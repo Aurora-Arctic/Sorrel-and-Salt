@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import AdminArrivals from '../../../../../components/AdminCards/arrivals';
 import { readArrivalsFilter } from '../../../../../components/AdminCards/filter-params';
@@ -22,9 +23,7 @@ import { readPauseState } from '../../(people)/pause-state';
 import { readListPlace } from '../../../curator/list-page';
 import type { ArrivalsPageProps } from '../invitation-cards/types';
 
-export const metadata: Metadata = {
-  title: 'Card Sign-Ups',
-};
+export const metadata: Metadata = pageTitle('Card Sign-Ups');
 
 const REMOVED_ACCOUNT = 'Removed account';
 

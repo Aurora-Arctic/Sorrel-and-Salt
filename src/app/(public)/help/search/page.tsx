@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import HelpSearchResults from '@/components/HelpSearchResults';
 import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { getSession } from '@/lib/request-session';
 import { searchHelp } from '@/modules/help';
 
-export const metadata: Metadata = {
-  title: 'Search Help',
-  robots: { index: false },
-};
+export const metadata: Metadata = noIndexMetadata('Search Help');
 
 // Results follow the reader's audience, so the page reads the session and is never shared between viewers.
 export default async function Page({

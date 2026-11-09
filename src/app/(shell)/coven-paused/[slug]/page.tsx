@@ -1,4 +1,5 @@
 import { orNotFound } from '@/lib/or-not-found';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import { pausedCovenBySlug } from '@/modules/coven';
@@ -15,10 +16,7 @@ import type { CovenPausedPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
 
-export const metadata: Metadata = {
-  title: 'Access Paused',
-  robots: { index: false },
-};
+export const metadata: Metadata = noIndexMetadata('Access Paused');
 
 // Where a member whose access to one coven is paused lands from that coven's pages (claude-docs/auth/coven-guard.md, "A paused
 // member"). Outside `/coven/[slug]`, whose layout refuses them. It reads the pause through the service by the slug, so it

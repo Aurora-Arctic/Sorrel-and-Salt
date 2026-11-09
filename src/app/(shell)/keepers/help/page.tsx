@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import { ADMIN_PAGES } from '../../../../components/AdminNav/sections';
 import HelpOutline from '../../../../components/HelpOutline';
@@ -29,9 +30,7 @@ import {
 } from '@/modules/help';
 import AddAction from '../../curator/add-action';
 
-export const metadata: Metadata = {
-  title: 'Help',
-};
+export const metadata: Metadata = pageTitle('Help');
 
 const { label } = ADMIN_PAGES.help;
 const NEW_PATH = '/keepers/help/new';

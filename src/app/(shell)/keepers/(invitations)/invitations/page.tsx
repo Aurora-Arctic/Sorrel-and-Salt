@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import AdminInvitations from '../../../../../components/AdminInvitations';
 import { invitationsHref } from '../../../../../components/AdminInvitations/href';
@@ -11,9 +12,7 @@ import { readInvitationsPlace } from './filter';
 import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Invitations',
-};
+export const metadata: Metadata = pageTitle('Invitations');
 
 // One page of the pending invitations and its count, newest first. A cursor naming no row gives the
 // first page again; numbered as every admin list is (rule 8). Cached so a second render in the

@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countReceivedInvitations,
@@ -17,9 +18,7 @@ import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
 
-export const metadata: Metadata = {
-  title: 'Your Account',
-};
+export const metadata: Metadata = pageTitle('Your Account');
 
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);

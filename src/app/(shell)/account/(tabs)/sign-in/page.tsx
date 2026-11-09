@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import PageNav from '../../../../../components/PageNav';
 import Passkeys from '../../../../../components/Passkeys';
 import PasswordSection from '../../../../../components/PasswordSection';
@@ -22,9 +23,7 @@ import type { SignInPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
 import { PendingLink } from '@/lib/navigation';
 
-export const metadata: Metadata = {
-  title: 'Sign-In',
-};
+export const metadata: Metadata = pageTitle('Sign-In');
 
 // The account's ways in, one section each: sign-in methods, password, two-factor and passkeys. A failed provider link returns
 // here with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").

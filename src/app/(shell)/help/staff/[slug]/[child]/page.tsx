@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { readGlossaryTerms } from '@/lib/help-glossary';
@@ -9,7 +10,7 @@ import { helpViewerOffers } from '@/lib/help-viewer';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
-export const metadata: Metadata = { title: 'Staff Help', robots: { index: false } };
+export const metadata: Metadata = noIndexMetadata('Staff Help');
 
 export default async function Page({
   params,

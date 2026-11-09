@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import CompendiumList from '../../../../components/CompendiumList';
@@ -46,9 +47,7 @@ import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
-export const metadata: Metadata = {
-  title: 'Compendium',
-};
+export const metadata: Metadata = pageTitle('Compendium');
 
 const ADD_TITLE = 'Add Ingredient';
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
