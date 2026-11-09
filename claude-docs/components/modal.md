@@ -17,7 +17,7 @@ Tests are `tests/components/Modal/`, `tests/support/discard-guard.tsx` (`expectG
 
 ### The first field's focus
 
-**The focus goes to the first field a person can use** (`firstShownField`, run right after `showModal()`): not `type="hidden"`, not disabled, not under a `hidden` section, not inside a `data-focus-skip` wrapper (the Reviewed switch at the foot of the ingredient form, which would take the open on an edit with every section closed). With no field the dialog takes it. `autoFocus` cannot do this: it runs before `showModal()` moves the focus, and development's remount blurs a focused field, which a form reads as touched. `ModalHeading.focusTitle` focuses the title instead, here and when a route modal's contents arrive (the support request dialog, so the subject is read first).
+**The focus goes to the first field a person can use** (`firstShownField`, run right after `showModal()`): not `type="hidden"`, not disabled, not under a `hidden` section, not inside a `data-focus-skip` wrapper (the Reviewed switch at the foot of the ingredient form, which would take the open on an edit with every section closed). With no field the dialog takes it. `autoFocus` cannot do this: it runs before `showModal()` moves the focus, and development's remount blurs a focused field, which a form reads as touched. `ModalHeading.focusTitle` focuses the title instead, here and when a route modal's contents arrive (the support request dialog, so the subject is read first). Turned on while the modal is open, it moves the focus to the title: the sign-in dialog's email view, whose heading the title is, uses this, since a file that draws a dialog may not call `.focus()` itself.
 
 ### The fade
 

@@ -19,7 +19,7 @@ export interface ModalHeading {
   actionsUnderClose?: boolean;
   aboveName?: ReactNode;
   under?: ReactNode;
-  /** The open lands the focus on the title, not the body's first field: a dialog that reads a record before it asks for anything. */
+  /** The open lands the focus on the title, not the body's first field: a dialog that reads a record before it asks for anything. Turned on while open, it moves the focus to the title: a view whose heading the title is. */
   focusTitle?: boolean;
 }
 

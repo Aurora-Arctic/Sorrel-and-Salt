@@ -6,7 +6,7 @@ import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { safeReturnPath, signInPath } from '../../lib/sign-in';
 import Modal from '../Modal';
-import SignInPanel, { SIGN_IN_TITLES } from '../SignInPanel';
+import SignInPanel, { EMAIL_VIEW_TITLES, SIGN_IN_TITLES } from '../SignInPanel';
 import type { SignInDialogProps } from './types';
 import './index.scss';
 
@@ -34,6 +34,8 @@ const SignInDialog = ({
   const [mode, setMode] = useState(openingMode);
   // A new email account, signed in by its sign-up, told to check its inbox here rather than sent anywhere.
   const [inbox, setInbox] = useState(false);
+  // The panel's email view, whose heading is this dialog's title; `focusTitle` puts the focus there as it opens.
+  const [emailView, setEmailView] = useState(false);
   const { refresh } = usePendingNavigation();
   const link = useRef<HTMLAnchorElement>(null);
 
@@ -42,6 +44,7 @@ const SignInDialog = ({
     event.preventDefault();
     setMode(openingMode);
     setInbox(false);
+    setEmailView(false);
     setOpen(true);
   };
 
@@ -52,7 +55,8 @@ const SignInDialog = ({
       </PendingLink>
       {open && (
         <Modal
-          title={inbox ? INBOX_TITLE : SIGN_IN_TITLES[mode]}
+          title={inbox ? INBOX_TITLE : (emailView ? EMAIL_VIEW_TITLES : SIGN_IN_TITLES)[mode]}
+          focusTitle={emailView && !inbox}
           under={
             inbox ? (
               <p className="lede">{INBOX_LEDE}</p>
@@ -81,6 +85,7 @@ const SignInDialog = ({
               configured={configured}
               mode={openingMode}
               onModeChange={setMode}
+              onEmailViewChange={setEmailView}
               inDialog
               signUpLandsOnNext={signUpLandsOnNext}
               // From an invitation the invitation itself is the inbox view.

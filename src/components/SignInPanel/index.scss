@@ -181,3 +181,8 @@ div.sign-in-panel__switch {
   gap: space(2);
   justify-content: center;
 }
+
+// The Last Used mark under a dialog's title, where the email view has no heading of its own to carry it.
+.sign-in-panel__last-used {
+  margin: 0;
+}

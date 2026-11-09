@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
@@ -11,7 +12,9 @@ import PageHeader from '../PageHeader';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import { useModalHeaderNote } from '../Modal/header-slot';
 import ModeSwitch from './mode-switch';
+import { EMAIL_VIEW_TITLES } from './titles';
 import TwoFactorStep from './two-factor-step';
 import type { PasswordFormProps, SignInMode } from './types';
 
@@ -72,6 +75,7 @@ const PasswordForm = ({
   mode,
   onModeChange,
   headingLevel,
+  ownHeading,
   signUpLandsOnNext,
   onSignedUp,
   lastUsed,
@@ -92,6 +96,7 @@ const PasswordForm = ({
   const [signedUp, setSignedUp] = useState<string>();
   const [askingForCode, setAskingForCode] = useState(false);
   const { ref, settle } = useResultFocus<HTMLDivElement>();
+  const headerNote = useModalHeaderNote();
 
   const signingUp = mode === 'sign-up';
   const ready =
@@ -173,6 +178,7 @@ const PasswordForm = ({
 
   const nameField = fieldDescription({ id: nameId });
   const emailField = fieldDescription({ id: emailId, error: problem.email });
+  const lastUsedMark = <span className="badge badge--last-used">Last Used</span>;
 
   return (
     <div className="sign-in-panel__password" ref={ref}>
@@ -180,19 +186,22 @@ const PasswordForm = ({
         <BackChevron />
         Back
       </button>
-      {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
-      <PageHeader
-        className="sign-in-panel__password-head"
-        headingClassName="auth-title sign-in-panel__password-heading"
-        level={headingLevel}
-        focusable
-        title={signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
-        suffix={
-          lastUsed && !signingUp ? (
-            <span className="badge badge--last-used">Last Used</span>
-          ) : undefined
-        }
-      />
+      {/* The view's heading: focus lands here when the view opens (./index.tsx). In a dialog the title is it. */}
+      {ownHeading ? (
+        <PageHeader
+          className="sign-in-panel__password-head"
+          headingClassName="auth-title sign-in-panel__password-heading"
+          level={headingLevel}
+          focusable
+          title={EMAIL_VIEW_TITLES[mode]}
+          suffix={lastUsed && !signingUp ? lastUsedMark : undefined}
+        />
+      ) : (
+        lastUsed &&
+        !signingUp &&
+        headerNote &&
+        createPortal(<p className="sign-in-panel__last-used">{lastUsedMark}</p>, headerNote)
+      )}
       {problem.alert && (
         <Notice kind="error" result>
           {problem.alert}

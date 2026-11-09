@@ -21,6 +21,8 @@ export interface SignInPanelProps {
   signUpLandsOnNext?: boolean;
   /** Given, a new email account stays on the page, signed in, and this is called in place of the navigation. */
   onSignedUp?: () => void;
+  /** Told when the email view opens (true) or closes (false), so a dialog can title itself for the view. */
+  onEmailViewChange?: (open: boolean) => void;
 }
 
 export interface ProviderButtonProps {
@@ -38,6 +40,8 @@ export interface PasswordFormProps {
   onModeChange: (mode: SignInMode) => void;
   /** The level of the view's heading: h1 on the sign-in page, h3 under a dialog's title. */
   headingLevel: 'h1' | 'h3';
+  /** False in a dialog, whose title is the view's heading: the form then draws none, and puts its Last Used mark under that title. */
+  ownHeading: boolean;
   signUpLandsOnNext?: boolean;
   onSignedUp?: () => void;
   /** Whether this browser last signed in with a password. */

@@ -52,13 +52,23 @@ describe('SignInPanel in a dialog', () => {
     assign.mockReset();
   });
 
-  it('opens the email form in place, leaving the address and the history alone, and Back returns the focus to Continue with Email', async () => {
-    render(<SignInPanel next="/invite/abc" configured={['google']} inDialog />);
+  it('opens the email form in place, with no heading of its own, telling the dialog, leaving the address and the history alone, and Back returns the focus to Continue with Email', async () => {
+    const onEmailViewChange = vi.fn();
+    render(
+      <SignInPanel
+        next="/invite/abc"
+        configured={['google']}
+        inDialog
+        onEmailViewChange={onEmailViewChange}
+      />,
+    );
+    expect(onEmailViewChange).not.toHaveBeenCalled();
 
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
 
-    // A level under the dialog's own title.
-    expect(screen.getByRole('heading', { level: 3, name: /Sign In with Email/ })).toHaveFocus();
+    // The dialog's title heads the view.
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect(onEmailViewChange).toHaveBeenLastCalledWith(true);
     expect(field('Email Address')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
     expect(history.replace).not.toHaveBeenCalled();
@@ -67,6 +77,7 @@ describe('SignInPanel in a dialog', () => {
     await press(screen.getByRole('button', { name: 'Back' }));
 
     expect(history.back).not.toHaveBeenCalled();
+    expect(onEmailViewChange).toHaveBeenLastCalledWith(false);
     expect(screen.queryByLabelText(/^Email Address/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Continue with Email' })).toHaveFocus();
 
@@ -88,9 +99,6 @@ describe('SignInPanel in a dialog', () => {
 
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
 
-    expect(
-      screen.getByRole('heading', { level: 3, name: 'Create an Account with Email' }),
-    ).toBeInTheDocument();
     expect(field('Name')).toBeInTheDocument();
 
     await press(screen.getByRole('button', { name: 'Sign In Instead' }));

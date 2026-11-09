@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import SignInDialog from '@/components/SignInDialog';
+import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 
 // Sign In opened over the page it is on: a plain press opens the dialog, and the link's own
 // address, the sign-in page, is what a press for a new tab, or a browser without the script, gets.
@@ -158,6 +159,42 @@ describe('SignInDialog', () => {
     ).toBeInTheDocument();
   });
 
+  it("gives the email view one heading, the dialog's own title, named for the mode and taking the focus", async () => {
+    render(<SignInDialog next="/compendium" configured={['google']} label="Sign In" />);
+    await press(trigger());
+
+    await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
+
+    const headings = () => within(dialog()).getAllByRole('heading');
+    expect(headings()).toHaveLength(1);
+    expect(headings()[0]).toHaveAccessibleName('Sign In with Email');
+    expect(dialog()).toHaveAccessibleName('Sign In with Email');
+    await waitFor(() => expect(headings()[0]).toHaveFocus());
+
+    await press(within(dialog()).getByRole('button', { name: 'Create an Account' }));
+
+    expect(headings()).toHaveLength(1);
+    expect(headings()[0]).toHaveAccessibleName('Create an Account with Email');
+    expect(dialog()).toHaveAccessibleName('Create an Account with Email');
+
+    await press(within(dialog()).getByRole('button', { name: 'Back' }));
+
+    expect(dialog()).toHaveAccessibleName('Create an Account');
+    expect(within(dialog()).getByRole('button', { name: 'Continue with Email' })).toHaveFocus();
+  });
+
+  it('keeps the Last Used mark in the email view for a browser that last signed in with a password', async () => {
+    document.cookie = `${LAST_USED_PROVIDER_COOKIE}=email; path=/`;
+    render(<SignInDialog next="/compendium" configured={['google']} label="Sign In" />);
+    await press(trigger());
+
+    await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
+
+    expect(within(dialog()).getByText('Last Used')).toBeVisible();
+    expect(dialog()).toHaveAccessibleName('Sign In with Email');
+    document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; path=/; max-age=0`;
+  });
+
   // A new account from the bar stays where it was, signed in: its next step is the inbox, and the link there returns here.
   describe('a new email account', () => {
     const createAccount = async (): Promise<HTMLElement> => {
@@ -233,7 +270,7 @@ describe('SignInDialog', () => {
       });
       await press(within(dialog()).getByRole('button', { name: 'Create Account' }));
 
-      expect(dialog()).toHaveAccessibleName('Sign In');
+      expect(dialog()).toHaveAccessibleName('Sign In with Email');
     });
   });
 });

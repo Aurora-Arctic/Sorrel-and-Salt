@@ -161,6 +161,14 @@ const Modal = ({
     }
     wasLoading.current = loading;
   }, [loading, focusTitle]);
+  // A view the contents switch to whose heading is the title takes the focus there as it turns on.
+  const wasTitled = useRef(focusTitle);
+  useEffect(() => {
+    if (focusTitle && !wasTitled.current && ref.current?.open) {
+      ref.current.querySelector<HTMLElement>('.modal-dialog__title')?.focus();
+    }
+    wasTitled.current = focusTitle;
+  }, [focusTitle]);
   // open, fading, then closed; closed asks the owner once, in an effect, so no render reads a ref.
 
   const [phase, setPhase] = useState<ModalPhase>('open');

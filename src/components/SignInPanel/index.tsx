@@ -13,14 +13,11 @@ import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
+import { SIGN_IN_TITLES } from './titles';
 import type { SignInAttempt, SignInMode, SignInPanelProps } from './types';
 import './index.scss';
 
-/** Each mode's title, read by the page header here and by the dialog around a panel. */
-export const SIGN_IN_TITLES: Record<SignInMode, string> = {
-  'sign-in': 'Sign In',
-  'sign-up': 'Create an Account',
-};
+export { EMAIL_VIEW_TITLES, SIGN_IN_TITLES } from './titles';
 
 // A cookie announces no change, and only a callback, a full navigation away, writes this one:
 // there is nothing to subscribe to.
@@ -53,6 +50,7 @@ const SignInPanel = ({
   inDialog = false,
   signUpLandsOnNext,
   onSignedUp,
+  onEmailViewChange,
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
   const [mode, setMode] = useState<SignInMode>(initialMode);
@@ -87,14 +85,16 @@ const SignInPanel = ({
   const emailButton = useRef<HTMLButtonElement>(null);
   const shown = useRef(emailView);
   // On a switch of view, focus moves to the new view's heading, or in a dialog, whose buttons have
-  // none, back to Continue with Email; the first render leaves focus alone.
+  // none, back to Continue with Email; the first render leaves focus alone. A dialog's email view has no
+  // heading of its own: the dialog's title is it, and the dialog, told here, focuses that.
   useEffect(() => {
     if (shown.current === emailView) return;
     shown.current = emailView;
+    onEmailViewChange?.(emailView);
     (
       panelRef.current?.querySelector<HTMLElement>('[data-view-heading]') ?? emailButton.current
     )?.focus();
-  }, [emailView]);
+  }, [emailView, onEmailViewChange]);
 
   const showView = (toEmail: boolean): void => {
     if (inDialog) return setDialogEmailView(toEmail);
@@ -158,6 +158,7 @@ const SignInPanel = ({
           mode={mode}
           onModeChange={switchMode}
           headingLevel={inDialog ? 'h3' : 'h1'}
+          ownHeading={!inDialog}
           signUpLandsOnNext={signUpLandsOnNext}
           onSignedUp={onSignedUp}
           lastUsed={lastUsedPassword}
