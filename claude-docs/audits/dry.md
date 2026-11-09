@@ -28,9 +28,9 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-14  | The failure message is read three different ways from `readGraphqlFailure`                                                                                   | high     | Components    |     26 |  2.75 | Fixed in part                                   |
 | D-15  | Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`                                                                 | high     | Pages and lib |     16 |     4 | Not yet fixed                                   |
 | D-16  | Not-found handling written per page (`orNotFound` twice, try/catch about 25 times)                                                                           | high     | Pages and lib |     15 |     3 | Not yet fixed                                   |
-| D-17  | Help kind and audience lists typed out in GraphQL, the repository and the components                                                                         | high     | Server        |     14 |   2.5 | Not yet fixed                                   |
+| D-17  | Help kind and audience lists typed out in GraphQL, the repository and the components                                                                         | high     | Server        |     14 |   2.5 | Fixed                                           |
 | D-18  | Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts` | high     | Components    |     14 |   1.5 | Fixed in part                                   |
-| D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Not yet fixed                                   |
+| D-19  | Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring                                                            | high     | Components    |     12 |  6.75 | Fixed in part                                   |
 | D-20  | Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted                                                                         | high     | Components    |     10 |     8 | Fixed in part: outside press shared             |
 | D-21  | "assertMembership, swallow Forbidden" written at least six times                                                                                             | high     | Server        |     10 |     3 | Fixed                                           |
 | D-22  | Support time-out panel rebuilds the access-pause panel                                                                                                       | high     | Components    |      7 |     4 | Not yet fixed                                   |
@@ -669,7 +669,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/HelpArticleForm/`, `tests/components/HelpOutline/`, `tests/lib/help-audience.test.ts` if present.
 
 - **Estimate:** 2.5 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed. The GraphQL enums and the validator take the help kinds and audiences from the schema's enum values, the component types alias `@/modules/help`'s, and the audience labels and rank live once in `src/lib/help-audience`; `tests/modules/help/lists.test.ts` fails if any list drifts.
 
 ### D-18: Auth message constants and rate-limit handling are defined in one component and imported by four others; `FIELD_ERRORS` re-states `lib/password-refusals.ts`
 
@@ -719,7 +719,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/components/HelpOutline/*`.
 
 - **Estimate:** 6.75 hours
-- **Status:** Not yet fixed
+- **Status:** Fixed in part. `SortableColumn` in `src/lib/sortable/column.tsx` serves the help outline and the spell steps, and `useOptimisticOrder` serves the guides bar and the order table; `tests/guards/sortable-wiring.test.ts` keeps the sortable hooks to `column.tsx` and `Combobox/sortable.tsx`. The Combobox chips keep their own keyboard coordinates, since they wrap. Still to share: one grip button for `SpellBuilder/steps/step-row.tsx` and `Combobox/entry.tsx`.
 
 ### D-20: Outside-press and Escape dismissal is hand-written at about 11 sites and has drifted
 
