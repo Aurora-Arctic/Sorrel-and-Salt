@@ -1,6 +1,6 @@
 # SignInPanel
 
-`src/components/SignInPanel/` is the `/sign-in` page's card. The server component `src/app/sign-in/page.tsx` reads `?next=`, `?error=` and the environment and hands the results down as props (`types.ts`); this component does the rendering and the click.
+`src/components/SignInPanel/` is the `/sign-in` page's card, and the body of the sign-in dialog that opens over a page ([`sign-in-dialog.md`](sign-in-dialog.md)). On the page, the server component `src/app/sign-in/page.tsx` reads `?next=`, `?error=` and the environment and hands the results down as props (`types.ts`); this component does the rendering and the click.
 
 A visitor who is already signed in never sees the panel. The page redirects on the server: to `?next=` when it passes `safeReturnPath()`, otherwise to `signedInLanding(session)`. An account whose address is unverified goes to `emailPagePath(target)` instead, as `requireSession()` sends it (`tests/app/sign-in-page.test.tsx`).
 
@@ -8,7 +8,7 @@ A visitor who is already signed in never sees the panel. The page redirects on t
 
 **The `?next=` contract**
 
-- `safeReturnPath()` and `signInErrorMessage()` (`src/lib/sign-in.ts`) turn the raw `searchParams` into a same-site path and a readable sentence in place of an `?error=` code. The route-protection redirect writes the same `?next=` this page reads, so the validation lives in one place and the two cannot disagree about what is safe. The header's Sign In link on the public pages ([`public-frame.md`](public-frame.md)) writes it too. A safe path starts with a single `/`, holds no backslash or line break, and is not `/sign-in`, `/forgot-password` or `/reset-password` (or anything beneath them), which would only show a form again.
+- `safeReturnPath()` and `signInErrorMessage()` (`src/lib/sign-in.ts`) turn the raw `searchParams` into a same-site path and a readable sentence in place of an `?error=` code. The route-protection redirect writes the same `?next=` this page reads, so the validation lives in one place and the two cannot disagree about what is safe. The header's Sign In link on the public pages ([`public-frame.md`](public-frame.md)) and an invitation's two choices write it too, through `SignInDialog`, which hands the same `next` to the panel in the dialog. A safe path starts with a single `/`, holds no backslash or line break, and is not `/sign-in`, `/forgot-password` or `/reset-password` (or anything beneath them), which would only show a form again.
 - The three state failures (`state_mismatch`, `state_not_found`, `state_invalid`) share one sentence telling the visitor to start again from this page. The state is single-use and expires after ten minutes, so the obvious retry, going back through the provider's tab, replays a dead state.
 - `next` is absent when the page was given none or an unsafe one. The callback then lands the account by its role: `/keepers` for a keeper, `/curator` for a curator, `/coven` for anyone else ([`auth/route-protection.md`](../auth/route-protection.md), "Route protection").
 - With no `next`, `socialSignInTarget(next)` puts the `NO_RETURN_PATH` flag in `additionalData`, which is how the callback tells it from an explicit `/coven`. `callbackURL` is `/coven` only because Better Auth requires one, and a bare `/sign-in` is the `errorCallbackURL`, so a retry still asks for none. With a `next`, `errorCallbackURL` carries it, so a failed attempt keeps the destination. Better Auth appends its own `?error=<code>` to whatever URL it is given.
@@ -47,18 +47,30 @@ A visitor who is already signed in never sees the panel. The page redirects on t
 - A failure before the redirect (`signIn.social`'s `{ error }`, or a throw for a dropped connection) belongs to the button pressed, through its own click feedback ([`click-feedback.md`](click-feedback.md)): a callout under that button with focus kept on it, and a badge that brings it back. The badge is named "Show the error for Continue with <Provider>", without the last-used mark. The next press clears it.
 - That failure always says `GENERIC_SIGN_IN_ERROR` (`src/lib/sign-in.ts`), never `result.error.message`, which is provider- or Better-Auth-internal and unreviewed, as `signInErrorMessage()` treats `error_description`.
 
+**Signing in or creating an account**
+
+- The panel holds one mode, `sign-in` or `sign-up`, from the `mode` prop and reported through `onModeChange`. The switch under the buttons and under the email form is `ModeSwitch` (`mode-switch.tsx`): "New here? Create an Account" or "Already have an account? Sign In Instead", a quiet small button. The mode survives Back from the email form.
+- On the page the head reads Sign In or Create an Account. Creating an account offers no passkey, since a passkey signs in to an account that already exists.
+
+**In a dialog** (`inDialog`)
+
+- The panel draws no head of its own: the dialog's title is the head, so the email form's heading is an `h3` (`PageHeader` `level`, [`page-header.md`](page-header.md)), as is the two-factor step's.
+- The page beneath keeps its address, so Continue with Email opens the form in place, held in the panel's state, with no history entry and no `?method=email`. Back returns the focus to Continue with Email.
+- `signUpLandsOnNext`: a new email account with a session loads `next` itself rather than `/sign-in?next=`, which would send an unverified account to the email page. The invitation sets it, so its own page says to check the inbox. A sign-in, a passkey and the two-factor step still go through `/sign-in?next=`.
+- The class is `.sign-in-panel--dialog`, with no `.panel`: the modal's box is the ground and its body the padding, so the panel keeps only its column.
+
 **Two views**
 
 - The first view holds the provider buttons and "Continue with Email", and no text field. The second holds the email and password form, with a "Back" button above it in the ingredient page's back-link look (`IngredientEntry/back-link`).
-- "Continue with Email" adds a history entry with `window.history.pushState`, marked in `history.state`, and Next ties the address to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. "Back" calls `history.back()` when the form's entry carries the mark, so the browser's Back does not land on the form again. A form opened directly (a link to `?method=email`, or a reload) has no mark, and "Back" uses `history.replaceState` to the address without `method`. The panel holds the typed email address across the trip; the name and password are not kept.
+- On the page, "Continue with Email" adds a history entry with `window.history.pushState`, marked in `history.state`, and Next ties the address to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. "Back" calls `history.back()` when the form's entry carries the mark, so the browser's Back does not land on the form again. A form opened directly (a link to `?method=email`, or a reload) has no mark, and "Back" uses `history.replaceState` to the address without `method`. The panel holds the typed email address across the trip; the name and password are not kept.
 - On a view change focus moves to its heading (`tabIndex={-1}`, `data-view-heading`); the first render leaves focus alone. `.auth-title` (`_typography.scss`) is the h1 at the `h2` size so a long title fits the narrow card; the forgot-password and reset-password pages use the same class. The two-factor step shows alone, so its "Enter Your Code" is the page's `h1`, drawn by `PageHeader` with the same classes and no focus move.
 
 **Email and password** (`password-form.tsx`; wiring in [`auth/passwords.md`](../auth/passwords.md))
 
-- "Create an Account" switches the same form to sign-up and back. Sign-up adds a Name field; the [`PasswordField`](password-field.md) is `current` for sign-in and `new`, with the strength meter, for sign-up.
+- The switch turns the same form to sign-up and back. Sign-up adds a Name field; the [`PasswordField`](password-field.md) is `current` for sign-in and `new`, with the strength meter, for sign-up.
 - The submit is disabled until every field has something in it. The form is `noValidate`, so every refusal is the server's.
 - Each refusal is said where it belongs. A length or address code goes under its field; the breached-list refusal goes under the password with the server's own sentence. A 401 at sign-in is one sentence, `WRONG_CREDENTIALS`, the same for a wrong password and an unknown address. A 429 is `TOO_MANY_ATTEMPTS`; a 500 at sign-up, the breached-password check unable to answer, is `SIGN_UP_UNAVAILABLE`. Anything else is a generic sentence, never Better Auth's message.
-- A sign-up asks `getSession`: with a session it does the same full load as a sign-in; with none the address was held, and one sentence says a mail was sent and the form is not reset. The result of every submit takes focus (`useResultFocus`).
+- A sign-up asks `getSession`: with a session it does the same full load as a sign-in (or of `next`, under `signUpLandsOnNext`), and Better Auth's verification mail carries `next` as its `callbackURL`; with none the address was held, and one sentence says a mail was sent and the form is not reset. The result of every submit takes focus (`useResultFocus`).
 - A sign-in does a full load of `/sign-in?next=…` after `reportLeaving()`, and the page's server redirect sends the account on, an unverified one to the email page first. A submit clears the panel's callback error through `onStart`, as a provider press does.
 
 **Two-factor** ([`auth/two-factor.md`](../auth/two-factor.md))
@@ -81,9 +93,9 @@ A visitor who is already signed in never sees the panel. The page redirects on t
 
 ## Testing
 
-Stories are in `src/components/SignInPanel/index.stories.tsx`, each inside the page's own `main`: `States` and `Pending` and `Failed`, each pressing Continue with Google, the first with the request held open by the workshop's server (`.storybook/vite.config.ts`), the second answered by its 404. The mark is read from the workshop's own cookie, which outlives the story that wrote it, so every story sets or clears it before rendering.
+Stories are in `src/components/SignInPanel/index.stories.tsx`, each inside the page's own `main`: `States` (Create an Account among them) and `Pending` and `Failed`, each pressing Continue with Google, the first with the request held open by the workshop's server (`.storybook/vite.config.ts`), the second answered by its 404. The mark is read from the workshop's own cookie, which outlives the story that wrote it, so every story sets or clears it before rendering.
 
-Component tests are in `tests/components/SignInPanel/` (the `dom` project). `index.test.tsx` mocks `signIn` from `src/lib/auth-client.ts`, since Better Auth's client performs the OAuth hop by assigning `window.location.href`, which happy-dom cannot follow (`tests/lib/auth-client.test.ts` stubs `fetch` and calls the real client). The rest of the module is real, so the last-used read is the plugin's own against happy-dom's `document.cookie`. Its hydration test (`renderToString` carries no mark, `hydrateRoot` adds it without a recoverable error) fails with the client read as the server snapshot, since happy-dom has a `document` even under `renderToString`. `password-form.test.tsx` stands in for the address bar with `search-params.ts`. Stories 70 (password) and 75 (two-factor) walk the flows in the browser.
+Component tests are in `tests/components/SignInPanel/` (the `dom` project). `index.test.tsx` mocks `signIn` from `src/lib/auth-client.ts`, since Better Auth's client performs the OAuth hop by assigning `window.location.href`, which happy-dom cannot follow (`tests/lib/auth-client.test.ts` stubs `fetch` and calls the real client). The rest of the module is real, so the last-used read is the plugin's own against happy-dom's `document.cookie`. Its hydration test (`renderToString` carries no mark, `hydrateRoot` adds it without a recoverable error) fails with the client read as the server snapshot, since happy-dom has a `document` even under `renderToString`. `password-form.test.tsx` stands in for the address bar with `search-params.ts`; `in-dialog.test.tsx` covers the dialog variant. Stories 70 (password) and 75 (two-factor) walk the flows in the browser.
 
 Keyboard reachability and the axe scans are asserted in Playwright, once per provider state, because each state has a surface the other lacks:
 
@@ -96,7 +108,7 @@ The configured scan exists because the greyed one cannot see the brand colours: 
 
 ## Used by
 
-`src/app/sign-in/page.tsx`.
+`src/app/sign-in/page.tsx` and `SignInDialog` ([`sign-in-dialog.md`](sign-in-dialog.md)).
 
 ## Not here
 

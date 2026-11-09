@@ -409,11 +409,14 @@ filter, page)` is one page of the pending list, newest first, and
   between the checks and the stamp leaves nothing to stamp, and the refusal
   is the link's state read again.
 - **`/invite/[token]`** is public in `src/proxy.ts`. Signed out, it says an
-  invitation is waiting and offers Sign In, which returns to the link; it
+  invitation is waiting and offers Create Account and Sign In as equal
+  choices, each opening the sign-in dialog over the page and returning to
+  the link, where Accept Invitation stays its own press; it
   reads nothing of the invitation until a session holds it. Signed in, it
   asks `invitationStanding(session, token)`, the same checks as the accept,
-  and shows the refusal, with a link to the email page for an unverified
-  match, or Accept Invitation, naming the role it grants, whose mutation
+  and shows the refusal, or, for an unverified match, a note to check
+  that address's inbox with a link to the email page (a stand-in address,
+  which has no inbox, keeps the refusal), or Accept Invitation, naming the role it grants, whose mutation
   lands a new curator or keeper on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
