@@ -60,6 +60,7 @@ export default async function InvitationPanel({
       configured: configuredProviders(),
       card,
       lead: leadOf(card, isSiteInvitationMarker(marker)),
+      ...(linkFailed && { linkFailed }),
     };
   } else {
     const standing = await standingOf(session, token);

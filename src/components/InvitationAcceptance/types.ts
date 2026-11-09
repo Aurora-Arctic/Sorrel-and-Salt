@@ -12,6 +12,8 @@ export type InvitationAcceptanceProps =
       configured: readonly ProviderId[];
       card?: boolean;
       lead: SignedOutLead;
+      /** A verification link was refused on its way back here; never the reason, which the page does not repeat. */
+      linkFailed?: boolean;
     }
   /** Signed in with an address not yet verified: the message went to `email`, and its link comes back here. */
   | {

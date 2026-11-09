@@ -51,9 +51,11 @@ const CARD_SIGNED_OUT_GRANT =
 const UNVERIFIED_GRANT =
   "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
 
-/** Over the inbox state when a verification link came back refused, whatever the reason. */
-const LINK_FAILED =
-  "That link has expired or isn't valid. Press Confirm Your Email to get a new one.";
+/** When a verification link came back refused, whatever the reason, by the state it comes back to. */
+const LINK_FAILED = {
+  'signed-out': "That link has expired or isn't valid. Sign in to get a new one.",
+  unverified: "That link has expired or isn't valid. Press Confirm Your Email to get a new one.",
+} as const;
 
 /** What the heading says over a refusal. */
 const REFUSED_GRANT = "This invitation can't be used, and the reason is below.";
@@ -140,6 +142,9 @@ const InvitationAcceptance = ({
         lede={grant}
         level={headingLevel}
       />
+      {props.status === 'signed-out' && props.linkFailed && (
+        <Notice kind="error">{LINK_FAILED['signed-out']}</Notice>
+      )}
       {props.status === 'signed-out' && (
         // A `div`: each choice draws its dialog beside it, and a dialog in a `p` is invalid HTML.
         <div className="invitation-acceptance__actions invitation-acceptance__choices">
@@ -161,7 +166,7 @@ const InvitationAcceptance = ({
         </div>
       )}
       {props.status === 'unverified' && props.linkFailed && (
-        <Notice kind="error">{LINK_FAILED}</Notice>
+        <Notice kind="error">{LINK_FAILED.unverified}</Notice>
       )}
       {props.status === 'unverified' && (
         <p className="invitation-acceptance__actions invitation-acceptance__row">

@@ -146,6 +146,15 @@ describe('the invitation panel page', () => {
     });
   });
 
+  it('tells a signed-out visitor a verification link failed', async () => {
+    getSession.mockResolvedValue(null);
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc', linkFailed: true }));
+
+    expect(shown[0]).toMatchObject({ status: 'signed-out', linkFailed: true });
+    expect(invitationStanding).not.toHaveBeenCalled();
+  });
+
   // An address stood in for a provider that gave none was never written to, so there is no inbox to check.
   it('keeps the refusal for an unverified account holding a stand-in address', async () => {
     getSession.mockResolvedValue({ userId: 'u', role: 'user' });

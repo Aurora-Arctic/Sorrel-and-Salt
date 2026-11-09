@@ -142,8 +142,20 @@ test.describe('the sign-in dialog', () => {
   test('a signed-out invitation offers Create Account and Sign In as equal choices, and either brings the visitor back to press Accept Invitation', async ({
     page,
   }) => {
-    await page.goto(INVITATION);
     const main = page.getByRole('main');
+    // A verification link refused on its way back, opened in a browser with no session: an error above the choices, never the code.
+    await page.goto(`${INVITATION}?error=TOKEN_EXPIRED`);
+    const alert = main.getByRole('alert');
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toContainText('TOKEN_EXPIRED');
+    const above = await alert.boundingBox();
+    expect(above!.y + above!.height).toBeLessThanOrEqual(
+      (await main.getByRole('link', { name: 'Sign In' }).boundingBox())!.y,
+    );
+    await scanBothThemes(page);
+
+    await page.goto(INVITATION);
+    await expect(main.getByRole('alert')).toHaveCount(0);
     const createAccount = main.getByRole('link', { name: 'Create Account' });
     const signIn = main.getByRole('link', { name: 'Sign In' });
     await expect(createAccount).toHaveAttribute(

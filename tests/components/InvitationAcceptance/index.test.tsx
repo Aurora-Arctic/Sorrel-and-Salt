@@ -282,6 +282,36 @@ describe('InvitationAcceptance', () => {
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
   });
 
+  // A refused verification link can come back to a browser holding no session; the error stands above the choices.
+  it('shows a signed-out visitor an error above the choices when a verification link failed, and none when it did not', () => {
+    const { rerender } = render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    rerender(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+        linkFailed
+      />,
+    );
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeVisible();
+    expect(
+      alert.compareDocumentPosition(screen.getByRole('link', { name: 'Sign In' })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('says why a link cannot be accepted, with no Accept, pointing an unverified match at the email page', () => {
     const { rerender } = render(
       <InvitationAcceptance
