@@ -47,7 +47,7 @@
     display: contents;
   }
 
-  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  @include above-tablet {
     > .spell-recipe__head {
       max-width: $measure;
     }
@@ -361,7 +361,7 @@
 // far over the facts strip as the body's `space(4)`. Screen only: print places it on its own grid.
 @media screen {
   .spell-recipe > .spell-recipe__lead {
-    @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    @include above-tablet {
       box-sizing: border-box;
       padding-inline-end: calc(#{space(8)} + #{$side-column});
     }
@@ -386,7 +386,7 @@
     // The rows carry no gap; each box's margins stand in, so the lead and the facts stand the body's
     // `space(4)` apart, the menu starts level with whichever comes first, and a missing lead
     // leaves an empty row that takes no room.
-    @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    @include above-phone {
       row-gap: 0;
 
       > .spell-recipe__lead,
@@ -402,7 +402,7 @@
 
   // On a phone the boxes stack in source order, the wrappers dissolved, so the side column can stand
   // over Workings. Each box adds `space(2)` to the article's gap, for the body's `space(4)`.
-  @media (max-width: $shell-phone-width) {
+  @include phone-down {
     .spell-recipe--with-nav {
       .spell-recipe__columns,
       .spell-recipe__main {
@@ -467,7 +467,7 @@
 }
 
 // A phone's title shares its line with the icons and wraps to a second line.
-@media (max-width: $shell-phone-width) {
+@include phone-down {
   .spell-recipe--pending .spell-recipe__head h1 .skeleton__line {
     block-size: calc(2lh + 1.6875rem);
   }
@@ -475,7 +475,7 @@
 
 // The menu lists three entries on a phone and one past it (the side panels are in its stack only
 // there).
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+@include above-phone {
   .spell-recipe--pending > .page-nav .page-nav__pending:nth-child(n + 2) {
     display: none;
   }

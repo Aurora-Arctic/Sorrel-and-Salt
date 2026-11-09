@@ -107,7 +107,7 @@
     flex: none;
   }
 
-  @media (min-width: $shell-tablet-width) {
+  @include width-from($shell-tablet-width) {
     flex-direction: row;
     // The top, so that when one control wraps to two lines (many chips) its neighbours stay
     // level with its label instead of dropping to its bottom edge.
@@ -134,7 +134,7 @@
 }
 
 .facet-panel__quick--picker {
-  @media (min-width: $shell-tablet-width) {
+  @include width-from($shell-tablet-width) {
     padding-block-start: space(1);
   }
 }
@@ -153,7 +153,7 @@
   align-items: center;
 }
 
-@media (min-width: $shell-tablet-width) {
+@include width-from($shell-tablet-width) {
   .facet-panel:not(.facet-panel--static) {
     .facet-panel__head {
       @include visually-hidden;

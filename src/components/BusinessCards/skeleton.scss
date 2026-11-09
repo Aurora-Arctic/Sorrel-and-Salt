@@ -1,8 +1,9 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The lede takes three lines in the form's column and four on a phone, where it wraps once more.
 .business-cards-face__lede {
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     .skeleton__line:nth-child(n + 4) {
       display: none;
     }

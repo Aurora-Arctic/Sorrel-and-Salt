@@ -221,7 +221,7 @@ $stuck-pad: space(4);
 // At the width a table turns into cards, the name takes the whole first line and the marks sit
 // beneath it, still in their columns; the label row keeps the same columns, so it still names
 // them, and gives up its own label, which has no room beside six columns.
-@media (max-width: $table-stack-width) {
+@include phone-down {
   .access-cards {
     --access-pad-x: #{space(3)};
   }

@@ -25,7 +25,7 @@ $jump-link-line: 1.25;
 .ingredient-entry--with-nav {
   @include entry-nav-grid;
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     > .page-nav {
       // The menu's first link ("Details") level with the Details h2: the menu drops by half of what
       // the h2's line has over the link's. (claude-docs/components/ingredient-entry.md, "Styling")
@@ -168,7 +168,7 @@ $formal-line: $icon-size;
 
 // Beside a jump menu the shelf hangs out into the menu's column so the name keeps its line with the
 // text beneath it. (claude-docs/components/ingredient-entry.md, "Styling")
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+@include above-phone {
   .ingredient-entry--with-nav .page-header__title {
     position: relative;
   }
@@ -189,7 +189,7 @@ $formal-line: $icon-size;
 
 // Without the menu column the shelf stands on a line of its own above the name, 30% larger (the
 // drawing's own size, not a transform). (claude-docs/components/ingredient-entry.md, "Styling")
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   .ingredient-entry__head .page-header__title {
     flex-direction: column;
     align-items: flex-start;
@@ -262,7 +262,7 @@ $formal-line: $icon-size;
   }
 }
 
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   // The head keeps to the text column, so Edit ends where the text does.
   // (claude-docs/components/ingredient-entry.md, "Styling")
   .ingredient-entry__head {
@@ -400,7 +400,7 @@ $formal-line: $icon-size;
   }
 }
 
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .ingredient-entry__body > .ingredient-entry__references {
     grid-column: 1;
   }
@@ -531,7 +531,7 @@ $replaces-gap: space(5);
 // Beside the text the icons of a block stand in one column ending under the heading's ⓘ; titles are
 // sized by `contain: inline-size` so they wrap to the heading's width.
 // (claude-docs/components/ingredient-entry.md, "Styling")
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .ingredient-entry__replaces {
     inline-size: fit-content;
     max-inline-size: 100%;
@@ -698,7 +698,7 @@ $replaces-gap: space(5);
   inline-size: calc(#{$inline-mark-size} * 1.3);
   block-size: calc(#{$inline-mark-size} * 1.3);
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     position: absolute;
     inline-size: $inline-mark-size;
     block-size: $inline-mark-size;
@@ -710,7 +710,7 @@ $replaces-gap: space(5);
   block-size: 6.5625rem;
   margin: 0;
 
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     inline-size: 5.375rem;
   }
 }
@@ -719,7 +719,7 @@ $replaces-gap: space(5);
 .ingredient-entry__head .page-header__title:has(> h1 > .skeleton) {
   flex: 1 1 10rem;
 
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     > h1 {
       flex: none;
       align-self: stretch;
@@ -728,7 +728,7 @@ $replaces-gap: space(5);
 }
 
 // On a phone the real menu also holds a group label and two rules, which bars alone do not.
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   .ingredient-entry--pending > .page-nav {
     margin-block-end: 1.0625rem;
   }

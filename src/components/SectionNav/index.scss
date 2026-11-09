@@ -134,7 +134,7 @@
 
 // Before the script fits the row (no `data-fit`) the phone count of four is the wrong guess, so every tab shows. The
 // phone never gets `data-fit`, so it is excluded by width at the script's `TABLET_BAND`; `data-measuring` draws More to read its width.
-@media (min-width: #{$shell-phone-width + 0.01rem}) {
+@include above-phone {
   .section-nav:not([data-fit], [data-measuring]) {
     position: relative;
   }
@@ -226,7 +226,7 @@
 }
 
 // The page clears the bar by `$bottom-bar-height` (AppShell's padding).
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   .section-nav {
     position: fixed;
     inset-inline: 0;

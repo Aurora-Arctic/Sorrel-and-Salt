@@ -25,7 +25,7 @@
 .facet-chip__spacer {
   display: none;
 
-  @media (min-width: $shell-tablet-width) {
+  @include width-from($shell-tablet-width) {
     display: block;
   }
 }

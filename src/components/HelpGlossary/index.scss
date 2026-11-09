@@ -27,7 +27,7 @@
       border-inline-start: 0;
     }
 
-    @media (min-width: 40rem) {
+    @include width-from(40rem) {
       display: grid;
       grid-template-columns: 11rem 1fr;
       gap: space(4);
