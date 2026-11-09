@@ -5,6 +5,9 @@ export type SignInAttempt = ProviderId | 'passkey';
 /** Signing in to an account, or creating one. */
 export type SignInMode = 'sign-in' | 'sign-up';
 
+/** One sentence per mode, under the title: the panel's own on the sign-in page, the dialog's under its title in a dialog. */
+export type SignInLedes = Partial<Record<SignInMode, string>>;
+
 export interface SignInPanelProps {
   /** Already run through safeReturnPath; absent, the landing is the account role's. */
   next?: string;
@@ -13,6 +16,8 @@ export interface SignInPanelProps {
   configured: readonly ProviderId[];
   /** The mode it opens on; signing in when absent. */
   mode?: SignInMode;
+  /** The sentence under the page's title in each mode; none when absent. A dialog draws its own under its title, so a panel in one ignores these. */
+  ledes?: SignInLedes;
   /** Told of each switch between the modes, so a dialog can retitle itself. */
   onModeChange?: (mode: SignInMode) => void;
   /** Inside a dialog: the dialog's title heads it, its headings sit a level under that title, and the email view is held here rather than in the address of the page beneath. */

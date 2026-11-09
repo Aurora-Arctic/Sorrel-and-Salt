@@ -42,6 +42,28 @@ describe('SignInPanel', () => {
     clearLastUsed();
   });
 
+  it("draws the page's lede for the mode it is in, from the ledes passed, and none when none are passed", async () => {
+    const ledes = {
+      'sign-in': 'Testwort sign-in sentence.',
+      'sign-up': 'Testwort sign-up sentence.',
+    };
+    const { unmount } = render(<SignInPanel configured={['google']} ledes={ledes} />);
+    const header = () => screen.getByRole('heading', { level: 1 }).parentElement!;
+
+    expect(within(header()).getByText(ledes['sign-in'])).toBeInTheDocument();
+    expect(within(header()).queryByText(ledes['sign-up'])).toBeNull();
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(within(header()).getByText(ledes['sign-up'])).toBeInTheDocument();
+    expect(within(header()).queryByText(ledes['sign-in'])).toBeNull();
+    unmount();
+
+    render(<SignInPanel configured={['google']} />);
+
+    expect(header().querySelector('p')).toBeNull();
+  });
+
   it('offers every roster provider, and calls signIn.social with the provider, the destination and an error callback carrying it', async () => {
     render(
       <SignInPanel

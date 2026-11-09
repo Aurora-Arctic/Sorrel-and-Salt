@@ -51,6 +51,7 @@ const SignInPanel = ({
   signUpLandsOnNext,
   onSignedUp,
   onEmailViewChange,
+  ledes,
 }: SignInPanelProps): ReactElement => {
   // Held here, not in the form, so a switch made in either view holds in the other.
   const [mode, setMode] = useState<SignInMode>(initialMode);
@@ -176,7 +177,7 @@ const SignInPanel = ({
               headingClassName="auth-title"
               focusable
               title={SIGN_IN_TITLES[mode]}
-              lede="Sign in or create an account."
+              lede={ledes?.[mode]}
             />
           )}
           <div className="sign-in-panel__providers">
