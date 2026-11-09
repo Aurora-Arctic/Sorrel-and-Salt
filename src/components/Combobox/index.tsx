@@ -187,6 +187,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   keepOpen = false,
   noun = 'suggestion',
   placeholder,
+  spellCheck,
   required,
   qualifier,
   typedIcon,
@@ -424,6 +425,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   ref: inputRef,
                   name,
                   placeholder,
+                  spellCheck,
                   'aria-required': required || undefined,
                   // One character wide of its own, so that the slot, not the
                   // browser's default of twenty, decides how wide the text is.

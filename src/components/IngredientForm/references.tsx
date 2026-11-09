@@ -426,10 +426,14 @@ export function ReferencesField({
                     {...locatorField}
                     className="ingredient-form__locator"
                   >
+                    {/* Not PlainTextField: it makes its own control id, which the row's focus and error
+                        summary find by this one, and shares no error with the row's other fields. */}
                     <input
                       id={locatorField.controlId}
                       className="input"
                       placeholder="Add a locator"
+                      spellCheck={false}
+                      autoComplete="off"
                       aria-describedby={[citationId, locatorField.hintId, invalid && errorId]
                         .filter(Boolean)
                         .join(' ')}

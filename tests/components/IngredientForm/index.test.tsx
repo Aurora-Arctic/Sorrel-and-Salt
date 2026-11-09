@@ -137,6 +137,13 @@ describe('IngredientForm', () => {
     for (const button of saves()) expect(button).toBeDisabled();
   });
 
+  it('turns spell-check off on the names, which are not prose, and leaves it on the description', () => {
+    renderForm();
+
+    expect(textbox('Formal Name')).toHaveAttribute('spellcheck', 'false');
+    expect(textbox('Description')).not.toHaveAttribute('spellcheck', 'false');
+  });
+
   describe('saving a stub', () => {
     it('saves with only a name, leaving the classification to the local default of "none"', async () => {
       const calls = acceptCreate();
