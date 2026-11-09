@@ -13,6 +13,8 @@
   3. Annotate, for a compendium entry the coven holds, when `annotateHref` is given.
   4. More.
 
+  Edit and Annotate (`sortable-links.tsx`: `CardEditLink`, `CardAnnotateLink`) start loading the ingredient forms and the sortable list once the page is idle and when the link is pointed at, focused or pressed ([`ingredient-entry.md`](ingredient-entry.md), "The three forms load apart"), so the dialog opens with them already there. The Edit Stock pencil starts the stock form the same way.
+
   Every control is named "Name, Formal" by `covenCardName`, because two entries can share a label. Quick Look's eye sits at the foot's left, in `startActions`.
 
 - **Edit and Annotate start the sortable list loading.** Their dialogs hold ordered lists, so the foot draws them through `CardEditLink` and `CardAnnotateLink` (`sortable-links.tsx`, client files, since a composer cannot hand a client component a function): the list loads once the page is idle and when the link is pointed at, focused or pressed, so the dialog opens with no loading state ([`../design-decisions/graphql.md`](../design-decisions/graphql.md), "The date field, the sortable list and the coven choice load apart").

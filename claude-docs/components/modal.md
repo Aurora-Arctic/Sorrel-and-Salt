@@ -109,6 +109,7 @@ The header holds the title, the ×, and under them a full-width toolbar row. A c
 
 A button that opens a modal and returns the focus to itself however it closes. It holds the open state and renders `Modal` while open, so its owner writes neither; use it for every modal a page's button opens. It names its button as `returnTo` for WebKit; once a write has led the page away the ref is null and Modal focuses the heading.
 
+- **`preload`** is a `PreloadHandlers` object (`src/lib/types.ts`, from `preloadOnIntent`) spread on the button, so pointing at, focusing or pressing it starts the load of what the modal holds. `MenuButton` and `IconTip`'s `EditLink` and `AnnotateLink` take the same prop.
 - **A menu item is not one**: the More menu's Delete Spell opens its dialog by state, the menu having closed by then.
 - **A delete bin that reports a refusal** (Delete Spell, Delete Working) is a `ModalButton` whose `ref` is the ClickFeedback anchor, whose `onOpen` clears the last refusal, and whose contents close the dialog before the refusal shows, so the callout stands beside the bin.
 - **A button repeated down a list** (Edit Stock on each coven card) is an icon whose `ariaLabel` is its whole name; its `tip` wraps the button alone, since a tip around the dialog would open on its focus and hover and take its Escape.
@@ -143,7 +144,7 @@ Quick Look (the entry details) and Add Ingredient keep their contents out of the
 - They share `useLazyModule` (`src/lib/use-lazy-module.ts`), which runs a dynamic `import()` and holds the loaded module in state.
 - The frame draws at once with its accessible name and a `status` (`ModalLoading`) in the body, and the contents replace the status when the code arrives. A route modal gives the frame through `RouteModalContent`'s `loading` field.
 - Focus, Escape and the close button belong to the frame, so they work while the contents are on their way.
-- A dialog's own fields can load apart too: the calendar, the sortable list and the add-to-coven choice start loading when the page is idle and when their opener is pointed at, focused or pressed, so opening shows no loading state (`usePreloadWhenIdle`, `preloadOnIntent`; [`../design-decisions/graphql.md`](../design-decisions/graphql.md), "The date field, the sortable list and the coven choice load apart").
+- A dialog's own fields can load apart too: the calendar, the sortable list, the add-to-coven choice, the Edit Stock form and the three ingredient forms start loading when the page is idle and when their opener is pointed at, focused or pressed, so opening shows no loading state (`usePreloadWhenIdle`, `preloadOnIntent`; [`../design-decisions/graphql.md`](../design-decisions/graphql.md), "The date field, the sortable list, the coven choice and the forms load apart").
 
 ## RouteModal
 

@@ -4,7 +4,7 @@
 
 ## Contracts
 
-- **Its name.** The `article` is named by its title heading (`aria-labelledby`), so a test or a screen reader finds a spell by `getByRole('article', { name: 'Hearth Warding Jar' })`. The list leaves its items unnamed, so the title is heard once. A null or blank title lists as `UNTITLED_SPELL`, since a draft may have none.
+- **Its name.** The `article` is named by its title heading (`aria-labelledby`), so a test or a screen reader finds a spell by `getByRole('article', { name: 'Hearth Warding Jar' })`. The list leaves its items unnamed, so the title is heard once. A null or blank title lists as `UNTITLED_SPELL` (`SpellCard/untitled.ts`, which `src/modules/grimoire/services/spell-reads.ts` imports so the service does not import the card), since a draft may have none.
 - **Categories are the assigned ones**, never the derived ones (DESIGN.md §5).
 - **Only a draft and only a private spell are marked.** Complete and shared are the defaults, and marking them says nothing. `SpellMarks` draws both under the title ([entry-marks.md](entry-marks.md), "Spell marks"). The service lists a private spell to its author alone, so the Private badge is seen only by the person it is about. It is a word, so it does not rely on colour. Draft takes Retired's muted tint, because an unfinished spell is a fact about it, not a warning; Private takes Draft's.
 - **The foot line.** `workingCount` above zero adds "Made once" or "Made 3 times" after the last-edit line ([last-edit.md](last-edit.md)); it counts the complete workings the viewer can see, from the count loader. Zero or none says nothing.
