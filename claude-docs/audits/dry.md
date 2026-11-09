@@ -394,7 +394,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: `const ORIGIN = 'http://localhost:8000'` in a new lib test**
 
-- **Why it matters:** A developer changing the test origin or port must edit every file with its own copy. A missed file keeps using the old origin and fails, or worse, passes while testing the wrong address.
+- **Why it matters:** A developer changing the test origin or port must edit every file with its own copy, and a file that is missed keeps the old origin.
 - **Shared piece:** import `ORIGIN` from `tests/support/oauth.ts`, or move it to `tests/support/paths.ts`.
 - **Guard:** a `tests/guards/` grep for `const ORIGIN =` under `tests/`.
 - **Fix:** replace with an import.
@@ -582,7 +582,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-15: Page metadata is written by hand on about 60 pages and has drifted from `publicPageMetadata`
 
 - **Severity:** high
-- **Why it matters:** The same public page shows a different link preview depending on which file wrote its metadata, since only compendium pages get Open Graph and Twitter tags. A noindex comment copied into eight files can be missed, leaving a private page indexable.
+- **Why it matters:** The same public page shows a different link preview depending on which file wrote its metadata, since only compendium pages get Open Graph and Twitter tags. The noindex comment is copied into eight files, so a change to it has to be made in each.
 - **Where:**
   - 67 `export const metadata` or `generateMetadata` sites under `src/app/`. `publicPageMetadata` in `src/lib/page-metadata.ts` (adds canonical, openGraph and twitter) is used only by the compendium pages. The public pages (`src/app/page.tsx`, `src/app/sign-in/page.tsx`, `src/app/(public)/help/page.tsx`, `help/glossary/page.tsx`, `help/search/page.tsx`, `src/app/(public)/support/page.tsx`, `support/request/page.tsx`, the four document pages) write `alternates: { canonical: siteUrl('/...') }` themselves and have no openGraph or twitter tags, so the same page shows different link previews depending on which file wrote it. The same comment and `robots: { index: false }` ("A second guard beside robots.txt...") is copied in 8 files: `forgot-password/page.tsx`, `reset-password/page.tsx`, `access-paused/page.tsx`, `(public)/help/search/page.tsx`, `(shell)/coven-paused/[slug]/page.tsx`, `(shell)/help/staff/page.tsx`, `(shell)/help/staff/[slug]/page.tsx`, `(shell)/help/staff/[slug]/[child]/page.tsx`.
 - **Shared piece:** use `publicPageMetadata` on every public page, and add `noIndexMetadata(title)` to `src/lib/page-metadata.ts` for the eight noindex pages.
@@ -635,7 +635,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: Help kind and audience lists typed out in GraphQL, the repository and the components**
 
-- **Why it matters:** The help kinds and audiences are typed in GraphQL, the repository and three components. Adding a kind such as a new article type in one place leaves the API, database filter or editor refusing or hiding it, so keepers cannot save or see it.
+- **Why it matters:** The help kinds and audiences are typed out in GraphQL, the repository and three components, so adding a kind or audience means editing every list and a missed one falls out of step with the rest.
 - **Where:**
   - `src/modules/help/graphql/help.ts:24-34` (`['faq','article','guide','term']`, `['public','staff','keeper']`), `src/db/repository/help.ts:24` (`['public','staff','keeper']`), `src/components/HelpOutline/types.ts:4`, `src/components/HelpSearchResults/types.ts:4`, `src/components/HelpArticleForm/types.ts:3` (the kind union, three times). Other modules build their GraphQL enums from the schema's `enumValues`; help does not.
   - src/modules/help/validation/help.ts:4-5 redefines `z.enum(['faq','article','guide','term'])` and `z.enum(['public','staff','keeper'])`.
@@ -696,7 +696,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: Sortable lists: HelpSortable and SortableSteps (and the Combobox entries) copy the dnd-kit wiring**
 
-- **Why it matters:** The drag-and-drop reorder wiring is copied in three lists. A fix for keyboard reorder or screen-reader announcements in one leaves the other lists broken for keyboard and assistive-technology users, and the rollback notice wording drifts.
+- **Why it matters:** The drag-and-drop reorder wiring (sensors, keyboard keys, announcements) is copied in three lists, so a fix to one has to be made in the others, and the rollback notice wording can drift.
 - **Where:**
   - `src/components/HelpOutline/sortable.tsx:1-133` (`HelpSortable`, `useHelpSortableRow`)
   - `src/components/SpellBuilder/steps/sortable.tsx:1-96` (`SortableSteps`; elsewhere, about 80% identical to the first)
@@ -751,7 +751,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-21: "assertMembership, swallow Forbidden" written at least six times
 
 - **Severity:** high
-- **Why it matters:** The check-membership-and-swallow-refusal pattern returns undefined, null or the error depending on the file. A caller that misreads the convention can treat a refused person as allowed or an empty result, risking a leak of another coven's data.
+- **Why it matters:** The check-membership-and-swallow-refusal pattern returns undefined, null or the error depending on the file, so each caller handles a refused person differently.
 - **Where:**
   - `services/ingredient-rows.ts:55-61` `proofFor` (returns undefined); `services/compendium-held-in.ts:30-38` `proofsOf` (returns null); `services/cupboard-entries.ts:126-131` `entriesOf` (returns the error); `services/stock.ts` `jarsOf` and `formsHeldBy` (return the error, two copies); the same shape in `grimoire/services/spell-reads.ts:183`, `coven/services/members.ts:70`, `help/services/reach.ts`, `support/services/reads.ts` (three).
 - **Drift:** three different return conventions (undefined, null, the error), so each caller handles "refused" differently. No helper exists in `@/modules/coven` (checked `src/modules/coven/index.ts` and `services/membership.ts`).
@@ -930,7 +930,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-29: GroupForm and GroupedValueForm repeat one form skeleton, and their delete-error handling has drifted
 
 - **Severity:** high
-- **Why it matters:** Group and value forms repeat the same save, delete and history wiring and their delete-error handling has drifted. A curator hitting a failed delete may see a different message or an unreset form depending on which form they use.
+- **Why it matters:** Group and value forms repeat the same save, delete and history wiring, and their delete-error handling has drifted: GroupForm places a refusal itself, while GroupedValueForm relies on the confirm question's refusal callback.
 - **Where:**
   - `src/components/GroupForm/index.tsx:136-190` (`defineKind`), `:279-330` (save/remove mutations, `confirmDelete`)
   - `src/components/GroupedValueForm/index.tsx:177-300` (`defineKind`), `:351-400` (save/remove mutations, `confirmDelete`)
@@ -954,7 +954,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-30: Viewer's live covens list built three times, one copy drifted
 
 - **Severity:** high
-- **Why it matters:** The facet 'held in' filter counts a paused member's coven, while the entry page hides it. A paused member sees a coven in the filter that does not appear on the entry, so counts and results disagree.
+- **Why it matters:** Three services build the viewer's live covens list by hand, and one omits the paused-seat filter. A paused seat already makes the membership lookup refuse, so the results match today, but a change to the rule has to be made three times.
 - **Where:**
   - `services/entry-covens.ts` (about 44-51); `services/cupboard-entries.ts` `covensHoldingEntry` (about 485-497); `services/compendium-held-in.ts` `everyCovenProof` (about 66-72). Each calls `membershipsOf(session, [userId])`, runs `if (!memberships || memberships instanceof Error) return []`, filters paused seats, maps `{id, slug, name}` and sorts with `byCovenName`.
 - **Drift:** `everyCovenProof` does not filter paused seats, the other two do. A paused member's coven therefore counts in the facet "held in" filter while it is hidden from the entry page.
@@ -1067,7 +1067,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: "Newest first" cursor key (`-extract(epoch from col)`, `numeric`) is spelled out in ten places beside an existing helper**
 
-- **Why it matters:** Ten lists repeat the newest-first sort key. If the numeric cast or tie-break is fixed in one, the others can page wrongly, so a user may see a row twice or miss one when scrolling a list.
+- **Why it matters:** Ten lists spell out the same newest-first sort key by hand beside a private helper, so a change to the numeric cast or tie-break has to be made in each.
 - **Where:**
   - the helper, private: `src/db/repository/grimoire.ts:26-31` (`newestFirst`, typed to two spell columns)
   - inline copies: `src/db/repository/user-access-pauses.ts:55-57`, `src/db/repository/workspace-member-pauses.ts:80-82`, `src/db/repository/users.ts:133`, `src/db/repository/workings.ts:74-75`, `src/db/repository/invitations.ts:165,330,384,505-507`, `src/db/repository/support.ts:104,113` (the `REQUEST_ORDER` and `OWN_ORDER` comments even say "as the other newest-first lists do")
@@ -1079,7 +1079,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: Working order spelled twice: SQL key and a JavaScript re-sort**
 
-- **Why it matters:** The list of workings in a spell sorts in JavaScript by date text, while the paged list sorts in SQL with an id tie-break. Two workings on the same day can show in different orders, so a user sees the order change between views.
+- **Why it matters:** The list of workings in a spell sorts in JavaScript by date text, while the paged list sorts in SQL with an id tie-break, so the two lists can disagree on the order of workings that tie.
 - Drift risk. `findWorkingsInSpell` sorts in JavaScript by `workedOn.localeCompare` then `createdAt`; `WORKING_ORDER` (used by `findWorkingsPage`) sorts by `-extract(epoch ...)` then the id tiebreak the cursor adds. The JS sort has no id tiebreak, and `localeCompare` on a date string is not the same comparison as a numeric epoch. The two lists can disagree on ties. The comment at `workings.ts:68-70` says they are the same order.
 - **Shared piece:** read both through `findMany` with `WORKING_ORDER` (the existing finder in `finders.ts`), or drop the JS sort and `ORDER BY` in SQL. Check `findMany`'s signature before choosing.
 - **Guard:** none practical.
@@ -1121,7 +1121,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: the `next/navigation` router mock is declared in about 80 dom and app test files**
 
-- **Why it matters:** About 80 test files repeat the same router mock. A developer changing the router API must edit them all, and a missed file keeps passing against a stale mock, so a real navigation bug goes unnoticed.
+- **Why it matters:** About 80 test files repeat the same router mock, so a developer changing the router API must edit them all.
 - **Where:**
   - about 176 files mock `next/navigation`. About 80 declare the same `const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }))` plus `vi.mock('next/navigation', () => ({ useRouter: () => router }))` (42 hoisted three-method form, 15 plain form). Find them with `grep -rln "useRouter: () => router" tests`.
   - `tests/components/DocumentEditor/status.test.tsx:5-13`, `tests/app/(shell)/keepers/document-skeleton.test.tsx`; `vi.mock('next/navigation', ...)` now appears in all six DocumentEditor tests (`sources`, `autosave`, `toolbar`, `restore`, `saving`, `status`), each with `warmImport(() => import('@/components/DocumentEditor/editor'))` and its own `renderEditor`.
@@ -1132,7 +1132,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: inline router mocks in new DocumentEditor and keepers skeleton tests**
 
-- **Why it matters:** Six DocumentEditor tests each declare the same router mock and render helper. When the editor's props change, a developer must update each, and a missed one fails for the wrong reason or stops testing the real editor.
+- **Why it matters:** Six DocumentEditor tests each declare the same router mock and render helper, so when the editor's props change a developer must update each of the six.
 - **Shared piece:** `tests/support/document-editor.tsx` with the mock factory and a `renderEditor(props)` taking `body`, `revision`, `documentKey`. Extra copies of D-39.
 - **Guard:** none practical.
 - **Fix:** extract the common props; keep each file's bespoke props as arguments.
@@ -1144,7 +1144,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-40: a `QueryClientProvider` render wrapper is rewritten in 61 component test files
 
 - **Severity:** medium
-- **Why it matters:** The same query-client wrapper is rewritten in 61 test files, 16 of them under the name `renderForm`. A change to the provider setup has to be made 61 times, and a missed file fails or passes for the wrong reason, which costs developers time to diagnose.
+- **Why it matters:** The same query-client wrapper is rewritten in 61 test files, 16 of them under the name `renderForm`, so a change to the provider setup has to be made in each.
 - **Where:**
   - `grep -rl "QueryClientProvider client={makeQueryClient()}" tests` lists 61 files. Four support files already wrap it for one component each (`tests/support/ingredient-form.tsx`, `grouped-value-form.tsx`, `compendium-list.tsx`, `discard-guard.tsx`). Local `renderForm` in `tests/components/NameForm/index.test.tsx:14`, `EmailForm/index.test.tsx:19`, `RenameWorkspaceForm/index.test.tsx:18`, `GroupForm/index.test.tsx:56`, `CreateWorkspaceForm`, `CupboardEntryForm` (index, autosave), `HelpArticleForm`, `GroupedValueForm`, and `IngredientForm/*` (compendium, promote, variants, references, autosave, sections, index). Also 9 `renderBuilder`, 4 `renderDetail`.
 - **Shared piece:** `tests/support/render-with-query.tsx` exporting `renderWithQuery(ui)` (returns the `render` result, with a fresh `makeQueryClient()` per call). Local wrappers then keep only their component props.
@@ -1161,7 +1161,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: `/coven/<slug>/...` hrefs built by hand in about 40 places**
 
-- **Why it matters:** Coven addresses are built by hand in about 40 places, one with URL encoding and the rest without. A slug with unusual characters can give a working link in one place and a broken one in another for a member.
+- **Why it matters:** Coven addresses are built by hand in about 40 places, one with URL encoding and the rest without, so a change to the path or the encoding has to be found in every place.
 - **Where:**
   - `src/app/(shell)/coven/[slug]/{(people)/layout.tsx:23,30,(people)/skeleton.tsx:37,42,52,grimoire/(list)/layout.tsx:19,24,grimoire/(list)/skeleton.tsx:31,36,46,grimoire/(list)/grimoire-tab.tsx:78,200,grimoire/[id]/page.tsx:61,102,200,ingredients/[id]/page.tsx:127,128,147,200,ingredients/viewed-details.tsx:17,(people)/members/page.tsx:102,(people)/invitations/page.tsx:50}`, `src/app/(shell)/coven-paused/[slug]/page.tsx:34,74` (with `encodeURIComponent`, unlike the rest), `src/app/(shell)/coven/page.tsx:25`, `src/lib/shell-home.ts:15`, `src/app/invite/[token]/invitation-panel.tsx:75`, and in components: `CovenNav/sections.ts:16-17`, `AppShell/add-href.ts:62`, `AppShell/add-ingredient-button.tsx:79,191,233,242`, `ReceivedInvitations/accept-control.tsx:45`, `IngredientEntry/summary.tsx:113`, `IngredientEntry/cupboard-writes.tsx:137`, `CovenCards/index.tsx:63`, `RenameWorkspaceForm/index.tsx:44`, `SpellBuilder/step-quick-look.tsx:30`. Several repeat `as Route` casts. Drift already exists: only `coven-paused` encodes the slug, and `movedCovenPath` and `pathInCoven` in `coven-path.ts` use a third spelling.
   - `/coven/${slug}/grimoire`, `/grimoire/drafts`, `/members`, `/invitations`, `/ingredients` in: `(people)/layout.tsx`, `(people)/skeleton.tsx`, `(people)/members/page.tsx`, `grimoire/(list)/{layout,skeleton,grimoire-tab}.tsx`, `grimoire/[id]/page.tsx` (3), `ingredients/[id]/page.tsx` (4), `ingredients/viewed-details.tsx`, `(shell)/coven-paused/[slug]/page.tsx` (2); about 30 files repo-wide.
@@ -1185,7 +1185,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 3: The `/compendium/ingredients/<slug>` address is built by hand; the curator compendium page also has a duplicate import and a needless fragment**
 
-- **Why it matters:** The compendium entry address is built by hand in seven places, so renaming the route leaves broken links in the sitemap, AI discovery file or JSON-LD that search engines and visitors follow. The curator page also has a duplicate import and needless fragment.
+- **Why it matters:** The compendium entry address is built by hand in seven places, so renaming the route would leave stale links in places such as the sitemap and the AI discovery file. The curator page also has a duplicate import and needless fragment.
 - **Dead/tidy in area:** `curator/compendium/page.tsx:32-38` and `:39` import twice from `'../../../compendium-reads'`; `curator/compendium/compendium-dialog.tsx:31-77` wraps a single child in `<>`.
 - **Shared piece:** `compendiumEntryPath(slug)` in `src/lib/` (check `src/lib/help-paths.ts` for the pattern).
 - **Guard:** grep guard for the string literal `/compendium/ingredients/` outside the helper.
@@ -1218,7 +1218,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-42: `vi.mock('@/lib/request-session', ...)` and `vi.mock('@/lib/mail', () => ({ send }))` repeated in 51 and 31 files
 
 - **Severity:** medium
-- **Why it matters:** 51 test files mock request-session in eight shapes. Adding a new session helper means many mocks lack it, giving confusing failures, and a stale mock can make an authorization test pass without exercising the real guard.
+- **Why it matters:** 51 test files mock request-session in about eight shapes, so adding a new session helper means finding and updating many mocks.
 - **Where:**
   - `@/lib/request-session` is mocked in 51 files in about eight shapes (`{ getSession }` x9, `{ requireAdminSession }` x6, `{ requireSession }` x5, `{ requireCovenMembership, requireSession }` x5, `{ getSession, sessionIsVerified }` x5, plus 10 multi-line). `@/lib/mail` is mocked as `({ send })` in 24 of 31 files. 44 files declare `const session = ...` and 17 `const getSession = vi.fn()` locally.
 - **Shared piece:** `tests/support/request-session.ts` exporting `vi.hoisted`-friendly factory `requestSessionMock()` returning `{ getSession, requireSession, requireAdminSession, requireCuratorSession, requireCovenMembership, sessionIsVerified }` all as `vi.fn()`, used as `vi.mock('@/lib/request-session', () => import('.../request-session'))`, same pattern as `next-data-cache`. A matching `mailMock()` returning `{ send }`.
@@ -1246,7 +1246,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: "Readable spell or NotFound" and the uuid guard repeated across the grimoire module**
 
-- **Why it matters:** The readable-spell lookup and its not-found message are repeated across the grimoire module. A fix to who may read a spell, such as a private one, must be made in each, and a missed copy could expose or wrongly hide a spell.
+- **Why it matters:** The readable-spell lookup and its not-found message are repeated across the grimoire module, so a fix to who may read a spell has to be made in each copy.
 - **Shared piece:** export `readableSpell` (and a `readableWorking`) from one grimoire-internal file and use it everywhere; one `NO_SUCH_SPELL` constant. This is the grimoire side of D-43.
 - **Guard:** a `tests/guards/` grep test that `'No such spell in this coven'` appears once under `src/modules/grimoire/`.
 - **Fix:** move the helper to `services/spell-access.ts`; replace the inline copies. Check each caller's order of checks (membership before lookup) is kept.
@@ -1295,7 +1295,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: Better Auth client failure handling (`Failure`/`Refusal` types and the `.catch(() => ({ error: {} as Failure }))` fallback) is rewritten in seven forms**
 
-- **Why it matters:** The Better Auth failure handling is rewritten in seven forms. A fix for a dropped connection in one leaves a user stuck on a spinner or seeing no message in another sign-in, password or passkey screen.
+- **Why it matters:** The Better Auth failure handling is rewritten in seven forms, so a fix for a dropped connection in one has to be repeated in the others.
 - **Shared piece:** a type-only `AuthFailure` (`{ status?: number; code?: string; message?: string }`) in `src/lib/types.ts` (or beside `auth-client.ts`), and a small `settled(call)` helper in `src/lib/auth-client.ts` that returns `{ data, error }` and turns a throw into `{ data: null, error: {} }`. `Refusal` stays per form, because each form places messages differently.
 - **Guard:** a `tests/guards/` grep failing on `as Failure }` / `error: {} as` in `src/components/`.
 - **Fix:** add the type and helper; replace the seven local `Failure` interfaces and the catch fallbacks. Could break: the Passkeys catch yields `code: undefined` and feeds `refusal(code)`, so it needs the same shape (it does with `{}`).
@@ -1303,7 +1303,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 3: Better Auth "dropped connection" catch wrapper written 14 times**
 
-- **Why it matters:** The catch for a dropped connection is written 14 times with differing fallbacks. A person with a flaky network can see a clean error in one auth screen and an unhandled failure or silent hang in another.
+- **Why it matters:** The catch for a dropped connection is written 14 times with differing fallback shapes, and callers that read the error status or code depend on which shape they got.
 - **Drift:** the fallback is `{error: thrown}` in six places, `{error: {}}` (cast to a local `Failure`) in six, `{error: {code: undefined}}` in two, `{error: {} as {status?: number}}` in two, and a try/catch in one. Callers that read `error.status` or `.code` depend on which shape they got.
 - **Shared piece:** one helper in `src/lib/auth-client.ts` (or `src/lib/auth-call.ts`), e.g. `settle(call: Promise<{data, error}>)`, that returns the Better Auth result and turns a throw into `{data: null, error: {status: undefined, code: undefined, message: undefined}}`. It would also own the one `AuthFailure` shape (this overlaps D-44, which owns the `Failure` types; do both together).
 - **Guard:** an oxlint `no-restricted-syntax` rule or a `tests/guards/` grep test that fails on `.catch(` directly after a call imported from `lib/auth-client` inside `src/components/`.
@@ -1322,7 +1322,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-45: The mail-job family is five-times copied (start, message-for/send, step, workflow, report)
 
 - **Severity:** medium
-- **Why it matters:** Five mail jobs repeat the start, send and report steps. A fix to retry, logging or the missing-message check reaches one, so a keeper's pause or time-out email may fail silently while another family of mails is repaired.
+- **Why it matters:** Five mail jobs repeat the start, send and report steps, so a fix to retry, logging or the missing-message check has to be made in each of the five.
 - **Where:**
   - start wrappers: `src/modules/identity/services/access-pause-start.ts:1-19`, `src/modules/coven/services/member-pause-start.ts:1-20`, `src/modules/support/services/timeout-start.ts:1-21`, `src/modules/identity/services/account-notice-start.ts:1-19`, `src/modules/identity/services/secret-link-start.ts:1-18` (each: `startMailJob(job, [mail], label, async () => { const message = await xMessageFor(mail); if (message) await send(message); })`)
   - `sendXMail` wrappers (`messageFor` then `if (!message) return false; return deliver(message)`): `src/modules/identity/services/access-pause-mail.ts:21-25`, `src/modules/coven/services/member-pause-mail.ts:23-28`, `src/modules/support/services/timeout-mail.ts:21-28`, and the same in `src/modules/support/services/status-mail.ts`
@@ -1367,7 +1367,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: GroupedValueList, GroupList and GroupedValueForm repeat the kind-registry and filter scaffolding (extra detail for D-46, with drift)**
 
-- **Why it matters:** Group and value lists repeat the kind registry and filter scaffolding. A change to the search field or skeleton in one leaves the other showing a skeleton that does not match the real page, so curators see the layout jump.
+- **Why it matters:** Group and value lists repeat the kind registry and filter scaffolding (kind records, filter form, skeleton), so a change to the search field or skeleton in one has to be made in the other.
   This extends D-46 with specifics found; see "Extra copies of D-46" below for the file list. Drift found:
 
 - **Shared piece:** see D-46 (`KindList` factory and `defineListParams`). Specific addition: one `defineListKind({path,title,label,noun,plural,...})` type shared by both registries, and `FilterForm` taking an optional `select` slot so the Name search is written once.
@@ -1389,7 +1389,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times**
 
-- **Why it matters:** The live-parent check is written about fifteen times. A copy that forgets the soft-delete filter would count or return deleted rows, so a user could see a deleted ingredient's data in a list or count.
+- **Why it matters:** The live-parent check is written about fifteen times, so a copy that forgets the soft-delete filter would count or return deleted rows.
 - **Where:**
   - the correlated "parent is live and matches" check across `src/db/repository/ingredients.ts`, `spells.ts`, `stock.ts`, `workings.ts` and `cupboard-entries.ts`.
   - `ingredients.ts:480-485` (`holdsForm`), `487-493` (`holdsGroupMate`), `822-826` (`citesNowhere`), `835` (`hasNoForm`), `903-906` (`listOrVariantHolds`), `928-934` (`elementArm`), `945-951` (`formArm`), `989-992` (`toxicArm`), `1019-1022` (`pickedFormArm`). Also `vocabularies.ts:287` (`ofEntry`) and `ingredient-parent.ts` hold the same join condition.
@@ -1420,7 +1420,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 4: `existsIn(workspaces, eq(workspaces.id, X.workspaceId))` ("its coven is live") written six times**
 
-- **Why it matters:** The 'its coven is live' check is written six times. A copy missing it would return rows of a deleted coven, so a member could see an invitation or ingredient from a coven that no longer exists.
+- **Why it matters:** The 'its coven is live' check is written six times, so a copy missing it would return rows belonging to a deleted coven.
 - **Shared piece:** `inLiveWorkspaceOf(column: AnyPgColumn)` in `predicates.ts` beside `scopedTo`.
 - **Guard:** none practical.
 - **Fix:** add the helper; replace six sites. `invitations.ts:inLiveWorkspace` becomes `inLiveWorkspaceOf(invitations.workspaceId)`.
@@ -1432,7 +1432,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 ### D-48: Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times
 
 - **Severity:** medium
-- **Why it matters:** The wrapping flex row is repeated in 25 stylesheets. Changing the spacing or alignment means editing each, and a missed one leaves a wrapped row that looks different to users on narrow screens.
+- **Why it matters:** The wrapping flex row is repeated in 25 stylesheets, so changing its alignment or wrapping means editing each one.
 - **Where:**
   - `src/components/ChipColorField/index.scss:224`, `Combobox/index.scss:122`, `DocumentEditor/index.scss:13`, `FacetPanel/index.scss:149`, `ImpersonationBanner/index.scss:13`, `IngredientEntry/index.scss:317`, `IngredientForm/index.scss:449,495,681`, `JarShelf/index.scss:96`, `Passkeys/index.scss:18`, `ReceivedInvitations/index.scss:63`, `SignInMethods/index.scss:15`, `SiteFooter/index.scss:40,61`, `StepRow/index.scss:4`, `SupportList/index.scss:10,86`, `SupportRequests/index.scss:230`, `SupportRequests/timeout-panel.scss:52,72`, `Welcome/index.scss:14`, `src/scss/_primitives.scss:2376`, `.storybook/foundations.scss:230,307` (all under `src/components/` unless shown).
 - **Shared piece:** `@mixin wrap-row($gap)` in `src/scss/_mixins.scss` next to `stack`, or a `.wrap-row` primitive if markup can take it. Gaps vary (`space(1)` to `space(4)`, some two-value), so the gap is the argument.
@@ -1520,7 +1520,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 3: ISO-day display `toISOString().slice(0, 10)` is written in six components**
 
-- **Why it matters:** The ISO-day slice is written in six components. A change to how days display, or a wrong day near midnight in a time zone, is fixed in one place and left in the rest, so users see different dates for the same moment.
+- **Why it matters:** The ISO-day slice is written in six components, so a change to how days display has to be made in each.
 - **Shared piece:** `isoDayOf(at: Date): string` in `src/lib/utc.ts` beside `dayInUtc`. `MemberDetail` and `UserDetail` also repeat the whole `<time dateTime={at.toISOString()}>…</time>` element at the same shape (`MemberDetail/index.tsx:15`, `UserDetail/index.tsx:31`); a `UtcDay` component would own both.
 - **Guard:** a `tests/guards/` grep for `toISOString().slice(0, 10)` outside `src/lib/utc.ts` (the seed file `src/db/seed/documents.ts:47` is a validation use and goes on the allow list).
 - **Fix:** add the helper and optionally `<UtcDay at={…} />`; port the call sites. No behaviour change.
@@ -1541,7 +1541,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: "Has text" check (`(x ?? '').trim() !== ''`) written as a local `said` in four places and inline in six more**
 
-- **Why it matters:** The "has text" check exists as a local `said` helper in four files and inline in six more. If the rule changes, for example to treat non-breaking spaces as blank, the missed copies accept input the others reject, and users see forms that disagree.
+- **Why it matters:** The "has text" check exists as a local `said` helper in four files and inline in six more. If the rule changes, for example to treat non-breaking spaces as blank, the missed copies keep the old rule.
 - **Where:**
   - `src/components/IngredientEntry/blocks.tsx:6` (`said`, a type guard) and `listed` beside it
   - `src/components/SafetyNote/safety-note.tsx:7` (`said`, identical type guard)
@@ -1559,7 +1559,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: Local `count` and `said` helpers in IngredientForm re-implement shared wording helpers**
 
-- **Why it matters:** IngredientForm has its own count helper and a second helper named said, which clashes with another said elsewhere. A pluralisation fix in the shared helper misses this form, so a steward sees wrong plurals in its summaries.
+- **Why it matters:** IngredientForm has its own count helper and a second helper named said, which clashes with another said elsewhere, so a pluralisation fix in the shared helper does not reach this form.
 - **Shared piece:** the `counted` helper of D-54.
 - **Guard:** none practical.
 - **Fix:** do together with D-54; rename `copy.tsx`'s `said` to `copiedSentence`.
@@ -1567,7 +1567,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 3: Whitespace collapse `text.trim().replace(/\s+/g, ' ')` written as `oneLine` twice and inline twice more**
 
-- **Why it matters:** The whitespace collapse is written four times, two named oneLine. A fix, such as handling non-breaking spaces, reaches one, so page metadata or help text can keep stray spaces that appear in a title or search snippet.
+- **Why it matters:** The whitespace collapse is written four times, two of them named oneLine, so a fix such as handling non-breaking spaces has to be made in each.
 - **Shared piece:** `oneLine` in `src/lib/text.ts`.
 - **Guard:** none practical.
 - **Fix:** add and import (note the lib copies are `replace` then `trim`; same result).
@@ -1582,7 +1582,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: The coven access flags (`rolePermits` x4) are computed in more than one layout and page**
 
-- **Why it matters:** If the role rules change, for example a Practitioner gaining invite rights, one page can show the invite button while the layout or its server check still refuses, so a member sees a control that does nothing.
+- **Why it matters:** The same four role flags are computed in the coven layout and the coven page, with related copies in other layouts and pages, so a change to the role rules has to be made in each.
 - **Where:**
   - `src/app/(shell)/coven/[slug]/layout.tsx` and `src/app/(shell)/coven/[slug]/page.tsx` compute the same four flags from the role. Related `canInvite` and `canReadMembers` copies are in `src/app/(shell)/coven/[slug]/(people)/layout.tsx`, `src/app/(shell)/coven/[slug]/(people)/invitations/page.tsx`, the invite action file, and `src/lib/viewer.ts`.
   - `src/app/(public)/compendium/card-places.ts:16-18,40-42`
@@ -1600,7 +1600,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: Per-coven permission flags (`canAnnotate`, `canMakeOurs`, `canRemove`, `canAdd`) are computed in four places**
 
-- **Why it matters:** When a role's permissions change, the compendium card, entry page, coven ingredient list and detail page can disagree: a Practitioner sees Remove on one screen but not another, or a link opens an annotate form the server then refuses.
+- **Why it matters:** The compendium card, the entry page, the coven ingredient list and the detail page each compute the cupboard permission flags, so a change to a role's permissions has to be made in each of the four.
   Extra copies of D-52 and a finding of its own, because the app-side callers are four near-identical copies.
 
 - **Shared piece:** `cupboardAccessOf(role)` returning `{ canAdd, canAnnotate, canRemove, canMakeOurs, canStock }`, exported from `@/modules/coven` or `@/modules/ingredients` next to `MAKE_IT_OURS_PERMISSION`. It stays a per-role statement, not a rank.
@@ -1629,7 +1629,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: Untitled-spell name expression written in ten places**
 
-- **Why it matters:** A change to how an unnamed spell is shown, such as trimming rules or the fallback wording, lands in some cards and dialogs but not others, so one spell appears as 'Untitled' in one place and blank in another.
+- **Why it matters:** The expression that names an untitled spell is written in eleven places in two slightly different forms, so a change to the trimming or the fallback wording has to be made in each.
 - **Where:**
   - `SpellCard/index.tsx:42` and `SpellRecipe/body.tsx:69` and `SpellRecipe/index.tsx:36`: `(title ?? '').trim() || UNTITLED_SPELL`
   - `SpellBuilder/spell-dialog.tsx:69`, `SpellBuilder/index.tsx:444`, `SpellRecipe/deleted-href.ts:6`, `SpellRecipe/look-dialog.tsx:39`: `title?.trim() || UNTITLED_SPELL`
@@ -1642,7 +1642,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: Spell title fallback `title?.trim() || UNTITLED_SPELL` repeated**
 
-- **Why it matters:** The fallback name for a spell with no title is repeated in six files, with slightly different trimming. A fix in one leaves the search results, dialogs or deleted-spell links showing an empty name for a Practitioner.
+- **Why it matters:** The fallback name for a spell with no title is repeated in six files, with slightly different trimming, so a fix to the fallback has to be made in each.
 - **Shared piece:** `spellTitle(title)` exported beside `UNTITLED_SPELL` in `SpellCard/untitled.ts` (would also use D-51's `hasText`).
 - **Guard:** none practical.
 - **Fix:** add helper, replace the five or six sites.
@@ -1657,7 +1657,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: Hand-written singular/plural ternaries beside an existing `plural()` helper**
 
-- **Why it matters:** Hand-written singular/plural tests sit beside a ready helper, so wording fixes such as '0 items' or irregular plurals get applied in some screens and missed in others, leaving users with mismatched grammar like '1 ingredients'.
+- **Why it matters:** Hand-written singular/plural tests sit beside a ready helper (6 component call sites use it, at least 17 write the ternary by hand), so a wording fix such as '0 items' or an irregular plural has to be made site by site.
 - **Where:**
   - src/components/AccountMenu/index.tsx:29; src/components/AccountMenu/panel.tsx:62; src/components/AccountMenu/counts.ts:8,16; src/components/AdminCards/minted.tsx:85; src/components/Combobox/index.tsx:155; src/components/CategoryChips/category-more.tsx:132. Also in: HelpOutline/index.tsx:115, HelpOutline/guides-bar.tsx:319, SpellBuilder/index.tsx:112, SpellBuilder/steps/index.tsx:160-161, SignInMethods/index.tsx:186, HelpSearchResults/index.tsx:25, DocumentMailingPanel/index.tsx:98,122-123, SupportRequests/index.tsx:109, RecordWorking/warnings.ts:17, IngredientForm/duplicates.tsx:446.
   - inline `n === 1 ? 'x' : 'xs'` at `src/components/SpellBuilder/index.tsx:112`, `SpellBuilder/steps/index.tsx:160-161`, `SignInMethods/index.tsx:186`, `HelpOutline/guides-bar.tsx:319`, `HelpOutline/index.tsx:115`, `HelpSearchResults/index.tsx:25`, `AdminCards/minted.tsx:85`, `AccountMenu/index.tsx:29`, `AccountMenu/panel.tsx:62`, `AccountMenu/counts.ts:8,16`, `DocumentMailingPanel/index.tsx:98,122,123`, `IngredientForm/delete-users.tsx:30-32`, and others (42 `=== 1 ?` hits under `src/components/` outside stories). Only `GroupForm`, `IngredientForm/copy.tsx` and `IngredientForm/summaries.tsx` use `plural`.
@@ -1668,7 +1668,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 2: `plural()` exists in `src/lib/text.ts` and is bypassed in about 40 places**
 
-- **Why it matters:** Hand-written `n === 1 ? ... : ...` ternaries sit beside the existing `plural()` helper. A grammar fix to the helper misses these copies, so users see mismatched wording such as "1 ingredients" on some screens.
+- **Why it matters:** Hand-written `n === 1 ? ... : ...` ternaries sit beside the existing `plural()` helper, so a wording fix to the helper does not reach these copies.
 - **Shared piece:** existing `plural(count, one, many)` in `src/lib/text.ts`; add `count(n, 'step')` returning `"3 steps"` for the common "number plus noun" form (every site above prints the number).
 - **Guard:** an oxlint `no-restricted-syntax` selector on `ConditionalExpression[test.operator='==='][test.right.value=1]` with string-literal branches, in components only.
 - **Fix:** add `counted(n, one, many?)`, replace the sites. Leave titles like "Sub Page"/"Sub Pages" (capitalised) with `plural` direct.
@@ -1683,7 +1683,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 1: Four public document pages and their versions repeated eight times, plus eight skeletons**
 
-- **Why it matters:** Adding or changing a public document, such as a new page title or metadata, means editing sixteen near-identical files. A missed skeleton shows the wrong heading while the page loads, and a missed page loses its metadata or freshness setting.
+- **Why it matters:** Adding or changing a public document, such as a new page title or metadata, means editing sixteen near-identical files: eight page wrappers and eight skeletons.
 - **Where:**
   - `src/app/(public)/{terms,disclaimer,privacy,code-of-ethics}/page.tsx` and `.../versions/[number]/page.tsx` (eight wrappers of `_documents.tsx`, each with the same metadata and `dynamic = 'force-dynamic'`); `src/app/(public)/{terms,disclaimer,privacy,code-of-ethics}/skeleton.tsx` and `.../versions/[number]/skeleton.tsx` (eight files, each `<PageColumn as="div"><DocumentSkeleton title="..." /></PageColumn>`); eight registry rows in `src/app/skeletons.ts:79-86`.
   - `src/app/sitemap.ts:19-22`, `src/app/robots.ts:13-16`, `src/lib/public-routes.ts:19-26` (with `/versions/*`) and `:58` (`STAY_ON`), `src/app/skeletons.ts:79-86`, `src/lib/agreement-version.ts:14-16`, plus the key types `src/lib/types.ts:228` (`AgreementDocumentKey`) and `src/modules/documents/types.ts:1` (`DocumentKey`). Adding a fifth document means editing all of them; today nothing fails if one is missed.
@@ -1703,7 +1703,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 
 **Part 3: `UNVERSIONED_DOCUMENT_KEYS` and `UNMAILED_DOCUMENT_KEYS` are the same list in two shapes**
 
-- **Why it matters:** Two lists of the same documents (unversioned and unmailed) can drift apart, so a keeper could be offered versioning or mailing on a document that the repository treats the other way. The editor also needs a cast to compile.
+- **Why it matters:** The unversioned and unmailed document lists name the same documents in two shapes, so they can drift apart, and the editor needs a cast to treat one as a set.
 - **Shared piece:** one `as const` array with one derived predicate.
 - **Guard:** none.
 - **Fix:** keep the array, export `isUnversionedDocument(key)`; drop the cast.
@@ -1728,7 +1728,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: Three near-identical support reply forms**
 
-- **Why it matters:** The three support reply forms each hold their own copy of the box, discard guard and buttons. A fix to a bug, such as losing a draft on close, reaches the keeper's form but can be missed in the sender's or the link-based reply.
+- **Why it matters:** The three support reply forms each hold their own copy of the box, discard guard and buttons, so a fix to one has to be made in the other two.
 - **Where:**
   - `SupportRequests/reply-form.tsx:70-185` (reply or note, Notice error, textarea, BusyButton, DiscardQuestion)
   - `SupportSenderRequest/reply-box.tsx:25-88`
@@ -1747,7 +1747,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: The two support-request forms copy fields, limits and warning text; limits also copy the server**
 
-- **Why it matters:** The 120 and 4000 character limits are copied into three forms, away from the server's own constants. If the server limit changes, the form still accepts the old length and the sender loses a long message to a refusal after typing it.
+- **Why it matters:** The 120 and 4000 character limits are copied into three forms, away from the server's own constants, so a change to the server limit has to be mirrored by hand.
 - **Shared piece:** put the limits in `src/lib/support-path.ts` (client-safe, already holds `SUPPORT_ABOUTS`) and have `modules/support/validation/support.ts` import them from there (check `lib` -> module direction is allowed; if not, export from `@/modules/support` only if it is client-safe). Add `SupportMessageFields` (subject + message, with the warning, `CharacterCount`) and `BotTrapField` (owns the `website` state or takes `value/onChange`) in `SupportForm/` or `Field/`.
 - **Guard:** a `tests/guards/` test asserting the client limits equal the service constants if they stay separate; best is one source.
 - **Fix:** steps above. Risk: the signed-out form's ready logic; Story coverage (support stories).
@@ -1755,7 +1755,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 3: SupportRequestByLink repeats token extraction and a local failure-code reader**
 
-- **Why it matters:** The sign-in-by-link page reads the token from the URL in two separate effects. If a fix to the token handling lands in only one, the page can read the link correctly on load but fail after navigation, leaving the sender stuck.
+- **Why it matters:** The sign-in-by-link page reads the token from the URL in two separate effects, so a fix to the token handling has to be made in both.
 - **Shared piece:** one `readToken()` function in the same file; look in `lib/graphql-failure` for an existing code accessor before keeping the local one.
 - **Guard:** none practical.
 - **Fix:** extract the function, call it from both effects; replace the local code reader if `lib/graphql-failure` offers one.
@@ -1771,7 +1771,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-57: Hairline surface box repeated 12 times (exact triplicates)
 
 - **Severity:** medium
-- **Why it matters:** The same bordered card style is written out in twelve stylesheets. A change to the card look, such as border colour or radius, must be made in each, and any missed place is left with an odd panel next to its neighbours for every user.
+- **Why it matters:** The same bordered card style is written out in twelve stylesheets, so a change to its border, radius or background has to be made in each.
 - **Where:**
   - `border: 1px solid $hairline; border-radius: radius('surface'); background-color: $surface-card` in `src/components/AccessCards/index.scss:150`, `DateField/calendar.scss:10`, `HelpArticleForm/index.scss:60`, `PageNav/index.scss:116`, `StepRow/index.scss:78`, `src/scss/_primitives.scss:773,817`. Same with `$surface-page` in `FacetPanel/index.scss:89`, `SupportList/index.scss:49`, `SupportRequests/index.scss:187`, `SupportRequests/timeout-panel.scss:42`, `src/scss/_primitives.scss:2073`. Near variants: `HelpIndex/index.scss:86` (pill, card), `HelpWidget/index.scss:85` (control, page), `TabbedPage/index.scss:31` (pill, segment track).
 - **Shared piece:** `@mixin surface-box($background: $surface-card, $radius: radius('surface'))` in `_mixins.scss`. Check `_primitives.scss:773,817` first: if one is already a primitive class, components should use it.
@@ -1788,7 +1788,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: Two pages read search params by hand instead of `single()` and `trimmed()`**
 
-- **Why it matters:** Two pages read the search text by hand while the rest use the shared helpers. If trimming or array handling changes in the helper, help search and the account support list behave differently, for example treating spaces as a real search.
+- **Why it matters:** Two pages read the search text by hand while the rest use the shared helpers, so a change to trimming or array handling in the helpers does not reach help search or the account support list.
 - **Where:**
   - `src/app/(public)/help/search/page.tsx:19` and `src/app/(shell)/account/(tabs)/support/page.tsx:25` use `Array.isArray(...)` inline. `src/lib/search-params.ts` has `single` and `trimmed`, which the other pages use.
   - `src/app/(shell)/coven/[slug]/grimoire/(list)/grimoire-tab.tsx:130`
@@ -1816,7 +1816,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 3: `searchParams: Promise<Record<string, string | string[] | undefined>>` is declared seven times**
 
-- **Why it matters:** The same search-parameters type is declared seven times. If Next.js changes the page props shape, each copy has to be fixed by hand, and a missed one fails the build or quietly types the wrong shape for a developer.
+- **Why it matters:** The same search-parameters type is declared seven times, so a change to its shape has to be made in each.
 - **Shared piece:** `SearchParams` type in `src/lib/types.ts` (type-only file, per MB.108). `Next` may generate `PageProps`; check `node_modules/next/dist/docs/` for a global helper type before adding one.
 - **Guard:** none practical.
 - **Fix:** export the type and import it. Trivial.
@@ -1853,7 +1853,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`**
 
-- **Why it matters:** The two pause repositories copy the same 'has this pause run out' rule, even though a shared predicate exists. If the rule changes, one pause table could treat an expired pause as still standing, wrongly locking out a member or user.
+- **Why it matters:** The two pause repositories copy the same 'has this pause run out' rule, even though a shared predicate (`noEndOrAhead`) exists, so a change to the rule has to be made in each copy.
 - **Where:**
   - `src/db/repository/user-access-pauses.ts:13` and `src/db/repository/workspace-member-pauses.ts:15-19`: `notRunOut` is `or(isNull(until), gt(until, sql\`now()\`))`, which is exactly `noEndOrAhead(until)`in`src/db/repository/predicates.ts:61`, already used by `support.ts:356,855`
   - `src/db/repository/user-access-pauses.ts:15-16` (`pauseStands`), `src/db/repository/support.ts:353-356` (`timeoutStands`): `and(isNull(liftedAt), noEndOrAhead(until))`
@@ -1868,7 +1868,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Extra copies of D-60 (pause tables): the two pause repositories**
 
-- **Why it matters:** The user and coven-member pause files are near-copies of the same open, lift and history logic. A bug fix to how a pause closes or is lifted can land in one and not the other, leaving a member paused after a keeper lifted it.
+- **Why it matters:** The user and coven-member pause files are near-copies of the same open, lift and history logic, so a fix to how a pause closes or is lifted has to be made in both.
 - **Shared piece:** a private `pause-ledger.ts` in `src/db/repository/` holding `notRunOut(table)`, `lifted(session)`, `historyOrder(table)` and a `closeThenInsert` helper. Each file keeps its own proof types and table.
 - **Guard:** none practical; the two tables are different, so a test cannot tell a copy from a coincidence.
 - **Fix:** extract the table-parametrised pieces; keep the proofs per file. Risk: `notRunOut` in workspace-member-pauses is exported for `findWorkspaceSeat`, keep the export.
@@ -1883,7 +1883,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: A class-name joiner is hand-written in about nine components with four different idioms**
 
-- **Why it matters:** Class names are joined in four different ways across components. A mistake like a stray 'false' or double space in a class affects some components but not others, and a developer cannot tell which idiom is the correct one to copy.
+- **Why it matters:** Class names are joined in four different ways across components, so a developer cannot tell which idiom to copy and a change to joining has to be made in each.
 - **Where:**
   - `src/components/PageFrame/index.tsx:13` (`[...].filter(Boolean).join(' ')`), `src/components/PageHeader/index.tsx` (a local `classes()` function), `src/components/PageColumn/index.tsx:7` (`className ? \`page-column ${className}\` : 'page-column'`), `src/components/Notice/index.tsx:26`, `src/components/JarLine/index.tsx:26`(template string with two nested ternaries),`src/components/ProviderMark/unavailable-note.tsx:11`, plus `PageWithNav`, `PageNav`, `MenuButton`, `Modal/modal.tsx`(same idea). About 25 more files under`src/components/`use`.filter(Boolean).join(' ')` (`Field/shell.tsx`, `Field/form-actions.tsx`, `DataTable/index.tsx`, `CollapsibleSection`, `Combobox/entry.tsx`, `SkeletonFade`, and others). No helper exists in `src/lib/` (`classNames`, `clsx`and`cx` return nothing).
   - about six in Combobox alone (index.tsx, multi-select.tsx, select.tsx, popup.tsx) and the same expression in many other folders of `src/components`; count the full list at fix time with `grep -rn "filter(Boolean).join(' ')" src/components`.
@@ -1894,7 +1894,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Class names joined by hand with `.filter(Boolean).join(' ')`**
 
-- **Why it matters:** About thirty-odd components join class names by hand with the same expression. Any change, such as dropping empty strings or de-duplicating, must be repeated in each, so styling glitches appear in the components left behind.
+- **Why it matters:** About 24 component files join class names by hand with the same expression, so any change, such as de-duplicating, has to be made in each.
 - **Shared piece:** `cx(...parts)` in `src/lib/cx.ts`. No class-join helper exists.
 - **Guard:** an oxlint `no-restricted-syntax` selector on `.filter(Boolean).join(' ')`.
 - **Fix:** add `cx`; codemod the sites mechanically.
@@ -1906,7 +1906,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-62: small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2
 
 - **Severity:** medium
-- **Why it matters:** The copied e2e helpers have already drifted: one 'apply filters' waits for the page to navigate and the other does not. The admin spec can race the navigation and fail at random, so a developer is told the app is broken when it is not.
+- **Why it matters:** The copied e2e helpers have already drifted: one 'apply filters' waits for the URL to change and the other only clicks, so the admin spec can race the navigation.
 - **Where:**
   - `authorOf` (signs a keeper in on a throwaway page and returns the id): `tests/e2e/share-card.spec.ts:27-37`, `compendium-entry.spec.ts:15-25`, `forced-colours.spec.ts:120-127`. Identical.
   - `openFilters`: `tests/e2e/admin-compendium.spec.ts:32-40` and `stories/coven-ingredients.ts:345-353`; identical bodies. `applyFilters` differs (`admin-compendium.spec.ts:27` clicks only; `coven-ingredients.ts:355` waits for the URL change), which is drift: the admin copy can race the navigation.
@@ -1924,7 +1924,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-63: Trim, then empty to undefined or null, written inline in eight services
 
 - **Severity:** medium
-- **Why it matters:** Services each trim text and turn blanks into nothing in their own way, and the repository trims again. A blank invite note or label might be stored as an empty string in one place and null in another, confusing keepers' lists and searches.
+- **Why it matters:** Services each trim text and turn blanks into nothing in their own way, and the repository trims again, so a change to the rule has to be made in about eight places.
 - **Where:**
   - `src/modules/coven/services/members.ts:22`, `vocabulary/services/curated-lists.ts:25`, `identity/services/invitation-cards.ts:57,67,95`, `identity/services/user-list.ts:39`, `identity/services/admin-changes.ts:29`, `identity/services/admin-invitations.ts:119`, `coven/services/member-pause.ts:56`. The repository trims again at `grimoire.ts:57`, `help.ts:108`, `ingredients.ts:763`, `references.ts:99` (a second trim after the service's).
 - **Shared piece:** `blankToUndefined(text)` and `blankToNull(text)` in `src/lib/` (check `src/lib/text.ts` and `src/lib/validation.ts` for an existing helper first).
@@ -1942,7 +1942,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-64: Value-to-label lookups with a fallback, written eleven times
 
 - **Severity:** medium
-- **Why it matters:** Eleven files look up a label for a stored value with their own fallback. If a role or provider is renamed or added, some screens show the new label and others fall back to the raw code, such as 'member', to a keeper or steward.
+- **Why it matters:** Eleven files look up a label for a stored value with their own fallback, so a change to the lookup or its fallback has to be made in each.
 - **Where:**
   - `SupportRequests/index.tsx:41-42` (`labelOf`)
   - `SupportRequestByLink/index.tsx:159-160`
@@ -1963,7 +1963,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-65: "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated
 
 - **Severity:** medium
-- **Why it matters:** The 'No such compendium entry' check is repeated at about thirteen throw sites. If one drops the curator or id check, a keeper or user can get a different error or message for the same missing entry, or reach an unchecked path.
+- **Why it matters:** The 'No such compendium entry' check is repeated at about thirteen throw sites. The copies have already drifted: getWorkspaceIngredient has no uuid guard, while its sibling services have one.
 - **Where:**
   - `src/modules/ingredients/services/compendium.ts` (about 13 throw sites in `updateCompendiumEntry`, `promoteCompendiumFolkName`, `setCompendiumEntryReviewed`, `setCompendiumEntryShown`, `deleteCompendiumEntry`, `countCompendiumEntryUsers`, and the `softDeleteIngredient` argument); `services/compendium-sourcing.ts:850-866`; `services/cupboard-entries.ts` `NO_ENTRY`; `services/workspace-ingredients.ts` `'No such ingredient in this coven'` five times (`updateWorkspaceIngredient`, `promoteWorkspaceFolkName` twice, `getWorkspaceIngredient`, `deleteWorkspaceIngredient`); `services/ingredient-detail.ts` `'No such ingredient'` twice and `compendium.ts` once; `graphql/cupboard-entries.ts` `nodeOf`; `services/share-card.ts` once.
 - **Drift:** `getWorkspaceIngredient` (`workspace-ingredients.ts`) has no `RowId.safeParse` guard, while `updateWorkspaceIngredient`, `promoteWorkspaceFolkName` and `readableJar` in `stock.ts` all have one. A non-uuid id there reaches the driver and returns a driver error, not NotFound.
@@ -1978,7 +1978,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-66: Readable-spell parent check repeated in `spells.ts` and `workings.ts`; `grimoire.ts` ANDs `notSoftDeleted(spells)` after `readableSpells`
 
 - **Severity:** medium
-- **Why it matters:** The 'can this member read the parent spell' check is copied across spell and working code, with one query adding an extra soft-delete filter. If the rule changes, one path could expose a private spell's steps or workings to a member who should not see them.
+- **Why it matters:** The 'can this member read the parent spell' check is copied across spell and working code, and two grimoire queries add a soft-delete term that `readableSpells` already includes, so a change to the rule has to be made at each site.
 - Extra copies of D-47 specific to the spell tables.
 - **Where:**
   - `existsIn(spells, and(eq(spells.id, X.spellId), readableSpells(membership)))`: `spells.ts:43`, `spells.ts:107`, `spells.ts:131`.
@@ -2010,7 +2010,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Extra copies of D-67: seven vocabulary by-slug getters**
 
-- **Why it matters:** Seven getters each look up a vocabulary item by slug and throw 'not found' in their own way. If the lookup or error wording changes, the curator pages for deities, categories and forms behave differently, with some showing a blank page instead of a not-found.
+- **Why it matters:** Seven getters each look up a vocabulary item by slug with `findOneBySlug` and throw 'not found' separately, so a change to the lookup or the error wording has to be made in each.
 - **Shared piece:** `bySlug(table, label)` beside `liveRow` in curated-writes.ts.
 - **Guard:** none practical.
 - **Fix:** replace seven bodies with one-line calls; callers are src/app/(shell)/curator/value-kinds.ts and group-page.tsx only.
@@ -2063,7 +2063,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 3: AdminCards/minted hand-rolls a busy button**
 
-- **Why it matters:** The minted-card button is hand-built with disabled and aria-busy rather than the shared busy button. A keeper may get different spinner, double-click protection or screen reader wording than on other buttons, and fixes to the shared button skip it.
+- **Why it matters:** The minted-card button is hand-built with disabled and aria-busy and a text swap rather than the shared busy button, so fixes to the shared button do not reach it.
 - **Shared piece:** `BusyButton`.
 - **Guard:** none practical.
 - **Fix:** swap in `BusyButton`.
@@ -2078,7 +2078,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: Correspondence columns declared three times**
 
-- **Why it matters:** The four correspondence columns are declared in three tables. If one table gets a new correspondence or a changed type, ingredients, variants and coven entries disagree, and the keeper's data silently loses or mistypes that field in one of them.
+- **Why it matters:** The four correspondence columns are declared separately in three tables, so adding a correspondence or changing a type has to be made in each table.
 - **Where:**
   - `src/modules/ingredients/schema/ingredients.ts:470-474`; `schema/ingredient-variants.ts:384-387`; `schema/workspace-compendium-entries.ts:986-989` (`elements`, `celestialBodies`, `zodiacSigns`, `colors`).
   - `graphql/ingredient.ts` `IngredientRef` (1246-1249) and `IngredientVariantRef` (1202-1205); `graphql/cupboard-entries.ts` `CupboardEntryRef` (441-444) and `CupboardEntryInputRef` (506-509); `graphql/ingredient-input.ts` `IngredientVariantInput` (931-934) and `ingredientInputFields` (965-969); in services `ingredient-rows.ts` `ingredientColumns`, `PickedVariant`, `writeVariant`'s column list (3454-3475) and `cupboard-entries.ts` `ownValuesOf` and `asPicked`.
@@ -2089,7 +2089,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Correspondence field list exposed or typed in five more places (extra copies of D-70)**
 
-- **Why it matters:** The correspondence field list is spelled out in GraphQL, services and input types. Adding one correspondence means editing each place; a missed one is accepted in a form but dropped on save, or returned by one query but not another.
+- **Why it matters:** The correspondence field list is spelled out in GraphQL, services and input types, so adding one correspondence means editing each place.
 - **Shared piece:** `correspondenceFields(t, {nullable})` for GraphQL objects and `CORRESPONDENCE_KEYS` plus a `pickCorrespondence(row)` for services; pair with the schema-column helper in D-70.
 - **Guard:** none practical.
 - **Fix:** do with D-70 so the column, validation, GraphQL and service lists share one source.
@@ -2104,7 +2104,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: Delete and remove write hooks repeat one mutation shape**
 
-- **Why it matters:** Delete and remove hooks each hand-write the error and pending handling. A fix, such as showing the refusal message or stopping a double submit, reaches one button and not the rest, so a steward can click Delete twice or see a generic failure.
+- **Why it matters:** Delete and remove hooks each hand-write the same error and pending handling, so a fix to one, such as showing the refusal message, has to be repeated in the others.
 - **Where:**
   - `IngredientEntry/delete-entry.tsx` (`useDeleteEntry`), `IngredientEntry/cupboard-writes.tsx` (`useCupboardWrites`, ~105-146), `SpellRecipe/delete-spell.tsx` (`useDeleteSpell`, ~27-47), `SpellRecipe/duplicate-spell.tsx:44`, `TermsAgreement/index.tsx:56`, `IngredientForm/index.tsx:677`
   - `src/components/IngredientEntry/cupboard-writes.tsx:112-140` (remove, makeOurs), `src/components/IngredientEntry/delete-entry.tsx:41-67`. Each builds `useMutation({ mutationFn: graphqlRequest(...), onSuccess: navigate-or-refresh, onError: onSettle(); onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE) })`, and each reports `pending: x.isPending || x.isSuccess`.
@@ -2116,7 +2116,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Delete/remove mutation hooks in IngredientEntry repeat the same `onSuccess`/`onError` shape (extra copies of D-29)**
 
-- **Why it matters:** Remove, make-ours and delete on an ingredient entry each repeat the same success and error handling. If one forgets to clear its busy state on failure, the steward's button stays stuck, with no message, while the others recover.
+- **Why it matters:** Remove, make-ours and delete on an ingredient entry each repeat the same success and error handling, so a fix to one has to be made in the others.
 - **Shared piece:** the same hook D-29 proposes; the local part is a `useConfirmedWrite({ document, variables, leaveTo, onSettle, onRefused })` returning `CupboardWrite`.
 - **Guard:** see D-29.
 - **Fix:** fold the three mutations into one helper in `IngredientEntry/`; the types `CupboardWritesOptions` and `DeleteEntryOptions` share `onSettle`/`onRefused`/`workspaceId`.
@@ -2131,7 +2131,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: A callback-ref merge written twice**
 
-- **Why it matters:** Two components each copy the same few lines that pass a ref to both the component and a caller. A fix for a ref bug, such as React 19 cleanup behaviour, reaches only one, so focus or positioning breaks in either the menu or the modal button.
+- **Why it matters:** Two components each copy the same few lines that pass a ref to both the component and a caller, and the same shape is repeated in five more, so a fix to the ref merge has to be made in each.
 - **Where:**
   - `src/components/MenuButton/index.tsx:211-215` and `src/components/Modal/modal-button.tsx:32-36` (`if (typeof ref === 'function') ref(node); else if (ref) ref.current = node;`).
   - `src/components/IngredientEntry/own-actions.tsx:21-31`
@@ -2148,7 +2148,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Merging a `useClickFeedback` anchor ref with a second ref is written out in six components**
 
-- **Why it matters:** The callback-ref merge is written twice. A bug fix, such as handling a null ref, lands in one copy and leaves the other component dropping its ref, which breaks focus or measurement for that component only.
+- **Why it matters:** The callback-ref merge with a `useClickFeedback` anchor is written out in six components, so a fix to it has to be made in each.
 - **Shared piece:** `useClickFeedback` already owns `anchorRef` (`ClickFeedback/index.tsx:88`); let it take an optional `ref` to also fill (`useClickFeedback({ name, ref })`), and add `useMoreFeedback(name)` for the three menus, or put the ref in `MoreMenu` itself.
 - **Guard:** none practical.
 - **Fix:** extend the hook, delete the six callbacks. Risk: ref identity must stay stable so the control does not remount its tip.
@@ -2163,7 +2163,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: Help article title row and page head repeated across four Help pages and their skeletons**
 
-- **Why it matters:** The Help title row and header are rebuilt in four pages and their skeletons. A change to the heading or edit link lands in some pages, so a keeper sees the edit link on one article and not another, and skeletons jump when the page loads.
+- **Why it matters:** The Help title row and header are rebuilt in four pages and their skeletons, so a change to the heading or edit link has to be made in each.
 - **Where:**
   - `HelpArticleView/index.tsx`, `HelpGlossary/index.tsx`, `HelpIndex/index.tsx` (FAQ entry) each build `help-article__title` (h2 plus `EditLink`); the same row without the link in `HelpIndex/skeleton.tsx`. `<PageHeader title="Help" /><HelpSearchForm />` is repeated in `HelpArticleView`, `HelpGlossary`, `HelpIndex`, `HelpSearchResults` and in each skeleton.
   - `src/app/(public)/help/[slug]/page.tsx:38-45`
@@ -2180,7 +2180,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Help article pages repeat the same prop block four times**
 
-- **Why it matters:** Four help pages repeat the same block of props, including the keeper edit link and glossary. A change to one page, say adding steps or fixing the canonical link, leaves the staff or child pages different from the public ones for readers and search engines.
+- **Why it matters:** Four help pages repeat the same block of props, including the keeper edit link and glossary, so a change such as adding steps or fixing the canonical link has to be made in each.
 - **Shared piece:** `helpArticleProps(found, parent?)` (async) in `src/lib/help-pages.ts`, and `helpArticleMetadata(found)` beside it; read the article through a `cache()`-wrapped function.
 - **Guard:** none practical.
 - **Fix:** the helper returns the shared props; each page spreads it. Keep staff vs public differences (robots, base path) as arguments.
@@ -2241,7 +2241,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: "Unwrap a loader slot or throw" written three times**
 
-- **Why it matters:** Three services unwrap a loader result in slightly different ways; one also throws a fresh Forbidden on a missing value. A change to how denial is reported could leave one path returning undefined, hiding a refused read from a keeper or member.
+- **Why it matters:** Three services unwrap a loader result in slightly different ways, and compendium-sourcing also throws a fresh Forbidden on a missing value, so a change to how denial is reported has to be made in each.
 - **Where:**
   - `services/compendium-sourcing.ts:12-14` `answered`; `services/cupboard-entries.ts` `answered` (about 326, with `slot instanceof Forbidden`); `services/ingredient-detail.ts` `only`.
   - `keepers/(people)/users/opened-user.ts:38-44` and `:65-76` (found user, memberships, providers); `keepers/(people)/users/page.tsx:71-72`; `keepers/(people)/privilege-changes/page.tsx:60-61`; `keepers/(invitations)/card-sign-ups/page.tsx:54-61`.
@@ -2252,7 +2252,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Unwrapping a batch-loaded slot (`instanceof Error` then value) is written five times in the keepers people pages**
 
-- **Why it matters:** Five keeper pages each unwrap a batch-loaded result by hand. If one treats an error as 'missing' and another throws, the same failed lookup shows a user detail dialog as 'not found' on one page and a crash on another for a keeper.
+- **Why it matters:** Five keeper pages each unwrap a batch-loaded result by hand, and the entry notes some sites throw on an error while others treat it as missing.
 - **Shared piece:** a small `valueOrNull(slot)` / `valueOrThrow(slot)` in `src/lib/` (next to the batch helper that produces the slots; check `src/lib/` for its name), typed so `Error | T` narrows.
 - **Guard:** none practical; the shape is two lines.
 - **Fix:** 1. Add helper with unit test. 2. Replace the five sites. Could break: sites that throw versus sites that treat an error as "missing"; keep both variants.
@@ -2280,7 +2280,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Account pages build previous/next links by hand while about 15 pages use `pagerHrefs`**
 
-- **Why it matters:** Account and members pages build previous/next links by hand while fifteen others use the shared pager. A fix to paging, such as keeping filters in the link, reaches those fifteen but not these, so a user's Next link can drop their place.
+- **Why it matters:** Account and members pages build previous/next links by hand while fifteen others use the shared pager, so a paging fix reaches those fifteen but not these.
 - **Shared piece:** `pagerHrefs` and `readNumberedPage` (`src/lib/list-href.ts`, `src/lib/numbered-page.ts`). `pagerHrefs` takes a `build` callback, so the account page's `#fragment` fits.
 - **Guard:** none practical.
 - **Fix:** switch the three pages to the helpers. Risk: the members page shows no position or count; `readNumberedPage` needs a count function, so pass a cheap one or accept `resolvePage` there and only fix the hrefs.
@@ -2315,7 +2315,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: Hand-rolled send, busy and failure state in two forms that `useSupportAction` already covers**
 
-- **Why it matters:** Three forms hand-roll sending, failure and refresh logic that a shared hook already provides. The support reply form can show a different error, skip the announcement for screen readers, or fail to refresh, unlike the other support forms.
+- **Why it matters:** Several forms (SupportViewReplyForm, TermsAgreement and the user pause control, per the entry's Where list) hand-roll sending, failure and refresh logic that `useSupportAction` already provides, so a fix to the hook does not reach them.
 - **Shared piece:** `useSupportAction` already does busy, failure, announce and refresh. It lives in `SupportRequests/`; move it to `src/lib/` as a general `useSend` hook and use it in the three. Related to D-56 and D-56 (reply forms).
 - **Guard:** none practical.
 - **Fix:** generalise the hook (rename, no support-specific text), port the three, delete their local state. The full-load redirect in `TermsAgreement` needs an `onDone` that does not refresh.
@@ -2333,7 +2333,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-80: Five components pair `useOpenModalClick` with `ModalLink` to make a link that opens a modal
 
 - **Severity:** medium
-- **Why it matters:** Five components each pair the open-modal hook with a modal link by hand. If a fix to modifier-click or keyboard behaviour is made in one, a keeper opening a user or request in a new tab still gets the old, broken behaviour from the others.
+- **Why it matters:** Five components each pair the open-modal hook with a modal link by hand, so a fix to modifier-click or keyboard behaviour has to be made in each.
 - **Where:**
   - `src/components/MemberList/member-link.tsx:1-18` and `src/components/UserList/user-link.tsx:1-18` (identical apart from the prop type name and the comment), `src/components/SupportList/index.tsx:41-50` (`RowLink`), `src/components/SupportRequests/index.tsx:59-83` (`SubjectLink`), `src/components/SupportRequests/sender-name.tsx:23-37`; also `AdminCards/index.tsx:36` and `AdminInvitations/index.tsx:96` (outside my folders) use the same hook-then-`ModalLink` pair for buttons.
 - **Shared piece:** `OpenModalLink` in `src/components/Modal/` (exported from `Modal/index`), taking `href`, `heading`, optional `place`, and the link's children and `className`, calling `useOpenModalClick` inside. `MemberLink`, `UserLink` and `RowLink` become `<OpenModalLink>` at the call site and the two single-purpose files are deleted.
@@ -2347,7 +2347,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-81: Two near-identical `Day` components, plus three inline copies of the ISO-day cell
 
 - **Severity:** medium
-- **Why it matters:** Two Day components and three inline date cells show the UTC date differently from the shared helper. A fix to date display, such as time zones or the time tag, reaches one list but not the others, so a keeper sees inconsistent dates.
+- **Why it matters:** Two identical Day components and three inline `toISOString().slice(0, 10)` cells repeat a date format that `src/lib/utc.ts` already holds behind a named function, so a change to date display has to be made in each.
 - **Where:**
   - `src/components/MemberDetail/index.tsx:14-16` (`Day`) and `src/components/UserDetail/index.tsx:30-32` (`Day`): identical.
   - Inline `toISOString().slice(0, 10)` cell text: `src/components/MemberList/index.tsx:64-68`, `src/components/UserList/index.tsx:141-145`, `src/components/DataTable/updated-column.tsx:15`.
@@ -2363,7 +2363,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 ### D-82: CupboardEntryForm lists its field names in four places that can drift apart
 
 - **Severity:** medium
-- **Why it matters:** The cupboard entry form lists its field names in four places. Adding a field means finding all of them; a missed one is shown in the form but not compared for changes or saved, so a steward's edit is silently lost or unsaved warnings never fire.
+- **Why it matters:** The cupboard entry form lists its field names in four places that can drift apart, so adding a field means finding and editing all of them.
 - **Where:**
   - `CupboardEntryForm/index.tsx:100` `TEXT_FIELD_NAMES = ['label','description','safetyNotes']` against `CupboardEntryForm/changes.ts:15` `TEXT_FIELDS` (identical contents, and `changes.ts:25` already has `isTextField`). Used at `index.tsx:161` beside `field === 'elements'`.
   - The seven-field object spelled out in `baselineOf`, `openingValues` (index.tsx / changes.ts) and `entry-values.ts`.
@@ -2383,7 +2383,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: The user-dialog block is written out in three keeper pages**
 
-- **Why it matters:** Three keeper pages each write the same user-dialog block. A change to the impersonation or paused-changes rules reaches one page, so a keeper can impersonate or edit a user from one screen while another page correctly refuses.
+- **Why it matters:** Three keeper pages each write the same user-dialog block, so a change to the impersonation or paused-changes rules has to be made in each.
 - **Where:**
   - `src/app/(shell)/keepers/(people)/users/page.tsx`, `src/app/(shell)/keepers/(invitations)/card-sign-ups/page.tsx`, `src/app/(shell)/keepers/support/page.tsx`. Each reads the `user` search param, looks the user up, renders `{userParam && !opened && <MissingNotice noun="user" />}`, then `<UserDialog closeHref=... opened=... canImpersonate={impersonationEnabled()} changesPaused={Boolean(adminChanges && changesLocked(adminChanges))} />`.
   - `keepers/(people)/users/page.tsx:116-147`, `keepers/(invitations)/card-sign-ups/page.tsx:86-104`, `keepers/support/page.tsx:48-68`. Same `<MissingNotice noun="user" />`, `UserDialog`, `impersonationEnabled()`, `Boolean(adminChanges && changesLocked(adminChanges))`.
@@ -2394,7 +2394,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: The user-dialog block is written out three times (extra copies of D-83 are none; confirms D-83 and gives the exact lines)**
 
-- **Why it matters:** The same user-dialog block appears in three keeper pages. If the impersonation or lock check changes in one, a keeper could see a dialog allowing impersonation on one page that another page, with the newer rule, would block.
+- **Why it matters:** The same user-dialog block appears in three keeper pages, so a change to the impersonation or lock check has to be made in each.
 - **Shared piece:** see D-83 (`UserDialogHost`). This entry only adds the line ranges.
 - **Guard:** / Fix / Tests / Estimate:** as D-83; no separate hours.
 
@@ -2411,7 +2411,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 1: `SignInMethods/provider-row.tsx` hand-rolls a Remove confirmation the shared confirm pieces already provide**
 
-- **Why it matters:** The sign-in methods Remove confirmation is hand-built with its own state, while passkeys use the shared confirm. A fix to the shared confirm, like focus return or busy locking, skips this row, so a user can remove a sign-in method with weaker safeguards.
+- **Why it matters:** The sign-in methods Remove confirmation is hand-built with its own state, while passkeys use the shared `ConfirmedAction`, so a fix to the shared confirm does not reach this row.
 - **Where:**
   - `src/components/SignInMethods/provider-row.tsx:122-155` (a `Modal` with a destructive `BusyButton` and a Cancel in `modal__actions`, own `asking` state and a `returnTo` ref) against `src/components/Passkeys/passkey-row.tsx:28-40` which does the same job with `ConfirmedAction`. `PasswordSection/two-factor.tsx` (the leave and turn-on warning, about lines 255-285) and `LeaveWorkspaceButton/owner-exit.tsx:89-94` also hand-build a `modal__actions` pair.
   - `src/components/PendingInvitations/remove-control.tsx:1-39` and `src/components/PendingInvitations/revoke-control.tsx:1-38`. Both declare a `graphql()` document that calls `revokeInvitation(workspaceId, id) { id }` (`RemoveDeclinedInvitationDocument`, `RevokeInvitationDocument`), both wrap `ConfirmedAction` with the same `openClass`, `confirmClass`, `send` shape and an `announcement`. Only the wording differs. Both take `RevokeControlProps`, a name that is wrong for `RemoveControl`. Outside the folder, `src/components/AdminInvitations/` and `ReceivedInvitations/` use the same ConfirmedAction shape (only note, not counted).
@@ -2422,7 +2422,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: `RemoveControl` and `RevokeControl` are one control twice, with the same mutation document declared twice**
 
-- **Why it matters:** Remove and Revoke invitation controls are the same control with the same mutation declared twice, and one has the wrong prop name. A fix to the confirm step or announcement is made once and the other control keeps the bug for a steward.
+- **Why it matters:** The Remove and Revoke invitation controls are the same control with the same mutation document declared twice, so a fix to the confirm step or announcement has to be made in both.
 - **Shared piece:** one `InvitationRowControl` in `PendingInvitations/` taking a `declined` flag (or a `copy` object: label, title, question, busy, announcement), with one `RevokeInvitationDocument`. `PendingInvitations/index.tsx` picks the copy by `declinedAt`. The two files and `RevokeControlProps` go; replace it with a `InvitationControlProps`.
 - **Guard:** none practical (the codegen already de-duplicates identical documents by name only; distinct operation names pass).
 - **Fix:** merge into one file, one document, a copy table for the two states. Could break: the story `PendingInvitations/index.stories.tsx:87` presses by accessible name, so keep the names.
@@ -2448,7 +2448,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 
 **Part 2: HelpSearchForm hand-writes the magnifier submit button**
 
-- **Why it matters:** The help search form has a fourth hand-written copy of the magnifier submit button. If the shared search button is fixed for labels or focus, help search keeps the old behaviour, so screen reader users get a different control there.
+- **Why it matters:** The help search form has a fourth hand-written copy of the magnifier submit button, so a fix to the shared search button does not reach it.
 - **Shared piece:** the shared search-submit control already counted in D-85 (this is a fourth copy).
 - **Guard:** see D-85.
 - **Fix:** fold into the D-85 fix.
@@ -2464,7 +2464,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-86: `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses
 
 - **Severity:** medium
-- **Why it matters:** About 313 exports that nothing imports are hidden by a knip setting. They mislead developers into thinking the code is used elsewhere, keep dead email functions and icons alive, and bury real unused code among noise.
+- **Why it matters:** About 313 exports that only their own file uses are hidden from knip by `ignoreExportsUsedInFile: true`. They are over-exported rather than dead, and the setting stops knip from listing them.
 - **Where:**
   - `knip-strict.log` (full list with locations): 182 unused exports and 131 unused exported types, all with no importer in src, tests, scripts or stories; they are used only inside their defining file. Examples: `src/components/AppShell/add-href.ts` (`NEW_COVEN_INGREDIENT_PREFIX`, `NEW_INGREDIENT`, `NEW_SPELL`, `NEW_SPELL_PREFIX`, `askedSpell`, `covenIngredientValue`), `src/components/SignInPanel/icons.tsx` (5 icons), `src/components/IngredientForm/reference-panel.tsx` (9 items), `src/db/seed/demo-coven-content.ts`, `src/emails/*.ts` (18 email functions), `src/modules/*/graphql/*Ref` consts, `tests/support/card-sheet-pdf.ts`, `tests/support/story-checklist.ts`.
 - **Verdict:** not dead code, only over-exported. Not a runtime cost. Three classes need care before un-exporting:
@@ -2483,7 +2483,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-87: Not-blank CHECK SQL written by hand in many tables
 
 - **Severity:** medium
-- **Why it matters:** The 'not blank' database check is hand-written on many tables. A typo in one gives a column that accepts spaces-only text, so a keeper or steward can save a blank name there while other tables refuse it, and migrations drift.
+- **Why it matters:** The 'not blank' database check is hand-written on many tables, so a change to it has to be made in each, and the SQL of every copy has to stay identical.
 - **Where:**
   - ingredients: `schema/ingredient-deities.ts:96`, `ingredient-variants.ts:392`, `ingredient-substitutes.ts:344` (null-or-not-blank form), `ingredients.ts:503`, `references.ts:800-806`, `reference-links.ts:730`; grimoire: `spell-steps` (3x), `spell-workings`, participants, `spells`. More in other modules (check `grep -rn "btrim(" src`).
 - **Shared piece:** `notBlank(column)` and `notBlankIfSet(column)` in `src/db/schema-parts`.
@@ -2497,7 +2497,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-88: Seven "lazy wrapper" components repeat `useLazyModule(x, true)` then `module ? <module.default {...props}/> : null`
 
 - **Severity:** medium
-- **Why it matters:** Seven lazy-wrapper components each repeat the same load-then-render logic. A change to loading behaviour, such as an error state or fallback, has to be made seven times, and a missed wrapper shows a blank gap to users while the module loads.
+- **Why it matters:** Five bare lazy-wrapper components each repeat the same load-then-render logic, so a change such as adding an error state has to be made in each.
 - **Where:**
   - `src/components/IngredientEntry/lazy-coven-choice.tsx:13-15`
   - `src/components/IngredientEntry/lazy-forms.tsx:19-37` (three wrappers in one file)
@@ -2518,7 +2518,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 1: Quantity column declared five times without the shared constants' helper**
 
-- **Why it matters:** Five quantity columns each repeat the precision and scale. If the quantity size changes, a missed column keeps the old size, so a stock or spell amount is rounded or rejected in one table but kept in another for a steward.
+- **Why it matters:** Five quantity columns each repeat the precision and scale, so a change to the quantity size has to be made in each.
 - **Where:**
   - `src/modules/grimoire/schema/spell-steps.ts`, `spell-working-deductions.ts`, `spell-workings.ts`; `src/modules/ingredients/schema/inventory-items.ts` (twice); each `numeric(name, { precision: QUANTITY_PRECISION, scale: QUANTITY_SCALE })`.
   - `src/modules/grimoire/services/workings.ts` `completeWorking` (`taken.toFixed(3)` and the shortfall).
@@ -2529,7 +2529,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 2: `toFixed(3)` hard-coded where `QUANTITY_SCALE` exists**
 
-- **Why it matters:** The working completion hard-codes three decimal places while the shared scale constant exists. If the quantity scale changes, deductions are rounded differently from stored amounts, so a steward's stock count ends up slightly wrong.
+- **Why it matters:** The working completion hard-codes three decimal places (`toFixed(3)`) while the shared `QUANTITY_SCALE` constant exists, so a change to the scale would not reach it.
 - **Shared piece:** `QUANTITY_SCALE` from `schema/quantities.ts`.
 - **Guard:** none practical.
 - **Fix:** replace the literal 3 with `QUANTITY_SCALE`.
@@ -2622,7 +2622,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-94: DateField and DateRangeField duplicate the popover shell, bounds and weekday-word helper
 
 - **Severity:** medium
-- **Why it matters:** DateField and DateRangeField each copy the popover, bounds and close-and-focus logic. A bug fix such as focus return or min and max dates reaches one picker, so the other lets a keeper pick an out-of-range date or lose focus.
+- **Why it matters:** DateField and DateRangeField each copy the popover, bounds and close-and-focus logic, so a fix to one has to be made in the other.
 - **Where:**
   - `DateRangeField/index.tsx` and `DateField/index.tsx` / `DateField/calendar.tsx`: the popover panel markup and class, the `disabled` bounds array, the close-then-focus-trigger step, `usePreloadWhenIdle` / `useLazyModule` use, and the open/floating state.
   - `DateRangeField` `shortWords` against the `dayWords` pattern in `DateField/day.ts`.
@@ -2638,7 +2638,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-95: SignInPanel/in-dialog.test.tsx copies the password-form harness
 
 - **Severity:** medium
-- **Why it matters:** Sign-in tests copy the same mock set-up and helpers into several files. When the auth client changes, each copy must be fixed, so a developer sees failures in unrelated tests or keeps a stale mock that passes while the real flow is broken.
+- **Why it matters:** Sign-in tests copy the same mock set-up and helpers into several files, so when the auth client changes each copy has to be fixed.
 - **Where:**
   - harness header (auth-client mock, `./search-params` navigation mock, `assign`, `PASSWORD = 'Testwort crowns the eastern hedge'`, `press`, `field`, `type`, `afterEach` reset list) in `tests/components/SignInPanel/in-dialog.test.tsx:1-60` and `tests/components/SignInPanel/password-form.test.tsx`; `press` is also written in `SignInPanel/index.test.tsx:26`, `SignInPanel/two-factor-step.test.tsx:32`, `SignInDialog/index.test.tsx:30`.
 - **Shared piece:** `tests/support/interact.tsx` already exists; add `press`, and a `tests/support/sign-in-harness.ts` for the shared auth-client mock factory (extends D-42).
@@ -2655,7 +2655,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 1: Compendium filter schema repeats two transform shapes**
 
-- **Why it matters:** The compendium filter validation repeats the same transforms nine times. A mistake in one, such as a filter treating false as set, makes a stock or reference filter behave differently from its siblings, so a user's filtered list shows the wrong ingredients.
+- **Why it matters:** The compendium filter validation repeats the same two transforms nine times, so a change to either has to be made in each copy.
 - **Where:**
   - `src/modules/ingredients/validation/compendium-filter.ts`: `.nullish().transform(only => only === true ? true : undefined)` four times (`withoutReferences`, `withoutForms`, `inStock`, `lowStockOnly`); `.enum(X).nullish().transform(v => v ?? undefined)` five times (nomenclature, sort, order, source, reviewed); `filterElements` and `filterIds` share an "empty list means no filter" transform.
   - `graphql/compendium.ts` `compendium` query args (about 273-296) and `compendiumFacets` args (312-343): `query`, `categoryArgs`, `facetArgs`, `withoutReferences`, `withoutForms`, `nomenclature`, `listing`, and the `reviewed` argument with a 3-line description, all repeated. `filterOf` in `graphql/compendium.ts:366-402` and `graphql/workspace-ingredient-list.ts:1803-1831` each destructure and rebuild the same 12-16 keys, so adding a filter means editing the args, the type and `filterOf`.
@@ -2666,7 +2666,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 2: Compendium search arguments declared twice, `filterOf` copies list every field**
 
-- **Why it matters:** Compendium search arguments are declared twice and the filter is rebuilt key by key in two places. Adding a filter means three edits; a missed one makes the facet counts disagree with the list results, so a user sees wrong counts.
+- **Why it matters:** Compendium search arguments are declared twice and the filter is rebuilt key by key in two places, so adding a filter means editing each of them.
 - **Shared piece:** `compendiumFilterArgs = builder.args(...)` beside `facetArgs` for the shared eight; replace `filterOf` with a rest-spread that drops only the non-filter keys (`const { workspaceId, ...filter } = args`) or, for `compendium`, pass `args` directly since the paging keys are already split off.
 - **Guard:** the SDL snapshot test already pins the schema, so a changed argument shows.
 - **Fix:** declare once, spread twice; check the SDL snapshot is unchanged.
@@ -2681,7 +2681,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 1: CompendiumList re-describes the filter in words beside existing builders**
 
-- **Why it matters:** The compendium empty-state text rebuilds the filter sentence with its own plural ternaries beside the search sentence builder. A wording fix in one leaves the other saying something different, so a user's 'no results' message disagrees with the filter.
+- **Why it matters:** The compendium empty-state text rebuilds the filter sentence with its own plural ternaries beside the search sentence builder, so a wording fix in one does not reach the other.
 - **Where:**
   - CompendiumList/index.tsx:168-190 (`andNodes`, `orValues`, `joinedNames`: JSX forms of `joinAnd` and `joinList`); CompendiumList/index.tsx:192-273 (`emptyText`, with plural ternaries at 221, 226, 231, 236, 246, 255); IngredientSearch/sentence.ts (`buildSearchSentence`)
   - CompendiumList/filter.tsx:53-146 (`panelOf`, `noFacets`, `changeOf`, `heldFilter`; the field list four times), 174 and 221-225 (`JSON.stringify` comparisons), 237-245 (`pickHref`); CompendiumList/live-facets.ts:25-96 and 98-165 (7 facet fields, `{ value count }` each, plus shared variables); CompendiumList/facets.ts:49-53, 88-92, 93-97, 100-105 (`{ value, label: MAP[value], count }`)
@@ -2692,7 +2692,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 
 **Part 2: CompendiumList facet field list repeated; two GraphQL documents repeat one selection set**
 
-- **Why it matters:** A developer adding or renaming a compendium facet must edit the field list in four filter functions and two GraphQL documents; missing one makes that facet silently stop filtering, clearing or counting for visitors browsing the compendium.
+- **Why it matters:** A developer adding or renaming a compendium facet must edit the field list in four filter functions and two GraphQL documents.
 - **Shared piece:** a `FACET_FIELDS` constant to drive the four filter.tsx functions; a GraphQL fragment for the facet selection; a `toFacetOptions(values, labels)` mapper.
 - **Guard:** none practical.
 - **Fix:** run codegen after adding the fragment; commit `src/gql/`.
@@ -2704,7 +2704,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-98: `box-sizing: border-box` declared 68 times with no global reset
 
 - **Severity:** medium
-- **Why it matters:** A developer writing a new component sheet who forgets box-sizing gets padded boxes that overflow their container, so a user sees misaligned or clipped layouts. The 68 repeats also hide whether any element is meant to differ.
+- **Why it matters:** `box-sizing: border-box` is declared 68 times with no global reset, so each new component sheet has to repeat it and the repeats hide whether any element is meant to differ.
 - **Where:**
   - `grep -rn "box-sizing" src --include='*.scss'` (for example `src/scss/_frame-bar.scss:17,31`, `src/scss/_primitives.scss:141,549,615,653,663,693,746,839`, and the same across component sheets). `src/app/globals.scss` and `_layout.scss` set no reset.
 - **Shared piece:** one `*, ::before, ::after { box-sizing: border-box }` in `src/app/globals.scss`, then delete the per-block declarations. Alternative if a global reset is judged too risky: keep them and say so in `claude-docs/`.
@@ -2718,7 +2718,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-99: Jar muted-stroke overrides repeated in three sheets
 
 - **Severity:** medium
-- **Why it matters:** If the muted look of a low or empty jar changes in one sheet, the shelf, the jar line and the spell builder show different jars for the same stock state, so a practitioner sees an out-of-stock jar look faded in one place and normal in another.
+- **Why it matters:** If the muted look of a low or empty jar changes in one sheet, the shelf, the jar line and the spell builder sheets no longer match, because each repeats the overrides.
 - **Where:**
   - `src/components/JarLine/index.scss:11-19` (`.jar-shelf__lid`, `__facet`), `src/components/SpellBuilder/index.scss:395-400` (same two selectors), `src/components/JarShelf/index.scss:154-174` (lid, facet, cork, cloth) with `--low` at `:273` and `--out` at `:302`; `src/components/SpellBuilder/panels.scss:41,45` (`.is-low`, `.is-out`).
 - **Shared piece:** a mixin `jar-muted()` in `src/scss/_jar-motion.scss` (or a custom property on `.jar-shelf`) set once, applied by the three callers.
@@ -2732,7 +2732,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-100: the three `lint-*-boundary` guards repeat the probe test and the exemption-directive scanner
 
 - **Severity:** medium
-- **Why it matters:** A developer tightening the import-ban rules must fix the same exemption scanner in three guard tests; if one copy is missed, that guard can wrongly accept an unsafe import or fail on a valid exemption, letting a boundary breach merge.
+- **Why it matters:** A developer tightening the import-ban rules must fix the same exemption scanner and probe test in three guard tests.
 - **Where:**
   - `tests/guards/lint-job-boundary.test.ts:16-40`, `lint-loader-boundary.test.ts:11-45`, `lint-db-client-boundary.test.ts:20-58`; matching probe modules `tests/support/lint-probes/{job,loader,db-client}-boundary.ts`.
   - Same `directive` regex (`/^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/`) and the same "directive on line i, import on line i+1" loop, differing only in the import regex.
@@ -2748,7 +2748,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-101: the page-side GraphQL `fetch` is written four times; `graphqlFromPage` already exists
 
 - **Severity:** medium
-- **Why it matters:** The keepers' story specs already differ: one copy omits the accept header. A fix to GraphQL page requests, such as an auth or error change, reaches only some specs, so a developer sees misleading failures or false passes in browser tests.
+- **Why it matters:** The page-side GraphQL fetch is written four times and the copies already differ: the 08 spec omits the accept header. A fix to page requests has to be made in each.
 - **Where:**
   - `tests/e2e/stories/coven-ingredients.ts:~266-285` (`graphqlFromPage`, the exported one), `tests/e2e/stories/01-invitations.spec.ts:66-85` (`sendFromPage`), `tests/e2e/stories/08-email-and-admin.spec.ts:79-97` (`sendFromPage`, no `accept` header: drifted), `tests/e2e/unverified-api.spec.ts:15-30` (`readGrimoire`).
 - **Shared piece:** move `graphqlFromPage` to `tests/e2e/graphql.ts` (a harness file beside `session.ts`) and import it in all four; `stories/coven-ingredients.ts` re-exports or its importers are updated.
@@ -2762,7 +2762,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-102: Coven "not a member" refusal and member-removal sequence repeated
 
 - **Severity:** medium
-- **Why it matters:** If the not-a-member refusal or the removal steps change in one coven service, leaving and removing a member can behave differently, so a steward sees one message and a practitioner another, or the last-steward safeguard is skipped on one path.
+- **Why it matters:** The not-a-member refusal and the member-removal steps are repeated across the coven services, so a change to either has to be made in each.
 - **Where:**
   - src/modules/coven/services/member-removal.ts (`removeMember`, `leaveWorkspace`: RowId guard, `assertNotSystemSeat`, `withAudit` + `assertNotLastOwner` + `softDeleteMembership`); src/modules/coven/services/member-role.ts (guard + `assertNotSystemSeat` + the same message); src/modules/coven/services/member-pause.ts (`STRANGER_REFUSAL`). The text `That person is not a member of this coven` appears in 3-4 places.
 - **Shared piece:** one `notAMember()` error factory and a shared `removeSeat(session, membership, userId)` in `src/modules/coven/services/`.
@@ -2776,7 +2776,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-103: "Card accepted by this user" written four ways, two as raw SQL
 
 - **Severity:** medium
-- **Why it matters:** If the rule for an accepted card changes, such as ignoring a revoked card, three of the four copies may be missed. A keeper then sees users grouped as card sign-ups in one list but not another, or a sender gets the wrong support tier.
+- **Why it matters:** The fact 'a live card invitation accepted by this user' is written four ways, two as raw SQL, so a change such as excluding a revoked card has to be made four times.
 - Same fact ("a live card invitation whose `accepted_by` is this user") in four forms. One is a raw `not exists` with an alias, one a raw `exists` with no alias, two are `selectFrom` finders. A change to what counts as an accepted card (for example excluding a revoked card) has to be made four times.
 - **Where:**
   - `invitations.ts:113-116` (`noCardAcceptedBySession`, raw `not exists`, aliased `used_card`)
@@ -2794,7 +2794,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-104: Jar-row number conversion `quantityOnHand === null ? null : Number(quantityOnHand)` is repeated
 
 - **Severity:** medium
-- **Why it matters:** If stock conversion changes, for example how a missing quantity is read, one of four places keeps the old rule. A practitioner then sees a different amount or low-stock state for the same jar on the ingredient page, recipe and quick look.
+- **Why it matters:** The jar-row number conversion is written in four places, so a change to how a missing quantity is read has to be made in each.
 - **Where:**
   - `src/app/(shell)/coven/[slug]/grimoire/[id]/recipe-supply.ts:17-19` (`jarRowsOf`, also does `lowStockThreshold`)
   - `src/app/(shell)/coven/[slug]/ingredients/page.tsx:132,135`
@@ -2826,7 +2826,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 ### D-106: Single-name forms (NameForm, RenameWorkspaceForm) copy each other
 
 - **Severity:** medium
-- **Why it matters:** A change to how form errors are shown or cleared must be made in eight or more forms; any missed one leaves a user with a stale or missing error message after a failed save, with no clear sign of what went wrong.
+- **Why it matters:** A change to how form errors are shown or cleared must be made in eight or more forms.
 - **Where:**
   - `NameForm/index.tsx:1-85`
   - `RenameWorkspaceForm/index.tsx:1-102`
@@ -2870,7 +2870,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-108: Plain-state text fields hand-build `fieldDescription` + `FieldShell` + `<input className="input">` in four forms
 
 - **Severity:** medium
-- **Why it matters:** A fix to field labelling, error wiring or hints for text inputs must be made in four forms; a missed form leaves the input unlabelled for screen-reader users or missing its error text when someone signs in or creates a coven.
+- **Why it matters:** A fix to field labelling, error wiring or hints for text inputs must be made in four forms.
 - **Where:**
   - `EmailForm/index.tsx`, `ForgotPasswordForm/index.tsx`, `CreateWorkspaceForm/index.tsx`, `Field/reason-field.tsx`.
 - **Shared piece:** `TextField` is bound to react-hook-form. A `PlainTextField` (value and onChange props, error and hint) in `Field/`, which these four use and which `TextField` itself can sit on.
@@ -2884,7 +2884,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-109: DocumentMailingPanel hand-writes `joinList` and a count pluralisation, twice with drifted wording
 
 - **Severity:** medium
-- **Why it matters:** The panel hand-writes the list and plural wording the shared helpers already produce. If the house style changes, such as the comma rule, a keeper sees mailing confirmations worded differently from the rest of the site, or a count like 1 days.
+- **Why it matters:** The panel hand-writes the list and plural wording that the shared `joinList` and `plural` helpers already produce, so a change to the house style does not reach it.
 - **Where:**
   - `DocumentMailingPanel/index.tsx:43-46` `titlesOf`: the Oxford-comma join, identical in output to `src/lib/join-list.ts` `joinList(items, 'and')`. (For exactly two items both return `a and b`; for three or more both return `a, b, and c`.)
   - `DocumentMailingPanel/index.tsx:98` and `:122-123`: `accountCount === 1 ? 'account' : 'accounts'` and `days === 1 ? 'day' : 'days'`, written twice; the lib `plural(count, one, many)` (`src/lib/text.ts:3`) already does this.
@@ -2926,7 +2926,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-111: Unit compatibility rule stated in three places
 
 - **Severity:** medium
-- **Why it matters:** If the rule for which units convert changes, for example a new dimension, the three places can disagree. A practitioner could then see a recipe step accepted as measurable but fail to convert, or stock deducted for units that cannot be compared.
+- **Why it matters:** If the rule for which units convert changes, for example a new dimension, the three places that state it can disagree.
 - **Where:**
   - `src/modules/ingredients/units/convert.ts` (`unitConvert`); `src/modules/grimoire/validation/step-unit.ts` `measurable()`; `src/modules/grimoire/services/plan-deductions.ts:138-146`.
 - **Shared piece:** an exported `sameDimension(a, b)` / `isMeasurable(unit)` beside `dimensionOf` in `ingredients/schema/units.ts`, re-exported through the module index.
@@ -2940,7 +2940,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-112: Spell field list written five times
 
 - **Severity:** medium
-- **Why it matters:** Adding or renaming a spell field means editing five lists. If one is missed, the field saves from the form but is dropped on a copy or update, so a practitioner duplicating a spell silently loses that field.
+- **Why it matters:** Adding or renaming a spell field means editing five lists, and a missed one leaves the lists disagreeing.
 - **Where:**
   - `src/modules/grimoire/services/spells.ts:963-1000` (`spellColumns`), `~1159-1169` (`duplicateSpell`); `validation/spell.ts` `SpellFields`; `graphql/spell.ts` `SpellInput` and `UpdateSpellInput` (same ten fields: title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note, status, visibility, steps, categoryIds).
 - **Shared piece:** a `SPELL_FIELDS` key list in `validation/spell.ts` that `spellColumns` and `duplicateSpell` map over; a shared field-builder in `graphql/spell.ts` taking the description text.
@@ -2954,7 +2954,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-113: Public-reply test `eq(supportReplies.visibility, 'public')` written three times, each with a lint disable
 
 - **Severity:** medium
-- **Why it matters:** The public-reply filter is the guard for what a support sender may see. If one of three copies is changed or mistyped, a sender could be shown an internal staff note, or a reply could be missed from the notice, with the lint warning disabled each time.
+- **Why it matters:** The public-reply filter is written three times, each with the same comment lines and a lint disable, so a change to it has to be made in each.
 - Three copies, each carrying the same two comment lines and an `oxlint-disable-next-line`.
 - **Where:**
   - `support.ts:322-325` (`findPublicSupportReplies`), `support.ts:400-403` (`findReplyAwaitingNotice`), `support.ts:554-556` (`internalNotesScope`).
@@ -2969,7 +2969,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-114: The keepers and curator area layouts are the same file
 
 - **Severity:** medium
-- **Why it matters:** A change to the admin area header, navigation or modal scaffolding must be made in both layouts. A missed one leaves keepers and curators with different navigation or a broken route modal, and the curator type is already imported across them.
+- **Why it matters:** A change to the admin area header, navigation or modal scaffolding must be made in both layouts, which differ only in names, the nav list and the support count.
 - **Where:**
   - `src/app/(shell)/keepers/layout.tsx` and `src/app/(shell)/curator/layout.tsx` differ only in names, the nav list and the support count; their index `page.tsx` files have the same shape.
 - **Shared piece:** an `AdminAreaLayout({ guard, title, nav, children })` in `src/app/(shell)/` that both layouts call.
@@ -2987,7 +2987,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-115: `readBatches` and `readArrivals` wrap `cache()` around an object argument, which React's cache never matches, and each has one caller
 
 - **Severity:** medium
-- **Why it matters:** These two keepers' pages wrap a cache around a filter object, which never matches, so the cache does nothing while suggesting a read is shared. A developer trusts it to avoid repeat database reads, and the card list reloads every time.
+- **Why it matters:** These two keepers' pages wrap `cache()` around a filter object, which never matches, so the cache does nothing while suggesting a read is shared.
 - **Where:**
   - `keepers/(invitations)/invitation-cards/page.tsx:21-71` (`readBatches(session, filter: CardsFilter, after, before)`), `keepers/(invitations)/card-sign-ups/page.tsx:31-73` (`readArrivals(session, filter: ArrivalsFilter, ...)`). The curator pages say their `cache()` reads are "keyed by primitives rather than a filter object"; the help page does the same for `readAll` but not for `readSearch` (`keepers/help/page.tsx:74`, also an object key).
 - **Shared piece:** none needed. Either drop `cache()` (one caller each, verified by grep: no second caller of either function) or key by primitives as the curator pages do.
@@ -3001,7 +3001,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-116: Three cron route handlers are the same function
 
 - **Severity:** medium
-- **Why it matters:** A change to cron authorisation, such as a header check or response code, must be repeated in three routes. A missed route could run its daily job for an unauthorised caller or fail to respond correctly, so a scheduled cleanup or mailing silently fails.
+- **Why it matters:** A change to cron authorisation, such as a header check or response code, must be repeated in three routes that are the same function.
 - **Where:**
   - `src/app/api/cron/document-mailing/route.ts:1-14`
   - `src/app/api/cron/provisional-cleanup/route.ts:1-12`
@@ -3018,7 +3018,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-117: Account tab pages write the panel section markup seven times
 
 - **Severity:** medium
-- **Why it matters:** If the account panel heading, lede or anchor markup changes, seven sections must be edited. A missed one gives a signed-in user a tab page with a differently styled heading or a broken in-page link in the account navigation.
+- **Why it matters:** If the account panel heading, lede or anchor markup changes, seven sections must be edited.
 - **Where:**
   - `src/app/(shell)/account/(tabs)/page.tsx:52-95` (3 sections)
   - `src/app/(shell)/account/(tabs)/sign-in/page.tsx:59-130` (4 sections)
@@ -3035,7 +3035,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-118: Three "more" menus repeat the Asking state, trigger ref and alert logic
 
 - **Severity:** medium
-- **Why it matters:** If focus return or the failure alert changes in one menu, the others differ. A keyboard or screen-reader user finds that after closing a dialog from one more menu, focus is lost or an error is not announced, while another menu behaves correctly.
+- **Why it matters:** The Asking state, trigger ref and failure alert are copied across three more menus, so a change to focus return or the failure alert in one has to be made in the others.
 - **Where:**
   - `src/components/CovenCards/card-more.tsx:1-78`
   - `src/components/CompendiumCards/card-more.tsx:1-158`
@@ -3055,7 +3055,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-119: Navigate-to-landing-and-refresh after leaving or deleting a coven is written three times with the same comment
 
 - **Severity:** medium
-- **Why it matters:** The order of navigating then refreshing matters because a client-side replace does not re-run the layout. If one of three copies swaps it, a steward who leaves or deletes a coven sees a stale coven in the menu or a blank page.
+- **Why it matters:** Navigating then refreshing after leaving or deleting a coven is written three times with the same comment, because a client-side replace does not re-run the layout. The order has to stay the same in each copy.
 - **Where:**
   - `src/components/LeaveWorkspaceButton/index.tsx:42-48`, `src/components/LeaveWorkspaceButton/owner-exit.tsx:138-142`, `src/components/DeleteWorkspaceButton/index.tsx:43-49` (outside my folders). Each calls `navigate(COVEN_LANDING_PATH, { replace: true }); refresh();` with a comment explaining that a client-side replace does not re-run the layout.
 - **Shared piece:** `leaveCoven()` returned by `usePendingNavigation` or a small hook `useLeaveCoven()` in `src/lib/navigation/`, that does both calls and holds the one comment.
@@ -3069,7 +3069,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-120: Three "native control before hydration" fallbacks build the same grouped `<select>`
 
 - **Severity:** medium
-- **Why it matters:** A change to how a pre-hydration native select groups options or hides zero counts can reach only some of the copies. Users who load a filter before scripts run would see different groups or counts, and specs reading the option text may fail.
+- **Why it matters:** A change to how a pre-hydration native select groups options or hides zero counts has to be made in each of the copies.
 - **Where:**
   - `FacetCombobox/index.tsx` (native fallback: groups by `choice.group`, hides zero counts unless chosen, option text `label count`)
   - `FacetPanel/category-line.tsx` (`NativeCategories`: same grouping and zero-hiding, grouped by `category.group.name`)
@@ -3085,7 +3085,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-121: the sign-up form fill is written four times
 
 - **Severity:** medium
-- **Why it matters:** If the sign-up form labels or field order change, four test copies break separately, so a developer must fix each. A missed copy can keep passing against an old form shape and stop proving that visitors can actually sign up.
+- **Why it matters:** If the sign-up form labels or field order change, the four test copies break separately and each has to be fixed.
 - **Where:**
   - twice in `tests/components/SignInDialog/index.test.tsx`, once in `tests/components/InvitationAcceptance/index.test.tsx` (new in the merge), once in `tests/components/SignInPanel/in-dialog.test.tsx`.
 - **Shared piece:** `fillSignUp(user, {name, email, password})` in `tests/support/interact.tsx`.
@@ -3102,7 +3102,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 1: Compendium slug-move block written twice in `compendium.ts`**
 
-- **Why it matters:** A change to how a renamed compendium entry keeps its old address must be made twice. A missed copy leaves old links broken or lets a name collide, so a visitor following a saved compendium link gets a not-found page after a curator renames.
+- **Why it matters:** A change to how a renamed compendium entry keeps its old address must be made in both `updateCompendiumEntry` and `promoteCompendiumFolkName`.
 - **Where:**
   - `src/modules/ingredients/services/compendium.ts:192-216` (`updateCompendiumEntry`) and `:249-270` (`promoteCompendiumFolkName`): `const at = new Date(); const moves = slug !== current.slug; if (moves) await refuseEndingARedirect(...)`, then inside `withAudit` `deleteLapsedSlugRetirements`, update, `if (moves) insertInCompendium(retiredIngredientSlugs, { ingredientId, slug: current.slug, retiredAt: at })`, then `.catch(refuseCollision(...))` and `expireCompendium()`.
   - `src/modules/ingredients/services/compendium.ts` `updateCompendiumEntry` (about 1063-1082) and `promoteCompendiumFolkName` (about 1119-1136): `moves = slug !== current.slug`, `refuseEndingARedirect`, `deleteLapsedSlugRetirements`, `insertInCompendium(curator, retiredIngredientSlugs, {ingredientId, slug: current.slug, retiredAt})`. `createCompendiumEntry` repeats the lapsed-delete step. The `withAudit(...)` then `expireCompendium()` shape repeats in about six writes, and `...(input.shown != null && { shown })` repeats in create and update.
@@ -3113,7 +3113,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 2: Slug-move block copied across compendium writes**
 
-- **Why it matters:** The retire-old-address steps must run in a set order. A copy that changes or omits the order of the lapsed delete and insert fails or leaves duplicates, so a curator's rename or promotion errors, or old links stop redirecting for visitors.
+- **Why it matters:** The retire-old-address steps are copied across the compendium writes and must run in a set order, with the lapsed delete before the insert.
 - **Shared piece:** `retireSlug(write, curator, id, oldSlug, at)` in `compendium.ts` (private).
 - **Guard:** none practical.
 - **Fix:** extract; keep the order of statements (the lapsed delete must precede the insert).
@@ -3125,7 +3125,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-123: Same "cupboard insertion on first compendium jar" block in `createStock` and `saveStock`
 
 - **Severity:** medium
-- **Why it matters:** The comment in the second copy admits it was pasted. A fix to adding an entry to a coven's cupboard on its first jar, or to the duplicate-jar message, reaches only one path, so a practitioner sees a different error or a missing cupboard entry depending on how stock was saved.
+- **Why it matters:** The comment in the second copy admits it was pasted. A fix to adding an entry to a coven's cupboard on its first jar, or to the duplicate-jar message, reaches only one of `createStock` and `saveStock`.
 - **Where:**
   - `services/stock.ts:62-70` (`createStock`) and `services/stock.ts:164-172` (`saveStock`): `if (!entry) { if (!(await heldCompendiumEntry(...))) throw NotFound(NO_FORM) } else if (entry.workspaceId === null && !(await findCupboardEntry(...))) await write.insertInWorkspace(membership, workspaceCompendiumEntries, {ingredientId: entry.id})`. The unique-index `catch` that maps `inventory_items_workspace_id_variant_id_unique` to `HELD` is also written twice (one pathed `['variantId']`, one `['create', index, 'variantId']`).
 - **Shared piece:** private `ensureHeld(write, membership, entry, ingredientId)` in `stock.ts`, and `refuseHeld(error, path)`.
@@ -3139,7 +3139,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-124: Invitable roles listed in four places
 
 - **Severity:** medium
-- **Why it matters:** If a new invitable role is added or one removed, four lists must change together. A missed one means the form offers a role the database rejects, or the database accepts a role such as steward that invitations must never grant.
+- **Why it matters:** If a new invitable role is added or one removed, the four lists that name the invitable roles must change together.
 - **Where:**
   - src/modules/coven/services/invitations.ts `INVITABLE`; src/modules/coven/graphql/invitations.ts `builder.enumType('InvitableRole')`; src/modules/coven/schema/invitations.ts `invitations_role_invitable` CHECK; src/db/repository `InvitableRole` type.
 - **Shared piece:** one `INVITABLE_ROLES` tuple in a type-only/constants file in coven schema, used by the zod/enum/CHECK/type.
@@ -3153,7 +3153,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-125: CategoryChips/category-more re-implements the InfoTip hover, focus and Escape logic
 
 - **Severity:** medium
-- **Why it matters:** The hand-built toggletip has its own timers and Escape handling. A fix to the shared tip, such as focus or dismiss behaviour, misses the category menu, so a keyboard user can find a category tip that will not close or stays open.
+- **Why it matters:** The hand-built toggletip has its own timers and Escape handling, so a fix to the shared tip, such as focus or dismiss behaviour, does not reach the category menu.
 - **Where:**
   - `src/components/CategoryChips/category-more.tsx:1-169` (hand-rolled floating toggletip: open timers, Escape handling, floating-ui wiring)
   - `src/components/InfoTip/use-tip.ts:1-166` (`useTip`, the shared version)
@@ -3168,7 +3168,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-126: Two `workingStepsOf` and two `UNAVAILABLE_INGREDIENT` constants
 
 - **Severity:** medium
-- **Why it matters:** The card and the page already disagree on when a step counts as linked, and each holds the Unavailable Ingredient text. A practitioner recording a working may see different names, stock or one-off flags for the same spell depending on where they start.
+- **Why it matters:** The card and the page already disagree on when a step counts as linked, and each holds the Unavailable Ingredient text, so a change has to be made in both.
 - **Where:**
   - `src/components/SpellCard/record-working.tsx:42-53` and `src/app/(shell)/coven/[slug]/grimoire/[id]/recipe-steps.ts:8,73-95`. Both turn a spell's steps into `WorkingStep[]` for Record a Working and both hold the literal `'Unavailable Ingredient'`. They have already drifted: the card decides "linked" from `ingredient != null || variant != null` of a GraphQL query, the page from `ingredientId !== null` of a service view, and the page also carries `stock`.
 - **Shared piece:** put `UNAVAILABLE_INGREDIENT` in a type-free constants file inside `src/components/RecordWorking/` (e.g. `warnings.ts` already exists there) and import it in both. The two mappers read different inputs (query result vs service view) so they stay two functions, but should share the one rule for the name, form, seed and `oneOff`; a shared `workingStepOf({ id, name, form, linked, ingredientId })` in `RecordWorking/` covers it.
@@ -3186,7 +3186,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-127: The "stuck" choice chip (every option leaves the same results) is spelled out per facet
 
 - **Severity:** medium
-- **Why it matters:** A change to when the stuck-choice chip disables or what hint it shows must be made in four places. A missed facet leaves a chip clickable that changes nothing, or hides the reason, so a user filtering the grimoire or compendium is confused.
+- **Why it matters:** The 'stuck' choice chip logic is spelled out per facet, so a change to when it disables or what hint it shows must be made in each place.
 - **Where:**
   - `GrimoireList/filter.tsx` (visibility chip: `some(c => c.count === 0)` disables it, value `''`, `chipHint` "Every matching ... cannot narrow further")
   - `FacetPanel/index.tsx` (Toxic, Source and Reviewed chips, same logic)
@@ -3201,7 +3201,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-128: `FacetPanel/facet-switch.tsx` re-implements `Field/switch-field.tsx`
 
 - **Severity:** medium
-- **Why it matters:** A fix to the switch markup, keyboard handling or press feedback reaches only one of two copies. A keyboard or screen-reader user can find a facet switch that does not toggle on Enter or announce correctly, while the form switch works.
+- **Why it matters:** A fix to the switch markup, keyboard handling or press feedback reaches only one of the two copies.
 - **Where:**
   - `FacetPanel/facet-switch.tsx` (label with `pressFeedback`, `role="switch"` checkbox, Enter-key click handler, plus a count) and `Field/switch-field.tsx` (the same markup).
 - **Shared piece:** a presentational `SwitchControl` in `Field/` (markup only, no react-hook-form), used by `SwitchField` and `FacetSwitch` (which passes the count as a child).
@@ -3261,7 +3261,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-131: Reopen-on-sender-message update and reply insert written twice
 
 - **Severity:** medium
-- **Why it matters:** The reopen-on-sender-message update and the reply insert are written in two large copies. A fix to one, such as the status rule for a closed request, misses the other, so a support request reopens or stays closed depending on which path the message took.
+- **Why it matters:** The reopen-on-sender-message update and the reply insert are written in two large copies, so a fix to one, such as the status rule for a closed request, has to be made in the other.
   Severity: medium (two large copies)
   Copies:
 - `src/modules/support/services/lifecycle.ts:~100-125` (`sendSenderMessage`)
@@ -3279,7 +3279,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-132: Cleanup and retention page coordinators are near-copies
 
 - **Severity:** medium
-- **Why it matters:** A fix to paging, such as the stop test or cursor, must be made in the cleanup and retention jobs separately. A missed copy could skip or repeat a page, so provisional accounts or old support data are left behind or removed twice.
+- **Why it matters:** A fix to paging, such as the stop test or cursor, must be made in the cleanup and retention jobs separately.
   Severity: medium
   Copies:
 - `src/modules/identity/jobs/provisional-cleanup.ts` + `provisional-cleanup-pages.ts` (`CLEANUP_PAGE_SIZE = 500`) + `provisional-cleanup-batch(-steps).ts`
@@ -3297,7 +3297,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-133: Inline `new ValidationError([{ path, message }])` where `fieldRefusal(path, message)` exists
 
 - **Severity:** medium
-- **Why it matters:** Many services build `new ValidationError([{ path, message }])` inline although `fieldRefusal(path, message)` exists. A change to the refusal shape, such as a code or a translation key, misses the inline copies, and users see inconsistent form errors.
+- **Why it matters:** Many services build `new ValidationError([{ path, message }])` inline although `fieldRefusal(path, message)` exists, so a change to the refusal shape does not reach the inline copies.
   Severity: medium (many small copies)
   `fieldRefusal` is used 40 times. Inline forms remain here:
 - `src/modules/identity/services/email.ts:134-139,144-146`
@@ -3333,7 +3333,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-135: Vocabulary group list/count pairs drift between `findPage` and `findGroupPage`
 
 - **Severity:** medium
-- **Why it matters:** The group lists use two paging methods with different filters. A filter or sort change made to one set leaves the deity traditions paging or counting differently, so a curator sees a total that does not match the rows shown.
+- **Why it matters:** The group lists use two paging methods (`findPage` for categories and ingredient forms, `findGroupPage` for deity traditions), and the cached page and count pairs are declared separately, so a filter or sort change has to be made in each set.
 - **Where:**
   - `listCategoryGroups`/`countCategoryGroups` and `listIngredientFormGroups`/`countIngredientFormGroups` use `findPage(table,[table.name],page)` + `findPageCount`; `listDeityTraditions`/`countDeityTraditions` use `findGroupPage`/`findGroupCount(table, filter, page)`. Cached `x-page`/`x-count` `cachedCompendiumRead` pairs are also declared separately in astrology.ts, categories.ts, deities.ts, ingredient-form-values.ts.
 - **Shared piece:** extend `cachedFilteredList` in curated-lists.ts to return the page and count pair and use it for all.
@@ -3347,7 +3347,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-136: Page and count twin finders repeat their filter in every repository file
 
 - **Severity:** medium
-- **Why it matters:** Each finder writes its filter twice. If a developer changes the list filter but not its count twin, a page shows a total that disagrees with the rows, or paging stops early, so a user cannot reach every item.
+- **Why it matters:** Each finder writes its filter twice, once for the page and once for the count, so a change to one can miss its twin.
 - **Where:**
   - `findX` / `findXCount` pairs in src/db/repository/{vocabularies,help,documents,memberships,users,cupboard-entries,stock,references,workings,spells,grimoire,ingredients,support,invitations}.ts. Each writes the filter twice; a change to one can miss its twin.
 - **Shared piece:** a per-finder `const filterFor = (args) => and(...)` used by both, which several files already do through `readPage`/`readCount`; the rest should follow.
@@ -3361,7 +3361,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-137: Support-request status marks written as seven separate `IconTip` plus button blocks
 
 - **Severity:** medium
-- **Why it matters:** Eight near-identical blocks are changed by hand. A new status or changed filter link can be missed in one, so a keeper reviewing support requests sees a status mark with the wrong tip, name or link, or no mark at all.
+- **Why it matters:** Eight near-identical blocks are changed by hand, and they differ only in the tip, accessible name, icon and filter link, so a new status or changed filter link has to be added to each.
 - **Where:**
   - `SupportRequests/index.tsx:125-199` (seven blocks) and `:217-225` (Beta Tester block).
 - **Shared piece:** a local `StatusMark({ tip, name, icon, href })` in `SupportRequests/status-badge.tsx` (already holds status marks) taking the tip, accessible name, icon and filter link. The blocks differ only in those four values.
@@ -3389,7 +3389,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-139: Combobox repeats option-row, group-heading and indicator markup
 
 - **Severity:** medium
-- **Why it matters:** A fix to the combobox option row, group heading or clear button must be made in several files. A missed one leaves keyboard or screen-reader users with different behaviour in the single select, multi select and base combobox, such as a click that wrongly closes the list.
+- **Why it matters:** A fix to the combobox option row, group heading or clear button must be made in several files, because the single select, multi select and base combobox each carry their own copy of that markup.
 - **Where:**
   - option row (icon, label, count, note): Combobox/index.tsx:362-387, multi-select.tsx:235-250, select.tsx:344-352. Group heading (`li.combobox__group` > `div role=group` > heading + `ul.combobox__rows`): index.tsx:554-567, select.tsx:438-450. Indicators (clear button, separator, chevron): index.tsx:490-524, multi-select.tsx:184-207. `preventDownshiftDefault` cast: index.tsx:296-298, select.tsx:380-383.
 - **Shared piece:** `OptionRow`, `OptionGroup` and `Indicators` components and a `preventDownshiftDefault` helper, in `Combobox/popup.tsx` or new files beside it.
@@ -3403,7 +3403,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-140: floating-ui `autoUpdate` wired by hand in four effects
 
 - **Severity:** medium
-- **Why it matters:** A fix to how a floating popup follows its anchor, such as cleanup on unmount, must be made in four places. A missed copy leaves a tip, menu or feedback bubble stuck in the wrong position or leaking listeners as a user scrolls.
+- **Why it matters:** A fix to how a floating popup follows its anchor, such as cleanup on unmount, must be made in four places, because each wires `autoUpdate` by hand.
 - **Where:**
   - Combobox/position.ts:144-148; InfoTip/use-tip.ts:105; CategoryChips/category-more.tsx:58; ClickFeedback/position.ts:90-100
 - **Shared piece:** `useAutoPosition(reference, floating, place)` in `src/lib`.
@@ -3417,7 +3417,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-141: Unverified-email sentence exists in five places
 
 - **Severity:** medium
-- **Why it matters:** If the unverified-email sentence changes, five places must be edited. A missed one shows a user a different message in sign-in, invitation acceptance or the email form, and the service refusal can disagree with what the screen told them.
+- **Why it matters:** If the unverified-email sentence changes, five places must be edited: two components, the email form, `sign-in.ts` and the invitation-acceptance service.
 - **Where:**
   - src/components/SignInDialog/index.tsx (`INBOX_LEDE`), src/components/InvitationAcceptance/index.tsx (`UNVERIFIED_GRANT`), src/components/EmailForm/index.tsx:44, src/lib/sign-in.ts:119, src/modules/identity/services/invitation-acceptance.ts:50
 - **Shared piece:** one exported constant in `src/lib/sign-in.ts` (client-safe) that the two components and the service import.
@@ -3431,7 +3431,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-142: Invitation-path regex written three times
 
 - **Severity:** medium
-- **Why it matters:** A change to the invitation link format must be made in three regexes. A missed copy rejects a valid link or accepts a malformed one, so an invited person lands on the wrong sign-in path and may fail to accept the invitation.
+- **Why it matters:** A change to the invitation link format must be made in each of the three places that spell out the path pattern, which already differ in whether they capture the token.
 - **Where:**
   - src/app/sign-in/page.tsx (`INVITE_LINK = /^\/invite\/([^/?#]+)$/`), src/lib/account-email.ts (`INVITATION_PATH = /^\/invite\/[^/?#]+$/`), src/lib/invitation-link.ts (new helper owning the invitation link marker)
 - **Shared piece:** an `invitationTokenFromPath(path)` in `src/lib/invitation-link.ts` returning the token or null.
@@ -3521,7 +3521,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 2: `StockDialogForm` exported both named and default**
 
-- **Why it matters:** The unused named export beside the default makes a developer think two entry points are in use, so they may import the wrong one. It also adds noise that hides real unused exports in the knip report.
+- **Why it matters:** `StockDialogForm` is exported both named and default, but only the default is imported (by the lazy loader), so the named export suggests a second entry point that does not exist.
 - **Verdict:** confirmed. Only `src/components/StockDialog/lazy-form.tsx:11,15` uses it, through `import('./form')` and `module.default`. The named export has no importer anywhere (src, tests, stories).
 - **Guard:** knip "Duplicate exports".
 - **Fix:** remove `export` from line 175 and keep the default (the lazy loader needs the default).
@@ -3553,7 +3553,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 6: `AudienceBadge` and `STATUS_LABELS` exported without a second user**
 
-- **Why it matters:** Exporting two names used only in their own files suggests other code depends on them, and one shares a name with a different map elsewhere, so a developer may import the wrong STATUS_LABELS and show the wrong status text.
+- **Why it matters:** Exporting two names used only in their own files suggests other code depends on them, and `STATUS_LABELS` shares its name with a different map in `SupportRequests/filter.tsx`.
 - **Shared piece:** none; drop `export`.
 - **Guard:** knip `exports` rule.
 - **Fix:** remove `export` from both.
@@ -3561,7 +3561,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 7: Unused exports in `src/lib/utc.ts`**
 
-- **Why it matters:** These UTC helpers are only exercised by their own tests, so the tests keep dead code looking alive and misleading readers into thinking the app formats times this way. A developer may fix a bug in code no user ever runs.
+- **Why it matters:** `minuteInUtc` and `longMinuteInUtc` have no caller in `src/`, only `tests/lib/utc.test.ts`, so the tests keep unused code in the source.
 - **Shared piece:** none; remove them, or keep them if the owner wants the UTC pair beside the zone pair.
 - **Guard:** the knip setup already covers unused exports.
 - **Fix:** delete both and their tests. Could break: nothing in `src/`.
@@ -3584,7 +3584,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 1: Pass-through wrappers and re-exports**
 
-- **Why it matters:** Pass-through wrappers add a layer a developer must read through to find the real component, and the duplicated prop type can drift from the target. The hand-rolled dialog lifecycle may differ from Modal, so focus return or page lock can behave differently.
+- **Why it matters:** Pass-through wrappers add a layer a developer must read through to find the real component, and the duplicated prop type can drift from the target. Whether `ConfirmDialog`'s hand-rolled dialog lifecycle matches `Modal` is not verified.
 - **Where:**
   - ConfirmedAction/index.tsx:187-214 (`Answers` wrapper renames props to `ConfirmAnswersRow`) with ConfirmedAction/types.ts:66-79 (`ConfirmAnswersProps` duplicates the target's prop type); AppShell/add-href.ts (re-exports `lib/coven-path` constants); ConfirmDialog/index.tsx:56-79 (hand-rolled showModal, `holdPage`, `giveFocusBack` effect; compare with Modal/modal.ts)
   - `CovenNav/sections.ts`: `covenSections` is a pass-through to `sectionsOf`; call `sectionsOf` directly.
@@ -3604,7 +3604,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 2: Small dead and redundant code**
 
-- **Why it matters:** Pass-through helpers and repeated casts make a developer read extra code to find what runs. The duplicate close and settle functions can drift, so one menu may handle focus or state differently, and two plural helpers can disagree on wording.
+- **Why it matters:** Pass-through helpers and repeated casts make a developer read extra code to find what runs. `close` repeats `settle` in the same file, and `Field/character-count.tsx` keeps a `plural` helper beside `src/lib/text.ts` `plural`.
 - **Shared piece:** none; local clean-ups.
 - **Guard:** knip catches an unused export; none for the rest.
 - **Fix:** each is a one-line or small change.
@@ -3612,7 +3612,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 3: Dead and trivial aliases**
 
-- **Why it matters:** Unused aliases and repeated field lists mislead a developer into thinking separate types exist, and adding a spell list field means editing the same names in several places. A missed one makes a field type-check yet be skipped during validation.
+- **Why it matters:** Unused aliases and repeated field lists mislead a developer into thinking separate types exist, and adding a spell list field means editing the same names in several places.
 - **Shared piece:** use `SpellStepInput` directly; derive `Parsed` from `Lists`.
 - **Guard:** knip covers the unused alias.
 - **Fix:** remove alias; derive types.
@@ -3620,7 +3620,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 4: Dead code and misplacement seen in the area**
 
-- **Why it matters:** The unused notifier parameter makes a developer think a pause notice is sent when it is not. Two import paths and two sentence builders for time-out refusals mean the sender's message can differ in wording between reply and request refusals.
+- **Why it matters:** The unused notifier parameter makes a developer think a pause notice is sent when it is not. The two import paths and the two separate until-X sentence builders mean a change has to be made in more than one place.
   Severity: low
 - `src/modules/support/services/view-link.ts`: `NO_SUCH_REQUEST` is declared after its first use.
 - `src/modules/support/services/timeouts.ts` `timeOutSignedOutSender` takes an unused `_notifier` parameter; the GraphQL resolver passes `context.pauses` only to fill it.
@@ -3652,7 +3652,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-147: Coven role labels live in a keeper-only folder; site and coven role helpers are split across two folders
 
 - **Severity:** low
-- **Why it matters:** Coven role names live in a keeper-only folder, so a developer looking for how Steward, Practitioner and Observer are shown searches the wrong place and may add a second label list. The two copies could then show a practitioner different role names.
+- **Why it matters:** Coven role names live in a keeper-only folder, so a developer looking for how Steward, Practitioner and Observer are shown searches the wrong place and may add a second label list.
 - **Where:**
   - `src/components/UserDetail/roles.ts` (coven role labels, `WORKSPACE_ROLE_LABELS`, `workspaceRoleLabel`) is imported by `MemberList/index.tsx:5`, `MemberList/role-control.tsx:9`, `MemberDetail/index.tsx:4`, `LeaveWorkspaceButton/owner-exit.tsx:16`, `ReceivedInvitations/index.tsx:6`, `PendingInvitations/index.tsx:6`, `InviteDialog/index.tsx:14`, `HelpWidget/role-permission-table.tsx:3`.
   - `src/components/UserList/roles.ts` (site role labels, `ROLES`, `ROLE_LABELS`, `SITE_ROLE_ACCESS`, `roleLabel`) is imported by `AdminInvitations/invite-form.tsx:11`, `UserDetail/index.tsx:8`, `RoleTip/index.stories.tsx:3`, `app/(shell)/keepers/(people)/users/page.tsx:6`.
@@ -3683,7 +3683,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-149: Case-folded equality and the trim-lowercase fold typed inline
 
 - **Severity:** low
-- **Why it matters:** Case-insensitive matching is typed in SQL and in JavaScript in eight places, and the two must agree. If one fold changes, an email or name may match in the database but not in code, so a user is told an address is new, or a duplicate is allowed.
+- **Why it matters:** Case-insensitive matching is typed in SQL and in JavaScript in eight places, and the two folds must stay equal, so a change to one has to be made in the others.
 - **Where:**
   - SQL `lower(col) = lower(x)` in `src/db/repository/cupboard-entries.ts:125,126,145,164`, `invitations.ts:102,690`, `memberships.ts:137`; the JS fold `trim().toLowerCase()` in `src/modules/vocabulary/services/curated-values.ts:14` (`foldVocabularyValue`), `ingredients/services/ingredient-rows.ts:770`, `help/services/help-rename.ts:28`, `src/db/repository/grimoire.ts:131`.
 - **Shared piece:** a `caseFoldedEq(col, value)` predicate in `predicates.ts` (the raw `sql` is allowed for functions) and a single `foldText` in `src/lib/`.
@@ -3697,7 +3697,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-150: The `zodResolver` type cast is written six ways
 
 - **Severity:** low
-- **Why it matters:** The same resolver cast is written six ways, some using as never, which hides real type errors in forms. A developer changing a form schema can get a form that compiles but submits the wrong shape, so a user sees a failed save.
+- **Why it matters:** The same resolver cast is written six ways, some using `as never`, which switches off type checking on the form schema and values.
 - **Where:**
   - `SpellBuilder/index.tsx:142` (`as unknown as Resolver<...>`), `GroupedValueForm/index.tsx:190` and `GroupForm/index.tsx:146` (`as unknown as Resolver<X>`), `BusinessCards/index.tsx:31` (`as Resolver<X>`), `HelpArticleForm/form.tsx:144` (`as never`), `{ raw: true }` in `IngredientForm/reference-panel.tsx:339` and `IngredientForm/values.ts:635`.
 - **Shared piece:** `typedResolver(schema)` in `src/lib/`. Folds into D-29 if that hook lands.
@@ -3718,7 +3718,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 1: Support sender tier and dialog kind lists typed inline in GraphQL**
 
-- **Why it matters:** If a support sender tier or dialog kind is added, several lists must change. A missed one makes the GraphQL enum, the repository switch and the keepers' page disagree, so a keeper sees a sender in the wrong tier or an unknown value.
+- **Why it matters:** If a support sender tier or dialog kind is added, the GraphQL enum, the repository comparison and the keepers' page reads each have to be changed, because each spells the values out.
 - **Where:**
   - `src/modules/support/graphql/support.ts:67-70` (`['beta_tester','standard']`), `src/modules/support/graphql/support.ts:240-243` (dialog kinds). The tier is also compared as a string in `src/db/repository/support.ts:160` and `src/app/(shell)/keepers/support/reads.ts:126,165`.
 - **Shared piece:** a `SUPPORT_SENDER_TIERS` constant and its type in the support module's type-only file, used by the repository switch, the GraphQL enum and the page reads.
@@ -3728,7 +3728,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 2: Hand-typed enum and topic lists beside their source types**
 
-- **Why it matters:** Hand-typed lists beside their source types can fall out of step when a value is added. The GraphQL enum then rejects or omits a valid tier, card state or topic, and a signed-out sender sees a topic list that differs from what the server accepts.
+- **Why it matters:** Hand-typed lists beside their source types can fall out of step when a value is added, so each GraphQL enum, tier list and signed-out topic list has to be updated with its source.
   Severity: low
   Copies:
 - `src/modules/support/graphql/support.ts:69` (`['beta_tester','standard']`) against `SupportSenderTier` at `support/services/lifecycle.ts:153`
@@ -3747,7 +3747,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-152: Published document literal built twice; draft-not-found sequence repeated
 
 - **Severity:** low
-- **Why it matters:** The published-document shape and the draft-not-found check are written several times. A change to one copy gives a visitor a document missing a field or a keeper a different error message for the same missing draft, depending on which action they used.
+- **Why it matters:** The published-document shape and the draft-not-found check are written several times (`'Draft not found'` five times, `'Document not found'` four times), so a change has to be made in each copy.
 - **Where:**
   - `src/modules/documents/services/documents.ts` (~897-927) `currentDocument` and `numberedDocument`; `services/editing.ts` `saveDocumentDraft`, `publishDocumentDraft`, `discardDocumentDraft` (find draft, `NotFound('Draft not found')`, write, `if (!x) throw NotFound('Draft not found')`); `'Draft not found'` 5 times and `'Document not found'` 4 times in the module; `const expire = expireDocuments;` alias in `editing.ts`.
 - **Shared piece:** `toPublishedDocument(document, version)`; `NO_DRAFT` / `NO_DOCUMENT` constants; delete the alias.
@@ -3761,7 +3761,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-153: Help module small repeats
 
 - **Severity:** low
-- **Why it matters:** The help article spread, the shared limit and the permission check are small repeats. If the limit changes in only one of the two files, search or path results cut off at different points, so a user finds some articles that another view hides.
+- **Why it matters:** The help article spread, the shared limit and the permission check are small repeats. `PATHS_LIMIT` in help-reads.ts and `TERMS_LIMIT` in marks.ts hold the same value in two files, so a change to one has to be made in the other.
 - **Where:**
   - `withChildren` and `readKeeperHelpArticle` in help-reads.ts both do `const [article, ...answered] = await toHelpArticles([row, ...children], reach); return { ...article, children: answered }`; `PATHS_LIMIT = 2001` in help-reads.ts equals `TERMS_LIMIT = 2001` in marks.ts; `reachOf` in reach.ts uses try/catch around `assertSiteAdmin` and `assertCurator`; help-rename.ts has a local regex `escape`; the `@throws` block of `createHelpArticle` sits above `parseSaying` in help-writes.ts (misplaced).
 - **Shared piece:** a `withAnsweredChildren` helper; one shared limit constant; check `src/lib` for an `escapeRegExp` before keeping the local one.
@@ -3775,7 +3775,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-154: "Until X" / "with no end date" wording built in five places
 
 - **Severity:** low
-- **Why it matters:** A change to the pause-end wording must be made in five components. A missed one tells a keeper or sender 'until' a date in one screen and 'with no end date' in another for the same pause, confusing who can write when.
+- **Why it matters:** A change to the pause-end wording ('until <date>' or 'with no end date') must be made in five components.
 - **Where:**
   - `UserList/until-mark.tsx:15-21`
   - `UserDetail/access-pause-parts.tsx:50-60` (`Until`)
@@ -3793,7 +3793,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-155: "Back to" link markup: `HelpBackLink` repeats `IngredientEntry/back-link.tsx`'s render and the skeleton rebuilds it
 
 - **Severity:** low
-- **Why it matters:** Importing the back chevron across four folders from the ingredient screen means moving or restyling it there breaks help and sign-in screens. A fix to the back link markup reaches only one copy, so help and ingredient pages look or behave differently.
+- **Why it matters:** Four other folders import the back chevron from the ingredient screen's folder, so moving or restyling it there affects them. A fix to the back link markup has to be made in both `HelpBackLink` and `IngredientEntry/back-link.tsx`.
 - **Where:**
   - `src/components/HelpArticleView/back-link.tsx:8-26`, `src/components/IngredientEntry/back-link.tsx:84-96`; `BackChevron` is imported across folders from `IngredientEntry/back-chevron.tsx` by `HelpArticleView`, `HelpIndex`, `HelpArticleForm/skeleton.tsx` and `SignInPanel/password-form.tsx`.
 - **Shared piece:** move `back-chevron.tsx` and `back-link.scss` to a neutral folder (`src/components/BackLink/`) and have `HelpBackLink` be a thin server wrapper over it. The client `BackLink` with history reading stays.
@@ -3810,7 +3810,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 1: Stand-in user id list and direct `applyAudit(...) as never` inserts**
 
-- **Why it matters:** If the stand-in user list changes in one repository file but not others, system users show up in some lists or counts but not others. Direct audit inserts skip the writer, so a row can be saved without correct audit ids.
+- **Why it matters:** The stand-in user id list is repeated in the repository files that exclude system users, so a change has to be made in each. Direct audit inserts bypass the writer's `insert` and `insertInWorkspace`.
 - **Where:**
   - stand-in user id list repeated in the repository files that exclude system users; `tx.insert(applyAudit(...) as never)` written directly instead of through the writer in several repository files (see D-182).
   - `invitations.ts:595-611` (card batch insert, `as never` twice), `invitations.ts:624-644` (`recordCardAttempt`, `as never` twice), `workings.ts:196-206` (participant rows, `as never` once in a loop). All of them bypass `insert`/`insertInWorkspace` from the writer.
@@ -3821,7 +3821,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 
 **Part 2: `applyAudit(...) as never` written directly in four insert paths**
 
-- **Why it matters:** Each raw insert applies the audit stamp and a type cast by hand, so a developer who changes how audit columns are set will miss these paths and leave card batches, card attempts and working participants without correct created-by or updated-by values.
+- **Why it matters:** Each raw insert applies the audit stamp and a type cast by hand, so a change to how audit columns are set has to be made separately in the card batch, card attempt and working participant inserts.
 - Extra copies of D-156.
 - **Shared piece:** the writer already has `insert(table, values)`. The raw form exists because card batch and attempt need `returning()` with a multi-row `.values(...)` or an `onConflictDoUpdate`. Two small helpers in `write.ts`: `insertMany(table, rows)` and `upsert(table, row, conflict)`, each doing the `applyAudit` and the cast once. `workings.ts` can use `insertMany`.
 - **Guard:** a grep test for `applyAudit(` outside `write.ts` and a short allowlist, as D-156 proposes.
@@ -3849,7 +3849,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-158: Unique-index names and their race handling repeated as string literals
 
 - **Severity:** low
-- **Why it matters:** If someone mistypes or renames a unique-index name in one literal, a double-submit race falls through as a raw database error shown to the user instead of the friendly refusal, and no test fails to warn the developer.
+- **Why it matters:** Unique-index names are typed as string literals in several services, away from the schema that declares them, so a rename of an index has to be followed in each literal.
 - **Where:**
   - `'ingredient_variants_form_unique'` in `src/modules/ingredients/services/ingredient-rows.ts:805` and `src/modules/vocabulary/services/ingredient-form-values.ts:164` (the schema declares it at `ingredients/schema/ingredient-variants.ts:42`); `'inventory_items_workspace_id_variant_id_unique'` in `ingredients/services/stock.ts:78,216` with the same `HELD` refusal, differing only in the error path; `'workspaces_slug_unique'` and `'workspace_slugs_slug_unique'` (D-33).
 - **Shared piece:** export the index names from the schema files and compare against the constants; a `refuseHeldVariant(path)` helper in `stock.ts` for the two copies.
@@ -3863,7 +3863,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-159: User search: name-or-email test, and the three-way system-user exclusion
 
 - **Severity:** low
-- **Why it matters:** If a fourth stand-in user is added to the system-actor file but only one of the two lists is updated, that fake account shows up in the keeper user search or in document mailing, where a keeper could see or email it as a real person.
+- **Why it matters:** The three stand-in user ids are listed twice, as three `ne`s in `users.ts` and as an array in `documents.ts`, so a fourth id has to be added to both.
 - **Where:**
   - Stand-in user ids: `users.ts:43-49` (`listedUsers`, three `ne`s) and `documents.ts:224` (`STAND_INS`, the same three ids as an array). This is an extra copy of D-156's "stand-in user id list".
   - `support.ts:129`, `311`, `510`, `810` and `users.ts:47` each test one of the three ids (only `SYSTEM_ACTOR_ID`) in their own way.
@@ -3892,7 +3892,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-161: `TABLET_BAND` and its `useSyncExternalStore` subscription written in both PageNav and SectionNav
 
 - **Severity:** low
-- **Why it matters:** If the phone width changes, a developer must find and edit the same media-query code in several components; a missed one makes the page nav and section nav switch layout at different widths, so a tablet user sees mismatched menus.
+- **Why it matters:** The tablet width query, its subscription and its server snapshot are written identically in `PageNav` and `SectionNav`, and similar `matchMedia` reads sit in two more components, so a change has to be made in each.
 - **Where:**
   - `src/components/PageNav/index.tsx:28-39` and `src/components/SectionNav/section-links.tsx:29-40`: identical `TABLET_BAND`, `subscribeToBand`, `inTabletBand`, `inTabletBandNever`. `src/components/DateRangeField/index.tsx:41` and `src/components/FacetPanel/shell.tsx:157` do the same `matchMedia` read for other widths.
 - **Shared piece:** `useMediaQuery(query)` (via `useSyncExternalStore`, server snapshot false) in `src/lib/use-media-query.ts`; the `40.01rem` width stays tied to `$shell-phone-width` in a single constant.
@@ -3910,7 +3910,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 ### D-162: "Deleted account" and "Signed-out sender" literals repeated across the support screens
 
 - **Severity:** low
-- **Why it matters:** If the wording of Deleted account or Signed-out sender is changed in one place, keepers see different labels for the same sender on the list, the detail view and the privilege ledger.
+- **Why it matters:** The 'Deleted account' and 'Signed-out sender' literals are typed in the support list, the detail view, the sender name and the privilege ledger, so a wording change has to be made in each.
 - **Where:**
   - `src/components/SupportRequests/index.tsx:77`, `SupportRequests/sender-name.tsx:28-29`, `SupportRequests/detail.tsx:84,121-122,132`, `src/components/PrivilegeLedger/index.tsx:42`.
 - **Shared piece:** two constants (`DELETED_ACCOUNT`, `SIGNED_OUT_SENDER`) and a `senderLabel(request)` in `src/components/SupportRequests/` (a type-free `labels.ts`); `PrivilegeLedger` can import `DELETED_ACCOUNT`.
@@ -3928,7 +3928,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-163: `pageshow` "restored from the back-forward cache" effect written three times
 
 - **Severity:** low
-- **Why it matters:** A fix to the back-forward cache handling, such as a sign-in form left stuck after the browser Back button, must be repeated in three components; a missed one leaves a user with a frozen or stale panel when they press Back.
+- **Why it matters:** A fix to the back-forward cache handling must be repeated in three components, which each carry the same `pageshow` listener, and the same listener also lives in `src/lib/navigation/store.ts`.
 - **Where:**
   - `src/components/SignInPanel/index.tsx:87-93`, `src/components/SignInMethods/index.tsx:53-59`, `src/components/ListFrame/index.tsx:67-73`. The same listener also lives in `src/lib/navigation/store.ts:25-35`.
 - **Shared piece:** `useRestoredFromCache(onRestore: () => void)` in `src/lib/` (next to `src/lib/navigation/`), wrapping the `event.persisted` check, add and remove.
@@ -3942,7 +3942,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-164: Calendar-day regex `/^\d{4}-\d{2}-\d{2}$/` written three times
 
 - **Severity:** low
-- **Why it matters:** If the date format check is tightened or loosened in one place, the record-working form, card filters and invitation-card validation accept different dates, so a keeper could enter a day one screen allows and another rejects.
+- **Why it matters:** The calendar-day regex is written three times, plus once with capture groups in `DateField/calendar.tsx`, so tightening or loosening the check has to be made in each.
 - **Where:**
   - `src/components/RecordWorking/form.tsx:91`, `src/components/AdminCards/filter-params.ts:8`, `src/modules/identity/services/invitation-cards.ts:42`. `src/components/DateField/calendar.tsx:12` is the same pattern with capture groups.
 - **Shared piece:** one `DAY_PATTERN` / `isCalendarDay()` in `src/lib/` (a date helper if one exists; the DateField calendar's parser could export it). `src/modules/**` may import from `src/lib/`.
@@ -3972,7 +3972,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-166: three guards each carry their own recursive file walker beside the shared `inject('repoFiles')` listing
 
 - **Severity:** low
-- **Why it matters:** These three guards walk the file tree themselves, so if the shared repo listing changes which folders it covers, they keep checking a different set of files and a real violation in a skipped folder passes unnoticed.
+- **Why it matters:** These three guards walk the file tree themselves, while 20 other guards read the shared `inject('repoFiles')` listing, so the file set they check is decided in three more places.
 - **Where:**
   - `tests/guards/workflow-run-interpolation.test.ts:15-21` (`yamlFiles`, recursive `readdirSync`), `tests/guards/skeletons.test.ts:37-42` (`pages()`, recursive `readdirSync`), `tests/guards/soft-delete-finder-guard.test.ts:36` (`readdirSync` of the repository directory). 20 of the guards that read files already use `inject('repoFiles')`.
 - **Shared piece:** `inject('repoFiles')` (check that its listing includes `.github/` and `src/app`; if `.github/` is excluded, add it in the global setup rather than walking).
@@ -3986,7 +3986,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-167: Distinct linked ingredient ids derived twice
 
 - **Severity:** low
-- **Why it matters:** If the rule for which ingredients a spell links to changes in one file, the spell read and the step view disagree, so a user could see an ingredient in the recipe that is missing from the step list, or the reverse.
+- **Why it matters:** The distinct linked ingredient ids are derived in `spell-reads.ts` and `step-views.ts`, with a similar derivation in `workings.ts`, so a change to the rule has to be made in each.
 - **Where:**
   - `src/modules/grimoire/services/spell-reads.ts` (~819-821); `step-views.ts` (~1217-1219); similar variant-id derivation in `workings.ts` `planFor`.
 - **Shared piece:** `linkedIngredientIds(steps)` in `services/` of grimoire.
@@ -4037,7 +4037,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-170: The mail glue repeats `${origin}/<path>` three times in one file
 
 - **Severity:** low
-- **Why it matters:** If a public page path changes, such as the support or sign-in route, a developer must edit each mail builder; a missed one sends users an email with a link that leads to a missing page.
+- **Why it matters:** The `${origin}/<path>` link is built separately in `pause-job-mail.ts` (three times) and in the account-notice and invitation-link mail files, so a changed path has to be edited in each.
 - **Where:**
   - `src/lib/pause-job-mail.ts:15,24,33` each build `` `${origin}/support` ``; `src/lib/account-notice-mail.ts` and `invitation-link-mail.ts` build `${origin}/sign-in`, `${origin}/forgot-password` and `${origin}/invite/<token>` the same way.
 - **Shared piece:** a local `const SUPPORT_URL = (origin) => ...` in `pause-job-mail.ts`, or reuse `SUPPORT_LIST_PATH`/`support-path.ts`.
@@ -4051,7 +4051,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-171: Help back-bar markup is written in both help form pages, and the edit page repeats the not-found catch
 
 - **Severity:** low
-- **Why it matters:** If the Help back bar or the not-found handling changes in one form page, the new and edit pages differ, so a keeper could get a working back link on one and a raw error instead of a not-found page on the other.
+- **Why it matters:** The Help back bar markup is written in both form pages, and the not-found catch is hand-written in the edit page and repeated in two more files, so a change has to be made in each.
 - **Where:**
   - `keepers/help/new/page.tsx:26-29` and `keepers/help/[id]/page.tsx:47-50` (`<main className="help-article-page"><div className="back-bar help-article-form__bar"><BackLink href label="Help" /></div>`); `keepers/help/[id]/page.tsx:15-22` hand-writes `catch (error) { if (error instanceof NotFound) notFound(); throw error; }`.
 - **Shared piece:** a `HelpArticlePage` wrapper in `src/components/HelpArticleForm/` taking `returnHref` and children; for the catch, `readOrMissing` from `curator/list-page.tsx` (extra copy of D-16; the same catch is also at `keepers/documents/[key]/page.tsx:16-19` and `keepers/support/reads.ts:144-150`).
@@ -4065,7 +4065,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-172: `readLedgerPage` and `cursorOf` are one-caller wrappers
 
 - **Severity:** low
-- **Why it matters:** The one-caller wrappers and a filter object written out three times make the users page harder to read, and a developer adding a filter must update every copy, or one view of the list ignores it.
+- **Why it matters:** The one-caller wrappers and a filter object written out three times in `users/page.tsx` make the page harder to read, and a developer adding a filter must update every copy.
 - **Where:**
   - `keepers/(people)/privilege-changes/page.tsx:30-41` (`readLedgerPage`, one caller); `keepers/(people)/users/page.tsx:87-90` (`cursorOf`, see D-78); the filter object `{ query, awaitingApproval, role, timedOut, paused }` is written out at `users/page.tsx:57,129,139`.
 - **Shared piece:** inline `readLedgerPage`; build `filter` once in `users/page.tsx` and pass it.
@@ -4093,7 +4093,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 ### D-174: Icon-only button boilerplate and SVG wrappers
 
 - **Severity:** low
-- **Why it matters:** Each icon and icon-button repeats the same accessibility attributes, so if one is wrong or changed, a screen-reader user hears a different or missing label on some icons, and a developer must edit each one.
+- **Why it matters:** Each icon and icon-button repeats the same accessibility attributes and stroked-SVG wrapper, so a change to them has to be made in each copy.
 - **Where:**
   - `icon-tip__edit--plain` button markup in `SpellPreview/index.tsx` and `SpellRecipe/print-button.tsx`
   - `<svg viewBox aria-hidden focusable="false">` with a stroked path in `UserList/icons.tsx:7-35`, `SpellWorkings/supply-icon`, `SourcingScore` `Glyph`, `StockBadge` `StockIcon`
@@ -4112,7 +4112,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-175: document-order assertions via compareDocumentPosition repeated in new tests
 
 - **Severity:** low
-- **Why it matters:** The same document-order check is written inline in many tests, so if its bit logic is wrong in one, that test can pass when elements are in the wrong order, and a developer has to fix every copy.
+- **Why it matters:** The same `compareDocumentPosition` document-order check is written inline in many tests, so a change to it has to be made in each.
 - **Where:**
   - `compareDocumentPosition(...) & Node.DOCUMENT_POSITION_FOLLOWING` in the new SignInPanel tests; also in `tests/app/(shell)/coven-paused/page.test.tsx`, `tests/components/SafetyNote/index.test.tsx`, `tests/components/SupportSenderRequest/index.test.tsx` and other older tests.
 - **Shared piece:** `expectBefore(a, b)` in `tests/support/interact.tsx`.
@@ -4152,7 +4152,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-177: Button reset re-implemented
 
 - **Severity:** low
-- **Why it matters:** The sign-in panel writes its own button reset, so if the shared button reset changes, such as its focus style or colour inheritance, this one button looks or behaves differently from every other reset button.
+- **Why it matters:** The sign-in panel writes its own button reset instead of including the shared `button-reset` mixin, so a change to the mixin does not reach this button.
 - **Where:**
   - `src/components/SignInPanel/index.scss:144` writes `padding: 0; border: 0; background: none; font-family: inherit; cursor: pointer` instead of `@include button-reset` (`src/scss/_mixins.scss:180`).
 - **Shared piece:** existing `button-reset`.
@@ -4180,7 +4180,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-179: Inline result type repeated as a GraphQL ref type
 
 - **Severity:** low
-- **Why it matters:** The document update result and the GraphQL document type describe the same shape separately, so if a field is added to one, the API returns data the service did not produce, or the service gains a field the API drops.
+- **Why it matters:** The document update result and the GraphQL document type describe the same shape separately, so a field added to one has to be added to the other.
 - **Where:**
   - `src/modules/documents/services/editing.ts` `updateDocument` inline `{id, title, lede}`; `graphql/documents.ts` `DocumentRef` (~69-78).
 - **Shared piece:** a named type in `documents/types.ts`.
@@ -4194,7 +4194,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-180: Blank-query handling differs between the lookups
 
 - **Severity:** low
-- **Why it matters:** A blank search returns nothing from two lookups but may return every common name from the third, so a user typing then clearing a search sees an unexpected full list in one place and an empty one in another.
+- **Why it matters:** Two lookups return nothing for a blank query, while `common-names.ts` passes the trimmed query straight to the repository. Whether the repository returns every row for a blank string has not been checked.
 - **Where:**
   - `services/duplicates.ts` and `findCompendiumMatches` return `[]` on a blank trimmed query; `services/common-names.ts` passes `query.trim()` straight to the repository.
 - **Shared piece:** none needed; decide one rule and put the guard in the repository finder or in each service.
@@ -4222,7 +4222,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-182: Repeated live-row lookups in repository workspace-slugs and provisional users
 
 - **Severity:** low
-- **Why it matters:** The same lookup and lapse test are written several times in the repository, so if the soft-delete filter or the lapse rule changes, a missed copy lets a deleted workspace be found or a provisional account lapse at the wrong time.
+- **Why it matters:** The same lookup and lapse test are written several times in the repository, so a change to the soft-delete filter or the lapse rule has to be made in each copy.
 - **Where:**
   - src/db/repository/workspace-slugs.ts:1294-1297, :1341-1344, :1362-1365 each `selectOne(workspaces, and(notSoftDeleted(workspaces), eq(workspaces.id, X)))`; src/db/repository/provisional-users.ts:985-989 and :1035-1038 repeat the `or(lt(updatedAt, now()-lifetime), lt(createdAt, now()-cap))` lapse test; admin-roles.ts and user-access-pauses.ts/workspace-member-pauses.ts repeat `.insert(table).values(applyAudit('insert', ..) as never).onConflictDoNothing().returning()`.
 - **Shared piece:** `findWorkspaceById` local helper; `lapsed(lifetime, cap)` in provisional-users.ts; an `insertIgnoringConflict` in the writer context.
@@ -4236,7 +4236,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-183: Grimoire categories are mapped to `CardCategory[]` twice
 
 - **Severity:** low
-- **Why it matters:** The same category mapping is written in two files, so if the shape of a card category changes, the grimoire list and the recipe page show different or missing category chips for the same spell.
+- **Why it matters:** The same category mapping is written in `grimoire/(list)/reads.ts` and `grimoire/recipe-read.ts`, so a change to the card category shape has to be made in both.
 - **Where:**
   - `src/app/(shell)/coven/[slug]/grimoire/(list)/reads.ts:~60-66`
   - `src/app/(shell)/coven/[slug]/grimoire/recipe-read.ts:~38-44`
@@ -4252,7 +4252,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-184: The demo notice's text choice is written twice
 
 - **Severity:** low
-- **Why it matters:** The demo notice text is picked by a nested condition in two places, so if the notice for an Observer or Practitioner is reworded in one, users see different messages on the coven page and the spell page.
+- **Why it matters:** The demo notice text is picked by a nested condition in the coven layout and in the spell page, so rewording it for an Observer or Practitioner has to be done in both.
 - **Where:**
   - `src/app/(shell)/coven/[slug]/layout.tsx:64-67`
   - `src/app/(shell)/coven/[slug]/grimoire/[id]/page.tsx:~180-186` (nested ternary on `workspace.demo` and role)
@@ -4267,7 +4267,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-185: Narrow-panel page scaffold repeated in Create Coven and Access Paused
 
 - **Severity:** low
-- **Why it matters:** The page scaffold is repeated across screens, so a change to the narrow panel layout, such as spacing or the context row, is applied to some pages and missed on others, and users see mismatched page frames.
+- **Why it matters:** The narrow-panel page scaffold is repeated in Create Coven and Access Paused, and the skeletons repeat it through `SkeletonContextRow`, so a change to its spacing or context row has to be made in each.
 - **Where:**
   - `src/app/(shell)/coven/new/page.tsx:~35-50`
   - `src/app/(shell)/coven-paused/[slug]/page.tsx`
@@ -4283,7 +4283,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-186: Password-section message constants are exported and compared in tests, but the client `STALE_SESSION` wording differs from the server's
 
 - **Severity:** low
-- **Why it matters:** Two constants share the name STALE_SESSION but hold different sentences, so a developer who searches for it may edit the wrong message, and a user could see the wrong prompt when a recent sign-in is needed.
+- **Why it matters:** Two constants share the name `STALE_SESSION` but hold different sentences, so a developer who searches for it may edit the wrong message.
 - **Where:**
   - `src/components/PasswordSection/two-factor.tsx:32-33` (`STALE_SESSION = 'Turning two-factor off needs a recent sign-in...'`) and `src/modules/identity/services/password.ts:11` (`STALE_SESSION`, a different sentence for setting a password). Same name, different meaning, two places.
 - **Shared piece:** none; rename the client one to `STALE_SESSION_TURN_OFF` (or keep it private) so a grep for `STALE_SESSION` is not misleading. `tests/components/PasswordSection/two-factor.test.tsx` imports it.
@@ -4297,7 +4297,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-187: `.invalid` placeholder-address check is a literal in `PasswordSection/index.tsx` twice and in `lib/email-address.ts`
 
 - **Severity:** low
-- **Why it matters:** The check for placeholder addresses is a string literal in three places, so if the placeholder domain changes, some screens treat a fake address as real and show a user an email they never entered.
+- **Why it matters:** The check for placeholder addresses is the literal `.invalid` in three places, so a change to the placeholder domain has to be made in each.
 - **Where:**
   - `src/components/PasswordSection/index.tsx:166` and `:209` (`email && !email.endsWith('.invalid')`), `src/lib/email-address.ts:22` (`email.endsWith('.invalid')`).
 - **Shared piece:** `isPlaceholderAddress(email)` exported from `src/lib/email-address.ts`; the component computes it once (`const real = email && !isPlaceholderAddress(email)`).
@@ -4311,7 +4311,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-188: Two copies of the 99-cap count text
 
 - **Severity:** low
-- **Why it matters:** The 99+ cap is defined twice, so if the cap or wording changes in one place, the tab counts and the account menu counts show different numbers or text for the same count to a user.
+- **Why it matters:** The 99+ cap and its 'more than 99' wording are defined in both `TabbedPage/tab-links.tsx` and `AccountMenu/counts.ts`, so a change to the cap or wording has to be made in both.
 - **Where:**
   - `TabbedPage/tab-links.tsx:13,93,96` and `AccountMenu/counts.ts:3-15`.
 - **Shared piece:** `AccountMenu/counts.ts` already exports `COUNT_CAP`; TabbedPage declares its own `COUNT_CAP = 99` and repeats the "99+" and "more than 99" logic. Move both to `FacetCount` (it already shows the number) as a `capped` helper.
@@ -4325,7 +4325,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-189: Spell card face and burn markup repeated in SpellCard and SpellPreview
 
 - **Severity:** low
-- **Why it matters:** The spell card face and burn layers are rebuilt in the preview, so a design change to the card applies to the real card but not the preview, and a user sees a preview that does not match the saved card.
+- **Why it matters:** The spell card face and burn layers are rebuilt in the preview instead of rendered through `SpellCard/frame.tsx`, so a design change to the card has to be made in both.
 - **Where:**
   - `SpellCard/frame.tsx:25-42` and `SpellPreview/index.tsx:66-91`.
 - **Shared piece:** `SpellCard/frame.tsx` exports the frame; SpellPreview should render through it rather than rebuild the face and burn layers.
@@ -4339,7 +4339,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-190: DemoNotice and CovenFacts both derive the destination coven from `useNavigationState`
 
 - **Severity:** low
-- **Why it matters:** Both components work out the destination coven from the link in their own copy, so if the path rules change, the demo notice and coven facts point at different covens while a user is navigating.
+- **Why it matters:** Both components work out the destination coven from the link with the same expression, so a change to the path rules has to be made in both.
 - **Where:**
   - `DemoNotice/index.tsx:12` and `CovenFacts/index.tsx:27`, both `covenSlugOf(href.split(/[?#]/)[0] ?? href)`.
 - **Shared piece:** `destinationCovenSlug(href)` in `src/lib/coven-path.ts`, which strips the query and hash itself.
@@ -4353,7 +4353,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-191: "Pick a coven, then Continue" modal written twice in IngredientEntry
 
 - **Severity:** low
-- **Why it matters:** The "pick a coven, then Continue" modal is written twice in IngredientEntry, about 25 lines each. A fix to its wording, focus handling or the continue step lands in one copy, and users meet different behaviour depending on the button they used.
+- **Why it matters:** The "pick a coven, then Continue" modal is written twice in IngredientEntry, about 25 lines each, so a fix to its wording, focus handling or the continue step has to be made in both.
 - **Where:**
   - `src/components/IngredientEntry/annotate-picker.tsx:25-52` (Modal, `.form`, `CovenChoice`, Continue/Cancel, default-coven lookup)
   - `src/components/IngredientEntry/edit-stock.tsx:48-68` (same JSX; same `places.find(default) ?? places[0]` lookups at `:35-37`)
@@ -4368,7 +4368,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-192: SignInDialog restates the sign-in card padding and the phone-column pattern
 
 - **Severity:** low
-- **Why it matters:** The padding and the phone stacking are restated in two components, so a design change to one sign-in card leaves the other with different spacing, and a user sees mismatched cards on a phone.
+- **Why it matters:** The sign-in card padding and the phone stacking are restated in the dialog, the panel and the invitation acceptance styles, so a change has to be made in each.
 - **Where:**
   - src/components/SignInDialog/index.scss (`padding: space(5) space(6) space(6)`), src/components/SignInPanel/index.scss (same padding), src/components/SignInDialog/index.scss `.sign-in-dialog__inbox` and src/components/InvitationAcceptance/index.scss `.invitation-acceptance__row` (column on a phone)
 - **Shared piece:** a token or mixin for the card padding; a mixin for "row that stacks on a phone" if one does not exist in `_mixins.scss`.
@@ -4396,7 +4396,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-194: Literal spacing where a token exists
 
 - **Severity:** low
-- **Why it matters:** A hard-coded gap sits where a spacing token exists, so if the spacing scale changes, this row keeps the old gap and the step list looks uneven to a user.
+- **Why it matters:** A hard-coded gap of `0.5rem` sits where the spacing token `space(2)` exists, so a change to the spacing scale does not reach this row.
 - **Where:**
   - `src/components/StepRow/index.scss:4` (`gap: 0.5rem`, equals `space(2)`).
 - **Shared piece:** `space(2)`.
@@ -4425,7 +4425,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-196: Three identical notifier interfaces
 
 - **Severity:** low
-- **Why it matters:** Three identical notifier types mean a change to what the notifier returns must be made in each, and a missed one lets the modules disagree so a mail link is built from the wrong origin.
+- **Why it matters:** Three identical notifier types mean a change to what the notifier returns must be made in each, and two more types may have the same `origin()` body.
   Severity: low
   Copies: `src/modules/identity/types.ts:30` (`AccessPauseNotifier`), `src/modules/support/types.ts:18` (`TimeoutNotifier`), `src/modules/support/types.ts:29` (`SupportNotifier`); also `src/modules/coven/types.ts:40` (`MemberPauseNotifier`) and `src/modules/documents/types.ts:78` (`DocumentMailingNotifier`) should be checked for the same `origin(): Promise<string>` body.
   Shared piece: one `OriginNotifier` in a type-only file in `src/lib/` (types live in type-only files), the others as aliases.
@@ -4440,7 +4440,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-197: "a/an role" noun written three times
 
 - **Severity:** low
-- **Why it matters:** The a-or-an role wording is written three times, so if a role is added or renamed, an invitation or notice email can say a admin or the wrong role to the person receiving it.
+- **Why it matters:** The a-or-an role wording is written in three places, so adding or renaming a role has to be followed in each.
   Severity: low
   Copies: `src/modules/identity/services/user-role.ts:20-24` (`ROLE_NOUNS`), `admin-invitations.ts:74` (`withArticle`), `workspace-creation.ts:66` (`user.role === 'admin' ? 'an admin' : 'a curator'`).
   Shared piece: export `ROLE_NOUNS` from `user-role.ts` (or a small `role-nouns.ts`).
@@ -4455,7 +4455,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-198: Batch refusal try/catch around an assert, returning one error per id
 
 - **Severity:** low
-- **Why it matters:** The same try-catch-per-id pattern is written three times, so a fix to how a refused check is reported is applied to some lookups only and a keeper may see an error for one list and a blank for another.
+- **Why it matters:** The same try-catch-per-id pattern is written three times in `reads.ts`, so a fix to how a refused check is reported has to be made in each.
   Severity: low
   Copies: `src/modules/support/services/reads.ts` `timeoutsForSenders` (~412-417), `timeoutsForAddresses` (~431-436), `tiersForSenders` (~486-490); and the newest-first `createdAt` sort twice in the same file.
   Shared piece: `refuseEach(ids, () => assert(...))` local helper in `reads.ts`.
@@ -4470,7 +4470,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-199: Constants: `SYSTEM`, day length, retention cutoff
 
 - **Severity:** low
-- **Why it matters:** System actor, day length and cutoff values are retyped across many files, so a misnamed window that merely equals a day could be changed and shift a retention or timeout rule by mistake, affecting when requests close.
+- **Why it matters:** System actor, day length and cutoff values are retyped across many files, and `view-link.ts` names the signed-out window `DAY_MS` although it only happens to equal a day, so a change to one of the values has to be found in each file.
   Severity: low
   Copies:
 - `const SYSTEM = { userId: SYSTEM_ACTOR_ID }` at `support/services/reply-notice.ts:14`, `support/services/retention.ts:31`, `documents/jobs/document-mailing-steps.ts:23`; inline at `db/repository/write.ts:317` and `identity/services/email.ts:81,101`.
@@ -4489,7 +4489,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-200: Confirm-email Forbidden and "no row" NotFound copies
 
 - **Severity:** low
-- **Why it matters:** The confirm-your-email refusal is written in two services, so rewording it in one leaves a user seeing different messages when they try to change a name and a password.
+- **Why it matters:** The confirm-your-email refusal is written in `name.ts` and `password.ts`, so rewording it has to be done in both.
   Severity: low
   Copies: `'Confirm your email address first'` at `identity/services/name.ts:21` and `identity/services/password.ts:26`. `new NotFound()` after an `updateById` returning no row in `name.ts`, `terms.ts`, `profile.ts` and `support/services/staff.ts` `change`.
   Shared piece: `assertEmailConfirmed(user)` in `identity/services/`.
@@ -4504,7 +4504,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-201: Site-admin list services repeat assert, parse filter, page, count
 
 - **Severity:** low
-- **Why it matters:** Site-admin list services each repeat assert, filter parsing, paging and counting in four short copies. A change to the authorisation check or paging rule that misses one list leaves that keeper screen with different access or page behaviour.
+- **Why it matters:** Site-admin list services each repeat assert, filter parsing, paging and counting in four short copies, so a change to the check or paging rule has to be made in each. The entry rates it low and lists it so the owner can reject it.
   Severity: low (four copies, each short)
   Copies: `identity/services/admin-invitations.ts` (list/count with `siteFilter`), `invitation-cards.ts` (`parsedBatchFilter`, `parsedArrivalFilter`), `privilege-changes.ts` (`parsedFilter`), `user-list.ts` (`trimmedFilter`).
   Shared piece: none worth making; the filters differ in shape. Listed so the owner can reject it.
@@ -4519,7 +4519,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-202: Working report mapping duplicated
 
 - **Severity:** low
-- **Why it matters:** The working report is mapped twice, so a field added to one list function, such as warnings or participants, is missing from the other and a user sees different working details in the list and the paged list.
+- **Why it matters:** The working report is mapped twice, in `listWorkings` and `listWorkingsPage`, so a field added to one, such as warnings or participants, has to be added to the other.
 - **Where:**
   - `src/modules/grimoire/services/workings.ts` `listWorkings` and `listWorkingsPage` (deductions filter by `workingId`, `participants.get(id) ?? []`, `warnings: []`).
 - **Shared piece:** local `toWorkingReport(row, deductions, participants)`.
@@ -4533,7 +4533,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-203: Compendium entry page assembled twice
 
 - **Severity:** low
-- **Why it matters:** The compendium entry page is assembled in two functions, so a new field or fix added to the cached public entry is missed in the curator view, and curators see an entry that differs from what visitors see.
+- **Why it matters:** The compendium entry page is assembled in `cachedEntry` and in `readCompendiumEntryAsCurator`, so a new field or fix to one has to be made in the other.
 - **Where:**
   - `compendium.ts` `cachedEntry` body (about 1226-1235) and `readCompendiumEntryAsCurator` (about 1254-1267).
 - **Shared piece:** private `entryPageOf(address)`.
@@ -4547,7 +4547,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-204: Vocabulary suggestion wrappers repeat the reader lookup
 
 - **Severity:** low
-- **Why it matters:** Two suggestion functions skip the shared helper, so a change to how readers are resolved or the query is trimmed applies to only two of the four, and a user gets different suggestion lists for forms and deities than for signs.
+- **Why it matters:** Two suggestion functions skip the shared `suggest` helper and repeat the reader lookup inline, so a change to how readers are resolved or the query is trimmed has to be made in the helper and in those two.
 - **Where:**
   - src/modules/vocabulary/services/suggestions.ts: `suggestForms` and `suggestDeities` inline `findVocabularySuggestions(await readersOf(session, workspaceId, READ), table, query.trim(), page)`; `suggestCelestialBodies` and `suggestZodiacSigns` use the local `suggest` helper.
 - **Shared piece:** route all four through `suggest`.
@@ -4561,7 +4561,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-205: LIKE-escape inlined twice in predicates
 
 - **Severity:** low
-- **Why it matters:** The LIKE escape is written twice, so a fix to escaping percent, underscore or backslash in one search predicate is missed in the other and a user searching for a literal percent gets wrong matches.
+- **Why it matters:** The LIKE escape is written twice, in `containsText` and `startsWithText`, so a change to how percent, underscore or backslash are escaped has to be made in both.
 - **Where:**
   - src/db/repository/predicates.ts:79 (`containsText`) and :83 (`startsWithText`), each `query.replace(/[\\%_]/g, '\\$&')`.
 - **Shared piece:** private `escapeLike` in predicates.ts.
@@ -4575,7 +4575,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-206: Help repository repeats its sort and filter clauses
 
 - **Severity:** low
-- **Why it matters:** The help list and its count repeat the same where and order clauses, so a change to one leaves the page and the total disagreeing, and a user sees a count that does not match the articles shown.
+- **Why it matters:** The help list and its count repeat the same where and order clauses for the staff and public reads, so a change to one has to be made in its twin.
 - **Where:**
   - src/db/repository/help.ts, the page finders and their count twins each repeat the same `where` and `order` arrays for the staff and public reads.
 - **Shared piece:** one local `helpFilter(...)` and `HELP_ORDER` in help.ts, used by `findX` and `findXCount`.
@@ -4589,7 +4589,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-207: Tier-2 uncurated suggestion select repeated
 
 - **Severity:** low
-- **Why it matters:** The same uncurated-suggestion select is built in two repository files, so a fix to what counts as uncurated reaches one, and keepers see suggestions in one vocabulary that the other would hide.
+- **Why it matters:** The same uncurated-suggestion select is built in `vocabularies.ts` and `common-names.ts`, so a change to what counts as uncurated has to be made in both.
 - **Where:**
   - src/db/repository/vocabularies.ts and src/db/repository/common-names.ts both build the same uncurated-suggestion select.
 - **Shared piece:** a helper beside `suggestion-page.ts`.
@@ -4603,7 +4603,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-208: `requireAdminSession` and `requireCuratorSession` are the same function with a different assertion
 
 - **Severity:** low
-- **Why it matters:** The admin and curator session checks are the same function with one different assertion, so a fix to how a refused user is handled is applied to one, and a curator or keeper hits different behaviour from the other.
+- **Why it matters:** The admin and curator session checks are the same function with one different assertion, so a change to how a refused user is handled has to be made in both.
 - **Where:**
   - `src/lib/request-session.ts:165-190`.
 - **Shared piece:** private `requireRole(assert: (s: Session) => void)` in the same file; both exports call it.
@@ -4617,7 +4617,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-209: `PublicLayout` writes `<main><PageColumn as="div">` once per branch
 
 - **Severity:** low
-- **Why it matters:** The layout repeats the main and column markup in both branches, so a change to the page column, such as its element or class, reaches only the signed-in or signed-out view and visitors see a different frame.
+- **Why it matters:** The layout repeats the main and column markup in both branches of the signed-in check, so a change to the page column, such as its element or class, has to be made in both.
 - **Where:**
   - `src/app/(public)/layout.tsx` (both branches of the signed-in check).
 - **Shared piece:** a local `Column` wrapper in the same file.
@@ -4633,7 +4633,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-210: The `'Prev' | 'Next'` label union is written three times in `Pager/types.ts`
 
 - **Severity:** low
-- **Why it matters:** The Prev or Next label union is typed three times, so adding a label means editing each, and a missed type lets a pager accept a label its siblings reject, causing a type error or wrong text.
+- **Why it matters:** The Prev or Next label union is typed three times in `Pager/types.ts`, so adding a label means editing each.
 - **Where:**
   - `src/components/Pager/types.ts:18`, `:23`, `:28` (`PagerEndProps`, `PagerLinkProps`, `PagerEndContentProps`).
 - **Shared piece:** `export type PagerLabel = 'Prev' | 'Next'` in the same file. The same file also has `PagerLinkProps` as `PagerEndProps` with `href` required and `soft` required; `Pick`/`Required` could derive it.
@@ -4647,7 +4647,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-211: SkeletonFrame writes the context-row lead twice in one file
 
 - **Severity:** low
-- **Why it matters:** The context-row placeholder is written twice, so a change to the loading lead, such as its shape, shows in one skeleton and not the other, and a user sees a loading frame that jumps when the real page loads.
+- **Why it matters:** The context-row placeholder is written twice in `SkeletonFrame/index.tsx`, once inside `framed` and once in `SkeletonContextRow`, so a change to the loading lead has to be made in both.
 - **Where:**
   - `src/components/SkeletonFrame/index.tsx:20-26` (inside `framed`) and `:38-46` (`SkeletonContextRow`): identical `<ContextRow lead={<span className="skeleton-frame__lead"><Skeleton shape="block" quiet /></span>} />`.
 - **Shared piece:** the already-exported `SkeletonContextRow`; `framed` renders `<SkeletonContextRow />`.
@@ -4661,7 +4661,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-212: Steps selection written four times with no guard
 
 - **Severity:** low
-- **Why it matters:** Step counts are pluralised by hand in several components, so a missed fix shows a user 1 steps or 2 step in the builder, recipe or card while the shared plural helper gets it right elsewhere.
+- **Why it matters:** Step counts are pluralised by hand in several components, although `lib/text` has a `plural()` helper, so a change to the wording has to be made in each place.
 - **Where:**
   - the steps selection in `SpellBuilder` (steps and index) and `SpellRecipe`/`SpellCard`; plural strings ("1 step", "2 steps") written inline in the same places while `lib/text` has `plural()`.
 - **Shared piece:** `plural()` from `src/lib/text.ts`.
@@ -4675,7 +4675,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-213: AppShell `onCuratedPage` re-implements `isAtPath`
 
 - **Severity:** low
-- **Why it matters:** The path-matching test is rewritten instead of using the shared one, so a fix to path matching, such as a trailing slash, applies to the nav but not the add-ingredient button, which shows or hides wrongly on curator pages.
+- **Why it matters:** The path-matching test is rewritten in `add-ingredient-button.tsx` instead of using `isAtPath`, which `site-nav.tsx` and `AccountMenu/panel.tsx` already use, so a change to path matching reaches only those two.
 - **Where:**
   - src/components/AppShell/add-ingredient-button.tsx:36-40 (`pathname === base || pathname.startsWith(`${base}/`)`); `isAtPath` in src/lib/at-path.ts is the same test and is already used by site-nav.tsx:20 and AccountMenu/panel.tsx:111.
 - **Shared piece:** `isAtPath(pathname, base)`.
@@ -4689,7 +4689,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-214: Repeat-announcement NBSP trick written three times
 
 - **Severity:** low
-- **Why it matters:** The non-breaking-space trick for repeating a screen-reader announcement is written in four places, so if it stops working, a blind user stops hearing repeated messages in some places and a developer must find each copy.
+- **Why it matters:** The non-breaking-space trick for repeating a screen-reader announcement is written in four places, so a change to it has to be made in each.
 - **Where:**
   - ClickFeedback/status-region.tsx:28-30; Modal/discard.tsx:126; SupportRequests/detail.tsx:256; also Field/use-form-history.ts:402
 - **Shared piece:** `useRepeatableAnnouncement()` or `repeatable(text, count)` in `src/lib`, so a live region re-announces identical text.
@@ -4703,7 +4703,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-215: `Field/radio-group-field.tsx` writes the radio `<input>` three times
 
 - **Severity:** low
-- **Why it matters:** The radio input is written three times, so a fix to its attributes, such as required state or press feedback, is applied to one layout and a keyboard or screen-reader user gets a different radio in the others.
+- **Why it matters:** The radio input is written three times, once in each of the strip, segmented and list layouts, so a change to its attributes, such as required state or press feedback, has to be made in each.
 - **Where:**
   - the strip, segmented and list layouts in `Field/radio-group-field.tsx`, each carrying `name`, `aria-required`, `value`, `checked`, `disabled`, `onChange` and `pressFeedback`.
 - **Shared piece:** a local `RadioInput` in the same file.
@@ -4717,7 +4717,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-216: `Field/use-form-history.ts` `undo` and `redo` are near-identical
 
 - **Severity:** low
-- **Why it matters:** Undo and redo are near-identical, so a bug fix to the history stack, such as losing the current value, is made in one and the other still misbehaves, and a user loses typed text when they redo.
+- **Why it matters:** Undo and redo are near-identical, differing only in which stack they pop from and push to, so a fix to the history stack has to be made in both.
 - **Where:**
   - the `undo` and `redo` callbacks in `Field/use-form-history.ts`, which differ only in which stack they pop from and push to.
 - **Shared piece:** a local `step(from, to)` function in the same file.
@@ -4731,7 +4731,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-217: `CovenHome` repeats `id={pending ? undefined : '…'}` with `aria-labelledby` across four sections
 
 - **Severity:** low
-- **Why it matters:** The heading id and aria-labelledby logic is repeated across four sections, so a mistake in one leaves a section without a heading label, and a screen-reader user hears an unnamed region on the coven home.
+- **Why it matters:** The heading id and `aria-labelledby` logic is repeated across four sections of `CovenHome`, so a change to it has to be made in each.
 - **Where:**
   - four section blocks in `CovenHome/index.tsx` (each sets the heading id and the section's `aria-labelledby` from the same `pending` test).
 - **Shared piece:** a local `Section` component taking `headingId` and `pending`.
@@ -4745,7 +4745,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-218: `buildSearchSentence` repeats one "picked values to clause" block fourteen times
 
 - **Severity:** low
-- **Why it matters:** `buildSearchSentence` repeats one picked-values-to-clause block fourteen times in one file. Adding a facet or fixing the joining rule means editing fourteen places, and a missed one makes the search summary read differently for that facet.
+- **Why it matters:** `buildSearchSentence` repeats one picked-values-to-clause block fourteen times in one file. Adding a facet or changing the joining rule means editing each copy.
 - **Where:**
   - `src/components/IngredientSearch/sentence.ts:~105-215` (covens, categories, moonPhases, daysOfWeek, visibilities, makers, forms, deities, zodiac, celestialBodies, elements) and `:~230-268` (five admin boolean clauses with the same `{kind:'value', text, facet, value:'true'}` shape).
 - **Shared piece:** a table `[facet, prefix, suffix, format]` driving one loop, and a `flagClause(facet, text)` helper for the boolean clauses. Order stays the table's order.
@@ -4759,7 +4759,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-219: `configuredProviders()` call with its lint-disable and comment repeated in three layouts
 
 - **Severity:** low
-- **Why it matters:** The same provider call with its lint-disable and comment is repeated in three layouts, so a change to how providers are read has to be made three times, and a missed one shows the wrong sign-in buttons.
+- **Why it matters:** The same provider call with its lint-disable and comment is repeated in three layouts, so a change to how providers are read has to be made three times.
 - **Where:**
   - src/app/(public)/layout.tsx, src/app/(unmatched)/layout.tsx, src/app/invite/[token]/invitation-panel.tsx
 - **Shared piece:** one server helper (for example `getConfiguredProviders()` in `src/lib/`) that carries the comment and the single `oxlint-disable-next-line no-restricted-imports`.
@@ -4773,7 +4773,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-220: SignInDialog inbox view repeats the "Confirm Your Email" link and `emailPagePath`
 
 - **Severity:** low
-- **Why it matters:** The Confirm Your Email link is built in two components, so if the email page path changes, one view leads users to a missing page while the other still works.
+- **Why it matters:** The Confirm Your Email link is built in `SignInDialog` and `InvitationAcceptance`, so a change to the email page path has to be made in both.
 - **Where:**
   - src/components/SignInDialog/index.tsx (inbox view), src/components/InvitationAcceptance/index.tsx (unverified state)
 - **Shared piece:** a small `ConfirmEmailLink` component or a shared `confirmEmailHref` helper.
@@ -4787,7 +4787,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-221: DocumentPage blockquote CSS hard-codes values
 
 - **Severity:** low
-- **Why it matters:** Hard-coded sizes in the blockquote style ignore the design tokens, so a change to the type scale or hairline leaves the quote looking different from the rest of the About page and other documents.
+- **Why it matters:** The blockquote style uses literal sizes (`3.25em`, `1.5`, `0.02em`, `1px solid $hairline`) instead of tokens, so a change to the type scale or hairline token does not reach it.
 - **Where:**
   - src/components/DocumentPage/index.scss (`3.25em`, `1.5`, `0.02em`, `calc(space(8) * 0.666)`, `1px solid $hairline`); the new `'quote'` type size in src/scss/_variables.scss covers part of it
 - **Shared piece:** tokens for the quote mark size and line height; `type-size('quote')` for the size; `$hairline-border` if a token for `1px solid $hairline` exists (check `_variables.scss`).
@@ -4801,7 +4801,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-222: Four new stroked-SVG icons repeat the 8-attribute wrapper
 
 - **Severity:** low
-- **Why it matters:** Each new icon repeats the same eight attributes, so a change to the stroke or accessibility defaults must be edited on every icon, and a missed one looks or reads differently to a user.
+- **Why it matters:** Each new stroked icon repeats the same eight attributes, so a change to the stroke or accessibility defaults must be edited on every icon.
 - **Where:**
   - src/components/IconTip/icons.tsx (`BookIcon`, `CovenIcon`, `SigilIcon`, `KeyIcon`; `PullQuoteIcon` is the fifth new one)
 - **Shared piece:** the stroked-icon wrapper of D-174 with `strokeWidth` as a prop.
@@ -4843,7 +4843,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-225: `.page-frame--in-column` margin restates `.page-column` padding
 
 - **Severity:** low
-- **Why it matters:** The margin repeats the column padding, so if the page padding is changed, content framed inside a column stops lining up with the column edge and users see a misaligned page.
+- **Why it matters:** The margin of `.page-frame--in-column` repeats the padding of `.page-column`, so a change to the column padding has to be made in both.
 - **Where:**
   - src/scss/_primitives.scss (new rule), `.page-column` in the same file
 - **Shared piece:** a `$page-column-padding` token used by both.
@@ -4857,7 +4857,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ### D-226: PageNav skeleton width cycle written as six `nth-child` rules
 
 - **Severity:** low
-- **Why it matters:** The width cycle is written as six separate rules, so adding or removing a nav item leaves the loading skeleton looking uneven, and a developer must edit each rule by hand.
+- **Why it matters:** The width cycle is written as six separate `nth-child` rules, so a developer must edit each rule by hand to change it.
 - **Where:**
   - src/components/PageNav/index.scss (`li:nth-child(6n+k) ... width: N%`)
 - **Shared piece:** an existing cycling-width helper was not located; check skeleton mixins in `_mixins.scss` before building one.
