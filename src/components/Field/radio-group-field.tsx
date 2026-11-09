@@ -73,6 +73,7 @@ export function RadioGroupField<T extends string>({
                     aria-required={required || undefined}
                     value={option.value}
                     checked={value === option.value}
+                    disabled={option.disabled}
                     onChange={() => onChange(option.value)}
                     {...pressFeedback}
                   />
@@ -104,6 +105,7 @@ export function RadioGroupField<T extends string>({
                 aria-required={required || undefined}
                 value={option.value}
                 checked={value === option.value}
+                disabled={option.disabled}
                 onChange={() => onChange(option.value)}
                 {...pressFeedback}
               />
@@ -136,6 +138,7 @@ export function RadioGroupField<T extends string>({
                   aria-required={required || undefined}
                   value={option.value}
                   checked={value === option.value}
+                  disabled={option.disabled}
                   aria-describedby={option.description ? descriptionId : undefined}
                   onChange={() => onChange(option.value)}
                   {...pressFeedback}

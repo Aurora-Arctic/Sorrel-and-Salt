@@ -5,7 +5,7 @@ import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
-import { BackChevron } from '../IngredientEntry/back-link';
+import { BackChevron } from '../IngredientEntry/back-chevron';
 import BusyButton from '../BusyButton';
 import PageHeader from '../PageHeader';
 import { FieldShell, fieldDescription } from '../Field';

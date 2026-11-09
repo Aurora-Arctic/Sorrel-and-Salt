@@ -20,7 +20,7 @@ How a click outside a form says its result and its failure is [`click-feedback.m
 
 ## Styling
 
-None of its own: the `.notice` primitive in `_primitives.scss` draws every kind, so the directory has no `index.scss`.
+None of its own: the `.notice` primitive, with `.notice__label` (beside `.eyebrow`, which draws it) for a help callout's label above its text ([`help-pages.md`](help-pages.md), "Callouts"), in `_primitives.scss` draws every kind, so the directory has no `index.scss`.
 
 There is no box. A 3px bar runs down the start edge, with a tint of the bar's colour behind the text, mixed with transparent so it reads the same on the page and on a card. The tint's strength is `--notice-tint`, set per theme in `_mixins.scss` (7% light, 8% dark, where the same strength reads fainter). A notice that leads with the triangle pads its start by `$notice-mark-size`; the click callout and the ingredient form's notices read the same two tokens (`$notice-mark-size`, `$notice-mark-drop`).
 
@@ -31,6 +31,7 @@ There is no box. A 3px bar runs down the start edge, with a tint of the bar's co
 | `warn`    | `$warning`, the ochre         | `$warning`                 | body ink           |
 | `caution` | `$text-muted`, the muted ink  | `$warning`                 | body ink           |
 | `success` | `$accent`                     | none                       | `$accent-hover`    |
+| `tip`     | `$accent-hover`               | none                       | body ink           |
 
 - **An error's and a success's text take the hover shade of their colour**, because the plain wax and sorrel fall short of 4.5:1 over their own tint (4.12:1 for the dark error on a card, 4.34:1 and 4.09:1 for the light error and success on the page).
 - **A button inside a warning or an error** (`.notice--warn .btn`, `.notice--error .btn`) takes its label from `$notice-button-ink` (`--notice-button-ink`), not from `$accent`, because on light the tint under the accent label measures 4.25:1 (warning) and 4.19:1 (error) on the page. The light value is `#33680f` (`$sorrel-notice-button`). Dark keeps `$accent`. The two buttons-in-notice rows in `tests/scss/tokens.test.ts` hold the floor on the page and the card.

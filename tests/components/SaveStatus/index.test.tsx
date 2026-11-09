@@ -97,4 +97,25 @@ describe('SaveStatus', () => {
     expect(onReload).toHaveBeenCalledTimes(1);
     into.remove();
   });
+
+  describe('as an example', () => {
+    it('draws each state with no live region and no alert, and the time as text', () => {
+      // Why it could have announced: the same line, not an example, has a live region and alerts.
+      const live = setup({ status: 'failed', savedAt: at(2) });
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      live.unmount();
+
+      for (const status of ['idle', 'pending', 'saving', 'saved', 'failed', 'conflict'] as const) {
+        const { container, unmount } = setup({ status, savedAt: at(2), example: true });
+
+        expect(container.querySelector('output')).toBeNull();
+        expect(screen.queryByRole('status')).toBeNull();
+        expect(screen.queryByRole('alert')).toBeNull();
+        unmount();
+      }
+      setup({ status: 'saved', savedAt: at(2), example: true });
+      expect(screen.getByText(/^Saved 2:02/).closest('[aria-hidden="true"]')).toBeNull();
+    });
+  });
 });

@@ -64,6 +64,16 @@ describe('SupportDialog', () => {
     expect(await within(dialog).findByRole('radio', { name: /^Bug/ })).toBeChecked();
   });
 
+  it('links Search Help before the form, so an answer can be looked for first', async () => {
+    search.mockReturnValue('support=question');
+    open();
+    const dialog = screen.getByRole('dialog', { name: 'Contact Support' });
+    expect(await within(dialog).findByRole('link', { name: 'Search Help' })).toHaveAttribute(
+      'href',
+      '/help',
+    );
+  });
+
   it('opens with what the address names', async () => {
     search.mockReturnValue('support=question');
     open();

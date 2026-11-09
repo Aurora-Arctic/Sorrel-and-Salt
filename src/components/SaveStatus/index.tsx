@@ -32,6 +32,7 @@ const SaveStatus = ({
   onKeepMine,
   conflictInto,
   className,
+  example = false,
 }: SaveStatusProps): ReactElement => {
   const saved = savedAt ? `${draft ? 'Draft saved' : 'Saved'} ${clockTime(savedAt)}` : '';
 
@@ -64,7 +65,7 @@ const SaveStatus = ({
   const retrying = next.failing && status === 'saving';
   const classes = className ? `save-status ${className}` : 'save-status';
   const conflict = status === 'conflict' && (
-    <Notice kind="warn" block className="save-status__conflict">
+    <Notice kind="warn" block inRegion={example} className="save-status__conflict">
       <span>{conflictMessage}</span>
       <span className="save-status__actions">
         {/* Outline, so the view keeps one solid button: Reload Latest, the safe choice, then a quiet Keep My Version. */}
@@ -84,7 +85,7 @@ const SaveStatus = ({
       {conflict && !conflictInto ? (
         conflict
       ) : next.failing ? (
-        <Notice kind="warn" block className="save-status__failed">
+        <Notice kind="warn" block inRegion={example} className="save-status__failed">
           <span>Could not save.</span>
           <button
             type="button"
@@ -98,7 +99,7 @@ const SaveStatus = ({
           </button>
         </Notice>
       ) : (
-        <span className="save-status__text" aria-hidden="true">
+        <span className="save-status__text" aria-hidden={!example || undefined}>
           {status === 'saving' ? (
             <>
               <Spinner /> Saving…
@@ -108,7 +109,7 @@ const SaveStatus = ({
           )}
         </span>
       )}
-      <output className="save-status__announced">{next.announced}</output>
+      {!example && <output className="save-status__announced">{next.announced}</output>}
     </div>
   );
 };

@@ -1,0 +1,243 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.help-widget__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+}
+
+// The answer, the figure's one large element, under a hairline.
+.help-widget__result {
+  display: block;
+  margin-top: space(4);
+  padding-top: space(3);
+  border-top: 1px solid $hairline;
+}
+
+.help-widget__equation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 space(2);
+  align-items: baseline;
+  font-size: heading-size(4);
+  font-weight: 500;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.help-widget__side {
+  white-space: nowrap;
+}
+
+.help-widget__equals,
+.help-widget__none {
+  color: $text-muted;
+}
+
+.help-widget__equals {
+  font-weight: 300;
+}
+
+// A refusal's notice: the warning edge and the lead, then the app's sentence word for word.
+.help-widget__refusal {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  align-items: flex-start;
+  margin-top: space(3);
+  padding: space(2) space(3);
+  border-inline-start: 3px solid $warning;
+  border-start-end-radius: radius('control');
+  border-end-end-radius: radius('control');
+  background: $surface-card;
+  font-size: type-size('small');
+
+  strong {
+    color: $warning;
+    font-weight: 500;
+  }
+}
+
+.help-widget__heading {
+  margin: space(3) 0 space(2);
+}
+
+// Each state name sits closer to its own sample than to the state above: space(2) beneath it, space(5) between states.
+.help-widget__states {
+  display: grid;
+  gap: space(5);
+  margin: 0;
+
+  dd {
+    margin: space(2) 0 0;
+  }
+}
+
+// A live save line set apart from the article text, in the field box's edge and radius on the page fill, a control's
+// height even for the empty Nothing to Save line.
+.help-widget__sample {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: $control-height;
+  padding: space(2) space(3);
+  border: 1px solid $hairline;
+  border-radius: radius('control');
+  background-color: $surface-page;
+
+  // The sample is the line's one frame: a failed or conflicting line's notice keeps its icon and text, not its bar
+  // and tint, which would draw a second box inside it.
+  .notice {
+    padding-block: 0;
+    padding-inline: calc(#{$notice-mark-size} + #{space(2)}) 0;
+    border-inline-start: 0;
+    background-color: transparent;
+
+    &::before {
+      inset-block-start: $notice-mark-drop;
+      inset-inline-start: 0;
+    }
+  }
+}
+
+.help-widget__explained {
+  margin-block: space(2) 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.help-widget__note {
+  margin-top: space(3);
+}
+
+// The invitation refusals widget (claude-docs/components/help-pages.md, "Widgets").
+.help-widget__finder {
+  margin-bottom: space(5);
+}
+
+.help-widget__answer {
+  margin-bottom: space(5);
+}
+
+.help-widget__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(2) space(4);
+  margin: space(4) 0 0;
+
+  > div {
+    display: contents;
+  }
+
+  dt {
+    color: $text-muted;
+    font-size: type-size('small');
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.help-widget__action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(3);
+  align-items: center;
+  margin: space(4) 0 0;
+
+  .help-widget__explained {
+    margin: 0;
+  }
+}
+
+// An outline in the tone's ink on the card, so four tones never read as the site's filled status badges.
+.help-widget__who {
+  display: inline-flex;
+  align-items: center;
+  @include badge-padding('default');
+  border: 1px solid currentcolor;
+  border-radius: radius('sharp');
+  font-size: type-size('caption');
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+.help-widget__who--you {
+  color: $accent;
+}
+
+.help-widget__who--sender {
+  color: $warning;
+}
+
+.help-widget__who--keeper {
+  color: $secondary;
+}
+
+.help-widget__who--none {
+  border-color: $hairline;
+  color: $text-muted;
+}
+
+.badge.help-widget__card {
+  border-style: dashed;
+  vertical-align: 1px;
+}
+
+// The form sections' fold (CollapsibleSection) on a native `<details>`, so the list opens with no script. What a
+// summary needs and the section's button does not have: no marker, its own focus ring, the chevron turned over by
+// `[open]` rather than `.is-open`, and a hairline to close it above the caption.
+body .help-widget__disclosure {
+  border-bottom: 1px solid $hairline;
+
+  > summary {
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &[open] > summary .collapsible-section__chevron {
+    transform: rotateX(180deg);
+  }
+}
+
+// Flush, as a section's fields are; the child selector outweighs the article's list margins and indent.
+.help-widget__disclosure > .help-widget__every {
+  margin: 0;
+  padding-inline: 0;
+  list-style: none;
+
+  > li {
+    margin: 0;
+
+    &::before {
+      content: none;
+    }
+  }
+}
+
+.help-widget__fix {
+  display: block;
+  margin-top: space(2);
+  color: $text-muted;
+  font-size: type-size('small');
+
+  .help-widget__who {
+    margin-inline-end: space(1);
+  }
+}
+
+.help-widget__kind {
+  margin: 0 0 space(2);
+}

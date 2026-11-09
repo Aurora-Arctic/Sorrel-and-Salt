@@ -6,8 +6,8 @@ import './index.scss';
 
 // A section's page drawn by the shell's body, because its section is not standing (a move in from
 // the compendium or from another area). The section's own layout is not mounted yet, so this draws
-// the context row it will have, and the frame its body keeps, so the page's head stands where it
-// will and nothing jumps when the section arrives.
+// the context row it will have and the frame its body keeps, so the
+// page's head stands where it will and nothing jumps when the section arrives.
 const frames = new Map<ComponentType, ComponentType>();
 
 /** The page's skeleton inside the frame of the section `host` names, one component per skeleton. */

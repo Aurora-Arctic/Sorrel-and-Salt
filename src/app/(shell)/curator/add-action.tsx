@@ -3,6 +3,7 @@
 import type { MouseEvent, ReactElement } from 'react';
 import IconTip, { PlusIcon } from '../../../components/IconTip';
 import { ModalLink, useOpenModalClick } from '../../../components/Modal';
+import { PendingLink } from '../../../lib/navigation';
 import type { AddActionProps } from './types';
 
 /**
@@ -24,9 +25,11 @@ export default function AddAction({
     event.preventDefault();
     window.history.pushState(null, '', href);
   };
+  // A full page scrolls to its top as an ordinary link does; a modal keeps the list where it is.
+  const Link = heading ? ModalLink : PendingLink;
   return (
     <IconTip tip={children}>
-      <ModalLink
+      <Link
         className="btn btn--solid add-action"
         href={href}
         onClick={drawnHere ? pushed : navigated}
@@ -35,7 +38,7 @@ export default function AddAction({
         <span className="add-action__plus" aria-hidden="true">
           <PlusIcon />
         </span>
-      </ModalLink>
+      </Link>
     </IconTip>
   );
 }

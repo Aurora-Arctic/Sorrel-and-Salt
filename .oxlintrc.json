@@ -76,7 +76,7 @@
           },
           {
             "name": "next/cache",
-            "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+            "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
           }
         ]
       }
@@ -197,7 +197,7 @@
               },
               {
                 "name": "next/cache",
-                "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+                "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ],
             "patterns": [
@@ -347,7 +347,7 @@
               },
               {
                 "name": "next/cache",
-                "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+                "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -430,7 +430,7 @@
               },
               {
                 "name": "next/cache",
-                "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+                "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -646,7 +646,7 @@
               },
               {
                 "name": "next/cache",
-                "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+                "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -719,7 +719,7 @@
             "paths": [
               {
                 "name": "next/cache",
-                "message": "Only src/lib/compendium-cache.ts and src/lib/documents-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium` and `documents` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+                "message": "Only src/lib/compendium-cache.ts, src/lib/documents-cache.ts and src/lib/help-cache.ts cache (CLAUDE.md rule 6): they hold the reads that are the same for every viewer under the `compendium`, `documents` and `help` tags, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -727,7 +727,11 @@
       }
     },
     {
-      "files": ["src/lib/compendium-cache.ts", "src/lib/documents-cache.ts"],
+      "files": [
+        "src/lib/compendium-cache.ts",
+        "src/lib/documents-cache.ts",
+        "src/lib/help-cache.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",

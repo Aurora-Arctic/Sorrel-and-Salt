@@ -1,0 +1,85 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.help-results__count {
+  display: block;
+  margin-block-end: space(4);
+  color: $text-muted;
+}
+
+// Each result a quiet card, as the guides on the help front page and the compendium's cards are: the title, whose link
+// covers the card (card-link), with the chips at the top of the row's end, and the summary beneath at the card's full width.
+.help-results__list {
+  @include list-reset;
+
+  display: grid;
+  gap: space(3);
+
+  // The searched words, picked out by weight, not a highlighter's fill.
+  mark {
+    background-color: transparent;
+    color: inherit;
+    font-weight: 500;
+  }
+}
+
+.help-results__item {
+  position: relative;
+}
+
+.help-results__head {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.help-results__title {
+  @include card-link;
+
+  font-size: $nav-link-size;
+}
+
+.help-results__labels {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: space(1);
+  justify-content: flex-end;
+  margin: 0;
+  // The chips sit level with the title's first line, not its top edge.
+  padding-block-start: space(1);
+}
+
+.help-results__summary {
+  margin-block: space(1) 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.help-results__kind {
+  @include badge('muted');
+}
+
+.help-results__audience {
+  @include badge('local');
+}
+
+// The site's No Matches state, as the coven's Ingredients list draws it (CovenCards).
+.help-results__no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(4);
+
+  p {
+    margin: 0;
+    color: $text-muted;
+  }
+}
+
+.help-results__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+}

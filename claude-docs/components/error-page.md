@@ -1,6 +1,6 @@
 # ErrorPage
 
-`src/components/ErrorPage/` — the body the 404 and 500 screens share: a level-one title, a reason, an optional reference, and the way onward as children. It draws its own `<main className="page-frame">`, so it works with or without the shell around it. Two small components sit beside it: `ReportThis` (the link to a bug request) and `NotAuthorized` (the 403 body).
+`src/components/ErrorPage/` — the body the 404 and 500 screens share: a level-one title, a reason, an optional reference, and the way onward as children. It draws its own `<main className="page-frame">`, so it works with or without the shell around it; `withinMain` swaps that for a `div` where a layout already owns the `main` (the public not-found). Two small components sit beside it: `ReportThis` (the link to a bug request) and `NotAuthorized` (the 403 body).
 
 ## Contracts
 

@@ -1,4 +1,6 @@
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { publicGuidePath } from '../../lib/help-paths';
 import { PendingLink } from '../../lib/navigation';
 import { emptyList, NO_MATCH_HINT } from '../../lib/text';
 import EmptyState from '../EmptyState';
@@ -6,8 +8,11 @@ import { buildSearchSentence } from '../IngredientSearch/sentence';
 import type { EmptyGrimoireProps } from './types';
 
 // What a grimoire tab draws with no card, as a named status region: No Spells (No Drafts on the Drafts tab) or No
-// Matches. An empty tab tells an observer, who has no New Spell, which roles can write one
-// (claude-docs/components/grimoire-list.md).
+// Matches. An empty tab tells an observer, who has no New Spell, which roles can write one, and links the Grimoire
+// guide (claude-docs/components/grimoire-list.md).
+
+// The Grimoire guide's slug is its title's (src/db/seed/help-content/articles.ts).
+const GRIMOIRE_GUIDE = publicGuidePath('grimoire') as Route;
 
 const EmptyGrimoire = ({ status, filter, canCreate, path }: EmptyGrimoireProps): ReactElement => {
   const { hasFilter } = buildSearchSentence({ filter, total: 0 });
@@ -17,6 +22,7 @@ const EmptyGrimoire = ({ status, filter, canCreate, path }: EmptyGrimoireProps):
       <EmptyState
         label={drafts ? 'No Drafts' : 'No Spells'}
         detail={canCreate ? undefined : 'A practitioner or steward of this coven can write them.'}
+        action={<PendingLink href={GRIMOIRE_GUIDE}>Learn More</PendingLink>}
       >
         {emptyList(drafts ? 'drafts' : 'complete spells')}
       </EmptyState>

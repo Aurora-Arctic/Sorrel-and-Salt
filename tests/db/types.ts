@@ -38,7 +38,8 @@ export type Governed =
   | 'workspace creation'
   | 'site role'
   | 'site access'
-  | 'documents';
+  | 'documents'
+  | 'help';
 
 /** A `Mutation` field only a site admin's scope admits. `probe` replaces the null-session probe where that one does not ask for the keeper's tier. */
 export interface AdminWrite {

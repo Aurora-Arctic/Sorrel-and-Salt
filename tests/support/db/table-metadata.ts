@@ -39,6 +39,7 @@ export const AUDITED_TABLES = [
   'document_mailings',
   'document_versions',
   'documents',
+  'help_articles',
   'ingredient_categories',
   'ingredient_deities',
   'ingredient_folk_names',

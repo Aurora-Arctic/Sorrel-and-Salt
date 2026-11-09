@@ -15,7 +15,11 @@ vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 const redirect = vi.fn((path: string) => {
   throw new Error(`redirect:${path}`);
 });
-vi.mock('next/navigation', () => ({ redirect }));
+vi.mock('next/navigation', () => ({
+  redirect,
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/support',
+}));
 
 vi.mock('@/components/SupportPanel', () => ({
   default: ({ state }: { state: { kind: string } }) => <p>{`panel:${state.kind}`}</p>,
@@ -38,6 +42,16 @@ beforeEach(() => {
 });
 
 describe('the /support page', () => {
+  it.each([
+    ['a visitor with no session', null],
+    ['a signed-in sender', SESSION],
+  ])('links Search Help to %s', async (_who, session) => {
+    getSession.mockResolvedValue(session);
+    await show();
+
+    expect(screen.getByRole('link', { name: 'Search Help' })).toHaveAttribute('href', '/help');
+  });
+
   it('offers Sign In to a visitor with no session', async () => {
     getSession.mockResolvedValue(null);
     await show();

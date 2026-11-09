@@ -3326,9 +3326,43 @@ describes; none of the help text is that.
 
 One table, `help_articles`, with a `kind` of `faq`, `article` or `term`. Three
 tables would repeat the same columns, the same admin page and the same
-public finders. `position` orders the FAQ and is unused by a term. The slug is
-unique across all three kinds among live rows, so an article's address and a
-term's anchor never clash. Columns are in `DESIGN.md` §5.
+public finders. `position`, a whole number 0 or more, orders the FAQ and the
+articles and is unused by a term. The slug is always `slugify(title)` and unique
+within its kind among live rows ("The parent article"). `shown` hides a row from
+readers ("Showing and hiding, and a parent's children"). Columns are in
+`DESIGN.md` §5.
+
+### Audiences, staff routes and search
+
+Decided by the owner on 2026-11-07. These decisions amend the sections around them; where one conflicts with an older sentence, this section stands.
+
+**Audiences.**
+
+- `audience` is an enum `help_audience`: `public` (anyone, signed in or not), `staff` (site keepers and curators, the `assertCurator` check) or `keeper` (site keepers only, `assertSiteAdmin`). It is not null and defaults to `public`. A CHECK keeps every `term` `public`, since the glossary is one public page.
+- A child's audience is equal to its parent's or narrower, in the order public, staff, keeper. A parent made narrower than any live child is refused with an explaining error. There is no cascade. The database holds neither rule; the service (M17.14) does, because each needs a look at a second row.
+- An article's list of children is filtered by the reader's audience in SQL: the public finder returns public children only, and the staff finder applies the same rules as for any row.
+
+**Staff routes.**
+
+- `/help/staff`, `/help/staff/[slug]` and `/help/staff/[parent]/[slug]` serve the `staff` and `keeper` rows. They live under `src/app/(shell)/help/staff/`, not under `(public)`: pages under `(public)` have no guard test and `PUBLIC_ROUTES`' `/help/*` would admit `/help/staff` past the proxy, whereas `tests/guards/shell-page-guards.test.ts` covers every page under `(shell)`. Each page still calls `requireSession()` and the curator check.
+- A signed-out visitor is sent to sign in. A signed-in user who is neither keeper nor curator gets the styled not-authorized page, as `/curator` does. A curator asking for a `keeper` row gets 404. A public article is never served under `/help/staff/…`, and a staff article is never served under `/help/[slug]` (404). A staff child requested at `/help/staff/[slug]` is answered like the public rule: 308 to the nested address.
+- The pages are dynamic, uncached and `noindex`, and are kept out of `PUBLIC_ROUTES` and the sitemap. `/curator` and `/keepers` link to `/help/staff`.
+- The staff reads take the session, run the check and filter by audience in SQL. They are never cached, because their result depends on the viewer (CLAUDE.md rule 6). Only the public finder is cached, under the tag `help`.
+- The slugs `glossary`, `staff` and `search` are reserved for every kind. A title that makes one is refused on `title`, on create and on rename: `staff` and `search` would collide with `/help/[slug]`.
+
+**Search.**
+
+- `search_vector` is a generated `tsvector` column (`english`; title weight A, summary B, body C, the summary coalesced to an empty string) with a GIN index (M17.13). `searchHelp` (M17.14) matches through `websearch_to_tsquery` and ranks with `ts_rank`.
+- Help search uses `tsvector` rather than the compendium's trigram match because trigram similarity is poor over long Markdown bodies.
+- When the full-text search finds nothing, it falls back to a trigram match on the title, reusing the compendium's `word_similarity` mechanism (`src/db/repository/predicates.ts`, with `unaccent_immutable`), so a typo still finds a page.
+- Results page by score through the M3.6 cursor helper, as `findPageInTiers` does with `carry: { score }` in `src/db/repository/ingredients.ts`.
+- The audience scope is applied in SQL by the rules above, so a staff row's words never surface for a signed-out visitor or a practitioner. An empty or whitespace-only query returns an empty result.
+- Search has its own page, `/help/search?q=…`, dynamic, uncached and `noindex`, and not in the sitemap. It is in the proxy's public routes, since signed-out visitors search the public rows. A search box sits on `/help` and on every article page, the staff pages included, and a submit goes to the page. There are no as-you-type suggestions for now.
+
+**Widgets and screenshots (later tasks).**
+
+- A widget is placed in a Markdown body by a tag, `::widget[name]`, from a fixed list in code. The syntax is fixed now so later tasks know the form. The renderer does nothing with the tag yet and the seeded prose carries none.
+- Screenshots will be captured by a Playwright script into the repo. Both are separate tasks; a re-seed carries them into each row no keeper has edited.
 
 ### The glossary
 
@@ -3357,12 +3391,112 @@ one general page and one per practice.
 - **Only an `article` has a parent, and only an `article` is one.** A CHECK
   holds the first half; the rest need a look at a second row, so the service
   enforces them and a test asserts them.
-- **Slugs stay unique across all rows**, children included. A child's page
-  is then identified by its own slug and its parent's, and `/help/[slug]` for
-  a child's slug answers 308 to the nested address, so the child has one
-  canonical address.
+- **A slug is unique within its kind**, children included (owner, 2026-11-07).
+  The article "Ingredients" and the term "Ingredients" both slugify to
+  `ingredients`, and each keeps it. The unique index is on `(kind, slug)` among
+  live rows. The addresses are an article `/help/[slug]`, an FAQ entry
+  `/help#[slug]` and a term `/help/glossary#[slug]`. A page lookup by slug
+  reads kind `article` only. A child's page is identified by its own slug and
+  its parent's, and `/help/[slug]` for a child's slug answers 308 to the nested
+  address, so the child has one canonical address.
+- **The slug is derived, never typed** (owner, 2026-11-08). It is
+  `slugify(title)` on create and on every title change, and the input, the
+  patch and the form hold no slug; the form shows the address the title makes,
+  read-only, beneath the title. A title that makes no address, a reserved one or
+  one a live row of its kind holds is refused on `title`, naming the title.
+  Renaming moves the address and nothing redirects the old one: a body link to
+  it answers 404, and a `[[Term]]` mark naming a renamed term by its old title
+  or address reads as plain text. The seed's `seed_key` is its own and does not
+  move, and a renamed row is `touched()`, so a re-seed leaves it.
 - **A parent with live children cannot be deleted** until they are moved or
   deleted, and the error says so.
+- **A child's audience** is equal to its parent's or narrower, and the
+  parent's page lists only the children the reader may see ("Audiences, staff
+  routes and search").
+
+### Showing and hiding, and a parent's children
+
+Decided by the owner on 2026-11-08.
+
+- **`shown`** is a boolean, not null, default `true`. A hidden row is kept,
+  never deleted, and reaches no reader, a keeper reading the help pages
+  included: every reader finder holds one predicate (`readable` in
+  `src/db/repository/help.ts`) that admits the audience, `shown`, and for a
+  child a live, shown parent. So a hidden parent hides its children without
+  writing their flags, and showing it again brings back each child that was
+  shown. A hidden row asked for by its slug answers 404, publicly and on the
+  staff routes alike. The search's two arms hold the same predicate, so a
+  hidden row's words neither answer nor stop the likeness fallback.
+- **The keeper sees hidden rows in two places only:** `keeperHelpArticles`,
+  every live row of every kind and audience, A to Z or in position order,
+  narrowed by a listing (`shown`, `hidden` or `all`, the default, by each
+  row's own flag), words in the title or the body, a kind, an audience and
+  top-level rows alone; and `readKeeperHelpArticle`, one row with
+  every live child in position order, for the editor. Both run under
+  `assertSiteAdmin`. `setHelpArticleShown` writes the flag through
+  `withAudit` and revalidates `help`, so a re-seed leaves a row a keeper hid.
+- **A hidden term's marks** read as plain text, since the glossary read drops
+  the term. A save's mark check still counts hidden terms, so hiding a term
+  never makes a body that marks it unsaveable. A body link to a hidden article
+  answers 404, and nothing checks for one; a warning at save or in the keeper's
+  list is the remedy if it is wanted, not a refusal.
+- **A parent chooses its children** through `childIds` on the article's input
+  and patch, applied in the parent's own `withAudit` transaction. Each listed
+  article becomes a child, positioned 1, 2, 3… in list order, moved from any
+  other parent. Each live child left out goes to the top level, positioned after
+  the last top-level article, so the order stays explicit; a null position
+  already sorts last. Left out, `childIds` leaves the children alone. Refused on
+  `childIds`: a non-article, a missing or deleted row, the article itself, an id
+  listed twice, an article with live children (one level), a child wider than
+  the parent, and `childIds` on a row that has a parent or is not an article. A
+  save that names its children is checked on those, so it may narrow the parent
+  in the save that releases a wider child. A child still takes its parent
+  through `parentId` the other way.
+
+### Renaming a help row
+
+- **Nothing redirects an old help address.** A slug comes from the title, so
+  a new title moves the row's address, and every link to the old one answers 404.
+- **So the editor asks first.** Before a save whose title makes a new slug,
+  `readHelpRenameEffects(session, id, title)` (`assertSiteAdmin`) answers the old
+  and new address and what would still point at the old one:
+  - every other live row, shown or hidden, whose body holds the old address
+    as a whole address, not as the start of a longer slug;
+  - for a term, every body that marks it by its old title, in any case, or by
+    its slug;
+  - for a public article, the front page's quick links
+    (`HELP_QUICK_LINKS`) that read the old slug, which drop out once it moves.
+- **When anything is named**, the form lists it and saves only on Rename; the
+  keeper then fixes the links by hand. When nothing is, it saves at once.
+- **A parent move is not covered.** Moving a sub page to another guide, or
+  out of one, also moves its address, and the form does not ask before that
+  save.
+
+### The help seed
+
+`src/db/seed/help.ts` writes the entries listed under
+`src/db/seed/help-content/`, finding each row by its `seed_key`, deleted rows
+included, in one transaction.
+
+- **A listed entry** is inserted when no row has its key, and restated to the
+  list's text while only the seed has written the row (`touched()` is false).
+  A row a person edited is left as they wrote it. A row a person deleted is
+  never written again.
+- **An entry the list no longer holds** is retired: its row is soft-deleted,
+  stamped as the bootstrap user, and the run prints `RETIRED <seed_key>`,
+  which `migrate.yml` copies into the job summary. Retiring runs before any
+  insert, so an entry moved to a new key under the same title can take the old
+  row's slug.
+- **A dropped row stays live** when a person edited it, printing
+  `KEPT <seed_key>: edited by a person`, or when a live sub page that is not
+  itself retired hangs beneath it, printing
+  `KEPT <seed_key>: has live sub pages`. Sub pages are retired before their
+  parents, so a dropped guide and its dropped sub pages go together.
+- **A row the seed retired comes back** when its entry returns to the list: it
+  is revived and restated. Only a row a person deleted (`deleted_by` not the
+  bootstrap user) stays deleted.
+- **Every live top-level article holding a live sub page becomes a guide** (`makeGuides`), in the same run. The step lives in the seed, not in the migration that adds `guide` to the enum: drizzle's migrator runs every pending migration in one transaction, and Postgres refuses a new enum value inside the transaction that adds it. A seeded entry names its kind (`guide` or `subPage` in `help-content/build.ts`), and the seed refuses a sub page listed under an entry that is not a guide.
+- **`--dry-run`** runs all of this, prints the same lines and rolls back.
 
 ### The module: `help`
 
@@ -3388,7 +3522,9 @@ Both are lines in `CLAUDE.md`, amended in the same PR as this record.
    reference data. What it gives up: a curator who spots a wrong answer must
    ask a keeper.
 2. **What is public.** "The compendium is the one public surface of data" gains
-   `/help` and its sub pages, open and indexable, carrying no workspace data.
+   `/help` and its sub pages for `public` rows, open and indexable, carrying no
+   workspace data. `staff` and `keeper` rows are not public: they sit behind
+   `/help/staff`.
    That is no new kind of exposure, since the pages hold only text a keeper
    chose to publish, and the public finders take no session and cannot reach a
    workspace row.
@@ -3405,17 +3541,33 @@ public pages (M17.16), not before.
 
 ### The build
 
-| Task                                                       | What it builds                                                                   |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| M17.13 — Add the Help Articles Table                       | The table, with nullable `parent_id`; prerequisite MB.175                        |
-| M17.14 — Help Article Services and GraphQL                 | The services, the keeper's GraphQL and the cache; after M17.13                   |
-| M17.15 — The Keepers' Help Page                            | `/keepers/help`; after M17.14                                                    |
-| M17.16 — The Public Help Pages, the Glossary and Sub Pages | `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`; after M17.14 |
-| M17.17 — Seed the Help Articles and the Glossary           | The `help` seed target and the terms; after M17.13                               |
+| Task                                                       | What it builds                                                                            |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| M17.13 — Add the Help Articles Table                       | The table, with nullable `parent_id`, `audience` and `search_vector`; prerequisite MB.175 |
+| M17.14 — Help Article Services and GraphQL                 | The services, the keeper's GraphQL and the cache; after M17.13                            |
+| M17.15 — The Keepers' Help Page                            | `/keepers/help`; after M17.14                                                             |
+| M17.16 — The Public Help Pages, the Glossary and Sub Pages | `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`; after M17.14          |
+| M17.17 — Seed the Help Articles and the Glossary           | The `help` seed target and the terms; after M17.13                                        |
+
+### Glossary marks
+
+A writer marks a term in Markdown; nothing is matched by itself, so a common word is never linked by accident. The mark is `[[Term]]` or `[[Term|shown text]]`, matched to a term row by title in any case or by slug. A mark is drawn as a link to the glossary anchor with a tooltip, so the link works without script and a touch reader still reaches the definition. The definitions come from the cached public finder with the rest of the page, not one read per term. A save that marks a term with no row is refused, so a dead mark cannot be published; a term deleted later leaves its marks showing as plain text. The cost is that a Keeper adds a term before the prose that marks it.
+
+### Callouts
+
+A help body marks a callout as a blockquote whose first words are one of three bold labels: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. It is drawn as a notice named by its label, so a reader of the source sees an ordinary blockquote and a reader of the page sees the label above the text. A blockquote opening with any other words stays a blockquote. Word labels rather than icons, so the kind does not rest on a picture or a colour. Only help bodies read callouts: the site documents and the keeper's preview keep their blockquotes, as they do their glossary marks (claude-docs/components/help-pages.md, "Callouts").
+
+### Widgets and screenshots
+
+Some help text describes a rule the code holds: the units that convert, the reasons an invitation is refused, what each role may do, the save line's states. Written as prose, such a list goes stale the day the rule changes. A body therefore places a widget by name, `::widget[name]`, from a fixed list in code, and each widget imports the rule it shows, never a copy, so the page changes with the code. A save naming an unknown widget is refused, as a mark naming an unknown term is, so a broken tag cannot be published. The cost is that a new widget is a code change, not a keeper's edit.
+
+A screenshot is a committed picture in `public/help/screens/`, shown as a figure with alt text and a caption. A Playwright script on demand writes it from a seeded slot database, so a picture can be retaken after a page changes rather than drawn by hand (claude-docs/components/help-pages.md, "Widgets" and "Screenshots").
 
 ### What it rules out
 
 - Help text kept in the repository, for the reasons above.
+- A cache of anything staff or keeper rows can reach: only the public finder is cached.
+- A staff page under `(public)`, where no guard test reaches it.
 - A tree of articles deeper than one level, or a child with a glossary term
   beneath it.
 - A curator writing help text. A keeper-only rule is easy to widen later; a wide one is
@@ -3511,3 +3663,23 @@ GDPR Article 7 and EDPB guidelines 05/2020 require the controller to demonstrate
 - A `mailto:` header only, a link that needs sign-in, a GraphQL mutation or a server action for unsubscribe.
 - A keeper-edited setting or a hard-coded address for the postal address.
 - Switching off security, pause or document mail.
+
+## Synonyms live in a keeper-edited column
+
+The help search has to answer a question phrased in words the page does not use ("poisonous" for a page that says "toxic"). The
+search ORs the question's words, ranks a row holding every word first, and indexes each row's `search_terms` beside its summary
+(weight B), so a keeper adds a synonym to the row it should find, in the Help editor.
+
+### Why a column
+
+- A custom synonym or thesaurus dictionary needs a file in the server's `tsearch_data` directory. Neon documents no way for a user
+  to place one, so it is treated as unavailable.
+- `dict_xsyn` is not in Neon's extension list and also reads a server file.
+- `lakebase_tokenizer` keeps synonyms in a table, but it replaces the `english` configuration, so the generated column would be
+  rebuilt on a new configuration, and it needs Postgres 16 or later.
+- `ts_rewrite` works in plain SQL, but each rule is a `tsquery` a keeper cannot write, and it checks every rule on every search.
+- A column needs no extension and no server file, and the database reindexes it when it changes.
+
+### Rules out
+
+- A site-wide synonym table or list in code: a synonym that fits one page would widen every other.

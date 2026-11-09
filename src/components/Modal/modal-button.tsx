@@ -19,6 +19,7 @@ export default function ModalButton({
   ariaLabel,
   tip,
   size,
+  readingBody,
   ref,
   onOpen,
   preload,
@@ -64,6 +65,7 @@ export default function ModalButton({
           eyebrow={eyebrow}
           qualifier={qualifier}
           size={size}
+          readingBody={readingBody}
           onClose={() => setOpen(false)}
           // Modal gives the focus back to the button; named too, as a click
           // in WebKit leaves the focus on nothing.

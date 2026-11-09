@@ -53,7 +53,7 @@ The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9
 
 **5. Two authorization layers, deliberately: the service check, and the `Membership` proof it returns.** `assertMembership(session, workspaceId, permission)` returns a branded `Membership` only the membership service can build, and every workspace-scoped finder and writer takes it first and ANDs its `workspace_id` itself. `assertSiteAdmin` does the same for the compendium tier. A `permission` is a per-role statement, never a rank. Two named exceptions take no proof (`.claude/rules/database.md`, Rule 5). RLS is deferred, not rejected (MB.29).
 
-**6. Never cache anything not keyed by viewer identity.** The compendium, categories and the keeper-curated vocabularies are cacheable (`unstable_cache`, tag `compendium`, `revalidateTag` on every keeper mutation), and so are the site's published documents (tag `documents`, `src/lib/documents-cache.ts`). Anything workspace-scoped is not.
+**6. Never cache anything not keyed by viewer identity.** The compendium, categories and the keeper-curated vocabularies are cacheable (`unstable_cache`, tag `compendium`, `revalidateTag` on every keeper mutation), and so are the site's published documents (tag `documents`, `src/lib/documents-cache.ts`) and the help articles open to everyone (tag `help`, `src/lib/help-cache.ts`; the staff and keeper reads and search are never cached). Anything workspace-scoped is not.
 
 **7. Filter in SQL, not after fetching.** A private spell or another workspace's row must never reach a resolver.
 
@@ -111,7 +111,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & Salt** (number `1`), are what to work on; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`.
 
-- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`). Never hand-compose `gh issue`.
+- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`, `move`, `milestone`, `retire`). Never hand-compose `gh issue`.
 - **`find <ID>` matches the title on `<ID> — ` exactly.** Zero matches, or several: stop and say so.
 - **Status moves forward, in the same turn as the event**: `In Progress` once work starts, `In Review` when the PR opens (with a comment carrying its link), `Done` at the merge. Never close a task by hand.
 - **A PR body opens with `Closes #N`**, or `Refs #N` for a PR that does not finish the task.

@@ -1,0 +1,63 @@
+@use '../../scss/variables' as *;
+
+.help-search {
+  display: flex;
+  gap: space(2);
+  max-width: $measure;
+  position: relative;
+  margin-block: space(4);
+
+  .input {
+    flex: 1;
+    min-width: 0;
+    padding-inline-start: calc(#{space(3)} + 1.25rem + #{space(2)});
+  }
+
+  &--hero {
+    .input {
+      min-height: $hero-control-height;
+      font-size: type-size('lead');
+    }
+
+    .btn {
+      min-height: $hero-control-height;
+    }
+  }
+
+  // Centred on the box's first line, so it stays put when the button drops beneath on a narrow phone.
+  &__magnifier {
+    position: absolute;
+    inset-block-start: calc((#{$control-height} - 1.25rem) / 2);
+    inset-inline-start: space(3);
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    color: $text-muted;
+    pointer-events: none;
+  }
+
+  &--hero &__magnifier {
+    inset-block-start: calc((#{$hero-control-height} - 1.25rem) / 2);
+  }
+
+  // Below a narrow phone the button drops beneath the box rather than squeezing it.
+  @media (max-width: 20rem) {
+    flex-wrap: wrap;
+
+    .btn {
+      flex-basis: 100%;
+    }
+  }
+}
+
+// The page title beneath the box (the h1, search, h2 header), or the staff index's first section, which holds its
+// heading: a step clear of the box, as a sub page's parent link stands. The box's own bottom margin collapses into
+// this one; a section is a flex stack, so the step is the section's margin, and its heading takes none.
+.help-search + h2,
+.help-search + section {
+  margin-block-start: space(6);
+}
+
+// Its heading's own top margin would add to the step, as a flex child's does not collapse.
+.help-search + section > h2:first-child {
+  margin-block-start: 0;
+}

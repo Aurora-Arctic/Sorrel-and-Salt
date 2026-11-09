@@ -1,0 +1,22 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The button is the picture alone: no fill, edge or padding of a button, as wide as the picture and never wider than
+// the figure it sits in.
+.help-screenshot {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  border-radius: radius('control');
+  background: none;
+  cursor: zoom-in;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// In the dialog the picture keeps its own size up to the body's width, and the body scrolls a taller one.
+.help-screenshot__full {
+  margin-inline: auto;
+}

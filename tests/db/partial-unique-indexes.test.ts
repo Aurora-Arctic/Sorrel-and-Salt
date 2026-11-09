@@ -175,6 +175,17 @@ const documentMailing = async () =>
     recipient_count: 1,
   });
 
+const helpArticle = async () => {
+  const t = token();
+  return stamped({
+    kind: 'article',
+    title: `Testwort Guide ${t}`,
+    slug: `testwort-guide-${t}`,
+    body: 'How the Testwort guide reads.',
+    seed_key: `fixture-${t}`,
+  });
+};
+
 // Keyed by index, not table: one table's indexes can hold rows either side of a predicate.
 const ROWS: Record<string, PartialIndexRow> = {
   // `(true)` where open: at most one open pause, whatever it holds.
@@ -215,6 +226,8 @@ const ROWS: Record<string, PartialIndexRow> = {
   document_versions_one_draft: { row: documentVersion('draft') },
   documents_key_unique: { row: documentRow },
   documents_seed_key_unique: { row: documentRow },
+  help_articles_seed_key_unique: { row: helpArticle },
+  help_articles_slug_unique: { row: helpArticle },
   ingredient_deities_link_unique: { row: () => ingredientDeity(true) },
   ingredient_deities_name_unique: { row: () => ingredientDeity(false) },
   ingredient_deities_position_unique: { row: () => ingredientDeity(false) },

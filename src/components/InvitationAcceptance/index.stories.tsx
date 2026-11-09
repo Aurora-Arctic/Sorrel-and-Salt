@@ -24,7 +24,7 @@ const EMAIL_PAGE = '/account/email?next=%2Finvite%2Fworkshop';
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
 // The service's own sentences, copied because a story cannot import a server-only module.
-// Keep in step with MESSAGES in modules/identity/services/invitation-acceptance.ts.
+// Keep in step with INVITATION_REFUSAL_MESSAGES in modules/identity/services/invitation-acceptance.ts.
 const INVALID =
   "This invitation link isn't valid. Check that you opened the whole link from the email.";
 const ACCEPTED = 'This invitation has already been accepted.';

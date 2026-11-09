@@ -31,6 +31,22 @@ export function PencilIcon(): ReactElement {
   );
 }
 
+/** Up and down arrows: a list's Reorder. */
+export function ReorderIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M5 13V3M2.5 5.5L5 3l2.5 2.5M11 3v10M8.5 10.5L11 13l2.5-2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PlusIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

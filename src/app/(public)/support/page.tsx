@@ -4,6 +4,7 @@ import PageHeader from '../../../components/PageHeader';
 import SupportPanel from '../../../components/SupportPanel';
 import type { SupportPanelState } from '../../../components/SupportPanel/types';
 import { emailPagePath } from '../../../lib/account-email';
+import { PendingLink } from '../../../lib/navigation';
 import { getSession, sessionIsVerified } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
 import {
@@ -49,6 +50,9 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
+      <p>
+        <PendingLink href="/help">Search Help</PendingLink>
+      </p>
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
     </PageWithNav>
   );

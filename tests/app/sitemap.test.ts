@@ -11,9 +11,16 @@ vi.mock('@/modules/ingredients', () => ({
     { slug: 'fixtura-testalis', name: 'Fixture', canonicalName: 'Fixtura testalis', lastModified },
   ]),
 }));
+// The help addresses are the public articles and their public sub pages; the staff pages and search are never listed.
+vi.mock('@/modules/help', () => ({
+  listHelpArticlePaths: vi.fn(async () => [
+    '/help/getting-started',
+    '/help/getting-started/signing-in',
+  ]),
+}));
 
 describe('sitemap', () => {
-  it('lists the home page, the compendium, sign-in, the public documents and one absolute address per current entry, dated by its last change', async () => {
+  it('lists the home page, the compendium, sign-in, the public documents, the help pages and one absolute address per current entry, dated by its last change', async () => {
     expect(await sitemap()).toEqual([
       { url: 'https://sorrelandsalt.com/' },
       { url: 'https://sorrelandsalt.com/compendium' },
@@ -22,6 +29,10 @@ describe('sitemap', () => {
       { url: 'https://sorrelandsalt.com/disclaimer' },
       { url: 'https://sorrelandsalt.com/terms' },
       { url: 'https://sorrelandsalt.com/code-of-ethics' },
+      { url: 'https://sorrelandsalt.com/help' },
+      { url: 'https://sorrelandsalt.com/help/glossary' },
+      { url: 'https://sorrelandsalt.com/help/getting-started' },
+      { url: 'https://sorrelandsalt.com/help/getting-started/signing-in' },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/testwort', lastModified },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/fixtura-testalis', lastModified },
     ]);

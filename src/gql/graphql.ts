@@ -132,6 +132,50 @@ export type FormGroupIcon =
   | 'mineral'
   | 'substance';
 
+export type HelpArticleInput = {
+  audience?: HelpAudience | null | undefined;
+  body: string;
+  /** The sub pages a guide holds, in order, each placed by its place in the list. */
+  childIds?: Array<string | number> | null | undefined;
+  kind: HelpArticleKind;
+  parentId?: string | number | null | undefined;
+  /** A whole number, 0 or more. */
+  position?: number | null | undefined;
+  /** Words that make the row findable by a reader’s own word; the search reads them as it reads the summary. */
+  searchTerms?: string | null | undefined;
+  summary?: string | null | undefined;
+  title: string;
+};
+
+/** A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term. */
+export type HelpArticleKind =
+  | 'article'
+  | 'faq'
+  | 'guide'
+  | 'term';
+
+/** Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level. */
+export type HelpArticlePatch = {
+  audience?: HelpAudience | null | undefined;
+  body?: string | null | undefined;
+  childIds?: Array<string | number> | null | undefined;
+  /** A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused. */
+  kind?: HelpArticleKind | null | undefined;
+  parentId?: string | number | null | undefined;
+  /** A whole number, 0 or more. */
+  position?: number | null | undefined;
+  /** Words that make the row findable by a reader’s own word; the search reads them as it reads the summary. */
+  searchTerms?: string | null | undefined;
+  summary?: string | null | undefined;
+  title?: string | null | undefined;
+};
+
+/** Who reads a help row: everyone (`public`), curators and keepers (`staff`), or keepers alone (`keeper`). */
+export type HelpAudience =
+  | 'keeper'
+  | 'public'
+  | 'staff';
+
 /** A curated deity picked, or a name typed: exactly one of the two. */
 export type IngredientDeityInput = {
   deityId?: string | number | null | undefined;
@@ -863,6 +907,66 @@ export type DeleteZodiacSignMutationVariables = Exact<{
 
 
 export type DeleteZodiacSignMutation = { deleteZodiacSign: string };
+
+export type CreateHelpArticleMutationVariables = Exact<{
+  input: HelpArticleInput;
+}>;
+
+
+export type CreateHelpArticleMutation = { createHelpArticle: { id: string, slug: string } };
+
+export type UpdateHelpArticleMutationVariables = Exact<{
+  id: string | number;
+  input: HelpArticlePatch;
+}>;
+
+
+export type UpdateHelpArticleMutation = { updateHelpArticle: { id: string, slug: string } };
+
+export type DeleteHelpArticleMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type DeleteHelpArticleMutation = { deleteHelpArticle: string };
+
+export type HelpRenameEffectsQueryVariables = Exact<{
+  id: string | number;
+  title: string;
+}>;
+
+
+export type HelpRenameEffectsQuery = { helpRenameEffects: { oldPath: string, newPath: string, quickLinks: Array<string>, articles: Array<{ id: string, title: string }> } };
+
+export type OrderHelpGuidesMutationVariables = Exact<{
+  ids: Array<string | number> | string | number;
+}>;
+
+
+export type OrderHelpGuidesMutation = { orderHelpGuides: Array<{ id: string }> };
+
+export type OrderHelpSubPagesMutationVariables = Exact<{
+  id: string | number;
+  input: HelpArticlePatch;
+}>;
+
+
+export type OrderHelpSubPagesMutation = { updateHelpArticle: { id: string } };
+
+export type OrderHelpFaqMutationVariables = Exact<{
+  ids: Array<string | number> | string | number;
+}>;
+
+
+export type OrderHelpFaqMutation = { orderHelpFaq: Array<{ id: string }> };
+
+export type SetHelpArticleShownMutationVariables = Exact<{
+  id: string | number;
+  shown: boolean;
+}>;
+
+
+export type SetHelpArticleShownMutation = { setHelpArticleShown: { id: string } };
 
 export type AddCupboardEntryMutationVariables = Exact<{
   workspaceId: string | number;
@@ -2027,6 +2131,68 @@ export const DeleteZodiacSignDocument = new TypedDocumentString(`
   deleteZodiacSign(id: $id)
 }
     `) as unknown as TypedDocumentString<DeleteZodiacSignMutation, DeleteZodiacSignMutationVariables>;
+export const CreateHelpArticleDocument = new TypedDocumentString(`
+    mutation CreateHelpArticle($input: HelpArticleInput!) {
+  createHelpArticle(input: $input) {
+    id
+    slug
+  }
+}
+    `) as unknown as TypedDocumentString<CreateHelpArticleMutation, CreateHelpArticleMutationVariables>;
+export const UpdateHelpArticleDocument = new TypedDocumentString(`
+    mutation UpdateHelpArticle($id: ID!, $input: HelpArticlePatch!) {
+  updateHelpArticle(id: $id, input: $input) {
+    id
+    slug
+  }
+}
+    `) as unknown as TypedDocumentString<UpdateHelpArticleMutation, UpdateHelpArticleMutationVariables>;
+export const DeleteHelpArticleDocument = new TypedDocumentString(`
+    mutation DeleteHelpArticle($id: ID!) {
+  deleteHelpArticle(id: $id)
+}
+    `) as unknown as TypedDocumentString<DeleteHelpArticleMutation, DeleteHelpArticleMutationVariables>;
+export const HelpRenameEffectsDocument = new TypedDocumentString(`
+    query HelpRenameEffects($id: ID!, $title: String!) {
+  helpRenameEffects(id: $id, title: $title) {
+    oldPath
+    newPath
+    articles {
+      id
+      title
+    }
+    quickLinks
+  }
+}
+    `) as unknown as TypedDocumentString<HelpRenameEffectsQuery, HelpRenameEffectsQueryVariables>;
+export const OrderHelpGuidesDocument = new TypedDocumentString(`
+    mutation OrderHelpGuides($ids: [ID!]!) {
+  orderHelpGuides(ids: $ids) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpGuidesMutation, OrderHelpGuidesMutationVariables>;
+export const OrderHelpSubPagesDocument = new TypedDocumentString(`
+    mutation OrderHelpSubPages($id: ID!, $input: HelpArticlePatch!) {
+  updateHelpArticle(id: $id, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpSubPagesMutation, OrderHelpSubPagesMutationVariables>;
+export const OrderHelpFaqDocument = new TypedDocumentString(`
+    mutation OrderHelpFaq($ids: [ID!]!) {
+  orderHelpFaq(ids: $ids) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<OrderHelpFaqMutation, OrderHelpFaqMutationVariables>;
+export const SetHelpArticleShownDocument = new TypedDocumentString(`
+    mutation SetHelpArticleShown($id: ID!, $shown: Boolean!) {
+  setHelpArticleShown(id: $id, shown: $shown) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<SetHelpArticleShownMutation, SetHelpArticleShownMutationVariables>;
 export const AddCupboardEntryDocument = new TypedDocumentString(`
     mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
   addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {

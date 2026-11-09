@@ -276,7 +276,17 @@ describe('CovenCards', () => {
     expect(new URLSearchParams(window.location.search).get('new')).toBe(
       'ingredient-coven-fixture-coven',
     );
-    expect(within(state!).queryByRole('link')).toBeNull();
+    // The add is a button writing the address, never a link to another page.
+    expect(within(state!).queryByRole('link', { name: 'Add Ingredient' })).toBeNull();
+  });
+
+  it('links the empty cupboard to the Ingredients help article', () => {
+    render(<Cards {...props(empty)} />);
+
+    expect(within(emptyState()!).getByRole('link', { name: 'Learn More' })).toHaveAttribute(
+      'href',
+      '/help/ingredients',
+    );
   });
 
   it("draws a viewer's empty cupboard with no add", () => {

@@ -36,6 +36,8 @@
 draws one of three things: Sign In for a signed-out visitor, the end of a time-out, or that it has no end date, in place of the form,
 or `SupportForm`. `returnTo` is where Sign In brings the visitor back (the support page by default; the dialog passes its own address) and `onDone` closes the dialog. The caller decides the state; the panel decides nothing about access.
 
+Both callers put a "Search Help" link to `/help` on its own above the panel, so a reader can look for an answer before writing. The dialog omits it for the unverified notice.
+
 The signed-out state carries the same optional `support` topic as the form state, and passes it to `SignedOutSupportForm` as `about`.
 
 ## Support link

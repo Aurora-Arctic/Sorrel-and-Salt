@@ -66,6 +66,7 @@ Nine palettes, deliberately not equals. Every hue not already reserved belongs t
 - **Local** marks a coven's own entry, as against the compendium's, on the ingredient page. It says where the row lives, not that anything is wrong, so it is tinted in the accent's inks, never solid, so it never reads as last-used's pointer. Dark takes `$sorrel-bright`; light takes `$sorrel-deep`, because `$sorrel-vivid` on its own tint measured 4.42:1. Label on tint 5.60:1 dark and 6.98:1 light; edge 4.23:1 and 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
 - **Demo** marks the demo coven in its page heading (`badge--demo`): Local's inks through the same two tokens, tinted, as its own palette.
 - **Annotated** marks a compendium entry with the coven's own changes: Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens, tinted. It is its own palette, never `badge--local`.
+- **Public** marks a help item every reader may read, in the keepers' help lists (`badge--public`): Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens, tinted, so it is the green beside Staff and Keeper's muted badges. It is its own palette, never `badge--local`.
 - **Retired** marks a compendium entry the curators have retired, on the ingredient page of a coven whose cupboard still names it. A fact about the entry, not a hazard, so it takes low stock's treatment and inks exactly (tinted, `$chalk-muted` dark, `$ink-muted` light), which needs no new contrast check. It is its own palette so the entry page does not name a retired entry after stock.
 - **Muted** marks a plain fact beside a name that is no warning: a one-off ingredient in a spell's steps, and a picker row whose form is already in the jar. Same treatment and inks as Retired and Low, its own palette so neither use borrows a name about the compendium.
 
@@ -296,7 +297,7 @@ Pieces around a field and a form's buttons that more than one form shares are ea
 - `.filter-row`: a list's filter form, a toolbar that applies as it changes: the search, its choices and switches, and Clear while a filter is shown, wrapping, and stacked on a phone. Widths, the busy fade and the type-ahead's width rule are [`components/filter-form.md`](components/filter-form.md#styling). The filter type-ahead is 14rem wide; the longest seeded name ("Anglo-Saxon & Continental Germanic") is 18rem as drawn and runs on inside the box, its option drawn whole.
 - `.list-frame`: a list page's root, a `ListFrame` ([`components/list-frame.md`](components/list-frame.md)): its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own. Its `.list-frame__body`, the list under the filter, is spaced the same, and fades in when a new page replaces the skeleton.
 
-Form-control details: an undo/redo pair uses width 0 rather than transparent, so neither the dashed disabled edge nor a held modal's brings a border back; in a modal it stands at the end of the header slot row, stretched to row height, elsewhere at the start of the form. The compact field size is `$control-height-compact` with caption-size text. The switch's pressed state stretches the thumb towards its end before the switch turns. Radio strip, segmented and cards layouts take arrow keys, checked state and label as the list does.
+Form-control details: an undo/redo pair uses width 0 rather than transparent, so neither the dashed disabled edge nor a held modal's brings a border back; in a modal it stands at the end of the header slot row, stretched to row height, elsewhere at the start of the form. The compact field size is `$control-height-compact` with caption-size text. The hero size, `$hero-control-height` (3rem) with lead-size text, is the help front page's search box alone. The switch's pressed state stretches the thumb towards its end before the switch turns. Radio strip, segmented and cards layouts take arrow keys, checked state and label as the list does.
 
 ## The page frame
 
@@ -417,6 +418,10 @@ The faded-underline mixes 55% (resting) and 65% (pointed or focused) are the low
 ### Whole-card links
 
 A stretched-link card is plain ink with an empty `::after` over the card, and the ring is drawn on that overlay so it rounds the card. It is not an `<a>` around the card, which a screen reader reads whole and which cannot hold a button. `$ring: false` is for a card whose layers paint over the overlay.
+
+### Quiet cards and figures
+
+`.card--quiet` is a hairline surface card that takes the highlight edge and fill on hover and focus within; a whole-card link inside it uses `card-link`. `.figure` frames a screenshot or a widget in running text, at most `$measure` wide, its `figcaption` muted beneath. Both are primitives in `_primitives.scss`.
 
 ### Loading motion
 

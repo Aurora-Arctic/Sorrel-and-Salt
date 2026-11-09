@@ -9,6 +9,7 @@ import * as documentMailingRecipients from '@/modules/documents/schema/document-
 import * as documentMailings from '@/modules/documents/schema/document-mailings';
 import * as documentVersions from '@/modules/documents/schema/document-versions';
 import * as documents from '@/modules/documents/schema/documents';
+import * as helpArticles from '@/modules/help/schema/help-articles';
 import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaceMemberPauses from '@/modules/coven/schema/workspace-member-pauses';
@@ -71,6 +72,7 @@ const MODULES = [
   documentMailings,
   documentVersions,
   documents,
+  helpArticles,
   cardInvitationAttempts,
   invitations,
   workspaceMemberPauses,

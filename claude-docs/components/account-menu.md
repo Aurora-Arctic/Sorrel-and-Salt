@@ -14,7 +14,7 @@
 - **The name is said once**, on the button. The avatar disc (up to two initials, from the first and last words of the name) is `aria-hidden`.
 - **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)): it starts the navigation through the shared hook and sets `aria-busy` while it runs.
   - The destination's address chooses the skeleton (`src/app/skeletons.ts`), so the site links and the account links name nothing.
-- **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, then Sign Out. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
+- **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, Help (a link to `/help`; the top bar has no Help link, so this and the footer are where a signed-in reader finds it), Support, then Sign Out. An unverified viewer gets Sign Out alone. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
 - **Waiting invitations show in three places.**
   - **A dot on the avatar disc**, `aria-hidden` with the disc.
   - **The button's name gains ", N coven invitations"**, as hidden text (`account-menu__count`) that repeats the name and adds the count. The visible name is then `aria-hidden`, so the button reads "Name, 2 coven invitations" with no stray space. It is not an `aria-label`, because axe's `label-content-name-mismatch` wants a label to repeat every visible word, the avatar's initials among them.

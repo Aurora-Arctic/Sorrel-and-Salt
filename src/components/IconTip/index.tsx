@@ -1,6 +1,6 @@
 // An icon control's tip, the list rows' Edit link that wears it, and the pencil they share (claude-docs/components/icon-tip.md).
 export { default } from './icon-tip';
-export { AnnotateLink, CompendiumEditLink, EditLink, QuickLookLink } from './edit-link';
+export { AnnotateLink, CompendiumEditLink, EditLink, QuickLookLink, ViewLink } from './edit-link';
 export {
   AnnotateButton,
   BinButton,
@@ -9,6 +9,7 @@ export {
   PreviewButton,
   QuickLookButton,
   RecordButton,
+  ReorderButton,
 } from './icon-button';
 export { LiddedEyeIcon } from './lidded-eye';
 export {
@@ -30,6 +31,7 @@ export {
   PreviewIcon,
   PrintIcon,
   RedoIcon,
+  ReorderIcon,
   SproutIcon,
   CircleCheckIcon,
   BubbleLinesIcon,

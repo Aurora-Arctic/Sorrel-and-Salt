@@ -122,6 +122,12 @@ describe('public routes', () => {
     '/disclaimer',
     '/terms',
     '/code-of-ethics',
+    '/help',
+    '/help/glossary',
+    '/help/getting-started',
+    '/help/getting-started/signing-in',
+    '/help/search',
+    '/help/search?q=stock+levels',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',
@@ -167,12 +173,22 @@ describe('public routes', () => {
     '/compendium-admin',
     '/supports',
     '/robots.txt.bak',
+    '/helpers',
+    '/help-desk',
   ])('lets a signed-out request to the unknown address %s through to the 404', async (path) => {
     const response = await proxy(request(path));
 
     expect(getRedirectUrl(response)).toBeNull();
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
+
+  // The staff help pages sit under the public /help but are for curators and keepers only.
+  it.each(['/help/staff', '/help/staff/vocabularies', '/help/staff/vocabularies/forms'])(
+    'redirects a signed-out request to the staff help page %s to sign in',
+    async (path) => {
+      expect((await proxy(request(path))).status).toBe(307);
+    },
+  );
 
   it('forwards the return path on a public route too', async () => {
     const response = await proxy(request('/invite/2b7c5e2f8a'));

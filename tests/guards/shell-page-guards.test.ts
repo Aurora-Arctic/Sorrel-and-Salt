@@ -62,4 +62,21 @@ describe('shell pages', () => {
     }
     expect(unguarded.map((file) => relative('.', file))).toEqual([]);
   });
+
+  // The staff help pages are in the shell, under the curation guard, and nowhere under the public help routes.
+  it('hold the staff help pages, each under the curation guard', () => {
+    const files = inject('repoFiles');
+    const staff = [
+      'src/app/(shell)/help/staff/page.tsx',
+      'src/app/(shell)/help/staff/[slug]/page.tsx',
+      'src/app/(shell)/help/staff/[slug]/[child]/page.tsx',
+    ];
+    const curation = /\brequireCuratorSession\(/;
+    for (const file of staff) {
+      expect(files, file).toContain(file);
+      expect(SHELL_PAGE.test(file), file).toBe(true);
+      expect(curation.test(readFileSync(file, 'utf8')), file).toBe(true);
+    }
+    expect(files.filter((file) => file.startsWith('src/app/(public)/help/staff/'))).toEqual([]);
+  });
 });

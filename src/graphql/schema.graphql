@@ -490,6 +490,115 @@ enum GrimoireOrder {
   UPDATED_DESC
 }
 
+"""A help row: an FAQ entry, an article or a glossary term."""
+type HelpArticle {
+  audience: HelpAudience!
+  body: String!
+
+  """The live children the reader’s audience reaches, in position order."""
+  children: [HelpArticle!]!
+  id: ID!
+  kind: HelpArticleKind!
+  parentId: ID
+  position: Int
+
+  """Whether readers see the row; a hidden parent hides its children too."""
+  shown: Boolean!
+  slug: String!
+  summary: String
+  title: String!
+}
+
+input HelpArticleInput {
+  audience: HelpAudience
+  body: String!
+
+  """
+  The sub pages a guide holds, in order, each placed by its place in the list.
+  """
+  childIds: [ID!]
+  kind: HelpArticleKind!
+  parentId: ID
+
+  """A whole number, 0 or more."""
+  position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
+  summary: String
+  title: String!
+}
+
+"""
+A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term.
+"""
+enum HelpArticleKind {
+  article
+  faq
+  guide
+  term
+}
+
+"""
+Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.
+"""
+input HelpArticlePatch {
+  audience: HelpAudience
+  body: String
+  childIds: [ID!]
+
+  """
+  A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused.
+  """
+  kind: HelpArticleKind
+  parentId: ID
+
+  """A whole number, 0 or more."""
+  position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
+  summary: String
+  title: String
+}
+
+"""
+Who reads a help row: everyone (`public`), curators and keepers (`staff`), or keepers alone (`keeper`).
+"""
+enum HelpAudience {
+  keeper
+  public
+  staff
+}
+
+"""
+Which rows the keeper’s list holds: the shown ones, the hidden ones, or both.
+"""
+enum HelpListing {
+  all
+  hidden
+  shown
+}
+
+"""
+What a title change would leave pointing at a help row’s old address; nothing redirects one.
+"""
+type HelpRenameEffects {
+  """
+  Every other live row whose body holds the old address or, for a term, marks the old title.
+  """
+  articles: [HelpArticle!]!
+  newPath: String!
+  oldPath: String!
+
+  """The help front page’s quick link titles that read the old slug."""
+  quickLinks: [String!]!
+}
+
 """
 A curated deity or category, by id, and how many entries it would list.
 """
@@ -1073,6 +1182,7 @@ type Mutation {
   ): Ingredient!
   createDeity(input: DeityInput!): Deity!
   createDeityTradition(input: DeityTraditionInput!): DeityTradition!
+  createHelpArticle(input: HelpArticleInput!): HelpArticle!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
 
@@ -1143,6 +1253,11 @@ type Mutation {
   A soft delete; the live deities under it move to `moveTo` first, re-slugged there, which they need when there are any.
   """
   deleteDeityTradition(id: ID!, moveTo: ID): ID!
+
+  """
+  A soft delete, answering the id; refused while the row holds live children.
+  """
+  deleteHelpArticle(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
 
   """
@@ -1207,6 +1322,16 @@ type Mutation {
   Lifts the pause standing on a user’s access now, and answers it. Site admins only.
   """
   liftUserAccessPause(userId: ID!): UserAccessPause!
+
+  """
+  Places every live FAQ entry, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpFaq(ids: [ID!]!): [HelpArticle!]!
+
+  """
+  Places every live top-level guide, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpGuides(ids: [ID!]!): [HelpArticle!]!
 
   """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
@@ -1349,6 +1474,11 @@ type Mutation {
   """
   setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
+
+  """
+  Shows or hides a row; a hidden row reaches no reader, and a hidden parent hides its children.
+  """
+  setHelpArticleShown(id: ID!, shown: Boolean!): HelpArticle!
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!
 
@@ -1429,6 +1559,7 @@ type Mutation {
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
   updateDocument(id: ID!, input: DocumentInput!): Document!
+  updateHelpArticle(id: ID!, input: HelpArticlePatch!): HelpArticle!
   updateIngredient(
     """
     The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
@@ -1762,6 +1893,30 @@ type Query {
   A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given, matching `query` when given and ranked best match first.
   """
   grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, query: String, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
+
+  """A public row by slug; not found for any other audience."""
+  helpArticle(slug: String!): HelpArticle!
+
+  """
+  The public top-level pages, guides and articles together, in position order.
+  """
+  helpArticles(after: String, before: String, first: Int, last: Int): QueryHelpArticlesConnection!
+
+  """The public FAQ entries, in position order."""
+  helpFaq(after: String, before: String, first: Int, last: Int): QueryHelpFaqConnection!
+
+  """The public glossary terms, A to Z."""
+  helpGlossary(after: String, before: String, first: Int, last: Int): QueryHelpGlossaryConnection!
+
+  """
+  What saving `title` on the row would leave pointing at its old address, read before the save.
+  """
+  helpRenameEffects(id: ID!, title: String!): HelpRenameEffects!
+
+  """
+  The rows the reader’s audience reaches that `query` finds, best first; a blank query finds none.
+  """
+  helpSearch(after: String, before: String, first: Int, last: Int, query: String!): QueryHelpSearchConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """
@@ -1818,6 +1973,11 @@ type Query {
     mintedTo: LocalDate
     status: InvitationCardBatchStatus
   ): QueryInvitationCardBatchesConnection!
+
+  """
+  Every live row of every kind and audience, shown and hidden, that the filters admit, A to Z: the keeper’s list.
+  """
+  keeperHelpArticles(after: String, audience: HelpAudience, before: String, first: Int, kind: HelpArticleKind, last: Int, listing: HelpListing, query: String): QueryKeeperHelpArticlesConnection!
   me: User!
 
   """One of the signed-in account’s own support requests."""
@@ -1849,6 +2009,12 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
+
+  """A row by slug among the audiences a curator or keeper reaches."""
+  staffHelpArticle(slug: String!): HelpArticle!
+
+  """Every live row of every kind the reader’s audience reaches, A to Z."""
+  staffHelpArticles(after: String, before: String, first: Int, last: Int): QueryStaffHelpArticlesConnection!
 
   """
   Open to a signed-out caller. The answer is about the caller alone, read under their own session.
@@ -2168,6 +2334,46 @@ type QueryGrimoireConnectionEdge {
   node: Spell!
 }
 
+type QueryHelpArticlesConnection {
+  edges: [QueryHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpFaqConnection {
+  edges: [QueryHelpFaqConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpFaqConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpGlossaryConnection {
+  edges: [QueryHelpGlossaryConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpGlossaryConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpSearchConnection {
+  edges: [QueryHelpSearchConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpSearchConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
 type QueryIngredientFormGroupsConnection {
   edges: [QueryIngredientFormGroupsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -2230,6 +2436,16 @@ type QueryInvitationCardBatchesConnectionEdge {
   node: InvitationCardBatch!
 }
 
+type QueryKeeperHelpArticlesConnection {
+  edges: [QueryKeeperHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryKeeperHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
 type QueryMySupportRequestsConnection {
   edges: [QueryMySupportRequestsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -2273,6 +2489,16 @@ type QueryReferenceSuggestionsConnection {
 type QueryReferenceSuggestionsConnectionEdge {
   cursor: String!
   node: Reference!
+}
+
+type QueryStaffHelpArticlesConnection {
+  edges: [QueryStaffHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryStaffHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
 }
 
 type QuerySupportRequestsConnection {

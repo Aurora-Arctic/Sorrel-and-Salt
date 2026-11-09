@@ -28,7 +28,8 @@ export interface ModalProps extends ModalHeading {
   onClose: () => void;
   /** Where the focus goes as the modal closes when its opener is gone or held none (a click in WebKit focuses no button), given the opener already out of the page, or null (claude-docs/components/modal.md, "Giving the focus back"). */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
-  size?: 'listed';
+  /** `listed`: the column with a list down its side. `picture`: as wide as a help screenshot, so it shows at full size where the screen allows. */
+  size?: 'listed' | 'picture';
   /** A body with nothing to fill in, only to read: Tab stops on the body itself so a keyboard can scroll it. Off by default, as a form's fields already reach every part. */
   readingBody?: boolean;
   /** Its contents are on their way: the body is marked busy, and the focus moves to their first field on arrival. */
@@ -51,6 +52,7 @@ export interface ModalButtonProps {
   /** A tip over an icon button, "Edit Stock" over the pencil. Wraps the button alone, never the dialog, which would open the tip on its focus. */
   tip?: string;
   size?: ModalProps['size'];
+  readingBody?: ModalProps['readingBody'];
   ref?: Ref<HTMLButtonElement>;
   onOpen?: () => void;
   /** Starts loading what the modal holds as a person reaches for the button (claude-docs/components/modal.md). */

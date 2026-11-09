@@ -15,7 +15,8 @@ export interface IconTipProps {
 export interface EditLinkProps {
   href: Route;
   name: string;
-  heading: ModalHeading;
+  /** The modal the address opens over the list; left out, the address is a page of its own and the link goes there. */
+  heading?: ModalHeading;
   /** The link's element, for a caller that returns the focus to it once a dialog it opened closes. */
   ref?: Ref<HTMLAnchorElement>;
   /** Starts the dialog's late-loading parts when the pointer, focus or a press reaches the link. */

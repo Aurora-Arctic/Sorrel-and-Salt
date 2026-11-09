@@ -1,0 +1,35 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The bubble is placed by `useTip`; the link stays a link, marked as a defined word by a dotted underline.
+.help-term__link {
+  text-decoration-style: dotted;
+}
+
+// A lifted card in place of the tip's tint: a definition is read, not glanced at, so it takes the body's colours.
+.help-term__bubble {
+  @include tip-above;
+
+  padding: space(3);
+  border-color: $hairline;
+  border-radius: radius('control');
+  background-color: $surface-card;
+  box-shadow: $shadow-floating;
+  color: $text-primary;
+  font-size: type-size('small');
+  font-weight: 400;
+
+  > strong {
+    display: block;
+    margin-block-end: space(1);
+    font-family: $font-heading;
+    font-size: type-size('title');
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+.help-term__more {
+  display: inline-block;
+  margin-block-start: space(1);
+}

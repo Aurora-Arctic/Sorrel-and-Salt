@@ -26,8 +26,11 @@ const CURATION = [
 ];
 
 const nav = () => screen.getByRole('navigation', { name: 'Curator' });
-const navHrefs = () => hrefs(within(nav()).getAllByRole('link'));
-const mainHrefs = () => hrefs(within(screen.getByRole('main')).getAllByRole('link'));
+// The staff help pages are linked from the nav too; the lists below are of the section's own pages, so they leave it out.
+const STAFF_HELP = '/help/staff';
+const ownPages = (list: (string | null)[]) => list.filter((href) => href !== STAFF_HELP);
+const navHrefs = () => ownPages(hrefs(within(nav()).getAllByRole('link')));
+const mainHrefs = () => ownPages(hrefs(within(screen.getByRole('main')).getAllByRole('link')));
 
 beforeEach(() => {
   requireCuratorSession.mockReset();
@@ -85,7 +88,7 @@ describe('the /curator page', () => {
     const row = within(nav())
       .getAllByRole('link')
       .filter((link) => !link.closest('details'));
-    expect(hrefs(row)).toEqual(CURATION);
+    expect(ownPages(hrefs(row))).toEqual(CURATION);
     expect(mainHrefs()).toEqual(CURATION);
   });
 
@@ -93,5 +96,19 @@ describe('the /curator page', () => {
     requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(CuratorPage()).rejects.toThrow('forbidden');
+  });
+});
+
+describe('the /curator section and the staff help pages', () => {
+  it.each([
+    ['a curator', CURATOR],
+    ['a keeper', ADMIN],
+  ])('links %s to the staff help pages', async (_, who) => {
+    requireCuratorSession.mockResolvedValue(who);
+
+    render(await CuratorLayout({ children: await CuratorPage() }));
+
+    expect(requireCuratorSession).toHaveBeenCalled();
+    expect(hrefs(within(nav()).getAllByRole('link'))).toContain(STAFF_HELP);
   });
 });

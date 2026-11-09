@@ -26,7 +26,7 @@ decisions make it hold:
   meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section (74 today, 1–34, 47–64 and 70–91), so a
+  "## 10. User stories" and the next section (75 today, 1–34, 47–64 and 70–92), so a
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own: a broken checklist is seen by whoever runs
   it.
@@ -65,7 +65,7 @@ decisions make it hold:
 
 ## Story numbering
 
-Story numbers 35–46 are **not reused**; v1 is 74 stories, numbered 1–34, 47–64 and 70–91. Every one of the 74 numbers is tagged by at least one spec under `tests/e2e/stories/`.
+Story numbers 35–46 are **not reused**; v1 is 75 stories, numbered 1–34, 47–64 and 70–92. Every one of the 75 numbers is tagged by at least one spec under `tests/e2e/stories/`.
 
 ## The reporter
 

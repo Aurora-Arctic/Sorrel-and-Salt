@@ -129,6 +129,8 @@ jobs:
             compendium/ \
             documents/ \
             src/db/seed/documents.ts \
+            src/db/seed/help.ts \
+            src/db/seed/help-content/ \
             src/db/seed/idempotent.ts \
             src/lib/citation.ts \
             claude-docs/compendium/deity-vocabulary-seed.md \

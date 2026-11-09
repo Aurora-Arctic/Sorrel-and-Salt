@@ -1209,6 +1209,45 @@ describe('Combobox', () => {
       expect(element()).toHaveAttribute('aria-expanded', 'false');
       expect(fireEvent.keyDown(element(), { key: 'Escape' })).toBe(true);
     });
+
+    it('draws each run of choices of one group under that group’s name, in the order given', () => {
+      const onChange = vi.fn();
+      render(
+        <ComboboxSelect
+          id="guide"
+          label="Guide"
+          value=""
+          onChange={onChange}
+          choices={[
+            { value: 'a', label: 'Testwort Basics', group: 'Public' },
+            { value: 'b', label: 'Testwort Queue Notes', group: 'Staff' },
+            { value: 'c', label: 'Testwort Roots', group: 'Public' },
+            { value: 'faq', label: 'FAQ' },
+          ]}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('combobox', { name: 'Guide' }));
+      const list = screen.getByRole('listbox', { name: 'Guide choices' });
+      const groups = within(list).getAllByRole('group');
+      const labels = (group: HTMLElement) =>
+        within(group)
+          .getAllByRole('option')
+          .map((option) => option.textContent);
+      expect(groups.map(labels)).toEqual([
+        ['Testwort Basics'],
+        ['Testwort Queue Notes'],
+        ['Testwort Roots'],
+      ]);
+      expect(groups[0]).toHaveAccessibleName('Public');
+      expect(groups[1]).toHaveAccessibleName('Staff');
+      expect(groups[2]).toHaveAccessibleName('Public');
+      const faq = within(list).getByRole('option', { name: 'FAQ' });
+      expect(groups.some((group) => group.contains(faq))).toBe(false);
+
+      fireEvent.click(within(list).getByRole('option', { name: 'Testwort Roots' }));
+      expect(onChange).toHaveBeenCalledWith('c');
+    });
   });
 
   describe('the multi-select box', () => {

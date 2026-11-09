@@ -183,6 +183,16 @@ describe('GrimoireList', () => {
     },
   );
 
+  it('links an empty tab to the Grimoire help article', () => {
+    render(<List {...props({ status: 'complete', spells: [], total: 0, position: undefined })} />);
+
+    expect(
+      within(screen.getByRole('status', { name: 'No Spells' })).getByRole('link', {
+        name: 'Learn More',
+      }),
+    ).toHaveAttribute('href', '/help/grimoire');
+  });
+
   it('names the drafts tab in its empty region', () => {
     render(
       <List

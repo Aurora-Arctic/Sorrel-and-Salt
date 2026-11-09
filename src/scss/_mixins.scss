@@ -32,6 +32,63 @@
   }
 }
 
+// The “#” link beside a help term or question, drawn by CSS so the heading reads as its title alone. It sits on the
+// vertical middle of the heading’s text and fades in when `$row` is hovered or holds focus, staying shown while the
+// link itself is focused. The fade and the colour change take the state-fade timing, snapped under reduced motion.
+@mixin entry-anchor($row) {
+  display: inline-block;
+  margin-inline-start: space(2);
+  font-family: $font-body;
+  font-size: type-size('small');
+  font-weight: 300;
+  line-height: 1;
+  vertical-align: middle;
+  color: $text-muted;
+  text-decoration: none;
+  opacity: 0;
+  @include state-fade(opacity, color);
+
+  &::before {
+    content: '#';
+  }
+
+  &:focus-visible,
+  #{$row}:hover &,
+  #{$row}:focus-within & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+// The row an address names (CSS `:target`): a faint tint behind it with a hairline accent edge at its start,
+// reaching a step past the column each side so the text and the rules stay put. The tint arrives stronger and settles
+// (`target-arrive`, in the primitives); under reduced motion it is the settled tint at once. `$block-end` reaches the
+// tint past the row's bottom edge, for a row spaced by its margin rather than its padding.
+@mixin target-highlight($block-end: 0) {
+  &:target {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 0 calc(-1 * #{space(3)});
+      inset-block-end: $block-end;
+      border-inline-start: 1px solid $edge-highlight;
+      background-color: color-mix(in srgb, $accent 5%, $surface-card);
+      animation: target-arrive $motion-long $motion-easing;
+
+      @include reduced-motion {
+        animation: none;
+      }
+    }
+  }
+}
+
 // Light is the system's preference, which a stored choice of theme may still override.
 @mixin color-scheme-light {
   @media (prefers-color-scheme: light) {

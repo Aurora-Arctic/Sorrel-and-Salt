@@ -1,6 +1,5 @@
 'use client';
 
-import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 import { type ReactElement, useMemo, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
@@ -10,11 +9,9 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import ConfirmedAction from '../ConfirmedAction';
-import { editorPlugins } from './elements';
-import Toolbar from './toolbar';
-import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
+import RichTextEditor, { markdownOf, useRichTextEditor } from '../RichTextEditor';
+import { editorValueToMarkdown, markdownToEditorValue } from '../RichTextEditor/markdown';
 import type { DocumentEditorProps } from './types';
-import '../DocumentPage/index.scss';
 import './index.scss';
 
 // The keeper's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
@@ -79,13 +76,10 @@ const DocumentEditor = ({
   revision: openRevision,
   nextNumber,
 }: DocumentEditorProps): ReactElement => {
-  const editor = usePlateEditor({
-    plugins: editorPlugins,
-    value: () => markdownToEditorValue(body),
-  });
+  const editor = useRichTextEditor(body);
   const [revision, setRevision] = useState(openRevision);
   const [dirty, setDirty] = useState(false);
-  const [markdown, setMarkdown] = useState(() => editorValueToMarkdown(editor.children as never));
+  const [markdown, setMarkdown] = useState(() => markdownOf(editor));
   const [publishing, setPublishing] = useState(false);
   // Bumped when a publish fails with text still unsaved, so the autosave sees that text as a fresh change.
   const [retry, setRetry] = useState(0);
@@ -97,7 +91,7 @@ const DocumentEditor = ({
   // the editor, not `body`, as the editor writes markdown a little differently from how it was
   // read.
   const savedRef = useRef<string | null>(null);
-  savedRef.current ??= editorValueToMarkdown(editor.children as never);
+  savedRef.current ??= markdownOf(editor);
   // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it
   // still counts, and the autosave sends it once that save lands.
   const sendingRef = useRef<string | null>(null);
@@ -115,7 +109,7 @@ const DocumentEditor = ({
       savedRef.current = text;
       revisionRef.current = saveDocumentDraft.revision;
       setRevision(saveDocumentDraft.revision);
-      setDirty(editorValueToMarkdown(editor.children as never) !== text);
+      setDirty(markdownOf(editor) !== text);
       return {
         revision: saveDocumentDraft.revision,
         savedAt: new Date(),
@@ -143,7 +137,7 @@ const DocumentEditor = ({
   async function publish(): Promise<void> {
     setPublishing(true);
     try {
-      if (dirty) await writeDraft(editorValueToMarkdown(editor.children as never));
+      if (dirty) await writeDraft(markdownOf(editor));
       const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
         documentId,
         expectedRevision: revisionRef.current,
@@ -184,19 +178,14 @@ const DocumentEditor = ({
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
-      <div className="document-page__body document-editor__text">
-        <Plate
-          editor={editor}
-          onValueChange={({ value }) => {
-            const text = editorValueToMarkdown(value as never);
-            setMarkdown(text);
-            setDirty(text !== (sendingRef.current ?? savedRef.current));
-          }}
-        >
-          <Toolbar />
-          <PlateContent aria-label="Document Text" />
-        </Plate>
-      </div>
+      <RichTextEditor
+        editor={editor}
+        label="Document Text"
+        onMarkdownChange={(text) => {
+          setMarkdown(text);
+          setDirty(text !== (sendingRef.current ?? savedRef.current));
+        }}
+      />
       <div className="document-editor__bar">
         <BusyButton
           className="btn"
