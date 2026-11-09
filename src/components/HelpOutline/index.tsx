@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactElement, ReactNode } from 'react';
+import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink } from '../../lib/navigation';
 import StackTable from '../DataTable';
@@ -82,7 +82,11 @@ const orderRows = (rows: readonly HelpOutlineSubPage[]): HelpOrderRow[] =>
     id: row.id,
     title: row.title,
     index: row.index,
-    cells: [<Title key="title" row={row} />, audienceCell(row), cornerCell(row)],
+    cells: [
+      <Title key="title" row={row} />,
+      <Fragment key="audience">{audienceCell(row)}</Fragment>,
+      <Fragment key="corner">{cornerCell(row)}</Fragment>,
+    ],
   }));
 
 const audienceColumn = <Row extends HelpOutlineRow>(): StackColumn<Row> => ({
