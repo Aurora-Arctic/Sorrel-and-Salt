@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { helpTerms, marksInMarkdown } from '@/lib/help-marks';
@@ -344,6 +344,26 @@ describe('the shipped help list', () => {
 
       expect(image?.[2], title).toBe(`/help/screens/${file}`);
       expect(existsSync(join('public', 'help', 'screens', file)), file).toBe(true);
+    }
+  });
+
+  it('pairs every committed screenshot with a dark one of the same size', () => {
+    const screens = join('public', 'help', 'screens');
+    // A PNG's width and height are the two big-endian words after its signature and IHDR header.
+    const size = (file: string) => {
+      const bytes = readFileSync(join(screens, file));
+      return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
+    };
+    const files = readdirSync(screens);
+    const light = files.filter((file) => !file.endsWith('.dark.png'));
+
+    expect(light.length).toBeGreaterThan(0);
+    expect(files.filter((file) => !file.endsWith('.png'))).toEqual([]);
+    expect([...files].sort()).toEqual(
+      light.flatMap((file) => [file, file.replace(/\.png$/, '.dark.png')]).sort(),
+    );
+    for (const file of light) {
+      expect(size(file.replace(/\.png$/, '.dark.png')), file).toEqual(size(file));
     }
   });
 

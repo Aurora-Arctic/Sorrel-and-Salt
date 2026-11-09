@@ -12,8 +12,9 @@ import {
 import { ingredientSlug } from '@/lib/slugify';
 
 // Writes the help articles' screenshots into public/help/screens/, from the seeded compendium and a coven made here,
-// in the light theme at one desktop width. Run by `npm run help:screenshots` (claude-docs/components/help-pages.md,
-// "Screenshots"); the pictures are committed, and an article shows one with `![alt](/help/screens/<name>.png "caption")`.
+// in the light theme as <name>.png and the dark as <name>.dark.png, at one desktop width. Run by `npm run help:screenshots`
+// (claude-docs/components/help-pages.md, "Screenshots"); the pictures are committed, and an article shows one with
+// `![alt](/help/screens/<name>.png "caption")`, the dark one found beside it.
 
 const SCREENS = join(process.cwd(), 'public', 'help', 'screens');
 /** The standard seed's site curator, fixture F. */
@@ -25,10 +26,36 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** Waits for the page's fonts, so no picture is taken in a fallback face. */
+/**
+ * Waits for the page's fonts and any running fade, so no picture is taken in a fallback face or mid-change. A looping
+ * animation never finishes, so only those with an end are awaited.
+ */
 async function settled(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.evaluate(() =>
+    Promise.all([
+      document.fonts.ready,
+      ...document
+        .getAnimations()
+        .filter((run) => Number.isFinite(run.effect?.getComputedTiming().endTime))
+        .map((run) => run.finished),
+    ]).then(() => undefined),
+  );
+}
+
+/**
+ * Takes the picture in the light theme, then again in the dark. The theme follows the system's preference, as no
+ * choice is stored, so the same frame is taken twice and the pair are the same size.
+ */
+async function bothThemes(
+  page: Page,
+  name: string,
+  take: (path: string) => Promise<unknown>,
+): Promise<void> {
+  await take(join(SCREENS, `${name}.png`));
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await settled(page);
+  await take(join(SCREENS, `${name}.dark.png`));
 }
 
 test('the compendium entry page, read signed out', async ({ page }) => {
@@ -56,10 +83,9 @@ test('the compendium entry page, read signed out', async ({ page }) => {
   const main = await page.locator('main').first().boundingBox();
   if (!main) throw new Error('the entry page drew no main');
 
-  await page.screenshot({
-    path: join(SCREENS, 'compendium-entry.png'),
-    clip: { x: 0, y: 0, width: 1024, height: Math.ceil(main.y + main.height) },
-  });
+  const clip = { x: 0, y: 0, width: 1024, height: Math.ceil(main.y + main.height) };
+
+  await bothThemes(page, 'compendium-entry', (path) => page.screenshot({ path, clip }));
 });
 
 test('the spell builder, open on a draft', async ({ page }) => {
@@ -111,5 +137,5 @@ test('the spell builder, open on a draft', async ({ page }) => {
   // No focus ring in the picture: the reader has pressed nothing.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 
-  await builder.screenshot({ path: join(SCREENS, 'spell-builder.png') });
+  await bothThemes(page, 'spell-builder', (path) => builder.screenshot({ path }));
 });

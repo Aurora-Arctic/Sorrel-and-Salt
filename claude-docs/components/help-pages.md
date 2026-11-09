@@ -108,17 +108,19 @@ A help body places a live widget with a paragraph that is one tag, `::widget[nam
 
 A help body shows a screenshot with a paragraph that is one image, `![alt text](/help/screens/<name>.png "caption")`. `renderMarkdown` draws it as a `.figure` with the title as its `figcaption`, only in help bodies; an image whose address is not a path on this site becomes its alt text. The pictures live in `public/help/screens/` and are committed; the proxy serves them under the public help article rule.
 
-`npm run help:screenshots` writes them: `tests/e2e/help-screenshots/`, run on `playwright.help-screenshots.config.ts` against the e2e slot server and a slot database it seeds, at 1024 wide in the light theme. `npm run e2e` leaves it out. Run it after a change to a page a screenshot shows, with the e2e lock, ports clear of the dev server and the placeholder secret:
+Every screenshot comes in two files of the same size: `<name>.png` in the light theme and `<name>.dark.png` in the dark. The author writes the light file only. The figure holds both pictures inside one `role="img"` element named by the alt text, each picture with an empty alt, so the alt text is read once. The `.figure` primitive (`src/scss/_primitives.scss`) shows the dark picture by default and the light one under the same selectors as the light theme tokens, so the picture follows a reader's chosen theme and switches with it; a `<picture>` with a `prefers-color-scheme` source would follow the system alone and ignore that choice. An image inside a sentence is not a figure and stays one file. `tests/db/seed/help-list.test.ts` fails a screenshot without its dark partner, or a pair of different sizes.
+
+`npm run help:screenshots` writes them: `tests/e2e/help-screenshots/`, run on `playwright.help-screenshots.config.ts` against the e2e slot server and a slot database it seeds, at 1024 wide, each picture first in the light theme and then in the dark. `npm run e2e` leaves it out. Run it after a change to a page a screenshot shows, with the e2e lock, ports clear of the dev server and the placeholder secret:
 
 ```sh
-flock /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
+scripts/with-lock.sh /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
   BETTER_AUTH_SECRET=local-dev-not-a-real-secret npm run help:screenshots
 ```
 
-| File                   | What it shows                                                              | Article                       |
-| ---------------------- | -------------------------------------------------------------------------- | ----------------------------- |
-| `compendium-entry.png` | The Rosemary entry page, signed out, marked reviewed by the seeded curator | Read an Entry and Its Sources |
-| `spell-builder.png`    | The spell builder over a draft, every section open, three steps in it      | Build a Spell                 |
+| Files                                               | What it shows                                                              | Article                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------- |
+| `compendium-entry.png`, `compendium-entry.dark.png` | The Rosemary entry page, signed out, marked reviewed by the seeded curator | Read an Entry and Its Sources |
+| `spell-builder.png`, `spell-builder.dark.png`       | The spell builder over a draft, every section open, three steps in it      | Build a Spell                 |
 
 ## Links to help
 

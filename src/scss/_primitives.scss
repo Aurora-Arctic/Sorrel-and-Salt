@@ -53,6 +53,19 @@
   }
 }
 
+// The light theme's screenshot in a `.figure`, its dark one hidden.
+@mixin figure-light-screen {
+  > .figure__screen {
+    > .figure__light {
+      display: block;
+    }
+
+    > .figure__dark {
+      display: none;
+    }
+  }
+}
+
 @mixin primitives-base {
   // Not modal-surface(): its shadow and radius would read as a dialog.
   .panel {
@@ -777,11 +790,32 @@
     border-radius: radius('surface');
     background-color: $surface-card;
 
-    > img {
+    > img,
+    > .figure__screen > img {
       display: block;
       max-width: 100%;
       height: auto;
       border-radius: radius('control');
+    }
+
+    // A screenshot holds a light and a dark picture; the theme's own selectors pick one, as a reader's chosen theme
+    // outranks the system's (claude-docs/components/help-pages.md, "Screenshots").
+    > .figure__screen {
+      display: block;
+
+      > .figure__light {
+        display: none;
+      }
+    }
+
+    @include color-scheme-light {
+      html:not([data-theme='dark']) & {
+        @include figure-light-screen;
+      }
+    }
+
+    html[data-theme='light'] & {
+      @include figure-light-screen;
     }
 
     > figcaption {

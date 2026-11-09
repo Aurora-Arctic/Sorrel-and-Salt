@@ -189,6 +189,30 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
 const SITE_IMAGE = /^\/(?!\/)/;
 
 /**
+ * A figure's picture in both themes: the written file for light and `<name>.dark.<ext>` beside it for dark, which the
+ * stylesheet swaps on the theme's own selectors, as a `<picture>` media query would ignore a reader's chosen theme.
+ * The pair is one image to assistive tech, so the alt text is read once.
+ */
+function themedScreen(image: Element): Element {
+  const { alt, src, ...rest } = image.properties;
+  const picture = (file: string, theme: 'light' | 'dark'): Element => ({
+    type: 'element',
+    tagName: 'img',
+    properties: { ...rest, src: file, alt: '', className: [`figure__${theme}`] },
+    children: [],
+  });
+  return {
+    type: 'element',
+    tagName: 'span',
+    properties: { className: ['figure__screen'], role: 'img', ariaLabel: String(alt ?? '') },
+    children: [
+      picture(String(src), 'light'),
+      picture(String(src).replace(/(\.[^./]+)?$/, '.dark$1'), 'dark'),
+    ],
+  };
+}
+
+/**
  * Turns a paragraph that is one image into a `.figure`, its title the caption beneath, and an image from another
  * site into its alt text (claude-docs/components/help-pages.md, "Screenshots").
  */
@@ -215,7 +239,7 @@ function shapeFigures(children: ElementContent[]): ElementContent[] {
       tagName: 'figure',
       properties: { className: ['figure'] },
       children: [
-        image,
+        themedScreen(image),
         ...(typeof caption === 'string' && caption !== ''
           ? [
               {
