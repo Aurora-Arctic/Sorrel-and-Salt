@@ -6,7 +6,7 @@ Findings are ranked by severity (high, medium, low). High means the copies have 
 
 Each finding records whether it has been fixed in its **Status** line and in the table below. Hours are estimates, not measurements.
 
-Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged a real bug and every high finding (40 findings). Every other medium and low finding becomes a grouped task in the Z. Cleanup milestone and shows "Moved to MC.n", naming the task (MC.1 → MC.9). Each finding's hours are the audit's first estimate; the MC tasks are estimated at about a quarter of their findings' total, scaled to finished de-duplication tasks of the same size (MB.206 → MB.226). D-130 shows that the owner keeps `lint:unused` non-blocking.
+Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged a real bug and every high finding (41 findings). Every other medium and low finding becomes a grouped task in the Z. Cleanup milestone and shows "Moved to MC.n", naming the task (MC.1 → MC.9). Each finding's hours are the audit's first estimate; the MC tasks are estimated at about a quarter of their findings' total, scaled to finished de-duplication tasks of the same size (MB.206 → MB.226). D-130 shows that the owner keeps `lint:unused` non-blocking.
 
 ## Summary
 
@@ -60,7 +60,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-46  | GroupList and GroupedValueList (and AdminInvitations, AdminCards) rebuild one list family file for file                                                      | medium   | Components    |     20 |   6.5 | Moved to MC.5                                   |
 | D-47  | `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times                                                                     | medium   | Server        |     19 |   4.5 | Moved to MC.3                                   |
 | D-48  | Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times                                                                | medium   | Styles        |     19 |     2 | Moved to MC.9                                   |
-| D-49  | The lede text is written in both a page and its skeleton                                                                                                     | medium   | Pages and lib |     18 |  2.75 | Moved to MC.2                                   |
+| D-49  | The lede text is written in both a page and its skeleton                                                                                                     | medium   | Pages and lib |     21 |     3 | Moved to MC.2                                   |
 | D-50  | `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting                                      | medium   | Pages and lib |     18 |  3.25 | Moved to MC.2                                   |
 | D-51  | "Has text" check (`(x ?? '').trim() !== ''`) written as a local `said` in four places and inline in six more                                                 | medium   | Components    |     16 |  1.25 | Moved to MC.7                                   |
 | D-52  | The coven access flags (`rolePermits` x4) are computed in more than one layout and page                                                                      | medium   | Pages and lib |     15 |   4.5 | Moved to MC.2                                   |
@@ -96,7 +96,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-82  | CupboardEntryForm lists its field names in four places that can drift apart                                                                                  | medium   | Components    |      7 |     2 | Moved to MC.5                                   |
 | D-83  | The user-dialog block is written out in three keeper pages                                                                                                   | medium   | Pages and lib |      6 |     2 | Moved to MC.2                                   |
 | D-84  | `SignInMethods/provider-row.tsx` hand-rolls a Remove confirmation the shared confirm pieces already provide                                                  | medium   | Components    |      6 |     2 | Moved to MC.8                                   |
-| D-85  | Magnifier submit button written in the search box, its idle twin and `SearchField`                                                                           | medium   | Components    |      6 |   1.5 | Moved to MC.6                                   |
+| D-85  | Magnifier submit button written in the search box, its idle twin and `SearchField`                                                                           | medium   | Components    |      6 |   1.6 | Moved to MC.6                                   |
 | D-86  | `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses                                                                        | medium   | Unused code   |      6 |     4 | Moved to MC.9                                   |
 | D-87  | Not-blank CHECK SQL written by hand in many tables                                                                                                           | medium   | Server        |      6 |     2 | Moved to MC.4                                   |
 | D-88  | Seven "lazy wrapper" components repeat `useLazyModule(x, true)` then `module ? <module.default {...props}/> : null`                                          | medium   | Components    |      6 |   1.5 | Moved to MC.6                                   |
@@ -117,7 +117,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-103 | "Card accepted by this user" written four ways, two as raw SQL                                                                                               | medium   | Server        |      4 |   1.5 | Moved to MC.3                                   |
 | D-104 | Jar-row number conversion `quantityOnHand === null ? null : Number(quantityOnHand)` is repeated                                                              | medium   | Pages and lib |      4 |     1 | Moved to MC.2                                   |
 | D-105 | IngredientForm/duplicates `PlusChoice` re-implements AddIcon's button and glyph                                                                              | medium   | Components    |      4 |     2 | Moved to MC.8                                   |
-| D-106 | Single-name forms (NameForm, RenameWorkspaceForm) copy each other                                                                                            | medium   | Components    |      4 |     3 | Moved to MC.5                                   |
+| D-106 | Single-name forms (NameForm, RenameWorkspaceForm) copy each other                                                                                            | medium   | Components    |      5 |  3.25 | Moved to MC.5                                   |
 | D-107 | "this field's server message, or undefined" repeated 8 times in 5 forms                                                                                      | medium   | Components    |      4 |     1 | Moved to MC.5                                   |
 | D-108 | Plain-state text fields hand-build `fieldDescription` + `FieldShell` + `<input className="input">` in four forms                                             | medium   | Components    |      4 |     3 | Moved to MC.5                                   |
 | D-109 | DocumentMailingPanel hand-writes `joinList` and a count pluralisation, twice with drifted wording                                                            | medium   | Components    |      4 |     1 | Moved to MC.7                                   |
@@ -238,6 +238,33 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-224 | QR ink colour duplicates SCSS `$chalk`                                                                                                                       | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-225 | `.page-frame--in-column` margin restates `.page-column` padding                                                                                              | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-226 | PageNav skeleton width cycle written as six `nth-child` rules                                                                                                | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
+| D-227 | Support and pause limit and required messages are written in the schema, the forms and the pause parsers, and the wording drifted                            | high     | Server        |      6 |     0 | Fixed                                           |
+| D-228 | The email field is wired by hand in six forms, with the submit-time check written out per form                                                               | medium   | Components    |      7 |     1 | Moved to MC.5                                   |
+| D-229 | The reason-note error state is hand-built in AdminInvitations and ConfirmedAction                                                                            | low      | Components    |      2 |  0.25 | Moved to MC.5                                   |
+| D-230 | A labelled date field is assembled by hand four times from `FieldShell` and `DateField`                                                                      | medium   | Components    |      4 |   0.5 | Moved to MC.5                                   |
+| D-231 | `SuggestField` is written twice, in IngredientForm and SpellBuilder, and the copies differ on a blank value                                                  | medium   | Components    |      2 |   0.5 | Moved to MC.5                                   |
+| D-232 | Plain-state forms set their problems and focus the first invalid field by hand                                                                               | low      | Components    |      3 |   0.5 | Moved to MC.5                                   |
+| D-233 | SupportForm and SignedOutSupportForm repeat their problems state, first-invalid focus and submit flow                                                        | medium   | Components    |      2 |   0.5 | Moved to MC.5                                   |
+| D-234 | TextField and PlainTextField repeat one render body                                                                                                          | medium   | Components    |      2 |   0.5 | Moved to MC.8                                   |
+| D-235 | The authenticator-code input and its digit stripper are written twice                                                                                        | low      | Components    |      2 |  0.25 | Moved to MC.8                                   |
+| D-236 | A controlled select inside a `FieldShell` is hand-built twice because `SelectField` needs react-hook-form                                                    | low      | Components    |      2 |  0.25 | Moved to MC.8                                   |
+| D-237 | StockDialog builds the same jar label and the same value map in two files                                                                                    | low      | Components    |      2 |   0.1 | Moved to MC.8                                   |
+| D-238 | The `framed` flag gives three help components and their skeletons two header layouts each                                                                    | medium   | Components    |      4 |  0.75 | Moved to MC.8                                   |
+| D-239 | HelpFrontSkeleton repeats HelpFront's wrapper markup                                                                                                         | low      | Components    |      2 |  0.25 | Moved to MC.2                                   |
+| D-240 | AddIngredientAction and NewSpellAction are near twins                                                                                                        | low      | Components    |      2 |  0.25 | Moved to MC.6                                   |
+| D-241 | `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox                                                                    | low      | Components    |      2 |   0.1 | Moved to MC.7                                   |
+| D-242 | The set of openable link schemes is written in a list and again in a regex                                                                                   | low      | Components    |      3 |  0.25 | Moved to MC.7                                   |
+| D-243 | Duplicate, unused and test-only exports remain among the form and support files                                                                              | low      | Components    |      6 |  0.25 | Moved to MC.9                                   |
+| D-244 | Four container queries add `0.01rem` by hand, and the breakpoint guard checks only `@media`                                                                  | low      | Styles        |      4 |   0.5 | Moved to MC.9                                   |
+| D-245 | `adminDeclaration` re-implements the pause note parser, with a second constant for the same 500                                                              | low      | Server        |      3 |  0.25 | Moved to MC.4                                   |
+| D-246 | `spell-step.ts` builds three `z.guid` schemas beside `requiredRowId`, and `SummariesInput` takes a bare string id                                            | low      | Server        |      4 |   0.1 | Moved to MC.4                                   |
+| D-247 | `reference-format.ts` has a local `trimmed` format equal to `trimEnds`                                                                                       | low      | Server        |      3 |   0.1 | Moved to MC.7                                   |
+| D-248 | `category-group.ts` writes the hex-colour message twice                                                                                                      | low      | Server        |      2 |   0.1 | Moved to MC.7                                   |
+| D-249 | `support.test.ts` has two `describe` blocks that prove the same error reference limit                                                                        | low      | Tests         |      2 |   0.1 | Moved to MC.1                                   |
+| D-250 | The coven name limit test is copied into create and rename with the literals 80 and 81                                                                       | low      | Tests         |      4 |   0.1 | Moved to MC.1                                   |
+| D-251 | The email field contract tests are repeated in four component test files                                                                                     | low      | Tests         |      4 |  0.25 | Moved to MC.1                                   |
+| D-252 | Component tests redefine `save`, `submit`, `type` and `fill`, and hand-write error-summary link checks                                                       | medium   | Tests         |     55 |     1 | Moved to MC.1                                   |
+| D-253 | `lint/source-sweeps.js` repeats its allowlist reporter, attribute extraction and file gate                                                                   | medium   | Tooling       |      5 |   0.5 | Moved to MC.1                                   |
 | S-1   | `vitest.yml`'s three part jobs (dom, node, db) are one job written three times                                                                               | medium   | Scripts       |      3 |     3 | Moved to MC.1                                   |
 | S-2   | The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`                                       | medium   | Scripts       |      2 |     2 | Moved to MC.1                                   |
 | S-3   | `setOutput` is written in four `.mjs` scripts                                                                                                                | low      | Scripts       |      4 |   0.5 | Moved to MC.1                                   |
@@ -1498,7 +1525,14 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Fix:** one constant per tab. Do together with D-117.
 - **Tests covering the callers:** `tests/app/(shell)/account/*`.
 
-- **Estimate:** 2.75 hours
+- **Extra copies and changes found when merging:**
+
+Two more page-and-skeleton pairs:
+
+- "Add Ingredient" typed in `src/app/(shell)/coven/[slug]/ingredients/add-ingredient-action.tsx`, `src/app/(shell)/coven/[slug]/skeleton.tsx` and `src/components/AppShell/add-ingredient-button.tsx`, and "New Spell" in `grimoire/(list)/new-spell-action.tsx` and its skeleton. Shared piece: `ADD_INGREDIENT_LABEL` and `NEW_SPELL_LABEL` exported beside each action.
+- `src/components/SpellRecipe/skeleton.tsx` types "Category Match", "In the Cupboard" and "Workings" again from `src/components/SpellRecipe/index.tsx` and `sections.ts` (`recipeMenu()` is already shared). Shared piece: export the section titles from `sections.ts` and import them in both.
+
+- **Estimate:** 3 hours
 - **Status:** Not fixed: moved to MC.2.
 
 ### D-50: `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting
@@ -1771,6 +1805,11 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 - **Extra copies and changes found when merging:**
 
 `SupportViewReplyForm/index.tsx` hand-rolls `sending` and `failure` and repeats `MESSAGE_LIMIT = 4000` and the bot-trap `website` field.
+The three reply forms have also drifted on rules the merged form must settle once:
+
+- The discard guard: `SupportViewReplyForm/index.tsx` uses `body !== ''`, so a whitespace-only reply raises the discard question there, while `SupportRequests/reply-form.tsx` and `SupportSenderRequest/reply-box.tsx` use `body.trim() !== ''`. Fixed in M17.8: the view-token form now uses `body.trim() !== ''`.
+- The timed-out Notice kind: `reply-box.tsx` uses `warn` and `reply-form.tsx` uses `caution` for the same message. Fixed in M17.8: both use one kind.
+- The length check: `reply-box.tsx` and `SupportViewReplyForm/index.tsx` each keep a local `tooLong` that `PlainTextField`'s `limit` already covers, and `reply-form.tsx` does neither. The merged form uses `limit`.
 
 - **Estimate:** 5.5 hours
 - **Status:** Not fixed: moved to MC.5.
@@ -2193,6 +2232,10 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 - **Fix:** the helper returns the shared props; each page spreads it. Keep staff vs public differences (robots, base path) as arguments.
 - **Tests covering the callers:** `tests/app/(public)/help/*`, `tests/app/(shell)/help/*`.
 
+- **Extra copies and changes found when merging:**
+
+More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.tsx` and `[slug]/[child]/page.tsx` still repeat the `generateMetadata` and props assembly after the header moved into the layout. The same helper covers them.
+
 - **Estimate:** 2.75 hours
 - **Status:** Not fixed: moved to MC.8.
 
@@ -2464,8 +2507,9 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 - **Extra copies and changes found when merging:**
 
 src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
+A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/index.tsx` each carry `data-1p-ignore` and its comment. HelpSearchForm renders `SearchField`, or both spread one `SEARCH_INPUT_ATTRIBUTES` object. Adds 0.1 hours.
 
-- **Estimate:** 1.5 hours
+- **Estimate:** 1.6 hours
 - **Status:** Not fixed: moved to MC.6.
 
 ### D-86: `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses
@@ -2852,8 +2896,9 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `src/components/RenameWorkspaceForm/index.tsx` (same shape)
 - `src/components/ReceivedInvitations/accept-control.tsx` and `decline-control.tsx` (manual try/catch plus `feedback.report(readGraphqlFailure(error).alert)`; one-button variants, two near-identical files)
 - `src/components/ReportThis/index.tsx`, `src/components/RecordWorking/complete-action.tsx`, `src/components/RecordWorking/form.tsx`
+  A third single-name form: `src/components/Passkeys/rename-fields.tsx` (one `PlainTextField` and `FormActions`, with `useDiscardGuard(value !== name…)`). `NameForm/index.tsx` and `RenameWorkspaceForm/index.tsx` both compute `typed !== '' && typed !== name`, but NameForm checks the limit through `NameInput.safeParse` and RenameWorkspaceForm by hand with `value.trim().length > COVEN_NAME_LIMIT`. All three should validate through a schema. Adds 0.25 hours.
 
-- **Estimate:** 3 hours
+- **Estimate:** 3.25 hours
 - **Status:** Not fixed: moved to MC.5.
 
 ### D-107: "this field's server message, or undefined" repeated 8 times in 5 forms
@@ -4874,6 +4919,428 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 
 - **Estimate:** 0.5 hours
 - **Status:** Not fixed: moved to MC.9.
+
+### D-227: Support and pause limit and required messages are written in the schema, the forms and the pause parsers, and the wording drifted
+
+- **Severity:** high
+- **Why it matters:** The form and the server said different things for the same field: the about refusal lost its full stop in the schema, and a message or note over its limit read "Keep the message to 500 characters" on the server and "Keep this to 500 characters or fewer" in the form. `limitMessage` states that the schema carries the same words as the form, and four schemas did not.
+- **Where:**
+  - `src/lib/support-messages.ts` (`ABOUT_REQUIRED`, `SUBJECT_REQUIRED`, `MESSAGE_REQUIRED`), used by `SupportForm` and `SignedOutSupportForm`
+  - `src/modules/support/validation/support.ts`: the same three sentences typed again, the about one without its full stop, and "Keep the message/subject to N characters"
+  - `src/lib/pause-message.ts`: "Keep the message/note to 500 characters" beside the pause forms, which show `limitMessage(500)`
+  - `src/modules/coven/services/coven-slug.ts` and `src/modules/identity/validation/name.ts`: the `requiredText(...).max(n, { error: limitMessage(n) })` shape
+- **Shared piece:** `src/lib/support-messages.ts` for the required messages, and `limitMessage` (`src/lib/formats.ts`) through a `limitedText` helper in `src/lib/validation.ts` for every limit.
+- **Guard:** `tests/guards/limit-message.test.ts` refuses a hand-written "Keep the … characters" sentence in `src/`.
+- **Fix:** The schema imports the shared messages, every limit uses `limitMessage`, and the tests that asserted the old sentences assert the shared ones.
+- **Tests covering the callers:** `tests/modules/support/validation/support.test.ts`, the pause and coven service tests, the support component tests.
+
+- **Estimate:** 0 hours
+- **Status:** Fixed. The schema and the pause parsers use the shared messages and `limitMessage`, so the form and the server say the same words.
+
+### D-228: The email field is wired by hand in six forms, with the submit-time check written out per form
+
+- **Severity:** medium
+- **Why it matters:** Only the two invite forms share an email field (D-4). Six other forms repeat its format and check props, and two repeat the submit-time check, so a change to how an address is tidied or refused has to be made in each.
+- **Where:**
+  - `src/components/AdminInvitations/invite-form.tsx` and `src/components/InviteDialog/index.tsx`: the same `EmailAddress.safeParse(email)` block that turns the first issue into a `{ field: { name: 'email', message } }` failure
+  - `src/components/EmailForm/index.tsx`, `ForgotPasswordForm/index.tsx`, `SignedOutSupportForm/index.tsx` and `SignInPanel/password-form.tsx`: each passes `format={emailFormat}` and `check={emailAddressProblem}` to a `PlainTextField` and runs its own submit-time check
+  - `src/components/BusinessCards/index.tsx`: passes `format={emailFormat}` again
+- **Shared piece:** `InviteEmailField` (`src/components/InviteDialog/email-field.tsx`) already holds the format, check and browser attributes. Move it into the Field set as a general email field, and add one helper that turns `EmailAddress.safeParse` into the failure shape.
+- **Guard:** A test that fails a `PlainTextField` with `format={emailFormat}` outside the shared email field.
+- **Fix:** Move the field, add the helper, replace the hand-wired copies. Each form keeps its own submit behaviour.
+- **Tests covering the callers:** The component tests for EmailForm, ForgotPasswordForm, InviteDialog, AdminInvitations, SignedOutSupportForm, SignInPanel and BusinessCards.
+
+- **Estimate:** 1 hour
+- **Status:** Not fixed: moved to MC.5.
+
+### D-229: The reason-note error state is hand-built in AdminInvitations and ConfirmedAction
+
+- **Severity:** low
+- **Why it matters:** A change to when the reason note is checked or its error cleared has to be made in both forms.
+- **Where:**
+  - `src/components/AdminInvitations/invite-form.tsx`: a `noteError` state, `reasonProblem(note)` on submit and a clear on change
+  - `src/components/ConfirmedAction/index.tsx`: the same pair
+- **Shared piece:** `ReasonField` (`src/components/Field/reason-field.tsx`) and `reasonProblem` already exist; the state around them repeats.
+- **Guard:** None practical.
+- **Fix:** Let `ReasonField` own its error state, or add a small hook beside it.
+- **Tests covering the callers:** `tests/components/ConfirmedAction/` and `tests/components/AdminInvitations/`, including their over-limit tests.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.5.
+
+### D-230: A labelled date field is assembled by hand four times from `FieldShell` and `DateField`
+
+- **Severity:** medium
+- **Why it matters:** The label, description, error and shell wiring around `DateField` is written in each form, so a fix to how a date field shows its error reaches only the copy that was edited.
+- **Where:**
+  - `src/components/RecordWorking/form.tsx`
+  - `src/components/UserDetail/access-pause-parts.tsx`
+  - `src/components/IngredientForm/reference-panel.tsx` (`ReferenceDayField`)
+  - `src/components/AdminCards/mint-form.tsx` (Expires On)
+- **Shared piece:** A `PlainDateField` in the Field set beside `PlainTextField`: state-held value, label, hint and error around `DateField`.
+- **Guard:** A lint rule that fails `DateField` outside a Field-set wrapper.
+- **Fix:** Add the field and use it in the four forms.
+- **Tests covering the callers:** The component tests for RecordWorking, UserDetail, IngredientForm and AdminCards.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.5.
+
+### D-231: `SuggestField` is written twice, in IngredientForm and SpellBuilder, and the copies differ on a blank value
+
+- **Severity:** medium
+- **Why it matters:** Both are a Combobox that tidies its text when the box is left, but they handle a blank value differently, so the same input behaves differently in the two forms.
+- **Where:**
+  - `src/components/IngredientForm/fields.tsx` (`SuggestField`)
+  - `src/components/SpellBuilder/suggest-field.tsx` (`SpellSuggestField`)
+- **Shared piece:** One suggest field in the Field set, or a tidy-on-blur option on the Combobox.
+- **Guard:** None practical.
+- **Fix:** Keep the more complete copy, move it to the Field set and delete the other. Check the blank-value difference against each form's tests first.
+- **Tests covering the callers:** `tests/components/IngredientForm/` and `tests/components/SpellBuilder/`.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.5.
+
+### D-232: Plain-state forms set their problems and focus the first invalid field by hand
+
+- **Severity:** low
+- **Why it matters:** Setting the problems, flushing them and moving focus to the first invalid field is written out in each plain-state form, so the order of focus and the summary can differ between forms.
+- **Where:**
+  - `src/components/AdminCards/mint-form.tsx`: a `pressed` state, `flushSync` and a ref focus
+  - `src/components/AdminInvitations/invite-form.tsx`: `setFailure` then focus
+  - The email forms in D-228
+- **Shared piece:** `FormErrorSummary` and `useField` cover display and links; the set-then-focus step has no shared piece.
+- **Guard:** None practical.
+- **Fix:** A small hook for plain-state forms that holds the problems, the pressed flag and the focus step. The `type="number"` input in `mint-form.tsx` is on the lint allowlist on purpose (a bounded whole number), so it stays.
+- **Tests covering the callers:** `tests/components/AdminCards/`, `tests/components/AdminInvitations/`, `tests/components/InviteDialog/`.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.5.
+
+### D-233: SupportForm and SignedOutSupportForm repeat their problems state, first-invalid focus and submit flow
+
+- **Severity:** medium
+- **Why it matters:** Both forms hold the same `Problems` type, `shown`, `edited`, `focusFirst`, the subject and message checks, the `flushSync` submit and the `readGraphqlFailure` catch. D-56 Part 2 covers the field markup, not this logic.
+- **Where:**
+  - `src/components/SupportForm/index.tsx` (`Problems`, `edited`, `focusFirst`, `problemsOf`)
+  - `src/components/SignedOutSupportForm/index.tsx` (the same pieces)
+- **Shared piece:** A hook in `src/components/SupportForm/` that holds the problems, `edited`, `focusFirst` and the subject and message checks. The two forms keep their own fields. They differ today in `maxLength`, the character count and client-side checking, and the hook makes those differences explicit choices.
+- **Guard:** None practical.
+- **Fix:** Extract the hook after D-56 Part 2 merges the field markup.
+- **Tests covering the callers:** `tests/components/SupportForm/` and `tests/components/SignedOutSupportForm/`.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.5.
+
+### D-234: TextField and PlainTextField repeat one render body
+
+- **Severity:** medium
+- **Why it matters:** The two text fields share `blurFormat` and `browserAttributes` in `text-control.tsx`, but each still writes the same props, mask setup, `aria-describedby` join, limit count and control markup, so a change to the control must be made twice.
+- **Where:**
+  - `src/components/Field/text-field.tsx` and `src/components/Field/plain-text-field.tsx`: about 20 destructured props, the `browserAttributes` call, the `useMask` setup, the `[describedBy, limit && countId]` join, the `after` slot with the count, and the markup that picks a textarea or an input inside `span.field__control` with a `Spinner` when busy
+- **Shared piece:** One control component (or hook) in `src/components/Field/text-control.tsx` that both fields wrap, taking value and change handlers from react-hook-form or from state.
+- **Guard:** The "each format rule is written once" lint and the tests on both fields remain.
+- **Fix:** Extract the control; each field only adapts value, change, blur and error.
+- **Tests covering the callers:** `tests/components/Field/text-field.test.tsx`, `plain-text-field.test.tsx`, and the RichTextEditor link dialog and HelpSearchForm tests.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.8.
+
+### D-235: The authenticator-code input and its digit stripper are written twice
+
+- **Severity:** low
+- **Why it matters:** A change to what a code input accepts has to be made in the sign-in step and in the account two-factor setup.
+- **Where:**
+  - `src/components/SignInPanel/two-factor-step.tsx`: `code.replace(/\s/g, '')` and a `PlainTextField` with `inputMode="numeric"`, `autoComplete="one-time-code"` and `spellCheck={false}`
+  - `src/components/PasswordSection/two-factor.tsx`: the same stripper and field
+- **Shared piece:** A `CodeField` beside the Field set and a `codeDigits` helper in `src/lib/formats.ts`.
+- **Guard:** None practical.
+- **Fix:** Extract both. The sign-in step keeps its method switch for `autoComplete`.
+- **Tests covering the callers:** `tests/components/SignInPanel/two-factor-step.test.tsx` and `tests/components/PasswordSection/two-factor.test.tsx`.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.8.
+
+### D-236: A controlled select inside a `FieldShell` is hand-built twice because `SelectField` needs react-hook-form
+
+- **Severity:** low
+- **Why it matters:** `SelectField` calls `useFormContext`, so plain-state forms build their own select with the label, hint and error wiring.
+- **Where:**
+  - `src/components/UserDetail/access-pause-parts.tsx` (For)
+  - `src/components/SupportRequests/detail.tsx` (Assignee, with `aria-busy`)
+- **Shared piece:** A `PlainSelectField` in `src/components/Field/` beside `PlainTextField`, taking label, value, change handler, options, error, hint and busy.
+- **Guard:** The Field-input lint rules do not cover a raw `<select>`; a rule could.
+- **Fix:** Add the field and use it in both places.
+- **Tests covering the callers:** `tests/components/UserDetail/access-pause-panel.test.tsx` and `tests/components/SupportRequests/index.test.tsx`.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.8.
+
+### D-237: StockDialog builds the same jar label and the same value map in two files
+
+- **Severity:** low
+- **Why it matters:** A change to how a jar is named or its values are read must be made in `batch.ts` and in `form.tsx`.
+- **Where:**
+  - `src/components/StockDialog/batch.ts` (`labelOf`, and `new Map(jars.map(...stockFormValues...))`)
+  - `src/components/StockDialog/form.tsx` (`labelOf` and the same map)
+- **Shared piece:** `jarLabel(jar)` and `jarValues(jars)` exported from `StockDialog/batch.ts`.
+- **Guard:** None practical.
+- **Fix:** Export the two and import them in `form.tsx`.
+- **Tests covering the callers:** `tests/components/StockDialog/`.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.8.
+
+### D-238: The `framed` flag gives three help components and their skeletons two header layouts each
+
+- **Severity:** medium
+- **Why it matters:** The heading and search box are drawn by the help layout's header on the public pages and by each component on the staff page, so the pair exists in the layout head and in four more places.
+- **Where:**
+  - `src/components/HelpIndex/index.tsx` and `HelpIndex/skeleton.tsx`: `{!framed && <PageHeader title={heading} />}` and `{!framed && <HelpSearchForm />}`
+  - `src/components/HelpArticleView/index.tsx` and `HelpArticleView/skeleton.tsx`: the same two lines
+  - The staff route `(shell)/help/staff` is the only caller that leaves `framed` false
+- **Shared piece:** One help header component that takes `heading` and `framed`, or the same layout header mounted for staff help so `framed` and its branches go. Related: D-73.
+- **Guard:** A test that `HelpIndex` and `HelpArticleView` do not import `PageHeader`.
+- **Fix:** Move the `!framed` branch into the one component and render it once per page.
+- **Tests covering the callers:** `tests/components/HelpIndex/`, `tests/components/HelpArticleView/`, `tests/e2e/help-pages.spec.ts`, `tests/e2e/skeleton-layout.spec.ts`.
+
+- **Estimate:** 0.75 hours
+- **Status:** Not fixed: moved to MC.8.
+
+### D-239: HelpFrontSkeleton repeats HelpFront's wrapper markup
+
+- **Severity:** low
+- **Why it matters:** A change to the help front's wrapper classes reaches the page but not its skeleton, the same shape as D-49.
+- **Where:**
+  - `src/components/HelpFront/index.tsx` (`help-front` and the `help-front__body` region)
+  - `src/components/HelpFront/skeleton.tsx` (the same two classes on plain divs)
+- **Shared piece:** A `HelpFrontShell` that takes a head and children, used by both.
+- **Guard:** The skeleton-layout e2e catches drift only afterwards; no mechanical guard is practical.
+- **Fix:** Extract the shell and pass the real head or the skeleton head.
+- **Tests covering the callers:** `tests/e2e/skeleton-layout.spec.ts` (help routes).
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.2.
+
+### D-240: AddIngredientAction and NewSpellAction are near twins
+
+- **Severity:** low
+- **Why it matters:** Both are client components that read the path and search params, build a dialog address and render `AddAction`, so a change to how a page action opens its dialog is made twice.
+- **Where:**
+  - `src/app/(shell)/coven/[slug]/ingredients/add-ingredient-action.tsx`
+  - `src/app/(shell)/coven/[slug]/grimoire/(list)/new-spell-action.tsx`
+  - `AddAction` already exists in `src/app/(shell)/curator/add-action.tsx`
+- **Shared piece:** One `DialogAddAction({ label, value })` client component, or a hook that builds the dialog address.
+- **Guard:** None practical.
+- **Fix:** Add the component; each page supplies only a label and a dialog value.
+- **Tests covering the callers:** The coven Ingredients and Grimoire e2e stories.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.6.
+
+### D-241: `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox
+
+- **Severity:** low
+- **Why it matters:** A new value in either union has to be added in both type files.
+- **Where:**
+  - `src/components/Field/types.ts` and `src/components/Combobox/types.ts`: the `autoCapitalize` and `enterKeyHint` unions
+  - `src/components/Combobox/types.ts`: `format?: (text: string) => string` instead of `FieldFormat`
+- **Shared piece:** Named types exported from `src/components/Field/types.ts` and imported by Combobox.
+- **Guard:** None needed; the type check covers it.
+- **Fix:** Import the types.
+- **Tests covering the callers:** Type check only.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.7.
+
+### D-242: The set of openable link schemes is written in a list and again in a regex
+
+- **Severity:** low
+- **Why it matters:** Adding a scheme means changing `LINK_SCHEMES` and the `OPENABLE_ADDRESS` regex, and the two can disagree.
+- **Where:**
+  - `src/lib/link-address.ts`: `LINK_SCHEMES` and the hand-written `https:|mailto:` in `OPENABLE_ADDRESS`
+  - `src/components/RichTextEditor/elements.tsx` and `markdown.ts`: the same link-plugin options
+- **Shared piece:** Build the regex from `LINK_SCHEMES`, and export one link-plugin options object.
+- **Guard:** A test that every scheme in `LINK_SCHEMES` matches `OPENABLE_ADDRESS` and an `http:` address does not.
+- **Fix:** Derive the regex and share the options.
+- **Tests covering the callers:** `tests/lib/link-address.test.ts`, and the RichTextEditor and DocumentPage tests.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.7.
+
+### D-243: Duplicate, unused and test-only exports remain among the form and support files
+
+- **Severity:** low
+- **Why it matters:** Exports nothing uses, or that only a test uses, make a change look wider than it is. Related: D-86, D-145 and D-157.
+- **Where:**
+  - `src/lib/email-address.ts`: `normaliseEmail` and `emailFormat` are one function exported twice
+  - `src/modules/ingredients/validation/types.ts`: an unused `FieldFormat` re-export
+  - `src/modules/support/validation/limits.ts`: an unused `ERROR_REFERENCE_MAX_LENGTH` re-export
+  - `src/components/StockDialog/form.tsx`: `StockDialogForm` is both a named and the default export
+  - Hidden by `ignoreExportsUsedInFile` (D-86), used only in their own file or by tests: `formatPhoneNumber`, `isOpenableAddress`, `applyMask`, `Deletion`, `MaskEdit`, `MaskedText`
+- **Shared piece:** None; delete or un-export.
+- **Guard:** Knip, once D-86 turns `ignoreExportsUsedInFile` off.
+- **Fix:** Delete the alias and the unused re-exports; un-export the test-only ones, or keep them with a stated reason.
+- **Tests covering the callers:** The tests that import the test-only exports.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.9.
+
+### D-244: Four container queries add `0.01rem` by hand, and the breakpoint guard checks only `@media`
+
+- **Severity:** low
+- **Why it matters:** The step that puts a width on exactly one side of an edge is written by hand in container queries, and nothing refuses a new raw `@container` width as D-12 does for `@media`.
+- **Where:**
+  - `src/scss/_primitives.scss` (two `page-header` queries)
+  - `src/components/SpellRecipe/index.scss`
+  - `src/components/TabbedPage/index.scss`
+  - `tests/guards/breakpoints.test.ts` matches `@media` only
+- **Shared piece:** `container-from($name, $width)` and `container-to($name, $width)` mixins in `src/scss/_mixins.scss` that own the `0.01rem` step.
+- **Guard:** Extend `tests/guards/breakpoints.test.ts` to refuse a raw `@container` width.
+- **Fix:** Add the two mixins, convert the queries, extend the guard.
+- **Tests covering the callers:** `tests/guards/breakpoints.test.ts`, and the skeleton-layout, spell-recipe-layout and page-with-nav-layout e2e specs.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.9.
+
+### D-245: `adminDeclaration` re-implements the pause note parser, with a second constant for the same 500
+
+- **Severity:** low
+- **Why it matters:** The same trim, blank-is-none and over-500 refusal is written in two services, so a change to the rule reaches only one.
+- **Where:**
+  - `src/modules/identity/services/admin-changes.ts` (`adminDeclaration`, using `REASON_LIMIT`)
+  - `src/lib/pause-message.ts` (`parsePauseNote`, using `PAUSE_TEXT_MAX_LENGTH`)
+  - `src/modules/identity/validation/reason.ts`: `reasonTooLong` and `reasonProblem` restate the trim-then-compare for the forms
+- **Shared piece:** One `parseTrimmedNote(value, { field, limit, required })` in `src/lib/` that both call. The owner decides whether a reason and a pause note share one limit by rule or by coincidence: if by coincidence, keep two constants and share only the parser.
+- **Guard:** None practical.
+- **Fix:** Extract the parser and keep the `note` path and the 500 limits.
+- **Tests covering the callers:** `tests/modules/identity/services/admin-invitations.test.ts` (500 and 501), the access-pause and role-change tests, `tests/lib/pause-message*.test.ts`.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.4.
+
+### D-246: `spell-step.ts` builds three `z.guid` schemas beside `requiredRowId`, and `SummariesInput` takes a bare string id
+
+- **Severity:** low
+- **Why it matters:** `requiredRowId(message)` is exactly the repeated schema, and a malformed `versionId` reaches the repository instead of being refused as a validation issue.
+- **Where:**
+  - `src/modules/grimoire/validation/spell-step.ts` (three `z.guid({ error })` calls)
+  - `src/lib/validation.ts` (`requiredRowId`)
+  - `src/modules/documents/services/document-mailing.ts` (`versionId: z.string()`, and `SummariesInput` built in the service although the module keeps schemas in `validation/`)
+- **Shared piece:** `requiredRowId(message).nullish()` in the step schema; `RowId` in `SummariesInput`, which moves to `src/modules/documents/validation/documents.ts`.
+- **Guard:** The D-43 guard, if MC.4 adds one, also refuses `z.guid(` outside `lib/validation.ts`.
+- **Fix:** Replace the three calls and move one schema.
+- **Tests covering the callers:** `tests/modules/grimoire/validation/spell.test.ts` and the documents mailing tests.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.4.
+
+### D-247: `reference-format.ts` has a local `trimmed` format equal to `trimEnds`
+
+- **Severity:** low
+- **Why it matters:** `tidy` and `withScheme` already moved to `src/lib/formats.ts` from this file, and this format was left behind.
+- **Where:**
+  - `src/modules/ingredients/validation/reference-format.ts` (`trimmed`, used for `modified` and `accessed`, and `withScheme(text.trim())` for `url`)
+  - `src/lib/formats.ts` (`trimEnds`)
+- **Shared piece:** `trimEnds` from `src/lib/formats`.
+- **Guard:** None practical.
+- **Fix:** Import it, delete `trimmed` and use it in `url`.
+- **Tests covering the callers:** `tests/modules/ingredients/validation/reference*.test.ts`.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.7.
+
+### D-248: `category-group.ts` writes the hex-colour message twice
+
+- **Severity:** low
+- **Why it matters:** A wording change to the colour refusal has to be made on two lines.
+- **Where:**
+  - `src/modules/vocabulary/validation/category-group.ts` (the `string` error and the `regex` error)
+- **Shared piece:** A `HEX_MESSAGE` constant in the file.
+- **Guard:** None practical.
+- **Fix:** One constant.
+- **Tests covering the callers:** `tests/modules/vocabulary/validation/category-group.test.ts`.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.7.
+
+### D-249: `support.test.ts` has two `describe` blocks that prove the same error reference limit
+
+- **Severity:** low
+- **Why it matters:** The same limit is proved twice, with a second request builder beside the shared `BASE`.
+- **Where:**
+  - `tests/modules/support/validation/support.test.ts` ("error reference limit" and "SignedOutSupportRequestInput error reference")
+- **Shared piece:** One block that keeps the signed-in and signed-out comparison and adds the 65 and 100 boundary and the message assertion, using `BASE`.
+- **Guard:** None practical.
+- **Fix:** Fold the second block into the first, keeping the message assertion only the second proves.
+- **Tests covering the callers:** The file itself.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### D-250: The coven name limit test is copied into create and rename with the literals 80 and 81
+
+- **Severity:** low
+- **Why it matters:** `COVEN_NAME_LIMIT` exists for this, and a changed limit would leave these tests failing for the wrong reason or passing at the old edge.
+- **Where:**
+  - `tests/modules/coven/services/workspace-creation.test.ts`
+  - `tests/modules/coven/services/workspace-rename.test.ts`
+  - `tests/components/CreateWorkspaceForm/index.test.tsx` and `tests/components/RenameWorkspaceForm/index.test.tsx` (`limitMessage(80)`)
+- **Shared piece:** `COVEN_NAME_LIMIT` from `@/modules/coven/validation/workspace-name`, or one `CovenNameInput` schema test with a smoke assertion per service.
+- **Guard:** None practical.
+- **Fix:** Use the constant in all four tests.
+- **Tests covering the callers:** The four files above.
+
+- **Estimate:** 0.1 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### D-251: The email field contract tests are repeated in four component test files
+
+- **Severity:** low
+- **Why it matters:** "Tidies on blur" and "flags a malformed address" are proved again in each form, so a change to the contract means four test edits.
+- **Where:**
+  - `tests/components/EmailForm/index.test.tsx`, `ForgotPasswordForm/index.test.tsx`, `InviteDialog/index.test.tsx` and `AdminInvitations/index.test.tsx`
+- **Shared piece:** Once D-228 lands, one test of the shared email field owns the contract. Until then a helper in `tests/support/` holds both cases.
+- **Guard:** None practical.
+- **Fix:** Write the contract once; each form test keeps its own submit behaviour.
+- **Tests covering the callers:** The four files above.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### D-252: Component tests redefine `save`, `submit`, `type` and `fill`, and hand-write error-summary link checks
+
+- **Severity:** medium
+- **Why it matters:** `tests/support/interact.tsx` already exports `type` and `typeIn`, and `tests/support/error-summary.ts` exports `expectSummaryLinksTo`, yet about 55 local copies exist, so a change to how a form is filled or submitted is made in each.
+- **Where:**
+  - `const save = () => screen.getByRole('button', { name: /^Sav/ })` in about 30 files under `tests/components/` (for example `NameForm`, `RenameWorkspaceForm` and eight `SpellBuilder` files)
+  - `const submit = () => fireEvent.submit(save().closest('form'))` in 8 files
+  - A local `type` in 18 files (for example `SignInPanel/password-form.test.tsx`, `PasswordSection/two-factor.test.tsx`, `SpellBuilder/index.test.tsx`), and `tests/components/IngredientForm/variants-harness.tsx` exports another
+  - `tests/components/BusinessCards/index.test.tsx`: a local `fill` (change, then blur)
+  - `tests/components/CupboardEntryForm/index.test.tsx` and `BusinessCards/index.test.tsx`: error-summary link checks written by hand
+- **Shared piece:** Add `save()`, `submitForm(button = save())` and a `fill` (change, then blur) to `tests/support/interact.tsx`, and use `expectSummaryLinksTo`.
+- **Guard:** A grep guard like the router-mock one in D-39 that refuses a local `const save =`, `const type =`, `const fill =` and the submit one-liner in a component test.
+- **Fix:** Replace the local definitions with imports. Keep a local helper only where its lookup differs (for example inside `within(dialog())`). D-95 covers the sign-in tests' `press`, `field` and `type` separately.
+- **Tests covering the callers:** The files listed.
+
+- **Estimate:** 1 hour
+- **Status:** Not fixed: moved to MC.1.
+
+### D-253: `lint/source-sweeps.js` repeats its allowlist reporter, attribute extraction and file gate
+
+- **Severity:** medium
+- **Why it matters:** Each lint rule in the file repeats the same plumbing, so a fix to how an allowlist is reported or how an attribute is read has to be made in every rule that carries a copy. Related: D-59 and D-100, which repeat the same allowlist shape in the guards.
+- **Where:**
+  - `lint/source-sweeps.js`: the allowlist-plus-stale-entry `'Program:exit'` reporter in `long-form-guards-leaving`, `in-app-link-through-pending-link`, `inputs-use-field`, `no-number-input` and `use-form-renders-error-summary`
+  - The same file: JSX attribute literal extraction (a `Literal`, or a `JSXExpressionContainer` holding one) in `no-number-input` and `placeholder-is-short`, and the `node.attributes.find(...)` lookup by name in several rules
+  - The same file: the file gate `/^src\/.*\.tsx$/.test(file) || isStory(file)`, about twelve times
+  - `long-form-guards-leaving` and `use-form-renders-error-summary` each detect `useForm` with their own allowlist
+- **Shared piece:** helpers `allowlistRule({ allowed, visit })`, `jsxAttribute(node, name)`, `literalValue(attr)` and `isComponentFile(file)` in a helper file under `lint/`.
+- **Guard:** the lint rules' own tests under `tests/lint/` must pass unchanged.
+- **Fix:** extract the four helpers; each rule keeps only its detection.
+- **Tests covering the callers:** the per-rule tests under `tests/lint/`.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.1.
 
 ## Possible Behaviour Bugs
 
