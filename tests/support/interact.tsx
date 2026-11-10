@@ -56,3 +56,17 @@ export function redo({ meta = false, viaY = false } = {}): boolean {
     shiftKey: !viaY,
   });
 }
+
+// The form's Save button, whatever it is named: Save, Save Draft, Saving.
+export const save = (): HTMLElement => screen.getByRole('button', { name: /^Sav/ });
+
+// Submits the form `button` sits in, as pressing it does, without the click.
+export const submitForm = (button: HTMLElement = save()): boolean =>
+  fireEvent.submit(button.closest('form') as HTMLFormElement);
+
+// One change, then the blur that follows it, for a form that tidies or validates a field when it is left.
+export function fill(label: string, text: string): void {
+  const field = screen.getByRole('textbox', { name: label });
+  fireEvent.change(field, { target: { value: text } });
+  fireEvent.blur(field);
+}
