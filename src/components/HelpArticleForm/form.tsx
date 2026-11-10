@@ -1,6 +1,6 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, type ReactNode, useEffect, useId, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -148,7 +148,7 @@ const HelpArticleForm = ({
       childIds: article?.subPages.map(({ id }) => id) ?? [],
       shown: article?.shown ?? true,
     },
-    resolver: zodResolver(Schema) as never,
+    resolver: typedResolver<HelpFormValues>(Schema),
   });
   const {
     control,

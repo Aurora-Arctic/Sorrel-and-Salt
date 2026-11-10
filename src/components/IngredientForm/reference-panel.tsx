@@ -1,6 +1,6 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { rawValidator } from '../../lib/typed-resolver';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   type KeyboardEvent,
@@ -341,13 +341,13 @@ export function referenceValuesOf(source: ReferenceQuery['reference']): Referenc
   return values;
 }
 
-const validate = zodResolver(ReferenceInput, undefined, { raw: true });
+const validate = rawValidator<ReferenceFormValues, ReferenceSendInput>(ReferenceInput);
 
 const referenceResolver: Resolver<ReferenceFormValues, unknown, ReferenceSendInput> = (
   values,
   context,
   options,
-) => validate(toReferenceInput(values), context, options as never);
+) => validate(toReferenceInput(values), context, options);
 
 /**
  * The panel: a new source, or with `editing`, that source, read whole by id

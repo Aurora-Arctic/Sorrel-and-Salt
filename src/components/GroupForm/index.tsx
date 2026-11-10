@@ -1,9 +1,9 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
-import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
@@ -144,7 +144,7 @@ function defineKind<Input extends object>({
   const send = saveRequest(create, update);
   return {
     ...copy,
-    resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
+    resolver: typedResolver<GroupValues>(schema),
     save: (values, id) => send(values as unknown as Input, id),
     remove: async (variables) => {
       await graphqlRequest(remove, variables);
