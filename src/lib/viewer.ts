@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { byCovenName, membershipsOf, rolePermits, type WorkspaceRole } from '@/modules/coven';
+import { byCovenName, membershipsOf, type WorkspaceRole } from '@/modules/coven';
+import { covenAccessOf } from './coven-access';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { getMySupportCounts } from '@/modules/support';
 import { getSession, getShellSession, requireSignedIn } from './request-session';
@@ -66,18 +67,21 @@ async function viewerFor(
     // Alphabetical with the demo coven last: the service's order is the database's, which looks random.
     workspaces: [...memberships]
       .sort((a, b) => byCovenName(a.workspace, b.workspace))
-      .map(({ role, pause, workspace: { id, slug, name } }) => ({
-        id,
-        slug,
-        name,
-        // A paused seat reaches only the paused page, so its role offers nothing: every service refuses it too.
-        canReadMembers: !pause && rolePermits(role, { member: ['read'] }),
-        // The statement the invite service asserts: the switcher keeps a viewer on the invitations page only where it opens.
-        canInvite: !pause && rolePermits(role, { member: ['invite'] }),
-        // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
-        canWrite: !pause && rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
-        paused: pause ? { until: pause.until } : null,
-      })),
+      .map(({ role, pause, workspace: { id, slug, name } }) => {
+        const access = covenAccessOf(role);
+        return {
+          id,
+          slug,
+          name,
+          // A paused seat reaches only the paused page, so its role offers nothing: every service refuses it too.
+          canReadMembers: !pause && access.canReadMembers,
+          // The statement the invite service asserts: the switcher keeps a viewer on the invitations page only where it opens.
+          canInvite: !pause && access.canInvite,
+          // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
+          canWrite: !pause && access.canAddToCupboard,
+          paused: pause ? { until: pause.until } : null,
+        };
+      }),
   };
 }
 

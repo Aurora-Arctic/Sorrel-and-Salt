@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
-import Notice from '../../../components/Notice';
-import { NEW_COVEN_PATH } from '../../../lib/coven-path';
-import PageHeader from '../../../components/PageHeader';
-import { PendingLink } from '../../../lib/navigation';
-import { requireSession } from '../../../lib/request-session';
-import { firstReachable } from '../../../lib/shell-home';
-import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
-import { viewerOf } from '../../../lib/viewer';
+import Notice from '@/components/Notice';
+import { NEW_COVEN_PATH, covenPath } from '@/lib/coven-path';
+import PageHeader from '@/components/PageHeader';
+import { PendingLink } from '@/lib/navigation';
+import { requireSession } from '@/lib/request-session';
+import { firstReachable } from '@/lib/shell-home';
+import { ACCOUNT_INVITATIONS_PATH } from '@/lib/sign-in';
+import { viewerOf } from '@/lib/viewer';
 import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = pageTitle('Your Coven');
@@ -21,7 +21,7 @@ export default async function CovenLandingPage() {
   const { viewer, workspaces } = await viewerOf();
 
   const first = firstReachable(workspaces);
-  if (first) redirect(`/coven/${first.slug}`);
+  if (first) redirect(covenPath(first.slug));
 
   const pending = viewer.pendingInvitations;
 

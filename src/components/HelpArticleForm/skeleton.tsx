@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { RichTextEditorSkeleton } from '../RichTextEditor/skeleton';
 import { BackChevron } from '../IngredientEntry/back-chevron';
+import { HelpArticlePage } from './page';
 import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
@@ -150,13 +151,15 @@ export const HelpArticleFormSkeleton = ({ heading }: { heading?: string }): Reac
 
 /** The whole page while it is on its way: the back link, the heading, and the form. An edited row's title is not known yet. */
 export const HelpArticlePageSkeleton = ({ editing }: { editing: boolean }): ReactElement => (
-  <div className="help-article-page">
-    <div className="back-bar help-article-form__bar">
+  <HelpArticlePage
+    as="div"
+    back={
       <span className="back-link" aria-hidden="true">
         <BackChevron />
         Back to Help
       </span>
-    </div>
+    }
+  >
     {editing ? (
       <>
         <div className="help-article-form__pending-head">
@@ -167,5 +170,5 @@ export const HelpArticlePageSkeleton = ({ editing }: { editing: boolean }): Reac
     ) : (
       <HelpArticleFormSkeleton heading="Add Article" />
     )}
-  </div>
+  </HelpArticlePage>
 );

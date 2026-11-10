@@ -8,9 +8,12 @@ import {
   NEW_INGREDIENT,
   NEW_SPELL,
   NEW_SPELL_PREFIX,
+  covenPath,
 } from '../../lib/coven-path';
 
 export const NEW = 'new';
+export const ADD_INGREDIENT_TITLE = 'Add Ingredient';
+export const NEW_SPELL_TITLE = 'New Spell';
 
 export {
   NEW_COMPENDIUM_ENTRY,
@@ -59,7 +62,7 @@ export function opensNewSpell(value: string | null, slug: string): boolean {
 export function newSpellElsewhere(value: string | null, pathname: string): string | null {
   const asked = askedSpell(value);
   if (asked === null || asked === 'current') return null;
-  const grimoire = `/coven/${asked}/grimoire`;
+  const grimoire = covenPath(asked, 'grimoire');
   if (pathname === grimoire || pathname.startsWith(`${grimoire}/`)) return null;
   return `${grimoire}?${NEW}=${spellValue(asked)}`;
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import ErrorPage from '../components/ErrorPage';
-import { SupportIcon } from '../components/IconTip/icons';
+import ErrorPage from '@/components/ErrorPage';
+import { SupportIcon } from '@/components/IconTip/icons';
 import './globals.scss';
 
 // Sign-in-free address of the bug form; the digest rides as ref.

@@ -1,4 +1,4 @@
-import type { Route } from 'next';
+import { covenPath } from '@/lib/coven-path';
 import type { ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import SafetyNote from '../SafetyNote';
@@ -110,7 +110,7 @@ export default function IngredientSummary({
     >
       {holding.map(({ id, slug, name }) => (
         <li key={id}>
-          <PendingLink href={`/coven/${slug}/ingredients/${detail.entry.id}` as Route}>
+          <PendingLink href={covenPath(slug, 'ingredients', detail.entry.id)}>
             <ShelfIcon />
             <span>{name}</span>
           </PendingLink>

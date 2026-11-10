@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { noIndexMetadata } from '@/lib/page-metadata';
-import ForgotPasswordForm from '../../components/ForgotPasswordForm';
-import PageHeader from '../../components/PageHeader';
+import ForgotPasswordForm from '@/components/ForgotPasswordForm';
+import PageHeader from '@/components/PageHeader';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
 

@@ -1,6 +1,6 @@
-import { AdminContents } from '../../../components/AdminNav';
-import PageHeader from '../../../components/PageHeader';
-import { requireCuratorSession } from '../../../lib/request-session';
+import { AdminContents } from '@/components/AdminNav';
+import PageHeader from '@/components/PageHeader';
+import { requireCuratorSession } from '@/lib/request-session';
 
 export default async function KeepersPage() {
   const { role } = await requireCuratorSession();

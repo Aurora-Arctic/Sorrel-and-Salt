@@ -5,13 +5,11 @@ import SupportRequests from '@/components/SupportRequests';
 import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
 import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
-import { impersonationEnabled } from '@/lib/impersonation';
 import { requireCuratorSession } from '@/lib/request-session';
-import MissingNotice from '../../curator/missing-notice';
-import { changesLocked } from '@/components/UserList/lock';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import { readPauseState } from '../(people)/pause-state';
 import { readOpenedUser } from '../(people)/users/opened-user';
-import UserDialog from '../(people)/users/user-dialog';
+import UserDialogHost from '../(people)/users/user-dialog-host';
 import { readSupportPlace } from './filter';
 import { readAssignees, readOpened, readRequests, readViewCounts } from './reads';
 import type { SupportRequestsCursor } from '@/components/SupportRequests/types';
@@ -58,12 +56,11 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
       />
       {/* Rendered whatever the address opens, after the request's, so it opens on top of it and Close
           leaves the request. */}
-      <UserDialog
+      <UserDialogHost
         place={USER_MODAL_PLACE}
         closeHref={supportHref(filter, cursor, request)}
         opened={openedUser}
-        canImpersonate={impersonationEnabled()}
-        changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
+        adminChanges={adminChanges}
       />
     </TabbedPage>
   );

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { useSearchParams } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
-import { NEW, opensNewSpell } from '../AppShell/add-href';
+import { NEW, NEW_SPELL_TITLE, opensNewSpell } from '../AppShell/add-href';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { withParam } from '../../lib/list-href';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -31,7 +31,7 @@ const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', 
 const EDIT_SPELL = 'Edit Spell';
 
 export const newSpellHeading = (covenName: string): ModalHeading => ({
-  title: 'New Spell',
+  title: NEW_SPELL_TITLE,
   destination: covenName,
 });
 

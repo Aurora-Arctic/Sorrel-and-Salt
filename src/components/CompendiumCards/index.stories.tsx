@@ -1,3 +1,4 @@
+import { compendiumEntryPath } from '@/lib/compendium-path';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import type { Route } from 'next';
@@ -116,7 +117,7 @@ const canAddEditAndMoreNode = (
                 canMakeOurs: true,
                 canRemove: true,
                 annotateHref:
-                  `/compendium/ingredients/${entry.slug}?annotate=${FIXTURE_COVEN.slug}` as Route,
+                  `${compendiumEntryPath(entry.slug)}?annotate=${FIXTURE_COVEN.slug}` as Route,
               },
             ]
           : undefined,

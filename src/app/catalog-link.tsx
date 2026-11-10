@@ -1,4 +1,4 @@
-import { siteUrl } from '../lib/site';
+import { siteUrl } from '@/lib/site';
 import { CATALOG_MEDIA_TYPE } from './ai-discovery';
 
 // Points an agent that has landed on any page at the AI catalog: the AI Catalog draft's "Link Relation

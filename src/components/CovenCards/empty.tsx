@@ -1,13 +1,10 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { publicGuidePath } from '../../lib/help-paths';
 import { emptyList, NO_MATCH_HINT } from '../../lib/text';
-import {
-  PUBLIC_COMPENDIUM_PATH,
-  compendiumHref,
-  covenIngredientsPath,
-} from '../CompendiumList/href';
+import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../CompendiumList/href';
 import EmptyState from '../EmptyState';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import type { EmptyCupboardProps } from './types';
@@ -53,7 +50,7 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
       size="compact"
       action={
         <>
-          <PendingLink href={covenIngredientsPath(covenSlug)} className="btn btn--quiet">
+          <PendingLink href={covenPath(covenSlug, 'ingredients')} className="btn btn--quiet">
             Clear Filters
           </PendingLink>
           {filter.query && (

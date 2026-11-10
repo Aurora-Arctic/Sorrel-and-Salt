@@ -68,13 +68,18 @@ function skeletonHomes(file: string): string[] {
 type Host = 'main' | 'coven' | 'admin' | 'help';
 const REGION = /<SectionBody\s+region="(coven|admin|help)"/;
 
-/** The region a layout's source mounts, directly or through a component of `src/components` it draws. */
+/** The region a layout's source mounts, directly or through a component of `src/components`, or a shared layout of `src/app`, it draws. */
 function regionIn(source: string): Host | null {
   const own = REGION.exec(source);
   if (own) return own[1] as Host;
   for (const [, name] of source.matchAll(/import \w+ from '@\/components\/(\w+)'/g)) {
     const component = join(REPO_ROOT, 'src/components', name!, 'index.tsx');
     const drawn = existsSync(component) && REGION.exec(readFileSync(component, 'utf8'));
+    if (drawn) return drawn[1] as Host;
+  }
+  for (const [, path] of source.matchAll(/import \w+ from '@\/(app\/[^']+)'/g)) {
+    const shared = join(REPO_ROOT, 'src', `${path}.tsx`);
+    const drawn = existsSync(shared) && REGION.exec(readFileSync(shared, 'utf8'));
     if (drawn) return drawn[1] as Host;
   }
   return null;

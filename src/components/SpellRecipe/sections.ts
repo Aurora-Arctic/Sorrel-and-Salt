@@ -7,6 +7,9 @@ export const WORKINGS_ID = 'spell-workings';
 export const WORKINGS_TITLE_ID = 'spell-workings-title';
 export const CATEGORY_MATCH_ID = 'spell-category-match';
 export const INVENTORY_ID = 'spell-inventory';
+export const CATEGORY_MATCH_TITLE = 'Category Match';
+export const INVENTORY_TITLE = 'In the Cupboard';
+export const WORKINGS_TITLE = 'Workings';
 export const JAR_ID = 'spell-jar';
 
 /**
@@ -27,17 +30,17 @@ export const recipeMenu = ({
     ? [
         {
           href: `#${CATEGORY_MATCH_ID}` as const,
-          label: 'Category Match',
+          label: CATEGORY_MATCH_TITLE,
           group: 'The Cupboard',
           narrowOnly: true,
         },
         {
           href: `#${INVENTORY_ID}` as const,
-          label: 'In the Cupboard',
+          label: INVENTORY_TITLE,
           group: 'The Cupboard',
           narrowOnly: true,
         },
       ]
     : []),
-  ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: 'Workings' }] : []),
+  ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: WORKINGS_TITLE }] : []),
 ];

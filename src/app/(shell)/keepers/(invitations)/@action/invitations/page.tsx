@@ -1,5 +1,5 @@
-import { InviteAdmin } from '../../../../../../components/AdminInvitations';
-import { requireAdminSession } from '../../../../../../lib/request-session';
+import { InviteAdmin } from '@/components/AdminInvitations';
+import { requireAdminSession } from '@/lib/request-session';
 import { readInvitationsPlace } from '../../invitations/filter';
 import { invitationsLock } from '../../invitations/lock';
 import type { AdminInvitationsPageProps } from '../../invitations/types';

@@ -11,12 +11,11 @@ import { editEyebrow } from './edit-heading';
 import { LazyCompendiumEntryForm, LazyIngredientForm } from './lazy-forms';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 // The edit modal over an entry's own page, shaped like `compendium-dialog.tsx`; a client part as the
 // form's handlers are functions. Always rendered, so a press's skeleton and the form are one dialog
 // (claude-docs/components/ingredient-entry.md, "The details modal").
-
-const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;
 
 export default function EntryDialog({
   entry,
@@ -64,7 +63,9 @@ export default function EntryDialog({
                   refresh();
                 }}
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
-                entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
+                entryHref={({ slug, isGlobal }) =>
+                  isGlobal ? compendiumEntryPath(slug) : undefined
+                }
               />
             ) : (
               <LazyCompendiumEntryForm
@@ -76,7 +77,7 @@ export default function EntryDialog({
                 // rename moves the public address, so the page follows it, `?edit` kept; the
                 // coven's address names the id.
                 onSaved={(saved) => {
-                  navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
+                  navigate(savedHref ?? (`${compendiumEntryPath(saved.slug)}?edit` as Route), {
                     replace: true,
                     scroll: false,
                   });
@@ -84,7 +85,7 @@ export default function EntryDialog({
                 }}
                 onAutosaved={(saved) => {
                   if (!savedHref) {
-                    navigate(`${publicAddress(saved.slug)}?edit` as Route, {
+                    navigate(`${compendiumEntryPath(saved.slug)}?edit` as Route, {
                       replace: true,
                       scroll: false,
                     });
@@ -93,8 +94,8 @@ export default function EntryDialog({
                 }}
                 // Not `done`, which would go back to this page: it is gone.
                 onDeleted={() => navigate(deletedHref, { replace: true, scroll: false })}
-                duplicateHref={({ slug }) => publicAddress(slug)}
-                entryHref={({ slug }) => publicAddress(slug)}
+                duplicateHref={({ slug }) => compendiumEntryPath(slug)}
+                entryHref={({ slug }) => compendiumEntryPath(slug)}
               />
             ),
         }

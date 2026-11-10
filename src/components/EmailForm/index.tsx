@@ -1,5 +1,6 @@
 'use client';
 
+import { EMAIL_TITLE } from './head';
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
@@ -122,7 +123,7 @@ const EmailForm = ({
     embedded ? (
       <p className="lede email-form__status">{status}</p>
     ) : (
-      <PageHeader title="Your Email" lede={status} />
+      <PageHeader title={EMAIL_TITLE} lede={status} />
     );
 
   if (confirmed && !embedded) {

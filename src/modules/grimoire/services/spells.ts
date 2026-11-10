@@ -9,6 +9,7 @@ import {
   SpellInput as SpellInputSchema,
   UpdateSpellInput as UpdateSpellInputSchema,
 } from '../validation/spell';
+import { amountOf } from '../../../lib/quantity';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { parseInput, RowId } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
@@ -251,7 +252,7 @@ export async function duplicateSpell(
           variantId: step.variantId,
           name: step.name,
           form: step.form,
-          quantity: step.quantity === null ? null : Number(step.quantity),
+          quantity: amountOf(step.quantity),
           unit: step.unit,
         })),
       [],

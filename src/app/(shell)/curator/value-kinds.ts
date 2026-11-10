@@ -1,5 +1,5 @@
 import 'server-only';
-import type { GroupedValueKind } from '../../../components/GroupedValueForm/types';
+import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 import {
   countAstrologyValues,
   countCategories,
