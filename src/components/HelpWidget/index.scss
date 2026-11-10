@@ -82,6 +82,8 @@
   // The sample is the line's one frame: a failed or conflicting line's notice keeps its icon and text, not its bar
   // and tint, which would draw a second box inside it.
   .notice {
+    --notice-inline-extra: calc(#{$notice-mark-size} + #{space(2)});
+
     padding-block: 0;
     padding-inline: calc(#{$notice-mark-size} + #{space(2)}) 0;
     border-inline-start: 0;

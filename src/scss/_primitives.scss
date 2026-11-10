@@ -1197,10 +1197,12 @@
   .notice {
     --notice-bar: #{$accent};
     --notice-icon: currentColor;
+    // The inline padding and bar the measure sits inside, since the cap is on the border box; a kind or
+    // context that changes either sets this to match.
+    --notice-inline-extra: calc(#{space(3) * 2} + #{$rule-heavy});
 
-    box-sizing: content-box;
     display: block;
-    max-width: $measure;
+    max-width: calc(#{$measure} + var(--notice-inline-extra));
     margin: 0;
     padding: space(2) space(3);
     border-inline-start: $rule-heavy solid var(--notice-bar);
@@ -1292,6 +1294,10 @@
   .notice--error,
   .notice--warn,
   .notice--caution {
+    --notice-inline-extra: calc(
+      #{space(3) * 2} + #{$notice-mark-size} + #{space(2)} + #{$rule-heavy}
+    );
+
     position: relative;
     padding-inline-start: calc(#{space(3)} + #{$notice-mark-size} + #{space(2)});
 

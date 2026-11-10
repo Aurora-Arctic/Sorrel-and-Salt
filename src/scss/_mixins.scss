@@ -1319,6 +1319,10 @@
 // Doubled selectors outrank the notice's own margin; its triangle moves with the room so it stays clear of the text.
 @mixin notice-row {
   @include wrap-row(space(3));
+  --notice-inline-extra: calc(
+    #{space(4) * 2} + #{$notice-mark-size} + #{space(2)} + #{$rule-heavy}
+  );
+
   margin: 0;
   padding-block: space(3);
   padding-inline: calc(#{space(4)} + #{$notice-mark-size} + #{space(2)}) space(4);
