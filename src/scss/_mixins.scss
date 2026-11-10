@@ -520,7 +520,7 @@
 
 // A bordered box on a surface: a hairline edge, rounded, on the card ground unless another is given.
 @mixin surface-box($background: $surface-card, $radius: radius('surface')) {
-  border: 1px solid $hairline;
+  border: $hairline-border;
   border-radius: $radius;
   background-color: $background;
 }
@@ -687,7 +687,7 @@
   max-width: 100%;
   padding-block-end: space(1);
   padding-inline-end: space(4);
-  border-block-end: 1px solid $hairline;
+  border-block-end: $hairline-border;
 }
 
 @mixin entry-column-section {
@@ -1313,7 +1313,7 @@
   content: '';
   position: absolute;
   inline-size: space(5);
-  border-block-start: 1px solid $hairline;
+  border-block-start: $hairline-border;
 }
 
 // Doubled selectors outrank the notice's own margin; its triangle moves with the room so it stays clear of the text.

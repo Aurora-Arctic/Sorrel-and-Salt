@@ -123,7 +123,7 @@ $stuck-pad: space(4);
   align-items: end;
   margin-block-start: calc(-1 * #{$stuck-pad});
   padding-block: $stuck-pad space(1);
-  border-bottom: 1px solid $hairline;
+  border-bottom: $hairline-border;
   background-color: $surface-page;
 
   .icon-tip {
@@ -150,7 +150,7 @@ $stuck-pad: space(4);
   @include surface-box;
 
   &[open] > .access-cards__summary {
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
     border-end-start-radius: 0;
     border-end-end-radius: 0;
   }
@@ -195,7 +195,7 @@ $stuck-pad: space(4);
     column-gap: space(2);
     align-items: start;
     padding-block: space(2);
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
 
     &:last-child {
       border-bottom: 0;

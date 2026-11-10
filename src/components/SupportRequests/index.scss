@@ -83,7 +83,7 @@
 
 .support-detail__side {
   padding-inline-start: space(5);
-  border-inline-start: 1px solid $hairline;
+  border-inline-start: $hairline-border;
 
   @include phone-down {
     padding-inline-start: 0;
@@ -158,7 +158,7 @@
   @include stack(2);
   margin-block: 0;
   padding-block-start: space(3);
-  border-block-start: 1px solid $hairline;
+  border-block-start: $hairline-border;
 
   h3 {
     margin-block-end: 0;
@@ -215,7 +215,7 @@
 
 .support-detail__reply {
   padding-block-start: space(5);
-  border-block-start: 1px solid $hairline;
+  border-block-start: $hairline-border;
 }
 
 .support-detail__actions {

@@ -318,7 +318,7 @@
   container-type: inline-size;
   max-width: $measure;
   padding-block-start: space(3);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .spell-recipe__facts {
@@ -364,7 +364,7 @@
 .spell-recipe__note {
   margin-block-start: space(2);
   padding-block-start: space(3);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .spell-recipe-look {

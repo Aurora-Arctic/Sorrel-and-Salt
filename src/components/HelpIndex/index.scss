@@ -132,7 +132,7 @@
     // the same overhang past the text, which the padding keeps in place.
     margin-inline: calc(-1 * #{$ruled-row-overhang});
     padding: space(5) $ruled-row-overhang calc(#{space(5)} + #{space(4)});
-    border-block-start: 1px solid $hairline;
+    border-block-start: $hairline-border;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
     // The question an address names, as the glossary marks a term.

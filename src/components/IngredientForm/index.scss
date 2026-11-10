@@ -780,7 +780,7 @@ $panel-head-gap: space(3);
   }
 
   > div + div {
-    border-top: 1px solid $hairline;
+    border-top: $hairline-border;
   }
 
   dt {
@@ -808,7 +808,7 @@ $panel-head-gap: space(3);
 .promote-question__unsaved {
   margin: space(5) 0;
   padding-top: space(4);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .ingredient-form__renamed {

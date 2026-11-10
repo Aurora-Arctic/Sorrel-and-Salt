@@ -28,7 +28,7 @@
 
   & + & {
     padding-inline-start: space(2);
-    border-inline-start: 1px solid $hairline;
+    border-inline-start: $hairline-border;
   }
 }
 

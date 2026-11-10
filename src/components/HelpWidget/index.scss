@@ -12,7 +12,7 @@
   display: block;
   margin-top: space(4);
   padding-top: space(3);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .help-widget__equation {
@@ -182,7 +182,7 @@
 // summary needs and the section's button does not have: no marker, its own focus ring, the chevron turned over by
 // `[open]` rather than `.is-open`, and a hairline to close it above the caption.
 body .help-widget__disclosure {
-  border-bottom: 1px solid $hairline;
+  border-bottom: $hairline-border;
 
   > summary {
     list-style: none;

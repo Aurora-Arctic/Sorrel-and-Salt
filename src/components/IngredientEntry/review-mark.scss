@@ -67,7 +67,7 @@ body .review-mark {
 body .review-row {
   inline-size: 100%;
   padding-block: space(4);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 body .review-row__line {

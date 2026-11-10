@@ -197,7 +197,7 @@ $sheet-slide: 250ms ease-out;
   height: 100%;
   margin: 0 0 0 auto;
   background-color: $surface-page;
-  border-left: 1px solid $hairline;
+  border-left: $hairline-border;
   overflow-y: auto;
   scroll-padding-block-end: calc(2 * #{space(7)});
 
@@ -266,7 +266,7 @@ $sheet-slide: 250ms ease-out;
     margin-top: auto;
     padding: space(3) 0;
     background-color: $surface-page;
-    border-top: 1px solid $hairline;
+    border-top: $hairline-border;
   }
 }
 

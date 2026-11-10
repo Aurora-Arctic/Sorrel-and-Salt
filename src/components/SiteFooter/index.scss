@@ -20,7 +20,7 @@
 // scroll-driven animations keeps, so the fixed salt never shows through the row.
 .site-footer {
   margin-block-start: auto;
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
   background-color: $surface-page;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the salt stays put and the fill covers it, not yet Baseline
   view-timeline: --site-footer block;

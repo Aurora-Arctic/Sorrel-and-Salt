@@ -12,10 +12,10 @@
   @include stack(2);
   margin: 0;
   padding-block: space(4);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 
   &:last-of-type {
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
   }
 }
 

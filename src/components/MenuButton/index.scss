@@ -71,7 +71,7 @@
 .menu-button__rule {
   height: 0;
   margin: space(1) space(2);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 .menu-button__item {

@@ -10,7 +10,7 @@ $bar-height: 0.5rem;
   margin-block-end: 0;
   gap: 0;
   padding-block-end: space(5);
-  border-block-end: 1px solid $hairline;
+  border-block-end: $hairline-border;
 }
 
 .sourcing-score__head {

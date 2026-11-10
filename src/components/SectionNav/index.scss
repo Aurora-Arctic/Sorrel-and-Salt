@@ -216,7 +216,7 @@
 
 .section-nav__sheet-item.section-nav__item--apart {
   margin-top: space(1);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 // In the sheet the current entry is drawn by weight and fill, without
@@ -234,7 +234,7 @@
     z-index: layer('shell');
     height: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0);
-    border-top: 1px solid $hairline;
+    border-top: $hairline-border;
     background-color: $surface-card;
   }
 

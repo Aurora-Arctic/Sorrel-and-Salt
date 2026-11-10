@@ -438,7 +438,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   align-items: center;
   gap: space(2);
   margin-top: space(1);
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 
   svg {
     flex: none;

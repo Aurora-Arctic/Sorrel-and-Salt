@@ -15,7 +15,7 @@
     top: 0;
     z-index: layer('shell');
     height: $shell-bar-height;
-    border-bottom: 1px solid $hairline;
+    border-bottom: $hairline-border;
     background-color: $surface-card;
   }
 

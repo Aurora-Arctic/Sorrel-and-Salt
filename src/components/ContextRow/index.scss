@@ -12,7 +12,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 .context-row {
   display: block;
   margin: 0;
-  border-bottom: 1px solid $hairline;
+  border-bottom: $hairline-border;
   background-color: $context-row-ground;
 }
 

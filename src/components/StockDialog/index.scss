@@ -19,7 +19,7 @@
   @include stack(3);
   min-width: 0;
   padding-inline-end: space(4);
-  border-inline-end: 1px solid $hairline;
+  border-inline-end: $hairline-border;
 }
 
 .stock-dialog__picks {
@@ -191,6 +191,6 @@
     padding-inline-end: 0;
     padding-block-end: space(4);
     border-inline-end: 0;
-    border-block-end: 1px solid $hairline;
+    border-block-end: $hairline-border;
   }
 }

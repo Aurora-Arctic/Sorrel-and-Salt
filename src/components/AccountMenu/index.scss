@@ -258,7 +258,7 @@ $account-menu-avatar: 2rem;
 
 // Sign Out is the last row, set off from the rest by a hairline above it.
 .account-menu__signout {
-  border-top: 1px solid $hairline;
+  border-top: $hairline-border;
 }
 
 // The last row's wash takes the panel's bottom rounding, inside its 1px edge.

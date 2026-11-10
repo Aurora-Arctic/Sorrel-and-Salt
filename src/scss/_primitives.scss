@@ -901,7 +901,7 @@
 
   // A way in with no brand (email & password, a passkey): the quiet wash with a hairline edge, its outline glyph in the body ink.
   .provider-mark--own {
-    border: 1px solid $hairline;
+    border: $hairline-border;
     color: $text-primary;
     background-color: $fill-quiet;
   }
@@ -1490,7 +1490,7 @@
     }
 
     .icon-tip + .icon-tip {
-      border-inline-start: 1px solid $hairline;
+      border-inline-start: $hairline-border;
     }
 
     .icon-tip:not(:last-child) .btn {
@@ -2442,7 +2442,7 @@
     display: flex;
     justify-content: center;
     padding: space(3) 0;
-    border-top: 1px solid $hairline;
+    border-top: $hairline-border;
     background: $surface-card;
 
     > .btn {

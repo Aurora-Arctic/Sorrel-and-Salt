@@ -21,7 +21,7 @@
     }
 
     > tbody > tr + tr {
-      border-top: 1px solid $hairline;
+      border-top: $hairline-border;
     }
 
     // Three tracks: coven and Accept first, then Role (at least 5rem) and Expires beneath, so
