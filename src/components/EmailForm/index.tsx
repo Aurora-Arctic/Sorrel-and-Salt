@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
+import { emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -107,7 +108,9 @@ const EmailForm = ({
     if (coolingDown) return;
     setSentTo(undefined);
     setAlert(undefined);
-    setFieldError(undefined);
+    const invalid = validateEmailAddress(normalise(value));
+    setFieldError(invalid?.message);
+    if (invalid) return;
     mutation.mutate(value);
   };
 
@@ -164,8 +167,12 @@ const EmailForm = ({
           autoComplete="off"
           ignorePasswordManagers
           placeholder="name@example.com"
+          format={emailFormat}
           value={value}
-          onChange={setValue}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
           error={fieldError}
         />
         <FormActions

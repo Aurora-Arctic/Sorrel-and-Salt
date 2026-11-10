@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ForgotPasswordForm, { GENERIC_RESET_REQUEST_ERROR } from '@/components/ForgotPasswordForm';
 import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 
 // Better Auth's client is mocked at its one call; tests/db/password-reset.test.ts proves an unknown address is answered as a known one.
 const requestPasswordReset = vi.fn();
@@ -33,6 +34,22 @@ describe('ForgotPasswordForm', () => {
     expect(send()).toBeDisabled();
     fireEvent.change(email(), { target: { value: 'someone@forgot.test' } });
     expect(send()).toBeEnabled();
+  });
+
+  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+    fireEvent.change(email(), { target: { value: '  Name@EXAMPLE.COM  ' } });
+    fireEvent.blur(email());
+
+    expect(email()).toHaveValue('Name@example.com');
+  });
+
+  it('refuses a malformed address with the shared message, without asking the server', async () => {
+    fireEvent.change(email(), { target: { value: 'name@' } });
+
+    await press(send());
+
+    expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
+    expect(requestPasswordReset).not.toHaveBeenCalled();
   });
 
   it('fills the visitor’s own email, not a username', () => {

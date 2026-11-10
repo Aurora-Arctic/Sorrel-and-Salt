@@ -10,6 +10,7 @@ import EmailForm, {
   VERIFIED_STATUS,
 } from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
@@ -122,6 +123,26 @@ describe('EmailForm', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(submit()).toBeEnabled();
+  });
+
+  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.change(emailField(), { target: { value: '  Name@EXAMPLE.COM  ' } });
+    fireEvent.blur(emailField());
+
+    expect(emailField()).toHaveValue('Name@example.com');
+  });
+
+  it('refuses a malformed address with the shared message, without sending', () => {
+    const calls = acceptSetEmail();
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.change(emailField(), { target: { value: 'new@' } });
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
+    expect(calls).toEqual([]);
   });
 
   it('sends the typed address and names it, normalised, in the confirmation', async () => {

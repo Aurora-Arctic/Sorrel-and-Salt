@@ -3,6 +3,7 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
+import { emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { BackChevron } from '../IngredientEntry/back-chevron';
@@ -102,6 +103,11 @@ const PasswordForm = ({
     event.preventDefault();
     // A disabled submit stops a click, not Enter in a field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    if (invalid) {
+      setProblem({ email: invalid.message });
+      return;
+    }
     setPending(true);
     setProblem({});
     setSignedUp(undefined);
@@ -206,6 +212,7 @@ const PasswordForm = ({
           type="email"
           autoComplete={signingUp ? 'email' : 'username'}
           placeholder="name@example.com"
+          format={emailFormat}
           value={email}
           onChange={onEmailChange}
           error={problem.email}

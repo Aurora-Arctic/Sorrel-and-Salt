@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useState } from 'react';
+import { emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { requestPasswordReset } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
@@ -17,6 +18,7 @@ const ForgotPasswordForm = (): ReactElement => {
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
   const [alert, setAlert] = useState<string>();
+  const [emailError, setEmailError] = useState<string>();
   const [sentTo, setSentTo] = useState<string>();
 
   const ready = email.trim() !== '' && !pending;
@@ -41,6 +43,9 @@ const ForgotPasswordForm = (): ReactElement => {
     event.preventDefault();
     // A disabled submit stops a click, not Enter in the field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    setEmailError(invalid?.message);
+    if (invalid) return;
     void request(email.trim());
   };
 
@@ -98,8 +103,13 @@ const ForgotPasswordForm = (): ReactElement => {
           placeholder="name@example.com"
           // Typing a different address replaces the confirmation, so the field takes focus again.
           autoFocus={retyping}
+          format={emailFormat}
           value={email}
-          onChange={setEmail}
+          error={emailError}
+          onChange={(next) => {
+            setEmail(next);
+            setEmailError(undefined);
+          }}
         />
         <div className="form__actions">
           <BusyButton

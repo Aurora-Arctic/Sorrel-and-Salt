@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 import {
   GENERIC_SIGN_UP_ERROR,
   SIGN_UP_UNAVAILABLE,
@@ -74,6 +75,23 @@ describe('SignInPanel, email and password', () => {
     getSession.mockReset();
     assign.mockReset();
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
+  });
+
+  it('tidies the address when the field is left: ends trimmed, domain lower-cased', () => {
+    type('Email Address', '  Name@EXAMPLE.COM  ');
+    fireEvent.blur(field('Email Address'));
+
+    expect(field('Email Address')).toHaveValue('Name@example.com');
+  });
+
+  it('refuses a malformed address with the shared message, without asking the server', async () => {
+    type('Email Address', 'name@');
+    type('Password', PASSWORD);
+
+    await press(submit('Sign In'));
+
+    expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
+    expect(signInEmail).not.toHaveBeenCalled();
   });
 
   it('keeps Sign In disabled until both fields hold something', () => {
