@@ -2,6 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import { findOneById, withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
+import { limitMessage } from '../../../lib/formats';
 import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { parseInput, requiredText } from '../../../lib/validation';
@@ -16,7 +17,7 @@ import { assertMembership } from './membership';
 
 const RenameWorkspaceInput = z.object({
   name: requiredText('Give the coven a name').max(COVEN_NAME_LIMIT, {
-    error: `Keep the name to ${COVEN_NAME_LIMIT} characters`,
+    error: limitMessage(COVEN_NAME_LIMIT),
   }),
 });
 

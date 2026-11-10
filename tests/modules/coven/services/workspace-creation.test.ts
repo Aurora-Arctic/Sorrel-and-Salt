@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
+import { limitMessage } from '@/lib/formats';
 import { createWorkspace } from '@/modules/coven';
 import { A, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
@@ -18,6 +19,12 @@ describe('createWorkspace', () => {
     expect(await membersOf(created.id)).toEqual([{ user_id: A.id, role: 'owner' }]);
     const [row] = await sql`select created_by, updated_by from workspaces where id = ${created.id}`;
     expect(row).toEqual({ created_by: A.id, updated_by: A.id });
+  });
+
+  it('refuses a name past the limit in the shared limit wording', async () => {
+    await expect(createWorkspace(asUser(A), { name: 'F'.repeat(81) })).rejects.toMatchObject({
+      issues: [{ path: ['name'], message: limitMessage(80) }],
+    });
   });
 
   it('refuses a user without the flag and writes nothing', async () => {

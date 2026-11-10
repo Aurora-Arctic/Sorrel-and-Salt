@@ -3,6 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -61,6 +62,10 @@ const CreateWorkspaceForm = (): ReactElement => {
     // A disabled submit stops a click, not a form submitted by other means.
     if (empty || busy) return;
     setAlert(undefined);
+    if (value.trim().length > COVEN_NAME_LIMIT) {
+      setFieldError(limitMessage(COVEN_NAME_LIMIT));
+      return;
+    }
     setFieldError(undefined);
     mutation.mutate(value);
   };
@@ -79,7 +84,10 @@ const CreateWorkspaceForm = (): ReactElement => {
           placeholder="Add a name"
           limit={COVEN_NAME_LIMIT}
           value={value}
-          onChange={setValue}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
           error={fieldError}
         />
         {/* Offered only when there is something to create, and busy, saying so, from

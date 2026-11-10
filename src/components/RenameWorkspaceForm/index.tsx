@@ -3,6 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -65,6 +66,10 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
     // A disabled submit stops a click, not a form submitted by other means.
     if (!dirty || busy) return;
     setAlert(undefined);
+    if (value.trim().length > COVEN_NAME_LIMIT) {
+      setFieldError(limitMessage(COVEN_NAME_LIMIT));
+      return;
+    }
     setFieldError(undefined);
     mutation.mutate(value);
   };
@@ -85,7 +90,10 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
           autoComplete="off"
           limit={COVEN_NAME_LIMIT}
           value={value}
-          onChange={setValue}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
           error={fieldError}
         />
         <FormActions noun="Coven" dirty={dirty} submitting={busy} holdCancel onCancel={cancel} />

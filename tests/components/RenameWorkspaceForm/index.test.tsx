@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RenameWorkspaceMutation, RenameWorkspaceMutationVariables } from '@/gql/graphql';
+import { limitMessage } from '@/lib/formats';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -113,6 +114,32 @@ describe('RenameWorkspaceForm', () => {
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
     expect(nameField()).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('clears a refusal on the name as soon as the person edits it', async () => {
+    mockGraphQLError('RenameWorkspace', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'Keep this to 80 characters or fewer' }],
+    });
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+    await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
+
+    fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+
+    expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('refuses a name past the limit on Save with the shared wording, without asking the server', async () => {
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+
+    expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
 
