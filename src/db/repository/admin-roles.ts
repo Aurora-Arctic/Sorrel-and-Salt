@@ -1,5 +1,4 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { applyAudit } from '../audit';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
@@ -27,6 +26,7 @@ export function findOpenAdminRoleChangePause(
 export function adminRoleWrites({
   tx,
   session,
+  stampInsert,
   update,
 }: WriterContext): Pick<
   AuditWriter,
@@ -43,11 +43,7 @@ export function adminRoleWrites({
     // No conflict target: the one-open index is an expression index, and the
     // generated primary key is the only other unique.
     pauseAdminRoleChanges: () =>
-      tx
-        .insert(adminRoleChangePauses)
-        .values(applyAudit('insert', {}, session) as never)
-        .onConflictDoNothing()
-        .returning(),
+      tx.insert(adminRoleChangePauses).values(stampInsert({})).onConflictDoNothing().returning(),
     // `now()` beside the trigger's `updated_at`, so the two read alike.
     resumeAdminRoleChanges: () =>
       update(

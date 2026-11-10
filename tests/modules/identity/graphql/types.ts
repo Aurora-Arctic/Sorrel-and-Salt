@@ -6,6 +6,7 @@ export interface ListedUserNode {
   canCreateWorkspace: boolean;
   emailVerified: boolean;
   providers: string[];
+  hasPasskey: boolean;
   audit: { createdAt: string };
 }
 

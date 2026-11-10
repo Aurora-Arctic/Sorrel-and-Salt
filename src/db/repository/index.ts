@@ -120,10 +120,12 @@ export {
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
+  findPasskeyHoldersAmong,
   findUserByEmail,
   findUserCount,
   findUserPage,
 } from './users';
+export { STAND_IN_USER_IDS } from './user-filters';
 export {
   findCardArrivalCount,
   findCardArrivalPage,

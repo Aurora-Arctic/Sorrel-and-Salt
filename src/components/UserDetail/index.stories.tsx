@@ -18,6 +18,7 @@ const FACTS = {
   primaryAdmin: false,
   canCreateWorkspace: false,
   providers: ['google'],
+  hasPasskey: false,
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
   agreedDisclaimerVersion: 1,
@@ -49,7 +50,8 @@ const DEE: UserDetailUser = {
 };
 const MANY: UserDetailUser = {
   ...BO,
-  providers: ['google', 'discord', 'facebook', 'microsoft'],
+  providers: ['credential', 'discord', 'facebook', 'google', 'microsoft'],
+  hasPasskey: true,
   emailVerified: false,
 };
 

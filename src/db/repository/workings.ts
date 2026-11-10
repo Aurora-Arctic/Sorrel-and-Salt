@@ -5,10 +5,9 @@ import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { spells } from '../../modules/grimoire/schema/spells';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { Membership } from '@/modules/coven';
-import { applyAudit } from '../audit';
 import { findPageInScope } from './finders';
 import { newestFirst, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, selectFrom, whenIds } from './select';
 import { readableWorkings } from './spells';
 import type {
   AuditWriter,
@@ -45,9 +44,11 @@ export async function isParticipantOfWorking(
     and(
       eq(spellWorkingParticipants.workingId, workingId),
       eq(spellWorkingParticipants.userId, membership.userId),
-      existsIn(
+      existsByKey(
         spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingParticipants.workingId), readableWorkings(membership)),
+        spellWorkings.id,
+        spellWorkingParticipants.workingId,
+        readableWorkings(membership),
       ),
     ),
   );
@@ -91,22 +92,23 @@ export function findCompleteWorkingCounts(
   membership: Membership,
   spellIds: readonly string[],
 ): Promise<WorkingCount[]> {
-  if (spellIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    spellWorkings,
-    and(
-      readableWorkings(membership),
-      eq(spellWorkings.status, 'complete'),
-      inArray(spellWorkings.spellId, [...spellIds]),
-    ),
-    {
-      aggregate: {
-        spellId: sql<string>`${spellWorkings.spellId}`,
-        count: sql<number>`count(*)::int`,
+  return whenIds(spellIds, () =>
+    selectFrom(
+      spellWorkings,
+      and(
+        readableWorkings(membership),
+        eq(spellWorkings.status, 'complete'),
+        inArray(spellWorkings.spellId, [...spellIds]),
+      ),
+      {
+        aggregate: {
+          spellId: sql<string>`${spellWorkings.spellId}`,
+          count: sql<number>`count(*)::int`,
+        },
+        over: {},
+        groupBy: [spellWorkings.spellId],
       },
-      over: {},
-      groupBy: [spellWorkings.spellId],
-    },
+    ),
   );
 }
 
@@ -115,14 +117,17 @@ export async function findParticipantsOfWorkings(
   membership: Membership,
   workingIds: readonly string[],
 ): Promise<WorkingParticipantRow[]> {
-  if (workingIds.length === 0) return [];
-  const rows = await selectFrom(
-    spellWorkingParticipants,
-    and(
-      inArray(spellWorkingParticipants.workingId, [...workingIds]),
-      existsIn(
-        spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingParticipants.workingId), readableWorkings(membership)),
+  const rows = await whenIds(workingIds, () =>
+    selectFrom(
+      spellWorkingParticipants,
+      and(
+        inArray(spellWorkingParticipants.workingId, [...workingIds]),
+        existsByKey(
+          spellWorkings,
+          spellWorkings.id,
+          spellWorkingParticipants.workingId,
+          readableWorkings(membership),
+        ),
       ),
     ),
   );
@@ -134,14 +139,17 @@ export async function findDeductionsOfWorkings(
   membership: Membership,
   workingIds: readonly string[],
 ): Promise<WorkingDeductionRow[]> {
-  if (workingIds.length === 0) return [];
-  return selectFrom(
-    spellWorkingDeductions,
-    and(
-      inArray(spellWorkingDeductions.workingId, [...workingIds]),
-      existsIn(
-        spellWorkings,
-        and(eq(spellWorkings.id, spellWorkingDeductions.workingId), readableWorkings(membership)),
+  return whenIds(workingIds, () =>
+    selectFrom(
+      spellWorkingDeductions,
+      and(
+        inArray(spellWorkingDeductions.workingId, [...workingIds]),
+        existsByKey(
+          spellWorkings,
+          spellWorkings.id,
+          spellWorkingDeductions.workingId,
+          readableWorkings(membership),
+        ),
       ),
     ),
   );
@@ -153,7 +161,7 @@ export async function findDeductionsOfWorkings(
  */
 export function workingWrites({
   tx,
-  session,
+  stampInsert,
   update,
   softDelete,
 }: WriterContext): Pick<
@@ -189,16 +197,12 @@ export function workingWrites({
         const [row] = await tx
           .insert(spellWorkingParticipants)
           .values(
-            applyAudit(
-              'insert',
-              {
-                workingId,
-                userId: participant.userId ?? null,
-                name: participant.name ?? null,
-                position,
-              },
-              session,
-            ) as never,
+            stampInsert({
+              workingId,
+              userId: participant.userId ?? null,
+              name: participant.name ?? null,
+              position,
+            }),
           )
           .returning();
         written.push(row as WorkingParticipantRow);
@@ -211,7 +215,7 @@ export function workingWrites({
         spellWorkings,
         and(
           eq(spellWorkings.spellId, spellId),
-          existsIn(spells, and(eq(spells.id, spellWorkings.spellId), scopedTo(membership, spells))),
+          existsByKey(spells, spells.id, spellWorkings.spellId, scopedTo(membership, spells)),
         ),
       ),
   };

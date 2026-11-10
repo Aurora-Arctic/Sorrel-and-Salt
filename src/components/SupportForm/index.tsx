@@ -24,6 +24,7 @@ import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { ErrorDetails } from './error-details';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
 import { PendingLink } from '../../lib/navigation';
@@ -46,6 +47,7 @@ const SupportForm = ({
   about: initialAbout,
   errorCode,
   errorReference,
+  errorDetail,
   path,
   onDone,
 }: SupportFormProps): ReactElement => {
@@ -132,6 +134,7 @@ const SupportForm = ({
           ...(page.trim() !== '' && { path: page.trim() }),
           ...(errorCode !== undefined && { errorCode }),
           ...(errorReference && { errorReference }),
+          ...(errorDetail && { errorDetail }),
         },
       });
       setSending(false);
@@ -197,6 +200,7 @@ const SupportForm = ({
           edited('path');
         }}
       />
+      {errorDetail && <ErrorDetails detail={errorDetail} />}
       <PlainTextField
         name="subject"
         label="Subject"

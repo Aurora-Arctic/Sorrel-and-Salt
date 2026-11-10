@@ -1,9 +1,10 @@
 import 'server-only';
+import { SECONDS_PER_DAY } from '../../../lib/duration';
 import { Forbidden } from '../../../lib/errors';
 import { utcMinute } from '../../../lib/utc';
 import type { StandingTimeout } from '../types';
 
-export const SEND_WINDOW_SECONDS = 24 * 60 * 60;
+export const SEND_WINDOW_SECONDS = SECONDS_PER_DAY;
 
 export function refuseTimedOut(timedOut: StandingTimeout | undefined): void {
   if (!timedOut) return;

@@ -1,13 +1,14 @@
 // How long ago an instant was, as a phrase ("3 days ago"). Worked out against the
 // reader's clock, so it only ever runs in the browser (last-edit-tip.tsx).
 
+import { MS_PER_DAY } from '../../lib/duration';
 import { TIME_PERIOD_SPACE } from '../../lib/utc';
 
 const UNITS: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
-  ['year', 365 * 24 * 60 * 60 * 1000],
-  ['month', 30 * 24 * 60 * 60 * 1000],
-  ['week', 7 * 24 * 60 * 60 * 1000],
-  ['day', 24 * 60 * 60 * 1000],
+  ['year', 365 * MS_PER_DAY],
+  ['month', 30 * MS_PER_DAY],
+  ['week', 7 * MS_PER_DAY],
+  ['day', MS_PER_DAY],
   ['hour', 60 * 60 * 1000],
   ['minute', 60 * 1000],
 ];

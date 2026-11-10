@@ -33,6 +33,7 @@ const BO = {
   primaryAdmin: false,
   canCreateWorkspace: false,
   providers: [],
+  hasPasskey: false,
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
   agreedDisclaimerVersion: 1,

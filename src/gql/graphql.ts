@@ -383,6 +383,7 @@ export type SignedOutSupportRequestInput = {
   /** Where the reply is mailed. */
   email: string;
   errorCode?: number | null | undefined;
+  errorDetail?: string | null | undefined;
   errorReference?: string | null | undefined;
   /** 1 to 4000 characters. */
   message: string;
@@ -482,6 +483,8 @@ export type SupportRequestInput = {
   about: SupportAbout;
   /** The HTTP status of the error page, if any. */
   errorCode?: number | null | undefined;
+  /** The error's name and message, at most 500 characters. */
+  errorDetail?: string | null | undefined;
   /** The digest of the error page, if any. */
   errorReference?: string | null | undefined;
   /** 1 to 4000 characters. */

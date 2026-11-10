@@ -1,9 +1,10 @@
+import { MS_PER_DAY } from '../duration';
 import type { MirrorEntry } from './types';
 
 // A copy of an autosaving form's value in localStorage, written on every change and cleared only once the server confirms a save, so a closed tab
 // keeps what was typed. Storage can be absent, full or refused, so every access is in try/catch and a failure means no mirror.
 
-const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const MAX_AGE_MS = MS_PER_DAY;
 
 /** `autosave:<entity>:<id|new>:<userId>`: per row and per person, so two people on one browser never see each other's copy. */
 export function mirrorKey({

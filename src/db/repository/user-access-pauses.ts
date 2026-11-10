@@ -1,19 +1,16 @@
-import { and, eq, gt, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
-import { applyAudit } from '../audit';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { SiteAdmin } from '@/modules/identity';
-import { newestFirst, notSoftDeleted } from './predicates';
+import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
+import { closeThenInsertPause, liftedNow, standingPause } from './pause-ledger';
 import { findPage } from './finders';
-import { selectFrom, selectOne } from './select';
+import { selectFrom, selectOne, whenIds } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, UserAccessPauseRow, WriterContext } from './types';
 
-/** A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. */
-const notRunOut = or(isNull(userAccessPauses.until), gt(userAccessPauses.until, sql`now()`));
-
 /** A pause stands: not lifted, and not run out. The column read and the user list's filter share it. */
-export const pauseStands = and(isNull(userAccessPauses.liftedAt), notRunOut) as SQL;
+export const pauseStands = standingPause(userAccessPauses);
 
 /** One user's live pause: not lifted, and (by the writes' own filter, or `notSoftDeleted` in a read) not deleted. */
 const liveFor = (userId: string) =>
@@ -28,7 +25,7 @@ export function findStandingUserAccessPause(
 ): Promise<UserAccessPauseRow | undefined> {
   return selectOne(
     userAccessPauses,
-    and(notSoftDeleted(userAccessPauses), liveFor(userId), notRunOut),
+    and(notSoftDeleted(userAccessPauses), liveFor(userId), noEndOrAhead(userAccessPauses.until)),
   );
 }
 
@@ -40,13 +37,14 @@ export function findStandingUserAccessPausesFor(
   _admin: SiteAdmin,
   userIds: readonly string[],
 ): Promise<UserAccessPauseRow[]> {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    userAccessPauses,
-    and(
-      notSoftDeleted(userAccessPauses),
-      inArray(userAccessPauses.userId, [...userIds]),
-      pauseStands,
+  return whenIds(userIds, () =>
+    selectFrom(
+      userAccessPauses,
+      and(
+        notSoftDeleted(userAccessPauses),
+        inArray(userAccessPauses.userId, [...userIds]),
+        pauseStands,
+      ),
     ),
   );
 }
@@ -67,27 +65,27 @@ export function findUserAccessPausePage(
 }
 
 /** The site access pause's two named writes, beside its finders. `writerFor` spreads them into the writer. */
-export function userAccessPauseWrites({
-  tx,
-  session,
-  update,
-}: WriterContext): Pick<AuditWriter, 'setUserAccessPause' | 'liftUserAccessPause'> {
-  // `now()` beside the trigger's `updated_at`, so the two read alike.
-  const lifted = () => ({ liftedAt: sql`now()`, liftedBy: session.userId });
+export function userAccessPauseWrites(
+  context: WriterContext,
+): Pick<AuditWriter, 'setUserAccessPause' | 'liftUserAccessPause'> {
+  const { tx, session, update } = context;
   return {
-    // Closes the live row first so the one-live index takes the new pause; no conflict target, so a racing
-    // pause wins and this writes nothing. Ends the user's sessions in the same transaction.
+    // Ends the user's sessions in the same transaction as the pause.
     setUserAccessPause: async (_admin, userId, { until, note, message }) => {
-      await update(userAccessPauses, lifted(), liveFor(userId));
       await tx.delete(sessions).where(eq(sessions.userId, userId));
-      return tx
-        .insert(userAccessPauses)
-        .values(applyAudit('insert', { userId, until, note, message }, session) as never)
-        .onConflictDoNothing()
-        .returning();
+      return closeThenInsertPause(context, userAccessPauses, liveFor(userId), {
+        userId,
+        until,
+        note,
+        message,
+      });
     },
     // A pause that has run out ended by itself, so it is left alone rather than recorded as a keeper's lift.
     liftUserAccessPause: (_admin, userId) =>
-      update(userAccessPauses, lifted(), and(liveFor(userId), notRunOut)),
+      update(
+        userAccessPauses,
+        liftedNow(session),
+        and(liveFor(userId), noEndOrAhead(userAccessPauses.until)),
+      ),
   };
 }

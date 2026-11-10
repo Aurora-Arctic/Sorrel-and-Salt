@@ -20,16 +20,13 @@ import { documentMailings } from '../../modules/documents/schema/document-mailin
 import { documentVersions } from '../../modules/documents/schema/document-versions';
 import { documents } from '../../modules/documents/schema/documents';
 import { users } from '../../modules/identity/schema/users';
-import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
-import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import { applyAudit } from '../audit';
+import { notStandIn } from './user-filters';
 import type { SiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { StaleWrite } from '../../lib/errors';
 import { notSoftDeleted } from './predicates';
 import { findPage } from './finders';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, selectFrom, selectOne, whenIds } from './select';
 import type {
   AuditWriter,
   DocumentMailingItem,
@@ -115,17 +112,15 @@ const newerVersion = alias(documentVersions, 'newer_version');
 
 // A live item of a live sent mailing covering the outer version: a replaced, sending or paused mailing leaves it to be mailed.
 const mailedVersion = () =>
-  existsIn(
+  existsByKey(
     documentMailingItems,
-    and(
-      eq(documentMailingItems.documentVersionId, documentVersions.id),
-      existsIn(
-        documentMailings,
-        and(
-          eq(documentMailings.id, documentMailingItems.mailingId),
-          eq(documentMailings.status, 'sent'),
-        ),
-      ),
+    documentMailingItems.documentVersionId,
+    documentVersions.id,
+    existsByKey(
+      documentMailings,
+      documentMailings.id,
+      documentMailingItems.mailingId,
+      eq(documentMailings.status, 'sent'),
     ),
   );
 
@@ -142,13 +137,12 @@ export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]>
       gt(documentVersions.number, 1),
       notInArray(documents.key, [...UNMAILED_DOCUMENT_KEYS]),
       not(
-        existsIn(
+        existsByKey(
           newerVersion,
-          and(
-            eq(newerVersion.documentId, documentVersions.documentId),
-            eq(newerVersion.status, 'published'),
-            gt(newerVersion.number, documentVersions.number),
-          ),
+          newerVersion.documentId,
+          documentVersions.documentId,
+          eq(newerVersion.status, 'published'),
+          gt(newerVersion.number, documentVersions.number),
         ),
       ),
       not(mailedVersion()),
@@ -174,33 +168,34 @@ export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]>
 export function findDocumentMailingItems(
   mailingIds: readonly string[],
 ): Promise<DocumentMailingItem[]> {
-  if (mailingIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    documentMailingItems,
-    and(
-      notSoftDeleted(documentMailingItems),
-      inArray(documentMailingItems.mailingId, [...mailingIds]),
-    ),
-    {
-      aggregate: {
-        mailingId: sql<string>`${documentMailingItems.mailingId}`,
-        versionId: sql<string>`${documentMailingItems.documentVersionId}`,
-        key: sql<string>`${documents.key}`,
-        title: sql<string>`${documents.title}`,
-        versionNumber: sql<number>`${documentVersions.number}`,
-        summary: sql<string>`${documentMailingItems.summary}`,
-      },
-      over: {},
-      joins: [
-        {
-          type: 'inner',
-          table: documentVersions,
-          on: eq(documentVersions.id, documentMailingItems.documentVersionId),
+  return whenIds(mailingIds, () =>
+    selectFrom(
+      documentMailingItems,
+      and(
+        notSoftDeleted(documentMailingItems),
+        inArray(documentMailingItems.mailingId, [...mailingIds]),
+      ),
+      {
+        aggregate: {
+          mailingId: sql<string>`${documentMailingItems.mailingId}`,
+          versionId: sql<string>`${documentMailingItems.documentVersionId}`,
+          key: sql<string>`${documents.key}`,
+          title: sql<string>`${documents.title}`,
+          versionNumber: sql<number>`${documentVersions.number}`,
+          summary: sql<string>`${documentMailingItems.summary}`,
         },
-        { type: 'inner', table: documents, on: eq(documents.id, documentVersions.documentId) },
-      ],
-      orderBy: [documents.title],
-    },
+        over: {},
+        joins: [
+          {
+            type: 'inner',
+            table: documentVersions,
+            on: eq(documentVersions.id, documentMailingItems.documentVersionId),
+          },
+          { type: 'inner', table: documents, on: eq(documents.id, documentVersions.documentId) },
+        ],
+        orderBy: [documents.title],
+      },
+    ),
   );
 }
 
@@ -222,15 +217,12 @@ export function findUnsentDocumentMailingRecipientPage(
 
 export type MailingAccount = Pick<typeof users.$inferSelect, 'id' | 'email' | 'name'>;
 
-// The seeded accounts that stand in for no one: they hold no mailbox.
-const STAND_INS = [BOOTSTRAP_USER_ID, SYSTEM_ACTOR_ID, SIGNED_OUT_SENDER_ID];
-
 // The accounts a mailing reaches: live, with a verified address a mailbox can hold (RFC 2606 reserves `.invalid`).
 const mailable = and(
   notSoftDeleted(users),
   eq(users.emailVerified, true),
   not(ilike(users.email, '%.invalid')),
-  notInArray(users.id, STAND_INS),
+  notStandIn,
 );
 
 export async function countDocumentMailingAccounts(): Promise<number> {
@@ -250,8 +242,9 @@ export function findDocumentMailingAccountPage(
 export function findDocumentMailingRecipientUsers(
   userIds: readonly string[],
 ): Promise<MailingAccount[]> {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(users, and(notSoftDeleted(users), inArray(users.id, [...userIds])));
+  return whenIds(userIds, () =>
+    selectFrom(users, and(notSoftDeleted(users), inArray(users.id, [...userIds]))),
+  );
 }
 
 /** How many mails, of every mailing, went out since midnight UTC: the provider's daily allowance is shared by them all. */
@@ -325,7 +318,7 @@ export async function findOldestSendingDocumentMailing(): Promise<DocumentMailin
 
 export function documentWrites({
   tx,
-  session,
+  stampInsert,
   update,
   softDelete,
   updateAtRevision,
@@ -387,11 +380,11 @@ export function documentWrites({
       return tx
         .insert(documentVersions)
         .values(
-          applyAudit(
-            'insert',
-            { documentId, number: (highest ?? 0) + 1, body: givenBody ?? latest?.body ?? '' },
-            session,
-          ) as never,
+          stampInsert({
+            documentId,
+            number: (highest ?? 0) + 1,
+            body: givenBody ?? latest?.body ?? '',
+          }),
         )
         .returning();
     },
@@ -420,31 +413,27 @@ export function documentWrites({
     // The versions' rows are locked, so a delete alongside cannot slip between the check and the inserts.
     startDocumentMailing: async (_admin, { items, recipientCount }) => {
       const versionIds = [...new Set(items.map((item) => item.versionId))];
-      if (versionIds.length === 0) return [];
-      const versions = await selectFrom(
-        documentVersions,
-        and(
-          notSoftDeleted(documentVersions),
-          inArray(documentVersions.id, versionIds),
-          eq(documentVersions.status, 'published'),
+      const versions = await whenIds(versionIds, () =>
+        selectFrom(
+          documentVersions,
+          and(
+            notSoftDeleted(documentVersions),
+            inArray(documentVersions.id, versionIds),
+            eq(documentVersions.status, 'published'),
+          ),
+          { lockIn: tx, lockOrder: documentVersions.id },
         ),
-        { lockIn: tx, lockOrder: documentVersions.id },
       );
       if (versions.length !== versionIds.length) return [];
       const started: DocumentMailingRow[] = await tx
         .insert(documentMailings)
-        .values(applyAudit('insert', { recipientCount }, session) as never)
+        .values(stampInsert({ recipientCount }))
         .returning();
       await tx
         .insert(documentMailingItems)
         .values(
-          items.map(
-            ({ versionId, summary }) =>
-              applyAudit(
-                'insert',
-                { mailingId: started[0]!.id, documentVersionId: versionId, summary },
-                session,
-              ) as never,
+          items.map(({ versionId, summary }) =>
+            stampInsert({ mailingId: started[0]!.id, documentVersionId: versionId, summary }),
           ),
         );
       return started;
@@ -454,29 +443,26 @@ export function documentWrites({
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'document-mailing:start'}))`);
     },
     addDocumentMailingRecipients: (mailingId, userIds) => {
-      if (userIds.length === 0) return Promise.resolve([]);
-      return tx
-        .insert(documentMailingRecipients)
-        .values(
-          [...new Set(userIds)].map(
-            (userId) => applyAudit('insert', { mailingId, userId }, session) as never,
-          ),
-        )
-        .onConflictDoNothing()
-        .returning();
+      return whenIds(userIds, () =>
+        tx
+          .insert(documentMailingRecipients)
+          .values([...new Set(userIds)].map((userId) => stampInsert({ mailingId, userId })))
+          .onConflictDoNothing()
+          .returning(),
+      );
     },
     markDocumentMailingRecipientsSent: (mailingId, userIds) =>
-      userIds.length === 0
-        ? Promise.resolve([])
-        : update(
-            documentMailingRecipients,
-            { sentAt: sql`now()` },
-            and(
-              eq(documentMailingRecipients.mailingId, mailingId),
-              inArray(documentMailingRecipients.userId, [...userIds]),
-              isNull(documentMailingRecipients.sentAt),
-            ),
+      whenIds(userIds, () =>
+        update(
+          documentMailingRecipients,
+          { sentAt: sql`now()` },
+          and(
+            eq(documentMailingRecipients.mailingId, mailingId),
+            inArray(documentMailingRecipients.userId, [...userIds]),
+            isNull(documentMailingRecipients.sentAt),
           ),
+        ),
+      ),
     skipDocumentMailingRecipient: (mailingId, userId) =>
       update(
         documentMailingRecipients,

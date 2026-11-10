@@ -29,6 +29,9 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 );
 
 // Stock hangs off the ingredient, which is why `spell_steps` references `ingredients` and not this table.
+/** The index that refuses a second live jar of one form in a coven. */
+export const INVENTORY_ITEMS_VARIANT_UNIQUE = 'inventory_items_workspace_id_variant_id_unique';
+
 export const inventoryItems = pgTable(
   'inventory_items',
   {
@@ -68,12 +71,7 @@ export const inventoryItems = pgTable(
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
     // What "already added" means, per form. Partial per CLAUDE.md
     // rule 4: throwing a jar out is recoverable, so it must not reserve the form.
-    liveUnique(
-      'inventory_items_workspace_id_variant_id_unique',
-      table,
-      table.workspaceId,
-      table.variantId,
-    ),
+    liveUnique(INVENTORY_ITEMS_VARIANT_UNIQUE, table, table.workspaceId, table.variantId),
     // The variant and the ingredient beside it, as a pair, so no row holds
     // another ingredient's form.
     foreignKey({

@@ -31,6 +31,20 @@ describe('ReportThis', () => {
     expect(link()).toHaveAttribute('href', '/coven/x/spells?support=bug&error=500&ref=abc123');
   });
 
+  it('carries the error detail beside the reference', () => {
+    pathname.mockReturnValue('/coven/x/spells');
+    browserAt('/coven/x/spells');
+    render(<ReportThis code={500} reference="abc123" detail="TypeError: a & b" />);
+    const href = link().getAttribute('href') ?? '';
+    expect(href.split('?')[0]).toBe('/coven/x/spells');
+    expect(Object.fromEntries(new URLSearchParams(href.split('?')[1]))).toEqual({
+      support: 'bug',
+      error: '500',
+      ref: 'abc123',
+      detail: 'TypeError: a & b',
+    });
+  });
+
   it("leaves the page out of the server-rendered link when the router gives the framework's route", () => {
     pathname.mockReturnValue('/_not-found');
     expect(renderToString(<ReportThis code={404} />)).toContain(

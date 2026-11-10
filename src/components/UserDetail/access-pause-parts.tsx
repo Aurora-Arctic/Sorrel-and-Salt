@@ -3,6 +3,7 @@
 import { type ReactElement, useId } from 'react';
 import DateField from '../DateField';
 import { today } from '../DateField/day';
+import { MS_PER_DAY } from '../../lib/duration';
 import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
 import { FieldShell, PlainTextField, fieldDescription } from '../Field';
 import LocalTime from '../LocalTime';
@@ -37,13 +38,11 @@ export const SPANS: readonly { value: PauseSpan; label: string }[] = [
 
 const MESSAGE_HINT = 'Emailed to them.';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /** Null for no end date; undefined while no valid end can be read from the picked day. */
 export function endOf(span: PauseSpan, day: string, now: Date): Date | null | undefined {
   if (span === 'none') return null;
-  if (span === 'day') return new Date(now.getTime() + DAY_MS);
-  if (span === 'week') return new Date(now.getTime() + 7 * DAY_MS);
+  if (span === 'day') return new Date(now.getTime() + MS_PER_DAY);
+  if (span === 'week') return new Date(now.getTime() + 7 * MS_PER_DAY);
   if (span === 'month') {
     const end = new Date(now);
     end.setMonth(end.getMonth() + 1);

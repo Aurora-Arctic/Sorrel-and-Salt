@@ -17,17 +17,20 @@ thing a keeper curates, either: CLAUDE.md's "and nothing else" governs what a ke
 may _change_.
 
 - **One service, two transports.** `listUsers(session, filter, page)`,
-  `countUsers(session, filter, start)` and `providersOf(session, userIds)`
+  `countUsers(session, filter, start)`, `providersOf(session, userIds)` and
+  `holdsPasskey(session, userIds)`
   (`src/modules/identity/services/user-list.ts`) are a site admin's alone. Each asserts the role itself, by direct call, so a
   non-keeper is refused at the service and not merely kept off the page. The
   page calls them under `requireAdminSession()`, and GraphQL's `users` query
-  and `User.providers` field end at the same two functions. The list is a read, so the query carries no Pothos scope of its own.
-- **Under the `SiteAdmin` proof.** `findUserPage`, `findUserCount` and `findProvidersOfUsers`
+  and `User.providers` and `User.hasPasskey` fields end at the same functions. The list is a read, so the query carries no Pothos scope of its own.
+- **Under the `SiteAdmin` proof.** `findUserPage`, `findUserCount`, `findProvidersOfUsers` and `findPasskeyHoldersAmong`
   (`src/db/repository/users.ts`) take the proof first, so the repository
   cannot be asked for the list by a caller that has not checked the role
   ([`db/site-admin-proof.md`](../db/site-admin-proof.md), "The SiteAdmin
   proof"). `findProvidersOfUsers` returns each account's user and provider
   only, so the tokens on an `accounts` row never leave the repository.
+  `findPasskeyHoldersAmong` returns the ids of the given users holding a
+  passkey, grouped in SQL so each is named once, and no key material.
 - **Not Better Auth's `listUsers`.** The `admin` plugin ships one, but it
   would put a database read outside the repository and a browser-initiated
   read outside `/api/graphql`: rules 2 and 1 in one call.
@@ -56,7 +59,8 @@ may _change_.
 - **`User.email` keeps its one scope.** The `users` nodes are the ordinary `User`, so `email`, `role`, `canCreateWorkspace` and `emailVerified` resolve through `selfOrAdmin` as on `me` ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
 - **`User.providers` is a keeper's alone**, the user's own row included. It
   resolves through the `providersByUser` loader. A user's own providers come
-  from Better Auth, on `/account`, whose table it is.
+  from Better Auth, on `/account`, whose table it is. `User.hasPasskey` is
+  scoped the same and resolves through the `passkeyHeldByUser` loader.
 - **Impersonate sits on each non-keeper row** where impersonation is
   registered. The control is the page's, but the guard is Better
   Auth's endpoint, which refuses a non-keeper caller and a keeper target
@@ -86,7 +90,7 @@ Pressing a user's name on the list opens a modal over it, so a keeper sees what 
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under
   `requireAdminSession()`: `usersForAdmin` for the user, `membershipsOf` for
-  the covens, `providersOf`. No GraphQL query is added. `membershipsOf`
+  the covens, `providersOf` and `holdsPasskey`. No GraphQL query is added. `membershipsOf`
   (`src/modules/coven/services/memberships.ts`) answers a key that is the caller's own, or any key
   when the caller is a site keeper; it hands over
   a workspace's `id`, `name` and `slug` and nothing beneath. GraphQL's

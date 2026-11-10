@@ -15,7 +15,7 @@ import type { ValidationIssue } from '../../../lib/types';
 import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
-import { inventoryItems } from '../schema/inventory-items';
+import { INVENTORY_ITEMS_VARIANT_UNIQUE, inventoryItems } from '../schema/inventory-items';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { dimensionOf } from '../schema/units';
 import { defaultThreshold } from '../validation/default-threshold';
@@ -75,10 +75,15 @@ export async function createStock(
     return row;
   } catch (error) {
     // The partial unique index is the check, so two creates racing for one form are refused alike.
-    if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
-      throw new ValidationError([{ path: ['variantId'], message: HELD }]);
+    refuseHeldVariant(error, ['variantId']);
     throw error;
   }
+}
+
+/** Turns a race on the one-live-jar-per-form index into the HELD refusal at `path`; any other error passes through. */
+function refuseHeldVariant(error: unknown, path: (string | number)[]): void {
+  if (violatedUniqueIndex(error) === INVENTORY_ITEMS_VARIANT_UNIQUE)
+    throw new ValidationError([{ path, message: HELD }]);
 }
 
 /**
@@ -213,8 +218,7 @@ export async function saveStock(
     });
   } catch (error) {
     // The partial unique index is the check, as in `createStock`.
-    if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
-      throw new ValidationError([{ path: ['create', index, 'variantId'], message: HELD }]);
+    refuseHeldVariant(error, ['create', index, 'variantId']);
     throw error;
   }
   return findStockOfIngredients(membership, [ingredientId]);
