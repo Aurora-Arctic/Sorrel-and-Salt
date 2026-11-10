@@ -693,6 +693,8 @@ The table is DESIGN.md §5's `user_access_pauses`.
 
 Every pause, dated or open-ended, needs a note saying why: the GraphQL argument is required, the service refuses one blank once trimmed, and the column is NOT NULL with a CHECK that it holds a character other than whitespace. The note is stored trimmed. Lifting a user with no standing pause, a run-out one included, answers `NotFound`.
 
+A paused curator or keeper cannot be assigned support requests (`assignSupportRequest` refuses with a validation error on `assigneeId`) and is not offered in the assignee picker, which lists with the `unpaused` user filter.
+
 **What a pause does.** Setting it lifts any run-out live row, deletes every row in `sessions` for the user and inserts
 the new pause, all in one `withAudit` transaction (`setUserAccessPause` in `src/db/repository/user-access-pauses.ts`).
 The session rows have no audit columns and no `deleted_at`, so they are deleted as Better Auth's own sign-out deletes them.

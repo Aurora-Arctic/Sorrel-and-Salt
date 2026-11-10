@@ -178,13 +178,13 @@ export const readOpened = cache(
   },
 );
 
-/** The curators and keepers a request may be assigned to: only a keeper assigns, so a curator is given none. */
+/** The curators and keepers a request may be assigned to, bar those whose site access is paused: only a keeper assigns, so a curator is given none. */
 export const readAssignees = cache(async (session: Session): Promise<SupportPerson[]> => {
   if (session.role !== 'admin') return [];
   const page = { limit: 200, inverted: false };
   const [keepers, curators] = await Promise.all([
-    listUsers(session, { role: 'admin' }, page),
-    listUsers(session, { role: 'curator' }, page),
+    listUsers(session, { role: 'admin', unpaused: true }, page),
+    listUsers(session, { role: 'curator', unpaused: true }, page),
   ]);
   return [...keepers, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });

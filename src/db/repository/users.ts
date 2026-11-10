@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNotNull, like, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, like, ne, not, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
@@ -184,6 +184,7 @@ function userArms({
   role,
   timedOut,
   paused,
+  unpaused,
 }: UserFilter): (SQL | undefined)[] {
   return [
     query ? nameOrEmailHolds(query) : undefined,
@@ -195,6 +196,9 @@ function userArms({
       : undefined,
     paused
       ? existsIn(userAccessPauses, and(eq(userAccessPauses.userId, users.id), pauseStands))
+      : undefined,
+    unpaused
+      ? not(existsIn(userAccessPauses, and(eq(userAccessPauses.userId, users.id), pauseStands)))
       : undefined,
   ];
 }

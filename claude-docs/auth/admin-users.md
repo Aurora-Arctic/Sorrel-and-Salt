@@ -50,6 +50,8 @@ may _change_.
   `findUserCount` sharing `timeoutStands` (`support.ts`) and `pauseStands`
   (`user-access-pauses.ts`) with the column reads, so the filter and the marks
   cannot disagree. GraphQL's `users` takes them as `timedOut` and `paused`.
+  The repository's `UserFilter` also has `unpaused`, the reverse (`NOT EXISTS` over the same
+  `pauseStands`); `paused: false` is no filter. Only the support assignee picker uses it.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build
   one.
