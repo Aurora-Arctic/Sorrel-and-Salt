@@ -31,6 +31,12 @@ would need no edit at any call site; nothing passes it today.
 - **`run-check`** — the steps every `checks.yml` job but `audit` shares: the command
   under `set -o pipefail` teeing to `/app/output.log`, the summarising script,
   then `job-summary` and `pr-comment`.
+- **`vitest-part`** — the steps each of `vitest.yml`'s three part jobs shares: the
+  Vitest run for the part's projects with coverage as a blob and the thresholds
+  off, the blob upload, the summarising script and the part's section of the
+  comment. Its inputs are `name`, `projects`, `pr-number` and `merge-queue`. Each
+  job keeps its `container:`, `services:` and `env:`, which a composite action
+  cannot hold.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`)
