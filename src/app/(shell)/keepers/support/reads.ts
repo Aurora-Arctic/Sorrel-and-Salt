@@ -1,7 +1,7 @@
 import { orMissing } from '@/lib/or-not-found';
 import { cache } from 'react';
 import { readNumberedPage } from '@/lib/numbered-page';
-import { listUsers } from '@/modules/identity';
+import { listUsers, standingAccessPausesOf } from '@/modules/identity';
 import {
   countSupportRequests,
   countSupportViews,
@@ -158,8 +158,15 @@ export const readOpened = cache(
       ...replies.map((reply) => reply.createdBy),
       ...(Array.isArray(timeouts) ? timeouts.flatMap(timeoutPeople) : []),
     ]);
+    const person = personOf(names, row.assignedTo);
+    // Only a keeper may read a pause, and only a keeper gets the picker the mark is for.
+    const [pause] =
+      person && row.assignedTo && session.role === 'admin'
+        ? await standingAccessPausesOf(session, [row.assignedTo])
+        : [];
     return {
       ...entryOf(row, names, tier === 'beta_tester'),
+      assignee: person && { ...person, paused: pause !== undefined },
       message: row.message,
       path: row.path || null,
       issueUrl: row.issueUrl,
