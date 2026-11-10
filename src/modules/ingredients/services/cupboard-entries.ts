@@ -14,11 +14,13 @@ import {
   findWorkspaceIngredientByName,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { answerOf, fieldRefusal, Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { NO_COMPENDIUM_ENTRY, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { fold, trimmedOrUndefined } from '../../../lib/text';
+import { isRowId, parseInput } from '../../../lib/validation';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { ingredients } from '../schema/ingredients';
@@ -31,7 +33,7 @@ import type { SubstituteFields } from '../validation/types';
 import type {
   CitedReference,
   ConvertedCompendium,
-  CupboardEntryKey,
+  WorkspaceIngredientKey,
   HoldingCoven,
   IngredientValues,
   VariantKey,
@@ -46,7 +48,6 @@ import {
   variantsOf,
 } from './ingredient-children';
 import {
-  foldForm,
   ingredientColumns,
   refuseCollision,
   resolvePicks,
@@ -78,7 +79,7 @@ export async function heldCompendiumEntry(
   ingredientId: string,
 ): Promise<{ entry: IngredientRow; cupboardEntry: CupboardEntryRow } | undefined> {
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(ingredientId).success) return undefined;
+  if (!isRowId(ingredientId)) return undefined;
   return findCupboardEntryIncludingSoftDeleted(membership, ingredientId);
 }
 
@@ -95,14 +96,14 @@ export async function getCupboardEntry(
 ): Promise<CupboardEntryRow | null> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
-  if (!RowId.safeParse(ingredientId).success) return null;
+  if (!isRowId(ingredientId)) return null;
   return (await findCupboardEntry(membership, ingredientId)) ?? null;
 }
 
 /** Each key's cupboard entry in its coven, or null, in key order: `Ingredient.cupboardEntry`'s batch; a refused coven gets a `Forbidden` in its slot. */
 export async function cupboardEntriesOf(
   session: Session,
-  keys: readonly CupboardEntryKey[],
+  keys: readonly WorkspaceIngredientKey[],
 ): Promise<(CupboardEntryRow | null | Forbidden)[]> {
   const covens = [...new Set(keys.map((key) => key.workspaceId))];
   const rows = new Map(
@@ -144,12 +145,11 @@ export async function findCompendiumMatches(
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, {}>[]> {
   await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  const trimmed = name.trim();
+  const trimmed = trimmedOrUndefined(name);
   if (!trimmed) return [];
   return findCompendiumMatchPage(trimmed, page);
 }
 
-const NO_ENTRY = 'No such compendium entry';
 const NO_ROW = 'This coven does not hold that compendium entry';
 const HELD = 'Your coven already holds this entry';
 const ENTRY_INDEX = 'workspace_compendium_entries_workspace_ingredient_unique';
@@ -170,15 +170,11 @@ async function refuseLabelTaken(
   if (label == null) return;
   const own = await findWorkspaceIngredientByName(membership, label);
   if (own) {
-    throw new ValidationError([
-      { path: ['label'], message: `This coven already has an ingredient called "${label}"` },
-    ]);
+    throw fieldRefusal('label', `This coven already has an ingredient called "${label}"`);
   }
   const other = await findCupboardEntryByLabel(membership, label);
   if (other && other.id !== exceptId) {
-    throw new ValidationError([
-      { path: ['label'], message: `This coven already calls another entry "${label}"` },
-    ]);
+    throw fieldRefusal('label', `This coven already calls another entry "${label}"`);
   }
 }
 
@@ -190,20 +186,16 @@ export async function refuseCupboardLabelAsName(
   name: string,
 ): Promise<void> {
   if (await findCupboardEntryByLabel(membership, name)) {
-    throw new ValidationError([
-      { path: ['name'], message: `This coven already calls a compendium entry "${name}"` },
-    ]);
+    throw fieldRefusal('name', `This coven already calls a compendium entry "${name}"`);
   }
 }
 
 function refuseRace(error: unknown): never {
   switch (violatedUniqueIndex(error)) {
     case ENTRY_INDEX:
-      throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
+      throw fieldRefusal('ingredientId', HELD);
     case LABEL_INDEX:
-      throw new ValidationError([
-        { path: ['label'], message: 'This coven already uses that label for another entry' },
-      ]);
+      throw fieldRefusal('label', 'This coven already uses that label for another entry');
   }
   throw error;
 }
@@ -221,12 +213,12 @@ export async function addCupboardEntry(
 ): Promise<CupboardEntryRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
   const parsed = parseInput(CupboardEntryInput, input);
-  if (!RowId.safeParse(ingredientId).success) throw new NotFound(NO_ENTRY);
+  assertRowId(ingredientId, NO_COMPENDIUM_ENTRY);
   // No proofs reads the compendium alone, so a coven's own row is never found.
   const entry = await findOneIngredient([], ingredientId);
-  if (!entry) throw new NotFound(NO_ENTRY);
+  if (!entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   if (await findCupboardEntry(membership, ingredientId)) {
-    throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
+    throw fieldRefusal('ingredientId', HELD);
   }
   await refuseLabelTaken(membership, parsed.label);
 
@@ -303,12 +295,10 @@ export async function removeCupboardEntry(
     const row = held.cupboardEntry;
     const jars = await findStockOfIngredients(membership, [ingredientId]);
     if (jars.length > 0) {
-      throw new ValidationError([
-        {
-          path: ['ingredientId'],
-          message: `This coven holds ${jars.length} ${jars.length === 1 ? 'jar' : 'jars'} of this entry — empty its jars first`,
-        },
-      ]);
+      throw fieldRefusal(
+        'ingredientId',
+        `This coven holds ${jars.length} ${jars.length === 1 ? 'jar' : 'jars'} of this entry — empty its jars first`,
+      );
     }
     const [removed] = await write.softDeleteByIdInWorkspace(
       membership,
@@ -321,13 +311,6 @@ export async function removeCupboardEntry(
 
 const sortedNames = (names: readonly string[]) =>
   [...new Set(names)].sort((a, b) => a.localeCompare(b));
-
-function answered<T>(slots: readonly (T[] | Forbidden)[]): T[] {
-  return slots.flatMap((slot) => {
-    if (slot instanceof Forbidden) throw slot;
-    return slot;
-  });
-}
 
 // Making a held compendium entry the coven's own (claude-docs/db/workspace-compendium-entries.md,
 // "Converting a compendium entry into our own" and "Cupboard entry service details").
@@ -349,7 +332,7 @@ async function ownValuesOf(
   heldBy: Membership | undefined,
 ): Promise<{ values: IngredientValues; selfLinks: SelfLink[]; folkNamesLost: string[] }> {
   const refs = [{ id: merged.id, workspaceId: null }];
-  const forms = answered(await variantsOf(session, refs, heldBy));
+  const forms = (await variantsOf(session, refs, heldBy)).flatMap(answerOf);
   const formRefs: VariantKey[] = forms.map((form) => ({
     id: form.id,
     ingredientId: merged.id,
@@ -423,10 +406,10 @@ async function ownValuesOf(
   const cited = (rows: CitedReference[]) =>
     rows.map(({ reference, locator }) => ({ referenceId: reference.id, locator }));
   const filed = (rows: readonly { id: string }[]) => rows.map((category) => category.id);
-  const ownedBy = <T>(rows: readonly (T[] | Forbidden)[], index: number) => answered([rows[index]]);
+  const ownedBy = <T>(rows: readonly (T[] | Forbidden)[], index: number) => answerOf(rows[index]);
 
   const nameKey = merged.name.toLowerCase();
-  const allFolkNames = answered(folkNames).map((row) => row.name);
+  const allFolkNames = folkNames.flatMap(answerOf).map((row) => row.name);
   const values: IngredientValues = {
     name: merged.name,
     canonicalName: merged.canonicalName,
@@ -440,15 +423,16 @@ async function ownValuesOf(
     colors: merged.colors,
     folkNames: allFolkNames.filter((name) => name.toLowerCase() !== nameKey),
     substitutes: copied(substitutes),
-    deities: answered(deities).map(({ name, deity }) => (deity ? { deityId: deity.id } : { name })),
-    references: cited(answered(references)),
-    categoryIds: filed(answered(categories)),
+    deities: deities
+      .flatMap(answerOf)
+      .map(({ name, deity }) => (deity ? { deityId: deity.id } : { name })),
+    references: cited(references.flatMap(answerOf)),
+    categoryIds: filed(categories.flatMap(answerOf)),
     variants: forms.map((form, index) => {
       const curated = form.formId === null ? undefined : curatedForms.get(form.formId);
       return {
         form: form.form,
-        formId:
-          curated !== undefined && foldForm(curated) === foldForm(form.form) ? form.formId! : '',
+        formId: curated !== undefined && fold(curated) === fold(form.form) ? form.formId! : '',
         description: form.description ?? '',
         safetyNotes: form.safetyNotes ?? '',
         toxic: form.toxic,
@@ -496,7 +480,7 @@ export async function convertCompendiumEntryToLocal(
   const columns = ingredientColumns(fields);
   // The cupboard row's own label is the one the new entry takes over.
   await refuseLabelTaken(membership, fields.name, cupboardEntry.id);
-  const entryForms = answered(await variantsOf(session, [entry], heldBy));
+  const entryForms = (await variantsOf(session, [entry], heldBy)).flatMap(answerOf);
 
   try {
     const row = await withAudit(session, async (write) => {
@@ -507,7 +491,7 @@ export async function convertCompendiumEntryToLocal(
       const forms = await write.lockLiveVariants(membership, own.id);
       const copyOf = new Map(
         entryForms.flatMap((form) => {
-          const copy = forms.find((candidate) => foldForm(candidate.form) === foldForm(form.form));
+          const copy = forms.find((candidate) => fold(candidate.form) === fold(form.form));
           return copy ? [[form.id, copy.id] as const] : [];
         }),
       );

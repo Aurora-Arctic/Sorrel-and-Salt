@@ -2,7 +2,6 @@ import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { workspaceIngredientFacets } from '../services/ingredient-facets';
 import { listWorkspaceIngredients } from '../services/workspace-ingredient-list';
-import type { WorkspaceIngredientFilterInput } from '../validation/compendium-filter';
 import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
@@ -42,19 +41,14 @@ builder.queryField('workspaceIngredients', (t) =>
       ...facetArgs,
       ...stockArgs,
     },
-    resolve: async (_root, args, page, context) => {
-      const entries = await listWorkspaceIngredients(
-        sessionOf(context),
-        args.workspaceId,
-        filterOf(args),
-        page,
-      );
+    resolve: async (_root, { workspaceId, ...filter }, page, context) => {
+      const entries = await listWorkspaceIngredients(sessionOf(context), workspaceId, filter, page);
       // The page read each entry's cupboard row beside it, under the same
       // read permission the loader's service asks, so `Ingredient.cupboardEntry`
       // is answered from here rather than by a second read.
       for (const { node, cupboardEntry } of entries) {
         context.loaders.cupboardEntryByIngredient.prime(
-          { ingredientId: node.id, workspaceId: args.workspaceId },
+          { ingredientId: node.id, workspaceId },
           cupboardEntry,
         );
       }
@@ -75,38 +69,7 @@ builder.queryField('workspaceIngredientFacets', (t) =>
       ...facetArgs,
       ...stockArgs,
     },
-    resolve: (_root, args, context) =>
-      workspaceIngredientFacets(sessionOf(context), args.workspaceId, filterOf(args)),
+    resolve: (_root, { workspaceId, ...filter }, context) =>
+      workspaceIngredientFacets(sessionOf(context), workspaceId, filter),
   }),
 );
-
-/** The filter's arguments, leaving out the coven and any page arguments. */
-function filterOf({
-  query,
-  categoryIds,
-  categoryMode,
-  forms,
-  deityIds,
-  zodiacSigns,
-  celestialBodies,
-  elements,
-  toxic,
-  source,
-  inStock,
-  lowStockOnly,
-}: WorkspaceIngredientFilterInput): WorkspaceIngredientFilterInput {
-  return {
-    query,
-    categoryIds,
-    categoryMode,
-    forms,
-    deityIds,
-    zodiacSigns,
-    celestialBodies,
-    elements,
-    toxic,
-    source,
-    inStock,
-    lowStockOnly,
-  };
-}

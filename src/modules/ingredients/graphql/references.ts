@@ -15,6 +15,7 @@ import {
 import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
+import { tierScope } from './tier-scope';
 
 // A reference as DESIGN.md §7 sketches it: its fields, the tier as `isGlobal`, and the citation rendered on the server by the one
 // renderer. `Ingredient.references` reads through the request's loader; `workspaceId` stays off the wire, as it does on `Ingredient`.
@@ -129,10 +130,6 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
     }),
   }),
 });
-
-/** The tier the `workspaceId` argument names, as a scope: null writes the compendium's (site admin only), a coven's admits anyone signed in. */
-const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
-  workspaceId == null ? { curator: true } : { signedIn: true };
 
 builder.mutationField('createReference', (t) =>
   t.field({
