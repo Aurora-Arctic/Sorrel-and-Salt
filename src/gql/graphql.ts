@@ -627,6 +627,15 @@ export type PickerCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type PickerCategoriesQuery = { categories: { edges: Array<{ node: { id: string, name: string, description: string, group: { id: string, name: string, colorDark: string, colorLight: string } } }> } };
 
+type IngredientFacetCountsFields_CompendiumFacets_Fragment = { forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }> };
+
+type IngredientFacetCountsFields_IngredientFacets_Fragment = { forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }> };
+
+export type IngredientFacetCountsFieldsFragment =
+  | IngredientFacetCountsFields_CompendiumFacets_Fragment
+  | IngredientFacetCountsFields_IngredientFacets_Fragment
+;
+
 export type CompendiumFacetCountsQueryVariables = Exact<{
   query?: string | null | undefined;
   forms?: Array<string> | string | null | undefined;
@@ -646,7 +655,7 @@ export type CompendiumFacetCountsQueryVariables = Exact<{
 }>;
 
 
-export type CompendiumFacetCountsQuery = { compendiumFacets: { withoutReferences: number, withoutForms: number, forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }>, reviewed: Array<{ value: boolean, count: number }> | null } };
+export type CompendiumFacetCountsQuery = { compendiumFacets: { withoutReferences: number, withoutForms: number, reviewed: Array<{ value: boolean, count: number }> | null, forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }> } };
 
 export type CovenFacetCountsQueryVariables = Exact<{
   workspaceId: string | number;
@@ -665,7 +674,7 @@ export type CovenFacetCountsQueryVariables = Exact<{
 }>;
 
 
-export type CovenFacetCountsQuery = { workspaceIngredientFacets: { inStock: number, lowStockOnly: number, forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }>, source: Array<{ value: IngredientSource, count: number }> } };
+export type CovenFacetCountsQuery = { workspaceIngredientFacets: { inStock: number, lowStockOnly: number, source: Array<{ value: IngredientSource, count: number }>, forms: Array<{ value: string, count: number }>, deities: Array<{ value: string, count: number }>, categories: Array<{ value: string, count: number }>, zodiacSigns: Array<{ value: string, count: number }>, celestialBodies: Array<{ value: string, count: number }>, elements: Array<{ value: IngredientElement, count: number }>, toxic: Array<{ value: ToxicFilter, count: number }> } };
 
 export type CreateWorkspaceMutationVariables = Exact<{
   name: string;
@@ -1722,7 +1731,38 @@ export class TypedDocumentString<TResult, TVariables>
     return this.value;
   }
 }
-
+export const IngredientFacetCountsFieldsFragmentDoc = new TypedDocumentString(`
+    fragment IngredientFacetCountsFields on IngredientFacetCounts {
+  forms {
+    value
+    count
+  }
+  deities {
+    value
+    count
+  }
+  categories {
+    value
+    count
+  }
+  zodiacSigns {
+    value
+    count
+  }
+  celestialBodies {
+    value
+    count
+  }
+  elements {
+    value
+    count
+  }
+  toxic {
+    value
+    count
+  }
+}
+    `, {"fragmentName":"IngredientFacetCountsFields"}) as unknown as TypedDocumentString<IngredientFacetCountsFieldsFragment, unknown>;
 export const CardArrivalsCsvDocument = new TypedDocumentString(`
     query CardArrivalsCsv($query: String) {
   cardArrivalsCsv(query: $query)
@@ -1826,34 +1866,7 @@ export const CompendiumFacetCountsDocument = new TypedDocumentString(`
     covenIds: $covenIds
     covensNot: $covensNot
   ) {
-    forms {
-      value
-      count
-    }
-    deities {
-      value
-      count
-    }
-    categories {
-      value
-      count
-    }
-    zodiacSigns {
-      value
-      count
-    }
-    celestialBodies {
-      value
-      count
-    }
-    elements {
-      value
-      count
-    }
-    toxic {
-      value
-      count
-    }
+    ...IngredientFacetCountsFields
     withoutReferences
     withoutForms
     reviewed {
@@ -1862,7 +1875,36 @@ export const CompendiumFacetCountsDocument = new TypedDocumentString(`
     }
   }
 }
-    `) as unknown as TypedDocumentString<CompendiumFacetCountsQuery, CompendiumFacetCountsQueryVariables>;
+    fragment IngredientFacetCountsFields on IngredientFacetCounts {
+  forms {
+    value
+    count
+  }
+  deities {
+    value
+    count
+  }
+  categories {
+    value
+    count
+  }
+  zodiacSigns {
+    value
+    count
+  }
+  celestialBodies {
+    value
+    count
+  }
+  elements {
+    value
+    count
+  }
+  toxic {
+    value
+    count
+  }
+}`) as unknown as TypedDocumentString<CompendiumFacetCountsQuery, CompendiumFacetCountsQueryVariables>;
 export const CovenFacetCountsDocument = new TypedDocumentString(`
     query CovenFacetCounts($workspaceId: ID!, $query: String, $forms: [String!], $elements: [IngredientElement!], $categoryIds: [ID!], $categoryMode: CategoryMode, $deityIds: [ID!], $zodiacSigns: [String!], $celestialBodies: [String!], $toxic: ToxicFilter, $source: IngredientSource, $inStock: Boolean, $lowStockOnly: Boolean) {
   workspaceIngredientFacets(
@@ -1880,34 +1922,7 @@ export const CovenFacetCountsDocument = new TypedDocumentString(`
     inStock: $inStock
     lowStockOnly: $lowStockOnly
   ) {
-    forms {
-      value
-      count
-    }
-    deities {
-      value
-      count
-    }
-    categories {
-      value
-      count
-    }
-    zodiacSigns {
-      value
-      count
-    }
-    celestialBodies {
-      value
-      count
-    }
-    elements {
-      value
-      count
-    }
-    toxic {
-      value
-      count
-    }
+    ...IngredientFacetCountsFields
     source {
       value
       count
@@ -1916,7 +1931,36 @@ export const CovenFacetCountsDocument = new TypedDocumentString(`
     lowStockOnly
   }
 }
-    `) as unknown as TypedDocumentString<CovenFacetCountsQuery, CovenFacetCountsQueryVariables>;
+    fragment IngredientFacetCountsFields on IngredientFacetCounts {
+  forms {
+    value
+    count
+  }
+  deities {
+    value
+    count
+  }
+  categories {
+    value
+    count
+  }
+  zodiacSigns {
+    value
+    count
+  }
+  celestialBodies {
+    value
+    count
+  }
+  elements {
+    value
+    count
+  }
+  toxic {
+    value
+    count
+  }
+}`) as unknown as TypedDocumentString<CovenFacetCountsQuery, CovenFacetCountsQueryVariables>;
 export const CreateWorkspaceDocument = new TypedDocumentString(`
     mutation CreateWorkspace($name: String!) {
   createWorkspace(name: $name) {
