@@ -1,5 +1,6 @@
 'use client';
 
+import { TERMS_LEDE, TERMS_TITLE } from './head';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
@@ -18,7 +19,7 @@ import { reportLeaving } from '../../lib/navigation';
 // The server refuses a version no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 const DOCUMENT_TITLES: Record<AgreementDocumentKey, string> = {
-  terms: 'Terms of Use',
+  terms: TERMS_TITLE,
   disclaimer: 'Disclaimer',
   'code-of-ethics': 'Code of Ethics',
 };
@@ -57,10 +58,7 @@ const TermsAgreement = ({
 
   return (
     <div className="terms-agreement">
-      <PageHeader
-        title="Terms of Use"
-        lede="Read the terms of use, then agree to them to carry on. You agree again only when they change."
-      />
+      <PageHeader title={TERMS_TITLE} lede={TERMS_LEDE} />
       <p className="terms-agreement__version">
         Version {formatAgreementVersion(version)}, last updated{' '}
         <time dateTime={updatedOn}>{dayInUtc(new Date(updatedOn))}</time>

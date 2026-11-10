@@ -1,4 +1,5 @@
 import PageNav from '@/components/PageNav';
+import { ACCOUNT_NAV, SIGN_IN_NAV } from './nav';
 import PageWithNav from '@/components/PageWithNav';
 import Skeleton from '@/components/Skeleton';
 import { PanelSkeleton } from '@/components/Skeleton/panel';
@@ -8,14 +9,7 @@ import { PanelSkeleton } from '@/components/Skeleton/panel';
 /** The Account tab's body: its menu and the three sections the page has. */
 export const AccountPanelSkeleton = () => (
   <PageWithNav as="div" headless>
-    <PageNav
-      label="On This Page"
-      entries={[
-        { href: '#account-name', label: 'Name' },
-        { href: '#account-email', label: 'Email' },
-        { href: '#account-invitations', label: 'Invitations' },
-      ]}
-    />
+    <PageNav label="On This Page" entries={ACCOUNT_NAV} />
     <PanelSkeleton />
     <PanelSkeleton />
     <PanelSkeleton />
@@ -25,15 +19,7 @@ export const AccountPanelSkeleton = () => (
 /** The Sign-In tab's body: its menu and the four sections the page has. */
 export const AccountSignInPanelSkeleton = () => (
   <PageWithNav as="div" headless>
-    <PageNav
-      label="On This Page"
-      entries={[
-        { href: '#sign-in-methods', label: 'Sign-In Methods' },
-        { href: '#password', label: 'Password' },
-        { href: '#two-factor', label: 'Two-Factor Sign-In' },
-        { href: '#passkeys', label: 'Passkeys' },
-      ]}
-    />
+    <PageNav label="On This Page" entries={SIGN_IN_NAV} />
     {Array.from({ length: 4 }, (_, at) => (
       <PanelSkeleton key={at} />
     ))}

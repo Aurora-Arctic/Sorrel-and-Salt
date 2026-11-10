@@ -1,4 +1,5 @@
 import { compendiumEntryPath } from '@/lib/compendium-path';
+import { COMPENDIUM_EYEBROW, COMPENDIUM_LEDE, COMPENDIUM_TITLE } from './head';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '@/components/CompendiumCards';
@@ -260,11 +261,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       )}
       {/* A public page, so its head carries an eyebrow naming the section and a lede saying
           what it is for, where the app's list pages have the heading alone. */}
-      <PageHeader
-        eyebrow="Reference"
-        title="Compendium"
-        lede="Ingredients for spellwork: their formal and folk names, categories, deities and forms, with the sources behind them."
-      />
+      <PageHeader eyebrow={COMPENDIUM_EYEBROW} title={COMPENDIUM_TITLE} lede={COMPENDIUM_LEDE} />
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}

@@ -1,4 +1,5 @@
 import { single } from '@/lib/search-params';
+import { SIGN_IN_NAV } from '../nav';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import PageNav from '@/components/PageNav';
@@ -45,15 +46,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <PageWithNav as="div" headless>
-      <PageNav
-        label="On This Page"
-        entries={[
-          { href: '#sign-in-methods', label: 'Sign-In Methods' },
-          { href: '#password', label: 'Password' },
-          { href: '#two-factor', label: 'Two-Factor Sign-In' },
-          { href: '#passkeys', label: 'Passkeys' },
-        ]}
-      />
+      <PageNav label="On This Page" entries={SIGN_IN_NAV} />
       <PanelSection
         id="sign-in-methods"
         title="Sign-In Methods"
