@@ -7,6 +7,7 @@ import {
   pageTitle,
   publicPageMetadata,
 } from '@/lib/page-metadata';
+import { SITE_NAME, SITE_TITLE_NAME } from '@/lib/site';
 
 describe('page metadata', () => {
   it('keeps a short description whole, on one line', () => {
@@ -54,14 +55,17 @@ describe('page metadata', () => {
     expect(meta.twitter).toMatchObject({ title: 'Testwort | Sorrel & Salt' });
   });
 
-  it('gives the front page the site name alone, with the same social tags as any public page', () => {
-    const meta = publicPageMetadata('Sorrel & Salt', 'About it.', '/', { absolute: true });
-    expect(meta.title).toEqual({ absolute: 'Sorrel & Salt' });
+  it('spells the site name out in an absolute tab title, and keeps the ampersand in the share titles', () => {
+    const title = SITE_NAME;
+    expect(title).not.toBe(SITE_TITLE_NAME);
+    const meta = publicPageMetadata(title, 'About it.', '/', { absolute: true });
+    expect(meta.title).toEqual({ absolute: SITE_TITLE_NAME });
     expect(meta.openGraph).toMatchObject({
-      title: 'Sorrel & Salt',
+      title: SITE_NAME,
+      siteName: SITE_NAME,
       url: 'https://sorrelandsalt.com/',
     });
-    expect(meta.twitter).toMatchObject({ title: 'Sorrel & Salt' });
+    expect(meta.twitter).toMatchObject({ title: SITE_NAME });
   });
 
   it('keeps a noindex page out of search, and follows its links only when the page says', () => {
