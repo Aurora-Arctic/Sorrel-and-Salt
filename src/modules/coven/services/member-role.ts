@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById, findStandingWorkspaceMemberPause, withAudit } from '../../../db/repository';
-import { Forbidden, ValidationError } from '../../../lib/errors';
+import { Forbidden, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { isRowId } from '../../../lib/validation';
 import { workspaces } from '../schema/workspaces';
@@ -33,7 +33,7 @@ export async function updateMemberRole(
   assertNotSystemSeat(userId);
   // A steward's access is never paused, so a paused member is lifted before being made one.
   if (role === 'owner' && (await findStandingWorkspaceMemberPause(membership, userId))) {
-    throw new ValidationError([{ path: ['role'], message: PAUSED_PROMOTION }], PAUSED_PROMOTION);
+    throw fieldRefusal('role', PAUSED_PROMOTION);
   }
 
   const updated = await withAudit(session, async (write) => {

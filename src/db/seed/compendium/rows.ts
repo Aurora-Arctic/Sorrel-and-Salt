@@ -193,7 +193,6 @@ export function variantColumns({ variant, form }: PickedVariant, picks: Picks): 
 }
 
 /** The fold the variant's unique index keys a form by. */
-export const foldForm = (form: string): string => form.trim().toLowerCase();
 
 export type FolkNameRow = Pick<typeof ingredientFolkNames.$inferInsert, 'ingredientId' | 'name'>;
 

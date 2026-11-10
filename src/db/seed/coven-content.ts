@@ -12,6 +12,7 @@ import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { dimensionOf } from '../../modules/ingredients/schema/units';
 import { defaultThreshold } from '../../modules/ingredients/validation/default-threshold';
 import { ingredientSlug } from '../../lib/slugify';
+import { fold } from '../../lib/text';
 import { insertMissing, insertMissingBy, insertStamped, requireFrom } from './idempotent';
 import type {
   CovenTarget,
@@ -208,7 +209,7 @@ export async function insertMissingVariants(
 
   await insertMissingBy(tx, ingredientVariants, wanted, {
     columns: ['ingredientId', 'form'],
-    fold: { form: (form) => form.trim().toLowerCase() },
+    fold: { form: (form) => fold(form) },
     where: inArray(
       ingredientVariants.ingredientId,
       entries.map((entry) => entry.ingredientId),

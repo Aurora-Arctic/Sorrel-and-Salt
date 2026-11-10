@@ -28,7 +28,7 @@ import { INGREDIENT_VARIANTS_FORM_UNIQUE } from '@/modules/vocabulary/schema/ing
 import { referenceLinks } from '../schema/reference-links';
 import { type Membership, tryMembership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
-import { curatedNames, describeEntry, foldVocabularyValue } from '@/modules/vocabulary';
+import { curatedNames, describeEntry } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
 import type {
@@ -332,7 +332,7 @@ function pickedForm(
     });
     return form;
   }
-  if (foldVocabularyValue(form) !== foldVocabularyValue(name)) {
+  if (fold(form) !== fold(name)) {
     issues.push({
       path: [...at, 'form'],
       message: `The form picked is "${name}" — pick another, or clear the pick to type one`,

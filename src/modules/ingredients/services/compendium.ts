@@ -17,7 +17,7 @@ import { fieldRefusal, NotFound, ValidationError } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY, NO_INGREDIENT, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
-import { addressTaken } from '../../../lib/text';
+import { addressTaken, fold } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { isRowId, parseInput } from '../../../lib/validation';
 import { compendiumFilterFor, seesReview } from './compendium-filter';
@@ -43,7 +43,6 @@ import {
   type CuratedField,
   curatedSpellings,
   describeEntry,
-  foldVocabularyValue,
   redirectRefusal,
 } from '@/modules/vocabulary';
 import type {
@@ -413,8 +412,7 @@ async function inCuratedValues(
     curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
   const spellingsOf = { celestialBodies, zodiacSigns };
-  const spellingOf = (field: CuratedField, value: string) =>
-    spellingsOf[field].get(foldVocabularyValue(value));
+  const spellingOf = (field: CuratedField, value: string) => spellingsOf[field].get(fold(value));
 
   const sent = [
     { at: [], lists: input },

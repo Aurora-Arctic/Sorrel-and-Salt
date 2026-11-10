@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { answerOf } from '@/lib/errors';
-import { RowId } from '@/lib/validation';
+import { isRowId } from '@/lib/validation';
 import type { Session } from '@/lib/session';
 import { membershipsOf } from '@/modules/coven';
 import {
@@ -60,9 +60,8 @@ async function readPausesOf(
  * claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to"). Cached, so a second render in the request reads once.
  */
 export const readOpenedUser = cache(async (session: Session, raw: string) => {
-  const parsed = RowId.safeParse(raw);
-  if (!parsed.success || !listedOnUserList(parsed.data)) return undefined;
-  const id = parsed.data;
+  if (!isRowId(raw) || !listedOnUserList(raw)) return undefined;
+  const id = raw;
   const [[found], [memberships], [providers], timeouts] = await Promise.all([
     usersForAdmin(session, [id]),
     membershipsOf(session, [id]),

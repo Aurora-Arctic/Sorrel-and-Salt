@@ -3737,7 +3737,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Severity:** low
 - **Why it matters:** Case-insensitive matching is typed in SQL and in JavaScript in eight places, and the two folds must stay equal, so a change to one has to be made in the others.
 - **Where:**
-  - SQL `lower(col) = lower(x)` in `src/db/repository/cupboard-entries.ts:125,126,145,164`, `invitations.ts:102,690`, `memberships.ts:137`; the JS fold `trim().toLowerCase()` in `src/modules/vocabulary/services/curated-values.ts:14` (`foldVocabularyValue`), `ingredients/services/ingredient-rows.ts:770`, `help/services/help-rename.ts:28`, `src/db/repository/grimoire.ts:131`.
+  - SQL `lower(col) = lower(x)` in `src/db/repository/cupboard-entries.ts:125,126,145,164`, `invitations.ts:102,690`, `memberships.ts:137`; the JS fold `trim().toLowerCase()` in `src/modules/vocabulary/services/curated-values.ts:14`, `ingredients/services/ingredient-rows.ts:770`, `help/services/help-rename.ts:28`, `src/db/repository/grimoire.ts:131`.
 - **Shared piece:** a `caseFoldedEq(col, value)` predicate in `predicates.ts` (the raw `sql` is allowed for functions) and a single `foldText` in `src/lib/`.
 - **Guard:** none practical.
 - **Fix:** add both, switch the eight call sites. The JS and SQL folds must stay equal, so one comment names the pair.
