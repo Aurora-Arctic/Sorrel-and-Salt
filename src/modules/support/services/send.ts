@@ -56,6 +56,7 @@ export async function sendSupportRequest(
       errorCode: values.errorCode ?? null,
       lastSenderActivityAt: new Date(),
       errorReference: values.errorReference || null,
+      errorDetail: values.errorDetail || null,
     });
     return row as SupportRequestRow;
   });

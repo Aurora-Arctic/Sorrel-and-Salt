@@ -1594,6 +1594,11 @@
   .field__hint {
     color: $text-muted;
     font-size: type-size('caption');
+
+    // A reference or error message may hold no space to break at.
+    code {
+      overflow-wrap: anywhere;
+    }
   }
 
   // A count past its limit is in the error's colour.

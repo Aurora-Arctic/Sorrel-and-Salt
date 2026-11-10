@@ -59,6 +59,7 @@ const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
   message: 'There is no moon on the spell page.',
   path: '/coven/[slug]/grimoire',
+  errorDetail: null,
   issueUrl: null,
   resolvedBy: null,
   resolvedAt: null,
@@ -132,6 +133,25 @@ describe('Error reference', () => {
   it('is left out when the request has none', () => {
     open(ADMIN);
     expect(within(dialog()).queryByRole('button', { name: 'Copy Error Reference' })).toBeNull();
+  });
+});
+
+describe('Error detail', () => {
+  it.each([
+    ['a keeper', ADMIN],
+    ['a curator', CURATOR],
+  ])('is shown to %s with the error', (_name, viewer) => {
+    open(viewer, { errorReference: 'abc123', errorDetail: 'TypeError: Testwort' });
+    expect(within(dialog()).getByText('TypeError: Testwort')).toBeInTheDocument();
+  });
+
+  it('is left out when the request has none', () => {
+    open(ADMIN, { errorReference: 'abc123' });
+    expect(
+      within(dialog())
+        .getAllByRole('term')
+        .map((term) => term.textContent),
+    ).not.toContain('Error Details');
   });
 });
 

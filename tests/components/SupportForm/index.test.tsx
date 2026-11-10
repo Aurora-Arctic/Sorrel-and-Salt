@@ -277,6 +277,38 @@ describe('SupportForm', () => {
     expect(calls[0]?.input).toMatchObject({ errorCode: 500, errorReference: 'abc123' });
   });
 
+  it('shows the error detail read-only and sends it as errorDetail', async () => {
+    const calls = mockSending();
+    const detail = 'TypeError: Testwort is not a function';
+    render(
+      <SupportForm
+        path="/x"
+        errorCode={500}
+        errorReference="abc123"
+        errorDetail={detail}
+        about="bug"
+      />,
+    );
+    const shown = screen.getByRole('group', { name: 'Error Details' });
+    expect(shown).toHaveTextContent(detail);
+    expect(within(shown).queryByRole('textbox')).toBeNull();
+    for (const box of screen.getAllByRole('textbox')) expect(box).not.toHaveValue(detail);
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).toMatchObject({ errorReference: 'abc123', errorDetail: detail });
+  });
+
+  it('shows and sends no error detail when none is given', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/x" errorCode={500} errorReference="abc123" about="bug" />);
+    expect(screen.queryByRole('group', { name: 'Error Details' })).toBeNull();
+    fillForm();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).not.toHaveProperty('errorDetail');
+  });
+
   it('names the request in the received notice, links it, and gives the promise', async () => {
     mockSending();
     render(<SupportForm path="/a" />);

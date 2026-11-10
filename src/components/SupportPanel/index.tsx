@@ -24,7 +24,12 @@ const SupportPanel = ({
           about anything. Without one, you can write to us about accessibility, a bug, signing in,
           privacy or a question.
         </Notice>
-        <SignedOutSupportForm about={state.support} path={path} />
+        <SignedOutSupportForm
+          about={state.support}
+          errorReference={state.errorReference}
+          errorDetail={state.errorDetail}
+          path={path}
+        />
       </div>
     );
   }
@@ -46,6 +51,7 @@ const SupportPanel = ({
       about={state.support}
       errorCode={state.errorCode}
       errorReference={state.errorReference}
+      errorDetail={state.errorDetail}
       path={path}
       onDone={onDone}
     />

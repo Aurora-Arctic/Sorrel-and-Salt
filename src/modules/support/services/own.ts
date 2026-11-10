@@ -16,10 +16,10 @@ import type { StandingTimeout, SupportDialogAnswer, SupportRequestRow } from '..
 import { requireVerified } from './access';
 
 // The sender's reads, behind `/account/support`. The finders AND `created_by` themselves, so what another sender wrote is
-// outside the query, never filtered after it. The issue address and the error reference (the crash digest) are staff-only, so these reads blank them.
+// outside the query, never filtered after it. The issue address and the error reference and detail are staff-only, so these reads blank them.
 
 function withoutStaffFields(row: SupportRequestRow): SupportRequestRow {
-  return { ...row, issueUrl: null, errorReference: null };
+  return { ...row, issueUrl: null, errorReference: null, errorDetail: null };
 }
 
 /**

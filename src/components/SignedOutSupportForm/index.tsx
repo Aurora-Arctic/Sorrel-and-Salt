@@ -17,6 +17,7 @@ import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { ErrorDetails } from '../SupportForm/error-details';
 import type { SignedOutSupportFormProps } from './types';
 
 // Sends `sendSignedOutSupportRequest`; the reply comes by email alone.
@@ -35,6 +36,8 @@ type Problems = Partial<Record<'about' | 'email' | 'subject' | 'message', string
 
 const SignedOutSupportForm = ({
   about: initialAbout,
+  errorReference,
+  errorDetail,
   path,
 }: SignedOutSupportFormProps): ReactElement => {
   const aboutId = useId();
@@ -105,6 +108,8 @@ const SignedOutSupportForm = ({
           subject: subject.trim(),
           message: message.trim(),
           path,
+          ...(errorReference && { errorReference }),
+          ...(errorDetail && { errorDetail }),
           ...(website !== '' && { website }),
         },
       });
@@ -179,6 +184,7 @@ const SignedOutSupportForm = ({
           edited('subject');
         }}
       />
+      {errorDetail && <ErrorDetails detail={errorDetail} />}
       <PlainTextField
         name="message"
         label="Message"

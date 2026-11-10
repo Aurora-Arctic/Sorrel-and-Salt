@@ -2710,6 +2710,7 @@ input SignedOutSupportRequestInput {
   """Where the reply is mailed."""
   email: String!
   errorCode: Int
+  errorDetail: String
   errorReference: String
 
   """1 to 4000 characters."""
@@ -3051,6 +3052,11 @@ type SupportRequest {
   errorCode: Int
 
   """
+  The name and message of the error the sender reported from. Staff only.
+  """
+  errorDetail: String
+
+  """
   The digest of the error page the sender came from, to match the server log. Staff only.
   """
   errorReference: String
@@ -3098,6 +3104,9 @@ input SupportRequestInput {
 
   """The HTTP status of the error page, if any."""
   errorCode: Int
+
+  """The error's name and message, at most 500 characters."""
+  errorDetail: String
 
   """The digest of the error page, if any."""
   errorReference: String

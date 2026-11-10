@@ -61,6 +61,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           path={request.path}
           errorCode={request.errorCode}
           errorReference={request.errorReference}
+          errorDetail={request.errorDetail}
           lead={
             !request.anonymised && (
               <div className="support-detail__fact--wide">

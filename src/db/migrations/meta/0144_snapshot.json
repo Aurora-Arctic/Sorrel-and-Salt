@@ -1,6 +1,6 @@
 {
-  "id": "856abec2-dd07-4c10-862b-2e667d5d0f98",
-  "prevId": "d51494a1-b5d4-432b-8e5d-7c190c35a9f2",
+  "id": "07162a4d-7323-44d5-bce1-cd7d822c7ed8",
+  "prevId": "856abec2-dd07-4c10-862b-2e667d5d0f98",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -7377,6 +7377,12 @@
         },
         "error_reference": {
           "name": "error_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_detail": {
+          "name": "error_detail",
           "type": "text",
           "primaryKey": false,
           "notNull": false
