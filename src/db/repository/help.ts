@@ -64,11 +64,9 @@ function inPositionOrder(rows: HelpArticleRow[]): HelpArticleRow[] {
   return rows.sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
 }
 
-// The live rows a keeper orders as one list: the top-level guides and articles, or the FAQ entries.
+// The rows a keeper orders as one list: the top-level guides and articles, or the FAQ entries.
 const orderedList = (list: 'guides' | 'faq'): SQL | undefined =>
-  list === 'guides'
-    ? and(notSoftDeleted(helpArticles), isPage(), isNull(helpArticles.parentId))
-    : and(notSoftDeleted(helpArticles), eq(helpArticles.kind, 'faq'));
+  list === 'guides' ? and(isPage(), isNull(helpArticles.parentId)) : eq(helpArticles.kind, 'faq');
 
 /** One page of the public FAQ entries, in position order. */
 export function findHelpFaqPage(page: PageRequest): Promise<PageEntry<HelpArticleRow>[]> {
@@ -201,13 +199,13 @@ export async function findAllHelpArticleChildren(parentId: string): Promise<Help
 
 /** The highest position among the live rows of one ordered list (top-level guides and articles, or FAQ entries), shown or hidden, or 0 when none has one: where a new or released row goes after. */
 export async function findLastHelpPosition(list: 'guides' | 'faq'): Promise<number> {
-  const rows = await selectFrom(helpArticles, orderedList(list));
+  const rows = await selectFrom(helpArticles, and(notSoftDeleted(helpArticles), orderedList(list)));
   return Math.max(0, ...rows.map((row) => row.position ?? 0));
 }
 
 /** Every live row a keeper orders as one list, whatever its audience or flag, in position order: the top-level guides, or the FAQ entries. */
 export async function findAllHelpOrdered(list: 'guides' | 'faq'): Promise<HelpArticleRow[]> {
-  const rows = await selectFrom(helpArticles, orderedList(list));
+  const rows = await selectFrom(helpArticles, and(notSoftDeleted(helpArticles), orderedList(list)));
   return inPositionOrder(rows);
 }
 
