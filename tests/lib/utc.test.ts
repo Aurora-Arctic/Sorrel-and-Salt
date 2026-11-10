@@ -5,6 +5,7 @@ import {
   isoDayInUtc,
   longMinuteInUtc,
   longMinuteInZone,
+  untilPhrase,
   minuteInUtc,
   minuteInZone,
   printedDayOf,
@@ -74,5 +75,19 @@ describe('printedDayOf', () => {
   it('reads back the day the expiry was chosen as, and round-trips', () => {
     expect(printedDayOf(new Date('2027-01-30T12:00:00.000Z'))).toBe('2027-01-29');
     expect(printedDayOf(expiryOfDay('2028-03-01'))).toBe('2028-03-01');
+  });
+});
+
+describe('untilPhrase', () => {
+  it('words an end as until its date in the zone', () => {
+    const end = new Date('2999-01-01T12:00:00Z');
+    expect(untilPhrase(end, 'UTC')).toBe(`until ${longMinuteInZone(end, 'UTC')}`);
+  });
+
+  it('words no end as no end date, or as the wording given', () => {
+    expect(untilPhrase(null)).toBe('with no end date');
+    expect(untilPhrase(null, 'UTC', 'while timed out with no end date')).toBe(
+      'while timed out with no end date',
+    );
   });
 });

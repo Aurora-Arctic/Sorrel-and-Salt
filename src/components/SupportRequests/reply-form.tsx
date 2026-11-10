@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { SwitchField } from '../Field';
 import { ConfirmQuestion } from '../Modal';
-import LocalTime from '../LocalTime';
+import Until from '../LocalTime/until';
 import Notice from '../Notice';
 import SupportReplyShell from './reply-shell';
 import { useSupportAction } from './use-support-action';
@@ -41,15 +41,9 @@ const NoteDocument = graphql(`
   }
 `);
 
-/** How long a timed-out sender cannot answer: until the end, or with no end date. */
-const cannotAnswer = (until: Date | null): ReactNode =>
-  until ? (
-    <>
-      until <LocalTime at={until} long />
-    </>
-  ) : (
-    'while timed out with no end date'
-  );
+const cannotAnswer = (until: Date | null): ReactNode => (
+  <Until until={until} noEnd="while timed out with no end date" />
+);
 
 const ReplyForm = ({
   requestId,

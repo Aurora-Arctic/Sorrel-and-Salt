@@ -3,8 +3,8 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import LocalTime from '../LocalTime';
 import Notice from '../Notice';
+import TimedOutSentence from '../SupportRequests/timed-out-sentence';
 import SupportReplyShell from '../SupportRequests/reply-shell';
 import { useSupportAction } from '../SupportRequests/use-support-action';
 import type { SupportSenderReplyBoxProps } from './types';
@@ -51,13 +51,7 @@ const SupportSenderReplyBox = ({
       above={
         timedOut && (
           <Notice kind="warn" quiet>
-            {timedOut.until ? (
-              <>
-                You cannot reply until <LocalTime at={timedOut.until} long />.
-              </>
-            ) : (
-              'You cannot reply: you are timed out with no end date.'
-            )}
+            <TimedOutSentence cannot="You cannot reply" until={timedOut.until} />
           </Notice>
         )
       }

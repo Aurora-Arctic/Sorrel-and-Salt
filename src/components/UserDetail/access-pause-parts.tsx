@@ -6,7 +6,6 @@ import { today } from '../DateField/day';
 import { MS_PER_DAY } from '../../lib/duration';
 import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
 import { FieldShell, PlainTextField, fieldDescription } from '../Field';
-import LocalTime from '../LocalTime';
 import { LocalDay } from '../SupportRequests/day-range';
 import type { AccessPauseEntry, PauseFieldsProps, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
@@ -61,15 +60,6 @@ export const pauseReady = (span: PauseSpan, day: string): boolean =>
 
 export const stands = (pause: AccessPauseEntry, now: number): boolean =>
   pause.liftedAt === null && (pause.until === null || pause.until.getTime() > now);
-
-export const Until = ({ until }: { until: Date | null }): ReactElement =>
-  until ? (
-    <>
-      until <LocalTime at={until} long />
-    </>
-  ) : (
-    <>with no end date</>
-  );
 
 export const PauseFields = ({
   span,
