@@ -59,7 +59,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           Your new password is set, and every device that was signed in to your account has been
           signed out.
         </Notice>
-        <p>
+        <p className="reset-password-form__next">
           <PendingLink className="btn btn--solid" href="/sign-in">
             Sign In
           </PendingLink>
@@ -75,7 +75,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           This link has expired or has already been used. A reset link works once, within 15
           minutes.
         </Notice>
-        <p>
+        <p className="reset-password-form__next">
           <PendingLink className="btn btn--solid" href="/forgot-password">
             Ask for a New Link
           </PendingLink>
