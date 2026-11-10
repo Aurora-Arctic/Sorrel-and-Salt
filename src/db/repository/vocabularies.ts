@@ -35,7 +35,7 @@ import {
   readableInTiers,
   trigramMatch,
 } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, existsIn, selectFrom, whenIds } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type {
   AstrologyValueFilter,
@@ -155,9 +155,11 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
     query
       ? or(
           containsText(deities.name, query),
-          existsIn(
+          existsByKey(
             deityOtherNames,
-            and(eq(deityOtherNames.deityId, deities.id), containsText(deityOtherNames.name, query)),
+            deityOtherNames.deityId,
+            deities.id,
+            containsText(deityOtherNames.name, query),
           ),
         )
       : undefined,
@@ -206,8 +208,9 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   vocabulary: TVocabulary,
   ids: readonly string[],
 ): Promise<TVocabulary['$inferSelect'][]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
+  return whenIds(ids, () =>
+    selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids]))),
+  );
 }
 
 /** The live other names of these deities, in no particular order: a loader's batch read. No
@@ -215,10 +218,11 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
 export function findDeityOtherNames(
   deityIds: readonly string[],
 ): Promise<(typeof deityOtherNames.$inferSelect)[]> {
-  if (deityIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    deityOtherNames,
-    and(notSoftDeleted(deityOtherNames), inArray(deityOtherNames.deityId, [...deityIds])),
+  return whenIds(deityIds, () =>
+    selectFrom(
+      deityOtherNames,
+      and(notSoftDeleted(deityOtherNames), inArray(deityOtherNames.deityId, [...deityIds])),
+    ),
   );
 }
 
@@ -231,16 +235,16 @@ export function findDeityOtherNameHolders(
   folds: readonly string[],
   exceptId?: string,
 ): Promise<(typeof deityOtherNames.$inferSelect)[]> {
-  if (folds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    deityOtherNames,
-    and(
-      notSoftDeleted(deityOtherNames),
-      inArray(sql`lower(${deityOtherNames.name})`, [...folds]),
-      existsIn(
-        deities,
-        and(
-          eq(deities.id, deityOtherNames.deityId),
+  return whenIds(folds, () =>
+    selectFrom(
+      deityOtherNames,
+      and(
+        notSoftDeleted(deityOtherNames),
+        inArray(sql`lower(${deityOtherNames.name})`, [...folds]),
+        existsByKey(
+          deities,
+          deities.id,
+          deityOtherNames.deityId,
           eq(deities.traditionId, traditionId),
           exceptId === undefined ? undefined : ne(deities.id, exceptId),
         ),
@@ -264,7 +268,7 @@ export function curated(vocabulary: SuggestingVocabulary): SQL | undefined {
  */
 export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
   const grouping = groupingOf(vocabulary);
-  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.column));
+  return grouping && existsByKey(grouping.groups, grouping.groups.id, grouping.column);
 }
 
 /**

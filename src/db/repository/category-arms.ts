@@ -2,7 +2,7 @@ import { type SQL, and, eq, inArray } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import type { deities } from '../../modules/vocabulary/schema/deities';
-import { existsIn } from './select';
+import { existsByKey, existsIn, forIds } from './select';
 import type { AggregateJoin } from './types';
 import { inLiveGroup } from './vocabularies';
 
@@ -14,7 +14,7 @@ export function pointsLive(
   vocabulary: typeof categories | typeof deities,
   column: AnyPgColumn,
 ): SQL {
-  return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
+  return existsByKey(vocabulary, vocabulary.id, column, inLiveGroup(vocabulary));
 }
 
 type CategoryLink = {
@@ -36,15 +36,16 @@ export function categoryArms(
   categoryIds: readonly string[],
   mode: 'any' | 'all' = 'all',
 ): SQL[] {
-  if (categoryIds.length === 0) return [];
-  const carries = (chosen: SQL) =>
-    existsIn(
-      link.table,
-      and(eq(link.owner, link.outer), chosen, link.also, pointsLive(categories, link.category)),
-    );
-  return mode === 'any'
-    ? [carries(inArray(link.category, [...categoryIds]))]
-    : categoryIds.map((categoryId) => carries(eq(link.category, categoryId)));
+  return forIds(categoryIds, () => {
+    const carries = (chosen: SQL) =>
+      existsIn(
+        link.table,
+        and(eq(link.owner, link.outer), chosen, link.also, pointsLive(categories, link.category)),
+      );
+    return mode === 'any'
+      ? [carries(inArray(link.category, [...categoryIds]))]
+      : categoryIds.map((categoryId) => carries(eq(link.category, categoryId)));
+  });
 }
 
 /**

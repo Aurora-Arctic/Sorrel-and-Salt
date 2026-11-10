@@ -5,7 +5,7 @@ import type { Membership } from '@/modules/coven';
 import { newestFirst, noEndOrAhead, notSoftDeleted, scopedTo } from './predicates';
 import { closeThenInsertPause, liftedNow } from './pause-ledger';
 import { findPageInWorkspace } from './finders';
-import { selectFrom, selectOne } from './select';
+import { selectFrom, selectOne, whenIds } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, WorkspaceMemberPauseRow, WriterContext } from './types';
 
@@ -59,15 +59,16 @@ export function findStandingWorkspaceMemberPauses(
   membership: Membership,
   userIds: readonly string[],
 ): Promise<WorkspaceMemberPauseRow[]> {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    workspaceMemberPauses,
-    and(
-      notSoftDeleted(workspaceMemberPauses),
-      scopedTo(membership, workspaceMemberPauses),
-      inArray(workspaceMemberPauses.userId, [...userIds]),
-      isNull(workspaceMemberPauses.liftedAt),
-      noEndOrAhead(workspaceMemberPauses.until),
+  return whenIds(userIds, () =>
+    selectFrom(
+      workspaceMemberPauses,
+      and(
+        notSoftDeleted(workspaceMemberPauses),
+        scopedTo(membership, workspaceMemberPauses),
+        inArray(workspaceMemberPauses.userId, [...userIds]),
+        isNull(workspaceMemberPauses.liftedAt),
+        noEndOrAhead(workspaceMemberPauses.until),
+      ),
     ),
   );
 }

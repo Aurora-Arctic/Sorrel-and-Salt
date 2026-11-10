@@ -53,4 +53,32 @@ describe('repository shared pieces', () => {
     );
     expect(copies).toEqual([]);
   });
+
+  it('guards an empty id list only through whenIds and forIds', () => {
+    const files = repositoryFiles();
+    const bare = /\b\w*(?:[iI]ds|Keys|folds)\.length\s*===\s*0|!\w*[iI]ds\.length\b/;
+    const copies = files
+      .filter((file) => file !== 'src/db/repository/select.ts')
+      .flatMap((file) =>
+        sourceOf(file)
+          .split('\n')
+          .map((line, index) => ({ at: `${file}:${index + 1}`, line }))
+          .filter(({ line }) => bare.test(line))
+          .map(({ at }) => at),
+      );
+
+    // Preconditions: the helpers exist and are used, so the pattern is looked for in real code.
+    expect(sourceOf('src/db/repository/select.ts')).toMatch(/export function whenIds/);
+    expect(files.filter((file) => /\bwhenIds\(/.test(sourceOf(file))).length).toBeGreaterThan(5);
+    expect(copies).toEqual([]);
+  });
+
+  it('writes the live-parent EXISTS only through existsByKey', () => {
+    const copies = repositoryFiles().filter((file) =>
+      /existsIn\(\s*(\w+),\s*and\(\s*eq\(\s*\1\.\w+,/.test(sourceOf(file)),
+    );
+
+    expect(sourceOf('src/db/repository/select.ts')).toMatch(/export function existsByKey/);
+    expect(copies).toEqual([]);
+  });
 });

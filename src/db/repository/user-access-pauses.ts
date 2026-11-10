@@ -5,7 +5,7 @@ import type { SiteAdmin } from '@/modules/identity';
 import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
 import { closeThenInsertPause, liftedNow, standingPause } from './pause-ledger';
 import { findPage } from './finders';
-import { selectFrom, selectOne } from './select';
+import { selectFrom, selectOne, whenIds } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, UserAccessPauseRow, WriterContext } from './types';
 
@@ -37,13 +37,14 @@ export function findStandingUserAccessPausesFor(
   _admin: SiteAdmin,
   userIds: readonly string[],
 ): Promise<UserAccessPauseRow[]> {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    userAccessPauses,
-    and(
-      notSoftDeleted(userAccessPauses),
-      inArray(userAccessPauses.userId, [...userIds]),
-      pauseStands,
+  return whenIds(userIds, () =>
+    selectFrom(
+      userAccessPauses,
+      and(
+        notSoftDeleted(userAccessPauses),
+        inArray(userAccessPauses.userId, [...userIds]),
+        pauseStands,
+      ),
     ),
   );
 }

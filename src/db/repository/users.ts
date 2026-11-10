@@ -10,7 +10,7 @@ import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
 import { newestFirst, notSoftDeleted } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, selectFrom, whenIds } from './select';
 import { nameOrEmailHolds, notStandIn } from './user-filters';
 import { timeoutStands } from './support';
 import { pauseStands } from './user-access-pauses';
@@ -76,12 +76,10 @@ export async function findProvidersOfUsers(
   _admin: SiteAdmin,
   userIds: readonly string[],
 ): Promise<LinkedProvider[]> {
-  if (userIds.length === 0) return [];
   // `accounts` carries no `deleted_at`, so the filter adds nothing today; it is
   // here so a later column is filtered without a second look.
-  const rows = await selectFrom(
-    accounts,
-    and(notSoftDeleted(accounts), inArray(accounts.userId, [...userIds])),
+  const rows = await whenIds(userIds, () =>
+    selectFrom(accounts, and(notSoftDeleted(accounts), inArray(accounts.userId, [...userIds]))),
   );
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
 }
@@ -95,27 +93,29 @@ export async function findCoMemberNamesIncludingSoftDeleted(
   viewerId: string,
   userIds: readonly string[],
 ): Promise<UserName[]> {
-  if (userIds.length === 0) return [];
-  const viewerSeat = alias(workspaceMembers, 'viewer_seat');
-  const seats = await selectFrom(
-    workspaceMembers,
-    and(
-      inArray(workspaceMembers.userId, [...userIds]),
-      existsIn(
-        viewerSeat,
-        and(
-          eq(viewerSeat.workspaceId, workspaceMembers.workspaceId),
+  return whenIds(userIds, async () => {
+    const viewerSeat = alias(workspaceMembers, 'viewer_seat');
+    const seats = await selectFrom(
+      workspaceMembers,
+      and(
+        inArray(workspaceMembers.userId, [...userIds]),
+        existsByKey(
+          viewerSeat,
+          viewerSeat.workspaceId,
+          workspaceMembers.workspaceId,
           eq(viewerSeat.userId, viewerId),
         ),
+        existsByKey(workspaces, workspaces.id, workspaceMembers.workspaceId),
       ),
-      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
-    ),
-    { leftJoin: users, on: eq(users.id, workspaceMembers.userId) },
-  );
-  // `workspace_members.user_id` references `users.id`, so every seat joins a
-  // row; the guard narrows the type rather than filtering anything.
-  const names = new Map(seats.flatMap(({ joined }) => (joined ? [[joined.id, joined.name]] : [])));
-  return [...names].map(([id, name]) => ({ id, name }));
+      { leftJoin: users, on: eq(users.id, workspaceMembers.userId) },
+    );
+    // `workspace_members.user_id` references `users.id`, so every seat joins a
+    // row; the guard narrows the type rather than filtering anything.
+    const names = new Map(
+      seats.flatMap(({ joined }) => (joined ? [[joined.id, joined.name]] : [])),
+    );
+    return [...names].map(([id, name]) => ({ id, name }));
+  });
 }
 
 /**
@@ -164,7 +164,7 @@ function privilegeChangeArms({
     // The subject's live row, matched as the user list matches one, in SQL:
     // a semi-join, so a row is never fetched to be filtered out.
     query
-      ? existsIn(users, and(eq(users.id, userPrivilegeChanges.userId), nameOrEmailHolds(query)))
+      ? existsByKey(users, users.id, userPrivilegeChanges.userId, nameOrEmailHolds(query))
       : undefined,
   ];
 }
@@ -182,10 +182,10 @@ function userArms({
     role ? eq(users.role, role) : undefined,
     // Semi-joins by the column reads' own test, so the filter and the marks agree and paging stays in SQL.
     timedOut
-      ? existsIn(supportTimeouts, and(eq(supportTimeouts.userId, users.id), timeoutStands))
+      ? existsByKey(supportTimeouts, supportTimeouts.userId, users.id, timeoutStands)
       : undefined,
     paused
-      ? existsIn(userAccessPauses, and(eq(userAccessPauses.userId, users.id), pauseStands))
+      ? existsByKey(userAccessPauses, userAccessPauses.userId, users.id, pauseStands)
       : undefined,
   ];
 }

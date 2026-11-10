@@ -13,7 +13,7 @@ import type { PageEntry, PageRequest } from '../../lib/types';
 import { findPageInTiers } from './finders';
 import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import { foldedWordMatch, inCompendium, notSoftDeleted, readableInTiers } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, existsIn, selectFrom, whenIds } from './select';
 import type {
   CitingLink,
   CompendiumScore,
@@ -37,37 +37,38 @@ export async function findReferencesOf(
   ids: readonly string[],
   heldBy?: Membership,
 ): Promise<CitingLink[]> {
-  if (ids.length === 0) return [];
-  const column = referenceLinks[key];
-  const { table } = SOURCED[key];
-  // An ingredient's reference, or one form's, may be the compendium's or the
-  // ingredient's own coven's; `ingredients` is the parent the EXISTS reads.
-  const inParentsTier = or(
-    inCompendium(references),
-    eq(references.workspaceId, ingredients.workspaceId),
-  );
-  const readable =
-    table === ingredients
-      ? inUseIngredientParent(memberships, column, heldBy, inParentsTier)
-      : table === ingredientVariants
-        ? inUseVariantParent(memberships, column, heldBy, inParentsTier)
-        : and(existsIn(table, eq(table.id, column)), inCompendium(references));
-  const rows: JoinedRow<ReferenceLinkRow, ReferenceRow>[] = await selectFrom(
-    referenceLinks,
-    and(
-      notSoftDeleted(referenceLinks),
-      inArray(column, [...ids]),
-      // A missing or deleted reference is a null joined row, whose tier
-      // would otherwise read as the compendium's.
-      isNotNull(references.id),
-      readable,
-    ),
-    {
-      leftJoin: references,
-      on: and(eq(references.id, referenceLinks.referenceId), notSoftDeleted(references)) as SQL,
-    },
-  );
-  return rows.flatMap(({ row, joined }) => (joined ? [{ link: row, reference: joined }] : []));
+  return whenIds(ids, async () => {
+    const column = referenceLinks[key];
+    const { table } = SOURCED[key];
+    // An ingredient's reference, or one form's, may be the compendium's or the
+    // ingredient's own coven's; `ingredients` is the parent the EXISTS reads.
+    const inParentsTier = or(
+      inCompendium(references),
+      eq(references.workspaceId, ingredients.workspaceId),
+    );
+    const readable =
+      table === ingredients
+        ? inUseIngredientParent(memberships, column, heldBy, inParentsTier)
+        : table === ingredientVariants
+          ? inUseVariantParent(memberships, column, heldBy, inParentsTier)
+          : and(existsByKey(table, table.id, column), inCompendium(references));
+    const rows: JoinedRow<ReferenceLinkRow, ReferenceRow>[] = await selectFrom(
+      referenceLinks,
+      and(
+        notSoftDeleted(referenceLinks),
+        inArray(column, [...ids]),
+        // A missing or deleted reference is a null joined row, whose tier
+        // would otherwise read as the compendium's.
+        isNotNull(references.id),
+        readable,
+      ),
+      {
+        leftJoin: references,
+        on: and(eq(references.id, referenceLinks.referenceId), notSoftDeleted(references)) as SQL,
+      },
+    );
+    return rows.flatMap(({ row, joined }) => (joined ? [{ link: row, reference: joined }] : []));
+  });
 }
 
 /**
@@ -79,10 +80,11 @@ export function findManyReferences(
   memberships: readonly Membership[],
   ids: readonly string[],
 ): Promise<ReferenceRow[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    references,
-    and(readableInTiers(memberships, references), inArray(references.id, [...ids])),
+  return whenIds(ids, () =>
+    selectFrom(
+      references,
+      and(readableInTiers(memberships, references), inArray(references.id, [...ids])),
+    ),
   );
 }
 
@@ -129,10 +131,7 @@ export function cites(key: SourcedKey): SQL {
     referenceLinks,
     and(
       eq(referenceLinks[key], SOURCED[key].table.id),
-      existsIn(
-        references,
-        and(eq(references.id, referenceLinks.referenceId), inCompendium(references)),
-      ),
+      existsByKey(references, references.id, referenceLinks.referenceId, inCompendium(references)),
     ),
   );
 }

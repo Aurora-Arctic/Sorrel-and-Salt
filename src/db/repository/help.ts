@@ -12,7 +12,7 @@ import type { PageEntry, PageRequest } from '../../lib/types';
 import type { HelpKeeperFilter } from '@/modules/help';
 import { findPage } from './finders';
 import { containsText, foldedWordMatch, notSoftDeleted } from './predicates';
-import { selectFrom, selectOne } from './select';
+import { selectFrom, selectOne, whenIds } from './select';
 import type { ListOrder, SortPart } from './types';
 
 export type HelpArticleRow = typeof helpArticles.$inferSelect;
@@ -158,13 +158,14 @@ export async function findHelpArticleChildren(
   reach: HelpReach,
   parentIds: readonly string[],
 ): Promise<HelpArticleRow[]> {
-  if (parentIds.length === 0) return [];
-  const rows = await selectFrom(
-    helpArticles,
-    and(
-      notSoftDeleted(helpArticles),
-      inArray(helpArticles.parentId, [...parentIds]),
-      readable(reach),
+  const rows = await whenIds(parentIds, () =>
+    selectFrom(
+      helpArticles,
+      and(
+        notSoftDeleted(helpArticles),
+        inArray(helpArticles.parentId, [...parentIds]),
+        readable(reach),
+      ),
     ),
   );
   return inPositionOrder(rows);
@@ -175,10 +176,11 @@ export async function findHelpArticleSlugsByIds(
   reach: HelpReach,
   ids: readonly string[],
 ): Promise<Map<string, string>> {
-  if (ids.length === 0) return new Map();
-  const rows = await selectFrom(
-    helpArticles,
-    and(notSoftDeleted(helpArticles), inArray(helpArticles.id, [...ids]), admits(reach)),
+  const rows = await whenIds(ids, () =>
+    selectFrom(
+      helpArticles,
+      and(notSoftDeleted(helpArticles), inArray(helpArticles.id, [...ids]), admits(reach)),
+    ),
   );
   return new Map(rows.map((row) => [row.id, row.slug]));
 }

@@ -5,7 +5,7 @@ import { inventoryItems } from '../../modules/ingredients/schema/inventory-items
 import type { Membership } from '@/modules/coven';
 import { inUseVariantParent } from './ingredient-parent';
 import { notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsByKey, selectFrom, whenIds } from './select';
 import type { AuditWriter, StockRow, WriterContext } from './types';
 
 // A coven's stock: one `inventory_items` row per form it holds. Read through the form and its ingredient, both live and
@@ -25,16 +25,16 @@ export function findStockByIds(
   membership: Membership,
   ids: readonly string[],
 ): Promise<StockRow[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return findManyStock(membership, inArray(inventoryItems.id, [...ids]));
+  return whenIds(ids, () => findManyStock(membership, inArray(inventoryItems.id, [...ids])));
 }
 
 export function findStockOfIngredients(
   membership: Membership,
   ingredientIds: readonly string[],
 ): Promise<StockRow[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
-  return findManyStock(membership, inArray(inventoryItems.ingredientId, [...ingredientIds]));
+  return whenIds(ingredientIds, () =>
+    findManyStock(membership, inArray(inventoryItems.ingredientId, [...ingredientIds])),
+  );
 }
 
 /**
@@ -45,8 +45,9 @@ export function findStockOfVariants(
   membership: Membership,
   variantIds: readonly string[],
 ): Promise<StockRow[]> {
-  if (variantIds.length === 0) return Promise.resolve([]);
-  return findManyStock(membership, inArray(inventoryItems.variantId, [...variantIds]));
+  return whenIds(variantIds, () =>
+    findManyStock(membership, inArray(inventoryItems.variantId, [...variantIds])),
+  );
 }
 
 /**
@@ -97,12 +98,11 @@ export function stockWrites({
         and(
           notSoftDeleted(ingredientVariants),
           eq(ingredientVariants.ingredientId, ingredientId),
-          existsIn(
+          existsByKey(
             ingredients,
-            and(
-              eq(ingredients.id, ingredientVariants.ingredientId),
-              scopedTo(membership, ingredients),
-            ),
+            ingredients.id,
+            ingredientVariants.ingredientId,
+            scopedTo(membership, ingredients),
           ),
         ),
         { lockIn: tx, lockOrder: ingredientVariants.id },

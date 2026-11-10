@@ -6,15 +6,15 @@ import { users } from '../../modules/identity/schema/users';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { notSoftDeleted } from './predicates';
-import { existsIn } from './select';
+import { existsByKey } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by a keeper. */
 function provisional(userId?: string) {
   return and(
     userId === undefined ? undefined : eq(users.id, userId),
     eq(users.emailVerified, false),
-    existsIn(accounts, eq(accounts.userId, users.id)),
-    not(existsIn(userPrivilegeChanges, eq(userPrivilegeChanges.userId, users.id))),
+    existsByKey(accounts, accounts.userId, users.id),
+    not(existsByKey(userPrivilegeChanges, userPrivilegeChanges.userId, users.id)),
   );
 }
 

@@ -10,7 +10,7 @@ import { users } from '../../modules/identity/schema/users';
 import type { Membership, WorkspaceRole, WorkspaceSeat } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { containsText, noEndOrAhead, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, pageBounds, selectFrom, selectOne } from './select';
+import { existsByKey, pageBounds, selectFrom, selectOne, whenIds } from './select';
 import type { AuditWriter, Keyset, WriterContext } from './types';
 
 /** The standing pause on a seat: unlifted, undeleted and not run out. The one-live index allows one per seat, so joining it adds no row. */
@@ -40,7 +40,7 @@ export async function findWorkspaceSeat(
       // A deleted workspace admits no one, whatever their membership row says:
       // the rows stay live so a workspace restored by hand keeps its
       // members, and this check is what refuses every role at once.
-      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
+      existsByKey(workspaces, workspaces.id, workspaceMembers.workspaceId),
     ),
     { leftJoin: workspaceMemberPauses, on: standingPauseOnSeat },
   );
@@ -67,15 +67,16 @@ export async function findWorkspaceRole(
 export async function findMembershipsOfUsers(
   userIds: readonly string[],
 ): Promise<(typeof workspaceMembers.$inferSelect & Pick<WorkspaceSeat, 'pause'>)[]> {
-  if (userIds.length === 0) return [];
-  const rows = await selectFrom(
-    workspaceMembers,
-    and(
-      notSoftDeleted(workspaceMembers),
-      inArray(workspaceMembers.userId, [...userIds]),
-      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
+  const rows = await whenIds(userIds, () =>
+    selectFrom(
+      workspaceMembers,
+      and(
+        notSoftDeleted(workspaceMembers),
+        inArray(workspaceMembers.userId, [...userIds]),
+        existsByKey(workspaces, workspaces.id, workspaceMembers.workspaceId),
+      ),
+      { leftJoin: workspaceMemberPauses, on: standingPauseOnSeat },
     ),
-    { leftJoin: workspaceMemberPauses, on: standingPauseOnSeat },
   );
   return rows.map(({ row, joined }) => ({
     ...row,
@@ -104,10 +105,7 @@ export function findMemberPage(
       notSoftDeleted(workspaceMembers),
       scopedTo(membership, workspaceMembers),
       query
-        ? existsIn(
-            users,
-            and(eq(users.id, workspaceMembers.userId), containsText(users.name, query)),
-          )
+        ? existsByKey(users, users.id, workspaceMembers.userId, containsText(users.name, query))
         : undefined,
       pageBounds(keyset),
     ),
@@ -128,12 +126,11 @@ export function findMemberByEmail(
     and(
       notSoftDeleted(workspaceMembers),
       scopedTo(membership, workspaceMembers),
-      existsIn(
+      existsByKey(
         users,
-        and(
-          eq(users.id, workspaceMembers.userId),
-          eq(sql`lower(${users.email})`, email.toLowerCase()),
-        ),
+        users.id,
+        workspaceMembers.userId,
+        eq(sql`lower(${users.email})`, email.toLowerCase()),
       ),
     ),
   );
@@ -147,15 +144,18 @@ export async function findMemberEmails(
   membership: Membership,
   userIds: readonly string[],
 ): Promise<Pick<(typeof users)['$inferSelect'], 'id' | 'email'>[]> {
-  if (userIds.length === 0) return [];
-  const rows = await selectFrom(
-    users,
-    and(
-      notSoftDeleted(users),
-      inArray(users.id, [...userIds]),
-      existsIn(
-        workspaceMembers,
-        and(eq(workspaceMembers.userId, users.id), scopedTo(membership, workspaceMembers)),
+  const rows = await whenIds(userIds, () =>
+    selectFrom(
+      users,
+      and(
+        notSoftDeleted(users),
+        inArray(users.id, [...userIds]),
+        existsByKey(
+          workspaceMembers,
+          workspaceMembers.userId,
+          users.id,
+          scopedTo(membership, workspaceMembers),
+        ),
       ),
     ),
   );

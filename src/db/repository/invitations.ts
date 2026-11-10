@@ -21,7 +21,7 @@ import type { AuditSession } from '../types';
 import { nameOrEmailHolds } from './user-filters';
 import { containsText, newestFirst, notSoftDeleted, scopedTo, startsWithText } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -108,29 +108,28 @@ function openInvitation(...which: (SQL | undefined)[]) {
 }
 
 function inLiveWorkspaceOrSite() {
-  return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
+  return or(onSiteTier(), existsByKey(workspaces, workspaces.id, invitations.workspaceId));
 }
 
 // Without the site-tier arm, since the received invitations never reach that tier.
 function inLiveWorkspace() {
-  return existsIn(workspaces, eq(workspaces.id, invitations.workspaceId));
+  return existsByKey(workspaces, workspaces.id, invitations.workspaceId);
 }
 
 // Both sides lowered, though `users` holds its addresses lower-cased.
 function heldVerifiedBySession(session: AuditSession) {
-  return existsIn(
+  return existsByKey(
     users,
-    and(
-      eq(users.id, session.userId),
-      eq(users.emailVerified, true),
-      eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
-    ),
+    users.id,
+    session.userId,
+    eq(users.emailVerified, true),
+    eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
   );
 }
 
 // The session's user is verified. A card asks nothing more of the account: no address is matched.
 function verifiedBySession(session: AuditSession) {
-  return existsIn(users, and(eq(users.id, session.userId), eq(users.emailVerified, true)));
+  return existsByKey(users, users.id, session.userId, eq(users.emailVerified, true));
 }
 
 // The session's account has accepted no card yet: an account takes one card, so the next stays free for someone else.
@@ -310,15 +309,19 @@ export async function findReceivedInvitationCovens(
   session: AuditSession,
   ids: string[],
 ): Promise<ReceivedInvitationCoven[]> {
-  if (ids.length === 0) return [];
-  const rows = await selectFrom(
-    workspaces,
-    and(
-      notSoftDeleted(workspaces),
-      inArray(workspaces.id, ids),
-      existsIn(
-        invitations,
-        and(eq(invitations.workspaceId, workspaces.id), receivedBy(session), pendingInvitation()),
+  const rows = await whenIds(ids, () =>
+    selectFrom(
+      workspaces,
+      and(
+        notSoftDeleted(workspaces),
+        inArray(workspaces.id, ids),
+        existsByKey(
+          invitations,
+          invitations.workspaceId,
+          workspaces.id,
+          receivedBy(session),
+          pendingInvitation(),
+        ),
       ),
     ),
   );
@@ -330,15 +333,19 @@ export async function findReceivedInvitationInviters(
   session: AuditSession,
   ids: string[],
 ): Promise<ReceivedInvitationInviter[]> {
-  if (ids.length === 0) return [];
-  const rows = await selectFrom(
-    users,
-    and(
-      notSoftDeleted(users),
-      inArray(users.id, ids),
-      existsIn(
-        invitations,
-        and(eq(invitations.createdBy, users.id), receivedBy(session), pendingInvitation()),
+  const rows = await whenIds(ids, () =>
+    selectFrom(
+      users,
+      and(
+        notSoftDeleted(users),
+        inArray(users.id, ids),
+        existsByKey(
+          invitations,
+          invitations.createdBy,
+          users.id,
+          receivedBy(session),
+          pendingInvitation(),
+        ),
       ),
     ),
   );
@@ -358,7 +365,7 @@ function arrivedByCard(): SQL {
 function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
   if (!query) return undefined;
   return or(
-    existsIn(users, and(eq(users.id, invitations.acceptedBy), nameOrEmailHolds(query))),
+    existsByKey(users, users.id, invitations.acceptedBy, nameOrEmailHolds(query)),
     startsWithText(invitations.batchId, query),
   );
 }
@@ -469,22 +476,23 @@ export function findCardBatchTotals(
   _admin: SiteAdmin,
   batchIds: readonly string[],
 ): Promise<CardBatchTotal[]> {
-  if (batchIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    invitations,
-    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.batchId, [...batchIds])),
-    {
-      aggregate: {
-        batchId: sql<string>`${invitations.batchId}`,
-        cards: sql<number>`count(*)::int`,
-        accepted: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is not null))::int`,
-        pending: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is null and ${invitations.declinedAt} is null and ${invitations.revokedAt} is null and ${invitations.expiresAt} > now()))::int`,
-        // Refused opens of the batch's cards, summed per card in a correlated subquery so the join cannot repeat a card.
-        attempts: sql<number>`coalesce(sum((select coalesce(sum(${cardInvitationAttempts.attempts}), 0) from ${cardInvitationAttempts} where ${cardInvitationAttempts.invitationId} = ${invitations.id} and ${cardInvitationAttempts.deletedAt} is null)), 0)::int`,
+  return whenIds(batchIds, () =>
+    selectFrom(
+      invitations,
+      and(cardKind(), notSoftDeleted(invitations), inArray(invitations.batchId, [...batchIds])),
+      {
+        aggregate: {
+          batchId: sql<string>`${invitations.batchId}`,
+          cards: sql<number>`count(*)::int`,
+          accepted: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is not null))::int`,
+          pending: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is null and ${invitations.declinedAt} is null and ${invitations.revokedAt} is null and ${invitations.expiresAt} > now()))::int`,
+          // Refused opens of the batch's cards, summed per card in a correlated subquery so the join cannot repeat a card.
+          attempts: sql<number>`coalesce(sum((select coalesce(sum(${cardInvitationAttempts.attempts}), 0) from ${cardInvitationAttempts} where ${cardInvitationAttempts.invitationId} = ${invitations.id} and ${cardInvitationAttempts.deletedAt} is null)), 0)::int`,
+        },
+        over: {},
+        groupBy: [invitations.batchId],
       },
-      over: {},
-      groupBy: [invitations.batchId],
-    },
+    ),
   );
 }
 
@@ -493,11 +501,12 @@ export function findCardPositions(
   _admin: SiteAdmin,
   invitationIds: readonly string[],
 ): Promise<CardPosition[]> {
-  if (invitationIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    invitations,
-    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.id, [...invitationIds])),
-  ).then((rows) => rows.map((row) => ({ id: row.id, position: row.position })));
+  return whenIds(invitationIds, () =>
+    selectFrom(
+      invitations,
+      and(cardKind(), notSoftDeleted(invitations), inArray(invitations.id, [...invitationIds])),
+    ).then((rows) => rows.map((row) => ({ id: row.id, position: row.position }))),
+  );
 }
 
 const CARD_ATTEMPT_ORDER: readonly SortPart[] = [

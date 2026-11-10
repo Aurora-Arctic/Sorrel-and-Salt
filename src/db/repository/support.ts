@@ -28,7 +28,7 @@ import { findPage, findPageCount } from './finders';
 import { acceptedCard, cardAcceptedBy } from './invitations';
 import { newestFirst, notSoftDeleted } from './predicates';
 import { standingPause } from './pause-ledger';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, existsIn, selectFrom, selectOne, whenIds } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
@@ -445,15 +445,16 @@ export function findClosingNoticesDueAmong(
   lapsedBy: Date,
   ids: readonly string[],
 ): Promise<string[]> {
-  if (ids.length === 0) return Promise.resolve([]);
-  return retentionPage(
-    and(
-      notSoftDeleted(supportRequests),
-      closingNoticeDue(dueBy, lapsedBy),
-      inArray(supportRequests.id, [...ids]),
+  return whenIds(ids, () =>
+    retentionPage(
+      and(
+        notSoftDeleted(supportRequests),
+        closingNoticeDue(dueBy, lapsedBy),
+        inArray(supportRequests.id, [...ids]),
+      ),
+      null,
+      ids.length,
     ),
-    null,
-    ids.length,
   );
 }
 
@@ -515,21 +516,22 @@ export function findSupportTimeoutById(id: string) {
  * reply to a request outside the viewer's scope never leaves the database.
  */
 export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonly string[]) {
-  if (requestIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportReplies,
-    and(
-      notSoftDeleted(supportReplies),
-      inArray(supportReplies.requestId, [...requestIds]),
-      existsIn(
-        supportRequests,
-        and(
-          notSoftDeleted(supportRequests),
-          eq(supportRequests.id, supportReplies.requestId),
-          viewerScope(viewer),
+  return whenIds(requestIds, () =>
+    selectFrom(
+      supportReplies,
+      and(
+        notSoftDeleted(supportReplies),
+        inArray(supportReplies.requestId, [...requestIds]),
+        existsIn(
+          supportRequests,
+          and(
+            notSoftDeleted(supportRequests),
+            eq(supportRequests.id, supportReplies.requestId),
+            viewerScope(viewer),
+          ),
         ),
+        internalNotesScope(viewer),
       ),
-      internalNotesScope(viewer),
     ),
   );
 }
@@ -543,12 +545,11 @@ function internalNotesScope(viewer: SupportViewer): SQL | undefined {
   if (viewer.role === 'user') return PUBLIC_REPLY;
   return or(
     PUBLIC_REPLY,
-    existsIn(
+    existsByKey(
       supportRequests,
-      and(
-        eq(supportRequests.id, supportReplies.requestId),
-        or(eq(supportRequests.curatorVisible, true), eq(supportRequests.assignedTo, viewer.userId)),
-      ),
+      supportRequests.id,
+      supportReplies.requestId,
+      or(eq(supportRequests.curatorVisible, true), eq(supportRequests.assignedTo, viewer.userId)),
     ),
   );
 }
@@ -556,10 +557,11 @@ function internalNotesScope(viewer: SupportViewer): SQL | undefined {
 /** The ids among `userIds` that accepted a printed card: derived from the invitation, never
  * stored. */
 export async function findCardAcceptorIds(userIds: readonly string[]): Promise<Set<string>> {
-  if (userIds.length === 0) return new Set();
-  const rows = await selectFrom(
-    invitations,
-    and(notSoftDeleted(invitations), acceptedCard(inArray(invitations.acceptedBy, [...userIds]))),
+  const rows = await whenIds(userIds, () =>
+    selectFrom(
+      invitations,
+      and(notSoftDeleted(invitations), acceptedCard(inArray(invitations.acceptedBy, [...userIds]))),
+    ),
   );
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
@@ -567,20 +569,22 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
 /** The live time-outs set on these senders, newest first. The service lets a keeper alone
  * ask. */
 export function findSupportTimeoutsFor(userIds: readonly string[]) {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
+  return whenIds(userIds, () =>
+    selectFrom(
+      supportTimeouts,
+      and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
+    ),
   );
 }
 
 /** The live time-outs set on these addresses, newest first. The service lets a keeper alone
  * ask. */
 export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
-  if (addressKeys.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+  return whenIds(addressKeys, () =>
+    selectFrom(
+      supportTimeouts,
+      and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+    ),
   );
 }
 
@@ -589,13 +593,14 @@ export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) 
  * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is a keeper's to read.
  */
 export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: readonly string[]) {
-  if (userIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    supportTimeouts,
-    and(
-      notSoftDeleted(supportTimeouts),
-      inArray(supportTimeouts.userId, [...userIds]),
-      timeoutStands,
+  return whenIds(userIds, () =>
+    selectFrom(
+      supportTimeouts,
+      and(
+        notSoftDeleted(supportTimeouts),
+        inArray(supportTimeouts.userId, [...userIds]),
+        timeoutStands,
+      ),
     ),
   );
 }

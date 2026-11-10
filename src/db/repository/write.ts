@@ -22,7 +22,7 @@ import { userWrites } from './users';
 import { workingWrites } from './workings';
 import { workspaceMemberPauseWrites } from './workspace-member-pauses';
 import { workspaceSlugWrites } from './workspace-slugs';
-import { existsIn, selectFrom } from './select';
+import { existsIn, selectFrom, whenIds } from './select';
 import { runInWriteTransaction } from './unit-of-work';
 import { StaleWrite } from '@/lib/errors';
 import { newToken } from '../../lib/invitation-token';
@@ -144,7 +144,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       updateAtRevision(table, inWorkspaceById(membership, table, id), expectedRevision, values),
     softDelete,
     softDeleteByIds: (table, ids) =>
-      ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),
+      whenIds(ids, () => softDelete(table, inArray(table.id, [...ids]))),
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
     softDeleteByIdInWorkspace: (membership, table, id) =>

@@ -58,7 +58,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-44  | Four local `Failure`/`Refusal` interfaces for Better Auth results, one of which shadows the shared `Failure`                                                 | medium   | Components    |     29 |  4.75 | Moved to MC.5                                   |
 | D-45  | The mail-job family is five-times copied (start, message-for/send, step, workflow, report)                                                                   | medium   | Server        |     23 |     3 | Moved to MC.4                                   |
 | D-46  | GroupList and GroupedValueList (and AdminInvitations, AdminCards) rebuild one list family file for file                                                      | medium   | Components    |     20 |   6.5 | Moved to MC.5                                   |
-| D-47  | `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times                                                                     | medium   | Server        |     19 |   4.5 | Moved to MC.3                                   |
+| D-47  | `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times                                                                     | medium   | Server        |     19 |   4.5 | Fixed                                           |
 | D-48  | Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times                                                                | medium   | Styles        |     19 |     2 | Moved to MC.9                                   |
 | D-49  | The lede text is written in both a page and its skeleton                                                                                                     | medium   | Pages and lib |     21 |     3 | Moved to MC.2                                   |
 | D-50  | `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting                                      | medium   | Pages and lib |     18 |  3.25 | Moved to MC.2                                   |
@@ -86,7 +86,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-72  | A callback-ref merge written twice                                                                                                                           | medium   | Components    |      8 |     2 | Moved to MC.6                                   |
 | D-73  | Help article title row and page head repeated across four Help pages and their skeletons                                                                     | medium   | Components    |      8 |  2.75 | Moved to MC.8                                   |
 | D-74  | invitation-flow helpers duplicated between `workspace-invitation.spec.ts` and `stories/01-invitations.spec.ts`; Mailpit lookup duplicated again              | medium   | Tests         |      8 |   1.5 | Moved to MC.1                                   |
-| D-75  | About 59 hand-written empty-id early returns in the repository                                                                                               | medium   | Server        |      8 |     3 | Moved to MC.3                                   |
+| D-75  | About 59 hand-written empty-id early returns in the repository                                                                                               | medium   | Server        |      8 |     3 | Fixed                                           |
 | D-76  | The click-feedback action (guard, report, run, report failure) is written eight times                                                                        | medium   | Components    |      8 |     4 | Moved to MC.6                                   |
 | D-77  | "Unwrap a loader slot or throw" written three times                                                                                                          | medium   | Server        |      7 |     2 | Moved to MC.4                                   |
 | D-78  | Members page pages by hand and builds its cursor like the users page                                                                                         | medium   | Pages and lib |      7 |   2.5 | Moved to MC.2                                   |
@@ -1461,7 +1461,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/db/repository/{cupboard-entries,invitations,users,memberships}*.test.ts`.
 
 - **Estimate:** 4.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-48: Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times
 
@@ -2268,7 +2268,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/db/` repository specs, loader specs.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-76: The click-feedback action (guard, report, run, report failure) is written eight times
 
