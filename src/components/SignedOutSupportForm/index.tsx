@@ -8,11 +8,9 @@ import { emailAddressProblem, normaliseEmail } from '../../lib/email-address';
 import { useFormSend } from '../../lib/use-form-send';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { ABOUT_REQUIRED } from '../../lib/support-messages';
-import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
 import {
   EmailField,
   FormActions,
-  PlainTextField,
   RadioGroupField,
   usePlainProblems,
   type PlainProblems,
@@ -20,6 +18,8 @@ import {
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from '../SupportForm/error-details';
+import { BotTrapField } from '../SupportForm/bot-trap-field';
+import { SupportMessageFields } from '../SupportForm/message-fields';
 import { subjectAndMessageProblems } from '../SupportForm/problems';
 import type { SignedOutSupportFormProps } from './types';
 
@@ -134,54 +134,23 @@ const SignedOutSupportForm = ({
           edited('email');
         }}
       />
-      <PlainTextField
-        name="subject"
-        label="Subject"
-        required
-        autoComplete="off"
-        placeholder="Add a subject"
-        limit={SUBJECT_MAX_LENGTH}
-        disabled={sending}
-        value={subject}
-        error={shown.subject}
-        onChange={(next) => {
+      <SupportMessageFields
+        subject={subject}
+        message={message}
+        onSubject={(next) => {
           setSubject(next);
           edited('subject');
         }}
-      />
-      {errorDetail && <ErrorDetails detail={errorDetail} />}
-      <PlainTextField
-        name="message"
-        label="Message"
-        required
-        multiline
-        rows={6}
-        note={
-          <span className="field__warning">
-            Don’t include passwords, payment details or other private information.
-          </span>
-        }
-        placeholder="Write a message"
-        limit={MESSAGE_MAX_LENGTH}
-        disabled={sending}
-        value={message}
-        error={shown.message}
-        onChange={(next) => {
+        onMessage={(next) => {
           setMessage(next);
           edited('message');
         }}
+        subjectError={shown.subject}
+        messageError={shown.message}
+        disabled={sending}
+        between={errorDetail && <ErrorDetails detail={errorDetail} />}
       />
-      <div hidden>
-        <input
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden
-          value={website}
-          onChange={(event) => setWebsite(event.target.value)}
-        />
-      </div>
+      <BotTrapField value={website} onChange={setWebsite} />
       {discard.asking && <DiscardQuestion guard={discard} />}
       <FormActions
         noun="Request"

@@ -4,6 +4,7 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
+import { BotTrapField } from '../SupportForm/bot-trap-field';
 import SupportReplyShell from '../SupportRequests/reply-shell';
 import type { SupportViewReplyFormProps } from './types';
 
@@ -17,7 +18,6 @@ const ReplyByViewTokenDocument = graphql(`
 
 const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): ReactElement => {
   const [body, setBody] = useState('');
-  // The trap field: a person never sees it, so a value in it is a bot's.
   const [website, setWebsite] = useState('');
   const { sending, failure, send } = useFormSend(['body']);
 
@@ -46,19 +46,7 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
       placeholder="Write a reply"
       submitLabel="Reply"
       busyLabel="Sending"
-      below={
-        <div hidden>
-          <input
-            type="text"
-            name="website"
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden
-            value={website}
-            onChange={(event) => setWebsite(event.target.value)}
-          />
-        </div>
-      }
+      below={<BotTrapField value={website} onChange={setWebsite} />}
     />
   );
 };

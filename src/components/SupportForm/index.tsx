@@ -4,11 +4,7 @@ import { type FormEvent, type ReactElement, type ReactNode, useId, useState } fr
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
-import {
-  MESSAGE_MAX_LENGTH,
-  PATH_MAX_LENGTH,
-  SUBJECT_MAX_LENGTH,
-} from '../../modules/support/validation/limits';
+import { PATH_MAX_LENGTH } from '../../modules/support/validation/limits';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { ABOUT_REQUIRED, PATH_TOO_LONG } from '../../lib/support-messages';
 import {
@@ -21,6 +17,7 @@ import {
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from './error-details';
+import { SupportMessageFields } from './message-fields';
 import { subjectAndMessageProblems } from './problems';
 import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
@@ -164,41 +161,20 @@ const SupportForm = ({
         }}
       />
       {errorDetail && <ErrorDetails detail={errorDetail} />}
-      <PlainTextField
-        name="subject"
-        label="Subject"
-        required
-        placeholder="Add a subject"
-        autoComplete="off"
-        limit={SUBJECT_MAX_LENGTH}
-        disabled={sending}
-        value={subject}
-        error={shown.subject}
-        onChange={(next) => {
+      <SupportMessageFields
+        subject={subject}
+        message={message}
+        onSubject={(next) => {
           setSubject(next);
           edited('subject');
         }}
-      />
-      <PlainTextField
-        name="message"
-        label="Message"
-        required
-        multiline
-        rows={6}
-        placeholder="Write a message"
-        note={
-          <span className="field__warning">
-            Don’t include passwords, payment details or other private information.
-          </span>
-        }
-        limit={MESSAGE_MAX_LENGTH}
-        disabled={sending}
-        value={message}
-        error={shown.message}
-        onChange={(next) => {
+        onMessage={(next) => {
           setMessage(next);
           edited('message');
         }}
+        subjectError={shown.subject}
+        messageError={shown.message}
+        disabled={sending}
       />
       <FormActions
         noun="Request"
