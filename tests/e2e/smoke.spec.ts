@@ -60,6 +60,9 @@ test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
   await page.goto('/#_=_');
   expect(new URL(page.url()).hash).toBe('');
 
+  // A change of fragment alone stays in the same document, where the script never runs and the router, still hydrating,
+  // writes back the address it read before the change; leaving the page first makes this a fresh load.
+  await page.goto('about:blank');
   await page.goto('/#top');
   expect(new URL(page.url()).hash).toBe('#top');
 });
