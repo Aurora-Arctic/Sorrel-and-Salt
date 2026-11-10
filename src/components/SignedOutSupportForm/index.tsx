@@ -4,13 +4,7 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import {
-  EMAIL_FORMAT_MESSAGE,
-  emailAddressProblem,
-  emailFormat,
-  normaliseEmail,
-  validateEmailAddress,
-} from '../../lib/email-address';
+import { emailAddressProblem, emailFormat, normaliseEmail } from '../../lib/email-address';
 import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
@@ -73,7 +67,8 @@ const SignedOutSupportForm = ({
       return;
     }
     const found: typeof problems = {};
-    if (validateEmailAddress(normaliseEmail(email))) found.email = EMAIL_FORMAT_MESSAGE;
+    const emailProblem = emailAddressProblem(normaliseEmail(email));
+    if (emailProblem) found.email = emailProblem;
     if (subject.trim().length > SUBJECT_MAX_LENGTH)
       found.subject = limitMessage(SUBJECT_MAX_LENGTH);
     if (message.trim().length > MESSAGE_MAX_LENGTH)

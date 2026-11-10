@@ -6,7 +6,7 @@ import type {
   SendSignedOutSupportRequestMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
+import { EMAIL_FORMAT_MESSAGE, emailAddressProblem } from '@/lib/email-address';
 
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
@@ -103,6 +103,22 @@ describe('SignedOutSupportForm', () => {
 
     expect(email).toHaveAttribute('aria-invalid', 'true');
     expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
+  it('refuses on Send Request with the same words the box showed when it was left', async () => {
+    render(<SignedOutSupportForm path="/support" />);
+    fill();
+    const email = screen.getByRole('textbox', { name: /Email/ });
+    fireEvent.change(email, { target: { value: 'visitor@example.invalid' } });
+    fireEvent.blur(email);
+    const onLeaving = email.getAttribute('aria-describedby');
+    const left = emailAddressProblem('visitor@example.invalid') as string;
+    expect(email).toHaveAccessibleDescription(expect.stringContaining(left));
+
+    fireEvent.click(send());
+
+    await waitFor(() => expect(email).toHaveAccessibleDescription(expect.stringContaining(left)));
+    expect(email.getAttribute('aria-describedby')).toBe(onLeaving);
   });
 
   it('refuses an address that is not one, and a subject past its limit, without sending', async () => {
