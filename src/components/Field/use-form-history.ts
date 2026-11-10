@@ -250,35 +250,28 @@ export function useFormHistory<V extends FieldValues>(
     [setValue, getValues, isSubmitted, onRestored, prepare],
   );
 
-  const undo = useCallback(() => {
-    if (!enabled) return;
-    const step = lastOf(stateRef.current.past);
-    if (!step) {
-      announce('Nothing to undo');
-      return;
-    }
-    const element = root.current;
-    const label = element ? labelOf(element, step.diffs[0].name) : 'the form';
-    restore(step, 'undo');
-    commit({ type: 'undone' });
-    announce(`Undid change to ${label}`);
-    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
-  }, [enabled, root, restore, commit, announce]);
+  /** One step of history: undo takes the last past step, redo the first future one; the wording and the committed action differ. */
+  const stepThrough = useCallback(
+    (direction: 'undo' | 'redo') => {
+      if (!enabled) return;
+      const undoing = direction === 'undo';
+      const step = lastOf(undoing ? stateRef.current.past : stateRef.current.future);
+      if (!step) {
+        announce(undoing ? 'Nothing to undo' : 'Nothing to redo');
+        return;
+      }
+      const element = root.current;
+      const label = element ? labelOf(element, step.diffs[0].name) : 'the form';
+      restore(step, direction);
+      commit({ type: undoing ? 'undone' : 'redone' });
+      announce(`${undoing ? 'Undid' : 'Redid'} change to ${label}`);
+      // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
+    },
+    [enabled, root, restore, commit, announce],
+  );
 
-  const redo = useCallback(() => {
-    if (!enabled) return;
-    const step = lastOf(stateRef.current.future);
-    if (!step) {
-      announce('Nothing to redo');
-      return;
-    }
-    const element = root.current;
-    const label = element ? labelOf(element, step.diffs[0].name) : 'the form';
-    restore(step, 'redo');
-    commit({ type: 'redone' });
-    announce(`Redid change to ${label}`);
-    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
-  }, [enabled, root, restore, commit, announce]);
+  const undo = useCallback(() => stepThrough('undo'), [stepThrough]);
+  const redo = useCallback(() => stepThrough('redo'), [stepThrough]);
 
   const clear = useCallback(() => {
     commit({ type: 'cleared' });
