@@ -12,6 +12,7 @@ export {
   ReorderButton,
 } from './icon-button';
 export { LiddedEyeIcon } from './lidded-eye';
+export { useAskingMenu } from './use-asking-menu';
 export {
   BinIcon,
   CauldronIcon,

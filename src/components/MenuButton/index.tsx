@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { setRef } from '../../lib/set-ref';
 import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
@@ -207,8 +208,7 @@ export default function MenuButton({
         ref={(node) => {
           toggle.current = node;
           setControl(node);
-          if (typeof ref === 'function') ref(node);
-          else if (ref) ref.current = node;
+          setRef(ref, node);
         }}
         type="button"
         className={className}

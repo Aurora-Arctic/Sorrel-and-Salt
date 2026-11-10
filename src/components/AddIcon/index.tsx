@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -77,16 +77,9 @@ const AddIcon = ({
   // name holds a comma of its own. Then how many covens hold it, and which.
   const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
-  const feedback = useClickFeedback({ name: label });
-  const { anchorRef } = feedback;
   const plus = useRef<HTMLButtonElement | null>(null);
-  const plusRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      plus.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
+  const feedback = useClickFeedback({ name: label, ref: plus });
+  const { anchorRef } = feedback;
   // The check after a success: it holds for ADDED_HOLD_MS and until the page has been read again, then
   // fades back to the plus, unless the add left every coven holding the entry, when it stays until the
   // held mark replaces it. `useFade` keeps it drawn while it fades and drops the fade under reduced motion.
@@ -134,7 +127,7 @@ const AddIcon = ({
   const control =
     covens.length > 1 ? (
       <MenuButton
-        ref={plusRef}
+        ref={anchorRef}
         label={label}
         className="add-icon"
         icon={
@@ -156,7 +149,7 @@ const AddIcon = ({
       />
     ) : (
       <button
-        ref={plusRef}
+        ref={anchorRef}
         type="button"
         className="add-icon"
         data-state={state}

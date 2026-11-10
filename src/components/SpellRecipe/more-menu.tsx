@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useCallback, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { MoreMenu } from '../IconTip';
 import type { MenuButtonItem } from '../MenuButton/types';
@@ -29,15 +29,8 @@ export default function SpellMoreMenu({
   // The dots, where the focus goes back to once the dialog closes; once the delete has led away
   // they are gone, and Modal gives the focus to the heading.
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const feedback = useClickFeedback({ name: `More for ${name}` });
+  const feedback = useClickFeedback({ name: `More for ${name}`, ref: trigger });
   const { anchorRef } = feedback;
-  const triggerRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      trigger.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
   const { duplicate, duplicating } = useDuplicateSpell(
     workspaceId,
     (id) => copiedHrefOf(covenSlug, id),
@@ -85,7 +78,7 @@ export default function SpellMoreMenu({
   return (
     <>
       <MoreMenu
-        ref={triggerRef}
+        ref={anchorRef}
         name={name}
         items={items}
         busy={duplicating}
