@@ -36,6 +36,7 @@ export * from './graphql/invitation-cards';
 export * from './graphql/privilege-changes';
 export * from './loaders/card-totals-by-batch';
 export * from './loaders/card-position-by-id';
+export * from './loaders/passkey-held-by-user';
 export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';

@@ -39,6 +39,7 @@ const ADA = {
   canCreateWorkspace: true,
   createdAt: new Date('2026-03-04T05:06:07Z'),
   providers: ['discord', 'google'],
+  hasPasskey: false,
   emailVerified: true,
   agreedTermsVersion: 1,
   agreedDisclaimerVersion: 4,
@@ -56,6 +57,7 @@ const BO = {
   canCreateWorkspace: false,
   createdAt: new Date('2026-05-06T07:08:09Z'),
   providers: [],
+  hasPasskey: false,
   emailVerified: false,
   agreedTermsVersion: null,
   agreedDisclaimerVersion: null,
@@ -248,6 +250,37 @@ describe('UserList', () => {
     render(<UserList {...props({ users: [{ ...BO, providers: ['github'] }] })} />);
 
     expect(cellUnder('Bo Fixturewort', 'Logins')).toHaveTextContent(/^github$/);
+  });
+
+  it('draws a labelled mark for an email & password login and for a passkey, never the raw id', () => {
+    render(
+      <UserList
+        {...props({ users: [{ ...BO, providers: ['credential', 'google'], hasPasskey: true }] })}
+      />,
+    );
+
+    const logins = cellUnder('Bo Fixturewort', 'Logins');
+    expect(screen.getByRole('cell', { name: /^Google\s+Email & Password\s+Passkey$/ })).toBe(
+      logins,
+    );
+    expect(logins.querySelectorAll('svg')).toHaveLength(3);
+    expect(logins).not.toHaveTextContent('credential');
+  });
+
+  it('reads each social provider as its own word', () => {
+    render(<UserList {...props({ users: [ADA] })} />);
+
+    expect(screen.getByRole('cell', { name: /^Discord\s+Google$/ })).toBe(
+      cellUnder('Ada Fixturewort', 'Logins'),
+    );
+  });
+
+  it('draws no passkey mark for a user who holds none', () => {
+    render(<UserList {...props({ users: [{ ...BO, providers: ['credential'] }] })} />);
+
+    expect(screen.getByRole('cell', { name: 'Email & Password' })).toBe(
+      cellUnder('Bo Fixturewort', 'Logins'),
+    );
   });
 
   it('draws no table when no user matches', () => {

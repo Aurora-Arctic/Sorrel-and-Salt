@@ -338,7 +338,7 @@ A table whose rows turn into cards on a narrow screen, so no column scrolls out 
 
 ## Provider marks
 
-**`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's ground**, as its sign-in button gives it one: the marks are drawn for those grounds. `--google`, `--discord`, `--facebook` and `--microsoft` take their `fill` from `brand-color()`, and a white one its brand's `edge`, which holds 3:1 against both pages ("Brand colours"). The circle is `border-box`, so an edged one is the same size as the rest. The markup is the `ProviderMark` component's ([`components/provider-mark.md`](components/provider-mark.md)).
+**`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's ground**, as its sign-in button gives it one: the marks are drawn for those grounds. `--google`, `--discord`, `--facebook` and `--microsoft` take their `fill` from `brand-color()`, and a white one its brand's `edge`, which holds 3:1 against both pages ("Brand colours"). The circle is `border-box`, so an edged one is the same size as the rest. The markup is the `ProviderMark` component's ([`components/provider-mark.md`](components/provider-mark.md)). `--own` is the circle for a way in with no brand (email & password, a passkey): the `$fill-quiet` wash, a `$hairline` edge and the outline glyph in the body ink, which holds 4.5:1 on that wash (tests/scss/tokens.test.ts).
 
 ## The application shell and the layers
 

@@ -84,6 +84,25 @@ export async function findProvidersOfUsers(
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
 }
 
+/** Which of the given users hold at least one passkey, each named once. */
+export async function findPasskeyHoldersAmong(
+  _admin: SiteAdmin,
+  userIds: readonly string[],
+): Promise<string[]> {
+  if (userIds.length === 0) return [];
+  // `passkeys` carries no `deleted_at`, so the filter adds nothing today.
+  const rows = await selectFrom(
+    passkeys,
+    and(notSoftDeleted(passkeys), inArray(passkeys.userId, [...userIds])),
+    {
+      aggregate: { userId: sql<string>`${passkeys.userId}` },
+      over: {},
+      groupBy: [passkeys.userId],
+    },
+  );
+  return rows.map((row) => row.userId);
+}
+
 /**
  * The display name of each given user who holds or has held a seat in a coven
  * `viewerId` sits in now, and nothing else of the row. A proofless read: the

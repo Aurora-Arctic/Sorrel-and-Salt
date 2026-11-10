@@ -27,6 +27,10 @@ beforeAll(async () => {
     insert into accounts (account_id, provider_id, user_id, updated_at)
     values ('a-google', 'google', ${A.id}, now())
   `;
+  await sql`
+    insert into passkeys (public_key, user_id, credential_id, counter, device_type, backed_up)
+    values ('key-a', ${A.id}, 'cred-a', 0, 'singleDevice', false)
+  `;
 });
 
 const usersAs = (session: Session | null, source: string, variables = {}) =>
@@ -51,7 +55,7 @@ const PAGE_OF_USERS = `
     ) {
       edges {
         cursor
-        node { id name email role canCreateWorkspace emailVerified providers audit { createdAt } }
+        node { id name email role canCreateWorkspace emailVerified providers hasPasskey audit { createdAt } }
       }
       pageInfo { hasNextPage endCursor }
     }
@@ -79,8 +83,11 @@ describe('Query.users', () => {
       canCreateWorkspace: true,
       emailVerified: expect.any(Boolean),
       providers: ['google'],
+      hasPasskey: true,
       audit: { createdAt: expect.any(String) },
     });
+    const without = users.edges.find((edge) => edge.node.name === 'Listed Fixture 00');
+    expect(without?.node.hasPasskey).toBe(false);
   });
 
   it('resolves a keeper the coven memberships of a listed user', async () => {
@@ -159,6 +166,26 @@ describe('User.providers and User.emailVerified', () => {
     expect(result.data).toBeNull();
     expect(result.errors?.[0]).toMatchObject({
       path: ['me', 'providers'],
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
+
+  it("refuses hasPasskey on a user's own row, as it does the providers", async () => {
+    // Why it could have answered: A holds a passkey, and a site keeper is told so.
+    const admin = await usersAs(
+      asUser(E),
+      `{ users(query: "${A.email}") { edges { node { id hasPasskey } } } }`,
+    );
+    expect(admin.errors).toBeUndefined();
+    expect(admin.data).toMatchObject({
+      users: { edges: [{ node: { id: A.id, hasPasskey: true } }] },
+    });
+
+    const result = await usersAs(asUser(A), '{ me { id hasPasskey } }');
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['me', 'hasPasskey'],
       extensions: { code: 'FORBIDDEN' },
     });
   });

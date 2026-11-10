@@ -12,6 +12,7 @@ import { oneOf, single } from '@/lib/search-params';
 import type { Session, UserRole } from '@/lib/session';
 import {
   countUsers,
+  holdsPasskey,
   isPrimaryAdmin,
   listUsers,
   providersOf,
@@ -58,8 +59,9 @@ const readUsers = cache(
       (start) => countUsers(session, filter, start),
     );
     const ids = page.edges.map((edge) => edge.node.id);
-    const [providers, timeouts, pauses] = await Promise.all([
+    const [providers, passkeys, timeouts, pauses] = await Promise.all([
       providersOf(session, ids),
+      holdsPasskey(session, ids),
       standingTimeoutsOf(session, ids),
       standingAccessPausesOf(session, ids),
     ]);
@@ -67,9 +69,13 @@ const readUsers = cache(
       const linked = providers[index];
       // A keeper's batch answers every slot; a refusal here is the guard's bug.
       if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
+      const passkey = passkeys[index];
+      if (passkey === undefined || passkey instanceof Error)
+        throw passkey ?? new Error('No passkey read');
       return {
         ...node,
         providers: linked,
+        hasPasskey: passkey,
         supportTimeout: timeouts[index] ? { until: timeouts[index].until } : undefined,
         accessPause: pauses[index] ? { until: pauses[index].until } : undefined,
         primaryAdmin: isPrimaryAdmin(node),
