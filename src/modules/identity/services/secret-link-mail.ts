@@ -8,6 +8,7 @@ import {
   rotateInvitationToken,
 } from '../../../db/repository';
 import { invitationLinkMessage } from '../../../lib/invitation-link-mail';
+import { deliverMessageFor } from '../../../lib/deliver-message-for';
 import { deliver } from '../../../lib/mail-transport';
 import {
   changeLinkMessage,
@@ -112,7 +113,5 @@ export async function sendChangeLink(
 
 /** A transport failure throws, so a job's step is retried. */
 export async function sendSecretLink(link: SecretLink): Promise<boolean> {
-  const message = await secretLinkMessage(link);
-  if (!message) return false;
-  return deliver(message);
+  return deliverMessageFor(secretLinkMessage, link);
 }

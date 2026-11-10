@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { trimEnds } from '../../../lib/formats';
-import { RowId, optionalText } from '../../../lib/validation';
+import { isRowId, optionalText } from '../../../lib/validation';
 import type { SpellStatus } from '../types';
 import { SpellStepInput } from './spell-step';
 import { STATUSES, VISIBILITIES, VISIBILITY_MESSAGE } from './visibility';
@@ -34,7 +34,7 @@ const SpellFields = z.object({
 function categoryRule(spell: { categoryIds?: string[] }, context: z.RefinementCtx) {
   spell.categoryIds?.forEach((id, index) => {
     // Not a uuid names nothing, and would be a driver error at the comparison.
-    if (!RowId.safeParse(id).success) {
+    if (!isRowId(id)) {
       context.addIssue({
         code: 'custom',
         path: ['categoryIds', index],

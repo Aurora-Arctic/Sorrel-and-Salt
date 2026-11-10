@@ -1,6 +1,6 @@
-// The ingredients module's behaviour surface. Schema tables are reached at
-// `@/modules/ingredients/schema/*`; `services/*`, `graphql/*`, `loaders/*` and
-// `types.ts` are internal to the module.
+// The ingredients module's public surface: its services, loaders and GraphQL types, the cupboard merge helper, `unitConvert`, and the
+// row and key types listed at the foot. Schema tables are reached at `@/modules/ingredients/schema/*`, and the validation schemas
+// at `@/modules/ingredients/validation/*`.
 export * from './services/duplicates';
 export * from './services/common-names';
 export * from './services/ingredient-suggestions';
@@ -40,6 +40,7 @@ export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
 export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
+export { canConvert, canMeasureAs } from './schema/units';
 export type {
   CategoryDetail,
   CitedReference,

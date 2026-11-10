@@ -18,19 +18,30 @@ export function liftedNow(session: AuditSession) {
 }
 
 /**
- * Closes the live pause `liveWhere` names, then opens the new one. No conflict target: a pause set alongside in another
- * transaction wins the one-live slot, and this writes nothing rather than failing.
+ * Opens a pause on any pause-shaped table. No conflict target: a pause set alongside in another transaction wins the one-live slot, and this writes nothing
+ * rather than failing.
  */
-export async function closeThenInsertPause<TTable extends PauseTable>(
-  { tx, session, update, stampInsert }: WriterContext,
+export async function openPause<TTable extends PgTable>(
+  { tx, stampInsert }: WriterContext,
   table: TTable,
-  liveWhere: SQL | undefined,
   values: object,
 ): Promise<TTable['$inferSelect'][]> {
-  await update(table, liftedNow(session), liveWhere);
   return (await tx
     .insert(table)
     .values(stampInsert(values))
     .onConflictDoNothing()
     .returning()) as TTable['$inferSelect'][];
+}
+
+/**
+ * Closes the live pause `liveWhere` names, then opens the new one with `openPause`.
+ */
+export async function closeThenInsertPause<TTable extends PauseTable>(
+  context: WriterContext,
+  table: TTable,
+  liveWhere: SQL | undefined,
+  values: object,
+): Promise<TTable['$inferSelect'][]> {
+  await context.update(table, liftedNow(context.session), liveWhere);
+  return openPause(context, table, values);
 }

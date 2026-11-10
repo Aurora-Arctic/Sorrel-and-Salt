@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { type FieldFormat, trimEnds } from '../../../lib/formats';
-import { quantity, requiredText } from '../../../lib/validation';
+import { quantity, requiredRowId, requiredText } from '../../../lib/validation';
 import { UNITS } from '../../ingredients/schema/units';
 
 // Mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts) one for one, so the database refuses nothing a user
@@ -16,10 +16,10 @@ export const SpellStepInput = z
     // The step this one is, on an update: kept where it is given, a new step
     // where it is absent, and a saved step left out of the list is removed
     // (claude-docs/db/grimoire.md, "Saving a recipe").
-    id: z.guid({ error: 'This step is not one of the spell’s' }).nullish(),
+    id: requiredRowId('This step is not one of the spell’s').nullish(),
     body: present('Write the instruction, or remove it', trimEnds),
-    ingredientId: z.guid({ error: 'Choose an ingredient from the list' }).nullish(),
-    variantId: z.guid({ error: 'Choose a form from the list' }).nullish(),
+    ingredientId: requiredRowId('Choose an ingredient from the list').nullish(),
+    variantId: requiredRowId('Choose a form from the list').nullish(),
     name: present('Give the ingredient a name'),
     form: present('Give the form a name, or remove it'),
     quantity: quantity('Quantity').nullish(),

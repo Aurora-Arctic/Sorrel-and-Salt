@@ -1,6 +1,5 @@
 import 'server-only';
-import { send } from '../../../lib/mail';
-import { startMailJob } from '../../../lib/mail-job';
+import { startMessageMail } from '../../../lib/mail-job';
 import { accessPauseMail } from '../jobs/access-pause-mail';
 import { accessPauseMessageFor } from './access-pause-mail';
 import type { AccessPauseMail } from '../types';
@@ -12,8 +11,5 @@ import type { AccessPauseMail } from '../types';
  */
 export async function mailPausedUser(pauseId: string, origin: string): Promise<void> {
   const mail: AccessPauseMail = { kind: 'access-pause', pauseId, origin };
-  await startMailJob(accessPauseMail, [mail], 'access pause', async () => {
-    const message = await accessPauseMessageFor(mail);
-    if (message) await send(message);
-  });
+  await startMessageMail(accessPauseMail, mail, 'access pause', accessPauseMessageFor);
 }

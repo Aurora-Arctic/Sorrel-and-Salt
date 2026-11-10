@@ -2,6 +2,7 @@ import 'server-only';
 import { type SimilarityScore, findSimilarIngredients } from '../../../db/repository';
 import type { IngredientRow } from '../types';
 import type { Session } from '../../../lib/session';
+import { trimmedOrUndefined } from '../../../lib/text';
 import { readersOf } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 
@@ -22,7 +23,7 @@ export async function findPossibleDuplicates(
 ): Promise<PageEntry<IngredientRow, SimilarityScore>[]> {
   const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
 
-  const trimmed = name.trim();
+  const trimmed = trimmedOrUndefined(name);
   if (!trimmed) return [];
 
   return findSimilarIngredients(memberships, trimmed, page);

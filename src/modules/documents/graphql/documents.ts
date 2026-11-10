@@ -20,6 +20,7 @@ import type {
   DocumentMailingSummary,
   PendingDocument,
   PublishedDocumentVersion,
+  DocumentHeading,
 } from '../types';
 
 const DocumentVersionRef = builder
@@ -65,16 +66,14 @@ const DocumentForEditingRef = builder
     }),
   });
 
-const DocumentRef = builder
-  .objectRef<{ id: string; title: string; lede: string }>('Document')
-  .implement({
-    description: 'A site document’s title and lede.',
-    fields: (t) => ({
-      id: t.exposeID('id'),
-      title: t.exposeString('title'),
-      lede: t.exposeString('lede'),
-    }),
-  });
+const DocumentRef = builder.objectRef<DocumentHeading>('Document').implement({
+  description: 'A site document’s title and lede.',
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    title: t.exposeString('title'),
+    lede: t.exposeString('lede'),
+  }),
+});
 
 const DocumentInputRef = builder.inputType('DocumentInput', {
   fields: (t) => ({

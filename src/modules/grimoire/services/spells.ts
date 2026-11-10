@@ -1,4 +1,5 @@
 import 'server-only';
+import { NO_SUCH_SPELL } from './spell-not-found';
 import { findManyByIds, findManyInSpell, findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
@@ -11,7 +12,7 @@ import {
 } from '../validation/spell';
 import { amountOf } from '../../../lib/quantity';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import { parseInput, RowId } from '../../../lib/validation';
+import { isRowId, parseInput } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
@@ -29,47 +30,30 @@ import type {
 
 async function readableSpell(membership: Membership, spellId: string): Promise<SpellRow> {
   const spell = await findOneSpell(membership, spellId);
-  if (!spell) throw new NotFound('No such spell in this coven');
+  if (!spell) throw new NotFound(NO_SUCH_SPELL);
   return spell;
 }
 
-function spellColumns(input: {
-  title?: string | null;
-  intent?: string | null;
-  jarDescription?: string | null;
-  sealWaxColor?: string | null;
-  moonPhase?: string | null;
-  dayOfWeek?: string | null;
-  note?: string | null;
-  status?: SpellRow['status'];
-  visibility?: SpellRow['visibility'];
-}) {
-  const {
-    title,
-    intent,
-    jarDescription,
-    sealWaxColor,
-    moonPhase,
-    dayOfWeek,
-    note,
-    status,
-    visibility,
-  } = input;
-  const columns = {
-    title,
-    intent,
-    jarDescription,
-    sealWaxColor,
-    moonPhase,
-    dayOfWeek,
-    note,
-    status,
-    visibility,
-  };
-  // Left out is unchanged: a key whose value is `undefined` is not written.
+/** The spell columns a save writes; the rest of a spell (its steps, categories and revision) have their own writes. */
+const SPELL_COLUMNS = [
+  'title',
+  'intent',
+  'jarDescription',
+  'sealWaxColor',
+  'moonPhase',
+  'dayOfWeek',
+  'note',
+  'status',
+  'visibility',
+] as const;
+
+type SpellColumns = Partial<Pick<SpellRow, (typeof SPELL_COLUMNS)[number]>>;
+
+/** The columns of `input` that are given. Left out is unchanged: a key whose value is `undefined` is not written. */
+function spellColumns(input: SpellColumns): SpellColumns {
   return Object.fromEntries(
-    Object.entries(columns).filter(([, value]) => value !== undefined),
-  ) as Partial<typeof columns>;
+    SPELL_COLUMNS.map((key) => [key, input[key]]).filter(([, value]) => value !== undefined),
+  ) as SpellColumns;
 }
 
 /**
@@ -133,7 +117,7 @@ export async function updateSpell(
       spellColumns(parsed),
     );
     // Read a moment ago, so only a delete in between leaves nothing here.
-    if (!spell) throw new NotFound('No such spell in this coven');
+    if (!spell) throw new NotFound(NO_SUCH_SPELL);
     if (parsed.steps) await writeRecipe(write, spellId, parsed.steps, existing);
     if (categoryIds) await writeCategories(write, spellId, categoryIds, held);
     return spell;
@@ -193,7 +177,7 @@ export async function deleteSpell(
   spellId: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { spell: ['delete'] });
-  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  if (!isRowId(spellId)) throw new NotFound(NO_SUCH_SPELL);
   await readableSpell(membership, spellId);
   await withAudit(session, async (write) => {
     // The steps first: they are reached through their live spell, which the next write takes away.
@@ -201,7 +185,7 @@ export async function deleteSpell(
     // The workings the same way; their participant and deduction rows have no tombstone and go hidden with them.
     await write.softDeleteWorkingsOfSpell(membership, spellId);
     const [spell] = await write.softDeleteSpell(membership, spellId);
-    if (!spell) throw new NotFound('No such spell in this coven');
+    if (!spell) throw new NotFound(NO_SUCH_SPELL);
   });
 }
 
@@ -220,7 +204,7 @@ export async function duplicateSpell(
   spellId: string,
 ): Promise<SpellRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
-  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  if (!isRowId(spellId)) throw new NotFound(NO_SUCH_SPELL);
   const source = await readableSpell(membership, spellId);
   const steps = await findManyInSpell(membership, spellSteps, spellId);
   const liveCategories = await findManyByIds(categories, await heldCategories(membership, spellId));
@@ -230,13 +214,8 @@ export async function duplicateSpell(
       membership,
       spells,
       spellColumns({
+        ...source,
         title: source.title === null ? null : `${source.title}${COPY_SUFFIX}`,
-        intent: source.intent,
-        jarDescription: source.jarDescription,
-        sealWaxColor: source.sealWaxColor,
-        moonPhase: source.moonPhase,
-        dayOfWeek: source.dayOfWeek,
-        note: source.note,
         status: 'draft',
         visibility: 'private',
       }),

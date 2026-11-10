@@ -1,3 +1,4 @@
+import type { OriginNotifier } from '../../lib/types';
 import type { workspaceMemberPauses } from './schema/workspace-member-pauses';
 import type { workspaceMembers, workspaces } from './schema/workspaces';
 import type { Membership } from './services/membership';
@@ -37,10 +38,7 @@ export type MemberKey = {
   userId: string;
 };
 
-export interface MemberPauseNotifier {
-  /** @throws {Error} where none resolves. */
-  origin(): Promise<string>;
-}
+export type MemberPauseNotifier = OriginNotifier;
 
 /** Carries nothing of the member's. */
 export type MemberPauseMail = {

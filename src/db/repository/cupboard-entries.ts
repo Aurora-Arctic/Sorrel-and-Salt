@@ -4,7 +4,7 @@ import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/wor
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import type { Membership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { caseFoldedEq, inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { findPageInTiers } from './finders';
 import { existsByKey, selectFrom, selectOne, whenIds } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
@@ -120,14 +120,9 @@ export function findCompendiumMatchPage(
 
 /** A compendium entry whose label or formal name is `name`, exactly but for case; the finders add the soft-delete filter. */
 function compendiumNamed(name: string): SQL | undefined {
-  // `lower` has no builder.
-  const folded = sql`lower(${name})`;
   return and(
     inCompendium(ingredients),
-    or(
-      eq(sql`lower(${ingredients.name})`, folded),
-      eq(sql`lower(${ingredients.canonicalName})`, folded),
-    ),
+    or(caseFoldedEq(ingredients.name, name), caseFoldedEq(ingredients.canonicalName, name)),
   );
 }
 
@@ -144,8 +139,7 @@ export function findCupboardEntryByLabel(
     and(
       scopedTo(membership, workspaceCompendiumEntries),
       notSoftDeleted(workspaceCompendiumEntries),
-      // `lower` has no builder.
-      eq(sql`lower(${workspaceCompendiumEntries.label})`, sql`lower(${label})`),
+      caseFoldedEq(workspaceCompendiumEntries.label, label),
     ),
   );
 }
@@ -164,7 +158,7 @@ export function findWorkspaceIngredientByName(
     and(
       scopedTo(membership, ingredients),
       notSoftDeleted(ingredients),
-      eq(sql`lower(${ingredients.name})`, sql`lower(${name})`),
+      caseFoldedEq(ingredients.name, name),
     ),
   );
 }

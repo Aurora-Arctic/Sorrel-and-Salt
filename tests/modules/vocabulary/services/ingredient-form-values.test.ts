@@ -334,7 +334,7 @@ describe('createIngredientFormValue', () => {
       {
         path: ['name'],
         message:
-          '"Fixture Shard" already has the address "fixture-shard-substance" — choose another name or group',
+          '"Fixture-Shard" is too close to "Fixture Shard", which already exists — choose another name or group',
       },
     ]);
     expect(await countNamed('Fixture-Shard')).toBe(0);
@@ -418,7 +418,7 @@ describe('updateIngredientFormValue', () => {
       {
         path: ['name'],
         message:
-          '"Fixture Taken" already has the address "fixture-taken-substance" — choose another name or group',
+          '"Fixture-Taken" is too close to "Fixture Taken", which already exists — choose another name or group',
       },
     ]);
     expect(await formOf(id)).toEqual(before);
@@ -439,8 +439,7 @@ describe('updateIngredientFormValue', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message:
-          '"Fixture Wax" already has the address "fixture-wax-animal" — choose another name or group',
+        message: '"Fixture Wax" already exists — choose another name or group',
       },
     ]);
   });
@@ -646,6 +645,7 @@ describe('deleteIngredientFormValue', () => {
       await expect(attempt).rejects.toThrow(Forbidden);
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
+      await expect(attempt).rejects.toMatchObject({ heldBy: { forms: ['Fixture Held'] } });
       expect((await formOf(id)).deleted_at).toBeNull();
     });
   });

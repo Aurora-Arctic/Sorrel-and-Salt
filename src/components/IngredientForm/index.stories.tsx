@@ -24,6 +24,7 @@ import type {
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
+import { fold } from '../../lib/text';
 import type { CitationFields } from '../../lib/types';
 import { ComboboxEntry } from '../Combobox';
 import Modal from '../Modal';
@@ -52,7 +53,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 
 const matches = (query: string, ...texts: (string | null)[]) =>
-  texts.some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
+  texts.some((text) => text?.toLowerCase().includes(fold(query)));
 
 const FORMS: FormSuggestionsQuery['formSuggestions']['edges'][number]['node'][] = [
   {

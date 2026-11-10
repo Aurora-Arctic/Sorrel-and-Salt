@@ -1,6 +1,6 @@
 import type { ErrorOption } from 'react-hook-form';
 import { GraphQLClientError } from './graphql-client-error';
-import type { Failure, ValidationIssue } from './types';
+import type { Failure, HeldBy, ValidationIssue } from './types';
 
 // One reader for a failed GraphQL request from the browser, so no form or button unpacks the error itself. Client-safe.
 // The shape it reads is in claude-docs/graphql/errors.md, "Errors".
@@ -44,6 +44,14 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
 /** The one sentence to show for a failed request: the first issue of a VALIDATION refusal, else the error's own message, else GENERIC_FAILURE. */
 export function failureMessage(error: unknown): string {
   return readGraphqlIssues(error)[0].message;
+}
+
+/** The compendium list's filter an IN_USE refusal carries for the entries holding the row; `undefined` for any other failure. */
+export function heldByOf(error: unknown): HeldBy | undefined {
+  if (!(error instanceof GraphQLClientError)) return undefined;
+  const extensions = error.errors?.[0]?.extensions as
+    { code?: string; heldBy?: HeldBy } | undefined;
+  return extensions?.code === 'IN_USE' ? extensions.heldBy : undefined;
 }
 
 /** Answers whether it set any error (claude-docs/modules.md, "Placing server issues on a form"). */

@@ -351,6 +351,19 @@ describe('getWorkspaceIngredient', () => {
 
     await expect(getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
   });
+
+  // Asked of the database, an id that is not a uuid is a driver error, not a miss.
+  it('answers an id that is not a uuid as NotFound', async () => {
+    // Why the read could have succeeded: B reads W's ingredients by id.
+    const id = await seed(local());
+    await expect(getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).resolves.toMatchObject({
+      id,
+    });
+
+    await expect(
+      getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, 'not-an-ingredient'),
+    ).rejects.toThrow(NotFound);
+  });
 });
 
 describe('updateWorkspaceIngredient', () => {

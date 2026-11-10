@@ -107,6 +107,14 @@ export function fold(value: SQLWrapper | string): SQL {
 }
 
 /**
+ * `left` equals `right`, case aside. Raw, as `lower` has no builder. Neither side is trimmed: the JS fold in `lib/text.ts` also trims, so a
+ * caller holding a JS-folded value compares it to `fold(column)` instead.
+ */
+export function caseFoldedEq(left: SQLWrapper, right: SQLWrapper | string): SQL {
+  return eq(sql`lower(${left})`, sql`lower(${right})`);
+}
+
+/**
  * `text` is trigram-similar to `query` as a whole (`%`) or holds a run of words like it (`<%`): how an autofill finds a near
  * spelling and completes a prefix. Raw, as neither operator has a builder, and parenthesised to AND as one arm
  * (claude-docs/db/member-autofill.md, "The member's autofill").

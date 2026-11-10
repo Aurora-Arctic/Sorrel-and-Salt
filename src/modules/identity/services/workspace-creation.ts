@@ -3,8 +3,9 @@ import { withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { adminDeclaration, liveUser } from './admin-changes';
+import { NO_SUCH_USER, adminDeclaration, liveUser } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
+import { ROLE_NOUNS } from './user-role';
 import type { UserRow } from '../types';
 
 // Each change is declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger (claude-docs/auth/admin-users.md, "Approving workspace creation").
@@ -24,7 +25,7 @@ async function setFlag(
       const [written] = await write.updateById(users, userId, { canCreateWorkspace });
       // Soft-deleted between the read and the write: the update matches no
       // row, so the trigger never fires, and nothing is recorded.
-      if (!written) throw new NotFound('No such user');
+      if (!written) throw new NotFound(NO_SUCH_USER);
       return written;
     },
     adminDeclaration(note),
@@ -63,7 +64,7 @@ export async function revokeWorkspaceCreation(
     throw new Forbidden(`${user.name} cannot create a coven, so there is nothing to revoke`);
   }
   if (user.role !== 'user') {
-    const role = user.role === 'admin' ? 'an admin' : 'a curator';
+    const role = ROLE_NOUNS[user.role];
     throw new Forbidden(
       `${user.name} is ${role}, and every ${user.role} may create a coven. Make them a user first.`,
     );

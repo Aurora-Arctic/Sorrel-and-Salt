@@ -10,6 +10,13 @@ import type { Membership } from '@/modules/coven';
 import { applyCupboardEntry } from '@/modules/ingredients';
 import type { SpellStepView } from '../types';
 
+/** The distinct ingredients a spell's steps link to; an instruction-only step links to none. */
+export function linkedIngredientIds(steps: readonly { ingredientId: string | null }[]): string[] {
+  return [
+    ...new Set(steps.flatMap((step) => (step.ingredientId === null ? [] : [step.ingredientId]))),
+  ];
+}
+
 /**
  * Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire read details").
  */
@@ -18,9 +25,7 @@ export async function stepsInSpells(
   spellIds: readonly string[],
 ): Promise<(spellId: string) => SpellStepView[]> {
   const rows = await findManyInSpells(membership, spellSteps, spellIds);
-  const linked = [
-    ...new Set(rows.flatMap((step) => (step.ingredientId === null ? [] : [step.ingredientId]))),
-  ];
+  const linked = linkedIngredientIds(rows);
   const [held, forms, cupboard] = await Promise.all([
     findIngredientsInSpellsIncludingSoftDeleted(membership, linked),
     findFormsInSpellsIncludingSoftDeleted(membership, linked),

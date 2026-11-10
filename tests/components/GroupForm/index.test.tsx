@@ -101,6 +101,47 @@ describe('GroupForm, its delete questions in a modal', () => {
     expect(screen.getByRole('button', { name: 'Delete Group' })).toHaveFocus();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  const renderEmpty = () =>
+    renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={0} onDone={done} />
+    ));
+
+  // The refusal is drawn at the top of a dialog scrolled down to its buttons: the focus going to it
+  // is what brings it into view, after the question going away has handed it to the delete button.
+  it("moves the focus to a refused delete's refusal, not back to the delete button", async () => {
+    mockGraphQLError('DeleteCategoryGroup', { code: 'NOT_FOUND', message: 'No such group' });
+    renderEmpty();
+
+    press('Delete Group');
+    // Precondition: the question has the focus, so it is the question going away that hands it back.
+    expect(answer('Cancel')).toHaveFocus();
+    press('Delete');
+
+    const alert = await screen.findByRole('alert');
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
+
+  it("moves the focus to a refused delete's refusal past a field an earlier save marked", async () => {
+    mockGraphQLError('UpdateCategoryGroup', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'Too close to another' }],
+    });
+    mockGraphQLError('DeleteCategoryGroup', { code: 'NOT_FOUND', message: 'No such group' });
+    renderEmpty();
+    typeIn(description(), 'A change');
+    press('Save Group');
+    // Precondition: a field is still marked invalid when the delete is refused.
+    await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
+
+    press('Delete Group');
+    press('Delete');
+
+    const alert = await screen.findByRole('alert');
+    expect(name()).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
 });
 
 describe('GroupForm, for a category group', () => {
@@ -295,8 +336,7 @@ describe('GroupForm, for a category group', () => {
         fieldErrors: [
           {
             path: ['name'],
-            message:
-              '"Fixture Shields" already has the address "fixture-shields" — choose another name',
+            message: '"Fixture Shields" already exists — choose another name',
           },
         ],
       });

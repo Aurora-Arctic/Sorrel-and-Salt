@@ -1,3 +1,4 @@
+import type { OriginNotifier } from '../../lib/types';
 export type DocumentKey = 'privacy' | 'about' | 'disclaimer' | 'code-of-ethics' | 'terms';
 
 export type PublishedDocument = {
@@ -13,6 +14,9 @@ export type DocumentVersionSummary = {
   number: number;
   publishedAt: Date;
 };
+
+/** A document's title and lede, which an edit changes without making a new version. */
+export type DocumentHeading = { id: string; title: string; lede: string };
 
 export type DocumentDraft = {
   id: string;
@@ -75,7 +79,4 @@ export type DocumentMailingOverview = {
   lastSent: DocumentMailingSummary | null;
 };
 
-export interface DocumentMailingNotifier {
-  /** @throws {Error} where none resolves. */
-  origin(): Promise<string>;
-}
+export type DocumentMailingNotifier = OriginNotifier;

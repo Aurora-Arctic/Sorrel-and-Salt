@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { check, date, foreignKey, numeric, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { QUANTITY_PRECISION, QUANTITY_SCALE } from './quantities';
+import { check, date, foreignKey, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { quantityColumn } from './quantity-column';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
@@ -48,19 +48,13 @@ export const inventoryItems = pgTable(
     // Precision and scale from ./quantities.ts, which the Zod ceiling reads too.
     // Nullable because `0` already means out of stock, and "we have this,
     // unweighed" must stay sayable.
-    quantityOnHand: numeric('quantity_on_hand', {
-      precision: QUANTITY_PRECISION,
-      scale: QUANTITY_SCALE,
-    }),
+    quantityOnHand: quantityColumn('quantity_on_hand'),
     unit: inventoryUnit('unit'),
     // Stored beside the unit rather than derived, so a query can group by it.
     unitDimension: unitDimension('unit_dimension'),
     // Written at creation with a dimension-appropriate default, not defaulted
     // at read time; no database default, since it depends on the row's unit.
-    lowStockThreshold: numeric('low_stock_threshold', {
-      precision: QUANTITY_PRECISION,
-      scale: QUANTITY_SCALE,
-    }),
+    lowStockThreshold: quantityColumn('low_stock_threshold'),
     // Where this jar came from ("foraged by the creek") — where the stock came
     // from, not where the entry did (`ingredients.workspace_id`).
     source: text('source'),
