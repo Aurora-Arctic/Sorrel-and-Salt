@@ -2,6 +2,7 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { resetPassword } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
 import BusyButton from '../BusyButton';
@@ -15,12 +16,6 @@ import { PendingLink } from '../../lib/navigation';
 // The first reset spends the token and signs out every session the account held (claude-docs/components/reset-password-form.md).
 
 export const GENERIC_RESET_ERROR = "We couldn't set your new password. Please try again.";
-
-interface Failure {
-  status?: number;
-  code?: string;
-  message?: string;
-}
 
 const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
   const [password, setPassword] = useState('');
@@ -41,9 +36,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
     setAlert(undefined);
     setFieldError(undefined);
     // Better Auth answers `{ error }` for a refusal and throws for a dropped connection.
-    const { error } = await resetPassword({ newPassword: password, token }).catch(() => ({
-      error: {} as Failure,
-    }));
+    const { error } = await settled(resetPassword({ newPassword: password, token }));
     setPending(false);
     settle();
     if (!error) {

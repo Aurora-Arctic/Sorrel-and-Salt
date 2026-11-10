@@ -2,6 +2,7 @@
 
 import type { ReactElement } from 'react';
 import { signIn } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { PASSKEY_SIGN_IN_ERROR, leaveSignedIn } from './passkey-sign-in';
@@ -25,7 +26,7 @@ const PasskeyButton = ({
     report(undefined);
     onSigningIn('passkey');
     // A dropped connection throws rather than answering `error`; both say so.
-    const result = await signIn.passkey().catch((thrown: unknown) => ({ error: thrown }));
+    const result = await settled(signIn.passkey());
     if (result?.error) {
       onSigningIn(null);
       report(PASSKEY_SIGN_IN_ERROR);

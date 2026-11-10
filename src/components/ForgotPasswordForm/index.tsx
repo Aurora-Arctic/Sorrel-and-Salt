@@ -4,6 +4,7 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { requestPasswordReset } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
 import { PlainTextField } from '../Field';
 import Notice from '../Notice';
@@ -29,10 +30,9 @@ const ForgotPasswordForm = (): ReactElement => {
     setPending(true);
     setAlert(undefined);
     // Better Auth answers `{ error }` for a refusal and throws for a dropped connection.
-    const { error } = await requestPasswordReset({
-      email: address,
-      redirectTo: '/reset-password',
-    }).catch(() => ({ error: {} as { status?: number } }));
+    const { error } = await settled(
+      requestPasswordReset({ email: address, redirectTo: '/reset-password' }),
+    );
     setPending(false);
     if (error) setAlert(rateLimited(error) ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR);
     else setSentTo(address.toLowerCase());

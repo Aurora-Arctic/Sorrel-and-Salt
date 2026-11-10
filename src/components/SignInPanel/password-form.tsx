@@ -2,6 +2,7 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
+import { settled, type AuthFailure } from '../../lib/auth-call';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS, rateLimited } from '../../lib/auth-messages';
 import { newPasswordRefusal } from '../../lib/password-refusals';
@@ -29,12 +30,6 @@ const FIELD_ERRORS: Record<string, { field: 'email' | 'password'; message: strin
   INVALID_EMAIL: { field: 'email', message: 'Enter an email address, such as name@example.com.' },
 };
 
-interface Failure {
-  status?: number;
-  code?: string;
-  message?: string;
-}
-
 interface Refusal {
   alert?: string;
   email?: string;
@@ -43,7 +38,7 @@ interface Refusal {
 
 // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive
 // here.
-function refusal(mode: SignInMode, failure: Failure): Refusal {
+function refusal(mode: SignInMode, failure: AuthFailure): Refusal {
   const chosen = newPasswordRefusal(failure);
   if (chosen) return { password: chosen };
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
@@ -59,9 +54,7 @@ function refusal(mode: SignInMode, failure: Failure): Refusal {
 
 // Whether the browser holds a session now, read from the server so the cookie a sign-up set is what counts.
 async function hasSession(): Promise<boolean> {
-  const { data } = await getSession({ query: { disableCookieCache: true } }).catch(() => ({
-    data: null,
-  }));
+  const { data } = await settled(getSession({ query: { disableCookieCache: true } }));
   return Boolean(data);
 }
 
@@ -110,7 +103,7 @@ const PasswordForm = ({
     setSignedUp(undefined);
     onStart?.();
     const address = email.trim();
-    const { data, error } = await (
+    const { data, error } = await settled(
       signingUp
         ? signUp.email({
             name: name.trim(),
@@ -118,8 +111,8 @@ const PasswordForm = ({
             password,
             ...(next && { callbackURL: next }),
           })
-        : signIn.email({ email: address, password })
-    ).catch(() => ({ data: null, error: {} as Failure }));
+        : signIn.email({ email: address, password }),
+    );
     if (error) {
       setPending(false);
       setProblem(refusal(mode, error));

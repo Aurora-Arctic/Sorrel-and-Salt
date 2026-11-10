@@ -2,6 +2,7 @@
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { stopImpersonating } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import type { ImpersonationBannerProps } from './types';
@@ -49,7 +50,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
     setPending(true);
     setFailed(false);
     report(undefined);
-    const { error } = await stopImpersonating().catch((thrown: unknown) => ({ error: thrown }));
+    const { error } = await settled(stopImpersonating());
     if (error) {
       setPending(false);
       setFailed(true);
