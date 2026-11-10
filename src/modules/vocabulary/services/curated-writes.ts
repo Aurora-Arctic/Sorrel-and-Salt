@@ -1,6 +1,7 @@
 import 'server-only';
 import { findOneById, findOneBySlug, withAudit } from '../../../db/repository';
 import type { AuditWriter, IngredientFilter } from '../../../db/repository';
+import type { HeldBy } from '../../../lib/types';
 import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -109,11 +110,15 @@ export async function deleteCurated<TTable extends CuratedTable>(
   session: Session,
   vocabulary: CuratedVocabulary<TTable>,
   id: string,
-  held: (row: TTable['$inferSelect']) => { filter: IngredientFilter; wording: HeldWording },
+  held: (row: TTable['$inferSelect']) => {
+    filter: IngredientFilter;
+    heldBy: HeldBy;
+    wording: HeldWording;
+  },
 ): Promise<void> {
   const row = await liveRow(vocabulary, id);
-  const { filter, wording } = held(row);
-  await refuseWhileHeld(filter, wording);
+  const { filter, heldBy, wording } = held(row);
+  await refuseWhileHeld(filter, heldBy, wording);
 
   await withAudit(session, async (write) => {
     const [deleted] = await write.softDeleteByIds(vocabulary.table as CuratedTable, [id]);

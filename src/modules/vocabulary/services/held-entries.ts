@@ -5,7 +5,8 @@ import {
   findCompendiumSlugRedirect,
 } from '../../../db/repository';
 import type { IngredientFilter } from '../../../db/repository';
-import { Forbidden, ValidationError } from '../../../lib/errors';
+import { InUse, ValidationError } from '../../../lib/errors';
+import type { HeldBy } from '../../../lib/types';
 import { joinAnd, joinAndMore, plural } from '../../../lib/text';
 import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
@@ -19,10 +20,11 @@ export const ENTRIES_NAMED = 3;
  * Refuses a delete while live compendium entries under `filter` hold the row.
  * "Held" means what the compendium's own filter reads as held.
  *
- * @throws {Forbidden} a live entry holds the row, in `wording`'s words.
+ * @throws {InUse} a live entry holds the row, in `wording`'s words, carrying `heldBy`: the same entries as the compendium list's filter.
  */
 export async function refuseWhileHeld(
   filter: IngredientFilter,
+  heldBy: HeldBy,
   { name, holding, remedy }: HeldWording,
 ): Promise<void> {
   const { totalCount } = await findCompendiumCount(filter, undefined);
@@ -30,8 +32,9 @@ export async function refuseWhileHeld(
   const named = await findCompendiumPage(filter, { limit: ENTRIES_NAMED, inverted: false });
   const names = named.map(({ node }) => describeEntry(node));
   const list = joinAndMore(names, totalCount);
-  throw new Forbidden(
+  throw new InUse(
     `"${name}" ${holding} ${totalCount} compendium ${plural(totalCount, 'entry', 'entries')} — ${list}. ${remedy(totalCount)}`,
+    heldBy,
   );
 }
 

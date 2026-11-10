@@ -218,7 +218,7 @@ describe('deleteCategory', () => {
     expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 
-  it('answers a category an entry is filed under as FORBIDDEN, the row left live', async () => {
+  it('answers a category an entry is filed under as IN_USE, with the list filter for those entries, the row left live', async () => {
     const id = await seed('Testcraft Held');
     await insertIngredient(
       sql,
@@ -228,7 +228,9 @@ describe('deleteCategory', () => {
 
     const result = await run(asUser(E), DELETE, { id });
 
-    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    expect(result.errors?.[0]).toMatchObject({
+      extensions: { code: 'IN_USE', heldBy: { categories: ['testcraft-held'] } },
+    });
     const [row] = await sql`select deleted_at from categories where id = ${id}`;
     expect(row.deleted_at).toBeNull();
   });

@@ -9,6 +9,7 @@ import { maskError } from '@/graphql/errors';
 import {
   AccessPaused,
   Forbidden,
+  InUse,
   NotFound,
   RateLimited,
   StaleWrite,
@@ -49,6 +50,7 @@ function thrownFor({
   currentRevision = 1,
   retryAfterSeconds = 60,
   pausedUntil = null,
+  heldBy = {},
   message,
 }: MockedError): Error {
   switch (code) {
@@ -58,6 +60,8 @@ function thrownFor({
       return new AccessPaused(pausedUntil, message);
     case 'FORBIDDEN':
       return new Forbidden(message);
+    case 'IN_USE':
+      return new InUse(message ?? 'In use', heldBy);
     case 'NOT_FOUND':
       return new NotFound(message);
     case 'STALE_WRITE':

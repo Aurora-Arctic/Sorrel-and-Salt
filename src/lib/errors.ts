@@ -1,4 +1,4 @@
-import type { ValidationIssue } from './types';
+import type { HeldBy, ValidationIssue } from './types';
 // Separate types, not messages, so a test survives a rewording; none carries a status code (claude-docs/auth/service-session.md, "The service-level session, and the three errors").
 
 /** Also thrown by the schema's auth scopes, so the transport maps one refusal shape. */
@@ -18,6 +18,17 @@ export class AccessPaused extends Forbidden {
     super(message);
     this.name = 'AccessPaused';
     this.until = until;
+  }
+}
+
+/** A delete refused while live compendium entries hold the row; `heldBy` filters the compendium list to exactly those entries. */
+export class InUse extends Forbidden {
+  readonly heldBy: HeldBy;
+
+  constructor(message: string, heldBy: HeldBy) {
+    super(message);
+    this.name = 'InUse';
+    this.heldBy = heldBy;
   }
 }
 

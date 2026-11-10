@@ -645,6 +645,7 @@ describe('deleteIngredientFormValue', () => {
       await expect(attempt).rejects.toThrow(Forbidden);
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
+      await expect(attempt).rejects.toMatchObject({ heldBy: { forms: ['Fixture Held'] } });
       expect((await formOf(id)).deleted_at).toBeNull();
     });
   });

@@ -36,7 +36,7 @@ export function ConfirmQuestion({
       await action();
     } catch (error) {
       if (!onRefused) throw error;
-      onRefused(failureMessage(error));
+      onRefused(failureMessage(error), error);
     }
   };
   return (

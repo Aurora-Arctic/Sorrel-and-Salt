@@ -132,6 +132,8 @@ export async function deleteIngredientFormValue(session: Session, id: string): P
   // Read through the compendium's own filter on the pick.
   await deleteCurated(session, FORMS, id, (form) => ({
     filter: { formId: form.id },
+    // The list filters forms by their text, which every entry picking this form holds.
+    heldBy: { forms: [form.name] },
     wording: {
       name: form.name,
       holding: 'is the form of',

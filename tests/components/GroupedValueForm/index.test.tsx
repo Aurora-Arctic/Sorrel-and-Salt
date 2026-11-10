@@ -89,7 +89,8 @@ const SUBJECT: GroupedValueFormSubject = {
   },
   slugClash: {
     name: 'Testcraft-Ward',
-    message: '"Testcraft Ward" already exists — choose another name',
+    message:
+      '"Testcraft-Ward" is too close to "Testcraft Ward", which already exists — choose another name',
   },
 };
 
@@ -283,6 +284,49 @@ describe('GroupedValueForm, a category', () => {
       expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
+      // A refusal that names no entries' filter has nothing to link to.
+      expect(within(screen.getByRole('alert')).queryByRole('link')).not.toBeInTheDocument();
+    });
+
+    it('links an in-use refusal to the compendium list of exactly the entries holding the category', async () => {
+      mockGraphQLError('DeleteCategory', {
+        code: 'IN_USE',
+        heldBy: { categories: ['testcraft'] },
+        message:
+          '"Testcraft" is filed on 4 compendium entries — Testwort, Testcap, Testroot and 1 more. Take it off them first.',
+      });
+      renderCategory({ value: CATEGORY });
+
+      press('Delete Category');
+      press('Delete');
+
+      const alert = await screen.findByRole('alert');
+      expect(within(alert).getByRole('link', { name: 'See All' })).toHaveAttribute(
+        'href',
+        '/curator/compendium?categories=testcraft',
+      );
+    });
+
+    it('drops the link once a later refusal replaces the in-use one', async () => {
+      mockGraphQLError('DeleteCategory', {
+        code: 'IN_USE',
+        heldBy: { categories: ['testcraft'] },
+        message: '"Testcraft" is filed on 1 compendium entry — Testwort. Take it off it first.',
+      });
+      renderCategory({ value: CATEGORY });
+      press('Delete Category');
+      press('Delete');
+      // Precondition: the first refusal carries the link.
+      expect(within(await screen.findByRole('alert')).getByRole('link')).toBeVisible();
+
+      mockGraphQLError('DeleteCategory', { code: 'FORBIDDEN', message: 'Not allowed today' });
+      press('Delete Category');
+      press('Delete');
+
+      const alert = await screen.findByText('Not allowed today');
+      expect(
+        within(alert.closest('[role="alert"]') as HTMLElement).queryByRole('link'),
+      ).not.toBeInTheDocument();
     });
   });
 });

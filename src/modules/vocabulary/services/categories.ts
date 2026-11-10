@@ -102,6 +102,7 @@ export async function deleteCategory(session: Session, id: string): Promise<void
   assertCurator(session);
   await deleteCurated(session, CATEGORIES, id, (category) => ({
     filter: { categoryIds: [category.id] },
+    heldBy: { categories: [category.slug] },
     wording: {
       name: category.name,
       holding: 'is filed on',

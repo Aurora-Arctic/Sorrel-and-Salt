@@ -16,7 +16,14 @@ import type {
 import type { DocumentMailingNotifier } from '@/modules/documents';
 import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 import type { Session } from '../lib/session';
-import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
+import type {
+  Cursor,
+  HeldBy,
+  PageCount,
+  PageEntry,
+  PageRequest,
+  ValidationIssue,
+} from '../lib/types';
 import type { Loaders } from './loaders';
 
 export interface Context {
@@ -69,7 +76,13 @@ export interface SchemaTypes {
 }
 
 export type ErrorCode =
-  'VALIDATION' | 'FORBIDDEN' | 'ACCESS_PAUSED' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
+  | 'VALIDATION'
+  | 'FORBIDDEN'
+  | 'IN_USE'
+  | 'ACCESS_PAUSED'
+  | 'NOT_FOUND'
+  | 'STALE_WRITE'
+  | 'RATE_LIMITED';
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
@@ -82,6 +95,8 @@ export interface ErrorExtensions {
   /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause
    * with no end. */
   pausedUntil?: string | null;
+  /** Set with `IN_USE`: the compendium list's filter for the entries holding the row. */
+  heldBy?: HeldBy;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };
 }

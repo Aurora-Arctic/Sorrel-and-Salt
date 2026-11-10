@@ -116,6 +116,7 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
   // Read through the compendium's own filter on the pick, which `ingredient_deities_deity_id_idx` answers.
   await deleteCurated(session, DEITIES, id, (deity) => ({
     filter: { deityIds: [deity.id] },
+    heldBy: { deities: [deity.slug] },
     wording: {
       name: deity.name,
       holding: 'is among the deities of',

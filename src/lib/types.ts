@@ -281,3 +281,8 @@ export interface CovenAccess {
 export interface OriginNotifier {
   origin(): Promise<string>;
 }
+
+/** The compendium list's filter for the entries holding a curated value, keyed as the list's address parameters: slugs for categories and deities, names for the rest. */
+export type HeldBy = Partial<
+  Record<'categories' | 'deities' | 'forms' | 'zodiac' | 'celestialBodies', string[]>
+>;

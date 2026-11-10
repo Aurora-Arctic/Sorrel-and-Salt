@@ -32,6 +32,7 @@ const VOCABULARY = {
     listNoun: 'celestial bodies',
     slugIndex: 'celestial_bodies_slug_unique',
     holding: (name: string) => ({ celestialBodies: [name] }),
+    heldBy: (name: string) => ({ celestialBodies: [name] }),
   },
   zodiacSigns: {
     table: zodiacSigns,
@@ -40,6 +41,7 @@ const VOCABULARY = {
     listNoun: 'zodiac signs',
     slugIndex: 'zodiac_signs_slug_unique',
     holding: (name: string) => ({ zodiacSigns: [name] }),
+    heldBy: (name: string) => ({ zodiac: [name] }),
   },
 } as const satisfies Record<CuratedField, unknown>;
 
@@ -145,6 +147,7 @@ export async function deleteAstrologyValue(
   const vocabulary = VOCABULARY[field];
   await deleteCurated<AstrologyTable>(session, vocabulary, id, (row) => ({
     filter: vocabulary.holding(row.name),
+    heldBy: vocabulary.heldBy(row.name),
     wording: {
       name: row.name,
       holding: `is among the ${vocabulary.listNoun} of`,

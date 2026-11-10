@@ -517,6 +517,7 @@ describe('deleteDeity', () => {
       await expect(attempt).rejects.toThrow(Forbidden);
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
+      await expect(attempt).rejects.toMatchObject({ heldBy: { deities: ['fixture-held-greek'] } });
       expect((await deityOf(id)).deleted_at).toBeNull();
     });
 
