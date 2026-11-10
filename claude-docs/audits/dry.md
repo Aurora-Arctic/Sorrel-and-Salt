@@ -2392,7 +2392,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/MemberList/`, `UserList/`, `SupportList/`, `SupportRequests/`, `tests/components/Modal/`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-81: Two near-identical `Day` components, plus three inline copies of the ISO-day cell
 
@@ -2510,7 +2510,7 @@ src/components/HelpSearchForm/{index.tsx,index.scss} (see D-85).
 A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/index.tsx` each carry `data-1p-ignore` and its comment. HelpSearchForm renders `SearchField`, or both spread one `SEARCH_INPUT_ATTRIBUTES` object. Adds 0.1 hours.
 
 - **Estimate:** 1.6 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-86: `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses
 
@@ -4159,7 +4159,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 src/components/IconTip/icons.tsx, five new icons (see D-222).
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-175: document-order assertions via compareDocumentPosition repeated in new tests
 
@@ -4372,7 +4372,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/components/TabbedPage`, `AccountMenu`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-189: Spell card face and burn markup repeated in SpellCard and SpellPreview
 
@@ -4736,7 +4736,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/components/AppShell.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-214: Repeat-announcement NBSP trick written three times
 
@@ -4750,7 +4750,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/components/ClickFeedback, Modal, SupportRequests, Field.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-215: `Field/radio-group-field.tsx` writes the radio `<input>` three times
 
@@ -4862,7 +4862,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** IconTip stories.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-223: Modal `wasTitled` effect repeats the `wasLoading` effect shape
 
@@ -4876,7 +4876,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** Modal tests.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-224: QR ink colour duplicates SCSS `$chalk`
 
@@ -5135,7 +5135,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** The coven Ingredients and Grimoire e2e stories.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-241: `autoCapitalize`, `enterKeyHint` and `format` are typed by hand a second time in Combobox
 
