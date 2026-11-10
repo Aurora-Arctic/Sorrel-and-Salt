@@ -748,6 +748,10 @@
     @include page-with-nav-grid;
   }
 
+  .page-with-nav:not(:has(> .page-nav)) {
+    @include page-with-nav-grid(null);
+  }
+
   .page-with-nav > * {
     box-sizing: border-box;
     margin-block: 0;

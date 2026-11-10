@@ -494,16 +494,24 @@
 }
 
 // One mixin for the pages and the shell's paused notice (AppShell), so the two cannot differ. A document page passes its wider pair.
+// `$menu: null` is a page with no menu, which keeps an equal free track each side so its column centres at every width.
 @mixin page-with-nav-grid($menu: calc(#{space(8)} * 3), $column: $narrow-column) {
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     display: grid;
-    grid-template-columns: $menu minmax(0, $column);
     place-content: start center;
+
+    @if $menu {
+      grid-template-columns: $menu minmax(0, $column);
+    } @else {
+      grid-template-columns: minmax(0, 1fr) minmax(0, $column) minmax(0, 1fr);
+    }
   }
 
   // Not from a tablet up, which lacks the room for three columns and the frame's padding.
-  @media (min-width: calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    grid-template-columns: $menu minmax(0, $column) $menu;
+  @if $menu {
+    @media (min-width: calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+      grid-template-columns: $menu minmax(0, $column) $menu;
+    }
   }
 }
 

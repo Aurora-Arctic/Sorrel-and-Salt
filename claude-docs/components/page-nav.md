@@ -18,6 +18,7 @@
 
 `.page-with-nav` in `_primitives.scss` goes on the page's root. The account page and the coven index take their layout from this one class, so the two cannot drift. The class does not need `.page-frame`, so the coven index uses it inside `.coven-layout`. The ingredient page and the spell page have their own wide layout with the same menu column, breakpoint and sticky offset ([`ingredient-entry.md`](ingredient-entry.md), "Layout"; the spell page's is `entry-nav-grid`). The public document pages ([`document-page.md`](document-page.md)) use `.page-with-nav` with a wider column. The help front page and a help article with a menu use `.page-with-nav` with the same wider column ([`help-pages.md`](help-pages.md)).
 
+- A page that takes the class only for its narrow column and has no `.page-nav` child, such as the support pages and the account's Support Requests tab, keeps no room for a menu: its column stays centred at every width. The shell's paused notice follows the same choice. A page with a menu, from a tablet up to the width that fits a menu column each side, centres the menu and the column together.
 - A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above it, adds `.page-with-nav--headless`.
 - Its children are the head, the menu, then the sections.
 - From a tablet up the menu is a sticky column beside the sections; at a phone's width it sits above them.
