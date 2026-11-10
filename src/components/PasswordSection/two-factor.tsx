@@ -6,7 +6,7 @@ import { twoFactor, useSession } from '../../lib/auth-client';
 import { TOO_MANY_ATTEMPTS, WRONG_CODE, rateLimited } from '../../lib/auth-messages';
 import { useLeaveGuard } from '../../lib/navigation';
 import { saveFile } from '../../lib/save-file';
-import { SITE_NAME } from '../../lib/site';
+import { SITE_NAME, SITE_TITLE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { PlainTextField } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
@@ -103,7 +103,7 @@ function printCodes(codes: string[], email: string | undefined): void {
     parent.append(element);
     return element;
   };
-  doc.title = `${SITE_NAME} Backup Codes`;
+  doc.title = `${SITE_TITLE_NAME} Backup Codes`;
   add('style', PRINT_STYLE, doc.head);
   add('h1', `${SITE_NAME} Backup Codes`);
   if (email) add('p', email);

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, siteUrl, titleTemplate } from './site';
+import { SITE_NAME, SITE_TITLE_NAME, TITLE_SEPARATOR, siteUrl } from './site';
 
 // The search-result text of a public page, pure so the three compendium pages share one wording. No image
 // tag: each segment's `opengraph-image` names its share card.
@@ -34,7 +34,10 @@ function social(title: string, description: string, url: string): Metadata {
   };
 }
 
-/** Absolute when the page names the site itself, so the layout's template does not add the name twice. */
+/**
+ * Absolute when the page names the site itself, so the layout's template does not add the name twice. The tab
+ * title spells the name 'Sorrel and Salt' for 1Password; the share titles keep the ampersand.
+ */
 export function publicPageMetadata(
   title: string,
   description: string,
@@ -43,10 +46,10 @@ export function publicPageMetadata(
 ): Metadata {
   const url = siteUrl(path);
   return {
-    title: absolute ? { absolute: title } : title,
+    title: absolute ? { absolute: title.replace(SITE_NAME, SITE_TITLE_NAME) } : title,
     description,
     alternates: { canonical: url },
-    ...social(absolute ? title : titleTemplate().replace('%s', title), description, url),
+    ...social(absolute ? title : `${title}${TITLE_SEPARATOR}${SITE_NAME}`, description, url),
   };
 }
 
