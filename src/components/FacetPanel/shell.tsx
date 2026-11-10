@@ -21,6 +21,7 @@ import { useSlide } from '../../lib/use-slide';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // The Filters button and the panel it opens, a native `<dialog>`: `show()` from the tablet width
 // up, `showModal()` below it. Before the script it is drawn inline and open, and every control
@@ -207,11 +208,12 @@ export function FacetShell({
       <dialog
         ref={dialogRef}
         id={id}
-        className={
-          `facet-panel facet-panel--compact${hydrated ? '' : ' facet-panel--static'}` +
-          (leaving ? ' is-closing' : '') +
-          (className ? ` ${className}` : '')
-        }
+        className={cx(
+          'facet-panel facet-panel--compact',
+          !hydrated && 'facet-panel--static',
+          leaving && 'is-closing',
+          className,
+        )}
         tabIndex={-1}
         data-tip-boundary=""
         aria-labelledby={titleId}

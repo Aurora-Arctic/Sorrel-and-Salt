@@ -2,9 +2,7 @@ import type { ReactElement } from 'react';
 import Skeleton from '../Skeleton';
 import type { PageHeaderProps } from './types';
 import './index.scss';
-
-const classes = (...names: (string | false | undefined)[]): string =>
-  names.filter(Boolean).join(' ');
+import { cx } from '@/lib/class-names';
 
 // No client directive and no hook, so a server page renders it (claude-docs/styling.md, "Buttons").
 const PageHeader = ({
@@ -38,7 +36,7 @@ const PageHeader = ({
       <Skeleton shape="line" quiet />
     </Heading>
   ) : tag ? (
-    <Heading id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
+    <Heading id={id} className={cx('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
     </Heading>
   ) : (
@@ -58,7 +56,7 @@ const PageHeader = ({
     column && !lead && !action ? (
       heading
     ) : (
-      <div className={classes('page-header', !column && className)}>
+      <div className={cx('page-header', !column && className)}>
         {lead ? (
           <div className="page-header__title">
             {lead}
@@ -72,7 +70,7 @@ const PageHeader = ({
     );
   if (!column) return line;
   return (
-    <div className={classes('header', className)}>
+    <div className={cx('header', className)}>
       {eyebrow && <p className="eyebrow">{eyebrow}</p>}
       {line}
       {lede && <p className="lede">{lede}</p>}

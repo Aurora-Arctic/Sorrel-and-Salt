@@ -11,6 +11,7 @@ import SafetyNote, { SafetyMark } from '../SafetyNote';
 import { UNIT_OPTIONS } from '../StockFields';
 import StepRow from '.';
 import OneOffBadge from './one-off-badge';
+import { cx } from '@/lib/class-names';
 
 const meta = {
   title: 'Grimoire / Step Row',
@@ -35,7 +36,7 @@ interface Values {
 const EditButton = ({ open, onClick }: { open: boolean; onClick: () => void }) => (
   <button
     type="button"
-    className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
+    className={cx('step-row__edit', open && 'step-row__edit--close')}
     aria-label={`${open ? 'Close' : 'Edit'} ${NAME}`}
     aria-expanded={open}
     aria-controls="story-step-fields"

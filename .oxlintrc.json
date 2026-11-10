@@ -107,6 +107,7 @@
     "sorrel/use-form-renders-error-summary": "error",
     "sorrel/placeholder-is-short": "error",
     "sorrel/spell-name-through-spell-name-of": "error",
+    "sorrel/class-names-joined-through-cx": "error",
     "no-unused-vars": "error",
     "no-unsafe-optional-chaining": "error",
     "react-hooks/exhaustive-deps": "error",

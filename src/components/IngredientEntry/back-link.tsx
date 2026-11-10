@@ -7,6 +7,7 @@ import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { BackChevron } from './back-chevron';
 import { listReturnHref } from './back-href';
+import { cx } from '@/lib/class-names';
 
 interface BackLinkProps {
   href: Route;
@@ -72,7 +73,7 @@ export default function BackLink({
 
   return (
     <PendingLink
-      className={className ? `back-link ${className}` : 'back-link'}
+      className={cx('back-link', className)}
       href={(historyHref ?? href) as Route}
       onClick={goBack}
     >

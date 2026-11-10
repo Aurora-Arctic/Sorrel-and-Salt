@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import type { NoticeKind, NoticeProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // The `.notice` primitive with the role its kind implies: a message arriving after the page is
 // announced only through its role, so the role travels with the look
@@ -23,7 +24,7 @@ const Notice = ({
   className,
   children,
 }: NoticeProps): ReactElement => {
-  const classes = className ? `${MODIFIER[kind]} ${className}` : MODIFIER[kind];
+  const classes = cx(MODIFIER[kind], className);
   // A quiet error or warning is a status too: present from the start, found
   // by its role, and never announced over what the reader is doing.
   const status = kind === 'success' || (quiet && kind !== 'plain');

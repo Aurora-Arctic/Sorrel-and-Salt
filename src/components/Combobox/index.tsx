@@ -28,6 +28,7 @@ import type {
   TypedRow,
 } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
@@ -338,15 +339,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     return (
       <li
         key={keyOf(item)}
-        className={[
+        className={cx(
           'combobox__option',
           (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
           !isTyped(item) && !isAction(item) && item.disabled && 'is-disabled',
           highlighted && 'is-highlighted',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
         style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
@@ -538,9 +537,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
       >
         <ul
-          className={['combobox__list', listOpen && 'is-open', wrapped && 'is-inset']
-            .filter(Boolean)
-            .join(' ')}
+          className={cx('combobox__list', listOpen && 'is-open', wrapped && 'is-inset')}
           style={wrapped ? undefined : listStyle}
           data-placement={wrapped ? undefined : placement}
           {...getMenuProps({

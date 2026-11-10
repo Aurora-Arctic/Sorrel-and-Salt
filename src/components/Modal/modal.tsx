@@ -20,6 +20,7 @@ import { holdPage } from './page-hold';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // A dialog on the native element's modal mode: `showModal()` gives the top layer, the inert page
 // (the focus trap) and the `cancel` event for Escape. The owner closes it by unmounting it, so a
@@ -271,9 +272,7 @@ const Modal = ({
   return (
     <dialog
       ref={ref}
-      className={['modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing']
-        .filter(Boolean)
-        .join(' ')}
+      className={cx('modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing')}
       // Focusable by script alone, for a dialog with no field to take the focus.
       tabIndex={-1}
       aria-labelledby={(eyebrow
@@ -291,13 +290,11 @@ const Modal = ({
       }}
     >
       <div
-        className={[
+        className={cx(
           'modal-dialog__header',
           topEnd !== undefined && 'modal-dialog__header--topped',
           headerAlign === 'center' && 'modal-dialog__header--centered',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        )}
       >
         {/* An edit dialog's head: what it does to what kind, then which entry. The hidden commas
             are for the dialog's name alone, which a screen reader would otherwise run together. */}

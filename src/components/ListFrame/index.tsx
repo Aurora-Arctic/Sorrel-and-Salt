@@ -12,6 +12,7 @@ import {
 import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
+import { cx } from '@/lib/class-names';
 
 // A list page's root, `.list-frame`, and the record of whether another of its pages is coming. The
 // filter and pager ends navigate through it, so the row greys out and the list shows the tabs'
@@ -102,11 +103,7 @@ const ListFrame = ({ className, disabled = false, children }: ListFrameProps): R
   };
   return (
     <ListNavigationContext.Provider value={value}>
-      <div
-        ref={root}
-        className={className ? `list-frame ${className}` : 'list-frame'}
-        aria-hidden={disabled || undefined}
-      >
+      <div ref={root} className={cx('list-frame', className)} aria-hidden={disabled || undefined}>
         {children}
       </div>
     </ListNavigationContext.Provider>

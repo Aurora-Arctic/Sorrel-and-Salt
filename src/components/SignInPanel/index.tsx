@@ -25,6 +25,7 @@ import type { ProviderId } from '../../lib/types';
 import { LastUsedMark, SignInBack, signInHeader } from './header';
 import type { SignInAttempt, SignInMode, SignInPanelProps, SignInView } from './types';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 export { LastUsedMark, SignInBack, signInHeader } from './header';
 
@@ -190,14 +191,14 @@ const SignInPanel = ({
     return undefined;
   };
 
-  const classes = [
+  const classes = cx(
     // Its own card ground, `.panel`, on /sign-in, which holds nothing else; a dialog is its own
     // (claude-docs/components/sign-in-panel.md, "Styling").
     inDialog ? 'sign-in-panel' : 'panel sign-in-panel',
     codeStep && 'sign-in-panel--code',
-  ];
+  );
   return (
-    <div className={classes.filter(Boolean).join(' ')} ref={panelRef}>
+    <div className={classes} ref={panelRef}>
       {message && <Notice kind="error">{message}</Notice>}
       {!inDialog && (
         <div className="sign-in-panel__head">

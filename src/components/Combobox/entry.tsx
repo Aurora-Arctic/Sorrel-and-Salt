@@ -8,6 +8,7 @@ import GripHandle from '../GripHandle';
 import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps } from './types';
+import { cx } from '@/lib/class-names';
 
 // An entry a list holds, inside the control: its text and the x that takes it out, with the whole text in a tooltip when cut off or when it has a detail
 // (claude-docs/components/combobox.md, "An entry"; "A sortable list"; "A linked entry's summary").
@@ -77,15 +78,13 @@ export function ComboboxEntry({
   return (
     <li
       ref={sortable?.setNodeRef}
-      className={[
+      className={cx(
         'combobox__entry',
         colors && 'is-coloured',
         outlined && !colors && 'is-outlined',
         errorId && 'is-invalid',
         sortable?.isDragging && 'is-dragging',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       // Its group's colour pair, read by the stylesheet, and where a move has carried the chip, translated only so a chip keeps its own size.
       style={{
         ...(colors && chipColors(colors)),

@@ -9,6 +9,7 @@ import { FacetTypeahead } from './typeahead';
 import type { FacetComboboxProps } from './types';
 import '../Combobox/index.scss';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // A filter's closed set with each value's count: the multi-select box, a value with none left out, the
 // chosen as outlined chips, each a hidden input of the GET form. Before the script loads the server
@@ -34,7 +35,7 @@ export default function FacetCombobox({
   const loading = counts && searching;
   const field = fieldDescription({ id: useId(), hint });
   const hydrated = useHydrated();
-  const shellClass = className ? `facet-combobox ${className}` : 'facet-combobox';
+  const shellClass = cx('facet-combobox', className);
 
   const typed = Boolean(typeahead) || choices.some((choice) => choice.group !== undefined);
 

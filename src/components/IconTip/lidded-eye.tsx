@@ -1,6 +1,7 @@
 import { type ReactElement, useId } from 'react';
 import type { LiddedEyeIconProps } from './types';
 import './lidded-eye.scss';
+import { cx } from '@/lib/class-names';
 
 const LID_OPEN = 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
 const LID_SHUT = 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
@@ -11,7 +12,7 @@ export function LiddedEyeIcon({ open, className }: LiddedEyeIconProps): ReactEle
   const lid = open ? LID_OPEN : LID_SHUT;
   return (
     <svg
-      className={['lidded-eye', open && 'lidded-eye--open', className].filter(Boolean).join(' ')}
+      className={cx('lidded-eye', open && 'lidded-eye--open', className)}
       viewBox="0 0 16 16"
       aria-hidden="true"
       focusable="false"

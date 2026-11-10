@@ -19,6 +19,7 @@ import { EDGE_EMBERS, HEARTH_EMBERS } from './embers';
 import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
+import { cx } from '@/lib/class-names';
 
 // Spell Preview: a button opening the spell in a pane of its own, with no links or controls. A native modal `<dialog>`
 // holds the page inert and gives Escape; full screen is added where the browser has it
@@ -52,13 +53,11 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
   list.map((ember, i) => (
     <i
       key={i}
-      className={[
+      className={cx(
         'spell-preview__ember',
         `spell-preview__ember--${ember.kind}`,
         edge && 'spell-preview__ember--edge',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      )}
       style={emberStyle(ember)}
     />
   ));
