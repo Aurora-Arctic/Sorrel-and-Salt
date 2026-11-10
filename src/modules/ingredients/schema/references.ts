@@ -3,7 +3,13 @@ import { boolean, check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/p
 import { REFERENCE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
-import { idColumn, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
+import {
+  idColumn,
+  notBlank,
+  notBlankIfSet,
+  seedKeyColumn,
+  seedKeyUnique,
+} from '../../../db/schema-parts';
 
 export const referenceKind = pgEnum('reference_kind', REFERENCE_KINDS);
 
@@ -64,12 +70,9 @@ export const references = pgTable(
     seedKeyUnique('references_seed_key_unique', table),
     // Required *and non-empty*: NOT NULL alone accepts ''. One CHECK per
     // column, so the service paths the refusal to its field.
-    check('references_title_not_blank', sql`btrim(title) <> ''`),
+    check('references_title_not_blank', notBlank('title')),
     ...OPTIONAL_NOT_BLANK.map((column) =>
-      check(
-        `references_${column}_not_blank`,
-        sql.raw(`${column} is null or btrim(${column}) <> ''`),
-      ),
+      check(`references_${column}_not_blank`, notBlankIfSet(column)),
     ),
 
     // The four that make the renderer total: every row admitted renders
