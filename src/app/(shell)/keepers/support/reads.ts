@@ -162,6 +162,7 @@ export const readOpened = cache(
       ...entryOf(row, names, tier === 'beta_tester'),
       message: row.message,
       path: row.path || null,
+      errorDetail: row.errorDetail,
       issueUrl: row.issueUrl,
       resolvedBy: personOf(names, row.resolvedBy),
       resolvedAt: row.resolvedAt,

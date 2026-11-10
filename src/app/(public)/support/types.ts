@@ -3,6 +3,7 @@ export interface SupportPageProps {
     support?: string | string[];
     error?: string | string[];
     ref?: string | string[];
+    detail?: string | string[];
     from?: string | string[];
   }>;
 }

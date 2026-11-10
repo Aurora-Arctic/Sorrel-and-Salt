@@ -11,6 +11,7 @@ import { single } from '../../../lib/search-params';
 import {
   SUPPORT_PATH,
   errorCodeOf,
+  errorDetailOf,
   errorReferenceOf,
   supportAboutOf,
 } from '../../../lib/support-path';
@@ -26,7 +27,12 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;
   if (!session) {
-    state = { kind: 'signed-out', support: supportAboutOf(single(params.support) ?? null) };
+    state = {
+      kind: 'signed-out',
+      support: supportAboutOf(single(params.support) ?? null),
+      errorReference: errorReferenceOf(single(params.ref) ?? null),
+      errorDetail: errorDetailOf(single(params.detail) ?? null),
+    };
   } else {
     if (!(await sessionIsVerified())) redirect(emailPagePath(undefined));
     const timedOut = await getMySupportTimeout(session);
@@ -38,6 +44,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           support: supportAboutOf(asked ?? null),
           errorCode: errorCodeOf(single(params.error) ?? null),
           errorReference: errorReferenceOf(single(params.ref) ?? null),
+          errorDetail: errorDetailOf(single(params.detail) ?? null),
         };
   }
   // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.

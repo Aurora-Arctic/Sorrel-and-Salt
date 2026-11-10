@@ -43,7 +43,12 @@ import type {
   SupportRequestView,
   SupportTimeoutRow,
 } from '../types';
-import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
+import {
+  ERROR_DETAIL_MAX_LENGTH,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from '../validation/support';
 
 const SupportAboutEnum = builder.enumType('SupportAbout', {
   description: 'What a support request is about.',
@@ -121,6 +126,11 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
       nullable: true,
       description:
         'The digest of the error page the sender came from, to match the server log. Staff only.',
+      authScopes: { curator: true },
+    }),
+    errorDetail: t.exposeString('errorDetail', {
+      nullable: true,
+      description: 'The name and message of the error the sender reported from. Staff only.',
       authScopes: { curator: true },
     }),
     status: t.expose('status', { type: SupportStatusEnum }),
@@ -207,6 +217,10 @@ const SupportRequestInput = builder.inputType('SupportRequestInput', {
       required: false,
       description: 'The digest of the error page, if any.',
     }),
+    errorDetail: t.string({
+      required: false,
+      description: `The error's name and message, at most ${ERROR_DETAIL_MAX_LENGTH} characters.`,
+    }),
   }),
 });
 
@@ -230,6 +244,7 @@ const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportReque
     path: t.string({ required: false }),
     errorCode: t.int({ required: false }),
     errorReference: t.string({ required: false }),
+    errorDetail: t.string({ required: false }),
     website: t.string({
       required: false,
       description: 'A trap for bots: the form hides it, so any value means the send is dropped.',

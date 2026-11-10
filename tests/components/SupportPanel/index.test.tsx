@@ -19,6 +19,18 @@ describe('SupportPanel', () => {
     ]);
   });
 
+  it('gives a signed-out visitor the error detail from the error screen, read-only', () => {
+    render(
+      <SupportPanel
+        state={{ kind: 'signed-out', errorReference: 'abc123', errorDetail: 'TypeError: Testwort' }}
+        path="/broken"
+      />,
+    );
+    expect(screen.getByRole('group', { name: 'Error Details' })).toHaveTextContent(
+      'TypeError: Testwort',
+    );
+  });
+
   it('tells a timed-out sender when it ends, in place of the form', () => {
     render(
       <SupportPanel

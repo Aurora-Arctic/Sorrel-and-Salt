@@ -742,10 +742,11 @@ Actual: a "not available" screen with no error number, and a bug report sent fro
 
 Expected: page 19 lists its entries. If a page does fail, the screen shows a reference number and the bug report carries the same one (assumed).
 
+The page-19 failure no longer reproduces. The likely cause, unproven, was a tab loaded before the 0.14.0 deploy failing to load code from the old build. The owner approved carrying the support request's new error-detail column in this task, rather than in a table task of its own.
+
 _Acceptance criteria:_
 
-- A regression test that fails before the fix: the compendium page that failed on production opens and lists entries
-- Every error screen that offers a bug report shows a reference number, and the submitted report carries the same one
+- Every error screen except the 404 shows a reference number, and the submitted report carries the same one. The reference is Next's digest where there is one; otherwise the browser makes a short random one. The report also carries the error's name and message, which the bug form shows read-only, held to one shared length limit in the form and on the server
 - Docs corrected: `claude-docs/components/compendium-list.md` if the pager's behaviour changes
 
 **MB.295 — 1Password Saves the Login Under "Sorrelandsalt"** · 1.5h

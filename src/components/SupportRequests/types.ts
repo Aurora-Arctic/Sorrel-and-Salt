@@ -66,6 +66,8 @@ export interface SupportTimeoutEntry {
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
   message: string;
   path: string | null;
+  /** The error's name and message, as the bug form sent it. */
+  errorDetail: string | null;
   issueUrl: string | null;
   resolvedBy: SupportPerson | null;
   resolvedAt: Date | null;

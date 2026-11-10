@@ -3,7 +3,7 @@
 import { ErrorScreen } from '../components/ErrorScreens';
 
 // The boundary for an error thrown while a page renders, with a 500. Next's redirect, `notFound()` and
-// `forbidden()` signals never reach it. Only the digest is shown, as production strips the message and
+// `forbidden()` signals never reach it. Only the reference is shown, as production strips a server error's message and
 // stack (claude-docs/components/error-page.md). `(shell)/error.tsx` renders it with the shell's dialog.
 export default function ErrorBoundary({
   error,
@@ -12,5 +12,5 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
-  return <ErrorScreen digest={error.digest} retry={retry} />;
+  return <ErrorScreen error={error} retry={retry} />;
 }
