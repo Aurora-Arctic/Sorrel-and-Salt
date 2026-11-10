@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getSession, getShellSession, requireSignedIn } from '../../support/request-session';
 
 // The viewer's own memberships, read once in a request however many readers ask. React's `cache()` memoises only inside the Flight renderer, so this renders;
 // the shared read is asked after an `await`, which the renderer follows only through `AsyncLocalStorage`, a global Next sets on the server and Node does not, so it is set here first.
@@ -16,11 +17,7 @@ const { membershipsOf } = vi.hoisted(() => ({
     ],
   ]),
 }));
-vi.mock('@/lib/request-session', () => ({
-  getSession: async () => SESSION,
-  getShellSession: async () => ({ session: SESSION }),
-  requireSignedIn: async () => SESSION,
-}));
+vi.mock('@/lib/request-session', () => import('../../support/request-session'));
 vi.mock('@/modules/identity', () => ({
   getMe: async () => ({ name: 'Fixture Member', canCreateWorkspace: true, emailVerified: false }),
   countReceivedInvitations: async () => ({ totalCount: 0, countBefore: null }),
@@ -58,6 +55,12 @@ async function render(): Promise<string> {
 }
 
 describe('the viewer and their roles inside one server render', () => {
+  beforeEach(() => {
+    vi.mocked(getSession).mockResolvedValue(SESSION);
+    vi.mocked(getShellSession).mockResolvedValue({ session: SESSION });
+    vi.mocked(requireSignedIn).mockResolvedValue(SESSION);
+  });
+
   it('read the memberships once between them', async () => {
     const text = await render();
 

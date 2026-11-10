@@ -8,10 +8,10 @@ import { verificationSigningSecret } from '@/lib/auth-secrets';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 import { useTestDatabase } from '../support/db/database';
-import { MAILPIT_URL } from '../support/constants';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 const DOMAIN = '@secret-link-run.test';
-const AUTH_BASE = 'http://localhost:3000/api/auth';
+const AUTH_BASE = `${ORIGIN}/api/auth`;
 
 let sql: ReturnType<typeof postgres>;
 

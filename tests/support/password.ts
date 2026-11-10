@@ -3,7 +3,7 @@ import { delay, http, HttpResponse } from 'msw';
 import type { AuthInstance } from './types';
 import { ORIGIN } from './constants';
 
-export const PWNED_RANGE = 'https://api.pwnedpasswords.com/range/:prefix';
+const PWNED_RANGE = 'https://api.pwnedpasswords.com/range/:prefix';
 
 export function sha1Hex(password: string): string {
   return createHash('sha1').update(password, 'utf8').digest('hex').toUpperCase();

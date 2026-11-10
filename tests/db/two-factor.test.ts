@@ -6,14 +6,13 @@ import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import { get, post, pwnedRange } from '../support/password';
 import { totpCode, wrongTotpCode } from '../support/two-factor';
-import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
 import { PASSWORD } from '../support/constants';
+import { send } from '../support/mail';
 
 // Through Better Auth's real endpoints (DESIGN.md §8; claude-docs/auth/two-factor.md).
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset;
 // its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');

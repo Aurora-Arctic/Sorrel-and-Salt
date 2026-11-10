@@ -1,22 +1,23 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { Forbidden } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import { mockGraphQLQuery } from '../../../support/msw/graphql';
+import { requireCovenMembership, requireSession } from '../../../support/request-session';
+import { renderWithQuery } from '../../../support/render-with-query';
+import { router } from '../../../support/next-navigation';
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
-const replace = vi.fn();
-vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh: vi.fn(), replace }) }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  notFound,
+}));
 
-const requireCovenMembership = vi.fn();
-const requireSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const listMembers = vi.fn();
 const memberRoster = vi.fn();
@@ -53,13 +54,11 @@ const render_ = async (role: WorkspaceRole, searchParams: Record<string, string>
   });
   requireSession.mockResolvedValue({ userId: 'u-owner', role: 'user' });
   // The modal's Coven Access reads the member's pauses through the query client the app provides.
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      {await MembersPage({
-        params: Promise.resolve({ slug: 'fixture-coven' }),
-        searchParams: Promise.resolve(searchParams),
-      })}
-    </QueryClientProvider>,
+  return renderWithQuery(
+    await MembersPage({
+      params: Promise.resolve({ slug: 'fixture-coven' }),
+      searchParams: Promise.resolve(searchParams),
+    }),
   );
 };
 
@@ -289,7 +288,7 @@ describe('the /coven/[slug]/members page, the member modal', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
     );
 
-    expect(replace).toHaveBeenCalledWith(
+    expect(router.replace).toHaveBeenCalledWith(
       `/coven/fixture-coven/members?after=${encodeURIComponent(after)}`,
       { scroll: false },
     );

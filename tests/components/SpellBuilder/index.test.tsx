@@ -1,38 +1,31 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
 import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { router } from '../../support/next-navigation';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
 // MSW answers the saves in /api/graphql's shape, so a refusal is read through the route's own error mapping. What the service refuses is tests/modules/grimoire/services/spells.test.ts's.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
 }
 
 const field = (name: string) =>
   screen.queryByRole('textbox', { name }) ?? screen.getByRole('combobox', { name });
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
+const typeInField = (name: string, value: string) =>
+  fireEvent.change(field(name), { target: { value } });
 const SECTIONS = ['Purpose', 'Jar', 'When to Work It', 'Notes'] as const;
 const section = (name: (typeof SECTIONS)[number]) => screen.getByRole('button', { name });
 const when = () => section('When to Work It');
@@ -96,7 +89,7 @@ const LABELS = [
 ] as const;
 
 beforeEach(() => {
-  push.mockClear();
+  router.push.mockClear();
   // The Categories field reads every category as the builder opens; its own
   // tests are categories-field.test.tsx's.
   offerCategories([]);
@@ -117,13 +110,13 @@ describe('SpellBuilder', () => {
     renderBuilder();
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    type('Intent', '   ');
+    typeInField('Intent', '   ');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    type('Intent', 'To see clearly');
+    typeInField('Intent', 'To see clearly');
     expect(save()).toBeEnabled();
 
-    type('Intent', '');
+    typeInField('Intent', '');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
@@ -132,7 +125,7 @@ describe('SpellBuilder', () => {
     expect(save()).toHaveAttribute('aria-disabled', 'true');
     expect(save()).toHaveAccessibleDescription('Nothing to save yet');
 
-    type('Intent', 'To see clearly');
+    typeInField('Intent', 'To see clearly');
     expect(save()).toBeEnabled();
     expect(save()).not.toHaveAttribute('aria-disabled');
     expect(save()).not.toHaveAccessibleDescription();
@@ -144,8 +137,8 @@ describe('SpellBuilder', () => {
     acceptCreate();
     renderBuilder();
 
-    type('Title', 'Fixture Working');
-    submit();
+    typeInField('Title', 'Fixture Working');
+    submitForm();
 
     await waitFor(() => expect(save()).not.toHaveAccessibleDescription('Nothing to save yet'));
     await waitFor(() => expect(save().matches(':disabled')).toBe(true));
@@ -156,8 +149,8 @@ describe('SpellBuilder', () => {
     const calls = acceptCreate();
     renderBuilder();
 
-    type('Intent', 'To see clearly');
-    submit();
+    typeInField('Intent', 'To see clearly');
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toEqual({
@@ -181,7 +174,7 @@ describe('SpellBuilder', () => {
     const calls = acceptCreate();
     renderBuilder();
 
-    type('Moon Phase', '  Dark   of the moon ');
+    typeInField('Moon Phase', '  Dark   of the moon ');
     fireEvent.blur(field('Moon Phase'));
 
     expect(field('Moon Phase')).toHaveValue('Dark of the moon');
@@ -192,14 +185,14 @@ describe('SpellBuilder', () => {
     const calls = acceptCreate();
     renderBuilder();
 
-    type('Title', '  Fixture Working ');
-    type('Intent', 'To see clearly');
-    type('Jar Description', '4 oz');
-    type('Seal Wax', 'Blue');
-    type('Moon Phase', 'Waxing gibbous');
-    type('Day', 'Monday');
-    type('Note', 'Kept on the sill');
-    submit();
+    typeInField('Title', '  Fixture Working ');
+    typeInField('Intent', 'To see clearly');
+    typeInField('Jar Description', '4 oz');
+    typeInField('Seal Wax', 'Blue');
+    typeInField('Moon Phase', 'Waxing gibbous');
+    typeInField('Day', 'Monday');
+    typeInField('Note', 'Kept on the sill');
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toEqual({
@@ -220,9 +213,9 @@ describe('SpellBuilder', () => {
     acceptCreate();
     renderBuilder();
 
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
     const button = save();
-    submit();
+    submitForm();
 
     await waitFor(() => expect(button).toHaveAttribute('aria-busy', 'true'));
     expect(button.matches(':disabled, [aria-disabled="true"]')).toBe(true);
@@ -238,13 +231,13 @@ describe('SpellBuilder', () => {
     const updated = acceptUpdate();
     renderBuilder();
 
-    type('Title', 'Fixture Working');
-    submit();
+    typeInField('Title', 'Fixture Working');
+    submitForm();
     await waitFor(() => expect(created).toHaveLength(1));
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
 
-    type('Intent', 'To see clearly');
-    submit();
+    typeInField('Intent', 'To see clearly');
+    submitForm();
 
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(created).toHaveLength(1);
@@ -280,8 +273,8 @@ describe('SpellBuilder', () => {
     expect(field('Moon Phase')).toHaveValue('');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
-    type('Seal Wax', '');
-    submit();
+    typeInField('Seal Wax', '');
+    submitForm();
 
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(updated[0]).toEqual({
@@ -312,8 +305,8 @@ describe('SpellBuilder', () => {
     });
     renderBuilder();
 
-    type('Intent', 'To see clearly');
-    submit();
+    typeInField('Intent', 'To see clearly');
+    submitForm();
 
     await waitFor(() => expect(field('Title')).toHaveAttribute('aria-invalid', 'true'));
     expect(field('Title')).toHaveAccessibleDescription(
@@ -332,8 +325,8 @@ describe('SpellBuilder', () => {
     });
     renderBuilder();
 
-    type('Title', 'Fixture Working');
-    submit();
+    typeInField('Title', 'Fixture Working');
+    submitForm();
 
     expect(await screen.findByText('Observers cannot write spells')).toHaveAttribute(
       'role',
@@ -379,7 +372,7 @@ describe('SpellBuilder', () => {
     it('narrows the list to what is typed', () => {
       renderBuilder();
 
-      type('Moon Phase', 'wan');
+      typeInField('Moon Phase', 'wan');
 
       expect(listed()).toEqual(expect.arrayContaining(['Waning Gibbous', 'Waning Crescent']));
       expect(listed()).not.toContain('Full Moon');
@@ -389,14 +382,14 @@ describe('SpellBuilder', () => {
       const calls = acceptCreate();
       renderBuilder();
 
-      type('Moon Phase', 'full');
+      typeInField('Moon Phase', 'full');
       fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
-      type('Day', 'fri');
+      typeInField('Day', 'fri');
       fireEvent.click(screen.getByRole('option', { name: 'Friday' }));
 
       expect(field('Moon Phase')).toHaveValue('Full Moon');
       expect(field('Day')).toHaveValue('Friday');
-      submit();
+      submitForm();
 
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0]?.input).toMatchObject({ moonPhase: 'Full Moon', dayOfWeek: 'Friday' });
@@ -406,9 +399,9 @@ describe('SpellBuilder', () => {
       const calls = acceptCreate();
       renderBuilder();
 
-      type('Moon Phase', 'Blue moon');
-      type('Day', 'Any dark night');
-      submit();
+      typeInField('Moon Phase', 'Blue moon');
+      typeInField('Day', 'Any dark night');
+      submitForm();
 
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0]?.input).toMatchObject({
@@ -521,7 +514,7 @@ describe('SpellBuilder', () => {
 
     it('keeps what was typed across a shut, its line reading it', () => {
       renderBuilder();
-      type('Day', 'Friday');
+      typeInField('Day', 'Friday');
 
       fireEvent.click(when());
 
@@ -538,11 +531,11 @@ describe('SpellBuilder', () => {
       });
       renderBuilder({ spell: SAVED });
       fireEvent.click(section('Notes'));
-      type('Note', 'Kept on the sill');
+      typeInField('Note', 'Kept on the sill');
       // The precondition the opening answers: shut when the save is pressed.
       expect(when()).toHaveAttribute('aria-expanded', 'false');
 
-      submit();
+      submitForm();
 
       await waitFor(() => expect(when()).toHaveAttribute('aria-expanded', 'true'));
       expect(when()).toHaveAccessibleDescription('Has an error to fix');
@@ -575,11 +568,11 @@ describe('SpellBuilder', () => {
       acceptCreate();
       renderBuilder();
       expect(tabCloseAsks()).toBe(false);
-      type('Title', 'Fixture Working');
+      typeInField('Title', 'Fixture Working');
 
       expect(tabCloseAsks()).toBe(true);
 
-      submit();
+      submitForm();
       await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
       await waitFor(() => expect(save()).not.toHaveAttribute('aria-busy', 'true'));
       expect(tabCloseAsks()).toBe(false);

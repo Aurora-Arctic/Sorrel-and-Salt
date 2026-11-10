@@ -1,12 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import HelpTerm from '@/components/HelpTerm';
-
-const push = vi.fn();
-vi.mock('next/navigation', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('next/navigation')>()),
-  useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }),
-}));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/help-pages.md, "Glossary marks"
 
@@ -28,7 +23,6 @@ function renderTerm() {
 
 describe('HelpTerm', () => {
   beforeEach(() => {
-    push.mockClear();
     vi.useFakeTimers();
   });
   afterEach(() => {
@@ -108,7 +102,7 @@ describe('HelpTerm', () => {
       const followed = tap(link);
 
       expect(followed).toBe(false);
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
 
@@ -155,6 +149,6 @@ describe('HelpTerm', () => {
 
     fireEvent.click(link);
 
-    expect(push).toHaveBeenCalledWith('/help/glossary#steward');
+    expect(router.push).toHaveBeenCalledWith('/help/glossary#steward');
   });
 });

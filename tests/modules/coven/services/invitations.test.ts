@@ -18,15 +18,11 @@ import { asManualFix } from '../../../support/db/privileges';
 import type { CovenInvitationStateRow } from './types';
 import { ORIGIN } from '../../../support/constants';
 import { insertWorkspace } from '../../../support/db/insert-workspace';
+import { send } from '../../../support/mail';
 
 // The transport is a test double; the failing transport is the real `send` over a failing `fetch` (claude-docs/db/invitations.md, "Inviting into a coven").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
-const mail = vi.hoisted(() => ({ real: false }));
-vi.mock('@/lib/mail', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@/lib/mail')>();
-  return { send: (message: Message) => (mail.real ? real.send(message) : send(message)) };
-});
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -54,8 +50,7 @@ const invitations = () => sql<CovenInvitationStateRow[]>`
 `;
 
 beforeEach(async () => {
-  send.mockClear();
-  mail.real = false;
+  send.mockReset();
   // With no transport the mail is built and tried once in the request, by the job step's own code, so `send` receives it.
   vi.stubEnv('MAIL_TRANSPORT', '');
   await sql`truncate card_invitation_attempts, invitations`;
@@ -316,7 +311,8 @@ describe('createInvitation', () => {
   });
 
   it('leaves the invitation pending, and answers it, when the transport fails', async () => {
-    mail.real = true;
+    const real = await vi.importActual<typeof import('@/lib/mail')>('@/lib/mail');
+    send.mockImplementation(real.send);
     vi.stubEnv('VERCEL_ENV', '');
     vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
     vi.stubEnv('MAILPIT_URL', 'http://mailpit.test:8025');

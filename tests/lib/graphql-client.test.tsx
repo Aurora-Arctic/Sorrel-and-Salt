@@ -1,6 +1,6 @@
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
-import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { useQuery } from '@tanstack/react-query';
+import { screen } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -17,6 +17,7 @@ import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error'
 import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../support/msw/graphql';
 import { server } from '../support/msw/server';
 import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';
+import { renderWithQuery } from '../support/render-with-query';
 
 // A document is its query text, as codegen's string mode writes it.
 class TextDocument<TResult, TVariables>
@@ -50,10 +51,6 @@ class Boundary extends Component<{ children: ReactNode }, { error: Error | null 
   }
 }
 
-function renderWithClient(ui: ReactNode) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
-}
-
 function refuseOk() {
   const calls = { count: 0 };
   server.use(
@@ -75,7 +72,7 @@ describe('a client component', () => {
   it('runs a typed query against /api/graphql', async () => {
     mockGraphQLQuery('Ok', () => ({ ok: true }));
 
-    renderWithClient(<Ok />);
+    renderWithQuery(<Ok />);
 
     expect(await screen.findByText('ok: true')).toBeInTheDocument();
   });
@@ -85,7 +82,7 @@ describe('a client component', () => {
     // React logs the caught error; it is the expected outcome here.
     expectConsole('error', /Forbidden/);
 
-    renderWithClient(
+    renderWithQuery(
       <Boundary>
         <Ok />
       </Boundary>,

@@ -1,7 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, type Mock, onTestFinished, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
 import IngredientSearch from '@/components/IngredientSearch';
 import AudienceFilter from '@/components/CompendiumList/filter';
@@ -13,21 +12,21 @@ import type {
   CompendiumListFilterProps,
   CompendiumListProps,
 } from '@/components/CompendiumList/types';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm } from './filter-form';
 import { mockGraphQLQuery } from './msw/graphql';
+import { queryWrapper } from './render-with-query';
 
 // The Name box is IngredientSearch's type-ahead, which asks the server through
 // TanStack Query, so every render sits under a client, as the app's providers give it.
-let client = makeQueryClient();
+let Queried = queryWrapper();
 // A client of each test's own: one shared by a file would hand a test the answers its neighbours cached.
 beforeEach(() => {
-  client = makeQueryClient();
+  Queried = queryWrapper();
 });
 export const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
-  <QueryClientProvider client={client}>
+  <Queried>
     <CompendiumListBase {...listProps} />
-  </QueryClientProvider>
+  </Queried>
 );
 
 export const FilterRow = ({
@@ -41,7 +40,7 @@ export const FilterRow = ({
     CompendiumListFilterProps,
     'audience' | 'covens' | 'covenSlug' | 'workspaceId'
   >): ReactElement => (
-  <QueryClientProvider client={client}>
+  <Queried>
     <IngredientSearch
       skeleton={null}
       search={<AudienceFilter {...filterProps} />}
@@ -51,7 +50,7 @@ export const FilterRow = ({
     >
       {null}
     </IngredientSearch>
-  </QueryClientProvider>
+  </Queried>
 );
 
 export const WARDS = {

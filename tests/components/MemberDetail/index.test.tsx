@@ -1,20 +1,16 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import MemberDetail from '@/components/MemberDetail';
 import type { MemberDetailProps } from '@/components/MemberDetail/types';
 import type { MemberListEntry } from '@/components/MemberList/types';
 import Modal from '@/components/Modal';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { HttpResponse } from 'msw/http';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/member-detail.md
-
-const router = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const SELF = 'u-self';
 const MEMBER: MemberListEntry = {
@@ -43,14 +39,12 @@ beforeEach(() => {
 });
 
 const renderDetail = (overrides: Partial<MemberDetailProps> = {}) =>
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <StatusRegionProvider>
-        <Modal title="Bo Fixturewort" onClose={vi.fn()}>
-          <MemberDetail workspaceId="w" member={MEMBER} currentUserId={SELF} {...overrides} />
-        </Modal>
-      </StatusRegionProvider>
-    </QueryClientProvider>,
+  renderWithQuery(
+    <StatusRegionProvider>
+      <Modal title="Bo Fixturewort" onClose={vi.fn()}>
+        <MemberDetail workspaceId="w" member={MEMBER} currentUserId={SELF} {...overrides} />
+      </Modal>
+    </StatusRegionProvider>,
   );
 
 const fact = (term: string) => {

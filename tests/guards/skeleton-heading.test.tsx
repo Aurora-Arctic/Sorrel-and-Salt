@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 // A skeleton draws the page's own heading, because the hosts no longer add a hidden one while a
 // page is on its way: a wait must leave exactly one level-one heading on screen. A public help page's
 // heading is the help header's, which stays up over its skeleton, so that skeleton draws it only framed.
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: () => {}, replace: () => {}, prefetch: () => {}, refresh: () => {} }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../support/next-navigation')),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),

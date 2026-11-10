@@ -1,12 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireAdminSession } from '../../../../../support/request-session';
 
 // The `/keepers/invitation-cards` page: the guard first, then the identity reads. What the guard and services decide is
 // tests/lib/request-session.test.ts's and tests/modules/identity/services/invitation-cards.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 const listCardBatches = vi.fn();
 const countCardBatches = vi.fn();

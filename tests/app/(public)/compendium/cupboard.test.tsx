@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 import type { PublicCupboardProps } from '@/components/IngredientEntry/types';
 import { entryDetail } from '../../../support/entry-detail';
+import { getSession } from '../../../support/request-session';
 
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
@@ -11,8 +12,7 @@ vi.mock('next/navigation', () => ({
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 // What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only which
 // covens it is asked for.

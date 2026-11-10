@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole } from '@/db/repository';
 import { Forbidden, ValidationError } from '@/lib/errors';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
 import { limitMessage } from '@/lib/formats';
 import { slugify } from '@/lib/slugify';
 import {
@@ -179,7 +180,7 @@ describe('renameWorkspace', () => {
     it.each([
       ['blank', ''],
       ['only spaces', '   '],
-      ['81 characters', 'F'.repeat(81)],
+      [`${COVEN_NAME_LIMIT + 1} characters`, 'F'.repeat(COVEN_NAME_LIMIT + 1)],
     ])('refuses a name that is %s, writing nothing', async (_what, name) => {
       const coven = await insertWorkspaceWithSlug(
         sql,
@@ -204,19 +205,22 @@ describe('renameWorkspace', () => {
       );
 
       await expect(
-        renameWorkspace(asUser(A), coven.id, { name: 'F'.repeat(81) }),
-      ).rejects.toMatchObject({ issues: [{ path: ['name'], message: limitMessage(80) }] });
+        renameWorkspace(asUser(A), coven.id, { name: 'F'.repeat(COVEN_NAME_LIMIT + 1) }),
+      ).rejects.toMatchObject({
+        issues: [{ path: ['name'], message: limitMessage(COVEN_NAME_LIMIT) }],
+      });
     });
 
-    it('admits a name of exactly 80 characters', async () => {
+    it('admits a name of exactly the limit', async () => {
       const coven = await insertWorkspaceWithSlug(
         sql,
         `Fixture Long Name ${token()}`,
         undefined,
         SEEDED,
       );
-      const name = `Fixture ${'L'.repeat(72)}`;
-      expect(name).toHaveLength(80);
+      const prefix = 'Fixture ';
+      const name = prefix + 'L'.repeat(COVEN_NAME_LIMIT - prefix.length);
+      expect(name).toHaveLength(COVEN_NAME_LIMIT);
 
       await expect(renameWorkspace(asUser(A), coven.id, { name })).resolves.toMatchObject({ name });
     });

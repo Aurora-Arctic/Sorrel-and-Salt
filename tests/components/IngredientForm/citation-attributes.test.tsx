@@ -9,13 +9,8 @@ import {
   compendiumResolver,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
-import {
-  chooseKind,
-  inPanel,
-  referencePanel,
-  renderWithClient,
-  waitFor,
-} from '../../support/ingredient-form';
+import { chooseKind, inPanel, referencePanel, waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { press, typeIn } from '../../support/interact';
 import {
   WORKSPACE_ID,
@@ -105,7 +100,7 @@ function renderListed(workspaceId: string | null, sources: ReferenceNode[] = [HE
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 
@@ -141,7 +136,7 @@ function chooseIn(control: HTMLElement, list: string, ...labels: string[]) {
   if (control.getAttribute('aria-expanded') === 'true')
     fireEvent.keyDown(control, { key: 'Escape' });
 }
-const save = () => press(screen.getByRole('button', { name: 'Save Ingredient' }));
+const saveIngredient = () => press(screen.getByRole('button', { name: 'Save Ingredient' }));
 
 describe('a citation’s compendium attributes', () => {
   describe('on the compendium’s form', () => {
@@ -155,7 +150,7 @@ describe('a citation’s compendium attributes', () => {
       const formRow = openRow(variant());
       chooseIn(nameBasisIn(formRow) as HTMLElement, 'Name Basis', 'Stated');
       chooseIn(supportsIn(formRow) as HTMLElement, 'Supports', 'Form');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       const sent = onSubmit.mock.calls[0][0] as IngredientFormInput;
@@ -192,7 +187,7 @@ describe('a citation’s compendium attributes', () => {
 
       const row = openRow(ingredient());
       expect(nameBasisIn(row)).toBeInTheDocument();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect((onSubmit.mock.calls[0][0] as IngredientFormInput).references).toEqual([
@@ -211,7 +206,7 @@ describe('a citation’s compendium attributes', () => {
       expect(nameBasisIn(row)).toBeNull();
       expect(supportsIn(row)).toBeNull();
       expect(supportsIn(openRow(variant()))).toBeNull();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect((onSubmit.mock.calls[0][0] as IngredientFormInput).references).toEqual([

@@ -8,10 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 import { ORIGIN, USER_ID } from './support/constants';
+import { sessionFromHeaders } from './support/request-session';
 
 // The session lookup is mocked; request-session.test.ts covers what it does with the answer.
-const sessionFromHeaders = vi.hoisted(() => vi.fn<(headers: Headers) => Promise<Session | null>>());
-vi.mock('@/lib/request-session', () => ({ sessionFromHeaders }));
+vi.mock('@/lib/request-session', () => import('./support/request-session'));
 
 const { config, proxy } = await import('@/proxy');
 
@@ -450,12 +450,12 @@ describe('the workshop', () => {
     {
       seen: 'http://0.0.0.0:8200/workshop/index.html',
       headers: { host: 'localhost:8000' },
-      page: 'http://localhost:8000/workshop/index.html',
+      page: `${ORIGIN}/workshop/index.html`,
     },
     {
-      seen: 'http://localhost:3000/workshop/index.html',
+      seen: 'http://localhost:3001/workshop/index.html',
       headers: {
-        host: 'localhost:3000',
+        host: 'localhost:3001',
         'x-forwarded-host': 'staging.example',
         'x-forwarded-proto': 'https',
       },

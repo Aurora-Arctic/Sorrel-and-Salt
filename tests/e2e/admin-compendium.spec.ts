@@ -108,7 +108,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
   await signInAs(page, 'keyboard-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/curator/compendium');
   // Hydrated first: before it, Enter submits the form natively with the switch off.
-  await openFilters(page);
+  const panel = await openFilters(page);
 
   const noRefs = page.getByRole('switch', { name: /^No Refs/ });
   await noRefs.focus();
@@ -123,7 +123,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
   // Held, not applied: the panel covers the results, so the address waits for Apply.
   await expect(page).not.toHaveURL(/withoutReferences/);
 
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/withoutReferences=1/);
   await assertNoAccessibilityViolations(page);
 });
@@ -138,10 +138,10 @@ test('the Form box keeps only the entries holding the form chosen', async ({ pag
   await expect(editOf('Senegalia greggii')).toBeVisible();
   await expect(editOf('Uncaria tomentosa')).toBeVisible();
 
-  await openFilters(page);
+  const panel = await openFilters(page);
   await page.getByRole('combobox', { name: 'Forms' }).fill('bark');
   await page.getByRole('option', { name: /^Bark/ }).click();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
 
   await expect(page).toHaveURL(/[?&]forms=Bark(&|$)/);
   await expect(editOf('Uncaria tomentosa')).toBeVisible();
@@ -418,9 +418,9 @@ test('?elements= in the address filters the list, survives the pager and another
   await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
   await expect(row(28)).toBeVisible();
 
-  await openFilters(page);
+  const panel = await openFilters(page);
   await main.getByRole('switch', { name: /^No Refs/ }).click();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
   await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
   await expect(page).not.toHaveURL(/[?&](after|before)=/);
@@ -451,7 +451,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
   await page.goto('/curator/compendium?query=Categorywort');
-  await openFilters(page);
+  const panel = await openFilters(page);
   // Why the filter could have dropped them: all three are listed unfiltered.
   await expect(edit('Categorywort Both')).toBeVisible();
   await expect(edit('Categorywort One')).toBeVisible();
@@ -467,7 +467,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
   await expect(announcer).not.toBeEmpty();
   await expect(page).not.toHaveURL(/categories=/);
   await expect(edit('Categorywort None')).toBeVisible();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/[?&]categories=protection(&|$)/);
   await expect(edit('Categorywort One')).toBeVisible();
   await expect(edit('Categorywort None')).toHaveCount(0);
@@ -476,7 +476,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
   await box.fill('cleansing');
   await page.getByRole('option', { name: /^Cleansing/ }).click();
   await expect(box).toBeFocused();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/[?&]categories=protection(&|.*&)categories=cleansing(&|$)/);
   await expect(edit('Categorywort Both')).toBeVisible();
   await expect(edit('Categorywort One')).toHaveCount(0);
@@ -539,7 +539,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
   const match = page.getByRole('group', { name: 'Match' });
   await page.goto('/curator/compendium?query=Modewort&categories=protection');
-  await openFilters(page);
+  const panel = await openFilters(page);
   // One category: the mode stays, on All, and cannot be changed.
   await expect(match.getByRole('button', { name: /All/ })).toBeDisabled();
 
@@ -549,14 +549,14 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(match.getByRole('button', { name: /All/ })).toHaveCount(0);
   await expect(held(match, 'All')).toBeEnabled();
   await expect(held(match, 'All')).toBeChecked();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   // Why Any could differ: under All, the entry with one category is out.
   await expect(edit('Modewort Both')).toBeVisible();
   await expect(edit('Modewort One')).toHaveCount(0);
 
   await openFilters(page);
   await choose(match, 'Any');
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/[?&]categoryMode=any(&|$)/);
   await expect(edit('Modewort One')).toBeVisible();
   await expect(edit('Modewort Both')).toBeVisible();
@@ -570,14 +570,14 @@ test('the match mode widens two categories to Any, is kept in the address, and g
 
   await page.getByRole('button', { name: 'Remove Category: Cleansing' }).click();
   await expect(match.getByRole('button', { name: /All/ })).toBeDisabled();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).not.toHaveURL(/categoryMode/);
 
   await openFilters(page);
   await box.fill('cleansing');
   await page.getByRole('option', { name: /^Cleansing/ }).click();
   await expect(held(match, 'All')).toBeChecked();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(edit('Modewort One')).toHaveCount(0);
 });
 
@@ -746,7 +746,7 @@ test('two forms list the entries holding either, and a form with a deity lists t
   );
   await seedFacetworts(userId);
   await page.goto('/curator/compendium?query=Facetwort');
-  await openFilters(page);
+  const panel = await openFilters(page);
   // Why a filter could drop rows: all five are listed unfiltered.
   await expect.poll(() => listed(page)).toBe('ABCDE');
 
@@ -763,13 +763,13 @@ test('two forms list the entries holding either, and a form with a deity lists t
   await expect(forms).toHaveAttribute('aria-expanded', 'false');
   await expect(page).not.toHaveURL(/forms=/);
   await expect.poll(() => listed(page)).toBe('ABCDE');
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/[?&]forms=Facetform(\+|%20)Alpha(&|$)/);
   await expect.poll(() => listed(page)).toBe('ADE');
 
   await openFilters(page);
   await pick(page, 'Forms', 'Facetform Beta', /^Facetform Beta/);
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(/forms=Facetform(\+|%20)Alpha&forms=Facetform(\+|%20)Beta/);
   await expect.poll(() => listed(page)).toBe('ABDE');
   const sentence = sentenceOf(page);
@@ -779,14 +779,14 @@ test('two forms list the entries holding either, and a form with a deity lists t
 
   await openFilters(page);
   await page.getByRole('button', { name: 'Remove Form: Facetform Beta' }).click();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).not.toHaveURL(/Beta/);
   await expect.poll(() => listed(page)).toBe('ADE');
   await expect(sentence).not.toContainText('facetform beta');
 
   await openFilters(page);
   await pick(page, 'Deities', FACET_DEITY, new RegExp(`^${FACET_DEITY}`));
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect.poll(() => page.url()).toMatch(/deities=/);
   const slugs = [GREEK_SLUG, ROMAN_SLUG].filter((slug) => page.url().includes(`deities=${slug}`));
   expect(slugs).toHaveLength(1);
@@ -794,7 +794,7 @@ test('two forms list the entries holding either, and a form with a deity lists t
 
   await openFilters(page);
   await pick(page, 'Deities', FACET_DEITY, new RegExp(`^${FACET_DEITY}`));
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect(page).toHaveURL(new RegExp(`deities=${GREEK_SLUG}`));
   await expect(page).toHaveURL(new RegExp(`deities=${ROMAN_SLUG}`));
   await expect.poll(() => listed(page)).toBe('DE');
@@ -824,11 +824,11 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
 
   await openFilters(page);
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect.poll(() => listed(page)).toBe('ADE');
   await openFilters(page);
   await choose(page.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
   await expect.poll(() => listed(page)).toBe('D');
 
   await page.reload();
@@ -1115,7 +1115,7 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   );
   expect(shown).toBe(2);
   await noForm.click();
-  await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+  await applyFilters(page, panel);
 
   await expect(page).toHaveURL(/[?&]withoutForms=1(&|$)/);
   await expect.poll(shownNames).toBe('AB');

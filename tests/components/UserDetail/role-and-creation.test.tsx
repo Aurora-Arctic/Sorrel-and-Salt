@@ -7,11 +7,9 @@ import type { UserDetailProps, UserDetailUser } from '@/components/UserDetail/ty
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { announced } from '../../support/click-feedback';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/user-detail.md
-
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {

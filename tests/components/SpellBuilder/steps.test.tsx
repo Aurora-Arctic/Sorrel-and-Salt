@@ -1,6 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import type {
   CreateSpellMutation,
@@ -9,7 +8,6 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { UNMEASURABLE_UNIT } from '@/modules/grimoire/validation/step-unit';
 import type { Unit } from '@/modules/ingredients/schema/units';
@@ -17,8 +15,8 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { useTurkishCaseFolding } from '../../support/turkish-locale';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -163,11 +161,7 @@ function renderBuilder(
   categories: Parameters<typeof offerCategories>[0] = [],
 ) {
   offerCategories(categories);
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
 }
 
 const search = () => screen.getByRole('combobox', { name: 'Add to Jar' });
@@ -180,8 +174,6 @@ const stepRow = (text: string) => {
 };
 const openRow = (name: string) =>
   fireEvent.click(screen.getByRole('button', { name: `Edit ${name}`, expanded: false }));
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
 async function lookUp(text: string, option: string | RegExp): Promise<HTMLElement> {
   act(() => search().focus());
@@ -349,7 +341,7 @@ describe('the spell builder’s Add to Jar', () => {
     });
     chooseUnit(row, 'g');
     await addOneOff('Testwort');
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     // Only the ids a step stores: the picker never hands over a cupboard entry or a jar.
@@ -369,7 +361,7 @@ describe('the spell builder’s Add to Jar', () => {
       within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
     fireEvent.change(box(), { target: { value: 'lots' } });
     fireEvent.blur(box());
-    submit();
+    submitForm();
 
     await waitFor(() => expect(stepRow('Fixture Rosewort')).toHaveClass('step-row--closed'));
     expect(calls).toHaveLength(0);
@@ -415,13 +407,13 @@ describe('the spell builder’s Add to Jar', () => {
 
     fireEvent.change(name(), { target: { value: '' } });
     fireEvent.blur(name());
-    submit();
+    submitForm();
     await waitFor(() =>
       expect(name()).toHaveAccessibleDescription('Error: Give the ingredient a name'),
     );
 
     fireEvent.change(name(), { target: { value: 'Mockwort' } });
-    submit();
+    submitForm();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([{ name: 'Mockwort' }]);
   });
@@ -435,7 +427,7 @@ describe('the spell builder’s Add to Jar', () => {
 
     fireEvent.change(name(), { target: { value: 'testwort' } });
     fireEvent.blur(name());
-    submit();
+    submitForm();
 
     await waitFor(() =>
       expect(name()).toHaveAccessibleDescription('Error: This ingredient is already in the jar.'),
@@ -744,7 +736,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     await add('Mock', /Fixture Mockroot/);
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([
@@ -769,7 +761,7 @@ describe('the spell builder’s Add to Jar', () => {
     renderBuilder();
     await add('Mock', /Fixture Mockroot/);
     chooseUnit(stepRow('Fixture Mockroot'), 'ml');
-    submit();
+    submitForm();
 
     const unit = within(stepRow('Fixture Mockroot')).getByRole('combobox', { name: /^Unit/ });
     await waitFor(() => expect(unit).toHaveAccessibleDescription(`Error: ${UNMEASURABLE_UNIT}`));
@@ -857,7 +849,7 @@ describe('the spell builder’s safety warning', () => {
     renderBuilder();
     await add('Tox', /Fixture Toxwort/);
 
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([{ ingredientId: ID.mockroot, variantId: ID.mockRoot }]);

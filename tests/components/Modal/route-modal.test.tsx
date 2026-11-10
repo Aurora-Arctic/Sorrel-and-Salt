@@ -3,9 +3,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ModalHeading, RouteModalOpener } from '@/components/Modal/types';
 import { Navigating } from '../../support/navigating';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 const { RouteModal, RouteModalProvider, useOpenModalClick } = await import('@/components/Modal');
 const { RouteModalContext } = await import('@/components/Modal/route-modal-provider');

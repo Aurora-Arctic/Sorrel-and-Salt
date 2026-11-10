@@ -1,14 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@/lib/session';
 import { USER_ID } from '../support/constants';
+import { getSession, sessionIsVerified } from '../support/request-session';
 
 // `/` offers a signed-in visitor the landing for their role and a signed-out one the sign-in page (claude-docs/components/welcome.md).
 // The session is tests/lib/request-session.test.ts's and the landing per role tests/lib/sign-in.test.ts's; here both and the viewer's first coven are mocked.
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));

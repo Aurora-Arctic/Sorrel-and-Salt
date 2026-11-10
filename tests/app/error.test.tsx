@@ -7,7 +7,10 @@ import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 import { hrefs } from '../support/links';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/gone', useRouter: () => ({}) }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../support/next-navigation')),
+  usePathname: () => '/gone',
+}));
 window.history.replaceState({}, '', '/gone');
 
 // React marks `document` as listening the first time any root mounts, and a later root whose container is

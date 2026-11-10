@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
+import { isBefore } from '../../support/interact';
 
 // claude-docs/components/entry-marks.md
 
@@ -112,29 +113,25 @@ describe('EntryMarks', () => {
 
 // EntryMarks draws the whole row, the safety mark included, so the order holds in one place; asserted by document order.
 describe('EntryMarks badge order', () => {
-  const precedes = (first: Element | null, second: Element | null): boolean =>
-    first !== null &&
-    second !== null &&
-    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
   const caution = () => screen.queryByText('Caution', { exact: true });
   const toxic = () => screen.queryByText('Toxic', { exact: true });
 
   it('draws a green mark first, ahead of a neutral one built before it', () => {
     render(<EntryMarks kind="cupboard" retired annotated />);
 
-    expect(precedes(annotated(), retired())).toBe(true);
+    expect(isBefore(annotated(), retired())).toBe(true);
   });
 
   it('draws Local ahead of the safety mark', () => {
     render(<EntryMarks kind="own" toxic />);
-    expect(precedes(local(), toxic())).toBe(true);
+    expect(isBefore(local(), toxic())).toBe(true);
   });
 
   it('draws the safety mark last', () => {
     render(<EntryMarks kind="cupboard" retired annotated safetyNotes="Fixture caution." />);
 
     for (const mark of [annotated(), retired()]) {
-      expect(precedes(mark, caution())).toBe(true);
+      expect(isBefore(mark, caution())).toBe(true);
     }
   });
 
@@ -153,7 +150,7 @@ describe('EntryMarks badge order', () => {
     const updated = screen.getByText('Updated', { exact: true });
 
     for (const badge of [local(), retired(), caution()]) {
-      expect(precedes(updated, badge)).toBe(true);
+      expect(isBefore(updated, badge)).toBe(true);
     }
   });
 

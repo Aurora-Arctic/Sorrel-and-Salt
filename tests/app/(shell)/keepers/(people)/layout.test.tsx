@@ -6,9 +6,9 @@ import { currentHrefs, hrefs } from '../../../../support/links';
 // invitation tabs moved to their own page (tests/app/(shell)/keepers/(invitations)/layout.test.tsx).
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const { default: PeopleLayout } = await import('@/app/(shell)/keepers/(people)/layout');

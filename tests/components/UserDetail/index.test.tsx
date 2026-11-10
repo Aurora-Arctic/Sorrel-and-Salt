@@ -5,6 +5,8 @@ import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
+import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which happy-dom cannot follow.
@@ -13,8 +15,6 @@ vi.mock('@/lib/auth-client', () => ({
   impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),
 }));
 const assignMock = vi.fn();
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/user-detail.md
 
@@ -407,9 +407,7 @@ describe('UserDetail, when the service refuses a change', () => {
         expect(within(alert).getByRole('button', { name: 'Dismiss' })).toBeInTheDocument();
         expect(screen.getAllByRole('alert')).toHaveLength(1);
         expect(screen.getByRole('dialog')).toContainElement(alert);
-        expect(
-          control().compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
-        ).toBeTruthy();
+        expectBefore(control(), alert);
         expect(control()).toHaveAccessibleDescription(`Last try failed: ${refusal.message}`);
         await waitFor(() => expect(control()).toHaveFocus());
         expect(badge()).toBeInTheDocument();

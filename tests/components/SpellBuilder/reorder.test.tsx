@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import type {
@@ -7,7 +6,6 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { TOUCH_DRAG_DELAY_MS } from '@/lib/sortable';
@@ -18,8 +16,8 @@ import {
   press,
   touchDragVertically,
 } from '../../support/sortable';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -125,11 +123,7 @@ function acceptUpdateEchoingSteps() {
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   offerCategories([]);
-  const view = render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" spell={SPELL} {...props} />
-    </QueryClientProvider>,
-  );
+  const view = renderWithQuery(<SpellBuilder workspaceId="w1" spell={SPELL} {...props} />);
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
@@ -146,8 +140,6 @@ const announced = () =>
     .getAllByRole('status')
     .map((region) => region.textContent)
     .join(' | ');
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
 const ROSEWORT = 'Fixture Rosewort (Dried Leaf)';
 
@@ -185,7 +177,7 @@ describe('the spell builder’s step order', () => {
     renderBuilder();
 
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([SENT.rosewort, SENT.stir, SENT.testwort]);
@@ -302,7 +294,7 @@ describe('the spell builder’s undo of step changes', () => {
     const calls = acceptUpdate();
     renderBuilder();
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
-    submit();
+    submitForm();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
@@ -323,7 +315,7 @@ describe('the spell builder’s undo across a save', () => {
     const rows = () => within(steps()).getAllByRole('listitem');
     fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
     await waitFor(() => expect(rows()).toHaveLength(2));
-    submit();
+    submitForm();
     await waitFor(() => expect(calls).toHaveLength(1));
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     const kept = rows().length;

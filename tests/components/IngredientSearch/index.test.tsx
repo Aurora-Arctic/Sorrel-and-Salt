@@ -9,12 +9,11 @@ import type { IngredientSearchMatch, SearchSource } from '@/components/Ingredien
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm } from '../../support/filter-form';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
-
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/ingredient-search.md, "Testing"
 
@@ -49,7 +48,7 @@ function renderSearch(
   source?: SearchSource,
   opener: typeof pickHref | null = pickHref,
 ) {
-  return renderWithClient(
+  return renderWithQuery(
     <IngredientSearch
       skeleton={null}
       search={
@@ -316,7 +315,7 @@ describe('IngredientSearch', () => {
   it('opens a pick through the route modal opener, under its heading and in its place', async () => {
     offer([match(1), match(2)]);
     const open = vi.fn();
-    renderWithClient(
+    renderWithQuery(
       <RouteModalContext.Provider value={{ loading: undefined, open, cancel: () => undefined }}>
         <IngredientSearch
           skeleton={null}

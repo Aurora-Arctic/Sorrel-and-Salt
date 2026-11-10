@@ -1,9 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpResponse } from 'msw/http';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { expect, vi } from 'vitest';
 import GroupedValueForm from '@/components/GroupedValueForm';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithQuery } from './render-with-query';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from './msw/graphql';
 import { server } from './msw/server';
 import { choose, press, type } from './interact';
@@ -19,15 +18,13 @@ const group = (subject: GroupedValueFormSubject) =>
 
 function renderSubject(subject: GroupedValueFormSubject, editing = false) {
   const onDone = vi.fn();
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <GroupedValueForm
-        kind={subject.kind}
-        value={editing ? subject.value : undefined}
-        groups={subject.groups}
-        onDone={onDone}
-      />
-    </QueryClientProvider>,
+  renderWithQuery(
+    <GroupedValueForm
+      kind={subject.kind}
+      value={editing ? subject.value : undefined}
+      groups={subject.groups}
+      onDone={onDone}
+    />,
   );
   return onDone;
 }

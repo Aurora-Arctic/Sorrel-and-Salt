@@ -1,25 +1,23 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import NameForm from '@/components/NameForm';
 import { characterCountText } from '@/components/Field/character-count';
 import { NAME_MAX_LENGTH, NameInput } from '@/modules/identity/validation/name';
 import type { SetNameMutation, SetNameMutationVariables } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 // The account page's Name section. The mutation is answered by MSW in
 // the shape /api/graphql answers (tests/support/msw/graphql.ts), so a refusal
 // is read through the route's own error mapping (claude-docs/components/name-form.md).
 
-function renderForm(ui: ReactNode) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+function renderForm(ui: ReactElement) {
+  return renderWithQuery(ui);
 }
 
 const nameField = () => screen.getByRole('textbox', { name: 'Name' });
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
 function acceptSetName() {
   const calls: SetNameMutationVariables[] = [];
@@ -61,7 +59,7 @@ describe('NameForm', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 
     fireEvent.change(nameField(), { target: { value: ' Ada Renamed ' } });
-    submit();
+    submitForm();
 
     expect(await screen.findByRole('status')).toBeVisible();
     expect(calls).toEqual([{ name: ' Ada Renamed ' }]);
@@ -77,7 +75,7 @@ describe('NameForm', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 
     fireEvent.change(nameField(), { target: { value: '   x' } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
     expect(nameField()).toHaveAccessibleDescription(/\S/);
@@ -89,7 +87,7 @@ describe('NameForm', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 
     fireEvent.change(nameField(), { target: { value: 'Ada Renamed' } });
-    submit();
+    submitForm();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Confirm your email address first');
   });
@@ -109,7 +107,7 @@ describe('NameForm', () => {
 
       fireEvent.change(nameField(), { target: { value: cleared } });
       expect(save()).toBeEnabled();
-      submit();
+      submitForm();
 
       expect(nameField()).toHaveAttribute('aria-invalid', 'true');
       expect(nameField()).toHaveAccessibleDescription(expect.stringContaining(refusal!));

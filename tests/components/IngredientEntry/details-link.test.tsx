@@ -1,10 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Navigating } from '../../support/navigating';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsLink } = await import('@/components/IngredientEntry/details-link');

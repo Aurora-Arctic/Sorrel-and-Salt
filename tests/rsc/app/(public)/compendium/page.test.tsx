@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CLIENT_MANIFEST } from '../../../../support/client-references.mts';
+import { getSession } from '../../../../support/request-session';
 
 // The public compendium page's Flight payload, the data `self.__next_f.push` carries beside the HTML. The reads
 // and the viewer are mocked and every `'use client'` module is a client reference
@@ -20,9 +21,7 @@ vi.mock('@/lib/viewer', () => ({
   viewerIfSignedIn,
   covenRolesIfSignedIn: async () => new Map([['w-1', 'owner']]),
 }));
-vi.mock('@/lib/request-session', () => ({
-  getSession: async () => ({ userId: 'user-a', role: 'user' }),
-}));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 vi.mock('@/app/entry-stock', () => ({
   readEntryStock: async () => new Map(),
   stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
@@ -141,6 +140,7 @@ const member = {
 
 beforeEach(() => {
   viewerIfSignedIn.mockReset();
+  vi.mocked(getSession).mockResolvedValue({ userId: 'user-a', role: 'user' });
 });
 
 describe('the public compendium page’s data for the browser', () => {

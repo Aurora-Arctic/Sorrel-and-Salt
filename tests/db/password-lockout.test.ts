@@ -5,15 +5,15 @@ import { PROVIDER_CREDENTIALS, cookieHeader, signIn as oauthSignIn } from '../su
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import { get, post, pwnedRange } from '../support/password';
-import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
 
 // Password lockout (@story-72) through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
 // claude-docs/auth/passwords.md, "Lockout". Counts are seeded in SQL rather than reached by a hundred sign-ins.
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
+// Imported after `importAuth` resets the module registry, so it is the instance `@/lib/auth` sends through.
+let send: (typeof import('../support/mail'))['send'];
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 
@@ -38,6 +38,7 @@ afterAll(() => server.close());
 let auth: AuthInstance;
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
+  ({ send } = await import('../support/mail'));
 });
 
 beforeEach(async () => {

@@ -1,20 +1,17 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardPlace, PublicCupboardActionsProps } from '@/components/IngredientEntry/types';
 import type { StockData } from '@/components/StockDialog/types';
 import type { AddCupboardEntryMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { covenChoiceModule } from '@/components/IngredientEntry/lazy-coven-choice';
-import { press } from '../../support/interact';
+import { press, expectBefore } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { cupboardEntryFormModule } from '@/components/IngredientEntry/lazy-forms';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The cupboard choices on the public entry page, across every coven the viewer may write in (claude-docs/components/ingredient-entry.md, "On the public page").
 // The card's plus shows while any coven lacks the entry, just before the other icons and never among their choices; a curator's Edit is the main icon and never in the dots;
@@ -76,18 +73,14 @@ const props = (
   ...over,
 });
 
-let client = makeQueryClient();
 const view = (p: PublicCupboardActionsProps) => (
-  <QueryClientProvider client={client}>
-    <main>
-      <h1>Testwort</h1>
-      <CupboardActions {...p} />
-    </main>
-  </QueryClientProvider>
+  <main>
+    <h1>Testwort</h1>
+    <CupboardActions {...p} />
+  </main>
 );
 function show(p: PublicCupboardActionsProps) {
-  client = makeQueryClient();
-  return render(view(p));
+  return renderWithQuery(view(p));
 }
 
 function shownChoices(): string[] {
@@ -210,7 +203,7 @@ describe('CupboardActions on the public page', () => {
 
       const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
-      expect(plus.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expectBefore(plus, edit);
       expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 

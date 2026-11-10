@@ -24,6 +24,7 @@ import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { rowCells } from '../../support/table';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/admin-cards.md
 
@@ -32,9 +33,6 @@ vi.mock('@/lib/invitation-cards', () => ({
     `<svg xmlns="http://www.w3.org/2000/svg"><title>${link}</title></svg>`,
   buildCardSheetsPdf: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
 }));
-
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const BATCH_ONE = 'b1111111-0000-4000-8000-000000000001';
 const BATCHES = [
@@ -606,7 +604,10 @@ describe('AdminCards', () => {
 
     await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
     const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
-    expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
+    expect(input.links).toEqual([
+      `${window.location.origin}/i/ta`,
+      `${window.location.origin}/i/tb`,
+    ]);
     expect(input.batch).toBe('b4444444');
     expect(input.expiresAt).toEqual(new Date('2027-02-02T12:00:00.000Z'));
     await waitFor(() =>

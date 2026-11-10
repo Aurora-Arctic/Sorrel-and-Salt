@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
@@ -9,13 +8,12 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mirrorKey, readMirror, writeMirror } from '@/lib/autosave';
 import type { SpellBuilderProps, SpellBuilderValues } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -39,16 +37,12 @@ const SPELL = {
 const KEY = mirrorKey({ entity: 'spell', id: 's9', userId: 'u1' });
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" userId="u1" {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SpellBuilder workspaceId="w1" userId="u1" {...props} />);
 }
 
 const field = (name: string) => screen.getByRole('textbox', { name });
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
+const typeInField = (name: string, value: string) =>
+  fireEvent.change(field(name), { target: { value } });
 
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
   return {
@@ -111,12 +105,12 @@ describe('the spell builder’s saves', () => {
     const { created, updated } = accept();
     renderBuilder();
 
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
     fireEvent.click(save());
     await waitFor(() => expect(created).toHaveLength(1));
     await waitFor(() => expect(save()).toBeDisabled());
 
-    type('Intent', 'Calm');
+    typeInField('Intent', 'Calm');
     fireEvent.click(save());
     await waitFor(() => expect(updated).toHaveLength(1));
     expect(created).toHaveLength(1);
@@ -127,7 +121,7 @@ describe('the spell builder’s saves', () => {
     const { created } = accept();
     renderBuilder();
 
-    type('Intent', 'Calm');
+    typeInField('Intent', 'Calm');
     fireEvent.click(save());
 
     await waitFor(() => expect(created).toHaveLength(1));
@@ -137,7 +131,7 @@ describe('the spell builder’s saves', () => {
     const { created } = accept();
     renderBuilder();
 
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
     fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     fireEvent.click(save());
 
@@ -150,7 +144,7 @@ describe('the spell builder’s saves', () => {
     renderBuilder();
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
     fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
@@ -217,7 +211,7 @@ describe('the spell builder’s saves', () => {
     renderBuilder();
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    type('Title', 'Fixture Working');
+    typeInField('Title', 'Fixture Working');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
     });
@@ -232,7 +226,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-    type('Intent', 'Clear');
+    typeInField('Intent', 'Clear');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2900);
     });
@@ -287,7 +281,7 @@ describe('a save someone else got in first', () => {
     mockGraphQLError('UpdateSpell', { code: 'STALE_WRITE', currentRevision: 5 });
     renderBuilder({ spell: SPELL });
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-    type('Intent', 'Mine');
+    typeInField('Intent', 'Mine');
     fireEvent.click(save());
     expect(await screen.findByText('This spell was changed elsewhere.')).toBeInTheDocument();
     return sends;

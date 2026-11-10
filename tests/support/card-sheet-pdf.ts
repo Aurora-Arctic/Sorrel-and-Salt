@@ -62,7 +62,7 @@ export interface Drawn {
   textInks: number[][];
 }
 
-export function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
+function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
   return [
     a * A + b * C,
     a * B + b * D,

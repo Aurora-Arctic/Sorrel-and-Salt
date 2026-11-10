@@ -11,9 +11,8 @@ import { server } from '../../support/msw/server';
 
 // claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link"
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/support/request',
 }));
 

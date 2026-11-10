@@ -4,6 +4,7 @@ import IngredientSummary from '@/components/IngredientEntry/summary';
 import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/ingredient-entry.md, "The details modal"
 
@@ -146,9 +147,7 @@ describe('IngredientSummary', () => {
 
     const description = screen.getByText('A fixture description.');
     const caution = screen.getByRole('region', { name: 'Caution' });
-    expect(
-      description.compareDocumentPosition(caution) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(description, caution);
   });
 
   it("shows the coven's description laid over a held compendium entry's", () => {
@@ -465,10 +464,7 @@ describe('IngredientSummary', () => {
       expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
       const caution = screen.getByRole('region', { name: 'Caution' });
-      expect(
-        caution.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(caution, screen.getByRole('heading', { name: 'Forms' }));
     });
 
     it("shows each form's jar with jars: its quantity or Unmeasured, and its badge; a form in no jar is Not Stocked to a screen reader", () => {

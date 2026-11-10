@@ -1,13 +1,12 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render as draw, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
+import type { ReactElement } from 'react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Navigating } from '../../support/navigating';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { expectBefore, isBefore } from '../../support/interact';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsDialog } = await import('@/components/IngredientEntry/details-dialog');
@@ -28,8 +27,8 @@ const ENTRY = {
 const DETAILS_NAME = 'Testwort';
 
 /** Draws the dialog and waits out its loading body: the window's head and foot load on first open. */
-const render = async (ui: Parameters<typeof draw>[0]) => {
-  const view = draw(ui);
+const render = async (ui: ReactElement) => {
+  const view = renderWithQuery(ui);
   if (screen.queryByRole('dialog')) {
     await waitFor(
       () =>
@@ -306,33 +305,29 @@ describe('DetailsDialog plus', () => {
   const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
   const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };
 
-  const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) =>
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <Navigating push={router.push}>
-          <RouteModalProvider>
-            <DetailsDialog
-              closeHref={LIST}
-              opened={{
-                heading: detailsHeading(ENTRY),
-                pageHref: PAGE,
-                editAction: { href: EDIT, heading: editHeading(ENTRY) },
-                ...(plus && { plus: { workspaceId: ONE.id, ...plus }, ingredientId: ID }),
-              }}
-            />
-          </RouteModalProvider>
-        </Navigating>
-      </QueryClientProvider>,
+  const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) => {
+    return render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <DetailsDialog
+            closeHref={LIST}
+            opened={{
+              heading: detailsHeading(ENTRY),
+              pageHref: PAGE,
+              editAction: { href: EDIT, heading: editHeading(ENTRY) },
+              ...(plus && { plus: { workspaceId: ONE.id, ...plus }, ingredientId: ID }),
+            }}
+          />
+        </RouteModalProvider>
+      </Navigating>,
     );
-  const before = (first: Node, second: Node) =>
-    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
-
+  };
   it('puts the plus before the pencil while a coven that may add lacks the entry', async () => {
     await show({ covens: [ONE, TWO], heldIn: [ONE.id] });
 
     const add = within(dialog()).getByRole('button', { name: /^Add to My Ingredients: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-    expect(before(add, edit)).toBe(true);
+    expect(isBefore(add, edit)).toBe(true);
     // Why it could be the check: one coven already holds it, but not both.
     expect(within(dialog()).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
@@ -342,7 +337,7 @@ describe('DetailsDialog plus', () => {
 
     const held = within(dialog()).getByRole('button', { name: /^In Every Cupboard: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-    expect(before(held, edit)).toBe(true);
+    expect(isBefore(held, edit)).toBe(true);
     expect(within(dialog()).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
   });
 
@@ -378,9 +373,7 @@ describe('DetailsDialog from a compendium card', () => {
     await show(true);
     const edit = within(dialog()).getByRole('link', { name: 'Edit in Compendium Testwort' });
     const more = within(dialog()).getByRole('button', { name: 'More for Testwort' });
-    expect(Boolean(edit.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
-      true,
-    );
+    expectBefore(edit, more);
     // Why the name is the compendium's: the same props without the flag name a plain Edit.
     expect(within(dialog()).queryByRole('link', { name: 'Edit Testwort' })).toBeNull();
   });
@@ -400,8 +393,8 @@ describe('DetailsDialog coven card controls', () => {
   const CARD_NAME = 'Testwort, Fixtura testalis';
   const entry = { id: ID, label: ENTRY.name, canonicalName: ENTRY.canonicalName };
 
-  const view = (opened: boolean, extra: object) => (
-    <QueryClientProvider client={makeQueryClient()}>
+  const view = (opened: boolean, extra: object) => {
+    return (
       <Navigating push={router.push}>
         <RouteModalProvider>
           <DetailsDialog
@@ -412,8 +405,8 @@ describe('DetailsDialog coven card controls', () => {
           />
         </RouteModalProvider>
       </Navigating>
-    </QueryClientProvider>
-  );
+    );
+  };
   const actions = (fields: object) =>
     covenCardActions({ ...entry, ...fields }, WORKSPACE_ID, 'fixture-coven', COVEN_LIST);
 

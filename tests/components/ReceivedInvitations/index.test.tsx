@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import ReceivedInvitations from '@/components/ReceivedInvitations';
 import type { ReceivedInvitationEntry } from '@/components/ReceivedInvitations/types';
@@ -11,11 +11,9 @@ import type {
 } from '@/gql/graphql';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/received-invitations.md
-
-const router = { push: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const INVITATIONS: readonly ReceivedInvitationEntry[] = [
   {

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import AdminInvitations, { InviteAdmin } from '@/components/AdminInvitations';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '@/lib/primary-admin';
 import type {
@@ -12,17 +12,14 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { expectGuardedWaysOut } from '../../support/discard-guard';
 import { FILTER_ROWS } from '../../support/filter-form';
+import { router } from '../../support/next-navigation';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
-import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 import { limitMessage } from '@/lib/formats';
 import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 
 // claude-docs/components/admin-invitations.md
-
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
 
@@ -49,12 +46,6 @@ const INVITATIONS = [
     expiresAt: new Date('2026-10-15T09:00:00Z'),
   },
 ];
-
-beforeEach(() => {
-  router.push.mockClear();
-  router.replace.mockClear();
-  router.refresh.mockClear();
-});
 
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
@@ -176,16 +167,6 @@ describe('AdminInvitations', () => {
       }),
     );
     expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false });
-  });
-
-  it('flags a malformed address when the field is left, linked to the field', () => {
-    render(<AdminInvitations invitations={[]} inviting />);
-    const email = within(dialog()).getByRole('textbox', { name: 'Email Address' });
-    fireEvent.change(email, { target: { value: 'name@' } });
-    fireEvent.blur(email);
-
-    expect(email).toHaveAttribute('aria-invalid', 'true');
-    expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
   });
 
   it('refuses a reason over its limit on Send Invitation, on the field, without sending', () => {

@@ -9,7 +9,7 @@ import {
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { UserRole } from '@/lib/session';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { slugify } from '@/lib/slugify';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
@@ -19,8 +19,9 @@ import { useTestDatabase } from '../support/db/database';
 // Where the callback lands a sign-in: a return path wins; otherwise a keeper goes to /keepers, a curator to /curator, a coven member into the first coven the switcher lists, anyone else to /coven;
 // an unverified account lands on the email page first. Driven through Better Auth's real endpoints (claude-docs/auth/route-protection.md, "Route protection").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
+// Imported after `importAuth` resets the module registry, so it is the instance `@/lib/auth` sends through.
+let send: (typeof import('../support/mail'))['send'];
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 
@@ -48,6 +49,7 @@ let auth: AuthInstance;
 // stubbed beside them for the whole file.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
+  ({ send } = await import('../support/mail'));
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
 });
 

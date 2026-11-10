@@ -4,13 +4,16 @@ import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
 // The page the test pretends to be on, and the router a tab press navigates
 // through; Next's own hooks read the App Router's state, which a component
 // test does not mount.
 const pathname = vi.fn<() => string>();
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => pathname(),
+}));
 
 const { default: TabbedPage } = await import('@/components/TabbedPage');
 

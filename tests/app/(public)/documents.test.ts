@@ -1,15 +1,14 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Metadata } from 'next';
 import { NotFound } from '@/lib/errors';
+import { getSession, sessionIsVerified } from '../../support/request-session';
 
 const notFound = vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 });
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 
-const getSession = vi.fn();
-const sessionIsVerified = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../../support/request-session'));
 
 const readDocument = vi.fn();
 const readDocumentVersion = vi.fn();

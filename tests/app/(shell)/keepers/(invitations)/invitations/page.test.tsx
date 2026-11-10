@@ -3,16 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm } from '../../../../../support/filter-form';
+import { requireAdminSession } from '../../../../../support/request-session';
 
 // The `/keepers/invitations` page, the People page's Invitations tab with New Invitation beside the heading: the guard, then the identity reads (a page of pending invitations and their count, shown with no hash),
 // the cursor and the pager's links, the invite form `?invite` opens, and the pause locking Invite and Revoke.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/admin-invitations.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 // The invite form and Revoke hold the router, which only a mounted app provides.
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 
 const adminRoleChangePauseState = vi.fn();
 const listPendingAdminInvitations = vi.fn();

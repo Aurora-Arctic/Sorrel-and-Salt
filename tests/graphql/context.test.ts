@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session, SessionState } from '@/lib/session';
+import { sessionStateFromHeaders } from '../support/request-session';
 
 // Better Auth's own reading of the cookie is request-session.test.ts's
 // subject; here it is the seam the context calls through.
-const sessionStateFromHeaders = vi.fn<(headers: Headers) => Promise<SessionState>>();
-vi.mock('@/lib/request-session', () => ({ sessionStateFromHeaders }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 
 const stateOf = (
   session: Session | null,

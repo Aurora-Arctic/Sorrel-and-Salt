@@ -1,11 +1,16 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { entryDetail } from '../../../../../support/entry-detail';
+import { router } from '../../../../../support/next-navigation';
+import { renderWithQuery } from '../../../../../support/render-with-query';
+import {
+  getSession,
+  requireCovenMembership,
+  requireSession,
+} from '../../../../../support/request-session';
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -14,19 +19,13 @@ const COVEN = {
 };
 const session = { user: { id: 'fixture-user' } };
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../../support/next-navigation')),
   usePathname: () => '/coven/fixture-coven/ingredients',
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const requireCovenMembership = vi.fn();
-vi.mock('@/lib/request-session', () => ({
-  requireCovenMembership,
-  requireSession: async () => session,
-  getSession: async () => session,
-}));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
@@ -131,7 +130,7 @@ async function renderPage(search: Record<string, string> = {}) {
     params: Promise.resolve({ slug: COVEN.slug }),
     searchParams: Promise.resolve(search),
   });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
   // An opened entry's details load on first open: wait for them to replace the dialog's loading status.
   if (search.entry) {
     await waitFor(() =>
@@ -147,6 +146,8 @@ beforeEach(() => {
   covensHoldingEntry.mockResolvedValue([]);
   viewerIfSignedIn.mockResolvedValue(undefined);
   covenRolesIfSignedIn.mockResolvedValue(undefined);
+  requireSession.mockResolvedValue(session);
+  getSession.mockResolvedValue(session);
   requireCovenMembership.mockResolvedValue({
     workspace: COVEN,
     membership: { workspaceId: COVEN.id, userId: 'fixture-user', role: 'member' },

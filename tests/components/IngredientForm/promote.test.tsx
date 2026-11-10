@@ -12,7 +12,8 @@ import type {
   UpdateCompendiumIngredientMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
+import { duplicateHref, textbox, waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
@@ -81,7 +82,7 @@ function renderForm(props: { mayPromote?: boolean; values?: IngredientFormValues
   const { mayPromote = true, values = TESTWORT } = props;
   const onSaved = vi.fn();
   offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm
       duplicateHref={duplicateHref}
       workspaceId={null}
@@ -137,7 +138,7 @@ describe('promoting a folk name in the compendium form', () => {
 
     it('is absent from a new entry, which has nothing to promote on', () => {
       offerNothing();
-      renderWithClient(
+      renderWithQuery(
         <IngredientForm duplicateHref={duplicateHref} workspaceId={null} mayPromote />,
       );
 
@@ -330,7 +331,7 @@ describe('the promotion question on its own, for either tier', () => {
     ['a coven', WORKSPACE_ID],
   ])('sends the one promotion for %s with its tier, ingredient and folk name', async (_, id) => {
     const sent = acceptPromote();
-    renderWithClient(<Harness workspaceId={id} />);
+    renderWithQuery(<Harness workspaceId={id} />);
 
     press('Promote');
 
@@ -341,7 +342,7 @@ describe('the promotion question on its own, for either tier', () => {
 
   it('sends nothing on Cancel, in a coven', async () => {
     const sent = acceptPromote();
-    renderWithClient(<Harness workspaceId={WORKSPACE_ID} />);
+    renderWithQuery(<Harness workspaceId={WORKSPACE_ID} />);
 
     press('Cancel');
 

@@ -1,6 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
 import GroupForm from '@/components/GroupForm';
 import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
@@ -21,7 +21,6 @@ import type {
   UpdateIngredientFormGroupMutation,
   UpdateIngredientFormGroupMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -55,11 +54,7 @@ const MATTER = { ...WARDS, name: 'Fixture Matter', colorDark: '', colorLight: ''
 
 function renderForm(props: Partial<GroupFormProps> = {}) {
   const onDone = vi.fn();
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <GroupForm kind="category" groups={GROUPS} onDone={onDone} {...props} />
-    </QueryClientProvider>,
-  );
+  renderWithQuery(<GroupForm kind="category" groups={GROUPS} onDone={onDone} {...props} />);
   return onDone;
 }
 
@@ -181,10 +176,8 @@ describe('GroupForm, for a category group', () => {
 
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
-      const { unmount } = render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <GroupForm kind="category" groups={GROUPS} onDone={vi.fn()} />
-        </QueryClientProvider>,
+      const { unmount } = renderWithQuery(
+        <GroupForm kind="category" groups={GROUPS} onDone={vi.fn()} />,
       );
       typeIn(dark(), '#4e8bc2');
       expect(light()).toHaveValue(pairedColor('#4e8bc2', 'colorLight'));
@@ -569,11 +562,11 @@ describe('GroupForm, for a deity tradition', () => {
 
 // The undo hook is tested in tests/components/Field; this is its wiring.
 describe('GroupForm, its undo and redo', () => {
-  const save = () => screen.getByRole('button', { name: 'Save Group' });
+  const saveGroup = () => screen.getByRole('button', { name: 'Save Group' });
 
   it('undoes a colour change, the hex box taking the saved colour back, and redoes it', () => {
     renderForm({ group: WARDS });
-    expect(save()).toBeDisabled();
+    expect(saveGroup()).toBeDisabled();
     act(() => dark().focus());
     typeIn(dark(), '#35987d');
     expect(dark()).toHaveValue('#35987d');
@@ -582,7 +575,7 @@ describe('GroupForm, its undo and redo', () => {
 
     expect(dark()).toHaveValue(WARDS.colorDark);
     expect(light()).toHaveValue(WARDS.colorLight);
-    expect(save()).toBeDisabled();
+    expect(saveGroup()).toBeDisabled();
 
     redo();
     expect(dark()).toHaveValue('#35987d');

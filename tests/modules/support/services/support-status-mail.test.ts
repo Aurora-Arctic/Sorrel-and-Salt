@@ -17,14 +17,12 @@ import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice'
 import { replyNoticeStep } from '@/modules/support/jobs/support-reply-notice-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { send } from '../../../support/mail';
+import { ORIGIN } from '../../../support/constants';
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
 
-vi.mock('@/lib/mail', () => ({
-  send: async (message: (typeof sent)[number]) => {
-    sent.push(message);
-  },
-}));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 // The jobs are not run here: a test calls the reply notice's step, or the retention job's notice batch step, as the runs would.
 const { startJob } = vi.hoisted(() => ({
@@ -50,6 +48,10 @@ afterEach(() => {
 beforeEach(async () => {
   startJob.mockClear();
   sent.length = 0;
+  send.mockReset();
+  send.mockImplementation(async (message: (typeof sent)[number]) => {
+    sent.push(message);
+  });
   await sql`truncate support_replies, support_timeouts, support_requests, support_send_counts cascade`;
 });
 
@@ -60,7 +62,7 @@ const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
 const emailOf = async (userId: string) =>
   (await sql`select email from users where id = ${userId}`)[0]!.email as string;
 
-const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+const mail: SupportNotifier = { origin: async () => ORIGIN };
 
 const statusRuns = () =>
   startJob.mock.calls
@@ -89,9 +91,7 @@ describe('the received mail', () => {
   it('starts a run holding the request id and the origin alone, whose step mails a signed-in sender a link to the request', async () => {
     const request = await sendSupportRequest(asUser(C), INPUT, mail);
 
-    expect(statusRuns()).toEqual([
-      { kind: 'received', requestId: request.id, origin: 'http://localhost:3000' },
-    ]);
+    expect(statusRuns()).toEqual([{ kind: 'received', requestId: request.id, origin: ORIGIN }]);
     const [message] = await sendStatusRuns();
     expect(message!.to).toBe(await emailOf(C.id));
     expect(message!.subject).toContain(INPUT.subject);
@@ -105,14 +105,12 @@ describe('the received mail', () => {
     } as Parameters<typeof sendSignedOutSupportRequest>[1]);
 
     const [row] = await sql`select id from support_requests`;
-    expect(statusRuns()).toEqual([
-      { kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' },
-    ]);
+    expect(statusRuns()).toEqual([{ kind: 'received', requestId: row!.id, origin: ORIGIN }]);
     expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.email);
     expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.subject);
     const [message] = await sendStatusRuns();
     expect(message!.to).toBe(SIGNED_OUT.email);
-    expect(message!.text).toMatch(/http:\/\/localhost:3000\/support\/request#[A-Za-z0-9_-]{32,}/);
+    expect(message!.text).toMatch(new RegExp(`${ORIGIN}/support/request#[A-Za-z0-9_-]{32,}`));
     expect(message!.text).not.toContain('/account');
   });
 
@@ -139,9 +137,7 @@ describe('the resolved mail', () => {
     startJob.mockClear();
 
     await resolveSupportRequest(asUser(E), request.id, mail);
-    expect(statusRuns()).toEqual([
-      { kind: 'resolved', requestId: request.id, origin: 'http://localhost:3000' },
-    ]);
+    expect(statusRuns()).toEqual([{ kind: 'resolved', requestId: request.id, origin: ORIGIN }]);
     const [message] = await sendStatusRuns();
     expect(message!.to).toBe(await emailOf(C.id));
     expect(message!.subject).toContain(INPUT.subject);
@@ -176,13 +172,13 @@ describe('an internal note', () => {
 
     expect(statusRuns().map((run) => run.kind)).toEqual(['received', 'resolved']);
     const replyRuns = startJob.mock.calls.filter(([job]) => job === supportReplyNotice);
-    expect(replyRuns.map(([, args]) => args)).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(replyRuns.map(([, args]) => args)).toEqual([[reply.id, ORIGIN]]);
     expect(JSON.stringify(startJob.mock.calls)).not.toContain('repeat caller');
   });
 });
 
 describe('the rendered mails', () => {
-  const real = () => supportNotifier(new Request('http://localhost:8000/api/graphql'));
+  const real = () => supportNotifier(new Request(`${ORIGIN}/api/graphql`));
   beforeEach(() => {
     // Unset, so the received and resolved mails are tried once here rather than started as jobs.
     vi.stubEnv('MAIL_TRANSPORT', '');
@@ -196,14 +192,14 @@ describe('the rendered mails', () => {
     await addSupportInternalNote(asUser(E), request.id, NOTE);
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
     const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
-    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
+    expect(await replyNoticeStep(reply.id, ORIGIN)).toBe(true);
     await resolveSupportRequest(asUser(E), request.id, notifier);
     expect(
       await retentionBatchStep({
         kind: 'notice',
         ids: [request.id],
         now: noticeDay(),
-        origin: 'http://localhost:8000',
+        origin: ORIGIN,
       }),
     ).toBe(1);
 
@@ -229,14 +225,14 @@ describe('the rendered mails', () => {
       'Use the card.',
       notifier,
     );
-    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
+    expect(await replyNoticeStep(reply.id, ORIGIN)).toBe(true);
     await resolveSupportRequest(asUser(E), row!.id as string, notifier);
     expect(
       await retentionBatchStep({
         kind: 'notice',
         ids: [row!.id as string],
         now: noticeDay(),
-        origin: 'http://localhost:8000',
+        origin: ORIGIN,
       }),
     ).toBe(1);
 
