@@ -37,6 +37,19 @@ describe('values tests share', () => {
     expect(copies).toEqual([]);
   });
 
+  it('writes the development origin only through ORIGIN', () => {
+    // Either port: the one the app answers on, and the one copies drifted to.
+    const INLINE = /http:\/\/localhost:(?:3000|8000)\b/;
+    // This file is left out, as its opening comment names both. Precondition: the pattern finds the shared value.
+    const SELF = 'tests/guards/test-constants.test.ts';
+    expect(INLINE.test(source(HOME))).toBe(true);
+    expect(files).toContain(SELF);
+
+    const copies = files.filter((file) => file !== SELF && INLINE.test(source(file)));
+
+    expect(copies).toEqual([]);
+  });
+
   it('declares no shared value again under its own name', () => {
     expect(Object.keys(shared).sort()).toEqual([
       'MAILPIT_URL',
