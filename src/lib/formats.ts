@@ -9,11 +9,14 @@ export type FieldFormat = (text: string) => string;
 export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
 
 const SCHEME = /^[a-z][a-z\d+.-]*:/i;
+
+/** Whether text opens with a scheme such as `https:` or `mailto:`. */
+export const hasScheme = (text: string): boolean => SCHEME.test(text);
 const BARE_HOST = /^[\w-]+(\.[\w-]+)+([/?#]|$)/;
 
 /** A web address with `https://` put in front when it has no scheme and plainly starts with a host name. */
 export const withScheme: FieldFormat = (text) =>
-  !SCHEME.test(text) && BARE_HOST.test(text) ? `https://${text}` : text;
+  !hasScheme(text) && BARE_HOST.test(text) ? `https://${text}` : text;
 
 /** Text with only its ends trimmed, for multiline text, whose line breaks and spacing belong to the person. */
 export const trimEnds: FieldFormat = (text) => text.trim();

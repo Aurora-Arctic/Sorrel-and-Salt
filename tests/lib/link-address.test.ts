@@ -14,6 +14,10 @@ describe('tidyLinkAddress', () => {
     ['HTTP://example.com', 'https://example.com'],
     ['https://example.com', 'https://example.com'],
     ['mailto:ada@example.com', 'mailto:ada@example.com'],
+    ['ada@example.com', 'mailto:ada@example.com'],
+    ['  Ada@Example.com ', 'mailto:ada@example.com'],
+    ['ada@', 'ada@'],
+    ['https://ada@example.com', 'https://ada@example.com'],
     ['/coven/w/spells', '/coven/w/spells'],
     ['not an address', 'not an address'],
   ])('turns %j into %j', (typed, shown) => {

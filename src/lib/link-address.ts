@@ -1,4 +1,5 @@
-import { withScheme, type FieldFormat } from './formats';
+import { normaliseEmail, validateEmailAddress } from './email-address';
+import { hasScheme, withScheme, type FieldFormat } from './formats';
 
 // The one rule for which addresses a link in a document may hold, shared by the editor's link dialog
 // and its link plugin and by the page that renders the saved Markdown, so what the editor accepts is
@@ -12,9 +13,13 @@ export const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
 
 export const isOpenableAddress = (address: string): boolean => OPENABLE_ADDRESS.test(address);
 
-/** What the dialog shows on blur: `https://` put in front of a bare host, and `http://` made `https://`. */
-export const tidyLinkAddress: FieldFormat = (text) =>
-  withScheme(text.trim().replace(/^http:\/\//i, 'https://'));
+/** What the dialog shows on blur: `mailto:` put in front of an email address, `https://` in front of a bare host, and `http://` made `https://`. */
+export const tidyLinkAddress: FieldFormat = (text) => {
+  const trimmed = text.trim();
+  const email = normaliseEmail(trimmed);
+  if (!hasScheme(trimmed) && validateEmailAddress(email) === null) return `mailto:${email}`;
+  return withScheme(trimmed.replace(/^http:\/\//i, 'https://'));
+};
 
 /** What is wrong with an address for a link, or undefined when the page will open it. */
 export function linkAddressProblem(address: string): string | undefined {
