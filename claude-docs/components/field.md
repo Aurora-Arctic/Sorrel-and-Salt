@@ -4,7 +4,8 @@
 
 - **Import a part from its own file** (`Field/shell`, `Field/text-field`, …), not from the barrel, in any component a page loads first. A barrel counts every re-export, and `tests/guards/first-load-scripts.test.ts` fails a first-load file that reaches react-hook-form or zod through it.
 - **The shell** (`FieldShell`, `fieldDescription`) knows no form library and has no hook, so a plain-state form (NameForm, EmailForm) or a server component renders it around its own control. `TextField` and `SelectField` need a `<FormProvider>`.
-- `SuggestField`, `MultiSelectField`, `ListField` and `ToggleField` stay in `IngredientForm/fields.tsx` on the same shell, and `CupboardEntryForm` imports two of them from there. The date field is [`date-field.md`](date-field.md).
+- `SuggestField` (a Combobox that tidies its text when left, for any react-hook-form field) is in the Field set. `MultiSelectField`, `ListField` and `ToggleField` stay in `IngredientForm/fields.tsx` on the same shell, and `CupboardEntryForm` imports two of them from there. The date field is [`date-field.md`](date-field.md); a plain-state form draws it through `PlainDateField`, and `DateFieldShell` is the same wiring for a caller that has its own description (a react-hook-form field).
+- **`EmailField`** is the one email input, with `emailFailure` (`src/lib/email-failure.ts`) giving the refusal the same way for every form. **`usePlainProblems`** holds a plain-state form's found problems beside the server's refusal, and moves focus to the first invalid field (a group such as a radio set names its box). **`useReasonNote`** holds a `ReasonField`'s text and its check.
 - Field has no size prop: the StockDialog's shorter Add Form wears `.field--compact` itself (`_primitives.scss`). Field has no stylesheet; the primitives are in [`styling.md`](../styling.md), "Form fields".
 
 ## Contracts
