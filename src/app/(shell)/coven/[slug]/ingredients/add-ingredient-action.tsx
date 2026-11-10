@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { openHref } from '@/components/AppShell/add-href';
-import AddAction from '@/app/(shell)/curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 import type { AddIngredientActionProps } from './types';
 
 /**

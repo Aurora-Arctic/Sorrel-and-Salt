@@ -32,8 +32,8 @@ import CompendiumDialog from '../../(shell)/curator/compendium/compendium-dialog
 import { readEntryStock, stockKey } from '../../entry-stock';
 import { cardPlacesOf, readCardCovens } from './card-places';
 import { readCompendiumEntry } from '../../(shell)/curator/compendium/read-entry';
-import { readEditPlace } from '../../(shell)/curator/list-page';
-import MissingNotice from '../../(shell)/curator/missing-notice';
+import { readEditPlace } from '@/app/(shell)/_admin/list-page';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import {
   readCardCategories,
   readCategories,

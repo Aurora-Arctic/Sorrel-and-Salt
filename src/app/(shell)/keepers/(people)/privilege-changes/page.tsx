@@ -20,7 +20,7 @@ import {
   usersForAdmin,
 } from '@/modules/identity';
 import { pagerHrefs } from '../../../../../lib/list-href';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 

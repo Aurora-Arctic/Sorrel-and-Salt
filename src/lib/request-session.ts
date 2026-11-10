@@ -159,14 +159,11 @@ export async function requireSession(): Promise<Session> {
   return session;
 }
 
-/**
- * A signed-in non-keeper gets Next's forbidden page (403), not a redirect or 404, as `/keepers` is a known path
- * (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it, since a layout does not re-run on client-side navigation.
- */
-export async function requireAdminSession(): Promise<Session> {
+// A signed-in user the assertion refuses gets Next's forbidden page; `forbidden()` is called from this module.
+async function requireRole(assert: (session: Session) => void): Promise<Session> {
   const session = await requireSession();
   try {
-    assertSiteAdmin(session);
+    assert(session);
   } catch (error) {
     if (error instanceof Forbidden) forbidden();
     throw error;
@@ -174,17 +171,14 @@ export async function requireAdminSession(): Promise<Session> {
   return session;
 }
 
+/**
+ * A signed-in non-keeper gets Next's forbidden page (403), not a redirect or 404, as `/keepers` is a known path
+ * (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it, since a layout does not re-run on client-side navigation.
+ */
+export const requireAdminSession = (): Promise<Session> => requireRole(assertSiteAdmin);
+
 /** The people pages call `requireAdminSession()`, which a curator fails (claude-docs/auth/admin-guard.md, "The curator guard"). */
-export async function requireCuratorSession(): Promise<Session> {
-  const session = await requireSession();
-  try {
-    assertCurator(session);
-  } catch (error) {
-    if (error instanceof Forbidden) forbidden();
-    throw error;
-  }
-  return session;
-}
+export const requireCuratorSession = (): Promise<Session> => requireRole(assertCurator);
 
 // One lookup per slug per request, however many layouts and pages ask.
 const covenOf = cache(async (slug: string) => membershipBySlug(await requireSession(), slug));

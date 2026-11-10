@@ -6,7 +6,7 @@ import type {
 import type { CompendiumPlace } from '../../../../components/CompendiumList/types';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import type { ListDialog } from '../../../../lib/types';
-import type { ListSearchParams } from '../types';
+import type { ListSearchParams } from '../../_admin/types';
 import type { SourcingScore } from '@/modules/ingredients';
 
 export interface AdminCompendiumPageProps {

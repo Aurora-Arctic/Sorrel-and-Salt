@@ -3,6 +3,7 @@ import type { ModalHeading } from '../../../../../components/Modal/types';
 import type { AccessPauseEntry } from '../../../../../components/UserDetail/types';
 import type { SupportTimeoutEntry } from '../../../../../components/SupportRequests/types';
 import type { UserCoven, UserDetailUser } from '../../../../../components/UserDetail/types';
+import type { PauseControlProps } from '../../../../../components/UserList/types';
 
 export interface AdminUsersPageProps {
   searchParams: Promise<UsersSearchParams>;
@@ -38,4 +39,12 @@ export interface UserDialogProps {
   changesPaused: boolean;
   /** The modal place it shows in, where the page has another modal; unnamed on the Users page. */
   place?: string;
+}
+
+export interface UserDialogHostProps extends Pick<
+  UserDialogProps,
+  'closeHref' | 'opened' | 'place'
+> {
+  /** Whether keeper changes are paused and whether this viewer may flip that; none where it was not read. */
+  adminChanges: PauseControlProps | undefined;
 }

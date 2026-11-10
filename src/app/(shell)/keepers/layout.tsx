@@ -1,15 +1,10 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../../components/AdminNav';
-import { PendingLink } from '../../../lib/navigation';
-import ContextRow from '../../../components/ContextRow';
-import SectionBody from '../../../components/SectionBody';
-// From its own client file: the Modal index re-exports modules a server
-// component cannot import.
-import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
+import AdminAreaLayout from '@/app/(shell)/_admin/area-layout';
 import { countSupportViews } from '@/modules/support';
 import { requireCuratorSession } from '../../../lib/request-session';
 import { titleTemplate } from '../../../lib/site';
-import type { AdminLayoutProps } from '../curator/types';
+import type { AdminLayoutProps } from '@/app/(shell)/_admin/types';
 
 // Each page under `/keepers` gives its own name ('Privilege Changes') and this template
 // finishes it. Next does not apply a layout's template to a page in the same
@@ -20,26 +15,18 @@ export const metadata: Metadata = {
 
 // The curation guard, passed by a curator or a keeper, since a curator reaches the index and Support; each
 // people and invitation page calls the admin guard. Every page calls a guard too, as a layout does not re-run on
-// client navigation (claude-docs/auth/admin-guard.md, "The admin guard"). The route-modal provider is shared by all.
+// client navigation (claude-docs/auth/admin-guard.md, "The admin guard").
 export default async function KeepersLayout({ children }: AdminLayoutProps) {
   const session = await requireCuratorSession();
   const { needs_staff: needsStaff } = await countSupportViews(session, {});
 
   return (
-    <RouteModalProvider>
-      {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
-      <ContextRow
-        lead={
-          <PendingLink href="/keepers" className="context-row__name">
-            Keepers
-          </PendingLink>
-        }
-      >
-        <AdminNav managesPeople={session.role === 'admin'} needsStaff={needsStaff} />
-      </ContextRow>
-      <SectionBody region="admin" className="page-column">
-        {children}
-      </SectionBody>
-    </RouteModalProvider>
+    <AdminAreaLayout
+      name="Keepers"
+      href="/keepers"
+      nav={<AdminNav managesPeople={session.role === 'admin'} needsStaff={needsStaff} />}
+    >
+      {children}
+    </AdminAreaLayout>
   );
 }

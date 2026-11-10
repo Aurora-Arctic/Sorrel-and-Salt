@@ -1,5 +1,5 @@
 import { trimmed } from '../../../../../lib/search-params';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
 export function readInvitationsPlace(params: InvitationsSearchParams): InvitationsPlace {
