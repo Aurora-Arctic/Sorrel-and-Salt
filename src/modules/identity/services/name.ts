@@ -1,10 +1,11 @@
 import 'server-only';
 import { withAudit } from '../../../db/repository';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import { NameInput } from '../validation/name';
+import { assertEmailConfirmed } from './email-confirmed';
 import { getMe } from './profile';
 import type { UserRow } from '../types';
 
@@ -18,7 +19,7 @@ import type { UserRow } from '../types';
  */
 export async function setName(session: Session, input: string): Promise<UserRow> {
   const me = await getMe(session);
-  if (!me.emailVerified) throw new Forbidden('Confirm your email address first');
+  assertEmailConfirmed(me);
   const { name } = parseInput(NameInput, { name: input });
 
   const [row] = await withAudit(session, (write) =>

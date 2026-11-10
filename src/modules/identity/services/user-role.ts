@@ -17,7 +17,8 @@ import type { UserRow } from '../types';
 
 const REFUSAL = 'Only a site keeper may change a site role';
 
-const ROLE_NOUNS: Record<UserRole, string> = {
+/** A site role with its article, for a sentence: 'an admin'. */
+export const ROLE_NOUNS: Record<UserRole, string> = {
   user: 'a user',
   curator: 'a curator',
   admin: 'an admin',
