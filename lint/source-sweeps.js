@@ -1,12 +1,14 @@
-import { relative, sep } from 'node:path';
+import {
+  allowlistRule,
+  fileOf,
+  isComponentFile,
+  isStory,
+  jsxAttribute,
+  literalValue,
+} from './source-sweep-helpers.js';
 
 // Rules that were Vitest guards reading source as text or syntax tree (claude-docs/testing/layer-ownership.md,
 // "What a test may assert"), now in the editor and `npm run lint`. `lint/sorrel-lint.js` spreads them into the `sorrel` plugin.
-
-/** The file being linted, repo-relative with forward slashes. */
-const fileOf = (context) => relative(context.cwd, context.filename).split(sep).join('/');
-
-const isStory = (file) => file.endsWith('.stories.tsx');
 
 /** The file's text with every comment blanked to spaces, newlines kept, so offsets and lines still match. */
 function codeOf(context) {
@@ -239,7 +241,7 @@ export const rules = {
   'modal-focus-return-through-modal': {
     create: (context) => {
       const file = fileOf(context);
-      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file)) return {};
+      if (!isComponentFile(file, { ts: true })) return {};
       if (['src/components/Modal/modal.tsx', 'src/components/Modal/route-modal.tsx'].includes(file))
         return {};
       const ALLOWED = {
@@ -308,57 +310,47 @@ export const rules = {
   // A form holding typed text asks before a tab close, reload or link leaves it unsaved, through `useLeaveGuard`
   // (src/lib/navigation/leave-guard.tsx), `useDiscardGuard` or `useSaveOnClose`. A component drawing a `<form>`, `FormActions`
   // or `useForm` must call one unless the list below says why not; a listed file that no longer needs it is reported.
-  'long-form-guards-leaving': {
-    create: (context) => {
-      const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
-      const ALLOWED = {
-        'src/components/NameForm/index.tsx': 'one short field, the account name (M13.14)',
-        'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
-        'src/components/SignInPanel/password-form.tsx':
-          'sign-in credentials, which the browser’s password manager holds: nothing typed is lost by leaving',
-        'src/components/SignInPanel/two-factor-step.tsx':
-          'a six-digit code that changes every 30 seconds: nothing typed outlasts leaving',
-        'src/components/ForgotPasswordForm/index.tsx':
-          'one short field, an address the browser fills: nothing typed is lost by leaving',
-        'src/components/ResetPasswordForm/index.tsx':
-          'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
-        'src/components/PasswordSection/index.tsx':
-          'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
-        'src/components/HelpSearchForm/index.tsx':
-          'a one-field search that submits as a page load: nothing typed waits on a Save',
-        'src/components/FilterForm/index.tsx':
-          'a list filter that applies as it changes: nothing typed waits on a Save',
-        'src/components/IngredientForm/reference-panel.tsx':
-          'a panel inside IngredientForm, which it tells of its changes (`useReportPanelChanges`) and whose guard holds them',
-        'src/components/IngredientEntry/coven-choice.tsx':
-          'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; nothing is submitted through it',
-        'src/components/SpellBuilder/skeleton.tsx':
-          'the Edit Spell form’s loading skeleton, inert and holding no input: nothing can be typed into it',
-      };
-      return {
-        Program(program) {
-          const code = codeOf(context);
-          const isForm = /<form\b|<FormActions\b|\buseForm\s*[<(]/.test(code);
-          const unguarded =
-            isForm && !/\buse(?:(?:Discard|Leave)Guard|SaveOnClose)\s*\(/.test(code);
-          if (unguarded && !(file in ALLOWED)) {
-            context.report({
-              node: program,
-              message:
-                'A form that holds typed input calls useDiscardGuard, useLeaveGuard or useSaveOnClose, so leaving it unsaved asks or saves first (M13.14)',
-            });
-          } else if (!unguarded && file in ALLOWED) {
-            context.report({
-              node: program,
-              message:
-                'This file no longer needs its place in the unguarded-forms list: remove it from lint/source-sweeps.js',
-            });
-          }
-        },
-      };
+  'long-form-guards-leaving': allowlistRule({
+    allowed: {
+      'src/components/NameForm/index.tsx': 'one short field, the account name (M13.14)',
+      'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
+      'src/components/SignInPanel/password-form.tsx':
+        'sign-in credentials, which the browser’s password manager holds: nothing typed is lost by leaving',
+      'src/components/SignInPanel/two-factor-step.tsx':
+        'a six-digit code that changes every 30 seconds: nothing typed outlasts leaving',
+      'src/components/ForgotPasswordForm/index.tsx':
+        'one short field, an address the browser fills: nothing typed is lost by leaving',
+      'src/components/ResetPasswordForm/index.tsx':
+        'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
+      'src/components/PasswordSection/index.tsx':
+        'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
+      'src/components/HelpSearchForm/index.tsx':
+        'a one-field search that submits as a page load: nothing typed waits on a Save',
+      'src/components/FilterForm/index.tsx':
+        'a list filter that applies as it changes: nothing typed waits on a Save',
+      'src/components/IngredientForm/reference-panel.tsx':
+        'a panel inside IngredientForm, which it tells of its changes (`useReportPanelChanges`) and whose guard holds them',
+      'src/components/IngredientEntry/coven-choice.tsx':
+        'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; nothing is submitted through it',
+      'src/components/SpellBuilder/skeleton.tsx':
+        'the Edit Spell form’s loading skeleton, inert and holding no input: nothing can be typed into it',
     },
-  },
+    staleMessage: () =>
+      'This file no longer needs its place in the unguarded-forms list: remove it from lint/source-sweeps.js',
+    visit: ({ context, flag }) => ({
+      Program(program) {
+        const code = codeOf(context);
+        const isForm = /<form\b|<FormActions\b|\buseForm\s*[<(]/.test(code);
+        const unguarded = isForm && !/\buse(?:(?:Discard|Leave)Guard|SaveOnClose)\s*\(/.test(code);
+        if (unguarded) {
+          flag(
+            program,
+            'A form that holds typed input calls useDiscardGuard, useLeaveGuard or useSaveOnClose, so leaving it unsaved asks or saves first (M13.14)',
+          );
+        }
+      },
+    }),
+  }),
 
   // A spec's tests spread across Playwright workers, each with its own database, so a test reading what an earlier one wrote
   // is intermittently red. Fails a variable declared outside a test and assigned inside it, in a file or `describe` not serial;
@@ -525,51 +517,36 @@ export const rules = {
 
   // An in-app link is a `PendingLink`, so the page bar and the skeletons follow the press. A bare `next/link` `<Link>` moves
   // the page with no signal. The status hook and types are fine, and the allowlist holds the files that build on `Link` itself.
-  'in-app-link-through-pending-link': {
-    create: (context) => {
-      const file = fileOf(context);
-      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file)) return {};
-      /** The files that import `next/link` for its component, each with the reason. */
-      const ALLOWED = {
-        'src/lib/navigation/pending-link.tsx':
-          'PendingLink is the one wrapper every in-app link goes through',
-        'src/components/Pager/pager-link.tsx':
-          'the pager link reports its own pending state to the list, not the page bar',
-        'src/components/TabbedPage/tab-links.tsx':
-          'a tab link reports its press to the tab row, which greys the tabs',
-      };
-      const allowed = file in ALLOWED;
-      let imported = false;
-      return {
-        ImportDeclaration(node) {
-          if (node.source.value !== 'next/link' || node.importKind === 'type') return;
-          const draws = node.specifiers.some(
-            (specifier) =>
-              specifier.type !== 'ImportSpecifier' ||
-              (specifier.importKind !== 'type' &&
-                (specifier.imported.name ?? specifier.imported.value) !== 'useLinkStatus'),
-          );
-          if (!draws) return;
-          imported = true;
-          if (!allowed) {
-            context.report({
-              node,
-              message:
-                'Link through PendingLink (@/lib/navigation), so the page bar and the skeletons follow the press',
-            });
-          }
-        },
-        'Program:exit'(program) {
-          if (allowed && !imported) {
-            context.report({
-              node: program,
-              message: `This file no longer imports the next/link component, so take it off the allowlist in lint/source-sweeps.js (${ALLOWED[file]})`,
-            });
-          }
-        },
-      };
+  'in-app-link-through-pending-link': allowlistRule({
+    ts: true,
+    /** The files that import `next/link` for its component, each with the reason. */
+    allowed: {
+      'src/lib/navigation/pending-link.tsx':
+        'PendingLink is the one wrapper every in-app link goes through',
+      'src/components/Pager/pager-link.tsx':
+        'the pager link reports its own pending state to the list, not the page bar',
+      'src/components/TabbedPage/tab-links.tsx':
+        'a tab link reports its press to the tab row, which greys the tabs',
     },
-  },
+    staleMessage: (reason) =>
+      `This file no longer imports the next/link component, so take it off the allowlist in lint/source-sweeps.js (${reason})`,
+    visit: ({ flag }) => ({
+      ImportDeclaration(node) {
+        if (node.source.value !== 'next/link' || node.importKind === 'type') return;
+        const draws = node.specifiers.some(
+          (specifier) =>
+            specifier.type !== 'ImportSpecifier' ||
+            (specifier.importKind !== 'type' &&
+              (specifier.imported.name ?? specifier.imported.value) !== 'useLinkStatus'),
+        );
+        if (!draws) return;
+        flag(
+          node,
+          'Link through PendingLink (@/lib/navigation), so the page bar and the skeletons follow the press',
+        );
+      },
+    }),
+  }),
 
   // A full page load (`location.assign`, `replace` or `reload`) is reported first, so the bar and the busy hint stay up
   // through the load instead of dropping when the request settles. Checked per function: a load in a callback is not
@@ -577,7 +554,7 @@ export const rules = {
   'full-page-load-reports-leaving': {
     create: (context) => {
       const file = fileOf(context);
-      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file)) return {};
+      if (!isComponentFile(file, { ts: true })) return {};
       const isLocation = (node) =>
         (node.type === 'Identifier' && node.name === 'location') ||
         (node.type === 'MemberExpression' &&
@@ -633,25 +610,23 @@ export const rules = {
   // hint, error, limit and attributes are drawn once (.claude/rules/components.md, "Form inputs", R1). A raw text <input> or
   // <textarea> belongs only in src/components/Field/ and the Combobox, bar the files below. A control no one types into
   // (checkbox, radio, hidden, file, button) is not text, and neither is one carrying aria-hidden, which is a honeypot.
-  'inputs-use-field': {
-    create: (context) => {
-      const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
-      if (
-        file.startsWith('src/components/Field/') ||
-        file.startsWith('src/components/Combobox/') ||
-        file.startsWith('src/components/PasswordField/')
-      )
-        return {};
-      const ALLOWED = {
-        'src/components/AdminCards/mint-form.tsx':
-          'Number of Sheets: its total line takes the error’s place, and Field has no slot for that',
-        'src/components/ChipColorField/index.tsx':
-          'the chip colour hex box needs the form’s own id and the contrast ratio’s description',
-        'src/components/IngredientForm/references.tsx':
-          'Locator: its row links to its own control id',
-        'src/components/HelpSearchForm/index.tsx': 'the help search is a plain GET form',
-      };
+  'inputs-use-field': allowlistRule({
+    allowed: {
+      'src/components/AdminCards/mint-form.tsx':
+        'Number of Sheets: its total line takes the error’s place, and Field has no slot for that',
+      'src/components/ChipColorField/index.tsx':
+        'the chip colour hex box needs the form’s own id and the contrast ratio’s description',
+      'src/components/IngredientForm/references.tsx':
+        'Locator: its row links to its own control id',
+      'src/components/HelpSearchForm/index.tsx': 'the help search is a plain GET form',
+    },
+    skip: (file) =>
+      file.startsWith('src/components/Field/') ||
+      file.startsWith('src/components/Combobox/') ||
+      file.startsWith('src/components/PasswordField/'),
+    staleMessage: (reason) =>
+      `This file no longer holds a raw text input, so take it off the list in lint/source-sweeps.js (${reason})`,
+    visit: ({ flag }) => {
       const NOT_TEXT = new Set([
         'hidden',
         'checkbox',
@@ -664,87 +639,43 @@ export const rules = {
         'range',
         'color',
       ]);
-      let used = false;
       return {
         JSXOpeningElement(node) {
           if (node.name.type !== 'JSXIdentifier' || !['input', 'textarea'].includes(node.name.name))
             return;
-          const attribute = (name) =>
-            node.attributes.find((a) => a.type === 'JSXAttribute' && a.name.name === name);
-          if (attribute('aria-hidden')) return;
-          if (node.name.name === 'input') {
-            const type = attribute('type')?.value;
-            if (type?.type === 'Literal' && NOT_TEXT.has(type.value)) return;
-          }
-          used = true;
-          if (file in ALLOWED) return;
-          context.report({
+          if (jsxAttribute(node, 'aria-hidden')) return;
+          if (node.name.name === 'input' && NOT_TEXT.has(literalValue(jsxAttribute(node, 'type'))))
+            return;
+          flag(
             node,
-            message:
-              'Build a typed input on the Field set (TextField, PlainTextField, DateField or Combobox), not a raw <' +
+            'Build a typed input on the Field set (TextField, PlainTextField, DateField or Combobox), not a raw <' +
               node.name.name +
               '> (M17.24, R1)',
-          });
-        },
-        'Program:exit'(program) {
-          if (file in ALLOWED && !used) {
-            context.report({
-              node: program,
-              message:
-                'This file no longer holds a raw text input, so take it off the list in lint/source-sweeps.js (' +
-                ALLOWED[file] +
-                ')',
-            });
-          }
+          );
         },
       };
     },
-  },
+  }),
 
   // An amount is a text input with inputMode="decimal", never type="number", whose spinner, scroll wheel and locale handling
   // change what was typed (R2). A bounded whole number may keep it, on the list below.
-  'no-number-input': {
-    create: (context) => {
-      const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
-      const ALLOWED = {
-        'src/components/AdminCards/mint-form.tsx':
-          'Number of Sheets is a whole number from 1 to a maximum',
-      };
-      let used = false;
-      return {
-        JSXAttribute(node) {
-          if (node.name.name !== 'type') return;
-          const value = node.value;
-          const text =
-            value?.type === 'Literal'
-              ? value.value
-              : value?.type === 'JSXExpressionContainer' && value.expression.type === 'Literal'
-                ? value.expression.value
-                : null;
-          if (text !== 'number') return;
-          used = true;
-          if (file in ALLOWED) return;
-          context.report({
-            node,
-            message:
-              'An amount is a text input with inputMode="decimal" and the shared quantity rule, not type="number"; only a bounded whole number keeps it, on the list in lint/source-sweeps.js (M17.24, R2)',
-          });
-        },
-        'Program:exit'(program) {
-          if (file in ALLOWED && !used) {
-            context.report({
-              node: program,
-              message:
-                'This file no longer uses type="number", so take it off the list in lint/source-sweeps.js (' +
-                ALLOWED[file] +
-                ')',
-            });
-          }
-        },
-      };
+  'no-number-input': allowlistRule({
+    allowed: {
+      'src/components/AdminCards/mint-form.tsx':
+        'Number of Sheets is a whole number from 1 to a maximum',
     },
-  },
+    staleMessage: (reason) =>
+      `This file no longer uses type="number", so take it off the list in lint/source-sweeps.js (${reason})`,
+    visit: ({ flag }) => ({
+      JSXAttribute(node) {
+        if (node.name.name !== 'type' || literalValue(node) !== 'number') return;
+        flag(
+          node,
+          'An amount is a text input with inputMode="decimal" and the shared quantity rule, not type="number"; only a bounded whole number keeps it, on the list in lint/source-sweeps.js (M17.24, R2)',
+        );
+      },
+    }),
+  }),
 
   // A length or size limit in a zod schema is a named constant exported from the module that owns it, so the service, the server schema
   // and the form share one number (R3). Applies to any src file importing zod. .min(0) and .min(1) are "not negative" and "not empty",
@@ -752,7 +683,7 @@ export const rules = {
   'schema-limits-are-named': {
     create: (context) => {
       const file = fileOf(context);
-      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file) || file.startsWith('src/gql/')) return {};
+      if (!isComponentFile(file, { ts: true }) || file.startsWith('src/gql/')) return {};
       let zod = false;
       const calls = [];
       return {
@@ -793,8 +724,7 @@ export const rules = {
   'no-max-length-attribute': {
     create: (context) => {
       const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file) || file.startsWith('src/components/Field/'))
-        return {};
+      if (!isComponentFile(file) || file.startsWith('src/components/Field/')) return {};
       const FIXED_LENGTH_CODES = new Set([
         'src/components/SignInPanel/two-factor-step.tsx',
         'src/components/PasswordSection/two-factor.tsx',
@@ -816,67 +746,48 @@ export const rules = {
 
   // A react-hook-form form lists its errors in FormErrorSummary (R6). The list names the forms that do not, with the reason; a listed file
   // that no longer needs its place is reported.
-  'use-form-renders-error-summary': {
-    create: (context) => {
-      const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
-      const ALLOWED = {
-        'src/components/IngredientEntry/coven-choice.tsx':
-          'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; there is no second field to list',
-      };
+  'use-form-renders-error-summary': allowlistRule({
+    allowed: {
+      'src/components/IngredientEntry/coven-choice.tsx':
+        'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; there is no second field to list',
+    },
+    staleMessage: (reason, state) =>
+      state.summarised
+        ? 'This file now renders FormErrorSummary: remove it from the no-summary list in lint/source-sweeps.js'
+        : 'This file no longer needs its place in the no-summary list: remove it from lint/source-sweeps.js',
+    visit: ({ context, flag, state }) => {
       let calls = null;
       return {
         CallExpression(node) {
           if (node.callee.type === 'Identifier' && node.callee.name === 'useForm') calls ??= node;
         },
-        'Program:exit'(program) {
-          if (!calls && file in ALLOWED) {
-            context.report({
-              node: program,
-              message:
-                'This file no longer needs its place in the no-summary list: remove it from lint/source-sweeps.js',
-            });
-            return;
-          }
+        'Program:exit'() {
           if (!calls) return;
-          const summarised = /<FormErrorSummary\b/.test(codeOf(context));
-          if (!summarised && !(file in ALLOWED)) {
-            context.report({
-              node: calls,
-              message:
-                'A form that calls useForm renders FormErrorSummary, so an error is listed and focused on Save (M17.24, R6)',
-            });
-          } else if (summarised && file in ALLOWED) {
-            context.report({
-              node: program,
-              message:
-                'This file now renders FormErrorSummary: remove it from the no-summary list in lint/source-sweeps.js',
-            });
+          state.summarised = /<FormErrorSummary\b/.test(codeOf(context));
+          if (!state.summarised) {
+            flag(
+              calls,
+              'A form that calls useForm renders FormErrorSummary, so an error is listed and focused on Save (M17.24, R6)',
+            );
           }
         },
       };
     },
-  },
+  }),
 
   // A placeholder is empty or a short sample; a rule about the value goes in the hint (R8). Counts words, not the articles a, an and
   // the, so the field doc's own "Add a name" is two. (Field's placeholder prop and a raw control both end up as a JSX attribute.)
   'placeholder-is-short': {
     create: (context) => {
       const file = fileOf(context);
-      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
+      if (!isComponentFile(file)) return {};
       const words = (text) =>
         text.split(/\s+/).filter((word) => word !== '' && !/^(a|an|the)$/i.test(word)).length;
       return {
         JSXAttribute(node) {
           if (node.name.name !== 'placeholder') return;
-          const value = node.value;
-          const literal =
-            value?.type === 'Literal'
-              ? value
-              : value?.type === 'JSXExpressionContainer' && value.expression.type === 'Literal'
-                ? value.expression
-                : null;
-          if (typeof literal?.value !== 'string' || words(literal.value) <= 2) return;
+          const text = literalValue(node);
+          if (typeof text !== 'string' || words(text) <= 2) return;
           context.report({
             node,
             message:
