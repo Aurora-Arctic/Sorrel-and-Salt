@@ -17,10 +17,10 @@ import {
   inPanel,
   labelled,
   referencePanel,
-  renderWithClient,
   waitFor,
   duplicateHref,
 } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { press, redo, typeIn, undo } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import {
@@ -78,14 +78,14 @@ function renderField() {
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 
 function renderForm() {
   const onSaved = vi.fn();
   offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
   );
   return onSaved;
@@ -500,7 +500,7 @@ describe('ReferencesField', () => {
           </FormProvider>
         );
       };
-      renderWithClient(<Harness />);
+      renderWithQuery(<Harness />);
       return onSubmit;
     }
 

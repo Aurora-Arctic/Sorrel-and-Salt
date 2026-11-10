@@ -42,7 +42,7 @@ function heldSave() {
     act(async () => {
       settles.shift()?.();
     });
-  return { save: saveCallback, sent, settleNext };
+  return { saveMutation: saveCallback, sent, settleNext };
 }
 
 describe('ShownSwitch, saving each press', () => {
@@ -63,8 +63,8 @@ describe('ShownSwitch, saving each press', () => {
   });
 
   it('saves a press made during a save once that save lands, one save at a time', async () => {
-    const { save, sent, settleNext } = heldSave();
-    const control = renderSwitch({ save });
+    const { saveMutation, sent, settleNext } = heldSave();
+    const control = renderSwitch({ save: saveMutation });
 
     fireEvent.click(control);
     expect(control).toHaveAttribute('aria-busy', 'true');
@@ -82,8 +82,8 @@ describe('ShownSwitch, saving each press', () => {
   });
 
   it('skips a save when the presses during one end where it saved', async () => {
-    const { save, sent, settleNext } = heldSave();
-    const control = renderSwitch({ save });
+    const { saveMutation, sent, settleNext } = heldSave();
+    const control = renderSwitch({ save: saveMutation });
 
     fireEvent.click(control);
     fireEvent.click(control);

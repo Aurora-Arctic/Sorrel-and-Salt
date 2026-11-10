@@ -1,12 +1,12 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render as draw, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
+import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { Navigating } from '../../support/navigating';
 import { WORKSPACE_ID } from '../../support/constants';
 import { router } from '../../support/next-navigation';
 import { expectBefore, isBefore } from '../../support/interact';
+import { renderWithQuery } from '../../support/render-with-query';
 
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsDialog } = await import('@/components/IngredientEntry/details-dialog');
@@ -27,8 +27,8 @@ const ENTRY = {
 const DETAILS_NAME = 'Testwort';
 
 /** Draws the dialog and waits out its loading body: the window's head and foot load on first open. */
-const render = async (ui: Parameters<typeof draw>[0]) => {
-  const view = draw(ui);
+const render = async (ui: ReactElement) => {
+  const view = renderWithQuery(ui);
   if (screen.queryByRole('dialog')) {
     await waitFor(
       () =>
@@ -306,23 +306,20 @@ describe('DetailsDialog plus', () => {
   const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };
 
   const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) => {
-    const fresh = makeQueryClient();
     return render(
-      <QueryClientProvider client={fresh}>
-        <Navigating push={router.push}>
-          <RouteModalProvider>
-            <DetailsDialog
-              closeHref={LIST}
-              opened={{
-                heading: detailsHeading(ENTRY),
-                pageHref: PAGE,
-                editAction: { href: EDIT, heading: editHeading(ENTRY) },
-                ...(plus && { plus: { workspaceId: ONE.id, ...plus }, ingredientId: ID }),
-              }}
-            />
-          </RouteModalProvider>
-        </Navigating>
-      </QueryClientProvider>,
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <DetailsDialog
+            closeHref={LIST}
+            opened={{
+              heading: detailsHeading(ENTRY),
+              pageHref: PAGE,
+              editAction: { href: EDIT, heading: editHeading(ENTRY) },
+              ...(plus && { plus: { workspaceId: ONE.id, ...plus }, ingredientId: ID }),
+            }}
+          />
+        </RouteModalProvider>
+      </Navigating>,
     );
   };
   it('puts the plus before the pencil while a coven that may add lacks the entry', async () => {
@@ -397,20 +394,17 @@ describe('DetailsDialog coven card controls', () => {
   const entry = { id: ID, label: ENTRY.name, canonicalName: ENTRY.canonicalName };
 
   const view = (opened: boolean, extra: object) => {
-    const fresh = makeQueryClient();
     return (
-      <QueryClientProvider client={fresh}>
-        <Navigating push={router.push}>
-          <RouteModalProvider>
-            <DetailsDialog
-              closeHref={COVEN_LIST}
-              opened={
-                opened ? { heading: detailsHeading(ENTRY), pageHref: PAGE, ...extra } : undefined
-              }
-            />
-          </RouteModalProvider>
-        </Navigating>
-      </QueryClientProvider>
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <DetailsDialog
+            closeHref={COVEN_LIST}
+            opened={
+              opened ? { heading: detailsHeading(ENTRY), pageHref: PAGE, ...extra } : undefined
+            }
+          />
+        </RouteModalProvider>
+      </Navigating>
     );
   };
   const actions = (fields: object) =>

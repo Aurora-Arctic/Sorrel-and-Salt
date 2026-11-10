@@ -34,13 +34,8 @@ import {
   expectAskingOver,
   renderInModal,
 } from '../../support/discard-guard';
-import {
-  box,
-  renderWithClient,
-  textbox,
-  waitFor,
-  duplicateHref,
-} from '../../support/ingredient-form';
+import { box, textbox, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { openSections } from '../../support/ingredient-sections';
 import { choose, press, type } from '../../support/interact';
 import {
@@ -74,7 +69,7 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   const onSaved = vi.fn();
   const onDeleted = vi.fn();
   const asks = offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm
       duplicateHref={duplicateHref}
       workspaceId={null}
@@ -117,7 +112,7 @@ function renderPickOnly() {
     );
   };
   offerNothing();
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 

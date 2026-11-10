@@ -1,11 +1,9 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import { editHeading } from '@/components/CompendiumList/heading';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { ViewerIdProvider } from '@/lib/viewer-id';
 import { textbox, waitFor } from '../../../../support/ingredient-form';
 import { press, type } from '../../../../support/interact';
@@ -40,15 +38,13 @@ const opened = (name: string, revision: number) => ({
   entry: { id: ENTRY_ID, revision, updatedAt: null, values: NAMED(name) },
 });
 
-function dialog(name: string, revision: number, client = makeQueryClient()): ReactElement {
+function dialog(name: string, revision: number): ReactElement {
   return (
-    <QueryClientProvider client={client}>
-      <ViewerIdProvider id="u1">
-        <RouteModalProvider>
-          <CompendiumDialog place={{}} opened={opened(name, revision)} />
-        </RouteModalProvider>
-      </ViewerIdProvider>
-    </QueryClientProvider>
+    <ViewerIdProvider id="u1">
+      <RouteModalProvider>
+        <CompendiumDialog place={{}} opened={opened(name, revision)} />
+      </RouteModalProvider>
+    </ViewerIdProvider>
   );
 }
 
@@ -71,7 +67,7 @@ describe('CompendiumDialog after an autosave', () => {
   it('moves its address to the saved name and fetches the page again, as Save does', async () => {
     offerNothing();
     const saves = acceptUpdate();
-    render(dialog('Testwort', 3));
+    renderWithQuery(dialog('Testwort', 3));
 
     type('Name', 'Mockwort');
     await wait(3100);
@@ -87,7 +83,7 @@ describe('CompendiumDialog after an autosave', () => {
   it('keeps what was typed after the autosave when the page arrives with the saved name', async () => {
     offerNothing();
     const saves = acceptUpdate();
-    const { rerender } = render(dialog('Testwort', 3));
+    const { rerender } = renderWithQuery(dialog('Testwort', 3));
 
     type('Name', 'Mockwort');
     await wait(3100);

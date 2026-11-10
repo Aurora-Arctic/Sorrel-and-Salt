@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SpellMoreMenu from '@/components/SpellRecipe/more-menu';
@@ -10,11 +9,11 @@ import type {
   DuplicateSpellMutation,
   DuplicateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/constants';
 import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/spell-recipe.md
 
@@ -27,31 +26,27 @@ function renderMenu({
   canDelete = true,
   canPrint = true,
   visibility,
-  queryClient = makeQueryClient(),
 }: {
   canDuplicate?: boolean;
   canDelete?: boolean;
   canPrint?: boolean;
   visibility?: SpellVisibility;
-  queryClient?: ReturnType<typeof makeQueryClient>;
 } = {}) {
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <main>
-        <h1>Fixture Working</h1>
-        <SpellMoreMenu
-          workspaceId={WORKSPACE_ID}
-          covenSlug="fixture-coven"
-          spellId={ID}
-          name="Fixture Working"
-          deletedHref={DELETED_HREF}
-          canDuplicate={canDuplicate}
-          canDelete={canDelete}
-          canPrint={canPrint}
-          visibility={visibility}
-        />
-      </main>
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <main>
+      <h1>Fixture Working</h1>
+      <SpellMoreMenu
+        workspaceId={WORKSPACE_ID}
+        covenSlug="fixture-coven"
+        spellId={ID}
+        name="Fixture Working"
+        deletedHref={DELETED_HREF}
+        canDuplicate={canDuplicate}
+        canDelete={canDelete}
+        canPrint={canPrint}
+        visibility={visibility}
+      />
+    </main>,
   );
 }
 
@@ -218,8 +213,7 @@ describe('SpellMoreMenu', () => {
         return { deleteSpell: String(variables.id) };
       },
     );
-    const queryClient = makeQueryClient();
-    const view = renderMenu({ queryClient });
+    const view = renderMenu();
 
     choose('Delete');
     press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
@@ -233,11 +227,9 @@ describe('SpellMoreMenu', () => {
     ).toBeDisabled();
 
     view.rerender(
-      <QueryClientProvider client={queryClient}>
-        <main>
-          <h1>Grimoire</h1>
-        </main>
-      </QueryClientProvider>,
+      <main>
+        <h1>Grimoire</h1>
+      </main>,
     );
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 1, name: 'Grimoire' })).toHaveFocus(),

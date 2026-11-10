@@ -12,7 +12,8 @@ import {
   openingValues,
 } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSectionsIn } from '../../support/ingredient-sections';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { offerForms, offerIngredients, offerNothing } from '../../support/msw/ingredient-lookups';
 import type { FormNode, IngredientNode } from './types';
 
@@ -285,7 +286,7 @@ export function renderVariants({
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 

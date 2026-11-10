@@ -17,7 +17,8 @@ import {
   ingredientResolver,
 } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { press, type, expectBefore } from '../../support/interact';
 import {
   WORKSPACE_ID,
@@ -54,7 +55,7 @@ function renderInForm(field: ReactElement, values: Partial<IngredientFormValues>
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return async (): Promise<IngredientFormInput> => {
     press('Save Ingredient');
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());

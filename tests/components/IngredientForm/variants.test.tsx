@@ -5,7 +5,8 @@ import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
-import { renderWithClient, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { waitFor, duplicateHref } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { press, redo, undo } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import {
@@ -67,7 +68,7 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
         entry={props.values && { id: ENTRY_ID, values: props.values }}
       />
     );
-  renderWithClient(form);
+  renderWithQuery(form);
   if (props.values) openSections('Forms');
   return onSaved;
 }

@@ -5,7 +5,8 @@ import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { renderInModal } from '../../support/discard-guard';
-import { control, renderWithClient, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { control, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
@@ -23,7 +24,7 @@ const TESTWORT: IngredientFormValues = {
 
 function renderForm(values?: IngredientFormValues) {
   offerNothing();
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm
       duplicateHref={duplicateHref}
       workspaceId={null}

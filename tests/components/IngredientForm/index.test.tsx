@@ -21,11 +21,11 @@ import {
   box,
   chooseKind,
   inPanel,
-  renderWithClient,
   textbox,
   waitFor,
   duplicateHref,
 } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import { choose, press, redo, type, typeIn, undo, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -52,7 +52,7 @@ function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refuse
   const onSaved = vi.fn();
   offerNothing();
   offerCategories(categories);
-  renderWithClient(
+  renderWithQuery(
     <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
   );
   return onSaved;
@@ -1045,7 +1045,7 @@ describe('IngredientForm', () => {
         const onSaved = vi.fn();
         offerNothing();
         offerCategories([]);
-        renderWithClient(
+        renderWithQuery(
           <StatusRegionProvider>
             <IngredientForm
               duplicateHref={duplicateHref}

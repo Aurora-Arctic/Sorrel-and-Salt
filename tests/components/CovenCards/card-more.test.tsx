@@ -1,15 +1,14 @@
 import type { Route } from 'next';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { router } from '../../support/next-navigation';
 import CardMore from '@/components/CovenCards/card-more';
 import type { CardMoreProps } from '@/components/CovenCards/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/constants';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/coven-cards.md
 
@@ -26,20 +25,16 @@ const HELD: CardMoreProps = {
   mayRemove: true,
 };
 
-let queryClient = makeQueryClient();
 const onPage = (props?: CardMoreProps) => (
-  <QueryClientProvider client={queryClient}>
-    <StatusRegionProvider>
-      <main>
-        <h1>Ingredients</h1>
-        {props && <CardMore {...props} />}
-      </main>
-    </StatusRegionProvider>
-  </QueryClientProvider>
+  <StatusRegionProvider>
+    <main>
+      <h1>Ingredients</h1>
+      {props && <CardMore {...props} />}
+    </main>
+  </StatusRegionProvider>
 );
 function renderOnPage(props: CardMoreProps) {
-  queryClient = makeQueryClient();
-  return render(onPage(props));
+  return renderWithQuery(onPage(props));
 }
 
 const more = (name: string) => screen.getByRole('button', { name: `More for ${name}` });
