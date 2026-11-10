@@ -149,7 +149,7 @@ _Acceptance criteria:_
 - `TextField` and `PlainTextField` wrap one control (D-234), the authenticator-code field and digit stripper are written once (D-235), a plain-state select field serves `UserDetail` and `SupportRequests` (D-236), `StockDialog` exports its jar label and values (D-237), and the help header is drawn by one component with no `framed` branch left in `HelpIndex`, `HelpArticleView` and their skeletons (D-238, D-73)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.9 — Clean Up Styles and Unused Code** · 7.75h
+**MC.9 — Clean Up Styles and Unused Code** · 11.75h
 
 _Story:_ As a developer, I want repeated styles gone and unused code removed or exposed, so that a style change is made once and unused code stops accumulating.
 
