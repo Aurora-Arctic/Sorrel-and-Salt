@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import Day from '../Day';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
@@ -61,11 +62,7 @@ const columns = (
   {
     heading: 'Joined',
     className: 'member-list__fact',
-    cell: (member) => (
-      <time dateTime={member.joinedAt.toISOString()}>
-        {member.joinedAt.toISOString().slice(0, 10)}
-      </time>
-    ),
+    cell: (member) => <Day at={member.joinedAt} />,
   },
   {
     heading: 'Invited By',

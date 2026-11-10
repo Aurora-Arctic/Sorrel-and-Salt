@@ -1,10 +1,8 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { graphql } from '@/lib/graphql-document';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { failureMessage } from '../../lib/graphql-failure';
+import { graphqlRequest, useRefusableMutation } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
@@ -29,17 +27,17 @@ export function useDuplicateSpell(
   onError: (message: string) => void,
 ) {
   const { navigate } = usePendingNavigation();
-  const copy = useMutation({
-    mutationFn: async (id: string) => {
+  const copy = useRefusableMutation({
+    request: async (id: string) => {
       const { duplicateSpell } = await graphqlRequest(DuplicateSpellDocument, { workspaceId, id });
       if (!duplicateSpell) throw new Error('No copy was made.');
       return duplicateSpell.id;
     },
-    onSuccess: (copyId) => {
+    onDone: (copyId) => {
       const href = hrefOf(copyId);
       navigate(href);
     },
-    onError: (error) => onError(failureMessage(error)),
+    onRefused: onError,
   });
-  return { duplicate: copy.mutate, duplicating: copy.isPending || copy.isSuccess };
+  return { duplicate: copy.run, duplicating: copy.pending };
 }

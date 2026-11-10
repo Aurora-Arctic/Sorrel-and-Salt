@@ -2169,7 +2169,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** IngredientEntry component tests, e2e specs for Delete Ingredient and Remove from Cupboard.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-72: A callback-ref merge written twice
 
@@ -2283,7 +2283,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/` for each folder named.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-77: "Unwrap a loader slot or throw" written three times
 
@@ -2408,7 +2408,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/MemberDetail/`, `UserDetail/`, `MemberList/`, `UserList/`, `DataTable/`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-82: CupboardEntryForm lists its field names in four places that can drift apart
 
@@ -2561,7 +2561,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/lib/use-lazy-module.test.ts*`, tests for StockDialog and IngredientEntry dialogs.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-89: Quantity column declared five times without the shared constants' helper
 
@@ -3116,7 +3116,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/components/LeaveWorkspaceButton/`, `tests/components/DeleteWorkspaceButton/`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-120: Three "native control before hydration" fallbacks build the same grouped `<select>`
 
@@ -3989,7 +3989,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** `tests/components/SignInPanel/*`, `tests/components/SignInMethods/*`, `tests/components/ListFrame/*`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.6.
+- **Status:** Fixed (MC.6).
 
 ### D-164: Calendar-day regex `/^\d{4}-\d{2}-\d{2}$/` written three times
 
