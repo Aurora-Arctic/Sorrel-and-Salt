@@ -105,3 +105,38 @@ test('a refused Save on the Cupboard entry form puts focus on the error summary'
 
   await expect(dialog.getByRole('group', { name: /problem/i })).toBeFocused();
 });
+
+for (const width of [375, 1280]) {
+  test(`at ${width}px the hex box shows the widest chip colour whole`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signInAs(page, `a-wide-hex-${width}@input-formatting.test`, ['discord'], 'admin');
+    await page.goto('/curator/category-groups?new');
+    const adding = page.getByRole('dialog', { name: 'Add Category Group' });
+    await expect(adding).toBeVisible();
+    await page.waitForLoadState('networkidle');
+
+    const overrun: string[] = [];
+    for (const name of ['Dark Theme Colour', 'Light Theme Colour']) {
+      const box = adding.getByRole('textbox', { name });
+      for (const hex of [
+        '#000000',
+        '#888888',
+        '#aaaaaa',
+        '#bbbbbb',
+        '#dddddd',
+        '#eeeeee',
+        '#ffffff',
+      ]) {
+        await box.fill(hex);
+        // Why the check means something: the box holds the whole value, so a short scroll width is not an empty box.
+        await expect(box).toHaveValue(hex);
+        const { scroll, client } = await box.evaluate((input: HTMLInputElement) => ({
+          scroll: input.scrollWidth,
+          client: input.clientWidth,
+        }));
+        if (scroll > client) overrun.push(`${name} ${hex}: ${scroll} > ${client}`);
+      }
+    }
+    expect(overrun, 'hex values wider than their box').toEqual([]);
+  });
+}

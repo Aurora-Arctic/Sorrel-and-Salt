@@ -137,10 +137,10 @@
   transform: translate(-50%, -50%);
 }
 
-// The hex holds its line at every width: its column is the width of "#5d8ab1" whole.
+// The hex column is as wide as its box needs or Match, whichever is wider; the box sets its own need below.
 .chip-color-field__controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto 5.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto min-content;
   gap: space(2) space(3);
   align-items: start;
 }
@@ -159,8 +159,10 @@
   white-space: nowrap;
 }
 
+// 8ch in the box's own font holds the widest hex, "#aaaaaa": "#" is 1.2ch and "a" and "d" 1.1ch, even in tabular figures.
 .chip-color-field .chip-color-field__hex {
   inline-size: 100%;
+  min-inline-size: calc(8ch + 2 * #{space(3)} + 2px);
 }
 
 .chip-color-field__caption-short {
@@ -276,13 +278,15 @@
 // picker's own grid stops fitting its full captions, not a form's width.
 @container (max-width: 30rem) {
   .chip-color-field__controls {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) auto 5.25rem;
     column-gap: space(1);
   }
 
-  // Caption-size figures and slimmer sides, so "207.86" and "#5d8ab1" show
-  // whole, and Chrome's single-letter captions, H, S and B, so the boxes can
-  // stand closer.
+  .chip-color-field .chip-color-field__hex {
+    min-inline-size: calc(8ch + 2 * #{space(1)} + 2px);
+  }
+
+  // Caption-size figures and slimmer sides, so "207.86" shows whole, and Chrome's
+  // single-letter captions, H, S and B, so the boxes can stand closer.
   .chip-color-field .chip-color-field__channel-input,
   .chip-color-field .chip-color-field__hex {
     padding-inline: space(1);
