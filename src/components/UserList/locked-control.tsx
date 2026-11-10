@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useId, useState } from 'react';
-import { useTip } from '../InfoTip/use-tip';
+import TipAnchor from '../InfoTip/tip-anchor';
 import type { LockedControlProps } from './types';
 import './controls.scss';
 
@@ -20,45 +20,36 @@ const LockedControl = ({
   reason,
 }: LockedControlProps): ReactElement => {
   const reasonId = useId();
-  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   const [attempts, setAttempts] = useState(0);
 
   return (
-    // Hover on the wrapper, which holds the tip as well as the button, so the
-    // pointer can move onto the tip without closing it.
-    <span
-      ref={anchor}
+    // A press re-keys the bubble as an alert, so a screen reader reads the reason again.
+    <TipAnchor
       className="user-list__locked"
-      onMouseEnter={showSoon}
-      onMouseLeave={hideSoon}
+      bubbleClass="user-list__control-tip"
+      bubbleId={reasonId}
+      bubbleRole={attempts ? 'alert' : 'tooltip'}
+      bubbleKey={attempts}
+      bubble={reason}
     >
-      <button
-        className={className}
-        type="button"
-        aria-label={accessibleName}
-        aria-disabled="true"
-        aria-describedby={reasonId}
-        onFocus={show}
-        onBlur={hide}
-        onClick={() => {
-          show();
-          setAttempts((count) => count + 1);
-        }}
-      >
-        {label}
-      </button>
-      <span
-        ref={bubble}
-        key={attempts}
-        id={reasonId}
-        role={attempts ? 'alert' : 'tooltip'}
-        className={open ? 'user-list__control-tip is-open' : 'user-list__control-tip'}
-        aria-hidden={!open}
-        style={bubbleStyle}
-      >
-        {reason}
-      </span>
-    </span>
+      {({ show, hide }) => (
+        <button
+          className={className}
+          type="button"
+          aria-label={accessibleName}
+          aria-disabled="true"
+          aria-describedby={reasonId}
+          onFocus={show}
+          onBlur={hide}
+          onClick={() => {
+            show();
+            setAttempts((count) => count + 1);
+          }}
+        >
+          {label}
+        </button>
+      )}
+    </TipAnchor>
   );
 };
 

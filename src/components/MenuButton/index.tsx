@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useDismiss } from '../../lib/use-dismiss';
+import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
@@ -135,6 +135,11 @@ export default function MenuButton({
     onOutsidePress: () => setOpen(false),
   });
 
+  const closeOnEscape = escapeKeyHandler<KeyboardEvent>(() => {
+    setOpen(false);
+    toggle.current?.focus();
+  });
+
   const onMenuKey = (event: KeyboardEvent): void => {
     const list = all();
     const at = list.indexOf(document.activeElement as HTMLElement);
@@ -146,11 +151,8 @@ export default function MenuButton({
     else if (event.key === 'ArrowUp') move(at - 1);
     else if (event.key === 'Home') move(0);
     else if (event.key === 'End') move(list.length - 1);
-    else if (event.key === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-      toggle.current?.focus();
-    } else if (event.key === 'Tab') setOpen(false);
+    else if (event.key === 'Tab') setOpen(false);
+    else closeOnEscape(event);
   };
 
   const drawItem = (item: MenuButtonItem): ReactElement =>
