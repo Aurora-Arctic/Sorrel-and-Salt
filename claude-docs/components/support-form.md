@@ -29,6 +29,7 @@
   `useDiscardGuard`. Cancel and Done exist only when
   `onDone` is given, because a page has nothing to close.
 - **The signed-out form offers five of the seven topics** (Accessibility, Bug, Account & Sign-In, Privacy & Data, Question), with the same labels and hints as this form, from `SUPPORT_ABOUTS`. `SIGNED_OUT_ABOUTS` in `src/modules/support/validation/support.ts` is the service's list; Compendium Entry and Feedback need an account.
+- **The signed-out form checks Send Request the same way**, with Email added between the topic and Subject: an empty or malformed address shows its message on the Email box, and the focus order is topic, Email, Subject, then Message. Both forms take their empty-field messages from `src/lib/support-messages.ts`.
 
 ## Support panel
 

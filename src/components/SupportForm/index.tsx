@@ -12,6 +12,7 @@ import {
   SUBJECT_MAX_LENGTH,
 } from '../../modules/support/validation/limits';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
+import { ABOUT_REQUIRED, MESSAGE_REQUIRED, SUBJECT_REQUIRED } from '../../lib/support-messages';
 import type { Failure } from '../../lib/types';
 import { PlainTextField } from '../Field/plain-text-field';
 import { FormActions } from '../Field/form-actions';
@@ -34,10 +35,6 @@ const SendSupportRequestDocument = graphql(`
   }
 `);
 
-const ABOUT_REQUIRED = 'Choose what this is about.';
-
-const SUBJECT_REQUIRED = 'Write a subject';
-const MESSAGE_REQUIRED = 'Write a message';
 const PATH_TOO_LONG = 'That page address is too long';
 
 const ABOUT_LABEL = 'What Is This About?';

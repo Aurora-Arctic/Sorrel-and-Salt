@@ -1,6 +1,7 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -8,6 +9,7 @@ import { emailAddressProblem, emailFormat, normaliseEmail } from '../../lib/emai
 import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import { ABOUT_REQUIRED, MESSAGE_REQUIRED, SUBJECT_REQUIRED } from '../../lib/support-messages';
 import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
 import type { Failure } from '../../lib/types';
 import { PlainTextField } from '../Field/plain-text-field';
@@ -29,13 +31,15 @@ const SIGNED_OUT_TOPICS = SUPPORT_ABOUTS.filter(({ value }) =>
   ['accessibility', 'bug', 'account', 'privacy', 'question'].includes(value),
 );
 
-const ABOUT_REQUIRED = 'Choose what this is about.';
+type Problems = Partial<Record<'about' | 'email' | 'subject' | 'message', string>>;
 
 const SignedOutSupportForm = ({
   about: initialAbout,
   path,
 }: SignedOutSupportFormProps): ReactElement => {
   const aboutId = useId();
+  const aboutBoxId = `${aboutId}-choices`;
+  const formRef = useRef<HTMLFormElement>(null);
   const [about, setAbout] = useState<SupportAbout | null>(
     SIGNED_OUT_TOPICS.find(({ value }) => value === initialAbout)?.value ?? null,
   );
@@ -45,36 +49,52 @@ const SignedOutSupportForm = ({
   // The trap field: a person never sees it, so a value in it is a bot's.
   const [website, setWebsite] = useState('');
   const [sending, setSending] = useState(false);
-  const [aboutMissing, setAboutMissing] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
-  const [problems, setProblems] = useState<
-    Partial<Record<'email' | 'subject' | 'message', string>>
-  >({});
-  const errorFor = (name: string) =>
-    failure.field?.name === name ? failure.field.message : undefined;
-  const edited = (name: keyof typeof problems) =>
-    setProblems((now) => ({ ...now, [name]: undefined }));
+  const [problems, setProblems] = useState<Problems>({});
+  const shown: Problems = {
+    ...(failure.field && { [failure.field.name]: failure.field.message }),
+    ...problems,
+  };
+  const edited = (name: keyof Problems) => setProblems((now) => ({ ...now, [name]: undefined }));
 
-  const ready = email.trim() !== '' && subject.trim() !== '' && message.trim() !== '';
+  // The topic group's first radio stands for the group.
+  function focusFirst(wrong: Problems) {
+    const target = wrong.about
+      ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
+      : formRef.current?.querySelector<HTMLElement>(
+          `[name="${wrong.email ? 'email' : wrong.subject ? 'subject' : 'message'}"]`,
+        );
+    target?.focus();
+  }
+
+  function problemsOf(): Problems {
+    const found: Problems = {};
+    if (about === null) found.about = ABOUT_REQUIRED;
+    const emailProblem = emailAddressProblem(normaliseEmail(email));
+    if (emailProblem) found.email = emailProblem;
+    if (subject.trim() === '') found.subject = SUBJECT_REQUIRED;
+    else if (subject.trim().length > SUBJECT_MAX_LENGTH)
+      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
+    if (message.trim() === '') found.message = MESSAGE_REQUIRED;
+    else if (message.trim().length > MESSAGE_MAX_LENGTH)
+      found.message = limitMessage(MESSAGE_MAX_LENGTH);
+    return found;
+  }
   const discard = useDiscardGuard(!sent && (email !== '' || subject !== '' || message !== ''));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (about === null) {
-      setAboutMissing(true);
+    const found = problemsOf();
+    if (Object.keys(found).length > 0) {
+      flushSync(() => setProblems(found));
+      setFailure({});
+      focusFirst(found);
       return;
     }
-    const found: typeof problems = {};
-    const emailProblem = emailAddressProblem(normaliseEmail(email));
-    if (emailProblem) found.email = emailProblem;
-    if (subject.trim().length > SUBJECT_MAX_LENGTH)
-      found.subject = limitMessage(SUBJECT_MAX_LENGTH);
-    if (message.trim().length > MESSAGE_MAX_LENGTH)
-      found.message = limitMessage(MESSAGE_MAX_LENGTH);
-    setProblems(found);
-    if (Object.keys(found).length > 0) return;
+    setProblems({});
+    if (about === null) return;
     setSending(true);
     setFailure({});
     try {
@@ -92,7 +112,9 @@ const SignedOutSupportForm = ({
       setSent(true);
     } catch (error) {
       setSending(false);
-      setFailure(readGraphqlFailure(error, ['about', 'email', 'subject', 'message']));
+      const failed = readGraphqlFailure(error, ['about', 'email', 'subject', 'message']);
+      flushSync(() => setFailure(failed));
+      if (failed.field) focusFirst({ [failed.field.name]: failed.field.message });
     }
   }
 
@@ -105,9 +127,10 @@ const SignedOutSupportForm = ({
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form ref={formRef} className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <RadioGroupField
+        id={aboutBoxId}
         legend="What Is This About?"
         required
         name={aboutId}
@@ -115,8 +138,11 @@ const SignedOutSupportForm = ({
         options={SIGNED_OUT_TOPICS}
         value={about}
         disabled={sending}
-        error={aboutMissing && about === null ? ABOUT_REQUIRED : errorFor('about')}
-        onChange={setAbout}
+        error={shown.about}
+        onChange={(value) => {
+          setAbout(value);
+          edited('about');
+        }}
       />
       <PlainTextField
         name="email"
@@ -132,7 +158,7 @@ const SignedOutSupportForm = ({
         check={emailAddressProblem}
         disabled={sending}
         value={email}
-        error={problems.email ?? errorFor('email')}
+        error={shown.email}
         onChange={(next) => {
           setEmail(next);
           edited('email');
@@ -147,7 +173,7 @@ const SignedOutSupportForm = ({
         limit={SUBJECT_MAX_LENGTH}
         disabled={sending}
         value={subject}
-        error={problems.subject ?? errorFor('subject')}
+        error={shown.subject}
         onChange={(next) => {
           setSubject(next);
           edited('subject');
@@ -168,7 +194,7 @@ const SignedOutSupportForm = ({
         limit={MESSAGE_MAX_LENGTH}
         disabled={sending}
         value={message}
-        error={problems.message ?? errorFor('message')}
+        error={shown.message}
         onChange={(next) => {
           setMessage(next);
           edited('message');
@@ -190,7 +216,7 @@ const SignedOutSupportForm = ({
         noun="Request"
         label="Send Request"
         busyLabel="Sending"
-        dirty={ready}
+        dirty
         submitting={sending}
       />
     </form>
