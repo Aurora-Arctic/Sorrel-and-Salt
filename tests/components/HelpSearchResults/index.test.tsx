@@ -54,17 +54,13 @@ const resultHrefs = () =>
   );
 
 describe('HelpSearchResults', () => {
-  it('heads the page with Help, then the search box, then Search Help beneath', () => {
+  it('draws no heading or search box of its own, which the help header holds above it', () => {
     render(<HelpSearchResults query="stock" results={RESULTS} />);
 
-    const h1 = screen.getByRole('heading', { level: 1, name: 'Help' });
-    const h2 = screen.getByRole('heading', { level: 2, name: 'Search Help' });
-    expect(h1.compareDocumentPosition(screen.getByRole('search'))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-    expect(screen.getByRole('search').compareDocumentPosition(h2)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    // Precondition: the page itself drew, under its own title.
+    expect(screen.getByRole('heading', { level: 2, name: 'Search Help' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('search')).toBeNull();
   });
 
   it('links back to the main help page', () => {
@@ -83,19 +79,11 @@ describe('HelpSearchResults', () => {
     );
   });
 
-  it('holds the words searched for in the search box', () => {
-    render(<HelpSearchResults query="stock" results={RESULTS} />);
-
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue('stock');
-  });
-
   it('draws no results and no result list for an empty query', () => {
     render(<HelpSearchResults query="" results={[]} />);
 
     expect(screen.queryByRole('list')).toBeNull();
     expect(resultHrefs()).toEqual([]);
-    // Why the empty page means something: the search box is still there to use.
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue('');
   });
 
   it('counts the results it is handed', () => {
@@ -126,9 +114,6 @@ describe('HelpSearchResults', () => {
 
     expect(resultHrefs()).toEqual([]);
     expect(screen.queryAllByRole('listitem')).toEqual([]);
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue(
-      'nothing-matches',
-    );
   });
 
   it('offers the guides and the glossary when a query finds nothing', () => {

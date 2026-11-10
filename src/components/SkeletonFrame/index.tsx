@@ -1,5 +1,7 @@
 import type { ComponentType, ReactElement } from 'react';
 import ContextRow from '../ContextRow';
+import { HelpFrontSkeleton } from '../HelpFront/skeleton';
+import PageColumn from '../PageColumn';
 import Skeleton from '../Skeleton';
 import type { SkeletonHost } from '../../lib/navigation/skeleton-for';
 import './index.scss';
@@ -15,6 +17,17 @@ export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
   if (host === 'main') return Page;
   const known = frames.get(Page);
   if (known) return known;
+  if (host === 'help') {
+    const InHelp = (): ReactElement => (
+      <PageColumn as="div">
+        <HelpFrontSkeleton>
+          <Page />
+        </HelpFrontSkeleton>
+      </PageColumn>
+    );
+    frames.set(Page, InHelp);
+    return InHelp;
+  }
   const className = host === 'coven' ? 'coven-layout' : 'page-column';
   const Framed = (): ReactElement => (
     <>

@@ -27,38 +27,34 @@ const QUESTIONS = [
   [5, 34],
 ] as const;
 
-// A help index with its guides still to come, in the page's own frame: the heading and band (or the unbanded search
-// box), the quick links' shipped titles, the jump menu, the guide cards with their kind and the glossary's own card,
+// A help index with its guides still to come: the heading and the search box (left to the help header when framed),
+// the quick links' shipped titles on the public index, the jump menu, the guide cards with their kind and the glossary's own card,
 // then, with the menu, the questions and Back to Top. Words still to come are bars of about their length.
 export const HelpIndexSkeleton = ({
   heading = 'Help',
-  lede,
+  framed,
   menu,
   back,
 }: {
   heading?: string;
-  lede?: string;
+  /** The public index under the help header, drawn without the heading and box and with the quick links. */
+  framed?: boolean;
   /** The jump menu and the questions it leads to: the page draws both when it has questions, which the public index always does. */
   menu?: boolean;
   /** The title of the index the page links back to, drawn as the page draws it. */
   back?: string;
 }): ReactElement => (
   <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
-    <PageHeader title={heading} />
-    {lede ? (
-      <div className="help-index__band">
-        <p className="lede">{lede}</p>
-        <HelpSearchForm size="hero" />
-        <ul className="help-index__quick" aria-label="Quick Links">
-          {HELP_QUICK_LINKS.map((title) => (
-            <li key={title}>
-              <span>{title}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ) : (
-      <HelpSearchForm />
+    {!framed && <PageHeader title={heading} />}
+    {!framed && <HelpSearchForm />}
+    {framed && (
+      <ul className="help-index__quick" aria-label="Quick Links">
+        {HELP_QUICK_LINKS.map((title) => (
+          <li key={title}>
+            <span>{title}</span>
+          </li>
+        ))}
+      </ul>
     )}
     {back && <HelpBackLinkSkeleton>Back to {back}</HelpBackLinkSkeleton>}
     {menu && (

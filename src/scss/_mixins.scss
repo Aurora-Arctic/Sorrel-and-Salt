@@ -493,6 +493,11 @@
   }
 }
 
+// The width from which a menu column fits on each side of the text column, with the frame's padding.
+@function page-with-nav-wide($menu, $column) {
+  @return calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2);
+}
+
 // One mixin for the pages and the shell's paused notice (AppShell), so the two cannot differ. A document page passes its wider pair.
 // `$menu: null` is a page with no menu, which keeps an equal free track each side so its column centres at every width.
 @mixin page-with-nav-grid($menu: calc(#{space(8)} * 3), $column: $narrow-column) {
@@ -509,7 +514,7 @@
 
   // Not from a tablet up, which lacks the room for three columns and the frame's padding.
   @if $menu {
-    @media (min-width: calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    @media (min-width: page-with-nav-wide($menu, $column)) {
       grid-template-columns: $menu minmax(0, $column) $menu;
     }
   }

@@ -1,17 +1,12 @@
 import type { ReactElement } from 'react';
 import { HelpBackLinkSkeleton } from '../HelpArticleView/back-link';
-import HelpSearchForm from '../HelpSearchForm';
-import PageHeader from '../PageHeader';
 import { SkeletonWords } from '../Skeleton/text';
 import './index.scss';
 
-// The search page with its results still to come, in the page's own frame: the heading, the search box and the title,
-// then the count and the result cards, each a title with its kind chip at the row's end over a summary, as bars. The
-// words searched are in the address, which a skeleton does not read.
-export const HelpSearchSkeleton = ({ lede }: { lede?: string }): ReactElement => (
+// The search page with its results still to come, beneath the help header: the way back and the title, then the count
+// and the result cards, each a title with its kind chip at the row's end over a summary, as bars.
+export const HelpSearchSkeleton = (): ReactElement => (
   <div className="help-page help-results">
-    <PageHeader title="Help" lede={lede} />
-    <HelpSearchForm />
     <HelpBackLinkSkeleton>Back to Help</HelpBackLinkSkeleton>
     <h2>Search Help</h2>
     <span className="help-results__count">

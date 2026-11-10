@@ -3,22 +3,18 @@ import type { ReactElement } from 'react';
 import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink } from '../../lib/navigation';
 import { HelpBackLink } from '../HelpArticleView/back-link';
-import HelpSearchForm from '../HelpSearchForm';
-import PageHeader from '../PageHeader';
 import { emphasise } from './emphasis';
 import type { HelpSearchResultsProps } from './types';
 import './index.scss';
 
 const KIND = { faq: 'Question', term: 'Term' } as const;
 
-// The search box holding the words, a count, then the results in the order handed (the search's rank), each a card
+// Beneath the help layout's header, whose search box holds the words: a count, then the results in the order handed (the search's rank), each a card
 // with its title, then a chip saying what kind of page it opens and, for a row not public, a chip naming its audience (Staff or Keeper), with the searched words
 // marked. No results draws no list; an unmatched query says so in the site's No Matches status
 // (claude-docs/components/help-pages.md).
-const HelpSearchResults = ({ lede, query, results }: HelpSearchResultsProps): ReactElement => (
+const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
   <div className="help-page help-results">
-    <PageHeader title="Help" lede={lede} />
-    <HelpSearchForm query={query} />
     <HelpBackLink href="/help" title="Help" />
     <h2>Search Help</h2>
     {results.length > 0 ? (

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import HelpSearchResults from '@/components/HelpSearchResults';
-import { HELP_LEDE, HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
+import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { getSession } from '@/lib/request-session';
 import { searchHelp } from '@/modules/help';
 
@@ -17,6 +18,8 @@ export default async function Page({
 }) {
   const { q } = await searchParams;
   const query = (Array.isArray(q) ? q[0] : q)?.trim() ?? '';
+  // A box emptied and sent without script lands on the index, as it does with script.
+  if (q !== undefined && query === '') redirect('/help');
   const session = await getSession();
   const results =
     query === ''
@@ -24,7 +27,6 @@ export default async function Page({
       : await searchHelp(session, query, { limit: HELP_PAGE_LIMIT, inverted: false });
   return (
     <HelpSearchResults
-      lede={HELP_LEDE}
       query={query}
       results={results.map(({ node }) => ({
         kind: node.kind,
