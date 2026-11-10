@@ -171,14 +171,6 @@ const andNodes = (items: readonly ReactNode[]): ReactNode =>
     </Fragment>
   ));
 
-const orValues = (values: readonly string[]): ReactNode =>
-  values.map((each, index) => (
-    <Fragment key={index}>
-      {index === 0 ? null : ' or '}
-      {value(`“${each}”`)}
-    </Fragment>
-  ));
-
 const joinedNames = (names: readonly string[], word: string): ReactNode =>
   names.map((each, index) => (
     <Fragment key={index}>
@@ -186,6 +178,19 @@ const joinedNames = (names: readonly string[], word: string): ReactNode =>
       {value(each)}
     </Fragment>
   ));
+
+const orValues = (values: readonly string[]): ReactNode =>
+  joinedNames(
+    values.map((each) => `“${each}”`),
+    ' or ',
+  );
+
+/** A clause that names a facet and lists what was chosen: "the form “a” or “b”". */
+const chosenClause = (one: string, many: string, count: number, listed: ReactNode): ReactNode => (
+  <>
+    the {plural(count, one, many)} {listed}
+  </>
+);
 
 export function emptyText(
   {
@@ -214,46 +219,38 @@ export function emptyText(
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && value(`“${query}”`),
-    forms.length > 0 && (
-      <>
-        the {plural(forms.length, 'form', 'forms')} {orValues(forms)}
-      </>
-    ),
-    deityNames.length > 0 && (
-      <>
-        the {plural(deityNames.length, 'deity', 'deities')} {orValues(deityNames)}
-      </>
-    ),
-    zodiac.length > 0 && (
-      <>
-        the {plural(zodiac.length, 'sign', 'signs')} {orValues(zodiac)}
-      </>
-    ),
-    celestialBodies.length > 0 && (
-      <>
-        the {plural(celestialBodies.length, 'celestial body', 'celestial bodies')}{' '}
-        {orValues(celestialBodies)}
-      </>
-    ),
+    forms.length > 0 && chosenClause('form', 'forms', forms.length, orValues(forms)),
+    deityNames.length > 0 &&
+      chosenClause('deity', 'deities', deityNames.length, orValues(deityNames)),
+    zodiac.length > 0 && chosenClause('sign', 'signs', zodiac.length, orValues(zodiac)),
+    celestialBodies.length > 0 &&
+      chosenClause(
+        'celestial body',
+        'celestial bodies',
+        celestialBodies.length,
+        orValues(celestialBodies),
+      ),
     toxicLabel && <>the toxic setting {value(toxicLabel)}</>,
     withoutReferences && value('No Refs'),
     withoutForms && value('No Form'),
     hidden && value('Hidden'),
-    elements.length > 0 && (
-      <>
-        the {plural(elements.length, 'element', 'elements')}{' '}
-        {joinedNames(
+    elements.length > 0 &&
+      chosenClause(
+        'element',
+        'elements',
+        elements.length,
+        joinedNames(
           elements.map((each) => labelOf(ELEMENT_OPTIONS, each)),
           ' or ',
-        )}
-      </>
-    ),
-    named.length > 0 && (
-      <>
-        the {plural(named.length, 'category', 'categories')}{' '}
-        {joinedNames(named, categoryMode === 'any' ? ' or ' : ' and ')}
-      </>
-    ),
+        ),
+      ),
+    named.length > 0 &&
+      chosenClause(
+        'category',
+        'categories',
+        named.length,
+        joinedNames(named, categoryMode === 'any' ? ' or ' : ' and '),
+      ),
   ].filter((filter): filter is Exclude<typeof filter, false | '' | undefined> => Boolean(filter));
   return (
     <span className="compendium-list__empty">

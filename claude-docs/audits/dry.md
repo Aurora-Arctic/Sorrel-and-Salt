@@ -75,7 +75,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-61  | A class-name joiner is hand-written in about nine components with four different idioms                                                                      | medium   | Components    |     12 |            4 Fixed |
 | D-62  | small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2                                                     | medium   | Tests         |     11 |                  2 | Moved to MC.1                                   |
 | D-63  | Trim, then empty to undefined or null, written inline in eight services                                                                                      | medium   | Server        |     11 |                  2 | Moved to MC.4                                   |
-| D-64  | Value-to-label lookups with a fallback, written eleven times                                                                                                 | medium   | Components    |     11 |    2 Fixed in part |
+| D-64  | Value-to-label lookups with a fallback, written eleven times                                                                                                 | medium   | Components    |     11 |            2 Fixed |
 | D-65  | "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated                                                                         | medium   | Server        |     10 |                  2 | Moved to MC.4                                   |
 | D-66  | Readable-spell parent check repeated in `spells.ts` and `workings.ts`; `grimoire.ts` ANDs `notSoftDeleted(spells)` after `readableSpells`                    | medium   | Server        |     10 |                1.5 | Moved to MC.4                                   |
 | D-67  | Vocabulary admin services repeat the create and delete sequences                                                                                             | medium   | Server        |      9 |                4.5 | Moved to MC.4                                   |
@@ -2004,7 +2004,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/components/SupportRequests`, `SupportList`, `UserList`, `UserDetail`, `IngredientForm`, `PrivilegeLedger`.
 
 - **Estimate:** 2 hours
-- **Status:** Fixed in part. `labelOf` from `@/lib/options` serves the support, user, role and privilege labels. Left: `providerLabel` in `UserList/marks.tsx` (keyed by `id`, not `value`), the `also` lookup in `IngredientEntry/back-link.tsx` (keyed by `path`, with a different fallback) and the StockDialog copies keyed by `variantId`.
+- **Status:** Fixed. `labelOf` and `labelByKey` in `src/lib/options.ts` serve every keyed label lookup, including `providerLabel`, the back link, and the two StockDialog copies.
 
 ### D-65: "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated
 
@@ -2750,7 +2750,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** tests/components/CompendiumList/*
 
 - **Estimate:** 4.75 hours
-- **Status:** Fixed in part. Part 1 is done: the empty-state sentence words its plurals through `plural()` and its lead and empty text through the shared builders; `andNodes` stays as the one JSX form of `joinAnd`. Part 2 (the facet field list and the repeated GraphQL selection) is not done.
+- **Status:** Fixed in part. Part 1 is done: `plural()`, the shared builders, and `chosenClause`/`joinedNames` in CompendiumList, whose empty-state wording differs from `buildSearchSentence`, so it cannot share that builder without changing visible text. Part 2: `FACET_DEFAULTS` drives `panelOf` and `noFacets`, and `toFacetOptions` builds the facet choices; `changeOf` and `heldFilter` transform values and stay. Not done: the shared GraphQL selection, because `CompendiumFacets` and `WorkspaceIngredientFacets` are different object types with no common interface, and a fragment needs one type condition; it would take a schema change.
 
 ### D-98: `box-sizing: border-box` declared 68 times with no global reset
 
