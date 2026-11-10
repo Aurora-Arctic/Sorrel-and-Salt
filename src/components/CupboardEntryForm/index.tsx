@@ -246,7 +246,7 @@ const CupboardEntryForm = ({
 
   const handBack = (field: CupboardField): void => {
     setValue(field, toForm(baseline)[field] as never, { shouldDirty: true });
-    if (field !== 'label' && field !== 'description' && field !== 'safetyNotes') {
+    if (!isTextField(field)) {
       if (field !== 'elements') setValue(`drafts.${field}`, '');
     }
     setHandedBack((current) => new Set(current).add(field));

@@ -33,30 +33,21 @@ const sameList = (a: readonly string[], b: readonly string[]): boolean =>
  * shown as its placeholder and a typed label is the coven's own word.
  */
 export function baselineOf(compendium: CompendiumValues): CupboardValues {
-  return {
-    label: '',
-    description: compendium.description ?? '',
-    safetyNotes: compendium.safetyNotes ?? '',
-    elements: compendium.elements,
-    celestialBodies: compendium.celestialBodies,
-    zodiacSigns: compendium.zodiacSigns,
-    colors: compendium.colors,
-  };
+  return Object.fromEntries(
+    FIELDS.map((field) => [
+      field,
+      field === 'label' ? '' : (compendium[field] ?? (isTextField(field) ? '' : [])),
+    ]),
+  ) as unknown as CupboardValues;
 }
 
 export function openingValues(
   baseline: CupboardValues,
   overrides: CupboardOverrides,
 ): CupboardValues {
-  return {
-    label: overrides.label ?? baseline.label,
-    description: overrides.description ?? baseline.description,
-    safetyNotes: overrides.safetyNotes ?? baseline.safetyNotes,
-    elements: overrides.elements ?? baseline.elements,
-    celestialBodies: overrides.celestialBodies ?? baseline.celestialBodies,
-    zodiacSigns: overrides.zodiacSigns ?? baseline.zodiacSigns,
-    colors: overrides.colors ?? baseline.colors,
-  };
+  return Object.fromEntries(
+    FIELDS.map((field) => [field, overrides[field] ?? baseline[field]]),
+  ) as unknown as CupboardValues;
 }
 
 export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
