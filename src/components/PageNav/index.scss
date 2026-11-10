@@ -243,28 +243,11 @@
       margin-inline-start: auto;
     }
 
-    li:nth-child(6n + 1) > .page-nav__pending .skeleton__line {
-      width: 60%;
-    }
-
-    li:nth-child(6n + 2) > .page-nav__pending .skeleton__line {
-      width: 80%;
-    }
-
-    li:nth-child(6n + 3) > .page-nav__pending .skeleton__line {
-      width: 45%;
-    }
-
-    li:nth-child(6n + 4) > .page-nav__pending .skeleton__line {
-      width: 70%;
-    }
-
-    li:nth-child(6n + 5) > .page-nav__pending .skeleton__line {
-      width: 55%;
-    }
-
-    li:nth-child(6n) > .page-nav__pending .skeleton__line {
-      width: 75%;
+    // The placeholder lines cycle through six widths down the list, so the rows do not read as one block.
+    @each $step, $width in (1: 60%, 2: 80%, 3: 45%, 4: 70%, 5: 55%, 6: 75%) {
+      li:nth-child(6n + #{$step % 6}) > .page-nav__pending .skeleton__line {
+        width: $width;
+      }
     }
 
     .page-nav__apart::before {
