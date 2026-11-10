@@ -14,7 +14,7 @@ import {
   findWorkspaceIngredientByName,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { answerOf, Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -322,13 +322,6 @@ export async function removeCupboardEntry(
 const sortedNames = (names: readonly string[]) =>
   [...new Set(names)].sort((a, b) => a.localeCompare(b));
 
-function answered<T>(slots: readonly (T[] | Forbidden)[]): T[] {
-  return slots.flatMap((slot) => {
-    if (slot instanceof Forbidden) throw slot;
-    return slot;
-  });
-}
-
 // Making a held compendium entry the coven's own (claude-docs/db/workspace-compendium-entries.md,
 // "Converting a compendium entry into our own" and "Cupboard entry service details").
 
@@ -349,7 +342,7 @@ async function ownValuesOf(
   heldBy: Membership | undefined,
 ): Promise<{ values: IngredientValues; selfLinks: SelfLink[]; folkNamesLost: string[] }> {
   const refs = [{ id: merged.id, workspaceId: null }];
-  const forms = answered(await variantsOf(session, refs, heldBy));
+  const forms = (await variantsOf(session, refs, heldBy)).flatMap(answerOf);
   const formRefs: VariantKey[] = forms.map((form) => ({
     id: form.id,
     ingredientId: merged.id,
@@ -423,10 +416,10 @@ async function ownValuesOf(
   const cited = (rows: CitedReference[]) =>
     rows.map(({ reference, locator }) => ({ referenceId: reference.id, locator }));
   const filed = (rows: readonly { id: string }[]) => rows.map((category) => category.id);
-  const ownedBy = <T>(rows: readonly (T[] | Forbidden)[], index: number) => answered([rows[index]]);
+  const ownedBy = <T>(rows: readonly (T[] | Forbidden)[], index: number) => answerOf(rows[index]);
 
   const nameKey = merged.name.toLowerCase();
-  const allFolkNames = answered(folkNames).map((row) => row.name);
+  const allFolkNames = folkNames.flatMap(answerOf).map((row) => row.name);
   const values: IngredientValues = {
     name: merged.name,
     canonicalName: merged.canonicalName,
@@ -440,9 +433,11 @@ async function ownValuesOf(
     colors: merged.colors,
     folkNames: allFolkNames.filter((name) => name.toLowerCase() !== nameKey),
     substitutes: copied(substitutes),
-    deities: answered(deities).map(({ name, deity }) => (deity ? { deityId: deity.id } : { name })),
-    references: cited(answered(references)),
-    categoryIds: filed(answered(categories)),
+    deities: deities
+      .flatMap(answerOf)
+      .map(({ name, deity }) => (deity ? { deityId: deity.id } : { name })),
+    references: cited(references.flatMap(answerOf)),
+    categoryIds: filed(categories.flatMap(answerOf)),
     variants: forms.map((form, index) => {
       const curated = form.formId === null ? undefined : curatedForms.get(form.formId);
       return {
@@ -496,7 +491,7 @@ export async function convertCompendiumEntryToLocal(
   const columns = ingredientColumns(fields);
   // The cupboard row's own label is the one the new entry takes over.
   await refuseLabelTaken(membership, fields.name, cupboardEntry.id);
-  const entryForms = answered(await variantsOf(session, [entry], heldBy));
+  const entryForms = (await variantsOf(session, [entry], heldBy)).flatMap(answerOf);
 
   try {
     const row = await withAudit(session, async (write) => {

@@ -1,5 +1,5 @@
 import 'server-only';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { answerOf, Forbidden, NotFound } from '../../../lib/errors';
 import { NO_INGREDIENT } from './messages';
 import type { Session } from '../../../lib/session';
 import { getCupboardEntry, heldCompendiumEntry, isRetired } from './cupboard-entries';
@@ -36,11 +36,6 @@ import type {
 
 // A coven entry's children answer `Forbidden` outside it; the compendium's answer anyone.
 
-function only<T>([answer]: readonly (T | Error)[]): T {
-  if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
-  return answer;
-}
-
 /**
  * A retired compendium entry is read only in a coven whose cupboard names it, marked `retired`.
  * No `workspaceId` is the public page, which reads no cupboard.
@@ -66,12 +61,12 @@ export async function ingredientDetailOf(
     : cupboardEntryOf(session, entry, workspaceId);
   cupboard.catch(() => {});
   const [folkNames, categories, deities, substitutes, references, variants] = await Promise.all([
-    folkNamesOf(session, refs, heldBy).then(only),
-    categoriesOf(session, refs, heldBy).then(only),
-    deitiesOf(session, refs, heldBy).then(only),
-    substitutesOf(session, refs, heldBy).then(only),
-    referencesOf(session, refs, heldBy).then(only),
-    variantsOf(session, refs, heldBy).then(only),
+    folkNamesOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
+    categoriesOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
+    deitiesOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
+    substitutesOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
+    referencesOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
+    variantsOf(session, refs, heldBy).then(([answer]) => answerOf(answer)),
   ]);
   const cupboardEntry = await cupboard;
 
@@ -84,13 +79,13 @@ export async function ingredientDetailOf(
   const [variantCategories, variantSubstitutes, variantReferences, traditions, otherNames, forms] =
     await Promise.all([
       categoriesOfVariants(session, variantRefs, heldBy).then((answers) =>
-        answers.map((a) => only([a])),
+        answers.map((a) => answerOf(a)),
       ),
       substitutesOfVariants(session, variantRefs, heldBy).then((answers) =>
-        answers.map((a) => only([a])),
+        answers.map((a) => answerOf(a)),
       ),
       referencesOfVariants(session, variantRefs, heldBy).then((answers) =>
-        answers.map((a) => only([a])),
+        answers.map((a) => answerOf(a)),
       ),
       deityTraditionsOf(picked.map((deity) => deity.traditionId)),
       deityOtherNamesOf(picked.map((deity) => deity.id)),

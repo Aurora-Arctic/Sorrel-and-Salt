@@ -1,6 +1,6 @@
 import 'server-only';
 import { findCompendiumReview, findOneIngredient } from '../../../db/repository';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { answerOf, Forbidden, NotFound } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY } from './messages';
 import type { Session } from '../../../lib/session';
 import { isRowId } from '../../../lib/validation';
@@ -9,19 +9,16 @@ import { sourcingScore } from './sourcing-score';
 import type { SourcingChildren, SourcingScore } from '../types';
 import { assertCurator } from '@/modules/identity';
 
-/** One child read's single answer, or its refusal thrown. */
-function answered<Row>(answer: Row | Forbidden | undefined): Row {
-  if (answer instanceof Forbidden || answer === undefined) throw answer ?? new Forbidden();
-  return answer;
-}
-
 /** The children the score reads without a request's loaders, as the admin page does: one batch each. */
 function childrenFor(session: Session): SourcingChildren {
   return {
-    variants: async (entry) => answered((await variantsOf(session, [entry]))[0]),
-    references: async (entry) => answered((await referencesOf(session, [entry]))[0]),
+    variants: async (entry) => answerOf((await variantsOf(session, [entry]))[0] ?? new Forbidden()),
+    references: async (entry) =>
+      answerOf((await referencesOf(session, [entry]))[0] ?? new Forbidden()),
     variantReferences: async (variants) =>
-      (await referencesOfVariants(session, variants)).map((answer) => answered(answer)),
+      (await referencesOfVariants(session, variants)).map((answer) =>
+        answerOf(answer ?? new Forbidden()),
+      ),
   };
 }
 
