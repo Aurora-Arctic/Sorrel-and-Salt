@@ -21,7 +21,16 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     const sender = await browser.newContext();
     const senderPage = await sender.newPage();
     const { userId: senderId } = await signInAs(senderPage, 'sender@story-90.test');
-    await signInAs(page, 'curator@story-90.test', ['discord'], 'curator');
+    const { userId: curatorId } = await signInAs(
+      page,
+      'curator@story-90.test',
+      ['discord'],
+      'curator',
+    );
+    // Every fixture account is named alike, so the curator gets a name of their own to be picked by.
+    await withE2eSql(
+      (sql) => sql`update users set name = 'Testwort Curator' where id = ${curatorId}`,
+    );
     await signInAs(page, 'admin@story-90.test', ['discord'], 'admin');
 
     // The sender's own session, through the API the form would call.
@@ -72,17 +81,12 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin assigns it and shares it with curators', async () => {
-      // Every fixture account is named alike, so the curator is the last choice: keepers are listed before curators.
       const assignee = dialog.getByRole('combobox', { name: 'Assignee' });
       await expect(assignee).toHaveText('Unassigned');
       await assignee.click();
-      await page
-        .getByRole('listbox', { name: 'Assignee choices' })
-        .getByRole('option')
-        .last()
-        .click();
+      await page.getByRole('option', { name: 'Testwort Curator' }).click();
       await expect(dialog.getByRole('status')).toHaveText(/Request assigned\./);
-      await expect(assignee).toHaveText('Fixture Person');
+      await expect(assignee).toHaveText('Testwort Curator');
       await dialog.getByRole('switch', { name: 'Shared With Curators' }).click();
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });
