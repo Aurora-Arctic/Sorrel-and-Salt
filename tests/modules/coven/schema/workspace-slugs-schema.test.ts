@@ -12,7 +12,7 @@ import { assertMembership } from '@/modules/coven';
 import { workspaceSlugs } from '@/modules/coven/schema/workspace-slugs';
 
 // A coven's live addresses, its current one and its one old one together, so one partial index refuses an address that
-// two live covens would share (claude-docs/tasks/m17.md, M17.22, M17.23).
+// two live covens would share (claude-docs/tasks/v1/m17.md, M17.22, M17.23).
 
 const OWN_COLUMNS = ['id', 'workspace_id', 'slug'];
 const SLUG_UNIQUE = 'workspace_slugs_slug_unique';
@@ -339,7 +339,7 @@ async function movedCoven(name: string) {
 }
 
 // Another coven's old address is free to take. The claimer's writer retires the old holder's row itself, under no proof of
-// the old holder, so no service ever handles another coven's row (claude-docs/tasks/m17.md, M17.23).
+// the old holder, so no service ever handles another coven's row (claude-docs/tasks/v1/m17.md, M17.23).
 describe("the address writers and another coven's old address", () => {
   it("insertWorkspaceSlug retires another live coven's old-address row, stamped from the session, so one live row holds it", async () => {
     const holder = await movedCoven(`Fixture Old Holder ${token()}`);
@@ -407,7 +407,7 @@ describe("the address writers and another coven's old address", () => {
   });
 });
 
-// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/m17.md, M17.23).
+// A coven keeps one old address: the one it held just before its latest rename (claude-docs/tasks/v1/m17.md, M17.23).
 describe('updateWorkspaceName and the one old address', () => {
   async function renamedTwice() {
     const coven = await insertCoven(`Fixture Twice Renamed ${token()}`);

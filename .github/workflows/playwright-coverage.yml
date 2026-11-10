@@ -3,8 +3,9 @@ name: Playwright Coverage
 # The gate suite's and the story suite's JavaScript coverage, merged (M14.28).
 # workflow_call only, from pr-gate's `playwright-coverage` job, which runs
 # after both suites. Each suite uploads its coverage report with monocart's raw
-# data inside it; this downloads whichever were uploaded, merges them and posts
-# the figure in a "Playwright Coverage" comment of its own. Never a required
+# data inside it; this downloads whichever were uploaded, merges them and writes
+# the figure into the Coverage section of the one Playwright comment the two
+# suites write their sections of (claude-docs/ci/pr-comments.md). Never a required
 # check: `continue-on-error` below, and nothing waits on it.
 #
 # A reusable workflow, not a job of pr-gate.yml, because a job with its own
@@ -25,7 +26,8 @@ on:
       should-run:
         description: >-
           True when at least one of the two suites ran, so there may be coverage
-          to merge. False posts nothing.
+          to merge. False writes nothing: pr-gate's `pr-comments` job has already
+          marked the section Skipped.
         required: true
         type: boolean
       suites-failed:
@@ -123,31 +125,46 @@ jobs:
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
 
+      # A merge that failed writes its log here too, so the section never stays
+      # Running.
       - name: Comment on PR
-        if: inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran == 'true'
+        if: ${{ !cancelled() && inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran != 'false' && steps.merge.outcome != 'skipped' }}
         uses: ./.github/actions/pr-comment
         with:
-          check-name: Playwright Coverage
-          marker-slug: playwright-coverage
+          check-name: Playwright
+          marker-slug: playwright
+          section: coverage
           pr-number: ${{ inputs.pr-number }}
           outcome: ${{ inputs.suites-failed && 'failure' || steps.merge.outcome }}
           log-file: /app/output.log
-          success-mode: comment
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
 
-      # The same comment, so it never keeps an earlier commit's figures. Posted
+      # A suite was meant to run but neither uploaded coverage: it died first.
+      - name: Comment on PR that neither suite left coverage
+        if: inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran == 'false'
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright
+          marker-slug: playwright
+          section: coverage
+          pr-number: ${{ inputs.pr-number }}
+          outcome: failure
+          log-file: /app/output.log
+          summary: Neither suite left coverage to merge. The suites' own sections say why.
+
+      # The same section, so it never keeps an earlier commit's figures. Written
       # as a failure whose output is the check's log.
       - name: Comment on PR that coverage is missing
         if: inputs.should-run && steps.check.outputs.missing != ''
         uses: ./.github/actions/pr-comment
         with:
-          check-name: Playwright Coverage
-          marker-slug: playwright-coverage
+          check-name: Playwright
+          marker-slug: playwright
+          section: coverage
           pr-number: ${{ inputs.pr-number }}
           outcome: failure
           log-file: /app/output.log
-          success-mode: comment
           summary: Coverage is missing for this commit, because an uploaded artifact could not be downloaded. Re-run the job.
 
       - name: Fail when a coverage artifact could not be downloaded

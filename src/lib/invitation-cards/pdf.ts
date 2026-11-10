@@ -15,7 +15,7 @@ import {
 } from 'pdf-lib';
 import { addSheetPage, backPosition, drawSheet, embedAssets, LABEL_AT } from '../card-sheet/sheet';
 import { FRONT_COPY, validUntil } from './copy';
-import { GROUND_INK, MUTED_INK } from './inks';
+import { GROUND_INK, HEADING_INK } from './inks';
 import {
   BACK_PICTURE,
   backText,
@@ -71,7 +71,7 @@ function qrOperators(link: string, at: QrItem): Operator[] {
   const ops: Operator[] = [
     pushGraphicsState(),
     concatTransformationMatrix(module, 0, 0, module, at.x, at.y),
-    setFillingCmykColor(...MUTED_INK),
+    setFillingCmykColor(...HEADING_INK),
   ];
   // Each finder's ring is filled even-odd, so the card shows through its middle as it does through the SVG's.
   for (const { outer, inner, centre } of finders) {

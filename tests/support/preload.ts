@@ -82,7 +82,8 @@ export function beginPress(control: HTMLElement): void {
 /**
  * Starts a fresh module registry and counts, from here on, the evaluations of each specifier: a module
  * the component imports statically counts once it is imported, one behind `import()` once the load
- * starts. Import the component under test after calling this, with `await import(...)`.
+ * starts. Import the component under test after calling this, with `await import(...)`. A load the test
+ * starts and does not await finishes before the test does, so it is never counted by the next test's watch.
  */
 export function watchLoads(specifiers: readonly string[]): () => string[] {
   vi.resetModules();
@@ -99,7 +100,9 @@ export function watchLoads(specifiers: readonly string[]): () => string[] {
       return evaluated as Promise<Record<string, unknown>>;
     });
   }
-  onTestFinished(() => {
+  onTestFinished(async () => {
+    // A form a test started loading and never awaited would otherwise evaluate under the next test's mocks.
+    await vi.dynamicImportSettled();
     for (const specifier of specifiers) vi.doUnmock(specifier);
   });
   return () => [...loaded];

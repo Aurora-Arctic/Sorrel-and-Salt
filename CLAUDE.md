@@ -100,7 +100,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - **Modules:** `src/modules/<name>/` (`identity`, `coven`, `vocabulary`, `ingredients`, `grimoire`, `support`, `documents`) each own their tables and services, and another module reaches one only through `@/modules/<name>` (claude-docs/modules.md).
 - **A type lives in a type-only file** (MB.108), by default the `types.ts` beside its users (claude-docs/modules.md, "Where types live").
 - **Every slug comes from `src/lib/slugify.ts`**, derived from the name and never written down beside it.
-- **Components and styling** follow `.claude/rules/components.md`: no styling past the tokens before the section's design review.
+- **Components and styling** follow `.claude/rules/components.md`: a task styles its components as the design needs, using the existing tokens, mixins and primitives where they fit and adding to `src/scss/` where they do not, never duplicating what already exists.
 - **A form input is built on the Field set, and each format rule is written once** (`.claude/rules/components.md`, "Form inputs"): six lint rules fail a raw text input, `type="number"`, a bare limit in a schema, a `maxLength`, a `useForm` without `FormErrorSummary` and a placeholder over two words.
 - **Gitflow:** `feature/*` → `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` and `main-sync/*` as DESIGN.md §12 sets out.
 - **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31). A doc holds only what adding a feature needs, each fact once: a binding fact (rule, reason, exception, command, path, env var, number) stays however old; history (what was tried, who decided, when, which task) goes (claude-docs/README.md, "What a doc holds"). Text leaving a live doc moves to another live doc, or is deleted, or goes into a tarball under `claude-docs/archive/`, which is never read. When a doc and the code disagree, establish which is wrong first.
@@ -110,9 +110,9 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ## GitHub task tracking
 
-The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & Salt** (number `1`), are what to work on; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`.
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, under two org Projects, **Sorrel & Salt** (ids `M…`, `MB.…`, `MW.…`) and **Sorrel & Salt V1.Next** (ids `N…`, milestones starting `N · `), are what to work on; `scripts/task-projects.mjs` is the one place their numbers are written, and a task's Project is its milestone's; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`.
 
-- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`, `move`, `milestone`, `retire`). Never hand-compose `gh issue`.
+- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`, `move`, `milestone`, `retire`, `place`, `renumber`), each on whichever Project holds the task. Never hand-compose `gh issue`.
 - **`find <ID>` matches the title on `<ID> — ` exactly.** Zero matches, or several: stop and say so.
 - **Status moves forward, in the same turn as the event**: `In Progress` once work starts, `In Review` when the PR opens (with a comment carrying its link), `Done` at the merge. Never close a task by hand.
 - **A PR body opens with `Closes #N`**, or `Refs #N` for a PR that does not finish the task.

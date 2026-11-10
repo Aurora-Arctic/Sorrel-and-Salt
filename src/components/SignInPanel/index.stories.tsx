@@ -60,6 +60,12 @@ export const PasswordLastUsed: Story = {
   },
 };
 
+const CreateAnAccountView = () => {
+  lastUsed(null);
+  return <Page next="/" configured={ALL_PROVIDERS} mode="sign-up" />;
+};
+const createAnAccountNode = <CreateAnAccountView />;
+
 const WithErrorView = () => {
   lastUsed(null);
   return <Page next="/" error={signInErrorMessage('email_not_found')} configured={ALL_PROVIDERS} />;
@@ -94,6 +100,7 @@ export const Failed: Story = {
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Last Used': lastUsedNode,
+  'Create an Account': createAnAccountNode,
   'With Error': withErrorNode,
   'Some Unavailable': someUnavailableNode,
 };

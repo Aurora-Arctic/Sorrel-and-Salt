@@ -104,7 +104,7 @@ describe('createAdminInvitation', () => {
     expect(message.to).toBe(INVITED);
     // 32 random bytes in base64url: unguessable, and safe in a path.
     expect(token).toHaveLength(43);
-    expect(message.html).toContain(`href="${ORIGIN}/invite/${token}"`);
+    expect(message.html).toContain(`href="${ORIGIN}/invite/${token}?for=site"`);
     expect(await invitations()).toEqual([
       expect.objectContaining({
         id: row.id,

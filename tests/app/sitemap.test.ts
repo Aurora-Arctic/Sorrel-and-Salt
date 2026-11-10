@@ -27,6 +27,7 @@ describe('sitemap', () => {
       { url: 'https://sorrelandsalt.com/sign-in' },
       { url: 'https://sorrelandsalt.com/privacy' },
       { url: 'https://sorrelandsalt.com/disclaimer' },
+      { url: 'https://sorrelandsalt.com/about' },
       { url: 'https://sorrelandsalt.com/terms' },
       { url: 'https://sorrelandsalt.com/code-of-ethics' },
       { url: 'https://sorrelandsalt.com/help' },

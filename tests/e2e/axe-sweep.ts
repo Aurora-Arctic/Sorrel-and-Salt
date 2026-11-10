@@ -274,6 +274,7 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/privacy/versions/[number]': () => '/privacy/versions/1',
   '/disclaimer': () => '/disclaimer',
   '/disclaimer/versions/[number]': () => '/disclaimer/versions/1',
+  '/about': () => '/about',
   '/code-of-ethics': () => '/code-of-ethics',
   '/code-of-ethics/versions/[number]': () => '/code-of-ethics/versions/1',
   '/terms': () => '/terms',
@@ -377,6 +378,11 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
       .fill('Fixture subject');
     await page.getByRole('banner').getByRole('link', { name: 'Compendium' }).first().click();
     return dialogNamed(page, 'Discard Changes?');
+  },
+  'sign-in': async (page) => {
+    await visit(page, '/compendium');
+    await page.getByRole('banner').getByRole('link', { name: 'Sign In' }).click();
+    return dialogNamed(page, 'Sign In');
   },
   'add-ingredient': async (page, w) => {
     await visit(page, `/coven/${w.coven.slug}/ingredients?new=ingredient-coven-${w.coven.slug}`);

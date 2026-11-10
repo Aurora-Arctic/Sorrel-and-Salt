@@ -12,7 +12,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const Page = ({ open = '/compendium' }: { open?: string }): ReactElement => (
   <WorkshopPathname.Provider value={open}>
-    <PublicFrame>
+    <PublicFrame configured={['discord', 'google', 'facebook', 'microsoft']}>
       <main>
         <div className="page-column">
           <h1>Compendium</h1>

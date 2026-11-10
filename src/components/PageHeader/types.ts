@@ -5,7 +5,8 @@ export interface PageHeaderProps {
   title?: ReactNode;
   /** Draws a placeholder bar in the `h1` in place of the title, for a head whose title is not known yet: a skeleton's. `2` stands for a title that wraps to two lines. */
   pendingTitle?: boolean | 2;
-  level?: 'h1' | 'h2';
+  /** `h3` for a view under a dialog's own title. */
+  level?: 'h1' | 'h2' | 'h3';
   greeting?: string;
   /** The `h1`'s id, for a landmark or an article that takes the heading as its name. */
   id?: string;

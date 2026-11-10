@@ -1,7 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
@@ -9,6 +9,8 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import SignInDialog from '../SignInDialog';
+import { ADDRESS_LEDES } from './ledes';
 import type { InvitationAcceptanceProps } from './types';
 import type { PageHeaderProps } from '../PageHeader/types';
 import './index.scss';
@@ -39,18 +41,29 @@ const SITE_GRANTS = {
 const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 
 const SIGNED_OUT_GRANT =
-  "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
+  "You've been invited to Sorrel & Salt. Create an account or sign in. Its email address must be the one this invitation was sent to.";
 
 const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 
 const CARD_SIGNED_OUT_GRANT =
-  "You've been given a card to join Sorrel & Salt. Sign in with any account, once its email address is verified.";
+  "You've been given a card to join Sorrel & Salt. Create an account or sign in to accept it.";
+
+/** To every unverified account that matched the address, new or not: a resend is the same press either way. */
+const UNVERIFIED_GRANT =
+  "Your email address isn't confirmed yet. Check your inbox for our message, or press Confirm Your Email to send a new one. Its link brings you back here to accept this invitation.";
+
+/** When a verification link came back refused, whatever the reason, by the state it comes back to. */
+const LINK_FAILED = {
+  'signed-out': "That link has expired or isn't valid. Sign in to get a new one.",
+  unverified: "That link has expired or isn't valid. Press Confirm Your Email to get a new one.",
+} as const;
 
 /** What the heading says over a refusal. */
 const REFUSED_GRANT = "This invitation can't be used, and the reason is below.";
 
 /** The sentence under the heading; a refusal says why in its alert below, and here only that it was refused. */
-function grantOf(props: InvitationAcceptanceProps): string | undefined {
+function grantOf(props: InvitationAcceptanceProps): ReactNode {
+  if (props.status === 'unverified') return UNVERIFIED_GRANT;
   if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
   if (props.status === 'refused') return REFUSED_GRANT;
   if (props.status !== 'acceptable') return undefined;
@@ -130,10 +143,39 @@ const InvitationAcceptance = ({
         lede={grant}
         level={headingLevel}
       />
+      {props.status === 'signed-out' && props.linkFailed && (
+        <Notice kind="error">{LINK_FAILED['signed-out']}</Notice>
+      )}
       {props.status === 'signed-out' && (
-        <p className="invitation-acceptance__actions">
-          <a className="btn btn--solid" href={props.signInHref}>
-            Sign In
+        // A `div`: each choice draws its dialog beside it, and a dialog in a `p` is invalid HTML.
+        <div className="invitation-acceptance__actions invitation-acceptance__choices">
+          {(props.lead === 'sign-up'
+            ? (['sign-up', 'sign-in'] as const)
+            : (['sign-in', 'sign-up'] as const)
+          ).map((mode) => (
+            <SignInDialog
+              key={mode}
+              next={props.next}
+              configured={props.configured}
+              label={mode === 'sign-up' ? 'Create Account' : 'Sign In'}
+              className={mode === props.lead ? 'btn btn--solid' : 'btn'}
+              mode={mode}
+              ledes={props.card ? undefined : ADDRESS_LEDES}
+              signUpLandsOnNext
+            />
+          ))}
+        </div>
+      )}
+      {props.status === 'unverified' && props.linkFailed && (
+        <Notice kind="error">{LINK_FAILED.unverified}</Notice>
+      )}
+      {props.status === 'unverified' && (
+        <p className="invitation-acceptance__actions invitation-acceptance__row">
+          <a className="btn btn--quiet" href={props.emailHref}>
+            Confirm Your Email
+          </a>
+          <a className="btn btn--quiet" href="/">
+            Back to Home
           </a>
         </p>
       )}

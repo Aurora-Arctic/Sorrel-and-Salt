@@ -1,6 +1,6 @@
 import type { Route } from 'next';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
 import type {
   AcceptInvitationMutation,
@@ -13,10 +13,26 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // claude-docs/components/invitation-acceptance.md
 
 const router = { push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+const signUpEmail = vi.fn();
+const getSession = vi.fn();
+vi.mock('@/lib/auth-client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/auth-client')>()),
+  signIn: { social: vi.fn(), email: vi.fn() },
+  signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
+  getSession: (...args: unknown[]) => getSession(...args),
+}));
 
 beforeEach(() => {
   router.push.mockClear();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
@@ -25,12 +41,33 @@ const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
 describe('InvitationAcceptance, for a card', () => {
-  it('tells a signed-out visitor any account will do, with no address to match', () => {
-    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+  // An address invitation's dialog says which address to use under its title; a card's has no address to name.
+  it.each(['Create Account', 'Sign In'])(
+    'gives the dialog from %s no lede under its title, where an address invitation gives one',
+    async (choice) => {
+      const paragraphsInDialog = async (card: boolean): Promise<number> => {
+        render(
+          <InvitationAcceptance
+            status="signed-out"
+            lead={card ? 'sign-up' : 'sign-in'}
+            card={card}
+            next="/invite/abc"
+            configured={['google']}
+          />,
+        );
+        await act(async () => fireEvent.click(screen.getByRole('link', { name: choice })));
+        const count = within(screen.getByRole('dialog')).queryAllByRole('paragraph').length;
+        cleanup();
+        return count;
+      };
 
-    expect(screen.getByText(/any account/i)).toBeVisible();
-    expect(screen.queryByText(/email address is the one/i)).toBeNull();
-  });
+      const forAnAddress = await paragraphsInDialog(false);
+      const forACard = await paragraphsInDialog(true);
+
+      expect(forAnAddress).toBeGreaterThan(0);
+      expect(forACard).toBe(forAnAddress - 1);
+    },
+  );
 
   it('accepts, and lands where the account starts a coven', async () => {
     mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
@@ -98,14 +135,181 @@ describe('InvitationAcceptance, for the account that already used a card', () =>
 });
 
 describe('InvitationAcceptance', () => {
-  it('asks a signed-out visitor to sign in, and back to the link', () => {
-    render(<InvitationAcceptance status="signed-out" signInHref="/sign-in?next=%2Finvite%2Fabc" />);
+  // Two equal choices, each a link to the sign-in page back to the invitation, for a press meant for
+  // a new tab or a browser without the script.
+  it('offers a signed-out visitor Create Account and Sign In, both back to the link, and no Accept', () => {
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
 
+    expect(screen.getByRole('link', { name: 'Create Account' })).toHaveAttribute(
+      'href',
+      '/sign-in?next=%2Finvite%2Fabc&mode=sign-up',
+    );
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
       'href',
       '/sign-in?next=%2Finvite%2Fabc',
     );
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
+  });
+
+  // The choice the invitation leads with comes first in the document, so the tab order matches what is seen.
+  it.each([
+    ['sign-up', 'Create Account', 'Sign In'],
+    ['sign-in', 'Sign In', 'Create Account'],
+  ] as const)('puts the %s choice first', (lead, first, second) => {
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead={lead}
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+
+    const firstLink = screen.getByRole('link', { name: first });
+    const secondLink = screen.getByRole('link', { name: second });
+    expect(
+      firstLink.compareDocumentPosition(secondLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('opens the dialog over the invitation in the mode each choice names', async () => {
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Create Account' })));
+
+    const creating = screen.getByRole('dialog', { name: 'Create an Account' });
+    expect(within(creating).queryByRole('button', { name: 'Sign In with a Passkey' })).toBeNull();
+    await act(async () => fireEvent.click(within(creating).getByRole('button', { name: 'Close' })));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Sign In' })));
+
+    const signingIn = screen.getByRole('dialog', { name: 'Sign In' });
+    expect(
+      within(signingIn).getByRole('button', { name: 'Sign In with a Passkey' }),
+    ).toBeInTheDocument();
+    // The invitation stays under the dialog, unaccepted.
+    expect(
+      screen.getByRole('heading', { name: 'Your Invitation', hidden: true }),
+    ).toBeInTheDocument();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  // The invitation says to check the inbox, where the sign-in page would send a new account to the
+  // email page; accepting stays a press of its own.
+  it('brings a new email account straight back to the invitation', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { assign });
+    signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
+    getSession.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Create Account' })));
+    const dialog = screen.getByRole('dialog');
+    await act(async () =>
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Continue with Email' })),
+    );
+    const field = (label: string) =>
+      within(dialog).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
+    fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
+    fireEvent.change(field('Email Address'), { target: { value: 'someone@invitation.test' } });
+    fireEvent.change(field('Password'), {
+      target: { value: 'Testwort crowns the eastern hedge' },
+    });
+
+    await act(async () =>
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Create Account' })),
+    );
+
+    expect(signUpEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ callbackURL: '/invite/abc' }),
+    );
+    expect(assign).toHaveBeenCalledWith('/invite/abc');
+  });
+
+  it('tells a new, unverified account to confirm its address, with the way to the email page and home, and no Accept', () => {
+    render(
+      <InvitationAcceptance status="unverified" emailHref="/account/email?next=%2Finvite%2Fabc" />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
+      'href',
+      '/account/email?next=%2Finvite%2Fabc',
+    );
+    expect(screen.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/');
+    // Not a refusal: nothing is wrong yet, only unfinished.
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
+  });
+
+  // A refused verification link comes back here; the way to a new one is the Confirm Your Email beside it.
+  it('shows an error in the inbox state when a verification link failed, and none when it did not', () => {
+    const { rerender } = render(
+      <InvitationAcceptance status="unverified" emailHref="/account/email?next=%2Finvite%2Fabc" />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    rerender(
+      <InvitationAcceptance
+        status="unverified"
+        emailHref="/account/email?next=%2Finvite%2Fabc"
+        linkFailed
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Confirm Your Email' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
+  });
+
+  // A refused verification link can come back to a browser holding no session; the error stands above the choices.
+  it('shows a signed-out visitor an error above the choices when a verification link failed, and none when it did not', () => {
+    const { rerender } = render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+      />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    rerender(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-in"
+        next="/invite/abc"
+        configured={['google']}
+        linkFailed
+      />,
+    );
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeVisible();
+    expect(
+      alert.compareDocumentPosition(screen.getByRole('link', { name: 'Sign In' })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('says why a link cannot be accepted, with no Accept, pointing an unverified match at the email page', () => {
@@ -299,7 +503,15 @@ describe('InvitationAcceptance, recording a refused open', () => {
         return { recordCardAttempt: true };
       },
     );
-    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+    render(
+      <InvitationAcceptance
+        status="signed-out"
+        lead="sign-up"
+        card
+        next="/i/abc"
+        configured={['google']}
+      />,
+    );
 
     await act(async () => {});
     expect(sent).toBe(0);

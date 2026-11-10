@@ -36,10 +36,10 @@
 ### V Fast Follow
 
 - [ ] Subscription billing, scoped by M17.1 (`claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope")
-      and built by Wave 21, M21.1 → M21.20. The requirements and the Stripe
+      and built by N · Wave 04, N4.1 → N4.20. The requirements and the Stripe
       plugin's fit are in DESIGN.md §13 (MB.79); the plugin-or-SDK choice is
-      the proof of concept, M21.1.
-- [ ] Closed practice warning, scoped by M17.2; built by M19.4 to M19.8 and M19.10 on Wave 19.
+      the proof of concept, N4.1.
+- [ ] Closed practice warning, scoped by M17.2; built by N2.4 to N2.8 and N2.10 on N · Wave 02.
       When it is built, update the Code of Ethics (`documents/code-of-ethics.md`,
       a document a keeper edits and publishes) in the same PR: the Short
       Version's closed-practices line and the list in "Closed Practices and
@@ -48,8 +48,8 @@
       entry from a closed practice says so, names the people it belongs to and
       does not describe the ceremony. The data is gathered in
       `compendium/ethics/` (M14.29).
-- [ ] Ethical warnings around ingredients, scoped by M17.3 and built by Wave 20
-      (M20.1 → M20.15). M20.13, the entry-page notice with the card marks and
+- [ ] Ethical warnings around ingredients, scoped by M17.3 and built by N · Wave 03
+      (N3.1 → N3.15). N3.13, the entry-page notice with the card marks and
       filter, updates the Code of Ethics in its PR: the "planned" item in "Closed Practices and
       Where Lore Comes From" and the paragraph in "Ethical and Sustainable
       Sourcing" that says IUCN and CITES status are planned.

@@ -3,6 +3,7 @@
 import { type ReactElement, useMemo, useRef, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
+import { UNVERSIONED_DOCUMENT_KEYS } from '../../lib/unversioned-documents';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -133,6 +134,15 @@ const DocumentEditor = ({
   });
   const saving = autosave.status === 'saving';
   const guard = useDiscardGuard(dirty && !saving && !publishing);
+  // A document with no public version pages names no version, as the number means nothing there.
+  const versionShown = !(UNVERSIONED_DOCUMENT_KEYS as ReadonlySet<string>).has(documentKey);
+  const status = dirty
+    ? 'Unsaved changes.'
+    : revision !== null
+      ? 'Draft saved.'
+      : versionShown
+        ? `Showing version ${nextNumber - 1}.`
+        : null;
 
   async function publish(): Promise<void> {
     setPublishing(true);
@@ -227,13 +237,7 @@ const DocumentEditor = ({
           send={restore}
           closeOnSent
         />
-        <p className="document-editor__status">
-          {dirty
-            ? 'Unsaved changes.'
-            : revision === null
-              ? `Showing version ${nextNumber - 1}.`
-              : 'Draft saved.'}
-        </p>
+        {status && <p className="document-editor__status">{status}</p>}
       </div>
       {guard.asking && <DiscardQuestion guard={guard} />}
       {failure && <Notice kind="error">{failure}</Notice>}

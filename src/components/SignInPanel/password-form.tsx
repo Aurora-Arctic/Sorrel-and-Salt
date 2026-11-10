@@ -6,14 +6,13 @@ import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
-import { BackChevron } from '../IngredientEntry/back-chevron';
 import BusyButton from '../BusyButton';
-import PageHeader from '../PageHeader';
 import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import ModeSwitch from './mode-switch';
 import TwoFactorStep from './two-factor-step';
-import type { PasswordFormProps } from './types';
+import type { PasswordFormProps, SignInMode } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
@@ -33,8 +32,6 @@ const FIELD_ERRORS: Record<string, { field: 'email' | 'password'; message: strin
   INVALID_EMAIL: { field: 'email', message: 'Enter an email address, such as name@example.com.' },
 };
 
-type Mode = 'sign-in' | 'sign-up';
-
 interface Failure {
   status?: number;
   code?: string;
@@ -49,7 +46,7 @@ interface Refusal {
 
 // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive
 // here.
-function refusal(mode: Mode, failure: Failure): Refusal {
+function refusal(mode: SignInMode, failure: Failure): Refusal {
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
   if (field) return { [field.field]: field.message };
   if (failure.code === 'PASSWORD_COMPROMISED') return { password: failure.message };
@@ -71,14 +68,15 @@ async function hasSession(): Promise<boolean> {
 
 const PasswordForm = ({
   next,
-  lastUsed,
+  mode,
+  onModeChange,
+  signUpLandsOnNext,
+  onSignedUp,
   email,
   onEmailChange,
-  onBack,
   onStart,
   onCodeStep,
 }: PasswordFormProps): ReactElement => {
-  const [mode, setMode] = useState<Mode>('sign-in');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
@@ -93,8 +91,8 @@ const PasswordForm = ({
   const ready =
     email.trim() !== '' && password !== '' && (!signingUp || name.trim() !== '') && !pending;
 
-  const switchTo = (to: Mode): void => {
-    setMode(to);
+  const switchTo = (to: SignInMode): void => {
+    onModeChange(to);
     setProblem({});
     setSignedUp(undefined);
   };
@@ -134,7 +132,7 @@ const PasswordForm = ({
     if (signingUp && !(await hasSession())) {
       setPending(false);
       setPassword('');
-      setMode('sign-in');
+      onModeChange('sign-in');
       setSignedUp(address.toLowerCase());
       settle();
       return;
@@ -147,10 +145,15 @@ const PasswordForm = ({
       onCodeStep?.(true);
       return;
     }
+    if (signingUp && onSignedUp) {
+      setPending(false);
+      onSignedUp();
+      return;
+    }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
     // landing, and an unverified one (every new account) to the email page first.
     reportLeaving();
-    window.location.assign(signInPath(next));
+    window.location.assign(signingUp && signUpLandsOnNext && next ? next : signInPath(next));
   };
 
   if (askingForCode) {
@@ -168,22 +171,6 @@ const PasswordForm = ({
 
   return (
     <div className="sign-in-panel__password" ref={ref}>
-      <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
-        <BackChevron />
-        Back
-      </button>
-      {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
-      <PageHeader
-        className="sign-in-panel__password-head"
-        headingClassName="auth-title sign-in-panel__password-heading"
-        focusable
-        title={signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
-        suffix={
-          lastUsed && !signingUp ? (
-            <span className="badge badge--last-used">Last Used</span>
-          ) : undefined
-        }
-      />
       {problem.alert && (
         <Notice kind="error" result>
           {problem.alert}
@@ -245,16 +232,7 @@ const PasswordForm = ({
           <PendingLink href="/forgot-password">Forgot Password?</PendingLink>
         </p>
       )}
-      <p className="sign-in-panel__switch">
-        {signingUp ? 'Already have an account?' : 'New here?'}{' '}
-        <button
-          type="button"
-          className="btn btn--quiet btn--small"
-          onClick={() => switchTo(signingUp ? 'sign-in' : 'sign-up')}
-        >
-          {signingUp ? 'Sign In Instead' : 'Create an Account'}
-        </button>
-      </p>
+      <ModeSwitch mode={mode} onSwitch={switchTo} />
     </div>
   );
 };

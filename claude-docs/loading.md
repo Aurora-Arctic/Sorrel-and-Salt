@@ -86,7 +86,7 @@ There are three hosts:
 
 The coven host stands for a switch between two covens, so the header and switcher stay up and busy through the wait. A section host that does not stand (a link from the Compendium into a coven page, or from `/curator` into `/keepers`) falls back to `MainBody`, which draws the whole frame.
 
-**Nothing draws** when the destination's path is the one already showing (a pager, filter or tab change keeps its own skeleton in `ListFrame` or the tab panel), when the navigation is a refresh, which has no `href`, or when the address matches no registered pattern. In those cases the page stays up under the bar alone.
+**Nothing draws** when the destination's path is the one already showing (a pager or filter change keeps its own skeleton in `ListFrame`), when both addresses are tabs of one admin page (`ADMIN_PAGES`; the layout's tab row stays mounted, its pill slides, and only the panel shows the tab's own skeleton), when the navigation is a refresh, which has no `href`, or when the address matches no registered pattern. In those cases the page stays up under the bar alone.
 
 ## How to adopt it
 

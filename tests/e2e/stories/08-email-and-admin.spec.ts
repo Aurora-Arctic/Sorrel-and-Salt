@@ -46,6 +46,7 @@ async function visit(page: Page, path: string): Promise<Response> {
 
 const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
 const INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+/;
+const SITE_INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+\?for=site/;
 
 /** The path, not the URL: the link's origin is the build's, not this slot's. */
 async function mailedPath(
@@ -713,14 +714,27 @@ test(
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
     const path = await inviteAdmin(page, invited, { reason: 'Curates the resins' });
 
+    // The mailed link marks a site invitation, so the page leads with Create Account, as a card's does.
+    const marked = await mailedPath(invited, SITE_INVITE_LINK);
+    expect(new URL(marked, 'http://relative.invalid').pathname).toBe(path);
+
     const visitor = await signedOutPage(browser, baseURL);
-    const opened = await visitor.goto(path);
+    const opened = await visitor.goto(marked);
     expect(opened?.status()).toBe(200);
     expect(new URL(visitor.url()).pathname).toBe(path);
-    await expect(visitor.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
-      'href',
-      `/sign-in?next=${encodeURIComponent(path)}`,
-    );
+    const choices = visitor
+      .getByRole('main')
+      .getByRole('link', { name: /^(Create Account|Sign In)$/ });
+    await expect(choices).toHaveText(['Create Account', 'Sign In']);
+    for (const [name, mode] of [
+      ['Create Account', '&mode=sign-up'],
+      ['Sign In', ''],
+    ]) {
+      await expect(visitor.getByRole('main').getByRole('link', { name })).toHaveAttribute(
+        'href',
+        `/sign-in?next=${encodeURIComponent(path)}${mode}`,
+      );
+    }
     await expect(visitor.getByRole('main').getByText(/keeper/i)).toHaveCount(0);
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
@@ -742,8 +756,11 @@ test(
       emailVerified: false,
     });
     await rename(invitee, 'Invited Fixturewort');
-    const unverified = await expectInvitationRefused(page, path);
-    expect(unverified).not.toBe(different);
+    // The invitee's own account, not yet verified: told to check its inbox, not refused.
+    expect((await visit(page, path)).status()).toBe(200);
+    await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+    expect(different).not.toContain(invited);
     const confirm = page.getByRole('link', { name: 'Confirm Your Email' });
     await expect(confirm).toBeVisible();
     await assertNoAccessibilityViolations(page);
@@ -753,8 +770,8 @@ test(
     await page.getByRole('button', { name: 'Send Confirmation' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(invited);
     const link = await mailedPath(invited, VERIFY_LINK);
+    // A link from an invitation lands on the invitation itself.
     await visit(page, link);
-    await page.getByRole('link', { name: 'Continue', exact: true }).click();
     await expect(page).toHaveURL(path);
 
     const accept = page.getByRole('button', { name: 'Accept Invitation' });

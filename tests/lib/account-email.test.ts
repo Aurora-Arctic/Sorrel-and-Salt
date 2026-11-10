@@ -60,6 +60,19 @@ describe("the email page's paths", () => {
     expect(verifiedLanding('/coven')).toBe('/account/email?verified&next=%2Fcoven');
   });
 
+  // An account made from an invitation has nothing to continue to but the invitation; the gates on later pages still apply.
+  it('lands a link from an invitation on the invitation itself, not the confirmed view', () => {
+    expect(verifiedLanding('/invite/abc_DEF-123')).toBe('/invite/abc_DEF-123');
+  });
+
+  it('keeps the confirmed view for a path that only begins like an invitation', () => {
+    expect(verifiedLanding('/invite')).toBe('/account/email?verified&next=%2Finvite');
+    expect(verifiedLanding('/invite/abc/more')).toBe(
+      '/account/email?verified&next=%2Finvite%2Fabc%2Fmore',
+    );
+    expect(verifiedLanding('/invitee/abc')).toBe('/account/email?verified&next=%2Finvitee%2Fabc');
+  });
+
   it("reads a sign-up link's callbackURL as where the sign-in was going", () => {
     expect(returnPathOf('/keepers')).toBe('/keepers');
     expect(returnPathOf('/coven/hearth?tab=mine')).toBe('/coven/hearth?tab=mine');

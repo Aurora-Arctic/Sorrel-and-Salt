@@ -10,6 +10,7 @@ import SkeletonText from '@/components/Skeleton/text';
 import PageHeader from '@/components/PageHeader';
 import { AdminContentsPending } from '@/components/AdminNav/contents';
 import Skeleton from '@/components/Skeleton';
+import { useNavigationState } from '@/lib/navigation';
 import { HelpArticlePageSkeleton } from '@/components/HelpArticleForm/skeleton';
 
 // The curator's lede and sections whatever the role, since the skeleton cannot know it.
@@ -94,8 +95,13 @@ const DocumentsSkeleton = ({ open, mailing }: { open: string; mailing?: boolean 
     </div>
   );
 };
-// The editor's draft is not known yet, so the first document's tab stands open.
-export const KeepersDocumentSkeleton = () => <DocumentsSkeleton open="/keepers/documents/terms" />;
+// The tab of the document being navigated to stands open, so the pill does not pass through the first tab on its way.
+export const KeepersDocumentSkeleton = () => {
+  const path = useNavigationState().href?.split(/[?#]/)[0];
+  const tabs = ADMIN_PAGES.documents.tabs;
+  const open = tabs.find((tab) => tab.href === path)?.href ?? tabs[0]!.href;
+  return <DocumentsSkeleton open={open} />;
+};
 export const KeepersEmailUpdatesSkeleton = () => (
   <DocumentsSkeleton open="/keepers/documents" mailing />
 );

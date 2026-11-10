@@ -2,24 +2,33 @@
 // JSON (STORIES_JSON), into the same two outputs summarize-playwright.mjs
 // produces.
 import fs from 'node:fs';
-import { buildCoverageSection } from './lib/coverage-table.mjs';
+import { collectFailures, formatFailures } from './lib/playwright-failures.mjs';
 
-const RESULTS_PATH = '/app/stories.json';
-// This run's own report. The gate suite's is merged with it by
-// merge-playwright-coverage.mjs, in a comment of its own; Vitest's never is.
-const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage-e2e/coverage-summary.json';
-const REPO_ROOT = '/app';
+const RESULTS_PATH = process.env.STORIES_JSON || '/app/stories.json';
+// Playwright's own report of the same run, for each failure's spec file and error.
+const PLAYWRIGHT_RESULTS_PATH =
+  process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || '/app/playwright-results.json';
 
 function setOutput(name, value) {
   const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
 }
 
+const failures = fs.existsSync(PLAYWRIGHT_RESULTS_PATH)
+  ? collectFailures(JSON.parse(fs.readFileSync(PLAYWRIGHT_RESULTS_PATH, 'utf8')), {
+      includeFlaky: true,
+    })
+  : [];
+const failureBlock = formatFailures(failures, {
+  heading: 'Failing stories',
+  tagPattern: /^@story-/,
+});
+
 // The run may have died before writing the file; job-summary's log tail says why.
 if (!fs.existsSync(RESULTS_PATH)) {
   setOutput('summary', 'no checklist was written');
-  setOutput('details', '');
-  setOutput('flaky', 'false');
+  setOutput('details', failureBlock);
+  setOutput('flaky', failures.some((failure) => failure.flaky) ? 'true' : 'false');
   process.exit(0);
 }
 
@@ -35,10 +44,8 @@ const parts = [`${counts.passed} of ${total} stories passing`];
 if (counts.failed) parts.push(`${counts.failed} failing`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
 if (counts.untested) parts.push(`${counts.untested} without a test`);
-const storySummary = parts.join(', ');
-// Null when the run wrote no report; the checklist then posts alone.
-const coverage = buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
-const summary = coverage ? `${storySummary} — ${coverage.stat}` : storySummary;
+// The merged coverage of both suites is the Coverage section's alone.
+const summary = parts.join(', ');
 
 const SUFFIX = {
   passed: '',
@@ -77,7 +84,7 @@ if (unknown.length > 0 || untagged.length > 0) {
 }
 lines.push('', '</details>');
 
-const details = lines.join('\n');
+const details = [failureBlock, lines.join('\n')].filter(Boolean).join('\n\n');
 
 setOutput('summary', summary);
 setOutput('details', details);

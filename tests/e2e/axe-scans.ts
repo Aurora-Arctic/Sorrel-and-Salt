@@ -46,6 +46,7 @@ export const ROUTE_SCANS = [
   { route: '/privacy/versions/[number]', as: ['signedOut'] },
   { route: '/disclaimer', as: ['signedOut'] },
   { route: '/disclaimer/versions/[number]', as: ['signedOut'] },
+  { route: '/about', as: ['signedOut'] },
   { route: '/code-of-ethics', as: ['signedOut'] },
   { route: '/code-of-ethics/versions/[number]', as: ['signedOut'] },
   { route: '/terms', as: ['signedOut'] },
@@ -126,6 +127,9 @@ export const MODAL_SCANS = [
     source: 'src/components/AppShell/add-ingredient-button.tsx',
     as: 'steward',
   },
+
+  // Signed out, over any public page.
+  { id: 'sign-in', source: 'src/components/SignInDialog/index.tsx', as: 'signedOut' },
 
   // The account.
   { id: 'unlink-provider', source: 'src/components/SignInMethods/provider-row.tsx', as: 'user' },

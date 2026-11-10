@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { framed } from '../../components/SkeletonFrame';
 import { skeletons } from '../../app/skeletons';
+import { ADMIN_PAGES } from '../../components/AdminNav/sections';
 import { covenSlugOf } from '../coven-path';
 import { matchRoute } from './route-match';
 
@@ -14,6 +15,14 @@ const adminAreaOf = (pathname: string): string | null => {
   const [, first] = pathname.split('/');
   return first === 'curator' || first === 'keepers' ? first : null;
 };
+
+/** Whether both addresses are tabs of one admin page, whose tab row stays mounted and swaps its own panel skeleton. */
+function sameTabbedPage(pathname: string, destination: string): boolean {
+  return Object.values(ADMIN_PAGES).some((page) => {
+    const paths = page.tabs.map((tab) => pathOf(tab.href));
+    return paths.length > 1 && paths.includes(pathname) && paths.includes(destination);
+  });
+}
 
 /** Whether the section body of `host` is mounted for `pathname` and stays mounted for the destination. */
 function hostStands(host: SkeletonHost, pathname: string, destination: string): boolean {
@@ -31,8 +40,8 @@ function hostStands(host: SkeletonHost, pathname: string, destination: string): 
 /**
  * The skeleton of the page an address opens, if `body` is the one to draw it, else null. A section body
  * draws a page of its own section; the shell's body draws every other registered page, so a page whose
- * section is not standing gets its whole frame. A move within the same page, and an address no page
- * answers, draw nothing here.
+ * section is not standing gets its whole frame. A move within the same page, a move between two tabs of one admin
+ * page (its tab row stays mounted and swaps its own panel skeleton), and an address no page answers draw nothing here.
  */
 export function skeletonFor(
   body: SkeletonHost,
@@ -41,7 +50,7 @@ export function skeletonFor(
 ): ComponentType | null {
   if (href === undefined) return null;
   const destination = pathOf(href);
-  if (destination === pathname) return null;
+  if (destination === pathname || sameTabbedPage(pathname, destination)) return null;
   const found = matchRoute(destination);
   if (!found) return null;
   const entry = skeletons[found.pattern as keyof typeof skeletons] as

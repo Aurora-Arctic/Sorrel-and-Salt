@@ -12,6 +12,7 @@ export const CRAWLABLE_PATHS = [
   '/support',
   '/privacy',
   '/disclaimer',
+  '/about',
   '/terms',
   '/code-of-ethics',
   '/help',

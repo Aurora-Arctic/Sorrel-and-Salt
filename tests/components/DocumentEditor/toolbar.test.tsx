@@ -18,6 +18,7 @@ warmImport(() => import('@/components/DocumentEditor/editor'));
 const BUTTONS = [
   'Heading 2',
   'Heading 3',
+  'Pull Quote',
   'Bold',
   'Italic',
   'Link',
@@ -119,6 +120,7 @@ describe('the document editor’s toolbar', () => {
   it.each([
     ['Heading 2', '## Fixturewort grows here.'],
     ['Heading 3', '### Fixturewort grows here.'],
+    ['Pull Quote', '> Fixturewort grows here.'],
     ['Bulleted List', '- Fixturewort grows here.'],
     ['Numbered List', '1. Fixturewort grows here.'],
   ])('%s turns the paragraph holding the caret into %j', async (name, expected) => {
@@ -128,6 +130,18 @@ describe('the document editor’s toolbar', () => {
     await press(name);
 
     expect(await saveDraft(saved)).toBe(expected);
+  });
+
+  it('Pull Quote shows pressed once it has wrapped the paragraph, and not after a second press', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'grows', { caret: true });
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
+
+    await press('Pull Quote');
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'true');
+
+    await press('Pull Quote');
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
   });
 
   it.each([
@@ -295,6 +309,16 @@ describe('the document editor’s toolbar', () => {
 
       await select(text, 'Testwort', { caret: true });
       expect(button('Heading 2')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('the pull quote button, for the quote holding the caret', async () => {
+      const { text } = await renderEditor('> Fixturewort\n\nTestwort grows here.');
+
+      await select(text, 'Fixturewort', { caret: true });
+      expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'true');
+
+      await select(text, 'Testwort', { caret: true });
+      expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('a list button, for the list item holding the caret', async () => {

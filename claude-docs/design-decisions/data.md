@@ -260,7 +260,7 @@ The owner's call, made while building M6.11. The task asked for a
 lookups across every coven a request lists. `Workspace.members` was built
 without one: its service reads one coven's page per call. The result is in
 [`graphql/schema.md`](../graphql/schema.md), DESIGN.md §7, and the M6.11
-entry in [`tasks/m6.md`](../tasks/m6.md), which now asks for what was built.
+entry in [`tasks/v1/m6.md`](../tasks/v1/m6.md), which now asks for what was built.
 
 ### What the loader would have bought
 

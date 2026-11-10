@@ -228,7 +228,7 @@ jobs:
         if: always() && steps.neon-guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
         with:
-          check-name: Neon snapshot (production)
+          check-name: Neon Snapshot (Production)
           outcome: ${{ steps.snapshot.outcome }}
           log-file: snapshot.log
           summary: ${{ steps.snapshot.outcome == 'success' && format('{0} {1}', steps.snapshot.outputs.verb, steps.snapshot.outputs.branch_name) || 'Snapshot failed' }}
@@ -320,7 +320,7 @@ jobs:
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
         uses: ./.github/actions/job-summary
         with:
-          check-name: Seed reference data (${{ inputs.environment }})
+          check-name: Seed Reference Data (${{ inputs.environment }})
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
           summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet, zodiac and deity vocabularies, their sources and the compendium seeded' || 'Seed failed' }}
@@ -353,7 +353,7 @@ jobs:
         if: always() && steps.seed.outcome == 'failure' && steps.deploying-pr.outputs.number != ''
         uses: ./.github/actions/pr-comment
         with:
-          check-name: Compendium seed (${{ inputs.environment }})
+          check-name: Compendium Seed (${{ inputs.environment }})
           marker-slug: seed-compendium
           pr-number: ${{ steps.deploying-pr.outputs.number }}
           outcome: failure

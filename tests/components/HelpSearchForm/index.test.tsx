@@ -22,7 +22,6 @@ describe('HelpSearchForm', () => {
     expect(search).toHaveAttribute('action', '/help/search');
     expect((search!.getAttribute('method') ?? 'get').toLowerCase()).toBe('get');
     expect(box()).toHaveAttribute('name', 'q');
-    expect(within(form()).getByRole('button')).toHaveAttribute('type', 'submit');
   });
 
   it('holds the words already searched for', () => {
@@ -50,5 +49,30 @@ describe('HelpSearchForm', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
     expect(screen.queryByRole('option')).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+  it('draws no text button, only the magnifier as the one submit', () => {
+    render(<HelpSearchForm />);
+
+    const buttons = within(form()).getAllByRole('button');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveAttribute('type', 'submit');
+    expect(buttons[0]).toHaveAccessibleName('Search');
+    expect(buttons[0]).toHaveTextContent(/^Search$/);
+  });
+
+  it.each(['', '   '])('does not submit on Enter with %j in the box', (value) => {
+    render(<HelpSearchForm />);
+    fireEvent.change(box(), { target: { value } });
+
+    // fireEvent returns false when the default action (the navigation) was prevented.
+    expect(fireEvent.submit(form())).toBe(false);
+  });
+
+  it('submits on Enter once the box holds words', () => {
+    render(<HelpSearchForm />);
+    fireEvent.change(box(), { target: { value: 'coven' } });
+
+    expect(box()).toHaveValue('coven');
+    expect(fireEvent.submit(form())).toBe(true);
   });
 });

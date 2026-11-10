@@ -21,6 +21,17 @@ function targetOf(link: HTMLElement): HTMLElement {
 }
 
 describe('DocumentPage', () => {
+  it('shows a dated time only when it is given a date', () => {
+    const { container, rerender } = show('## Fixture Section\n\nFixture text.');
+    expect(container.querySelectorAll('time')).toHaveLength(1);
+
+    rerender(<DocumentPage title="Fixture Policy" body="## Fixture Section\n\nFixture text." />);
+
+    expect(container.querySelectorAll('time')).toHaveLength(0);
+    expect(screen.queryByText(/last updated/i)).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Fixture Policy' })).toBeTruthy();
+  });
+
   it('heads the document with its title and says when it was last updated, as a dated time', () => {
     show('## Fixture Section\n\nFixture text.');
     const article = screen.getByRole('article', { name: 'Fixture Policy' });
@@ -32,6 +43,22 @@ describe('DocumentPage', () => {
     expect(
       within(article).getByRole('heading', { level: 2, name: 'Fixture Section' }),
     ).toBeTruthy();
+  });
+
+  it('links a keeper to the editor, named for the document, when given an edit target', () => {
+    show('Body.', { editHref: '/keepers/documents/privacy' });
+
+    const link = screen.getByRole('link', { name: 'Edit Fixture Policy' });
+
+    expect(link).toHaveAttribute('href', '/keepers/documents/privacy');
+    expect(screen.getByRole('heading', { level: 1, name: 'Fixture Policy' })).toBeTruthy();
+  });
+
+  it('shows no edit link when given no edit target', () => {
+    show('Body.');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Fixture Policy' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /^edit/i })).toBeNull();
   });
 
   it('shows the lede under the heading when the document has one', () => {
@@ -383,5 +410,47 @@ describe('DocumentPage', () => {
       expect(screen.queryByRole('complementary')).toBeNull();
       expect(screen.getByText('{fixture-cards}').tagName).toBe('P');
     });
+  });
+});
+
+// The About Us page hands DocumentPage its two card rows as placeholders. A version published before the placeholders
+// existed holds the bullets they replaced, and must still read as the plain prose it was.
+describe('DocumentPage with the About Us placeholders', () => {
+  const PLACEHOLDERS = {
+    aboutPillars: <ul aria-label="Fixture pillars">{<li>Fixture pillar</li>}</ul>,
+    aboutRoles: <ul aria-label="Fixture roles">{<li>Fixture role</li>}</ul>,
+  };
+
+  it('draws each row where its placeholder paragraph stands', () => {
+    show('## Fixture Section\n\n{aboutPillars}\n\nBetween.\n\n{aboutRoles}', {
+      placeholders: PLACEHOLDERS,
+    });
+    expect(screen.getByRole('list', { name: 'Fixture pillars' })).toBeTruthy();
+    expect(screen.getByRole('list', { name: 'Fixture roles' })).toBeTruthy();
+    expect(screen.queryByText('{aboutPillars}')).toBeNull();
+  });
+
+  it('keeps an older version that holds bullets instead as the prose it was', () => {
+    show('## Fixture Section\n\n- **Fixture Item.** Fixture old wording.', {
+      placeholders: PLACEHOLDERS,
+    });
+    expect(screen.getByText(/Fixture old wording/)).toBeTruthy();
+    expect(screen.queryByRole('list', { name: 'Fixture pillars' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Fixture roles' })).toBeNull();
+  });
+
+  it('keeps a placeholder-shaped paragraph as text where the page maps no such name', () => {
+    show('## Fixture Section\n\n{aboutPillars}');
+    expect(screen.getByText('{aboutPillars}')).toBeTruthy();
+  });
+});
+
+// A `>` paragraph is the page's pull-quote: the site's documents leave it a plain blockquote, which the page styles (claude-docs/components/document-page.md).
+describe('DocumentPage with a quoted paragraph', () => {
+  it('draws a paragraph that opens with > as a blockquote holding its text', () => {
+    show('## Fixture Section\n\n> Fixture pulled words.\n\nFixture after.');
+    const quote = screen.getByRole('blockquote');
+    expect(within(quote).getByText('Fixture pulled words.')).toBeTruthy();
+    expect(within(quote).queryByText('Fixture after.')).toBeNull();
   });
 });

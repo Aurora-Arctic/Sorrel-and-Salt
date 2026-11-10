@@ -1,4 +1,4 @@
-// Shared by summarize-vitest.mjs, summarize-playwright.mjs, summarize-stories.mjs and
+// Shared by summarize-vitest.mjs and
 // merge-playwright-coverage.mjs: Vitest's istanbul
 // provider and monocart both emit the same istanbul-style coverage-summary.json.
 import fs from 'node:fs';

@@ -32,4 +32,15 @@ describe('ErrorPage', () => {
     );
     expect(screen.getByText(/abc123/)).toBeInTheDocument();
   });
+
+  it('adds no main landmark when the page around it already owns one', () => {
+    render(
+      <ErrorPage title="Gone" reason="Nothing here." withinMain>
+        <a href="/">Home</a>
+      </ErrorPage>,
+    );
+
+    expect(screen.queryByRole('main')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Gone' })).toBeInTheDocument();
+  });
 });
