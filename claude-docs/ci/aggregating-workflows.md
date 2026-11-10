@@ -16,8 +16,12 @@
   config, the e2e image) as a step-level `if:`; it carries `continue-on-error`
   and is never a required check. `playwright-coverage` merges the coverage
   artifacts of `playwright` and `stories` after both, whether they passed or
-  failed; it carries `continue-on-error`, is never a required check, and is the
-  one job with a job-level `if:` (`!cancelled()`).
+  failed; it carries `continue-on-error` and is never a required check.
+  `pr-comments` starts this run's Vitest and Playwright comments once
+  `gitflow` finishes, whatever its result; nothing needs it
+  ([`pr-comments.md`](pr-comments.md)). These two are the jobs with a
+  job-level `!cancelled()`, which ignores a failed need, so each names the
+  stand-down beside it.
 - **One concurrency group per PR, and every job in it cancellable.**
   `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
   `cancel-in-progress: ${{ github.event.action != 'edited' }}`, so a push, a

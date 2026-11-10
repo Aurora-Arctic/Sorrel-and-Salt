@@ -285,7 +285,7 @@ filters and empty states, the Edit Stock dialog, the Quick Look window, and the
 entry page with its shelf of jars. It records what was changed, what was only
 mocked, what the accessibility audit found, which repeated code was merged, and
 the research each change rests on. The task is MB.121 in
-[`tasks/mb.md`](../tasks/mb.md); the review method is
+[`tasks/v1/mb.md`](../tasks/v1/mb.md); the review method is
 [`styling.md`](../styling.md), "Designing a section".
 
 The owner answered the review's questions on 2026-10-23; each answer is written
@@ -586,7 +586,7 @@ This record wins where the two differ.
 
 ### 1. Context
 
-MB.123 reviews the grimoire as built: the card list, the spell builder with its step editor, the Record a Working dialog, and the recipe page with its print layout ([`tasks/mb.md`](../tasks/mb.md), MB.123). The review ran in two stages. First, read-only Opus lanes audited the list, the builder, the recipe page and the whole site's shared pieces, researched published guidance on 14 topics, and photographed 188 screens in an isolated database. Then build lanes, one per area, made the changes in their own git worktrees, and the main session merged each lane's head into the review branch `feature/mb.123-design-review-the-grimoire`.
+MB.123 reviews the grimoire as built: the card list, the spell builder with its step editor, the Record a Working dialog, and the recipe page with its print layout ([`tasks/v1/mb.md`](../tasks/v1/mb.md), MB.123). The review ran in two stages. First, read-only Opus lanes audited the list, the builder, the recipe page and the whole site's shared pieces, researched published guidance on 14 topics, and photographed 188 screens in an isolated database. Then build lanes, one per area, made the changes in their own git worktrees, and the main session merged each lane's head into the review branch `feature/mb.123-design-review-the-grimoire`.
 
 The owner chose per decision on a private sign-off page (Q0 and D1 to D42), not in a chat thread. Where the owner answered a decision twice, the later answer is the one recorded here. A separate agent updated the Storybook stories; the owner runs `/design-sync`.
 
@@ -668,7 +668,7 @@ Sources are numbered notes in section 6. A decision with no note has "no externa
 
 **D36. DateField disabled opacity.** Owner: option a. Built: the token `$opacity-disabled`, 0.55. Raw rems elsewhere in `DateField` are left as they were. No external source; owner's call.
 
-**D37. Delete on cards and Quick Look.** Owner: option a. Built: no bin or Delete on a card or a Quick Look where an edit dialog holds it. A More menu that already holds other choices may still list Delete or Remove. Story 25 now deletes through the Edit Ingredient dialog. `menu-button.md` and M9.10 in `tasks/m9.md` were amended. Sources: [7], [8].
+**D37. Delete on cards and Quick Look.** Owner: option a. Built: no bin or Delete on a card or a Quick Look where an edit dialog holds it. A More menu that already holds other choices may still list Delete or Remove. Story 25 now deletes through the Edit Ingredient dialog. `menu-button.md` and M9.10 in `tasks/v1/m9.md` were amended. Sources: [7], [8].
 
 **D38. Coven-creation Revoke.** Owner: option b, only in the user modal. Built. Source: [8].
 
@@ -728,7 +728,7 @@ The owner asked for three findings to be fixed in the review rather than filed.
 
 The owner chose on 2026-10-30 to build the two stylesheet findings inside this review rather than mint tasks for them.
 
-- **One shared `ConfirmDialog`** for the five hand-written confirm modals (R39 and S30): not a task of its own. MB.124 already owns one shared row of confirm and safe buttons, and its entry in `tasks/mb.md` now names the five dialogs.
+- **One shared `ConfirmDialog`** for the five hand-written confirm modals (R39 and S30): not a task of its own. MB.124 already owns one shared row of confirm and safe buttons, and its entry in `tasks/v1/mb.md` now names the five dialogs.
 - **Split the builder panels' styles** (R44): built. Category Match's and In the Cupboard's rules moved unchanged into `src/components/SpellBuilder/panels.scss`, which the builder's stylesheet and `SpellRecipe/aside.tsx` both import; the aside no longer imports the builder's whole stylesheet. The rendered CSS was compared rule by rule before and after and is the same set. The recipe page still loads the builder's CSS through the Edit dialog it mounts, so the change removes a wrong import and saves that page no bytes.
 - **One mixin for the Recipe Card's step styles** (R47): withdrawn. The audit's premise did not hold: the step rules exist once, in `SpellRecipe/index.scss`; `_recipe-columns.scss` and `SpellPreview/index.scss` lay out the steps section and have never held a step-row rule; the preview renders `SpellRecipeBody`, which imports that stylesheet, so nothing can drift. The only other step rule is the paper font size in `_print.scss`, which is deliberate. `spell-preview.md` now says so.
 - **Left as found, for the owner:** a dead `@container spell-column` rule for `.spell-inventory .jar-line__name` in `panels.scss` (no ancestor on the recipe page is that container, and the builder no longer renders In the Cupboard); knip's 78 findings; `DateField`'s raw rems. None is minted.

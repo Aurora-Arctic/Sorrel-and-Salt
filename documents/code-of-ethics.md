@@ -118,7 +118,7 @@ The owner holds the primary keeper account, which no one can revoke. The site re
 - The site stays free of advertising, sells no data and uses nothing anyone writes here to train anything. If any of that could ever change, the owner emails every account to say so, in writing, before it does.
 - Anyone who reaches the database does so only to do what a person has asked for, such as an erasure, or to fix a fault, and says so when it is done.
 - Every rule on this page, and every change to the terms, applies to the owner as to anyone else, and a change to the terms is published as a new version that everyone agrees to again.
-- If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet, and it is planned as [M18.5](https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1527).
+- If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet, but it is planned.
 
 [^1]: U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026. https://www.fws.gov/program/national-eagle-repository.
 

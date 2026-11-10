@@ -715,7 +715,7 @@ Sorted by shard, then by label.
 
 ## The addendum
 
-Added on 23 October 2026 (M14.14). The addendum is rows 615 to 1,111: 497 further ingredients, which with the 614 above make the 1,111 the owner asked for on 11 October 2026. The roster and the addendum together never exceed 1,111. It replaces MB.250, which was never filed (it is recorded in `tasks/mb.md` as retired into M14.14); MB.250's mineral rule and its left-out notes carry over.
+Added on 23 October 2026 (M14.14). The addendum is rows 615 to 1,111: 497 further ingredients, which with the 614 above make the 1,111 the owner asked for on 11 October 2026. The roster and the addendum together never exceed 1,111. It replaces MB.250, which was never filed (it is recorded in `tasks/v1/mb.md` as retired into M14.14); MB.250's mineral rule and its left-out notes carry over.
 
 ### How the addendum was picked
 

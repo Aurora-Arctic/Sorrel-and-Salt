@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Suggestions } from '@/components/Combobox/types';
 import { ListField, MultiSelectField } from '@/components/IngredientForm/fields';
 import type {
@@ -10,6 +10,7 @@ import type {
   ListOption,
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
+import { sortableModule } from '@/components/Combobox/lazy-sortable';
 import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
@@ -515,6 +516,8 @@ describe('ListField', () => {
         .map((region) => region.textContent)
         .join(' | ');
 
+    // The handles arrive with the sortable list, which loads apart; loaded first, it draws on the first render.
+    beforeAll(() => sortableModule.load());
     beforeEach(layOutChips);
     afterEach(() => vi.restoreAllMocks());
 

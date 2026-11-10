@@ -1,0 +1,62 @@
+name: PR Comments
+
+# Starts this run's Vitest and Playwright comments: every section shows as
+# Running, except those the path filter skipped, which show as Skipped. The
+# suites then write their own sections (claude-docs/ci/pr-comments.md).
+# workflow_call only, from pr-gate's `pr-comments` job. Never a required check,
+# and nothing waits on it, so a failure here only leaves a comment out of date.
+#
+# A reusable workflow, not a job of pr-gate.yml, for the reason
+# playwright-coverage.yml gives: a run that stands down then reports it
+# skipped, not cancelled.
+on:
+  workflow_call:
+    inputs:
+      pr-number:
+        description: Pull request number to comment on
+        required: true
+        type: string
+      vitest-skipped:
+        description: Comma-separated Vitest sections the path filter skipped
+        required: false
+        type: string
+        default: ''
+      playwright-skipped:
+        description: Comma-separated Playwright sections the path filter skipped
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reset:
+    runs-on: ubuntu-26.04
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github
+
+      - name: Start the Vitest comment
+        continue-on-error: true
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Vitest
+          marker-slug: vitest
+          pr-number: ${{ inputs.pr-number }}
+          reset: 'true'
+          skipped-sections: ${{ inputs.vitest-skipped }}
+
+      - name: Start the Playwright comment
+        continue-on-error: true
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright
+          marker-slug: playwright
+          pr-number: ${{ inputs.pr-number }}
+          reset: 'true'
+          skipped-sections: ${{ inputs.playwright-skipped }}

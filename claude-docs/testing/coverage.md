@@ -5,7 +5,7 @@
 so the two suites' contributions stay visible independently — both under the
 `.reports/` that `.gitignore` carves out), reports `['v8', 'console-details', 'json-summary']` (the
 last added in M1.14, so `.github/scripts/summarize-playwright.mjs` has an
-istanbul-style `coverage-summary.json` to build the PR comment's coverage
+istanbul-style `coverage-summary.json` to build the PR comment section's coverage
 table from — same shape Vitest's own `json-summary` reporter emits).
 
 **What the 80% threshold is for.** The 80% threshold exists partly to prevent
@@ -82,9 +82,8 @@ a CLI `--reporter` replaces the config's list and with it the html report's
 
 The story suite (`suite: stories`, M14.28) reports its coverage the same way: it
 uploads its own report as `playwright-coverage-stories`, and
-`summarize-stories.mjs` adds the figure to the Stories comment's summary line
-through `buildCoverageSection`. Neither suite's comment carries the per-file
-table: it is the merged comment's alone. Each suite's report also holds
+neither suite's section of the Playwright comment carries its figure: the
+merged figure and the per-file table are the Coverage section's alone. Each suite's report also holds
 monocart's `raw` data (`coverage-e2e/raw/`, the unprocessed V8 data the `raw`
 report keeps), so it travels inside the same artifact. That is what lets the
 two suites be merged without running either again.
@@ -92,12 +91,13 @@ two suites be merged without running either again.
 **The merged report.** `pr-gate.yml`'s `playwright-coverage` job runs
 after both suites, pass or fail. It downloads whichever of the two coverage
 artifacts exist (an artifact that exists but cannot be downloaded fails the job and
-replaces the comment with a coverage-missing notice, so no earlier commit's figure stays), runs `.github/scripts/merge-playwright-coverage.mjs` (monocart's
+replaces the Coverage section with a coverage-missing notice, so no earlier commit's figure stays), runs `.github/scripts/merge-playwright-coverage.mjs` (monocart's
 `generate()` with `inputDir` set to each `raw/` folder, under the same `src/`
 filter as `coverage.config.ts`), uploads the result as `playwright-coverage-merged`
-and posts it as a "Playwright Coverage" comment. The summary line names the suites
+and writes it into the Coverage section of the Playwright comment
+(`ci/pr-comments.md`). The summary line names the suites
 merged ("Gate and story suites", "Story suite only", "Gate suite only"), so a
-figure is never read as covering a suite that did not run. The comment reads as
+figure is never read as covering a suite that did not run. The section reads as
 a failure when either suite failed, so a green merge never stands under a red
 suite. A line counts as covered
 when either suite ran it. It is never combined with Vitest's coverage, which

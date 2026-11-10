@@ -109,9 +109,9 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ## GitHub task tracking
 
-The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & Salt** (number `1`), are what to work on; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`.
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, under two org Projects, **Sorrel & Salt** (ids `M…`, `MB.…`, `MW.…`) and **Sorrel & Salt V1.Next** (ids `N…`, milestones starting `N · `), are what to work on; `scripts/task-projects.mjs` is the one place their numbers are written, and a task's Project is its milestone's; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`.
 
-- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`, `move`, `milestone`, `retire`). Never hand-compose `gh issue`.
+- **Everything goes through `node scripts/task-board.mjs`** (`find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`, `move`, `milestone`, `retire`, `place`, `renumber`), each on whichever Project holds the task. Never hand-compose `gh issue`.
 - **`find <ID>` matches the title on `<ID> — ` exactly.** Zero matches, or several: stop and say so.
 - **Status moves forward, in the same turn as the event**: `In Progress` once work starts, `In Review` when the PR opens (with a comment carrying its link), `Done` at the merge. Never close a task by hand.
 - **A PR body opens with `Closes #N`**, or `Refs #N` for a PR that does not finish the task.
