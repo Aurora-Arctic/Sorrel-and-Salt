@@ -17,13 +17,8 @@ import {
   TextField as FormTextField,
   useFormHistory,
 } from '../Field';
-import { ListField, MultiSelectField } from '../IngredientForm/fields';
-import {
-  LookupListField,
-  useCelestialBodySuggestions,
-  useZodiacSuggestions,
-} from '../IngredientForm/suggestions';
-import { ELEMENT_OPTIONS } from '../IngredientForm/options';
+import CorrespondenceFields from '../IngredientForm/correspondence-fields';
+import { FIELD_NOUNS } from '../IngredientForm/values';
 import IconTip, { UndoIcon } from '../IconTip';
 import { useModalHeaderNote } from '../Modal';
 import SaveStatus from '../SaveStatus';
@@ -298,8 +293,6 @@ const CupboardEntryForm = ({
     );
   };
 
-  const handBackAction = (field: CupboardField, label: string) => () => useCompendium(field, label);
-
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
@@ -318,44 +311,15 @@ const CupboardEntryForm = ({
           {textField('label', false)}
           {textField('description', true)}
           {textField('safetyNotes', true)}
-          <MultiSelectField
-            name="elements"
-            label="Elements"
-            hint={listHint('elements')}
-            placeholder="Add an element"
-            options={ELEMENT_OPTIONS}
-            action={useCompendium('elements', 'Elements')}
-          />
-          <LookupListField
+          <CorrespondenceFields
             workspaceId={workspaceId}
-            useSuggestions={useCelestialBodySuggestions}
-            name="celestialBodies"
-            ordered
-            legend="Celestial Bodies"
-            entry="Celestial Body"
-            hint={listHint('heavenly bodies')}
-            placeholder="Add a body"
-            action={handBackAction('celestialBodies', 'Celestial Bodies')}
-          />
-          <LookupListField
-            workspaceId={workspaceId}
-            useSuggestions={useZodiacSuggestions}
-            name="zodiacSigns"
-            ordered
-            legend="Zodiac Signs"
-            entry="Zodiac Sign"
-            hint={listHint('signs')}
-            placeholder="Add a sign"
-            action={handBackAction('zodiacSigns', 'Zodiac Signs')}
-          />
-          <ListField
-            name="colors"
-            ordered
-            legend="Colours"
-            entry="Colour"
-            hint={listHint('colours', ' in a working, not the colour it is')}
-            placeholder="Add a colour"
-            action={handBackAction('colors', 'Colours')}
+            hints={{
+              elements: listHint('elements'),
+              celestialBodies: listHint('heavenly bodies'),
+              zodiacSigns: listHint('signs'),
+              colors: listHint('colours', ' in a working, not the colour it is'),
+            }}
+            action={(field) => useCompendium(field, FIELD_NOUNS[field].label)}
           />
           <FormActions
             noun="Annotation"
