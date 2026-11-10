@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useState } from 'react';
-import { emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { requestPasswordReset } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
@@ -104,6 +104,7 @@ const ForgotPasswordForm = (): ReactElement => {
           // Typing a different address replaces the confirmation, so the field takes focus again.
           autoFocus={retyping}
           format={emailFormat}
+          check={emailAddressProblem}
           value={email}
           error={emailError}
           onChange={(next) => {

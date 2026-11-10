@@ -84,6 +84,16 @@ describe('SignInPanel, email and password', () => {
     expect(field('Email Address')).toHaveValue('name@example.com');
   });
 
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    type('Email Address', 'name@');
+    fireEvent.blur(field('Email Address'));
+
+    expect(field('Email Address')).toHaveAttribute('aria-invalid', 'true');
+    expect(field('Email Address')).toHaveAccessibleDescription(
+      expect.stringContaining(EMAIL_FORMAT_MESSAGE),
+    );
+  });
+
   it('refuses a malformed address with the shared message, without asking the server', async () => {
     type('Email Address', 'name@');
     type('Password', PASSWORD);

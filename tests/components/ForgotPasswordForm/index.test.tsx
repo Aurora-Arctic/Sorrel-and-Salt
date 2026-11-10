@@ -43,6 +43,14 @@ describe('ForgotPasswordForm', () => {
     expect(email()).toHaveValue('name@example.com');
   });
 
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    fireEvent.change(email(), { target: { value: 'name@' } });
+    fireEvent.blur(email());
+
+    expect(email()).toHaveAttribute('aria-invalid', 'true');
+    expect(email()).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
   it('refuses a malformed address with the shared message, without asking the server', async () => {
     fireEvent.change(email(), { target: { value: 'name@' } });
 

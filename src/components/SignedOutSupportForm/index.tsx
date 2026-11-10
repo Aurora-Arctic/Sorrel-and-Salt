@@ -6,6 +6,7 @@ import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import {
   EMAIL_FORMAT_MESSAGE,
+  emailAddressProblem,
   emailFormat,
   normaliseEmail,
   validateEmailAddress,
@@ -133,6 +134,7 @@ const SignedOutSupportForm = ({
         spellCheck={false}
         placeholder="Add an email"
         format={emailFormat}
+        check={emailAddressProblem}
         disabled={sending}
         value={email}
         error={problems.email ?? errorFor('email')}

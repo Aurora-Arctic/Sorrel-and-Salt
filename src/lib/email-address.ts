@@ -29,3 +29,7 @@ export function validateEmailAddress(email: string): ValidationIssue | null {
 
 /** The blur tidy: the server's own rule, so the box shows the address as it will be saved. */
 export const emailFormat: FieldFormat = normaliseEmail;
+
+/** The rule as a field's `check`: the message for a bad address, or undefined. */
+export const emailAddressProblem = (email: string): string | undefined =>
+  validateEmailAddress(email)?.message;

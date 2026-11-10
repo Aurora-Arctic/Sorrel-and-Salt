@@ -3,7 +3,7 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { emailFormat } from '../../lib/email-address';
+import { emailAddressProblem, emailFormat } from '../../lib/email-address';
 import { EmailAddress } from '../../lib/email-address-schema';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { reasonTooLong } from '../../modules/identity/validation/reason';
@@ -102,6 +102,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         spellCheck={false}
         placeholder="name@example.com"
         format={emailFormat}
+        check={emailAddressProblem}
         value={email}
         disabled={sending}
         error={failure.field?.message}

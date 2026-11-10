@@ -134,6 +134,15 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('name@example.com');
   });
 
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    renderForm(<EmailForm email="" verified={false} landing="/coven" />);
+    fireEvent.change(emailField(), { target: { value: 'name@' } });
+    fireEvent.blur(emailField());
+
+    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
+    expect(emailField()).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
   it('refuses a malformed address with the shared message, without sending', () => {
     const calls = acceptSetEmail();
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);

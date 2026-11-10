@@ -3,7 +3,7 @@
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
-import { emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -168,6 +168,7 @@ const EmailForm = ({
           ignorePasswordManagers
           placeholder="name@example.com"
           format={emailFormat}
+          check={emailAddressProblem}
           value={value}
           onChange={(next) => {
             setValue(next);

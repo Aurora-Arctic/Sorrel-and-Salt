@@ -3,7 +3,7 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
-import { emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import BusyButton from '../BusyButton';
@@ -200,6 +200,7 @@ const PasswordForm = ({
           autoComplete={signingUp ? 'email' : 'username'}
           placeholder="name@example.com"
           format={emailFormat}
+          check={emailAddressProblem}
           value={email}
           onChange={onEmailChange}
           error={problem.email}

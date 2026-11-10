@@ -15,6 +15,7 @@ import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 
 // claude-docs/components/admin-invitations.md
 
@@ -173,6 +174,16 @@ describe('AdminInvitations', () => {
       }),
     );
     expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false });
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    render(<AdminInvitations invitations={[]} inviting />);
+    const email = within(dialog()).getByRole('textbox', { name: 'Email Address' });
+    fireEvent.change(email, { target: { value: 'name@' } });
+    fireEvent.blur(email);
+
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {

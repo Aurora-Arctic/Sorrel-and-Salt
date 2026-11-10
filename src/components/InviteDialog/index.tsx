@@ -3,7 +3,7 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { emailFormat } from '../../lib/email-address';
+import { emailAddressProblem, emailFormat } from '../../lib/email-address';
 import { EmailAddress } from '../../lib/email-address-schema';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -106,6 +106,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
         spellCheck={false}
         placeholder="name@example.com"
         format={emailFormat}
+        check={emailAddressProblem}
         value={email}
         disabled={sending}
         error={failure.field?.message}

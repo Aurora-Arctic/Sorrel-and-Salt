@@ -6,6 +6,7 @@ import type {
   SendSignedOutSupportRequestMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
@@ -92,6 +93,16 @@ describe('SignedOutSupportForm', () => {
     fireEvent.change(email, { target: { value: '  Visitor@EXAMPLE.Test ' } });
     fireEvent.blur(email);
     expect(email).toHaveValue('visitor@example.test');
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    render(<SignedOutSupportForm path="/support" />);
+    const email = screen.getByRole('textbox', { name: /Email/ });
+    fireEvent.change(email, { target: { value: 'name@' } });
+    fireEvent.blur(email);
+
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
   });
 
   it('refuses an address that is not one, and a subject past its limit, without sending', async () => {
