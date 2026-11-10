@@ -1,8 +1,7 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardActionsProps } from '@/components/IngredientEntry/types';
 import type { StockData } from '@/components/StockDialog/types';
@@ -11,15 +10,13 @@ import type {
   MakeItOursMutation,
   RemoveCupboardEntryMutation,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
-import { press } from '../../support/interact';
+import { press, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { cupboardEntryFormModule } from '@/components/IngredientEntry/lazy-forms';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // Which cupboard choices a compendium entry offers (claude-docs/components/ingredient-entry.md): the page decides from the member's permissions and the choices follow whether the coven holds the entry.
 // They are drawn as the list cards draw them: a main icon (Annotate on a coven's page, Edit in Compendium on the compendium's) and the three dots for the rest,
@@ -62,25 +59,17 @@ const BASE: CupboardActionsProps = {
 };
 
 function renderActions(props: Partial<CupboardActionsProps> = {}) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CupboardActions {...BASE} {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<CupboardActions {...BASE} {...props} />);
 }
 
 const onPage = (props: Partial<CupboardActionsProps> = {}) => (
-  <QueryClientProvider client={queryClient}>
-    <main>
-      <h1>Testwort</h1>
-      <CupboardActions {...BASE} {...props} />
-    </main>
-  </QueryClientProvider>
+  <main>
+    <h1>Testwort</h1>
+    <CupboardActions {...BASE} {...props} />
+  </main>
 );
-let queryClient = makeQueryClient();
 function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
-  queryClient = makeQueryClient();
-  return render(onPage(props));
+  return renderWithQuery(onPage(props));
 }
 
 const button = (name: string) => screen.queryByRole('button', { name });
@@ -209,11 +198,7 @@ describe('CupboardActions', () => {
     const { container, rerender } = renderActions(none);
     expect(container).toBeEmptyDOMElement();
 
-    rerender(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CupboardActions {...BASE} {...none} held />
-      </QueryClientProvider>,
-    );
+    rerender(<CupboardActions {...BASE} {...none} held />);
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -264,11 +249,7 @@ describe('CupboardActions', () => {
     const view = renderActions({ held: true, annotate: { ...ANNOTATE, opened: true } });
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    view.rerender(
-      <QueryClientProvider client={makeQueryClient()}>
-        <CupboardActions {...BASE} held annotate={ANNOTATE} />
-      </QueryClientProvider>,
-    );
+    view.rerender(<CupboardActions {...BASE} held annotate={ANNOTATE} />);
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     await waitFor(() =>
@@ -376,11 +357,9 @@ describe('CupboardActions', () => {
     ).toBeDisabled();
 
     view.rerender(
-      <QueryClientProvider client={queryClient}>
-        <main>
-          <h1>Ingredients</h1>
-        </main>
-      </QueryClientProvider>,
+      <main>
+        <h1>Ingredients</h1>
+      </main>,
     );
 
     await waitFor(() =>
@@ -580,9 +559,7 @@ describe('CupboardActions', () => {
 
       const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
-      expect(
-        plus.compareDocumentPosition(annotate) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(plus, annotate);
       expect(choices()).toEqual(['Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 

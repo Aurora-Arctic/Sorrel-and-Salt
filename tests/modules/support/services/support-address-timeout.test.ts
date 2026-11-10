@@ -12,6 +12,7 @@ import { run } from '../../../support/graphql/run';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verification';
+import { ORIGIN } from '../../../support/constants';
 
 // Every signed-out request is written as the one seeded stand-in, so the time-out names the address's HMAC key and no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
@@ -57,7 +58,7 @@ afterEach(() => {
 });
 
 const TIMED_OUT = 'timed-out@example.test';
-const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+const mail: SupportNotifier = { origin: async () => ORIGIN };
 
 const input = (email: string, subject = `Testwort from ${email}`) =>
   ({ about: 'account', email, subject, message: 'The code never arrives.' }) as const;

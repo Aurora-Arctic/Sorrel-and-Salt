@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import {
@@ -97,8 +97,9 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
     expect(await shown(page)).toEqual([...ALL].sort());
   });
 
+  let panel: Locator;
   await test.step('the panel lists the viewer’s covens by name, and only theirs', async () => {
-    const panel = await openFilters(page);
+    panel = await openFilters(page);
     await panel.getByRole('combobox', { name: 'In My Covens' }).click();
     await expect(page.getByRole('option', { name: OWN })).toBeVisible();
     await expect(page.getByRole('option', { name: VIEWER_OF })).toBeVisible();
@@ -107,7 +108,7 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
 
   await test.step('picking one coven narrows the list and the address keeps it', async () => {
     await page.getByRole('option', { name: OWN }).click();
-    await applyFilters(page, page.getByRole('dialog', { name: 'Filters' }));
+    await applyFilters(page, panel);
     expect(new URL(page.url()).searchParams.getAll('covens')).toEqual([mine.id]);
     await expect(rowOf(compendiumList(page), FREE)).toHaveCount(0);
     expect(await shown(page)).toEqual([HELD]);

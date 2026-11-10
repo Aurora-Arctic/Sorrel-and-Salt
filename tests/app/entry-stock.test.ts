@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { getSession } from '../support/request-session';
 
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 const stockOf = vi.fn();
 const variantsOf = vi.fn();
 const heldFormsOf = vi.fn();

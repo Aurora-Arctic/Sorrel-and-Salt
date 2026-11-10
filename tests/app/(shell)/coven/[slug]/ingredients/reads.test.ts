@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
+import { requireSession } from '../../../../../support/request-session';
 
 // The coven's Ingredients reads. The services are mocked, since what they decide is
 // their own tests'. Here: the page size, the one batch per page for forms, categories and
@@ -8,7 +9,7 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 const COVEN = '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44';
 const membership = { workspaceId: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44', role: 'member' } as never;
 const session = { user: { id: 'fixture-user' } };
-vi.mock('@/lib/request-session', () => ({ requireSession: async () => session }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 const listWorkspaceIngredients = vi.fn();
 const countWorkspaceIngredients = vi.fn();
@@ -57,6 +58,7 @@ const entry = (node: { id: string; workspaceId: string | null }, cupboardEntry: 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  requireSession.mockResolvedValue(session);
   listWorkspaceIngredients.mockResolvedValue([entry(own, null), entry(held, { label: 'Ours' })]);
   countWorkspaceIngredients.mockResolvedValue({ totalCount: 2, countBefore: null });
   variantsOf.mockResolvedValue([

@@ -1,6 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { act, fireEvent, screen } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PasswordSection, {
   GENERIC_CHANGE_ERROR,
@@ -8,9 +7,10 @@ import PasswordSection, {
 } from '@/components/PasswordSection';
 import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import type { SetPasswordMutation, SetPasswordMutationVariables } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // Changing goes through Better Auth's client, mocked at its one call; tests/db/password-reset.test.ts proves what the server does with each.
 const changePassword = vi.fn();
@@ -22,20 +22,18 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   requestPasswordReset: (...args: unknown[]) => requestPasswordReset(...args),
   useSession: () => ({ data: sessionEmail ? { user: { email: sessionEmail } } : null }),
 }));
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
 
 beforeEach(() => {
   sessionEmail = 'testwort@example.com';
-  refresh.mockReset();
+  router.refresh.mockReset();
   requestPasswordReset.mockReset();
 });
 
 const CURRENT = 'Testwort hums along the hedge';
 const CHOSEN = 'Testwort crowns the eastern hedge';
 
-function renderSection(ui: ReactNode) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+function renderSection(ui: ReactElement) {
+  return renderWithQuery(ui);
 }
 
 const press = (element: Element) =>
@@ -45,7 +43,7 @@ const press = (element: Element) =>
 
 const field = (label: string) =>
   screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-const type = (label: string, value: string) =>
+const typeInField = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 
 describe('PasswordSection, changing a password', () => {
@@ -59,9 +57,9 @@ describe('PasswordSection, changing a password', () => {
     renderSection(<PasswordSection hasPassword />);
 
     expect(change()).toBeDisabled();
-    type('Current Password', CURRENT);
+    typeInField('Current Password', CURRENT);
     expect(change()).toBeDisabled();
-    await act(async () => type('New Password', CHOSEN));
+    await act(async () => typeInField('New Password', CHOSEN));
     expect(change()).toBeEnabled();
   });
 
@@ -81,8 +79,8 @@ describe('PasswordSection, changing a password', () => {
   it('sends both passwords as typed, signing out every other session, and clears the fields', async () => {
     changePassword.mockResolvedValue({ data: { token: null }, error: null });
     renderSection(<PasswordSection hasPassword />);
-    type('Current Password', CURRENT);
-    type('New Password', ` ${CHOSEN} `);
+    typeInField('Current Password', CURRENT);
+    typeInField('New Password', ` ${CHOSEN} `);
 
     await press(change());
 
@@ -92,7 +90,7 @@ describe('PasswordSection, changing a password', () => {
       revokeOtherSessions: true,
     });
     expect(screen.getByRole('status')).toHaveFocus();
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
     expect(field('Current Password')).toHaveValue('');
     expect(field('New Password')).toHaveValue('');
   });
@@ -100,8 +98,8 @@ describe('PasswordSection, changing a password', () => {
   it('shows the busy button while the request is out', async () => {
     changePassword.mockReturnValue(new Promise(() => {}));
     renderSection(<PasswordSection hasPassword />);
-    type('Current Password', CURRENT);
-    type('New Password', CHOSEN);
+    typeInField('Current Password', CURRENT);
+    typeInField('New Password', CHOSEN);
 
     await press(change());
 
@@ -111,8 +109,8 @@ describe('PasswordSection, changing a password', () => {
   it('puts a wrong current password under its field', async () => {
     changePassword.mockResolvedValue({ error: { status: 400, code: 'INVALID_PASSWORD' } });
     renderSection(<PasswordSection hasPassword />);
-    type('Current Password', CURRENT);
-    type('New Password', CHOSEN);
+    typeInField('Current Password', CURRENT);
+    typeInField('New Password', CHOSEN);
 
     await press(change());
 
@@ -124,8 +122,8 @@ describe('PasswordSection, changing a password', () => {
   it('puts a refusal of the new password under its field', async () => {
     changePassword.mockResolvedValue({ error: { status: 400, code: 'PASSWORD_TOO_SHORT' } });
     renderSection(<PasswordSection hasPassword />);
-    type('Current Password', CURRENT);
-    type('New Password', 'short');
+    typeInField('Current Password', CURRENT);
+    typeInField('New Password', 'short');
 
     await press(change());
 
@@ -141,13 +139,13 @@ describe('PasswordSection, changing a password', () => {
   ])('answers %o with its sentence', async (error, said) => {
     changePassword.mockResolvedValue({ error });
     renderSection(<PasswordSection hasPassword />);
-    type('Current Password', CURRENT);
-    type('New Password', CHOSEN);
+    typeInField('Current Password', CURRENT);
+    typeInField('New Password', CHOSEN);
 
     await press(change());
 
     expect(screen.getByRole('alert')).toHaveTextContent(said);
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 });
 
@@ -215,7 +213,7 @@ describe('PasswordSection, setting a first password', () => {
     expect(screen.queryByLabelText(/^Current Password/)).toBeNull();
     expect(set()).toBeDisabled();
     // In `act`: the strength meter loads on the first keystroke and updates when it arrives.
-    await act(async () => type('New Password', CHOSEN));
+    await act(async () => typeInField('New Password', CHOSEN));
     expect(set()).toBeEnabled();
   });
 
@@ -229,13 +227,13 @@ describe('PasswordSection, setting a first password', () => {
       },
     );
     renderSection(<PasswordSection hasPassword={false} />);
-    type('New Password', CHOSEN);
+    typeInField('New Password', CHOSEN);
 
     await press(set());
 
     expect(await screen.findByRole('status')).toHaveFocus();
     expect(calls).toEqual([{ newPassword: CHOSEN }]);
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
     expect(field('Current Password')).toHaveValue('');
     expect(changePassword).not.toHaveBeenCalled();
   });
@@ -246,7 +244,7 @@ describe('PasswordSection, setting a first password', () => {
       fieldErrors: [{ path: ['newPassword'], message: 'Use at least 15 characters.' }],
     });
     renderSection(<PasswordSection hasPassword={false} />);
-    type('New Password', 'short');
+    typeInField('New Password', 'short');
 
     await press(set());
 
@@ -265,7 +263,7 @@ describe('PasswordSection, setting a first password', () => {
       message: 'Confirm your email address first',
     });
     renderSection(<PasswordSection hasPassword={false} />);
-    type('New Password', CHOSEN);
+    typeInField('New Password', CHOSEN);
 
     await press(set());
 

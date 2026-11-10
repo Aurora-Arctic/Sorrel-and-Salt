@@ -2,6 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../support/printed-text';
+import { getShellSession } from '../support/request-session';
 
 // /access-paused reads the viewer's own standing pause, as the shell does, and says when it ends: a pause with an end and
 // one with none. Signed out it sends the visitor to Sign In, and with no pause standing, lifted or ended, to the entry page.
@@ -9,16 +10,15 @@ import { printed } from '../support/printed-text';
 // the one way there from this shell-less page. A standing support time-out replaces both with a sentence refusing the send
 // and a link to read the requests, and no Support dialog link, since the dialog could send nothing.
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({}),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../support/next-navigation')),
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },
   usePathname: () => '/access-paused',
   useSearchParams: () => new URLSearchParams(),
 }));
-const getShellSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getShellSession }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 const getMySupportTimeout = vi.fn();
 vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { accountExistsMessage } from '@/emails/account-exists';
+import { ORIGIN } from '../support/constants';
 
-const SIGN_IN = 'http://localhost:8000/sign-in';
+const SIGN_IN = `${ORIGIN}/sign-in`;
 
 describe('accountExistsMessage', () => {
   it('addresses the holder and carries the sign-in link, once in the text and twice in the HTML', async () => {

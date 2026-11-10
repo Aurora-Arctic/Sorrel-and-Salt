@@ -7,7 +7,6 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
-import type { Message } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
@@ -15,8 +14,7 @@ import { useTestDatabase } from '../support/db/database';
 // `account.encryptOAuthTokens` through a real sign-in: the access and refresh tokens in `accounts` are unreadable without BETTER_AUTH_SECRET, and a row written in plaintext before the switch still reads.
 // The id token is stored as issued (claude-docs/auth/config.md, "Config").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 
 const DOMAIN = '@oauth-token-encryption.test';
 const HOLDER = `holder${DOMAIN}`;

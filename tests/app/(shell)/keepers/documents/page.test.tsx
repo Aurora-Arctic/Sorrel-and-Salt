@@ -1,12 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireAdminSession } from '../../../../support/request-session';
 
 // The `/keepers/documents` page: the admin guard first, then the mailing overview, handed to the panel. What the guard and the
 // service decide is tests/lib/request-session.test.ts's and tests/modules/documents/services/document-mailing.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 
 const readDocumentMailings = vi.fn();
 vi.mock('@/modules/documents', () => ({ readDocumentMailings }));

@@ -7,13 +7,12 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
 import { rowCells } from '../../../../../support/table';
+import { requireAdminSession } from '../../../../../support/request-session';
+import { router } from '../../../../../support/next-navigation';
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+vi.mock('@/lib/request-session', () => import('../../../../../support/request-session'));
 
 // The rows' Approval controls hold the router, which only a mounted app provides.
-const replace = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace }) }));
 
 const listUsers = vi.fn();
 const countUsers = vi.fn();
@@ -102,7 +101,6 @@ function lastRequest(): PageRequest {
 }
 
 beforeEach(() => {
-  replace.mockReset();
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listUsers.mockReset();
@@ -403,7 +401,7 @@ describe('the /keepers/users page, the user modal', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
     );
 
-    expect(replace).toHaveBeenCalledWith(closeTo, { scroll: false });
+    expect(router.replace).toHaveBeenCalledWith(closeTo, { scroll: false });
   });
 
   // Hand-edited, or copied wrong: the list beneath is still the page asked for.

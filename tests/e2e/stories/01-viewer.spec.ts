@@ -8,6 +8,7 @@ import {
   compendiumVariant,
   editedAt,
   graphqlFromPage,
+  grimoireList,
   ingredientList,
   insertSpell,
   insertStock,
@@ -24,10 +25,6 @@ import {
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: 'Spells' });
-}
 
 /** Matched by verb, so a new write control under one of these verbs is caught too. */
 const WRITE_VERB = /^(Add|New|Create|Edit|Delete|Remove|Invite|Change|Make|Save)\b/;
@@ -99,8 +96,8 @@ test(
       ).toBeVisible();
 
       await page.goto(grimoirePath);
-      await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(rowOf(grimoireList(page), 'Fixture Working')).toBeVisible();
+      await expect(grimoireList(page, 'Spells').getByRole('listitem')).toHaveCount(1);
+      await expect(rowOf(grimoireList(page, 'Spells'), 'Fixture Working')).toBeVisible();
       await expect(writeControls(page).first()).toBeVisible();
     });
 
@@ -123,11 +120,11 @@ test(
 
       const grimoire = await page.goto(grimoirePath);
       expect(grimoire?.status()).toBe(200);
-      await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(rowOf(grimoireList(page), 'Fixture Working')).toBeVisible();
+      await expect(grimoireList(page, 'Spells').getByRole('listitem')).toHaveCount(1);
+      await expect(rowOf(grimoireList(page, 'Spells'), 'Fixture Working')).toBeVisible();
       await expect(writeControls(page)).toHaveCount(0);
       await expect(editingFields(page)).toHaveCount(0);
-      await expect(rowOf(grimoireList(page), 'Fixture Working')).toBeVisible();
+      await expect(rowOf(grimoireList(page, 'Spells'), 'Fixture Working')).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       await page.goto(`/coven/${coven.slug}`);

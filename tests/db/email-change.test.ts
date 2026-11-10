@@ -10,19 +10,19 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
 import { useTestDatabase } from '../support/db/database';
 import { ORIGIN } from '../support/constants';
+import { send } from '../support/mail';
 
 // Through Better Auth's real endpoints: an address becomes the account's only when the mailed change link is followed from a session holding the row,
 // so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 

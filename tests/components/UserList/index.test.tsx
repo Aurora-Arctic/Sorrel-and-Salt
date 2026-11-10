@@ -17,9 +17,7 @@ import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { rowCells } from '../../support/table';
-
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which happy-dom cannot follow.

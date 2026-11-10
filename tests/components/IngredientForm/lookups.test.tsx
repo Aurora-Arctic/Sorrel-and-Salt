@@ -17,8 +17,9 @@ import {
   ingredientResolver,
 } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
-import { press, type } from '../../support/interact';
+import { waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
+import { press, type, expectBefore } from '../../support/interact';
 import {
   WORKSPACE_ID,
   offerDeities,
@@ -54,7 +55,7 @@ function renderInForm(field: ReactElement, values: Partial<IngredientFormValues>
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return async (): Promise<IngredientFormInput> => {
     press('Save Ingredient');
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -516,9 +517,7 @@ describe('LookupListField', () => {
     expect(within(yours).getByRole('option')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect(within(compendium).getAllByRole('option')).toHaveLength(2);
     expect(within(compendium).getByRole('option', { name: /^Mockwort Tea/ })).toBeInTheDocument();
-    expect(
-      yours.compareDocumentPosition(compendium) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(yours, compendium);
   });
 
   it('saves a picked ingredient as a link, its entry reading as that ingredient', async () => {

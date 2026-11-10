@@ -1,15 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
+import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 // The requests are mocked; what the service decides is its own tests'.
 
-const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
-  replace: vi.fn(),
-  refresh: vi.fn(),
-  graphqlRequest: vi.fn(),
-}));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
+const { graphqlRequest } = vi.hoisted(() => ({ graphqlRequest: vi.fn() }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
@@ -39,8 +36,8 @@ async function openDialog(successors = SUCCESSORS) {
 
 describe('LeaveWorkspaceButton for the only owner', () => {
   beforeEach(() => {
-    replace.mockReset();
-    refresh.mockReset();
+    router.replace.mockReset();
+    router.refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
@@ -85,9 +82,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/coven'));
     // The switcher lists covens from a layout the replace does not re-run.
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(router.refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledTimes(2);
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
@@ -108,9 +105,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(promote);
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/coven'));
     // The switcher lists covens from a layout the replace does not re-run.
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(router.refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
       userId: OTHER,
@@ -127,7 +124,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     expect(await within(dialog).findByRole('alert')).toBeVisible();
     expect(graphqlRequest).toHaveBeenCalledTimes(2);
-    expect(replace).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('does not leave when the promotion is refused', async () => {
@@ -138,11 +135,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
     const alert = await within(dialog).findByRole('alert');
-    expect(
-      alert.compareDocumentPosition(handOver(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(alert, handOver(dialog));
     expect(graphqlRequest).toHaveBeenCalledTimes(1);
-    expect(replace).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('swaps the confirm for Delete once chosen, routing it into its own confirmation and deleting nothing from the dialog', async () => {
@@ -160,9 +155,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Coven' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/coven'));
     // The switcher lists covens from a layout the replace does not re-run.
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(router.refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
@@ -179,12 +174,10 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     const alert = await within(dialog).findByRole('alert');
     const button = within(dialog).getByRole('button', { name: 'Delete Coven' });
     expect(button.parentElement).toContainElement(alert);
-    expect(button.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(
-      deleteIt(dialog).compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(button, alert);
+    expectBefore(deleteIt(dialog), alert);
     expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
-    expect(replace).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('offers the deletion alone when there is no one to hand it to', async () => {

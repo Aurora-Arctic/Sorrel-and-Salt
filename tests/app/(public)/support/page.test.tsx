@@ -1,13 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
+import { getSession, sessionIsVerified } from '../../../support/request-session';
 
 // What /support shows each kind of visitor: Sign In to nobody signed in, the email page's redirect to an
 // unverified account, the end of a timeout, and otherwise the form. The session and service are mocked.
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const getMySupportTimeout = vi.fn<() => Promise<{ until: Date | null } | null>>();
 vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
@@ -15,9 +14,9 @@ vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 const redirect = vi.fn((path: string) => {
   throw new Error(`redirect:${path}`);
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   redirect,
-  useRouter: () => ({ push: vi.fn() }),
   usePathname: () => '/support',
 }));
 

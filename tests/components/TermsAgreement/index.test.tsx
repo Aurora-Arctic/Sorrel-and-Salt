@@ -1,14 +1,13 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TermsAgreement from '@/components/TermsAgreement';
 import type { TermsAgreementProps } from '@/components/TermsAgreement/types';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { leavingAtEachLoad } from '../../support/location';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The server refuses a version no longer in force (tests/modules/identity/services/terms.test.ts).
 
@@ -29,15 +28,13 @@ beforeEach(() => {
 });
 
 function renderAgreement(changed: TermsAgreementProps['changed'] = ['terms']) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <TermsAgreement
-        version={IN_FORCE}
-        changed={changed}
-        updatedOn="2026-11-02"
-        destination="/coven/hearth"
-      />
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <TermsAgreement
+      version={IN_FORCE}
+      changed={changed}
+      updatedOn="2026-11-02"
+      destination="/coven/hearth"
+    />,
   );
 }
 

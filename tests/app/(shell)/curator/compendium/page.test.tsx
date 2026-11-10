@@ -1,25 +1,22 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
+import { router } from '../../../../support/next-navigation';
+import { renderWithQuery } from '../../../../support/render-with-query';
+import { getSession, requireCuratorSession } from '../../../../support/request-session';
 
 // The form loads on first use; loading it once up front keeps each test off a cold import.
 beforeAll(async () => {
   await loadCompendiumEntryForm();
 });
 
-const requireCuratorSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({
-  requireCuratorSession,
-  getSession: async () => ADMIN,
-}));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 
 vi.mock('@/lib/viewer', () => ({
   viewerIfSignedIn: async () => undefined,
@@ -115,8 +112,10 @@ const REDIRECTED = 'NEXT_REDIRECT';
 const redirect = vi.fn((href: string) => {
   throw new Error(`${REDIRECTED} ${href}`);
 });
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router, redirect }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
+  redirect,
+}));
 
 const { default: AdminCompendiumPage } = await import('@/app/(shell)/curator/compendium/page');
 
@@ -160,7 +159,7 @@ const fullPage = () =>
 
 async function renderPage(params: Record<string, string | string[]> = {}) {
   const page = await AdminCompendiumPage({ searchParams: Promise.resolve(params) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 async function readPage(params: Record<string, string | string[]> = {}) {
@@ -236,6 +235,7 @@ const CATEGORY_ROWS = [
 beforeEach(() => {
   requireCuratorSession.mockReset();
   requireCuratorSession.mockResolvedValue(ADMIN);
+  getSession.mockResolvedValue(ADMIN);
   listCompendium.mockReset();
   listCompendium.mockResolvedValue([entry(TESTWORT)]);
   countCompendium.mockReset();

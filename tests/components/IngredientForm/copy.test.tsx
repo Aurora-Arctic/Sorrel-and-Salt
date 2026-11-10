@@ -20,7 +20,7 @@ import {
 
 // claude-docs/components/ingredient-form.md, "The variants"
 
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 
 describe('copying from the ingredient', () => {
   beforeEach(() => {
@@ -84,7 +84,7 @@ describe('copying from the ingredient', () => {
     expect(
       within(oil).getByRole('status', { name: 'Substitute Ingredients changes' }),
     ).toHaveTextContent(/2/);
-    save();
+    saveIngredient();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.[0]?.substitutes).toEqual([
       { name: 'Fixture fern' },
@@ -104,7 +104,7 @@ describe('copying from the ingredient', () => {
     const oil = openWhole('Oil');
 
     fireEvent.click(copyOf(oil, 'References'));
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.[0]?.references).toEqual([
@@ -128,7 +128,7 @@ describe('copying from the ingredient', () => {
 
     expect(copy).toHaveFocus();
     expect(skippedNotice(oil)).toBeEmptyDOMElement();
-    save();
+    saveIngredient();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.[0]?.substitutes).toEqual([
       { name: 'Fixture fern' },

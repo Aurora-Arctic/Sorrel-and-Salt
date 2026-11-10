@@ -1,9 +1,8 @@
 import { test, expect } from './fixtures';
-import type { Locator, Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
-import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
+import { grimoireList, insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 
 // Editing a saved spell from its card's pencil and from its recipe page. A viewer has no pencil and no dialog,
 // and the dialog over the recipe page passes axe and closes back to it.
@@ -11,8 +10,6 @@ import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-const grimoireList = (page: Page): Locator => page.getByRole('list', { name: 'Spells' });
 
 test('a member edits a saved spell from its card and its recipe page, and a viewer cannot', async ({
   page,
@@ -31,7 +28,7 @@ test('a member edits a saved spell from its card and its recipe page, and a view
 
   // From the card's pencil: change the title and add a step, close, and the card shows it.
   await page.goto(grimoire);
-  await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+  await grimoireList(page, 'Spells').getByRole('link', { name: 'Edit Fixture Working' }).click();
   await expect(page).toHaveURL(`${grimoire}?edit=${spellId}`);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Open All' }).click();
@@ -42,7 +39,10 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   await expect(page).toHaveURL(grimoire);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(
-    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+    grimoireList(page, 'Spells').getByRole('link', {
+      name: 'Fixture Working Renamed',
+      exact: true,
+    }),
   ).toBeVisible();
 
   // The recipe page reads the same change, and its Edit opens the dialog over it.
@@ -71,7 +71,10 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto(`${grimoire}?edit=${spellId}`);
   await expect(
-    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+    grimoireList(page, 'Spells').getByRole('link', {
+      name: 'Fixture Working Renamed',
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(page.getByRole('link', { name: /^Edit / })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);

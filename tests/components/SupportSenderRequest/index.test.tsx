@@ -1,14 +1,13 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import SupportSenderRequest from '@/components/SupportSenderRequest';
 import { senderStatusLabel } from '@/components/SupportSenderRequest/status';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
-
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { expectBefore } from '../../support/interact';
 
 const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRequestEntry => ({
   id: 'r1',
@@ -194,7 +193,7 @@ describe('SupportSenderRequest', () => {
     const box = screen.getByRole('textbox', { name: 'Your Reply' });
     expect(box).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
-    expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(notice, box);
   });
 
   it('shuts the box and the button while timed out with no end date, and says it has none', () => {

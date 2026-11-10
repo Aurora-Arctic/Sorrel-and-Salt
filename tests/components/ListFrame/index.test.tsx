@@ -1,16 +1,15 @@
 import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import ListFrame, {
   ListBody,
   ListNavigationContext,
   useListNavigation,
 } from '@/components/ListFrame';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
 // A soft navigation runs through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/list-frame.md
 

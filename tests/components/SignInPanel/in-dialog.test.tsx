@@ -1,39 +1,29 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import type { SignInHeader } from '@/components/SignInPanel/types';
 import { installHistory, setQuery } from './search-params';
 import { PASSWORD } from '../../support/constants';
+import {
+  assign,
+  field,
+  getSession,
+  press,
+  resetSignInHarness,
+  signInEmail,
+  signUpEmail,
+  typeInField,
+} from '../../support/sign-in-harness';
+import { fillSignUp } from '../../support/interact';
 
 // The panel inside a dialog (SignInDialog): the page beneath keeps its address, so the email view
 // is held by the panel, and the dialog's title heads it.
-const signInEmail = vi.fn();
-const signUpEmail = vi.fn();
-const getSession = vi.fn();
-vi.mock('@/lib/auth-client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/auth-client')>()),
-  signIn: { social: vi.fn(), email: (...args: unknown[]) => signInEmail(...args) },
-  signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
-  getSession: (...args: unknown[]) => getSession(...args),
-}));
-
-vi.mock('next/navigation', async () => ({
-  useRouter: () => ({}),
-  useSearchParams: (await import('./search-params')).useSearchParams,
-}));
-
-const assign = vi.fn();
-
-const press = (element: Element) =>
-  act(async () => {
-    fireEvent.click(element);
-  });
-
-const field = (label: string) =>
-  screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-
-const type = (label: string, value: string) =>
-  fireEvent.change(field(label), { target: { value } });
+vi.mock('@/lib/auth-client', async () =>
+  (await import('../../support/sign-in-harness')).authClientMock(),
+);
+vi.mock('next/navigation', async () =>
+  (await import('../../support/sign-in-harness')).navigationMock(),
+);
 
 describe('SignInPanel in a dialog', () => {
   let history: ReturnType<typeof installHistory>;
@@ -47,10 +37,7 @@ describe('SignInPanel in a dialog', () => {
     vi.restoreAllMocks();
     cleanup();
     setQuery('');
-    signInEmail.mockReset();
-    signUpEmail.mockReset();
-    getSession.mockReset();
-    assign.mockReset();
+    resetSignInHarness();
   });
 
   it('opens the email form in place, with no head of its own, reporting the head to the dialog, leaving the address and the history alone, and Back returns the focus to Continue with Email', async () => {
@@ -79,7 +66,7 @@ describe('SignInPanel in a dialog', () => {
     expect(field('Email Address')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
     expect(history.replace).not.toHaveBeenCalled();
-    type('Email Address', 'someone@in-dialog.test');
+    typeInField('Email Address', 'someone@in-dialog.test');
 
     await act(async () => reported()[1]());
 
@@ -129,9 +116,11 @@ describe('SignInPanel in a dialog', () => {
       />,
     );
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
-    type('Name', 'Testwort Hedge');
-    type('Email Address', 'someone@in-dialog.test');
-    type('Password', PASSWORD);
+    fillSignUp(null, {
+      name: 'Testwort Hedge',
+      email: 'someone@in-dialog.test',
+      password: PASSWORD,
+    });
 
     await press(screen.getByRole('button', { name: 'Create Account' }));
 
@@ -145,8 +134,8 @@ describe('SignInPanel in a dialog', () => {
     signInEmail.mockResolvedValue({ data: {}, error: null });
     render(<SignInPanel next="/invite/abc" configured={['google']} inDialog signUpLandsOnNext />);
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
-    type('Email Address', 'someone@in-dialog.test');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'someone@in-dialog.test');
+    typeInField('Password', PASSWORD);
 
     await press(screen.getByRole('button', { name: 'Sign In' }));
 

@@ -1,16 +1,13 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
-import type { AgreedVersion } from '@/lib/types';
+import { requireSession, sessionAgreedVersion } from '../../../../support/request-session';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // The terms acceptance page: kept out of search results, and drawn only for a signed-in account. The
 // session, the account's stored agreement and the documents in force are mocked; who is sent here is tests/lib/request-session.test.ts's.
 
-const requireSession = vi.fn<() => Promise<Session>>();
-const sessionAgreedVersion = vi.fn<() => Promise<AgreedVersion | undefined>>();
-vi.mock('@/lib/request-session', () => ({ requireSession, sessionAgreedVersion }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 
 const signedInLanding = vi.fn(async () => '/coven/fixture-coven');
 vi.mock('@/lib/landing', () => ({ signedInLanding }));
@@ -41,7 +38,7 @@ describe('the /account/terms page', () => {
     requireSession.mockResolvedValue(SESSION);
 
     const page = await TermsPage({ searchParams: Promise.resolve({}) });
-    render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+    renderWithQuery(page);
 
     expect(requireSession).toHaveBeenCalledOnce();
     expect(signedInLanding).toHaveBeenCalledWith(SESSION);
@@ -54,7 +51,7 @@ describe('the /account/terms page', () => {
     sessionAgreedVersion.mockResolvedValue({ ...IN_FORCE, disclaimer: 1 });
 
     const page = await TermsPage({ searchParams: Promise.resolve({}) });
-    render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+    renderWithQuery(page);
 
     const changed = within(screen.getByRole('list')).getAllByRole('link');
     expect(changed.map((link) => link.getAttribute('href'))).toEqual(['/disclaimer']);

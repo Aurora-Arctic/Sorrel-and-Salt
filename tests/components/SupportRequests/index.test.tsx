@@ -22,12 +22,12 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { rowCells } from '../../support/table';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/support-requests.md
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/support',
 }));
 
@@ -534,11 +534,11 @@ describe('Issue', () => {
     });
     open(ADMIN);
     const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
-    const save = within(dialog()).getByRole('button', { name: 'Save Address' });
-    expect(save).toBeDisabled();
+    const saveAddress = within(dialog()).getByRole('button', { name: 'Save Address' });
+    expect(saveAddress).toBeDisabled();
 
     fireEvent.change(field, { target: { value: 'https://example.test/issues/4' } });
-    fireEvent.click(save);
+    fireEvent.click(saveAddress);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
     expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);

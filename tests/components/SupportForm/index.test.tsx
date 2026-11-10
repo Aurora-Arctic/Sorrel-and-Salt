@@ -8,10 +8,6 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
-}));
-
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
 const aboutGroup = () => screen.getByRole('group', { name: 'What Is This About?' });
@@ -37,7 +33,7 @@ function fillText() {
   fireEvent.change(message(), { target: { value: ' The text is too faint. ' } });
 }
 
-function fill() {
+function fillForm() {
   fillText();
   if (!within(aboutGroup()).queryByRole('radio', { checked: true })) {
     fireEvent.click(aboutRadio('Bug'));
@@ -80,7 +76,7 @@ describe('SupportForm', () => {
   it('sends the about that was chosen', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.click(aboutRadio('Privacy & Data'));
     fireEvent.click(send());
     await screen.findByRole('status');
@@ -164,7 +160,7 @@ describe('SupportForm', () => {
   it('refuses a page address past its limit before sending', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" about="bug" />);
-    fill();
+    fillForm();
     fireEvent.change(page(), { target: { value: '/'.repeat(501) } });
     fireEvent.click(send());
     await waitFor(() => expect(page()).toHaveFocus());
@@ -175,7 +171,7 @@ describe('SupportForm', () => {
   it('refuses a page that is not on this site before sending, and accepts the site address', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" about="bug" />);
-    fill();
+    fillForm();
     fireEvent.change(page(), { target: { value: 'https://example.test/a' } });
     fireEvent.click(send());
     await waitFor(() => expect(page()).toHaveFocus());
@@ -196,7 +192,7 @@ describe('SupportForm', () => {
   it('sends an edited page', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.change(page(), { target: { value: '/b' } });
     fireEvent.click(send());
     await screen.findByRole('status');
@@ -206,7 +202,7 @@ describe('SupportForm', () => {
   it('sends no page when the field is cleared', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.change(page(), { target: { value: '  ' } });
     fireEvent.click(send());
     await screen.findByRole('status');
@@ -220,7 +216,7 @@ describe('SupportForm', () => {
       fieldErrors: [{ path: ['path'], message: 'That page address is too long' }],
     });
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
     await waitFor(() => expect(page()).toHaveFocus());
     expect(page()).toHaveAccessibleDescription(/too long/);
@@ -230,7 +226,7 @@ describe('SupportForm', () => {
   it('sends a path with a coven slug as it is, never a route pattern', async () => {
     const calls = mockSending();
     render(<SupportForm path="/coven/whitethorn-coven/grimoire" about="bug" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
 
     await screen.findByRole('status');
@@ -240,7 +236,7 @@ describe('SupportForm', () => {
   it('sends the trimmed text with the about, page and error, then says it was received', async () => {
     const calls = mockSending();
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
 
     expect(send()).toBeDisabled();
@@ -275,7 +271,7 @@ describe('SupportForm', () => {
     expect(
       screen.getByRole('textbox', { name: 'Page' }).getAttribute('aria-describedby'),
     ).toContain(reference.closest('[id]')?.id);
-    fill();
+    fillForm();
     fireEvent.click(send());
     await screen.findByRole('status');
     expect(calls[0]?.input).toMatchObject({ errorCode: 500, errorReference: 'abc123' });
@@ -284,7 +280,7 @@ describe('SupportForm', () => {
   it('names the request in the received notice, links it, and gives the promise', async () => {
     mockSending();
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
     const notice = await screen.findByRole('status');
     expect(within(notice).getByRole('link', { name: /Cannot read the menu/ })).toHaveAttribute(
@@ -299,7 +295,7 @@ describe('SupportForm', () => {
   it('sends no error number when there is none', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
     await screen.findByRole('status');
     expect(calls[0]?.input).not.toHaveProperty('errorCode');
@@ -308,7 +304,7 @@ describe('SupportForm', () => {
   it('says why a send was refused, keeps what was written, and allows another try', async () => {
     mockGraphQLError('SendSupportRequest', { code: 'FORBIDDEN', message: 'Forbidden' });
     render(<SupportForm path="/a" />);
-    fill();
+    fillForm();
     fireEvent.click(send());
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
@@ -323,7 +319,7 @@ describe('SupportForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(done).toHaveBeenCalledTimes(1);
 
-    fill();
+    fillForm();
     fireEvent.click(send());
     fireEvent.click(await screen.findByRole('button', { name: 'Done' }));
     expect(done).toHaveBeenCalledTimes(2);

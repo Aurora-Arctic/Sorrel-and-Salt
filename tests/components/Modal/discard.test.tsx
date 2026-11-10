@@ -1,9 +1,12 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { type ReactElement, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => '/here',
+}));
 
 const { default: Modal, DiscardQuestion, useDiscardGuard } = await import('@/components/Modal');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
@@ -37,7 +40,7 @@ function Go(): ReactElement {
 
 const button = (name: string) => screen.getByRole('button', { name });
 const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
-const type = (value: string) =>
+const typeName = (value: string) =>
   fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value } });
 
 function unload(): boolean {
@@ -73,7 +76,7 @@ describe('useDiscardGuard on a page', () => {
 
   it('asks in a dialog before a navigation leaves what was typed, and goes on Discard Changes', async () => {
     renderPage();
-    type('Testwort');
+    typeName('Testwort');
     expect(unload()).toBe(true);
 
     fireEvent.click(button('Go'));
@@ -120,7 +123,7 @@ describe('useDiscardGuard in a modal', () => {
         </Modal>
       </NavigationProvider>,
     );
-    type('Testwort');
+    typeName('Testwort');
     expect(unload()).toBe(true);
 
     // As a form's page navigates on its save: nothing asks.

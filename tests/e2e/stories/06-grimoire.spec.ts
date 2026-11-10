@@ -17,6 +17,7 @@ import {
   openFilters,
   seedCoven,
   withSql,
+  grimoireList,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
@@ -38,10 +39,6 @@ async function openBuilder(page: Page, slug: string): Promise<Locator> {
 
 function stepList(page: Page): Locator {
   return page.getByRole('list', { name: 'Steps' });
-}
-
-function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: /^(Spells|Drafts)$/ });
 }
 
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {

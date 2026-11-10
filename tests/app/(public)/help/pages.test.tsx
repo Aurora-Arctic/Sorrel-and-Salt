@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { hrefs } from '../../../support/links';
+import { getSession, sessionIsVerified } from '../../../support/request-session';
 
 // The public help pages read the public finders, which take no session, filter `audience = 'public'` in SQL and are
 // cached (tests/modules/help/services/help-reads.test.ts). Search reads the session, since its results follow the
@@ -20,18 +21,16 @@ const permanentRedirect = vi.fn((to: string) => {
 const redirect = vi.fn((to: string) => {
   throw new Error(`NEXT_REDIRECT 307 ${to}`);
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   notFound,
   permanentRedirect,
   redirect,
   usePathname: () => '/help',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn<() => Promise<boolean>>();
-vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const readHelpFaq = vi.fn();
 const readHelpArticleIndex = vi.fn();

@@ -3,8 +3,6 @@ import type { Route } from 'next';
 import { useInsertionEffect, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ back: vi.fn() }) }));
-
 const { default: BackLink } = await import('@/components/IngredientEntry/back-link');
 
 class FakeNavigation extends EventTarget {

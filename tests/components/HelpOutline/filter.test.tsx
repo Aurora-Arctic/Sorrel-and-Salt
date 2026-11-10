@@ -9,8 +9,8 @@ import { ListNavigationContext } from '@/components/ListFrame';
 // The keeper help list's filter row: Kind, Audience and Shown are each a choice chip whose pick applies at once,
 // with the same address parameters the list reads (claude-docs/components/help-outline.md).
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/help',
   useSearchParams: () => new URLSearchParams(),
 }));

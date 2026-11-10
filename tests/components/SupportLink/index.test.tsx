@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string>();
 const search = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({}),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(search()),
 }));

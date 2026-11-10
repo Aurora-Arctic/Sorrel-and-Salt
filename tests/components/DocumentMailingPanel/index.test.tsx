@@ -1,11 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { router } from '../../support/next-navigation';
 import DocumentMailingPanel from '@/components/DocumentMailingPanel';
 import type { DocumentMailingPanelProps } from '@/components/DocumentMailingPanel/types';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
-
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The mailing page's panel for emailing every account about every document changed since the last email: a summary box for each
 // pending document and one button, its confirmation, each open mailing's progress, Resume for a paused one, and the last sent.
