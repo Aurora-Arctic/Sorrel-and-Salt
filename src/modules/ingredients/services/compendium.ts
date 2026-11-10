@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  type AuditWriter,
   type CompendiumListEdge,
   findCompendiumCount,
   findCompendiumEntryByIdentity,
@@ -191,12 +192,10 @@ export async function updateCompendiumEntry(
     ...(input.shown != null && { shown: input.shown }),
   };
   const { slug } = columns;
-  const at = new Date();
-  const moves = slug !== current.slug;
-  if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
+  const move = await planSlugMove(current, slug, input.endRedirect);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(curator, at);
+    await write.deleteLapsedSlugRetirements(curator, move.at);
     const [row] = await write.updateRevisionedInCompendium(
       curator,
       ingredients,
@@ -205,13 +204,7 @@ export async function updateCompendiumEntry(
       columns,
     );
     if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
-    if (moves) {
-      await write.insertInCompendium(curator, retiredIngredientSlugs, {
-        ingredientId: id,
-        slug: current.slug,
-        retiredAt: at,
-      });
-    }
+    await retireSlug(write, curator, current, move);
     const touched = await writeChildren(
       write,
       [],
@@ -247,25 +240,17 @@ export async function promoteCompendiumFolkName(
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
   const slug = ingredientSlug(fields.name, fields.canonicalName);
-  const at = new Date();
-  const moves = slug !== current.slug;
-  if (moves) await refuseEndingARedirect(slug, at, undefined, id);
+  const move = await planSlugMove(current, slug, undefined);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(curator, at);
+    await write.deleteLapsedSlugRetirements(curator, move.at);
     await swapFolkName(write, id, promoted.id, current.name, others);
     const [row] = await write.updateByIdInCompendium(curator, ingredients, id, {
       name: fields.name,
       slug,
     });
     if (!row) throw new NotFound(NO_COMPENDIUM_ENTRY);
-    if (moves) {
-      await write.insertInCompendium(curator, retiredIngredientSlugs, {
-        ingredientId: id,
-        slug: current.slug,
-        retiredAt: at,
-      });
-    }
+    await retireSlug(write, curator, current, move);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
@@ -354,16 +339,20 @@ export async function resolveCompendiumSlug(
   throw new NotFound(NO_COMPENDIUM_ENTRY);
 }
 
-// The public entry route's read, cached whole beside the list's (claude-docs/db/compendium-cache.md).
-const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string) => {
-  const address = await resolveCompendiumSlug(slug);
-  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
+// The page is read without a viewer, so the cached read and the curator's read both build it here.
+async function entryPageOf(address: CompendiumAddress): Promise<CompendiumEntryPage> {
+  if (address.kind === 'moved') return address;
   const { entry, movedAway } = address;
   return {
     kind: 'entry',
     detail: await ingredientDetailOf(null, entry),
     movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
-  } satisfies CompendiumEntryPage;
+  };
+}
+
+// The public entry route's read, cached whole beside the list's (claude-docs/db/compendium-cache.md).
+const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string) => {
+  return entryPageOf(await resolveCompendiumSlug(slug));
 });
 
 /**
@@ -388,14 +377,7 @@ export async function readCompendiumEntryAsCurator(
   slug: string,
 ): Promise<CompendiumEntryPage> {
   assertCurator(session);
-  const address = await resolveCompendiumSlug(slug, session);
-  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
-  const { entry, movedAway } = address;
-  return {
-    kind: 'entry',
-    detail: await ingredientDetailOf(null, entry),
-    movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
-  } satisfies CompendiumEntryPage;
+  return entryPageOf(await resolveCompendiumSlug(slug, session));
 }
 
 const NOUN_OF: Record<CuratedField, string> = {
@@ -491,6 +473,35 @@ async function refuseEndingARedirect(
   if (confirmed === true) return;
   const refused = await redirectRefusal([{ slug, entryId: excluding }], at);
   if (refused) throw refused;
+}
+
+/** When a rename happens, and whether it leaves the old address behind to redirect from. */
+type SlugMove = { at: Date; moves: boolean };
+
+async function planSlugMove(
+  current: IngredientRow,
+  slug: string,
+  endRedirect: boolean | undefined,
+): Promise<SlugMove> {
+  const at = new Date();
+  const moves = slug !== current.slug;
+  if (moves) await refuseEndingARedirect(slug, at, endRedirect, current.id);
+  return { at, moves };
+}
+
+/** Runs after the lapsed retirements are deleted, so the address it retires is never one that has just lapsed. */
+async function retireSlug(
+  write: AuditWriter,
+  curator: ReturnType<typeof assertCurator>,
+  current: IngredientRow,
+  move: SlugMove,
+): Promise<void> {
+  if (!move.moves) return;
+  await write.insertInCompendium(curator, retiredIngredientSlugs, {
+    ingredientId: current.id,
+    slug: current.slug,
+    retiredAt: move.at,
+  });
 }
 
 /**
