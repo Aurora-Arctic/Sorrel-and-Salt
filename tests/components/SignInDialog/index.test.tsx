@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import SignInDialog from '@/components/SignInDialog';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { router } from '../../support/next-navigation';
-import { expectBefore } from '../../support/interact';
+import { expectBefore, fillSignUp } from '../../support/interact';
+import { PASSWORD } from '../../support/constants';
 
 // Sign In opened over the page it is on: a plain press opens the dialog, and the link's own
 // address, the sign-in page, is what a press for a new tab, or a browser without the script, gets.
@@ -254,12 +255,10 @@ describe('SignInDialog', () => {
       );
       await press(trigger());
       await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
-      const field = (label: string) =>
-        within(dialog()).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-      fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
-      fireEvent.change(field('Email Address'), { target: { value: 'someone@dialog.test' } });
-      fireEvent.change(field('Password'), {
-        target: { value: 'Testwort crowns the eastern hedge' },
+      fillSignUp(dialog(), {
+        name: 'Testwort Hedge',
+        email: 'someone@dialog.test',
+        password: PASSWORD,
       });
       await press(within(dialog()).getByRole('button', { name: 'Create Account' }));
       return dialog();
@@ -305,12 +304,10 @@ describe('SignInDialog', () => {
       );
       await press(trigger());
       await press(within(dialog()).getByRole('button', { name: 'Continue with Email' }));
-      const field = (label: string) =>
-        within(dialog()).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-      fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
-      fireEvent.change(field('Email Address'), { target: { value: 'held@dialog.test' } });
-      fireEvent.change(field('Password'), {
-        target: { value: 'Testwort crowns the eastern hedge' },
+      fillSignUp(dialog(), {
+        name: 'Testwort Hedge',
+        email: 'held@dialog.test',
+        password: PASSWORD,
       });
       await press(within(dialog()).getByRole('button', { name: 'Create Account' }));
 

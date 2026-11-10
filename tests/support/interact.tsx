@@ -81,3 +81,28 @@ export const isBefore = (a: Node | null, b: Node | null): boolean =>
 export function expectBefore(a: Node, b: Node): void {
   expect(isBefore(a, b)).toBe(true);
 }
+
+// The sign-in dialog open over a page, with Google available and Discord switched off.
+export function expectSignInDialogProviders(): void {
+  const dialog = screen.getByRole('dialog', { name: 'Sign In' });
+  expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+  expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+}
+
+// A required field's label ends in its aria-hidden mark, so the label is matched from its start.
+export const labelled = (scope: Pick<typeof screen, 'getByLabelText'>, label: string) =>
+  scope.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
+
+// The sign-up form's three fields, filled inside `scope` (the dialog, or the page).
+export function fillSignUp(
+  scope: HTMLElement | null,
+  { name, email, password }: { name: string; email: string; password: string },
+): void {
+  const inScope = scope ? within(scope) : screen;
+  fireEvent.change(labelled(inScope, 'Name'), { target: { value: name } });
+  fireEvent.change(labelled(inScope, 'Email Address'), { target: { value: email } });
+  fireEvent.change(labelled(inScope, 'Password'), { target: { value: password } });
+}

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
 import { Navigating } from '../../support/navigating';
 import { router } from '../../support/next-navigation';
+import { expectSignInDialogProviders } from '../../support/interact';
 
 const pathname = vi.fn<() => string>();
 const query = vi.hoisted(() => ({ current: '' }));
@@ -110,12 +111,7 @@ describe('PublicFrame', () => {
 
     await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Sign In' })));
 
-    const dialog = screen.getByRole('dialog', { name: 'Sign In' });
-    expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
-    expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expectSignInDialogProviders();
     expect(router.push).not.toHaveBeenCalled();
     expect(
       screen.getByRole('heading', { level: 1, name: 'The page', hidden: true }),

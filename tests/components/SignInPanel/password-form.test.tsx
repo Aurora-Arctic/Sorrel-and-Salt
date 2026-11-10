@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
@@ -7,38 +7,26 @@ import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
 import { PASSWORD } from '../../support/constants';
+import {
+  assign,
+  field,
+  getSession,
+  press,
+  resetSignInHarness,
+  signInEmail,
+  signUpEmail,
+  typeInField,
+} from '../../support/sign-in-harness';
 import { expectBefore } from '../../support/interact';
 
 // The password sign-in form (@story-70). Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
-const signInEmail = vi.fn();
-const signUpEmail = vi.fn();
-const getSession = vi.fn();
-vi.mock('@/lib/auth-client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/auth-client')>()),
-  signIn: { social: vi.fn(), email: (...args: unknown[]) => signInEmail(...args) },
-  signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
-  getSession: (...args: unknown[]) => getSession(...args),
-}));
-
-vi.mock('next/navigation', async () => ({
-  ...(await import('../../support/next-navigation')),
-  useSearchParams: (await import('./search-params')).useSearchParams,
-}));
-
-const assign = vi.fn();
-
-const press = (element: Element) =>
-  act(async () => {
-    fireEvent.click(element);
-  });
-
-// A required field's label ends in its aria-hidden mark, so the label is matched from its start.
-const field = (label: string) =>
-  screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-
-const typeInField = (label: string, value: string) =>
-  fireEvent.change(field(label), { target: { value } });
+vi.mock('@/lib/auth-client', async () =>
+  (await import('../../support/sign-in-harness')).authClientMock(),
+);
+vi.mock('next/navigation', async () =>
+  (await import('../../support/sign-in-harness')).navigationMock(),
+);
 
 const submit = (name: string) => screen.getByRole('button', { name });
 
@@ -67,10 +55,7 @@ describe('SignInPanel, email and password', () => {
     vi.restoreAllMocks();
     cleanup();
     setQuery('');
-    signInEmail.mockReset();
-    signUpEmail.mockReset();
-    getSession.mockReset();
-    assign.mockReset();
+    resetSignInHarness();
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
   });
 

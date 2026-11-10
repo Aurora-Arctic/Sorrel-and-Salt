@@ -10,7 +10,8 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { router } from '../../support/next-navigation';
-import { expectBefore } from '../../support/interact';
+import { expectBefore, fillSignUp } from '../../support/interact';
+import { PASSWORD } from '../../support/constants';
 
 // claude-docs/components/invitation-acceptance.md
 
@@ -228,12 +229,10 @@ describe('InvitationAcceptance', () => {
     await act(async () =>
       fireEvent.click(within(dialog).getByRole('button', { name: 'Continue with Email' })),
     );
-    const field = (label: string) =>
-      within(dialog).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-    fireEvent.change(field('Name'), { target: { value: 'Testwort Hedge' } });
-    fireEvent.change(field('Email Address'), { target: { value: 'someone@invitation.test' } });
-    fireEvent.change(field('Password'), {
-      target: { value: 'Testwort crowns the eastern hedge' },
+    fillSignUp(dialog, {
+      name: 'Testwort Hedge',
+      email: 'someone@invitation.test',
+      password: PASSWORD,
     });
 
     await act(async () =>
