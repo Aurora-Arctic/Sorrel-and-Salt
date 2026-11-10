@@ -7,7 +7,7 @@ import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
 import { roleLabel, SITE_ROLE_ACCESS } from './roles';
-import { OpenModalLink } from '../Modal';
+import OpenModalLink from '../Modal/open-modal-link';
 import RoleTip from '../RoleTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import { UserListBodySkeleton } from './skeleton';
