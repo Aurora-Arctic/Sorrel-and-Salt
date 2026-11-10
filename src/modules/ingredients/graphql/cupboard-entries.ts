@@ -20,7 +20,8 @@ import type {
   DroppedOnConvert,
 } from '../types';
 import { isAnnotated } from '../validation/cupboard-merge';
-import { EXPECTED_REVISION, IngredientElementEnum, IngredientRef } from './ingredient';
+import { correspondenceInputFields, exposeCorrespondences } from './correspondences';
+import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
 // Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries").
@@ -36,10 +37,7 @@ export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEn
     }),
     description: t.exposeString('description', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
-    elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
-    celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
-    zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
-    colors: t.exposeStringList('colors', { nullable: true }),
+    ...exposeCorrespondences(t),
     revision: t.exposeInt('revision', {
       description: 'Raised by one on every save; a save names the revision it was written against.',
     }),
@@ -101,10 +99,7 @@ const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
     label: t.string({ description: 'What the coven calls the entry; unique in the coven.' }),
     description: t.string(),
     safetyNotes: t.string(),
-    elements: t.field({ type: [IngredientElementEnum] }),
-    celestialBodies: t.stringList(),
-    zodiacSigns: t.stringList(),
-    colors: t.stringList(),
+    ...correspondenceInputFields(t, false),
   }),
 });
 

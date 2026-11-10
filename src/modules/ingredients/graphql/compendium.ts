@@ -6,11 +6,11 @@ import {
   CompendiumListingEnum,
   CompendiumOrderEnum,
   CompendiumSortEnum,
-  IngredientElementEnum,
   IngredientRef,
   NomenclatureEnum,
   ToxicFilterEnum,
 } from './ingredient';
+import { IngredientElementEnum } from './correspondences';
 import { CompendiumFacetsRef } from './ingredient-facets';
 
 // The compendium's three queries. Public, so none carries the `signedIn` scope; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
