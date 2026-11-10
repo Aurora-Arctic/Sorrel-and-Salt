@@ -1,6 +1,31 @@
 import { createElement, type ReactElement } from 'react';
 import { SHAPES } from '../JarShelf/shapes';
-import type { ChevronIconProps } from './types';
+import type { ChevronIconProps, IconProps } from './types';
+
+/** The stroked icon every set shares: a 16-unit box, round ends, the current colour, hidden from assistive technology since its control carries the name. */
+export function Icon({
+  path,
+  strokeWidth = 1.5,
+  className,
+  viewBox = '0 0 16 16',
+  children,
+}: IconProps): ReactElement {
+  return (
+    <svg
+      className={className}
+      viewBox={viewBox}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {path === undefined ? children : <path d={path} />}
+    </svg>
+  );
+}
 
 export function CloseIcon(): ReactElement {
   return (
@@ -629,18 +654,7 @@ export function Heading3Icon(): ReactElement {
 }
 
 export function PullQuoteIcon(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path
-        d="M2.5 3v10M6 4.5h7.5M6 8h7.5M6 11.5h4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Icon path="M2.5 3v10M6 4.5h7.5M6 8h7.5M6 11.5h4.5" />;
 }
 
 export function BoldIcon(): ReactElement {
@@ -752,73 +766,38 @@ export function FootnoteIcon(): ReactElement {
 /** An open book with a line of text on each page: the Compendium. Stroke 1.25, as the Sigil and the Key, so the About pillar icons match. */
 export function BookIcon(): ReactElement {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M8 4.5C6.5 3.5 4.5 3 1.5 3v9.5c3 0 5 .5 6.5 1.5 1.5-1 3.5-1.5 6.5-1.5V3c-3 0-5 .5-6.5 1.5M8 4.5V14M3.75 6.5h2.5M3.75 9h2.5M9.75 6.5h2.5M9.75 9h2.5" />
-    </svg>
+    <Icon
+      strokeWidth={1.25}
+      path="M8 4.5C6.5 3.5 4.5 3 1.5 3v9.5c3 0 5 .5 6.5 1.5 1.5-1 3.5-1.5 6.5-1.5V3c-3 0-5 .5-6.5 1.5M8 4.5V14M3.75 6.5h2.5M3.75 9h2.5M9.75 6.5h2.5M9.75 9h2.5"
+    />
   );
 }
 
 /** Three overlapping rings, each crossing the other two: the Coven, a group you practise with. Stroke 1.25, as the other About icons. */
 export function CovenIcon(): ReactElement {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <Icon strokeWidth={1.25}>
       <circle cx="8" cy="5.9" r="3.9" />
       <circle cx="5.3" cy="10.3" r="3.9" />
       <circle cx="10.7" cy="10.3" r="3.9" />
-    </svg>
+    </Icon>
   );
 }
 
 export function SigilIcon(): ReactElement {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <Icon strokeWidth={1.25}>
       <circle cx="8" cy="8" r="6" />
       <path d="M8 4.5l.9 2.6 2.6.9-2.6.9L8 11.5l-.9-2.6-2.6-.9 2.6-.9z" />
-    </svg>
+    </Icon>
   );
 }
 
 export function KeyIcon(): ReactElement {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <Icon strokeWidth={1.25}>
       <circle cx="5.5" cy="6" r="3" />
       <path d="M7.6 8.1l6 6M11.5 12l1.5-1.5M13.3 13.8l1.5-1.5" />
-    </svg>
+    </Icon>
   );
 }

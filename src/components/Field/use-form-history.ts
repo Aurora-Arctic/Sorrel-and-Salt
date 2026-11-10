@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { type FieldValues, type UseFormReturn, get, useFormState } from 'react-hook-form';
+import { repeatable } from '@/lib/repeat-announcement';
 import {
   HISTORY_LIMIT,
   TYPING_PAUSE_MS,
@@ -391,8 +392,8 @@ export function useFormHistory<V extends FieldValues>(
     };
   }, [root, enabled, ignore, undo, redo]);
 
-  // A live region speaks only a change, so a repeat alternates a no-break space.
-  const announcement = spoken.text && spoken.count % 2 === 0 ? `${spoken.text}\u00a0` : spoken.text;
+  // A repeat is spoken only if `repeatable` changes the text.
+  const announcement = repeatable(spoken.text, spoken.count);
 
   return useMemo(
     () => ({

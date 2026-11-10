@@ -2,7 +2,7 @@
 
 import { type ReactElement, useId } from 'react';
 import Combobox from '../Combobox';
-import { MagnifierIcon } from '../Field/icons';
+import { SearchSubmit } from '../Field/search-submit';
 import { WORDING } from './search-box';
 import type { IngredientSearchFormProps } from './types';
 
@@ -28,12 +28,7 @@ const IngredientSearchIdleBox = ({
       placeholder={wording.placeholder}
       clear={{ label: wording.clear, onClear: () => undefined, empty: true }}
       toggle={false}
-      leading={
-        <button type="submit" className="combobox__indicator">
-          <MagnifierIcon />
-          <span className="visually-hidden">Search</span>
-        </button>
-      }
+      leading={<SearchSubmit className="combobox__indicator" />}
     />
   );
 };

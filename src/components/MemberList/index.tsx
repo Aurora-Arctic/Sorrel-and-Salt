@@ -6,8 +6,8 @@ import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
 import { Mark } from '../UserList/marks';
+import { OpenModalLink } from '../Modal';
 import UntilMark from '../UserList/until-mark';
-import MemberLink from './member-link';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
@@ -28,7 +28,9 @@ const columns = (
     cell: (member) => (
       <span className="member-list__name">
         {member.openHref && member.heading ? (
-          <MemberLink href={member.openHref} heading={member.heading} name={member.name} />
+          <OpenModalLink href={member.openHref} heading={member.heading}>
+            {member.name}
+          </OpenModalLink>
         ) : (
           member.name
         )}

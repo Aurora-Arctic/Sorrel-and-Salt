@@ -9,7 +9,7 @@ import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
 import { AdminCardsBodySkeleton } from './skeleton';
-import { ModalLink, useOpenModalClick } from '../Modal';
+import { OpenModalLink } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../ConfirmedAction';
 import { Mark } from '../UserList/marks';
@@ -33,11 +33,10 @@ const RevokeCardBatchDocument = graphql(`
 
 export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   const href = cardsHref(cursor, true, filter);
-  const onClick = useOpenModalClick(href, { title: MINT_TITLE });
   return (
-    <ModalLink className="btn btn--solid" href={href} onClick={onClick}>
+    <OpenModalLink className="btn btn--solid" href={href} heading={{ title: MINT_TITLE }}>
       {MINT_TITLE}
-    </ModalLink>
+    </OpenModalLink>
   );
 };
 

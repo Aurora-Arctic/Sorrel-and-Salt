@@ -2,6 +2,7 @@
 
 import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
+import { Icon } from '../IconTip/icons';
 import { stockState } from './stock-state';
 import { stockName, stockTip } from './stock-words';
 import type { StockBadgeProps, StockTipProps, StockIconProps } from './types';
@@ -16,17 +17,7 @@ export const StockIcon = ({
   out,
   className = 'stock-badge__icon',
 }: StockIconProps): ReactElement => (
-  <svg
-    className={className}
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    focusable="false"
-  >
+  <Icon className={className}>
     {out ? (
       <>
         <circle cx="8" cy="8" r="5.5" />
@@ -35,7 +26,7 @@ export const StockIcon = ({
     ) : (
       <path d="M3.5 3.5 8 8l4.5-4.5M3.5 8.5 8 13l4.5-4.5" />
     )}
-  </svg>
+  </Icon>
 );
 
 export const StockTip = ({

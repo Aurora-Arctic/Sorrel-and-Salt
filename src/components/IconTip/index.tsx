@@ -5,6 +5,7 @@ export {
   AnnotateButton,
   BinButton,
   EditButton,
+  IconButton,
   MoreMenu,
   PreviewButton,
   QuickLookButton,
@@ -13,6 +14,7 @@ export {
 } from './icon-button';
 export { LiddedEyeIcon } from './lidded-eye';
 export {
+  Icon,
   BinIcon,
   CauldronIcon,
   CheckIcon,

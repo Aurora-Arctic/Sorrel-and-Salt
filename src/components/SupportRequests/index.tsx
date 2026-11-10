@@ -5,7 +5,7 @@ import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
-import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
+import { OpenModalLink, RouteModal } from '../Modal';
 import LocalTime from '../LocalTime';
 import {
   BubbleLinesIcon,
@@ -66,9 +66,12 @@ const SubjectLink = ({
   request: SupportRequestEntry;
 } & Pick<SupportRequestsProps, 'filter' | 'cursor'>): ReactElement => {
   const href = supportHref(filter, cursor, request.id);
-  const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
   return (
-    <ModalLink href={href} onClick={onClick} className="support-requests__subject">
+    <OpenModalLink
+      href={href}
+      heading={{ title: request.subject, focusTitle: true }}
+      className="support-requests__subject"
+    >
       {request.subject}
       {/* Names the sender too, so two requests with one subject are told apart; an anonymised one has none to name. */}
       {!request.anonymised && (
@@ -77,7 +80,7 @@ const SubjectLink = ({
           <span className="visually-hidden">from {senderLabel(request)}</span>
         </>
       )}
-    </ModalLink>
+    </OpenModalLink>
   );
 };
 

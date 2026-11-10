@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode, Ref } from 'react';
+import type { ReactElement, ReactNode, Ref } from 'react';
 import type { PreloadHandlers } from '../../lib/types';
 import type { ModalHeading } from '../Modal/types';
 
@@ -31,4 +31,23 @@ export interface LiddedEyeIconProps {
 export interface ChevronIconProps {
   className?: string;
   textSized?: boolean;
+}
+
+export interface IconProps {
+  /** The one path to draw; an icon of several shapes passes them as children instead. */
+  path?: string;
+  strokeWidth?: number;
+  className?: string;
+  viewBox?: string;
+  children?: ReactNode;
+}
+
+export interface IconButtonProps {
+  /** The button's name, read aloud and never drawn. */
+  label: string;
+  icon: ReactElement;
+  onClick: () => void;
+  /** Added to `icon-tip__edit`. */
+  className?: string;
+  pressed?: boolean;
 }
