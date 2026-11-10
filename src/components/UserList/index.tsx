@@ -117,11 +117,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Logins',
     className: 'user-list__fact user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    cell: (user) => (
-      <span className="user-list__providers">
-        <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />
-      </span>
-    ),
+    cell: (user) => <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />,
   },
   {
     heading: 'Terms',

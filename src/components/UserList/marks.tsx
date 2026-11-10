@@ -43,20 +43,35 @@ export function hasSignInMarks({ providers, hasPasskey }: SignInMarksProps): boo
   return hasPasskey || providers.length > 0;
 }
 
-/** A user's ways in: each linked social provider's mark, then email & password, then a passkey. */
-export const SignInMarks = ({ providers, hasPasskey }: SignInMarksProps): ReactElement => (
-  <>
-    {providers
-      .filter((id) => id !== CREDENTIAL)
-      .map((id) => (
-        <ProviderLogo key={id} id={id} />
-      ))}
-    {providers.includes(CREDENTIAL) && (
-      <OwnLoginMark label="Email & Password" icon={<EmailPasswordIcon />} />
-    )}
-    {hasPasskey && <OwnLoginMark label="Passkey" icon={<PasskeyIcon />} />}
-  </>
-);
+/**
+ * A user's ways in: each linked social provider's mark, then email & password, then a passkey.
+ * A list, so a screen reader hears each hidden word apart rather than run into the next.
+ */
+export const SignInMarks = (marks: SignInMarksProps): ReactElement | null => {
+  if (!hasSignInMarks(marks)) return null;
+  const { providers, hasPasskey } = marks;
+  return (
+    <ul className="user-list__providers">
+      {providers
+        .filter((id) => id !== CREDENTIAL)
+        .map((id) => (
+          <li key={id}>
+            <ProviderLogo id={id} />
+          </li>
+        ))}
+      {providers.includes(CREDENTIAL) && (
+        <li>
+          <OwnLoginMark label="Email & Password" icon={<EmailPasswordIcon />} />
+        </li>
+      )}
+      {hasPasskey && (
+        <li>
+          <OwnLoginMark label="Passkey" icon={<PasskeyIcon />} />
+        </li>
+      )}
+    </ul>
+  );
+};
 
 /**
  * A yes-or-no as a green check or a red cross, its word in the page for a screen reader since the mark is drawn alone.

@@ -115,7 +115,7 @@ const UserDetail = ({
         </div>
         <div>
           <dt>Sign-In Methods</dt>
-          <dd className="user-list__providers">
+          <dd>
             {hasSignInMarks(user) ? (
               <SignInMarks providers={user.providers} hasPasskey={user.hasPasskey} />
             ) : (

@@ -55,13 +55,16 @@
 // `.provider-mark` primitive (claude-docs/styling.md, "Provider
 // marks").
 .user-list__providers {
+  @include list-reset;
+
   display: inline-flex;
   gap: space(1);
   vertical-align: middle;
 
   // Flex, so the circle sizes the hint that holds it and its tip, rather than
   // a line box around it adding the text's descender space below.
-  > .user-list__hint {
+  > li,
+  > li > .user-list__hint {
     display: inline-flex;
   }
 }

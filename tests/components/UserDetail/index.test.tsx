@@ -144,6 +144,7 @@ describe('UserDetail', () => {
     expect(within(methods).getAllByText('Email & Password')[0]).toBeInTheDocument();
     expect(within(methods).getAllByText('Passkey')[0]).toBeInTheDocument();
     expect(methods.querySelectorAll('svg')).toHaveLength(2);
+    expect(within(methods).getAllByRole('listitem')).toHaveLength(2);
     expect(methods).not.toHaveTextContent('credential');
   });
 

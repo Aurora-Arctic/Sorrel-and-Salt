@@ -260,11 +260,19 @@ describe('UserList', () => {
     );
 
     const logins = cellUnder('Bo Fixturewort', 'Logins');
-    // The hidden words join with no space in the computed name, as inline text does.
-    expect(screen.getByRole('cell', { name: /Email & Password/ })).toBe(logins);
-    expect(screen.getByRole('cell', { name: /Passkey/ })).toBe(logins);
+    expect(screen.getByRole('cell', { name: /^Google\s+Email & Password\s+Passkey$/ })).toBe(
+      logins,
+    );
     expect(logins.querySelectorAll('svg')).toHaveLength(3);
     expect(logins).not.toHaveTextContent('credential');
+  });
+
+  it('reads each social provider as its own word', () => {
+    render(<UserList {...props({ users: [ADA] })} />);
+
+    expect(screen.getByRole('cell', { name: /^Discord\s+Google$/ })).toBe(
+      cellUnder('Ada Fixturewort', 'Logins'),
+    );
   });
 
   it('draws no passkey mark for a user who holds none', () => {
