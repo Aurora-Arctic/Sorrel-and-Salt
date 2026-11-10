@@ -55,9 +55,7 @@ $-details-width: 22rem;
 
   grid-area: details;
   padding: space(5);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-card;
+  @include surface-box;
 
   // The stack's gap alone spaces the fields, not a radio group's own margins (named, to outweigh `body .fieldset.radio-group`).
   > .fieldset.radio-group {

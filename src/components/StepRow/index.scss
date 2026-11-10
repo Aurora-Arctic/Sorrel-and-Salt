@@ -69,9 +69,7 @@ $step-line: type-size('body') * 1.65;
   padding: space(2) space(2) space(2) space(3);
   // A hairline, not `$text-muted`: the card is a container, not a control, so
   // it needs no 3:1 edge, and the fields inside keep theirs.
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-card;
+  @include surface-box;
 
   .step-row__marks,
   .step-row__field,

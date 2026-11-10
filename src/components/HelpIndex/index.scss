@@ -64,9 +64,7 @@
     > li > * {
       display: inline-block;
       padding: space(1) space(3);
-      border: 1px solid $hairline;
-      border-radius: radius('pill');
-      background-color: $surface-card;
+      @include surface-box($surface-card, radius('pill'));
       color: $text-primary;
       font-size: type-size('small');
       letter-spacing: 0.02em;

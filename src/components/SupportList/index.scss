@@ -43,9 +43,7 @@
   position: relative;
   margin: 0;
   padding: space(3) space(4);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-page;
+  @include surface-box($surface-page);
 
   // The site's ✦ marker is a ::before, which would otherwise take a cell of its own.
   &::before {

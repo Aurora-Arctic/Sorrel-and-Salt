@@ -781,9 +781,7 @@
   // A card holding a whole-card link positions itself, which `card-link` needs.
   .card--quiet {
     padding: space(4);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
+    @include surface-box;
 
     &:hover,
     &:focus-within {
@@ -826,9 +824,7 @@
     max-width: $measure;
     margin: space(5) 0;
     padding: space(3);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
+    @include surface-box;
 
     > img {
       display: block;
@@ -2107,9 +2103,7 @@
     min-block-size: $control-height;
     align-items: center;
     padding: space(2) space(3);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-page;
+    @include surface-box($surface-page);
     @include state-fade(border-color, background-color);
 
     &:hover:not(:has(input:disabled)) {

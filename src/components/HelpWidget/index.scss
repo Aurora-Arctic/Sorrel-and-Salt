@@ -81,9 +81,7 @@
   align-items: center;
   min-block-size: $control-height;
   padding: space(2) space(3);
-  border: 1px solid $hairline;
-  border-radius: radius('control');
-  background-color: $surface-page;
+  @include surface-box($surface-page, radius('control'));
 
   // The sample is the line's one frame: a failed or conflicting line's notice keeps its icon and text, not its bar
   // and tint, which would draw a second box inside it.

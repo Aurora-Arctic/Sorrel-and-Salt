@@ -518,6 +518,13 @@
   display: inline-flex;
 }
 
+// A bordered box on a surface: a hairline edge, rounded, on the card ground unless another is given.
+@mixin surface-box($background: $surface-card, $radius: radius('surface')) {
+  border: 1px solid $hairline;
+  border-radius: $radius;
+  background-color: $background;
+}
+
 // A row that wraps onto further lines when it runs out of room, its items centred across. The gap is
 // one step or a row-and-column pair; leave it out to set it by hand.
 @mixin wrap-row($gap: null) {

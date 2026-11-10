@@ -115,9 +115,7 @@
   }
 
   .page-nav__fold {
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
+    @include surface-box;
   }
 
   .page-nav__summary {

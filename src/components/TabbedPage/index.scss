@@ -27,9 +27,7 @@ $track-inset: calc(1px + 0.125rem);
   // Cancels the page header's nudge of its non-heading items and sets the track 0.125rem lower.
   top: 0;
   translate: 0 0.125rem;
-  border: 1px solid $hairline;
-  border-radius: radius('pill');
-  background-color: $segment-track;
+  @include surface-box($segment-track, radius('pill'));
 }
 
 // A framed page (the account) is its own frame, as no `.page-column` wraps it (the keeper's and a coven's tabbed pages sit in one): it keeps the

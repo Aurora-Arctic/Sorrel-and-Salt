@@ -84,9 +84,7 @@
 .facet-panel__pad {
   @include stack(4);
   padding: space(4);
-  background-color: $surface-page;
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
+  @include surface-box($surface-page);
 }
 
 .facet-panel__head {
