@@ -4,7 +4,12 @@
 // Usage: npm run e2e:servers. Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts).
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { mkdirSync, openSync } from 'node:fs';
 import { SERVERS_READY, allServers, slotServers } from '../tests/e2e/servers.ts';
+
+// Each server's output, one file per port, kept off the runner's console. Outside `.reports/test-results/`,
+// which Playwright empties when a run starts; CI uploads it with the report when a run fails.
+const SERVER_LOGS = '.reports/e2e-servers';
 
 // `--playwright` is how playwright.config.ts's one `webServer` entry runs this: a build is skipped when the slot servers are already
 // up (as `reuseExistingServer` did), and SERVERS_READY is printed for the entry to wait for.
@@ -70,9 +75,12 @@ const results = await Promise.allSettled(
       console.log(`${server.url}  already up, left alone`);
       return;
     }
+    mkdirSync(SERVER_LOGS, { recursive: true });
+    // Truncated, so the file holds this start's output alone.
+    const log = openSync(`${SERVER_LOGS}/${new URL(server.url).port}.log`, 'w');
     const child = spawn('npm', ['run', 'start'], {
       detached: true,
-      stdio: 'ignore',
+      stdio: ['ignore', log, log],
       env: { ...process.env, ...server.env },
     });
     children.push(child);
