@@ -33,7 +33,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     box-sizing: content-box;
     height: 2.5rem;
     border-radius: radius('sharp');
-    border: 1px solid $text-muted;
+    border: $muted-border;
   }
 
   .fd-swatch__name {
@@ -106,7 +106,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     gap: space(3);
     margin-top: space(5);
     padding-top: space(4);
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
   }
 
   .fd-type-size {
@@ -181,7 +181,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     // and stays on one line.
     height: 3.5rem;
     padding-inline: space(4);
-    border: 1px solid $text-muted;
+    border: $muted-border;
     white-space: nowrap;
     background-color: $surface-page;
 

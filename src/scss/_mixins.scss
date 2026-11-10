@@ -735,7 +735,7 @@
 }
 
 @mixin floating-panel {
-  border: 1px solid $text-muted;
+  border: $muted-border;
 
   @include modal-surface($shadow-floating);
 }
@@ -756,7 +756,7 @@
 @mixin field-box {
   min-height: $control-height;
   padding: space(2) space(3);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('control');
   background-color: $surface-card;
   color: $text-primary;

@@ -655,7 +655,7 @@
 
   .page-frame__rule {
     border: 0;
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
   }
 
   // A primitive because layouts and stories use the class as their frame.
@@ -934,7 +934,7 @@
     // heads. On the cell's bottom, so a heading that wraps keeps its last line on the hairline.
     thead th {
       vertical-align: bottom;
-      border-bottom: 1px solid $text-muted;
+      border-bottom: $muted-border;
     }
 
     // A row header names its row but is not a heading in weight: it reads as the cell it replaces.
@@ -1797,7 +1797,7 @@
       inline-size: $switch-width;
       block-size: $icon-size;
       margin: 0;
-      border: 1px solid $text-muted;
+      border: $muted-border;
       border-radius: radius('pill');
       background-color: $surface-card;
       appearance: none;
@@ -2003,7 +2003,7 @@
       block-size: $radio-size;
       margin-block-start: 0.125rem;
       margin-inline: 0;
-      border: 1px solid $text-muted;
+      border: $muted-border;
       border-radius: radius('pill');
       background-color: $surface-card;
       appearance: none;
@@ -2161,12 +2161,12 @@
   // segment's name tip above the bar: the end segments round their own.
   .radio-strip {
     display: inline-flex;
-    border: 1px solid $text-muted;
+    border: $muted-border;
     border-radius: radius('control');
     background-color: $surface-card;
 
     > :not(:first-child) .radio--segment {
-      border-inline-start: 1px solid $text-muted;
+      border-inline-start: $muted-border;
     }
 
     > :first-child .radio--segment {
@@ -2243,7 +2243,7 @@
 
   .radio-strip--text {
     > .radio--segment:not(:first-child) {
-      border-inline-start: 1px solid $text-muted;
+      border-inline-start: $muted-border;
     }
 
     > .radio--segment:first-child {
@@ -2376,7 +2376,7 @@
     display: block;
     margin: 0;
     padding-block: space(3) space(2);
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
     font-size: type-size('small');
     color: $text-muted;
   }

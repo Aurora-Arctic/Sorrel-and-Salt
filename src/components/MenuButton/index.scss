@@ -27,7 +27,7 @@
   // panel's edge and is never cut by it. The panel needs no clipping: nothing touches its
   // corners.
   padding: space(1);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('surface');
   background-color: $surface-card;
   box-shadow: $shadow-floating;

@@ -486,6 +486,9 @@ $hairline: color-mix(in srgb, $text-muted 45%, transparent);
 // The one hairline border: every 1px line in the hairline colour is written as this.
 $hairline-border: 1px solid $hairline;
 
+// The same line in the muted text colour, for an edge that must read stronger than the hairline.
+$muted-border: 1px solid $text-muted;
+
 $edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
 // One number for both themes, shared by the `focus-ring` mixin and the rings that set their own colour; each clears 3:1 where it

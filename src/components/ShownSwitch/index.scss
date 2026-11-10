@@ -27,7 +27,7 @@
     inline-size: $track-width;
     block-size: $track-height;
     margin: 0;
-    border: 1px solid $text-muted;
+    border: $muted-border;
     border-radius: radius('pill');
     background-color: $surface-card;
     appearance: none;

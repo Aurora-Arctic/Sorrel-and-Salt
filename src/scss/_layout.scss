@@ -35,7 +35,7 @@
   }
 
   .footer {
-    border-top: 1px solid $text-muted;
+    border-top: $muted-border;
     padding-top: space(5);
   }
 }

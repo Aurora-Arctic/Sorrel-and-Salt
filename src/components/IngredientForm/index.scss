@@ -470,7 +470,7 @@ $panel-head-gap: space(3);
   gap: space(4);
   margin-top: space(2);
   padding: space(4);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('surface');
   // Scrolled to when asked for again, with its legend, which sits across the top edge, in view.
   scroll-margin-top: space(5);
@@ -567,7 +567,7 @@ $panel-head-gap: space(3);
 .ingredient-form .ingredient-form__variant {
   gap: 0;
   padding: space(2) space(2) space(2) space(3);
-  border: 1px solid $text-muted;
+  border: $muted-border;
   border-radius: radius('surface');
   background-color: $surface-card;
 
