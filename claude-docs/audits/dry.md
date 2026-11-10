@@ -2750,7 +2750,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** tests/components/CompendiumList/*
 
 - **Estimate:** 4.75 hours
-- **Status:** Fixed in part. Part 1 is done: `plural()`, the shared builders, and `chosenClause`/`joinedNames` in CompendiumList, whose empty-state wording differs from `buildSearchSentence`, so it cannot share that builder without changing visible text. Part 2: `FACET_DEFAULTS` drives `panelOf` and `noFacets`, and `toFacetOptions` builds the facet choices; `changeOf` and `heldFilter` transform values and stay. Not done: the shared GraphQL selection, because `CompendiumFacets` and `WorkspaceIngredientFacets` are different object types with no common interface, and a fragment needs one type condition; it would take a schema change.
+- **Status:** Fixed in part. Part 1 is done: `plural()`, the shared builders, and `chosenClause`/`joinedNames` in CompendiumList, whose empty-state wording differs from `buildSearchSentence`, so it cannot share that builder without changing visible text. Part 2: `FACET_DEFAULTS` drives `panelOf` and `noFacets`, and `toFacetOptions` builds the facet choices; `changeOf` and `heldFilter` transform values and stay. The `IngredientFacetCounts` GraphQL interface now carries the seven shared lists on both types. The two queries still write the selection out, because a fragment defined in another `graphql()` call is not sent with the query that spreads it (claude-docs/graphql/client-types.md, "No shared fragments"); this waits on the owner changing that rule.
 
 ### D-98: `box-sizing: border-box` declared 68 times with no global reset
 
