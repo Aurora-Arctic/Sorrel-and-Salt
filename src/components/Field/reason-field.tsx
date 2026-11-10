@@ -1,8 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { limitMessage } from '../../lib/formats';
-import { REASON_LIMIT, reasonTooLong } from '../../modules/identity/validation/reason';
+import { REASON_LIMIT, reasonProblem } from '../../modules/identity/validation/reason';
 import { PlainTextField } from './plain-text-field';
 import type { ReasonFieldProps } from './types';
 
@@ -12,6 +11,7 @@ export function ReasonField({
   value,
   onChange,
   disabled,
+  error,
   hint = REASON_HINT,
   className,
 }: ReasonFieldProps): ReactElement {
@@ -24,7 +24,8 @@ export function ReasonField({
         autoComplete="off"
         placeholder="Add a reason"
         limit={REASON_LIMIT}
-        error={reasonTooLong(value) ? limitMessage(REASON_LIMIT) : undefined}
+        check={reasonProblem}
+        error={error}
         value={value}
         onChange={onChange}
         disabled={disabled}

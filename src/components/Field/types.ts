@@ -223,6 +223,8 @@ export interface ReasonFieldProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  /** The caller's refusal, such as the limit on a press; it wins over the field's own check. */
+  error?: string;
   hint?: string;
   className?: string;
 }

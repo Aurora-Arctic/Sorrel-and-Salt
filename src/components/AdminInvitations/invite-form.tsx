@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { emailAddressProblem, emailFormat } from '../../lib/email-address';
 import { EmailAddress } from '../../lib/email-address-schema';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { reasonTooLong } from '../../modules/identity/validation/reason';
+import { reasonProblem } from '../../modules/identity/validation/reason';
 import type { Failure } from '../../lib/types';
 import { FormActions, PlainTextField, RadioGroupField, ReasonField } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
@@ -51,6 +51,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const [email, setEmail] = useState('');
   const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState<string>();
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
 
@@ -58,13 +59,15 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const noteProblem = reasonProblem(note);
+    setNoteError(noteProblem);
     const parsed = EmailAddress.safeParse(email);
     if (!parsed.success) {
       return setFailure({
         field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
       });
     }
-    if (reasonTooLong(note)) return;
+    if (noteProblem) return;
     const address = email.trim();
     setSending(true);
     setFailure({});
@@ -127,7 +130,11 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         className="confirmed-action__note"
         hint={NOTE_HINT}
         value={note}
-        onChange={setNote}
+        onChange={(next) => {
+          setNote(next);
+          setNoteError(undefined);
+        }}
+        error={noteError}
         disabled={sending}
       />
       <FormActions

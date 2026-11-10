@@ -46,7 +46,7 @@ The approved masks are `phoneMask` (`src/lib/phone-number.ts`), on the Business 
 - **`aside`** takes Delete's place for further choices that are not a delete (the Annotate dialog's More menu).
 - **The row is `.form__actions`**, not `.modal__actions`: it wraps, so a third button never squeezes it.
 
-`ReasonField` is a keeper change's optional Reason. Its `hint` says where the reason is kept: by default with the change in the record of who changed what; the invitation form passes its own, since an invitation's reason is kept with the invitation first. `UserList`'s confirmed actions and the invitation form use it.
+`ReasonField` is a keeper change's optional Reason. Its `hint` says where the reason is kept: by default with the change in the record of who changed what; the invitation form passes its own, since an invitation's reason is kept with the invitation first. Its limit is checked on blur, and re-checked as the person types once shown, by `reasonProblem` (`src/modules/identity/validation/reason.ts`) through `check`; a caller puts the same message on it through `error` when a press finds the reason too long, and sends nothing. `UserList`'s confirmed actions and the invitation form use it.
 
 ## Radio groups
 
