@@ -440,15 +440,22 @@
 }
 
 .spell-recipe__pending-chips {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 
   > li {
     inline-size: 5.75rem;
     block-size: 1.5625rem;
-    margin: 0;
+
+    > .skeleton {
+      inline-size: 100%;
+      block-size: 100%;
+    }
   }
+}
+
+// A spell with no jar, wax, moon or day has no facts strip, so the skeleton draws no hairline over it.
+.spell-recipe--pending .spell-recipe__facts-box {
+  border-top: 0;
 }
 
 // The skeleton's bars stand as tall as what they stand for: the back link's line and the title's.

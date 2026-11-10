@@ -17,7 +17,8 @@ import type { Coven } from './stories/coven-ingredients';
 // action, the tabs, the side menu, the toolbar, the filter row, the list's frame, its first card and the table's
 // headings) is within 2px of the same part on the arrived page, and the site bar and the context row do
 // not move when the skeleton replaces the old page. Text lengths, item counts and a table row's wrapped
-// height are content, and are not compared (claude-docs/loading.md).
+// height are content, and are not compared (claude-docs/loading.md). The skeleton also draws no list marker and
+// no border that the page lacks in the same place.
 
 /** How far a static part may move between the skeleton and the page, in pixels. */
 const TOLERANCE = 2;
@@ -449,6 +450,77 @@ function differences(
   return found;
 }
 
+/** An element's box and the border sides it draws, or whether a list item draws a marker. */
+interface Drawn {
+  x: number;
+  y: number;
+  w: number;
+  sides: string[];
+  marker: boolean;
+}
+
+/** Every visible element in the skeleton's cover, or on the arrived page, with its drawn border sides and marker. */
+const decorationsOf = (page: Page, inSkeleton: boolean) =>
+  page.evaluate((skeleton): Drawn[] => {
+    const root = skeleton ? document.querySelector('.skeleton-cover') : document.body;
+    const outside =
+      '.skeleton-cover, .skeleton-fade, .skeleton-held, .app-shell__bar, .context-row, .site-footer, dialog';
+    const frame = '.app-shell__bar, .context-row, .site-footer, dialog';
+    const visible = (color: string) => !/^transparent$|rgba\(.*,\s*0\)$/.test(color);
+    const found: Drawn[] = [];
+    for (const element of root?.querySelectorAll('*') ?? []) {
+      // The site bar and the context row are the frame, which frameMoves compares, in the cover or out of it.
+      if (element.closest(skeleton ? frame : outside)) continue;
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+      const style = getComputedStyle(element);
+      const sides = ['top', 'right', 'bottom', 'left'].filter(
+        (side) =>
+          parseFloat(style.getPropertyValue(`border-${side}-width`)) > 0 &&
+          !['none', 'hidden'].includes(style.getPropertyValue(`border-${side}-style`)) &&
+          visible(style.getPropertyValue(`border-${side}-color`)),
+      );
+      let marker = false;
+      if (element.tagName === 'LI') {
+        const before = getComputedStyle(element, '::before');
+        marker =
+          (style.display === 'list-item' && style.listStyleType !== 'none') ||
+          (!['none', 'normal'].includes(before.content) &&
+            before.display !== 'none' &&
+            (before.content !== '""' || visible(before.backgroundColor)));
+      }
+      found.push({ x: rect.x, y: rect.y, w: rect.width, sides, marker });
+    }
+    return found;
+  }, inSkeleton);
+
+/**
+ * What the skeleton draws that the page does not, judged against the page's element in the same place: a list
+ * marker where the page's item has none, and a border side the page's element lacks. A skeleton element with
+ * no page element in its place stands for content, and only its marker is judged.
+ */
+function strayDecorations(skeleton: Drawn[], arrived: Drawn[]): string[] {
+  const found: string[] = [];
+  const near = (a: Drawn, b: Drawn) =>
+    Math.abs(a.x - b.x) <= TOLERANCE &&
+    Math.abs(a.y - b.y) <= TOLERANCE &&
+    Math.abs(a.w - b.w) <= TOLERANCE;
+  const at = (part: Drawn) => `${Math.round(part.x)},${Math.round(part.y)} ${Math.round(part.w)}px`;
+  for (const part of skeleton) {
+    const matches = arrived.filter((other) => near(part, other));
+    if (part.marker && !matches.some((other) => other.marker)) {
+      found.push(`list marker at ${at(part)}: in the skeleton, not on the page`);
+    }
+    if (matches.length === 0) continue;
+    for (const side of part.sides) {
+      if (!matches.some((other) => other.sides.includes(side))) {
+        found.push(`border-${side} at ${at(part)}: in the skeleton, not on the page`);
+      }
+    }
+  }
+  return found;
+}
+
 /** Every move of the site bar or the context row past the tolerance between two moments. */
 function frameMoves(
   label: string,
@@ -570,6 +642,7 @@ for (const as of ['steward', 'keeper'] as const) {
           );
           const frameWaiting = await frameOf(page);
           const skeleton = await layoutOf(page, true);
+          const skeletonDrawn = await decorationsOf(page, true);
 
           await server.release();
           await expect(page.locator('.skeleton-cover')).toHaveCount(0, { timeout: 20_000 });
@@ -579,6 +652,7 @@ for (const as of ['steward', 'keeper'] as const) {
           const frameArrived = await frameOf(page);
           await expect(page.locator('h1').first()).toBeVisible();
           const arrived = await layoutOf(page, false);
+          const arrivedDrawn = await decorationsOf(page, false);
           // Why the comparison means something: the page arrived and drew its heading.
           expect(arrived.parts.h1, 'the arrived page has a heading').not.toBeNull();
 
@@ -586,6 +660,7 @@ for (const as of ['steward', 'keeper'] as const) {
             ...frameMoves('old page to skeleton:', frameBefore, frameWaiting),
             ...frameMoves('skeleton to page:', frameWaiting, frameArrived),
             ...differences(navigation, skeleton, arrived, width === 375),
+            ...strayDecorations(skeletonDrawn, arrivedDrawn),
           ];
           expect(found, found.join('\n')).toEqual([]);
         });
