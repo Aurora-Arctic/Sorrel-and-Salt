@@ -1,23 +1,19 @@
 #!/usr/bin/env node
-// Leaves the e2e servers running between local runs: builds `.next-e2e` once,
-// starts every server `npm run e2e` would, and stops them on Ctrl-C. A run then
-// attaches to them (`reuseExistingServer`, on whenever CI is unset) and skips the
-// build and the boots. It is a developer-run process beside `npm run dev`, and
-// staleness is the developer's: after a code change, stop it and start it again,
-// which rebuilds. No file watcher, no hash check (claude-docs/testing/e2e.md,
-// "Keeping the servers warm").
-//
-// Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts)
-// and the point is to share it with the Playwright configs rather than keep a
-// compiled copy that could drift; scripts/db-seed.ts does the same.
-//
-// Usage: npm run e2e:servers
+// Leaves the e2e servers running between local runs; after a code change, stop it and start it again
+// (claude-docs/testing/e2e.md, "Keeping the servers warm").
+// Usage: npm run e2e:servers. Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts).
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { allServers } from '../tests/e2e/servers.ts';
+import { SERVERS_READY, allServers, slotServers } from '../tests/e2e/servers.ts';
+
+// `--playwright` is how playwright.config.ts's one `webServer` entry runs this: a build is skipped when the slot servers are already
+// up (as `reuseExistingServer` did), and SERVERS_READY is printed for the entry to wait for.
+const forPlaywright = process.argv.includes('--playwright');
+// Read by its literal name, which the .env.example guard scans for; tests/e2e/servers.ts sets it as `SLOTS_ONLY`.
+const servers = forPlaywright && process.env.E2E_SLOT_SERVERS_ONLY ? slotServers : allServers;
 
 const READY_TIMEOUT_MS = 60_000;
-const [first] = allServers;
+const [first] = servers;
 
 async function answers(url: string): Promise<boolean> {
   try {
@@ -40,12 +36,16 @@ async function waitUntilUp(url: string): Promise<void> {
 // The build always runs, so "restart after a code change" also rebuilds and a
 // stale build cannot be served. It takes the first slot's environment, as the
 // config's `npm run build && npm run start` does.
-console.log('Building .next-e2e ...');
-const build = spawnSync('npm', ['run', 'build'], {
-  stdio: 'inherit',
-  env: { ...process.env, ...first.env },
-});
-if (build.status !== 0) process.exit(build.status ?? 1);
+if (forPlaywright && !process.env.CI && (await answers(first.url))) {
+  console.log('Servers already up, build skipped');
+} else {
+  console.log('Building .next-e2e ...');
+  const build = spawnSync('npm', ['run', 'build'], {
+    stdio: forPlaywright ? ['ignore', 'ignore', 'inherit'] : 'inherit',
+    env: { ...process.env, ...first.env },
+  });
+  if (build.status !== 0) process.exit(build.status ?? 1);
+}
 
 // Each server is its own process group, so one signal reaches `next` and not
 // only the `npm` that started it.
@@ -65,7 +65,7 @@ process.on('SIGTERM', () => stopAll(0));
 
 const started = Date.now();
 const results = await Promise.allSettled(
-  allServers.map(async (server) => {
+  servers.map(async (server) => {
     if (await answers(server.url)) {
       console.log(`${server.url}  already up, left alone`);
       return;
@@ -91,7 +91,7 @@ if (failed.length > 0) {
   stopAll(1);
 }
 console.log(
-  `${allServers.length} servers ready in ${((Date.now() - started) / 1000).toFixed(1)} s. Ctrl-C stops them.`,
+  `${servers.length} ${SERVERS_READY} in ${((Date.now() - started) / 1000).toFixed(1)} s. Ctrl-C stops them.`,
 );
 
 // Keep the process alive; the servers are children, and the signal handlers end it.

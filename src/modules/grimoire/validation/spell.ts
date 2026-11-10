@@ -1,43 +1,31 @@
 import { z } from 'zod';
+import { trimEnds } from '../../../lib/formats';
 import { RowId, optionalText } from '../../../lib/validation';
-import type { SpellStatus, SpellVisibility } from '../types';
+import type { SpellStatus } from '../types';
 import { SpellStepInput } from './spell-step';
+import { STATUSES, VISIBILITIES, VISIBILITY_MESSAGE } from './visibility';
 
 // A spell as the builder and the mutation both read it. Pure: it imports no
 // server-only module, so the form runs the same schema the service does
 // (claude-docs/validation.md).
 
-// Both lists are written out because the table's enums would pull the database
-// schema into the browser; the `satisfies` and a test keep each equal to its
-// column.
-const VISIBILITIES = ['private', 'workspace'] as const satisfies readonly SpellVisibility[];
-const STATUSES = ['draft', 'complete'] as const satisfies readonly SpellStatus[];
-
 // Kept apart from the rule below because Zod will not extend a schema that
 // already carries a refinement, and the update input extends this one.
 const SpellFields = z.object({
-  // Optional here, required once the spell is complete (see `titleRule`). A
-  // blank title is no title, as `optionalText` reads it.
+  // Required once the spell is complete (see `titleRule`).
   title: optionalText(),
-  // What the spell is for, and the jar it is made in: free text, member-written (§5).
-  intent: optionalText(),
-  jarDescription: optionalText(),
+  intent: optionalText(trimEnds),
+  jarDescription: optionalText(trimEnds),
   sealWaxColor: optionalText(),
   moonPhase: optionalText(),
   dayOfWeek: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
-  visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
-  // Left out means the column's default (a draft) on create, and unchanged on
-  // update.
+  visibility: z.enum(VISIBILITIES, { error: VISIBILITY_MESSAGE }).optional(),
+  // Left out means the column's default on create, and unchanged on update.
   status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
-  // The spell's single free-text note; blank is none.
-  note: optionalText(),
-  // The recipe, in order: a step's place is its index.
+  note: optionalText(trimEnds),
   steps: z.array(SpellStepInput).default([]),
-  // The categories the spell is assigned, what it intends, never the
-  // ones derived from its ingredients. The whole set when given, so an id left
-  // out is unassigned; left out altogether, they are unchanged on update and
-  // none on create.
+  // The assigned categories, never the derived ones. The whole set when given; left out, unchanged on update and none on create.
   categoryIds: z.array(z.string().trim()).optional(),
 });
 
@@ -63,10 +51,8 @@ type StepIdentity = {
   name?: string | null;
 };
 
-// Mirrors the unique index over a jar's live custom names, case aside
-// (spell_steps_spell_id_custom_name_unique), and refuses a step named twice: each would
-// otherwise reach the user as a database error. A linked form may repeat: a spell lays one
-// form in as many steps as it likes.
+// Mirrors the unique index over a jar's live custom names, case aside (spell_steps_spell_id_custom_name_unique), and refuses a
+// step named twice so it does not reach the user as a database error. A linked form may repeat.
 function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementCtx) {
   const seen = { id: new Set<string>(), name: new Set<string>() };
   const flag = (index: number, field: string, message: string) =>
@@ -84,7 +70,6 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
   });
 }
 
-/** Said on the title when a spell with none is marked complete: the schema's and the builder's alike. */
 export const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
 
 // Mirrors the database CHECK `status <> 'complete' OR title IS NOT NULL`, so the
@@ -108,7 +93,7 @@ export const SpellInput = SpellFields.superRefine(titleRule)
   .superRefine(categoryRule);
 
 // An update names the revision it was written against so a save over someone else's change is caught; null overwrites.
-// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Saving a recipe").
 export const UpdateSpellInput = SpellFields.extend({
   steps: z.array(SpellStepInput).optional(),
   expectedRevision: z

@@ -6,16 +6,18 @@ import {
   curatedValueInput,
   optionalText,
   parseInput,
+  quantity,
+  quantityText,
   requiredRowId,
   requiredText,
 } from '@/lib/validation';
+import { MAX_QUANTITY } from '@/modules/ingredients/schema/quantities';
 
 const Layer = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   tags: z.array(z.string().min(1, 'A tag cannot be blank')),
 });
 
-// A refinement with no path is the one issue about the input as a whole.
 const Pair = z
   .object({ low: z.number(), high: z.number() })
   .refine(({ low, high }) => low <= high, 'Low must not exceed high');
@@ -66,7 +68,6 @@ describe('parseInput', () => {
   });
 });
 
-// The shapes every module's schemas share; each schema's own test holds it to its messages.
 describe('requiredText', () => {
   it('trims, and refuses blank and missing alike with the one message', () => {
     const Text = requiredText('Name it');
@@ -136,5 +137,52 @@ describe('CalendarDay', () => {
         expect.objectContaining({ message: 'Give the day as YYYY-MM-DD' }),
       ]);
     }
+  });
+});
+
+describe('quantity', () => {
+  const rule = quantity('Quantity');
+  const refused = (value: unknown) => {
+    const result = rule.safeParse(value);
+    return result.success ? null : result.error.issues.map((issue) => issue.message);
+  };
+
+  it('accepts an amount from zero to the most a column holds, with up to three decimals', () => {
+    for (const value of [0, 2.5, 0.001, 12.345, MAX_QUANTITY]) {
+      expect(rule.safeParse(value).success, String(value)).toBe(true);
+    }
+  });
+  it('refuses a value that is not a number with the one plain message', () => {
+    expect(refused(Number.NaN)).toEqual(['Enter an amount as a number, like 2.5']);
+    expect(refused('2')).toEqual(['Enter an amount as a number, like 2.5']);
+  });
+  it('refuses a negative, naming the field', () => {
+    expect(refused(-1)).toEqual(['Quantity cannot be negative']);
+  });
+  it('refuses more than three decimals', () => {
+    expect(refused(0.1234)).toEqual(['Quantity can have up to three decimal places']);
+  });
+  it('refuses more than the most a column holds', () => {
+    expect(refused(MAX_QUANTITY + 1)?.[0]).toMatch(/^Quantity is too large/);
+  });
+});
+
+describe('quantityText', () => {
+  const rule = quantityText('Low Stock At');
+  it('reads typed text through the same rule, blank as no amount', () => {
+    expect(rule.parse('2.5')).toBe(2.5);
+    expect(rule.parse('1,000')).toBe(1000);
+    expect(rule.parse('2,5')).toBe(25);
+    expect(rule.parse('')).toBeNull();
+  });
+  it('refuses unreadable and out-of-range text with the rule’s messages', () => {
+    const message = (text: string) => {
+      const result = rule.safeParse(text);
+      return result.success ? null : result.error.issues[0]?.message;
+    };
+    expect(message('1.000,5')).toBe('Low Stock At can have up to three decimal places');
+    expect(message('abc')).toBe('Enter an amount as a number, like 2.5');
+    expect(message('-1')).toBe('Low Stock At cannot be negative');
+    expect(message('1.2345')).toBe('Low Stock At can have up to three decimal places');
   });
 });

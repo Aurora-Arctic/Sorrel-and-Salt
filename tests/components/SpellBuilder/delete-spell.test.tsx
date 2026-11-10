@@ -8,6 +8,7 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
+import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -18,9 +19,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// Delete in the spell builder's Edit dialog, as the ingredient's Edit dialog has its
-// Delete: a bin icon at the far end of the row, which asks over the form, and once confirmed
-// leaves the autosave and the save on close nothing to send.
+// A confirmed delete leaves the autosave and the save on close nothing to send.
 
 const SPELL = {
   id: 's9',
@@ -50,7 +49,6 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
 const del = (title = 'Fixture Working') =>
   screen.queryByRole('button', { name: `Delete Spell ${title}` });
 
-// Outside a modal the question stands in the form as a fieldset.
 const asked = async () =>
   (await screen.findByRole('button', { name: 'Cancel' })).closest('fieldset') as HTMLElement;
 
@@ -152,5 +150,23 @@ describe('Delete in the spell builder', () => {
     expect(await screen.findByText('You cannot delete this spell')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('The spell builder footer layout', () => {
+  it('sets Delete Spell in the row of Save and Duplicate, with the Shared switch outside it', () => {
+    renderBuilder({
+      spell: { ...SPELL, status: 'complete' },
+      deletedHrefOf,
+      copiedHrefOf: (id) => `/coven/fixture-coven/grimoire?new=${id}` as Route,
+    });
+    // Duplicate is a direct child of the footer row, so its parent is that row.
+    const row = screen.getByRole('button', { name: 'Duplicate' }).parentElement as HTMLElement;
+    expect(within(row).getByRole('button', { name: 'Save Spell' })).toBeInTheDocument();
+    expect(
+      within(row).getByRole('button', { name: 'Delete Spell Fixture Working' }),
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole('switch')).toBeNull();
+    expect(screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace })).toBeInTheDocument();
   });
 });

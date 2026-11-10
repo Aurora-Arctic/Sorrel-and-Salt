@@ -15,24 +15,21 @@ import { deliver, isUndeliverableAddress, MailNotSent } from '@/lib/mail-transpo
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '../mailing-pace';
 
-// The steps of the document mailing job. A file of its own, so the workflow bundle keeps only the calls to them and never the
-// database code they reach.
+// A file of its own, so the workflow bundle never holds the database code the steps reach.
 
 // The log is how a mailing lost after every retry is seen.
 /* oxlint-disable no-console */
 
 const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 
-/** How a step leaves the run: another batch after a pause, or an end, for the reason named. */
 export type BatchResult = 'more' | 'sent' | 'replaced' | 'paused' | 'queued' | 'tomorrow';
 
 /**
- * Mails one batch of the mailing's unsent accounts, within today's allowance, one account at a time, each in a transaction that
- * holds the mailing's turn: two steps of one mailing never overlap, and each account is checked against the mailing's status and
- * the day's count just before it is mailed. A send is recorded as it goes, so a retry mails no one twice. An account that is gone,
- * or whose address the provider refuses for good (a 4xx other than 429), is skipped so the mailing can finish. A transport failure
- * throws and the SDK retries; the provider's quota answers end the batch instead, as a retry cannot clear them: the daily one ends
- * the run for the day, the monthly one pauses the mailing. A transport this environment may not use pauses it too.
+ * Mails one batch of the mailing's unsent accounts within today's allowance, each
+ * in a transaction that holds the mailing's turn, so two steps never overlap and a
+ * retry mails no one twice. A gone account or one the provider refuses for good
+ * is skipped; a transport failure throws and the SDK retries; the provider's quota
+ * answers end the batch instead (claude-docs/components/document-mailing-panel.md, "Contracts").
  */
 export async function mailBatchStep(mailingId: string, origin: string): Promise<BatchResult> {
   let sent = 0;
@@ -46,7 +43,7 @@ export async function mailBatchStep(mailingId: string, origin: string): Promise<
 
 type Write = Parameters<Parameters<typeof withAudit>[1]>[0];
 
-/** Mails the mailing's next unsent account, or says why not. 'mailed' and 'skipped' mean another account may follow. */
+/** 'mailed' and 'skipped' mean another account may follow. */
 async function mailNext(
   write: Write,
   mailingId: string,
@@ -64,7 +61,7 @@ async function mailNext(
 
   if (MAILING_DAILY_CAP - (await countDocumentMailsSentToday()) <= 0) return 'tomorrow';
 
-  // The items whose version and document are still live; with none left, there is nothing to tell anyone.
+  // With no live items left there is nothing to tell anyone.
   const items = await findDocumentMailingItems([mailingId]);
   if (items.length === 0) {
     await write.replaceDocumentMailing(mailingId);
@@ -120,13 +117,11 @@ async function mailNext(
   return 'mailed';
 }
 
-/** The sending mailing that has waited longest, when it is not `mailingId`: the one to start now this run has ended. */
 export async function nextMailingStep(mailingId: string): Promise<string | null> {
   const oldest = await findOldestSendingDocumentMailing();
   return oldest && oldest.id !== mailingId ? oldest.id : null;
 }
 
-/** Logs a mailing whose batch failed every attempt, by id and count alone. */
 export async function reportMailingUnsent(mailingId: string): Promise<void> {
   const reached = await countDocumentMailingReached(mailingId);
   console.error(

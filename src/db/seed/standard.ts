@@ -3,6 +3,7 @@ import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
+import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -16,6 +17,7 @@ import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
 import { seedDocumentFiles } from './documents';
+import { loadHelpArticles, seedHelpEntries } from './help';
 import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
 import {
@@ -107,9 +109,7 @@ export const FIXTURE_USERS = {
   },
 } satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G', FixtureUser>;
 
-/** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
-/** X — unrelated, and the other half of every isolation assertion. */
 export const WORKSPACE_X_ID = '00000000-0000-0000-0001-000000000002';
 
 // No slug is written down (CLAUDE.md's slug rule). Exported so the fixture
@@ -547,6 +547,7 @@ export async function seedStandardContent(
   await seedDeityVocabulary(tx);
   await seedVocabularySources(tx);
   await seedDocumentFiles(tx);
+  await seedHelpEntries(tx, loadHelpArticles());
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);
@@ -635,6 +636,15 @@ async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
     columns: ['id'],
     toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
   });
+  await insertMissingBy(
+    tx,
+    workspaceSlugs,
+    FIXTURE_WORKSPACES.map((workspace) => ({
+      workspaceId: workspace.id,
+      slug: slugify(workspace.name),
+    })),
+    { columns: ['slug'], toRow: (address) => address },
+  );
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {

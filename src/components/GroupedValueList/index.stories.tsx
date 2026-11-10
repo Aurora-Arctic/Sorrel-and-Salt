@@ -10,9 +10,6 @@ import { ListNavigationContext } from '../ListFrame';
 import { groupedValuesHref } from './href';
 import type { GroupedValueListFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/GroupedValueList.
-// The filter reaches the admin pages (`/curator/categories` and the rest),
-// which the workshop does not serve.
 const meta = {
   title: 'Admin / Grouped Value List',
 } satisfies Meta;
@@ -21,12 +18,8 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
-// Each kind's groups enough to narrow: the group filter is typed into once
-// hydrated, so typing in it shows its list narrowing.
 const CATEGORY_GROUPS = asSlugs(GROUP_NAMES.category);
 
-// Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
-// which a component may not import, on the invented groups.
 const COLORS: Record<string, { colorDark: string; colorLight: string }> = {
   'Fixture Protection': { colorDark: '#5d8ab1', colorLight: '#286ba6' },
   'Fixture Healing': { colorDark: '#559c54', colorLight: '#326d31' },
@@ -49,7 +42,6 @@ const category = (name: string, groupName: string, description: string) => {
 
 const FORM_GROUPS = asSlugs(GROUP_NAMES.form);
 
-// Two of the invented groups carry an icon; any other shows the generic.
 const GLYPHS: Record<string, 'mineral' | 'botanical'> = {
   [GROUP_NAMES.form[0]]: 'mineral',
   [GROUP_NAMES.form[1]]: 'botanical',
@@ -86,9 +78,6 @@ const deity = (name: string, groupName: string, description: string) => {
   };
 };
 
-// Paging, narrowing, no-match and empty states are the same for every kind, so
-// only the categories show them; the other kinds show what differs. The
-// Categories tab as `/curator/categories` draws it, with the shell and admin row.
 const defaultNode = (
   <AdminTabbedFrame
     shell
@@ -112,7 +101,6 @@ const defaultNode = (
   </AdminTabbedFrame>
 );
 
-// Next alone still sits at the right, where it is on every other page.
 const firstPageNode = (
   <GroupedValueList
     kind="category"
@@ -142,7 +130,6 @@ const middlePageNode = (
   />
 );
 
-// Narrowed by part of a name and by a group: the form shows both.
 const FilteredView = () => (
   <GroupedValueList
     kind="category"
@@ -170,7 +157,6 @@ const emptyNode = (
   <GroupedValueList kind="category" values={[]} filter={NO_FILTER} groups={CATEGORY_GROUPS} />
 );
 
-// A form's row draws its group's icon.
 const formsNode = (
   <GroupedValueList
     kind="form"
@@ -184,7 +170,6 @@ const formsNode = (
   />
 );
 
-// By tradition then name, as the service reads them.
 const deitiesNode = (
   <GroupedValueList
     kind="deity"
@@ -201,8 +186,6 @@ const deitiesNode = (
   />
 );
 
-// The flat kinds, here the celestial bodies: no group column and no
-// group filter. The zodiac signs draw the same.
 const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: string) => {
   const slug = slugify(name);
   return {
@@ -229,9 +212,6 @@ const celestialBodiesNode = (
   />
 );
 
-// Inside the admin layout and the Categories page, as the page draws it. At a
-// phone's width the tab's Add sits beneath the heading, the filter stacks and
-// each row is a card. `TabbedPage` and `FilterForm` are the real ones.
 const CategoriesPage = () => (
   <AdminTabbedFrame
     page="categories"
@@ -245,9 +225,6 @@ const CategoriesPage = () => (
   </AdminTabbedFrame>
 );
 
-// The same page with a filter applied and the list on its way: filter row greyed
-// and off, skeleton rows and pager in place of the list, held by a list
-// navigation provided above the page.
 const ON_ITS_WAY = { pending: true, searching: false, go: () => undefined };
 
 const PendingView = () => (

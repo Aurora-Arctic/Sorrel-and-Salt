@@ -3,7 +3,7 @@ import './index.scss';
 
 // Two fixed corner ornaments (sorrel top-left, salt bowl bottom-right), each two sibling layers, one per blend mode,
 // cross-faded by the theme; decorative, hidden from assistive technology, never in the pointer's way
-// (claude-docs/components/backdrop.md, "Stacking").
+// (claude-docs/components/backdrop.md, "Contracts").
 
 const CORNERS = ['sorrel', 'salt'] as const;
 const BLENDS = ['screen', 'multiply'] as const;

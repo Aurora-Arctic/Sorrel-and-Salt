@@ -5,16 +5,10 @@ import type { auth as Auth } from '@/lib/auth';
 import { socialSignInTarget } from '@/lib/sign-in';
 import type { ProviderId } from '@/lib/types';
 import type { Profile } from './types';
+import { ORIGIN } from './constants';
 
-// Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for each provider, so what is under
-// test is Better Auth's own flow with our hooks attached. The requests into Better Auth are `auth.handler` calls.
-
-export const ORIGIN = 'http://localhost:8000';
-
-/** Where an unverified sign-in lands when it asked for no return path, as `signIn` does by default. */
 export const EMAIL_PAGE = '/account/email';
 
-/** Test credentials for all four providers, as the env `@/lib/auth` reads at import. */
 export const PROVIDER_CREDENTIALS: Readonly<Record<string, string>> = {
   ...Object.fromEntries(
     ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT'].flatMap((provider) => [
@@ -25,9 +19,7 @@ export const PROVIDER_CREDENTIALS: Readonly<Record<string, string>> = {
   MICROSOFT_TENANT_ID: '',
 };
 
-// An unsigned JWT: Google and Microsoft decode the id token they received from
-// their own token endpoint without re-verifying it, which is what makes the
-// code exchange, not the token's signature, the trust boundary here.
+// An unsigned JWT: Google and Microsoft decode the id token from their token endpoint without re-verifying it, so the code exchange, not the signature, is the trust boundary.
 function idToken(claims: Record<string, unknown>): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
@@ -48,7 +40,6 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
               iss: 'https://accounts.google.com',
               aud: 'test-google-id',
               sub: profile.sub,
-              // `undefined` is dropped from the claims, as a missing claim is.
               email: profile.email ?? undefined,
               email_verified: profile.verified,
               name: 'Fixture Person',
@@ -124,11 +115,7 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
   }
 }
 
-/**
- * A response's `Set-Cookie` headers as one `Cookie` request header, leaving
- * out the ones it expires, as a browser would: a callback expires its `state`
- * cookie, and carried on as `state=` it would shadow the next flow's.
- */
+// Cookies a response expires are left out, as a browser would: a callback expires its `state` cookie, and carried on it would shadow the next flow's.
 export function cookieHeader(response: Response): string {
   return response.headers
     .getSetCookie()
@@ -137,11 +124,6 @@ export function cookieHeader(response: Response): string {
     .join('; ');
 }
 
-/**
- * One full round trip: start the sign-in headed for `next`, or for no return
- * path at all, with what SignInPanel would send, then land on the callback.
- * Returns the callback's redirect.
- */
 export async function signIn(
   auth: typeof Auth,
   server: SetupServer,
@@ -169,13 +151,8 @@ export async function signIn(
   );
 }
 
-/** Where a link flow lands, and where its errors land with `?error=`: the account page's own. */
 export const LINK_LANDING = '/account';
 
-/**
- * One full link round trip from a signed-in browser: `/link-social` under `cookie`, then the callback.
- * `callbackCookie` is the session the browser carries when it lands. Returns the callback's redirect.
- */
 export async function link(
   auth: typeof Auth,
   server: SetupServer,
@@ -209,17 +186,11 @@ export async function link(
   );
 }
 
-/** Where a redirect sent the browser, as a same-site path whether its Location was absolute or not. */
 export function landingOf(response: Response): string {
   const location = new URL(response.headers.get('location') ?? '', ORIGIN);
   return `${location.pathname}${location.search}`;
 }
 
-/**
- * The callback signed the browser in: it went to the landing a sign-in with
- * no return path gets, or to the email page an unverified account lands on,
- * and not to an error page. A test about which asserts `landingOf` itself.
- */
 export function expectSignedIn(response: Response): void {
   expect(response.status).toBe(302);
   expect(['/coven', '/keepers', '/curator', EMAIL_PAGE]).toContain(landingOf(response));

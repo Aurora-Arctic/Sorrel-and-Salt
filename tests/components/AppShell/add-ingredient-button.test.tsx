@@ -3,22 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-// A push moves the address as the router's would, so a save's navigation
-// to the new entry's page closes the dialog here as it does in the app.
+// A push moves the address as the router's would, so a save's navigation closes the dialog.
 const push = vi.fn((href: string) => {
   window.history.pushState(null, '', href);
   pathname.mockReturnValue(new URL(href, window.location.origin).pathname);
 });
-// The address is the window's: the dialog is opened and closed by `?new`
-// through the history API, which Next's router follows in the app and the
-// test follows by drawing again (`sync`).
+// `?new` moves through the history API, which Next's router follows and the test follows by drawing again (`sync`).
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ push }),
 }));
-// The form is Lane B's and tested on its own: a stub that shows which coven it
-// writes to and saves on request, in either way.
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
     workspaceId,
@@ -83,9 +78,6 @@ vi.mock('@/components/IngredientForm', () => ({
 const { default: AddIngredientButton } =
   await import('@/components/AppShell/add-ingredient-button');
 
-// The shell's one global action: where it leads follows the
-// area the viewer is in.
-
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,
@@ -120,13 +112,14 @@ const press = (element: HTMLElement) => {
   sync();
 };
 const open = () => press(screen.getByRole('button', { name: 'Add Ingredient' }));
-/** The dialog gone, once its close has moved the address on. */
 const closed = () =>
   waitFor(() => {
     sync();
     expect(screen.queryByRole('dialog')).toBeNull();
   });
-const target = () => screen.getByRole('form', { name: 'Ingredient Form' }).dataset.workspace;
+/** The form, once its code has arrived in the open dialog. */
+const formArrived = () => screen.findByRole('form', { name: 'Ingredient Form' });
+const target = async () => (await formArrived()).dataset.workspace;
 
 beforeEach(() => {
   pathname.mockReturnValue('/coven/fixture-coven');
@@ -135,28 +128,28 @@ beforeEach(() => {
 });
 
 describe('AddIngredientButton', () => {
-  it('targets the coven the address names', () => {
+  it('targets the coven the address names', async () => {
     pathname.mockReturnValue('/coven/testwort-circle/ingredients');
     draw(MEMBER, [FIXTURE, TESTWORT]);
     open();
 
-    expect(target()).toBe('id-testwort-circle');
+    expect(await target()).toBe('id-testwort-circle');
   });
 
-  it('targets the only writable coven when the address names none', () => {
+  it('targets the only writable coven when the address names none', async () => {
     pathname.mockReturnValue('/account');
     draw(MEMBER, [FIXTURE, VIEW_ONLY]);
     open();
 
-    expect(target()).toBe('id-fixture-coven');
+    expect(await target()).toBe('id-fixture-coven');
   });
 
-  it('falls back to the writable coven when the address names a view-only one', () => {
+  it('falls back to the writable coven when the address names a view-only one', async () => {
     pathname.mockReturnValue('/coven/testwort-circle');
     draw(MEMBER, [FIXTURE, VIEW_ONLY]);
     open();
 
-    expect(target()).toBe('id-fixture-coven');
+    expect(await target()).toBe('id-fixture-coven');
   });
 
   it('is a plain button, with no menu, for one destination', () => {
@@ -170,7 +163,7 @@ describe('AddIngredientButton', () => {
     const chevron = () => screen.getByRole('button', { name: 'Choose Where to Add' });
     const menuOf = () => screen.getByRole('menu');
 
-    it('lists the compendium then the coven for a curator, and opens a coven chosen on an admin page in place', () => {
+    it('lists the compendium then the coven for a curator, and opens a coven chosen on an admin page in place', async () => {
       pathname.mockReturnValue('/keepers/users');
       draw(ADMIN, [FIXTURE]);
       expect(chevron()).toHaveAttribute('aria-haspopup', 'menu');
@@ -181,16 +174,15 @@ describe('AddIngredientButton', () => {
       const items = within(menuOf()).getAllByRole('menuitem');
       expect(items.map((item) => item.textContent)).toEqual(['to Compendium', 'to Fixture Coven']);
 
-      // The coven's value names it, so the admin page's own `?new` cannot take it,
-      // and the page stays where it is.
+      // The coven's value names it, so the admin page's own `?new` cannot take it.
       press(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
       expect(window.location.search).toBe('?new=ingredient-coven-fixture-coven');
-      expect(target()).toBe('id-fixture-coven');
+      expect(await target()).toBe('id-fixture-coven');
       expect(push).not.toHaveBeenCalled();
     });
 
-    it('opens the coven chosen off the admin pages, naming it on the address', () => {
+    it('opens the coven chosen off the admin pages, naming it on the address', async () => {
       draw(MEMBER, [FIXTURE, TESTWORT]);
       fireEvent.click(chevron());
       press(within(menuOf()).getByRole('menuitem', { name: 'to Testwort Circle' }));
@@ -199,7 +191,7 @@ describe('AddIngredientButton', () => {
       expect(
         screen.getByRole('dialog', { name: 'Add Ingredient to Testwort Circle' }),
       ).toBeInTheDocument();
-      expect(target()).toBe('id-testwort-circle');
+      expect(await target()).toBe('id-testwort-circle');
       expect(push).not.toHaveBeenCalled();
     });
 
@@ -223,13 +215,13 @@ describe('AddIngredientButton', () => {
       },
     );
 
-    it('opens the coven the address names from the main part, a curator off the admin pages', () => {
+    it('opens the coven the address names from the main part, a curator off the admin pages', async () => {
       pathname.mockReturnValue('/coven/testwort-circle');
       draw(ADMIN, [FIXTURE, TESTWORT]);
       open();
 
       expect(push).not.toHaveBeenCalled();
-      expect(target()).toBe('id-testwort-circle');
+      expect(await target()).toBe('id-testwort-circle');
     });
 
     it('lists both covens and no compendium for a member of two', () => {
@@ -243,8 +235,6 @@ describe('AddIngredientButton', () => {
       ).toEqual(['to Fixture Coven', 'to Testwort Circle']);
     });
 
-    // Where the viewer may add to the compendium and to a coven the places are two named groups,
-    // the side they are on first.
     const groups = () =>
       within(menuOf())
         .getAllByRole('group')
@@ -309,26 +299,26 @@ describe('AddIngredientButton', () => {
   });
 
   describe('by its address', () => {
-    it('writes ?new=ingredient-coven-<slug> onto the address when pressed, over the parameters already there', () => {
+    it('writes ?new=ingredient-coven-<slug> onto the address when pressed, over the parameters already there', async () => {
       window.history.replaceState(null, '', '/coven/fixture-coven?query=rose');
       draw(MEMBER, [FIXTURE]);
       open();
 
       expect(window.location.search).toBe('?query=rose&new=ingredient-coven-fixture-coven');
       expect(screen.getByRole('dialog')).toBeInTheDocument();
+      await formArrived();
     });
 
-    it('opens from the address alone, for the default coven and for a named one', () => {
+    it('opens from the address alone, for the default coven and for a named one', async () => {
       window.history.replaceState(null, '', '/coven/fixture-coven?new=ingredient');
       let view = draw(MEMBER, [FIXTURE, TESTWORT]);
-      expect(target()).toBe('id-fixture-coven');
+      expect(await target()).toBe('id-fixture-coven');
       view.unmount();
 
-      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value
-      // existed still opens the default coven's dialog.
+      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value existed still opens the dialog.
       window.history.replaceState(null, '', '/coven/fixture-coven?new');
       view = draw(MEMBER, [FIXTURE, TESTWORT]);
-      expect(target()).toBe('id-fixture-coven');
+      expect(await target()).toBe('id-fixture-coven');
       view.unmount();
 
       window.history.replaceState(
@@ -337,19 +327,18 @@ describe('AddIngredientButton', () => {
         '/coven/fixture-coven?new=ingredient-coven-testwort-circle',
       );
       view = draw(MEMBER, [FIXTURE, TESTWORT]);
-      expect(target()).toBe('id-testwort-circle');
+      expect(await target()).toBe('id-testwort-circle');
       view.unmount();
 
-      // On an admin page too, where a bare `?new` is the page's own.
       pathname.mockReturnValue('/keepers/users');
       window.history.replaceState(null, '', '/keepers/users?new=ingredient-coven-fixture-coven');
       view = draw(ADMIN, [FIXTURE, TESTWORT]);
-      expect(target()).toBe('id-fixture-coven');
+      expect(await target()).toBe('id-fixture-coven');
       view.unmount();
 
       window.history.replaceState(null, '', '/keepers/users?new=ingredient');
       draw(ADMIN, [FIXTURE, TESTWORT]);
-      expect(target()).toBe('id-fixture-coven');
+      expect(await target()).toBe('id-fixture-coven');
     });
 
     it('opens nothing for a coven the viewer cannot write to, or for an admin page’s own ?new', () => {
@@ -375,8 +364,7 @@ describe('AddIngredientButton', () => {
     });
 
     it('opens nothing for a spell’s ?new, the grimoire’s New Spell, on any page', () => {
-      // The same writer and coven that open the dialog under ?new=ingredient, so only the
-      // value keeps it shut.
+      // The same writer and coven that open the dialog under ?new=ingredient, so only the value keeps it shut.
       pathname.mockReturnValue('/coven/fixture-coven/ingredients');
       for (const value of ['spell', 'spell-fixture-coven']) {
         window.history.replaceState(null, '', `/coven/fixture-coven/ingredients?new=${value}`);
@@ -392,7 +380,6 @@ describe('AddIngredientButton', () => {
       draw(MEMBER, [FIXTURE]);
       open();
 
-      // Escape, as the dialog element reports it.
       fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
       await closed();
 
@@ -425,9 +412,10 @@ describe('AddIngredientButton', () => {
   it('closes the dialog after Save Ingredient and leaves a status behind', async () => {
     draw(MEMBER, [FIXTURE]);
     open();
+    await formArrived();
     expect(screen.queryByRole('status')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save Ingredient' }));
 
     await closed();
     expect(screen.getByRole('status')).toBeInTheDocument();
@@ -437,7 +425,7 @@ describe('AddIngredientButton', () => {
     draw(MEMBER, [FIXTURE]);
     open();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save Ingredient' }));
 
     await closed();
     expect(push).toHaveBeenCalledExactlyOnceWith(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
@@ -445,15 +433,15 @@ describe('AddIngredientButton', () => {
     expect(window.location.pathname).toBe(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
   });
 
-  it('links a near match to the coven’s page for it, and a compendium substitute to its public page', () => {
+  it('links a near match to the coven’s page for it, and a compendium substitute to its public page', async () => {
     draw(MEMBER, [FIXTURE]);
     open();
 
-    expect(screen.getByRole('link', { name: 'Near Match' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Near Match' })).toHaveAttribute(
       'href',
       `/coven/${FIXTURE.slug}/ingredients/near-id`,
     );
-    expect(screen.getByRole('link', { name: 'Compendium Substitute' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Compendium Substitute' })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort',
     );
@@ -464,17 +452,17 @@ describe('AddIngredientButton', () => {
     draw(MEMBER, [FIXTURE]);
     open();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save With Jars' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save With Jars' }));
 
     await closed();
     expect(screen.getByRole('status')).toHaveTextContent(/Dried.*Fresh/);
   });
 
-  it('keeps the dialog open after Save & Add Another', () => {
+  it('keeps the dialog open after Save & Add Another', async () => {
     draw(MEMBER, [FIXTURE]);
     open();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save & Add Another' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save & Add Another' }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();

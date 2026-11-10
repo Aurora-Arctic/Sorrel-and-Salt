@@ -1,20 +1,18 @@
 'use client';
 
-import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 import { type ReactElement, useMemo, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useAutosave, type SaveResult } from '../../lib/autosave';
+import { UNVERSIONED_DOCUMENT_KEYS } from '../../lib/unversioned-documents';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import ConfirmedAction from '../UserList/confirmed-action';
-import { editorPlugins } from './elements';
-import Toolbar from './toolbar';
-import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
+import ConfirmedAction from '../ConfirmedAction';
+import RichTextEditor, { markdownOf, useRichTextEditor } from '../RichTextEditor';
+import { editorValueToMarkdown, markdownToEditorValue } from '../RichTextEditor/markdown';
 import type { DocumentEditorProps } from './types';
-import '../DocumentPage/index.scss';
 import './index.scss';
 
 // The keeper's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
@@ -44,7 +42,6 @@ const PublishDraftDocument = graphql(`
   }
 `);
 
-/** What a publish does for readers; the terms, and the disclaimer and code of ethics they include, ask everyone to agree again. */
 function PublishQuestion({
   documentKey,
   title,
@@ -80,13 +77,10 @@ const DocumentEditor = ({
   revision: openRevision,
   nextNumber,
 }: DocumentEditorProps): ReactElement => {
-  const editor = usePlateEditor({
-    plugins: editorPlugins,
-    value: () => markdownToEditorValue(body),
-  });
+  const editor = useRichTextEditor(body);
   const [revision, setRevision] = useState(openRevision);
   const [dirty, setDirty] = useState(false);
-  const [markdown, setMarkdown] = useState(() => editorValueToMarkdown(editor.children as never));
+  const [markdown, setMarkdown] = useState(() => markdownOf(editor));
   const [publishing, setPublishing] = useState(false);
   // Bumped when a publish fails with text still unsaved, so the autosave sees that text as a fresh change.
   const [retry, setRetry] = useState(0);
@@ -94,15 +88,15 @@ const DocumentEditor = ({
   const [published, setPublished] = useState<number>();
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
-  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
-  // as the editor writes markdown a little differently from how it was read.
+  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from
+  // the editor, not `body`, as the editor writes markdown a little differently from how it was
+  // read.
   const savedRef = useRef<string | null>(null);
-  savedRef.current ??= editorValueToMarkdown(editor.children as never);
+  savedRef.current ??= markdownOf(editor);
   // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it
   // still counts, and the autosave sends it once that save lands.
   const sendingRef = useRef<string | null>(null);
 
-  /** Writes `text` as the draft, against the revision the last write answered with. */
   async function writeDraft(text: string): Promise<SaveResult> {
     setFailure(undefined);
     setPublished(undefined);
@@ -116,15 +110,14 @@ const DocumentEditor = ({
       savedRef.current = text;
       revisionRef.current = saveDocumentDraft.revision;
       setRevision(saveDocumentDraft.revision);
-      // Text typed while the save was in flight is not on the server yet.
-      setDirty(editorValueToMarkdown(editor.children as never) !== text);
+      setDirty(markdownOf(editor) !== text);
       return {
         revision: saveDocumentDraft.revision,
         savedAt: new Date(),
         id: saveDocumentDraft.id,
       };
     } catch (error) {
-      setFailure(readGraphqlFailure(error).alert);
+      setFailure(failureMessage(error));
       throw error;
     } finally {
       sendingRef.current = null;
@@ -141,11 +134,20 @@ const DocumentEditor = ({
   });
   const saving = autosave.status === 'saving';
   const guard = useDiscardGuard(dirty && !saving && !publishing);
+  // A document with no public version pages names no version, as the number means nothing there.
+  const versionShown = !(UNVERSIONED_DOCUMENT_KEYS as ReadonlySet<string>).has(documentKey);
+  const status = dirty
+    ? 'Unsaved changes.'
+    : revision !== null
+      ? 'Draft saved.'
+      : versionShown
+        ? `Showing version ${nextNumber - 1}.`
+        : null;
 
   async function publish(): Promise<void> {
     setPublishing(true);
     try {
-      if (dirty) await writeDraft(editorValueToMarkdown(editor.children as never));
+      if (dirty) await writeDraft(markdownOf(editor));
       const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
         documentId,
         expectedRevision: revisionRef.current,
@@ -163,7 +165,6 @@ const DocumentEditor = ({
     }
   }
 
-  /** Throws the open draft away, when there is one, and puts the published text back in the editor. */
   async function restore(): Promise<void> {
     if (revisionRef.current !== null) {
       await graphqlRequest(DiscardDraftDocument, {
@@ -187,19 +188,14 @@ const DocumentEditor = ({
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
-      <div className="document-page__body document-editor__text">
-        <Plate
-          editor={editor}
-          onValueChange={({ value }) => {
-            const text = editorValueToMarkdown(value as never);
-            setMarkdown(text);
-            setDirty(text !== (sendingRef.current ?? savedRef.current));
-          }}
-        >
-          <Toolbar />
-          <PlateContent aria-label="Document Text" />
-        </Plate>
-      </div>
+      <RichTextEditor
+        editor={editor}
+        label="Document Text"
+        onMarkdownChange={(text) => {
+          setMarkdown(text);
+          setDirty(text !== (sendingRef.current ?? savedRef.current));
+        }}
+      />
       <div className="document-editor__bar">
         <BusyButton
           className="btn"
@@ -241,13 +237,7 @@ const DocumentEditor = ({
           send={restore}
           closeOnSent
         />
-        <p className="document-editor__status">
-          {dirty
-            ? 'Unsaved changes.'
-            : revision === null
-              ? `Showing version ${nextNumber - 1}.`
-              : 'Draft saved.'}
-        </p>
+        {status && <p className="document-editor__status">{status}</p>}
       </div>
       {guard.asking && <DiscardQuestion guard={guard} />}
       {failure && <Notice kind="error">{failure}</Notice>}

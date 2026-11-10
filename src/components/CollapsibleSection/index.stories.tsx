@@ -2,9 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, useState } from 'react';
 import { CollapsibleSection } from '.';
 
-// Render-only; behaviour is asserted in tests/components/CollapsibleSection.
-// Three sections in a form's column: one open, one closed showing its line,
-// and one holding an error. Each heading opens and shuts its own.
 const meta = {
   title: 'Forms / Collapsible Section',
 } satisfies Meta;

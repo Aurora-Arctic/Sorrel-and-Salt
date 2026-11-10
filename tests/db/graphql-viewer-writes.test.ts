@@ -1,5 +1,5 @@
-import { afterAll, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import {
@@ -8,19 +8,18 @@ import {
   runProbe,
   useProbeRows,
 } from '../support/graphql-workspace-probes';
+import { useTestDatabase } from '../support/db/database';
 
 // A viewer reads everything in the coven and writes nothing (CLAUDE.md: "Viewers write nothing"). Every Mutation field taking a
 // `workspaceId` is probed as C, W's viewer, who is refused with nothing changed; B or A, whom the same request admits, then
 // succeeds, so the refusal is the role's and not a malformed request's. The census cannot go stale: a new mutation with no probe
 // fails the first test.
 
-/** Mutation fields taking a `workspaceId` that a viewer may call, each with the reason. */
 const VIEWER_MAY = [
   // Every role may leave a coven; the row it removes is the caller's own, and it names no one else.
   'leaveWorkspace',
 ];
 
-/** Probes whose admitted request writes no new value (a role already held, a reference already so, an empty batch), so it moves no row. */
 const ADMITTED_CHANGES_NOTHING = ['updateMemberRole', 'updateReference', 'saveStock'];
 
 const mutations = Object.keys(schema.getMutationType()?.getFields() ?? {});
@@ -30,10 +29,12 @@ const refusedToViewers = (fields: string[]) =>
 
 useProbeRows();
 
-const sql = postgres(process.env.DATABASE_URL as string);
-afterAll(() => sql.end());
+let sql: postgres.Sql;
 
-/** A digest of every row of every table, so any write anywhere changes it. */
+useTestDatabase((client) => {
+  sql = client;
+});
+
 async function snapshot(): Promise<Record<string, string>> {
   const tables = await sql<{ table_name: string }[]>`
     select table_name from information_schema.tables

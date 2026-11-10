@@ -1,20 +1,19 @@
 'use client';
 
-import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { type FormEvent, type ReactElement, type ReactNode, useState } from 'react';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
+import { MESSAGE_MAX_LENGTH } from '../../modules/support/validation/limits';
+import { PlainTextField, SwitchField } from '../Field';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
-// Reply on a request: the sender is mailed that a reply is waiting and reads it on /account/support. A mode beside the box
-// turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Internal Note, so a
-// reply is always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
-// A reply to a timed-out sender asks first, since they cannot answer it until the time-out ends.
+// Reply on a request, or an internal note nobody is mailed; it opens on Internal Note so a reply is always chosen. A
+// reply to a timed-out sender asks first, since they cannot answer until the time-out ends.
 
 type Mode = 'reply' | 'note';
 
@@ -66,7 +65,6 @@ const ReplyForm = ({
   /** The sender's standing time-out; the form says they cannot answer until it ends, or that it has no end date. */
   senderTimedOut?: { until: Date | null };
   resolve?: ReactNode;
-  /** The viewer may add an internal note but not reply: no mode choice, and the form is a note form. */
   noteOnly?: boolean;
 }): ReactElement => {
   const [body, setBody] = useState('');
@@ -76,7 +74,6 @@ const ReplyForm = ({
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
-  const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
 
   async function send() {
     if (
@@ -117,23 +114,23 @@ const ReplyForm = ({
           onChange={setMode}
         />
       )}
-      <FieldShell label={note ? 'Your Note' : 'Your Reply'} required {...field}>
-        <textarea
-          id={field.controlId}
-          className="textarea"
-          rows={4}
-          placeholder={
-            note
-              ? 'Write a note for staff.'
-              : 'Write a reply. The sender is emailed that one is waiting.'
-          }
-          {...aria}
-          aria-required
-          value={body}
-          disabled={busy}
-          onChange={(event) => setBody(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        name="body"
+        label={note ? 'Your Note' : 'Your Reply'}
+        required
+        multiline
+        rows={4}
+        placeholder={
+          note
+            ? 'Write a note for staff'
+            : 'Write a reply. The sender is emailed that one is waiting'
+        }
+        limit={MESSAGE_MAX_LENGTH}
+        value={body}
+        disabled={busy}
+        error={failure.field?.message}
+        onChange={setBody}
+      />
       {!note && canWait && (
         <SwitchField
           label="Waiting on Sender"
@@ -146,7 +143,7 @@ const ReplyForm = ({
         />
       )}
       {!note && senderTimedOut && (
-        <Notice kind="caution" quiet>
+        <Notice kind="warn" quiet>
           The sender cannot answer {cannotAnswer(senderTimedOut.until)}.
         </Notice>
       )}

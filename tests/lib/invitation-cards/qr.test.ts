@@ -1,9 +1,8 @@
 import QRCode from 'qrcode';
 import { describe, expect, it } from 'vitest';
 import { cardQrSvg } from '@/lib/invitation-cards';
+import { CHALK } from '@/lib/invitation-cards/layout';
 
-// A realistic card link: the short `/i/` route and a 16-character token from the
-// card alphabet (letters and digits without 0, O, 1, l and I).
 const LINK = 'https://sorrelandsalt.com/i/Hk7pQ2xRm9TbWz4N';
 
 function inFinder(row: number, col: number, size: number): boolean {
@@ -41,7 +40,7 @@ describe('cardQrSvg', () => {
     expect(dotCentres(cardQrSvg(LINK))).toEqual(expected);
   });
 
-  it('draws the three finders as rounded squares in muted chalk, with a see-through ring and no background', () => {
+  it('draws the three finders as rounded squares in heading chalk, with a see-through ring and no background', () => {
     const svg = cardQrSvg(LINK);
     for (const [x, y] of [
       [0, 0],
@@ -51,7 +50,7 @@ describe('cardQrSvg', () => {
       expect(svg).toContain(`<path data-finder="${x},${y}" fill-rule="evenodd"`);
       expect(svg).toContain(`<rect x="${x + 2}" y="${y + 2}" width="3" height="3" rx="0.7"`);
     }
-    expect(svg).toContain('fill="#c0baac"');
+    expect(svg).toContain(`fill="${CHALK}"`);
     expect(svg).not.toMatch(/#14120e|#fff|white|#000/i);
   });
 });

@@ -20,16 +20,15 @@ import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
-import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
 import { categories } from '@/modules/vocabulary/schema/categories';
-import { assertMembership, type Membership } from '@/modules/coven';
+import { assertMembership, tryMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
-// The grimoire's reads: the paged list and its count, one spell, and the batches a spell's fields load through. A spell the reader
-// may not see is `NotFound` by id and absent from a batch (claude-docs/db/grimoire.md, "Grimoire read details").
+// A spell the reader may not see is `NotFound` by id and absent from a batch (claude-docs/db/grimoire.md, "Grimoire read details").
 
-/** The query with a search shorter than `MIN_QUERY_LENGTH` dropped, as the compendium counts it: one character is no search. */
+/** As the compendium counts it: one character is no search. */
 function searchable(query: GrimoireQuery): GrimoireQuery {
   const text = query.query?.trim();
   const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
@@ -37,8 +36,6 @@ function searchable(query: GrimoireQuery): GrimoireQuery {
 }
 
 /**
- * One page of the coven's grimoire in `order`: its shared spells and the caller's own private ones, narrowed by the query.
- *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
 export async function listGrimoire(
@@ -52,8 +49,6 @@ export async function listGrimoire(
 }
 
 /**
- * How many spells `listGrimoire` lists under `query`, and how many come before `start`, for the numbered pager.
- *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
 export async function countGrimoire(
@@ -67,8 +62,6 @@ export async function countGrimoire(
 }
 
 /**
- * How many spells `listGrimoire` would list in each category under the rest of `query`: the Categories filter's counts.
- *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
 export async function countGrimoireCategories(
@@ -81,9 +74,7 @@ export async function countGrimoireCategories(
 }
 
 /**
- * The counts behind the Moon Phases, Days of the Week, Visibility and Coven Members facets, which
- * are also the facets' choices
- * (claude-docs/db/grimoire.md, "Grimoire read details").
+ * Also the facets' choices (claude-docs/db/grimoire.md, "Grimoire read details").
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -97,7 +88,7 @@ export async function countGrimoireFacets(
 }
 
 /**
- * One spell, without its steps, which `Spell.steps` loads.
+ * Without its steps, which `Spell.steps` loads.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  * @throws {NotFound} no such spell here, or none this caller may read.
@@ -113,7 +104,6 @@ export async function readSpell(
   return spell;
 }
 
-/** Each spell's live steps in recipe order, with the ingredient and form each links: `Spell.steps`' batch. */
 export function stepsOfSpells(
   session: Session,
   refs: readonly SpellKey[],
@@ -121,7 +111,6 @@ export function stepsOfSpells(
   return perCoven(session, refs, stepsInSpells);
 }
 
-/** The categories each spell's author assigned it, sorted by name: `Spell.categories`' batch. */
 export function assignedCategoriesOf(
   session: Session,
   refs: readonly SpellKey[],
@@ -134,7 +123,7 @@ export function assignedCategoriesOf(
   });
 }
 
-/** The categories each spell is made of, sorted by name: `Spell.derivedCategories`' batch (DESIGN.md §5, "Two kinds of spell category"). */
+/** DESIGN.md §5, "Two kinds of spell category". */
 export function derivedCategoriesOf(
   session: Session,
   refs: readonly SpellKey[],
@@ -171,7 +160,7 @@ export function derivedCategoriesOf(
   });
 }
 
-/** Answers a batch one coven at a time, as `stockOf` does; a coven the caller may not read gets a `Forbidden` in its slot. */
+/** A coven the caller may not read gets a `Forbidden` in its slot. */
 export async function perCoven<T>(
   session: Session,
   refs: readonly SpellKey[],
@@ -184,16 +173,10 @@ export async function perCoven<T>(
         const spellIds = [
           ...new Set(refs.filter((ref) => ref.workspaceId === workspaceId).map((ref) => ref.id)),
         ];
-        try {
-          const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-          return [workspaceId, await read(membership, spellIds)] as [
-            string,
-            (spellId: string) => T,
-          ];
-        } catch (error) {
-          if (error instanceof Forbidden) return [workspaceId, error] as [string, Forbidden];
-          throw error;
-        }
+        const membership = await tryMembership(session, workspaceId, { spell: ['read'] });
+        if (membership instanceof Forbidden)
+          return [workspaceId, membership] as [string, Forbidden];
+        return [workspaceId, await read(membership, spellIds)] as [string, (spellId: string) => T];
       }),
     ),
   );
@@ -203,7 +186,6 @@ export async function perCoven<T>(
   });
 }
 
-/** Reads the live categories among `ids` once, and names any subset of them sorted by name. */
 async function categoriesById(
   ids: readonly string[],
 ): Promise<(ids: readonly string[]) => CategoryRow[]> {
@@ -211,7 +193,6 @@ async function categoriesById(
   const byId = new Map(rows.map((row) => [row.id, row]));
   return (wanted) =>
     [...new Set(wanted)]
-      // A soft-deleted category is absent from `byId`, so its link names nothing.
       .flatMap((id) => byId.get(id) ?? [])
       .sort((a, b) => a.name.localeCompare(b.name));
 }

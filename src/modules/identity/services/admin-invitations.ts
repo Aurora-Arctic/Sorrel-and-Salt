@@ -22,17 +22,15 @@ import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { AdminInvitationFilter, InvitationSender } from '../types';
 
-// A keeper invites an address to become a keeper or a curator: the site tier of `invitations`. Accepting is invitation-acceptance.ts's
-// (claude-docs/auth/admin-users.md, "Admin invitation service details").
+// Accepting is invitation-acceptance.ts's (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
 const REFUSAL = 'Only a site keeper may invite or withdraw a keeper invitation';
 
 /**
- * Invites `input` to `siteRole`, curator or admin: a pending site-tier invitation whose token is mailed through `sender` and
- * stored as its hash alone (claude-docs/auth/admin-users.md, "Admin invitation service details").
+ * Stored as its hash alone (claude-docs/auth/admin-users.md, "Inviting a keeper").
  *
  * @throws {Forbidden} the session's role is not `admin`, or keeper changes are paused and the caller is not the primary keeper.
- * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above.
+ * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above, or for `user` may already create a coven.
  */
 export async function createAdminInvitation(
   session: Session,
@@ -45,10 +43,15 @@ export async function createAdminInvitation(
   const email = normaliseEmail(input);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
-  const held = (await findUserByEmail(email))?.role;
-  if (held && !outranks(siteRole, held)) {
+  const holder = await findUserByEmail(email);
+  if (holder && siteRole === 'user' && holder.canCreateWorkspace) {
     throw new ValidationError([
-      { path: ['email'], message: `That address belongs to ${withArticle(held)} already` },
+      { path: ['email'], message: 'That address can already create a coven' },
+    ]);
+  }
+  if (holder && siteRole !== 'user' && !outranks(siteRole, holder.role)) {
+    throw new ValidationError([
+      { path: ['email'], message: `That address belongs to ${withArticle(holder.role)} already` },
     ]);
   }
 
@@ -68,12 +71,9 @@ export async function createAdminInvitation(
   return row;
 }
 
-/** A held role as the refusal names it: "an admin", "a curator". */
 const withArticle = (role: UserRole): string => (role === 'admin' ? 'an admin' : `a ${role}`);
 
 /**
- * Withdraws a pending admin invitation, stamped as the admin: its link is dead from now on, and says so.
- *
  * @throws {Forbidden} as `createAdminInvitation` does.
  * @throws {NotFound} no pending site-tier invitation has this id.
  */
@@ -84,13 +84,12 @@ export async function revokeAdminInvitation(session: Session, id: string): Promi
   return row;
 }
 
-/** How soon an invitation lapses for Expires in 24 Hrs to list it. */
 const EXPIRING_SOON_HOURS = 24;
 
 const LIST_REFUSAL = 'Only a site keeper may see admin invitations';
 
 /**
- * One page of the pending admin invitations under `filter`, newest first. Open to every keeper, paused or not, as the list is where an invitation is seen.
+ * Open to every keeper, paused or not, as the list is where an invitation is seen.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
@@ -104,8 +103,6 @@ export async function listPendingAdminInvitations(
 }
 
 /**
- * How many invitations `listPendingAdminInvitations` pages under `filter`, and how many come before `start`: "Page X of Y".
- *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function countPendingAdminInvitations(
@@ -117,7 +114,6 @@ export async function countPendingAdminInvitations(
   return findPendingSiteInvitationCount(admin, siteFilter(filter), start);
 }
 
-/** The filter as the finder takes it: a blank address none, and the window in hours. */
 function siteFilter({ email, expiringSoon }: AdminInvitationFilter): SiteInvitationFilter {
   return {
     email: email?.trim() || undefined,

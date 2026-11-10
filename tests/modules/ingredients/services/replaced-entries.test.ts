@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findOneIngredient } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
@@ -8,17 +8,19 @@ import { compendiumMatchesOf } from '@/modules/ingredients';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The compendium entries a coven's own entry is (same identity) or may
 // be (same label, when it declares no formal name). The table is emptied
 // per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
-const none = { kind: 'none', entries: [], total: 0 };
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
+
+const none = { kind: 'none', entries: [], total: 0 };
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
@@ -29,7 +31,6 @@ function add(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
-/** The service's answer for the entry `id`, read as a member of its own coven. */
 async function replacedBy(id: string, workspaceId: string | null, asMember = A) {
   const membership = workspaceId
     ? await assertMembership(asUser(A), workspaceId, { ingredient: ['read'] })

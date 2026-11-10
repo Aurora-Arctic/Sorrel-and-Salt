@@ -22,7 +22,6 @@ const SOURCE_LABELS: Record<IngredientSource, string> = {
   compendium: 'Compendium',
 };
 
-/** The Source chip's choices: All, then Local and Compendium, each with its count once read; All has none, as Toxic's Any has none. */
 function sourceOptions(
   counts: CompendiumFacetCounts['source'],
 ): { value: '' | IngredientSource; label: string; count?: number }[] {
@@ -36,14 +35,12 @@ function sourceOptions(
   ];
 }
 
-// In My Covens' two ways: In, held in a picked coven, or Not In, held in none. Not In submits as
-// covensNot=1; In submits an empty value, which the address reads as absent.
+// Not In submits as covensNot=1; In submits an empty value, which the address reads as absent.
 const COVENS_NOT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: 'In' },
   { value: '1', label: 'Not In' },
 ];
 
-/** The Reviewed strip's settings as the address writes them. */
 const REVIEW_ADDRESS = { reviewed: '1', needs_review: '0' } as const;
 
 export default function FacetPanel({
@@ -71,8 +68,6 @@ export default function FacetPanel({
   ].reduce((total, list) => total + list.length, 0);
   const count =
     chosen +
-    // Not In with covens picked is a mode of them, as Match is; with none picked it is a filter of
-    // its own.
     (filter.covensNot && !filter.covens?.length ? 1 : 0) +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
@@ -87,8 +82,6 @@ export default function FacetPanel({
   // The Source chip is stuck the same way: a source with nothing behind it means every matching
   // entry comes from the other, so the filter cannot narrow. Unread counts leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
-  // The Reviewed chip is stuck the same way: with either side empty, every entry is reviewed or
-  // none is.
   const reviewedStuck = facets.reviewed?.some((choice) => choice.count === 0) ?? false;
   // The public compendium's Forms line is halved when the viewer has covens: Forms and Toxic on
   // the left, In My Covens and its In / Not In choice on the right. With none, Forms and Toxic
@@ -182,7 +175,6 @@ export default function FacetPanel({
                       : undefined
                   }
                   options={sourceOptions(facets.source)}
-                  // Rests on All while stuck and submits nothing, as Toxic rests on Any.
                   value={sourceStuck ? '' : filter.source}
                   disabled={sourceStuck}
                   onChange={(source) => onChange({ source })}
@@ -309,7 +301,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Celestial Bodies"
             name="celestialBodies"
-            placeholder="Add a celestial body"
+            placeholder="Add a body"
             removeNoun="Celestial Body"
             loading={loading}
             choices={facets.celestialBodies}

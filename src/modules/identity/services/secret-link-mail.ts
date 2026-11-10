@@ -25,7 +25,6 @@ import type { SecretLink } from '../types';
 // The secret-link mails, built from the rows when they are sent, so the job that retries one carries ids alone: a
 // verification link is signed afresh, and a reset link's token is the newest Better Auth holds for the account.
 
-/** The mail for `link` as the rows stand, or null when there is none to send: the account is gone, unmailable, or has nothing left to verify or reset. */
 export async function secretLinkMessage(link: SecretLink): Promise<Message | null> {
   if (link.kind === 'invitation') return invitationMessage(link);
   const user = await findOneById(users, link.userId);
@@ -69,9 +68,7 @@ export async function secretLinkMessage(link: SecretLink): Promise<Message | nul
 }
 
 /**
- * The mail for an address invitation, on a token minted now: the row's hash is swapped for the new token's, so a retried
- * step mails a fresh link and every earlier one stops working. Null, with nothing written, once the invitation is
- * accepted, declined, revoked, expired or its coven deleted.
+ * The row's hash is swapped for the new token's, so a retried step mails a fresh link and every earlier one stops working.
  */
 async function invitationMessage(
   link: Extract<SecretLink, { kind: 'invitation' }>,
@@ -83,7 +80,7 @@ async function invitationMessage(
   const to = invitation.email;
   if (!to) return null;
   if (invitation.workspaceId === null) {
-    if (invitation.siteRole !== 'curator' && invitation.siteRole !== 'admin') return null;
+    if (!invitation.siteRole) return null;
     return invitationLinkMessage(link.origin, token, {
       to,
       inviterName,
@@ -100,10 +97,7 @@ async function invitationMessage(
   });
 }
 
-/**
- * Sends the change link for `link` and says when its pending address lapses: the stamp the row was mailed under and the seconds
- * the link lasts, or null when nothing was sent. A transport failure throws, so a job's step is retried.
- */
+/** A transport failure throws, so a job's step is retried. */
 export async function sendChangeLink(
   link: Extract<SecretLink, { kind: 'change' }>,
 ): Promise<{ sentAt: string; lapsesInSeconds: number } | null> {
@@ -116,7 +110,7 @@ export async function sendChangeLink(
   };
 }
 
-/** Builds and sends the mail for `link`; true once the transport took it, false when there was none to send or the transport refused it before trying. A transport failure throws, so a job's step is retried. */
+/** A transport failure throws, so a job's step is retried. */
 export async function sendSecretLink(link: SecretLink): Promise<boolean> {
   const message = await secretLinkMessage(link);
   if (!message) return false;

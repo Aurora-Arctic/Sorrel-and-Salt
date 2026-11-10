@@ -5,8 +5,7 @@ import { spellStatus, spellVisibility } from '@/modules/grimoire/schema/spells';
 import { SpellInput, UpdateSpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellStepInput } from '@/modules/grimoire/validation/spell-step';
 
-// The schema mirrors spell_steps' CHECKs so the database is never what a user
-// sees refuse a step; each CHECK has a row here, named by its constraint.
+// The schema mirrors spell_steps' CHECKs so the database never refuses a step a user sees; each CHECK has a row here, named by its constraint.
 
 const INGREDIENT = '11111111-1111-4111-8111-111111111111';
 const VARIANT = '22222222-2222-4222-8222-222222222222';
@@ -45,7 +44,7 @@ describe('SpellStepInput', () => {
     expect(SpellStepInput.parse(input)).toMatchObject(input);
   });
 
-  // The step note is retired: `body` is the one text (pr1308-step-note-retired.md).
+  // The step note is retired: `body` is the one text (design-decisions/grimoire.md, "The step note is retired (PR #1308)").
   it('drops a note an old client still sends', () => {
     expect(SpellStepInput.parse({ body: 'Stir', note: 'old' })).toEqual({ body: 'Stir' });
   });
@@ -106,6 +105,11 @@ describe('SpellStepInput', () => {
 
   it('refuses a blank instruction even beside an identity', () => {
     expect(failedPaths({ body: '', name: 'Testwort' })).toEqual([['body']]);
+  });
+
+  it('refuses a quantity with more than three decimal places, and takes three', () => {
+    expect(SpellStepInput.safeParse({ name: 'Testwort', quantity: 0.125 }).success).toBe(true);
+    expect(failedPaths({ name: 'Testwort', quantity: 0.1234 })).toEqual([['quantity']]);
   });
 
   it('refuses a negative, oversized or non-numeric quantity, at its field', () => {

@@ -1,18 +1,13 @@
-// The one runtime import of `dataloader` (enforced by lint and pinned by
-// tests/guards/lint-loader-boundary.test.ts): a loader's cache lives as long
-// as its instance, so one built at module level would serve one request's
-// answers to the next. This file hands out factories instead, and only the
-// request context calls them.
+// The one runtime import of `dataloader`: a loader's cache lives as long as its instance, so module-level
+// loaders would leak across requests (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at
+// module level").
 // oxlint-disable-next-line no-restricted-imports
 import DataLoader from 'dataloader';
 import { Forbidden } from '../../lib/errors';
 import type { Session } from '../../lib/session';
 import type { LoaderFactory } from './types';
 
-/**
- * A loader as the factory that builds it per request; `batch` gets the session first, as the service it calls does. `C` is the cache key for an object-keyed loader.
- * For a service taking `Session | null`; `defineSignedInLoader` and `definePublicLoader` cover the other two.
- */
+/** `C` is the cache key for an object-keyed loader. */
 export function defineLoader<K, V, C = K>(
   batch: (session: Session | null, keys: readonly K[]) => PromiseLike<ArrayLike<V | Error>>,
   options?: DataLoader.Options<K, V, C>,

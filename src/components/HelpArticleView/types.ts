@@ -1,0 +1,31 @@
+import type { HelpTermSource } from '../../lib/help-marks';
+
+export interface HelpSubpageLink {
+  title: string;
+  summary: string | null;
+  href: string;
+}
+
+export type HelpGuideStep = Pick<HelpSubpageLink, 'title' | 'href'>;
+
+export interface HelpArticleViewProps {
+  /** The page's title, drawn as a level-two heading beneath the search box. */
+  title: string;
+  /** The level-one heading: Help, or Staff Help on a staff page. */
+  heading?: string;
+  /** Drawn under the public help layout's header, which holds the heading and the search box, so the page draws neither. */
+  framed?: boolean;
+  /** Markdown, rendered with raw HTML as text. */
+  body: string;
+  subpages: HelpSubpageLink[];
+  /** The glossary, which the body's `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */
+  terms?: HelpTermSource[];
+  /** The page above this one, linked between the search box and the title: a sub page's guide, or a guide's help index. */
+  parent?: HelpGuideStep;
+  /** The pages either side of this one in its guide (`guideSteps`), linked at the page's foot. */
+  steps?: { previous?: HelpGuideStep; next?: HelpGuideStep };
+  /** The article's edit page, handed only to a keeper (`helpViewerOffers`), drawn as the Edit Article pencil beside the article title. */
+  editHref?: string;
+  /** The kind the pencil is named for: Article, or Guide on a guide. */
+  editName?: 'Article' | 'Guide';
+}

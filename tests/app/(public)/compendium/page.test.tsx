@@ -1,14 +1,17 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public compendium page, with the reads and the viewer mocked (the admin page's test runs the reads). It proves what the address becomes in the read,
-// which foot each kind of visitor gets, and when the page asks to be kept out of search results.
+// The form loads on first use; loading it once up front keeps each test off a cold import.
+beforeAll(async () => {
+  await loadCompendiumEntryForm();
+});
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {
@@ -17,16 +20,12 @@ const redirect = vi.fn((_to: string) => {
 vi.mock('next/navigation', () => ({ redirect, useRouter: () => router }));
 
 const viewerIfSignedIn = vi.fn();
-// A role in each coven, which the three dots read; the roles' own abilities are the coven module's.
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 
 const readCompendium = vi.fn();
 const readFacets = vi.fn();
-// The details a Quick Look opens, by id with no session: what it admits is its own
-// test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
 const readCompendiumDetails = vi.fn();
-// The reads narrowed to the viewer's picked covens: uncached, with the session.
 const readCompendiumHeldIn = vi.fn();
 const readFacetsHeldIn = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
@@ -35,28 +34,27 @@ vi.mock('@/app/compendium-reads', () => ({
   readCompendiumHeldIn,
   readFacetsHeldIn,
   readCompendiumDetails,
+  // The real read composes the two module reads mocked below; the page only delegates to it.
+  readEntryReview: async (curator: unknown, id: string) => {
+    if (!curator) return undefined;
+    const review = await readCompendiumReview(curator, id);
+    const row = await getIngredient(curator, id);
+    return { reviewedAt: review?.reviewedAt.toISOString() ?? null, shown: row.shown };
+  },
   readFormIcons: async () => new Map(),
   readDeities: async () => [],
   readCategories: async () => [],
   readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
 }));
 
-// What a curator's ?edit=<slug> reads: the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
-// The edited entry's sourcing score, none here: its own tests are the dialog's and the component's.
 const readSourcingScore = vi.fn(async () => null);
-// The held read is `held.test.tsx`'s; here the coven holds nothing.
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
-// The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
-// Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
-// The review switch's read, per viewer, made for a curator or keeper only.
 const readCompendiumReview = vi.fn();
-// The curator's read of the row itself, for the form's shown switch.
 const getIngredient = vi.fn();
-// Which entries each coven holds, for the plus's count: nothing held, unless a test says otherwise.
 const heldCompendiumEntryIdsIn = vi.fn(async () => new Map<string, ReadonlySet<string>>());
 vi.mock('@/modules/ingredients', () => ({
   readSourcingScore,
@@ -67,8 +65,6 @@ vi.mock('@/modules/ingredients', () => ({
   heldCompendiumEntryIdsIn,
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
-// What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only that
-// the window's three dots offer it where the page read stock for the holding coven.
 const readEntryStock = vi.fn();
 vi.mock('@/app/entry-stock', () => ({
   readEntryStock,
@@ -76,7 +72,6 @@ vi.mock('@/app/entry-stock', () => ({
 }));
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
-// The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
   default: ({ review }: { review?: { reviewed: boolean } }) => (
     <form aria-label="Fixture Form">
@@ -208,7 +203,6 @@ describe('the public compendium page', () => {
     expect(variablesRead()).not.toHaveProperty('withoutForms');
   });
 
-  // The review filter is the admin list's; the services refuse it to anyone else.
   it('reads the same list with ?reviewed=1 as without it, for a curator too', async () => {
     await renderPage();
     const unfiltered = readCompendium.mock.lastCall![0];
@@ -245,9 +239,6 @@ describe('the public compendium page', () => {
   );
 });
 
-// In My Covens. A pick reads the uncached reads with the session; none, and a visitor
-// whatever the address says, read the cached ones. Which ids those reads admit is
-// tests/modules/ingredients/services/compendium-held-in.test.ts's.
 describe('the public compendium page, narrowed to the viewer’s covens', () => {
   beforeEach(async () => {
     readCompendiumHeldIn.mockResolvedValue(await readCompendium());
@@ -329,8 +320,6 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
   });
 });
 
-// A curator edits an entry from the search, in the compendium's edit dialog over the
-// results, as the admin Compendium does; anyone else reads the page as ever.
 describe('the public compendium page, for a curator', () => {
   const curator = (canCurate = true) => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate } });
   const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
@@ -356,7 +345,6 @@ describe('the public compendium page, for a curator', () => {
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug, expect.anything());
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: NODE.id }), null);
     expect(within(dialog()!).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
-    // The search beneath is the one asked for.
     expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
   });
 
@@ -423,8 +411,6 @@ describe('the public compendium page, for a curator', () => {
   });
 });
 
-// Each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
-// anyone, a visitor included: the compendium as the compendium has it, read with no session.
 describe("the public compendium page, with an entry's details open", () => {
   const SEARCH = { query: 'Test' };
   const DETAIL = {
@@ -435,7 +421,6 @@ describe("the public compendium page, with an entry's details open", () => {
   const curator = () => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate: true } });
   const paramsOf = (link: HTMLElement) =>
     Object.fromEntries(new URL(link.getAttribute('href')!, 'https://fixture.test').searchParams);
-  /** Every link on the cards, by name and address: what the list offers. */
   const cardLinks = () =>
     within(screen.getByRole('list', { name: 'Compendium' }))
       .getAllByRole('link')
@@ -456,11 +441,12 @@ describe("the public compendium page, with an entry's details open", () => {
     readCompendiumDetails.mockResolvedValue(DETAIL);
     await renderPage({ ...SEARCH, entry: NODE.id });
 
-    // No session reaches the read: the id is all it is given.
     expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
     const dialog = details()!;
     expect(
-      within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
+      within(await within(dialog).findByRole('list', { name: 'Folk Names' })).getByText(
+        'Fixture Bane',
+      ),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
@@ -468,7 +454,6 @@ describe("the public compendium page, with an entry's details open", () => {
     );
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).toBeNull();
     expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
-    // A visitor has no covens, so the page asks for none.
     expect(covensHoldingEntry).not.toHaveBeenCalled();
     expect(within(dialog).queryByRole('list', { name: 'In Your Cupboards' })).toBeNull();
   });
@@ -481,15 +466,13 @@ describe("the public compendium page, with an entry's details open", () => {
     await renderPage({ ...SEARCH, entry: NODE.id });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
-    const covens = within(details()!).getByRole('list', { name: 'In Your Cupboards' });
+    const covens = await within(details()!).findByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/ingredients/${NODE.id}`,
     );
   });
 
-  // The window mirrors the card it was opened from: the three dots
-  // for a member of a coven that holds the entry, and none for anyone else.
   describe('the three dots in the details', () => {
     const member = () => ({
       ...shellOf(true),
@@ -504,7 +487,6 @@ describe("the public compendium page, with an entry's details open", () => {
       ],
     });
 
-    // What the menu holds, and in what order, is tests/components/IngredientEntry/cupboard-actions.test.tsx's.
     it('gives a member of a holding coven More', async () => {
       viewerIfSignedIn.mockResolvedValue(member());
       covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'member']]));
@@ -515,7 +497,9 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       expect(
-        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+        await within(details()!).findByRole('button', {
+          name: 'More for Testwort, Fixtura testalis',
+        }),
       ).toBeInTheDocument();
     });
 
@@ -532,7 +516,9 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       fireEvent.click(
-        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+        await within(details()!).findByRole('button', {
+          name: 'More for Testwort, Fixtura testalis',
+        }),
       );
       expect(
         within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' }),
@@ -552,7 +538,7 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       // Why it could show: the same window is open, with the entry read.
-      expect(details()).not.toBeNull();
+      expect(await contentsOf(details()!)).not.toBeNull();
       expect(within(details()!).queryByRole('button', { name: /^More for / })).toBeNull();
     });
   });
@@ -562,9 +548,8 @@ describe("the public compendium page, with an entry's details open", () => {
     readCompendiumDetails.mockResolvedValue(DETAIL);
     await renderPage({ ...SEARCH, entry: NODE.id });
 
-    const edit = within(details()!).getByRole('link', { name: /^Edit\b/ });
+    const edit = await within(details()!).findByRole('link', { name: /^Edit\b/ });
     expect(paramsOf(edit)).toEqual({ ...SEARCH, entry: NODE.id, edit: NODE.slug });
-    // The card's own Edit opens over the search alone, as without the details.
     const [cardEdit] = screen.getAllByRole('link', { name: /^Edit in Compendium Testwort/ });
     expect(paramsOf(cardEdit)).toEqual({ ...SEARCH, edit: NODE.slug });
   });
@@ -613,7 +598,6 @@ describe('the public compendium page structured data', () => {
     expect(scripts()).toHaveLength(0);
   });
 
-  // The addresses the proxy marks noindex: Quick Look open over the list, and a pager page.
   it.each<Record<string, string>>([{ entry: NODE.id }, { after: 'c' }, { before: 'c' }])(
     'describes %o as nothing, as a copy of the list',
     async (params) => {
@@ -649,11 +633,7 @@ describe('the public compendium page metadata', () => {
     expect(result.robots).toBeUndefined();
   });
 
-  it.each<Record<string, string>>([
-    { query: 'wort' },
-    // A view narrowed to the viewer's covens is filtered too, whoever asks.
-    { covens: 'w0' },
-  ])(
+  it.each<Record<string, string>>([{ query: 'wort' }, { covens: 'w0' }])(
     'keeps a filtered view (%o) out of search results, canonical to the unfiltered page',
     async (params) => {
       const result = await metadata(params);
@@ -699,8 +679,18 @@ describe('the public compendium page metadata', () => {
   });
 });
 
-// The Reviewed switch in the Quick Look and the edit dialog, for a curator or
-// admin. The review read is per viewer and made only for them, never inside the cached reads.
+/** Waits for a dialog's lazily loaded contents to replace its loading status. */
+const contentsOf = async (dialog: HTMLElement) => {
+  await waitFor(() =>
+    expect(
+      within(dialog)
+        .queryAllByRole('status')
+        .filter((status) => status.textContent === 'Loading'),
+    ).toHaveLength(0),
+  );
+  return dialog;
+};
+
 describe('the public compendium page, with the review switch', () => {
   const DETAIL = entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name });
   const viewerOf = (canCurate: boolean) => ({
@@ -720,7 +710,7 @@ describe('the public compendium page, with the review switch', () => {
     await renderPage({ entry: NODE.id });
 
     expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
-    expect(switchIn(details())).toBeChecked();
+    expect(switchIn(await contentsOf(details()))).toBeChecked();
   });
 
   it('shows a curator the switch above the edit form on ?edit=', async () => {
@@ -740,7 +730,7 @@ describe('the public compendium page, with the review switch', () => {
     readCompendiumDetails.mockResolvedValue(DETAIL);
     viewerIfSignedIn.mockResolvedValue(viewerOf(true));
     await renderPage(address);
-    expect(switchIn(details())).not.toBeNull();
+    expect(switchIn(await contentsOf(details()))).not.toBeNull();
     expect(switchIn(editor())).not.toBeNull();
     document.body.innerHTML = '';
     readCompendiumReview.mockClear();
@@ -748,7 +738,7 @@ describe('the public compendium page, with the review switch', () => {
     viewerIfSignedIn.mockResolvedValue(shell);
     await renderPage(address);
 
-    expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();
+    expect(await contentsOf(screen.getByRole('dialog', { name: 'Testwort' }))).toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
     expect(readCompendiumReview).not.toHaveBeenCalled();
   });

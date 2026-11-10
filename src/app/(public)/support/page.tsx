@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../../components/PageHeader';
 import SupportPanel from '../../../components/SupportPanel';
 import type { SupportPanelState } from '../../../components/SupportPanel/types';
 import { emailPagePath } from '../../../lib/account-email';
+import { PendingLink } from '../../../lib/navigation';
 import { getSession, sessionIsVerified } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
 import {
@@ -14,16 +16,12 @@ import {
 } from '../../../lib/support-path';
 import { getMySupportTimeout } from '../../../modules/support';
 import type { SupportPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
 // Crawlable, so a search engine reads this and drops the bare address it would otherwise list from
 // links; the page holds nothing worth a result.
-export const metadata: Metadata = {
-  title: 'Support',
-  robots: { index: false, follow: true },
-};
+export const metadata: Metadata = noIndexMetadata('Support', true);
 
-// Open to a signed-out visitor, who is offered Sign In in place of the form. An unverified account is
-// sent to confirm its address; a timed-out sender is told when that ends, or that it has no end date.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;
@@ -44,13 +42,16 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   }
   // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.
   return (
-    <div className="page-with-nav">
+    <PageWithNav as="div">
       <PageHeader
         eyebrow="Help"
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
+      <p>
+        <PendingLink href="/help">Search Help</PendingLink>
+      </p>
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
-    </div>
+    </PageWithNav>
   );
 }

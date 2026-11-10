@@ -9,10 +9,7 @@ import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail'
 import { supportTimeoutStep } from '@/modules/support/jobs/support-timeout-mail-steps';
 import { C, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-
-// The mail a support time-out sends its user. Setting one starts a run holding the time-out's id, the kind and the origin alone;
-// the run's step reads the user and the time-out when it sends, and sends nothing once the time-out is lifted. The note is for
-// staff and reaches no mail; the message to the user does. What the template says is tests/emails/pause-notices.test.tsx.
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -39,7 +36,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = 'Staff only: a repeat caller.';
 const MESSAGE = 'Please keep each request to one problem.';
@@ -51,13 +47,11 @@ const emailOf = async (userId: string) =>
 const timeoutsOf = async (userId: string) =>
   sql`select id, message from support_timeouts where user_id = ${userId} order by created_at`;
 
-/** The time-out mail runs started so far, each run's one argument. */
 const timeoutRuns = () =>
   startJob.mock.calls
     .filter(([job]) => job === supportTimeoutMail)
     .map(([, args]) => (args as [SupportTimeoutMail])[0]);
 
-/** Runs each started run's step, as the job would, and returns the mails the transport took. */
 async function sendTimeoutRuns() {
   sent.length = 0;
   for (const run of timeoutRuns()) await supportTimeoutStep(run);

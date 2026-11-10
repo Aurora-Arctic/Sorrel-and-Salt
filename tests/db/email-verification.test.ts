@@ -6,7 +6,6 @@ import { createEmailVerificationToken } from 'better-auth/api';
 import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
 import { seedDemoCoven } from '@/db/seed/demo-coven';
 import {
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -17,6 +16,8 @@ import type { Message, ProviderId } from '@/lib/types';
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
@@ -33,12 +34,8 @@ const STRANGER = `stranger${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();
@@ -48,12 +45,10 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials and nothing else, so one import serves every test.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });
 
-// The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
   // The ledger first: a promotion's rows name the users deleted below, and
   // only a truncate empties it.
@@ -83,7 +78,7 @@ async function userRow(email: string) {
     { id: string; email_verified: boolean; updated_by: string; updated_at: Date } | undefined;
 }
 
-/** Hands the row's stamp to the bootstrap user so a restamping write is visible: an `updated_by` assertion would pass with no update hook at all. */
+/** Stamps the row as bootstrap, so `updated_by` moves only if an update hook restamps it. */
 async function restamp(email: string): Promise<void> {
   await asTouch(
     sql,
@@ -91,7 +86,6 @@ async function restamp(email: string): Promise<void> {
   );
 }
 
-/** The link in the one verification mail sent so far. */
 function mailedLink(): string {
   expect(send).toHaveBeenCalledTimes(1);
   const [message] = send.mock.calls[0];
@@ -104,13 +98,11 @@ function follow(link: string, cookie?: string): Promise<Response> {
   return auth.handler(new Request(link, { headers: cookie ? { cookie } : {} }));
 }
 
-/** A Microsoft sign-up, unverified and restamped, with its session and its mailed link. */
 async function signUpUnverified() {
   const response = await signIn('microsoft', { sub: 'ms-2', email: OWNER, verified: true });
   expectSignedIn(response);
   await restamp(OWNER);
   const before = await userRow(OWNER);
-  // The preconditions a refusal below could otherwise be explained by.
   expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
   return { cookie: cookieHeader(response), link: mailedLink(), before: before! };
 }
@@ -156,8 +148,6 @@ describe('Story 58: following the link', () => {
     const response = await follow(link, cookie);
 
     expect(response.status).toBe(302);
-    // The email page's confirmed view. The sign-in asked for no return path,
-    // so the link carries none: Continue lands the account by its role.
     expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: before.id });
   });
@@ -168,7 +158,6 @@ describe('Story 58: following the link', () => {
     const response = await follow(link);
 
     expect(response.status).toBe(302);
-    // Nothing from the link travels: the sign-in page says to open it again.
     expect(response.headers.get('location')).toBe(
       '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
     );
@@ -218,14 +207,12 @@ describe('Story 58: following the link', () => {
 describe('Story 58: the link carries on to where the account was going', () => {
   const ADMIN_LANDING = '/account/email?verified&next=%2Fkeepers';
 
-  /** A Microsoft sign-up headed for /keepers, with its session and its mailed link. */
   async function signUpHeadedForAdmin() {
     const response = await signIn(
       'microsoft',
       { sub: 'ms-next', email: OWNER, verified: true },
       '/keepers',
     );
-    // The `next` the account was sent with: the email page it landed on carries it.
     expect(landingOf(response)).toBe('/account/email?next=%2Fkeepers');
     expect((await userRow(OWNER))?.email_verified).toBe(false);
     return { cookie: cookieHeader(response), link: mailedLink() };
@@ -345,9 +332,6 @@ describe('the update hook stamps other Better Auth writes', () => {
   });
 });
 
-// Promotion at verification: our own mail vouches for the address the
-// way Google or Discord would, and only because the link is honoured from a
-// session holding the row.
 describe('the primary keeper is promoted at first-party verification', () => {
   async function roleOf(email: string): Promise<string | undefined> {
     const [row] = await sql`select role::text as role from users where email = ${email}`;
@@ -356,7 +340,6 @@ describe('the primary keeper is promoted at first-party verification', () => {
 
   beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@Email-Verification.test');
-    // The Microsoft sign-up logs why it did not promote.
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -383,7 +366,6 @@ describe('the primary keeper is promoted at first-party verification', () => {
     const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
     expectSignedIn(response);
     const cookie = cookieHeader(response);
-    // The change as setEmail records it, which the link must match to be honoured.
     await sql`update users set pending_email = ${OWNER} where email = ${STRANGER}`;
     const before = (await userRow(STRANGER))!;
     const { secret } = await auth.$context;
@@ -425,7 +407,6 @@ describe('a new account is seated in the demo coven', () => {
     return row;
   }
 
-  // Every case starts from no demo coven, whether or not the template holds one.
   async function removeDemoCoven() {
     // The coven's contents reference its row, so they go first; the cascade also empties the tables that hang off them.
     await sql`truncate spell_workings, spells, inventory_items, workspace_compendium_entries, ingredients cascade`;
@@ -451,7 +432,6 @@ describe('a new account is seated in the demo coven', () => {
 
     const response = await signIn('google', { sub: 'g-demo-1', email: OWNER, verified: true });
 
-    // Their first coven is the demo coven, so that is where they land.
     expect(response.status).toBe(302);
     expect(landingOf(response)).toBe('/coven/sorrel-and-salt-demo');
 

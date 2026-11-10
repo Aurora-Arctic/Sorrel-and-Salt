@@ -1,0 +1,13 @@
+import PageFrame from '@/components/PageFrame';
+import PageHeader from '@/components/PageHeader';
+import Skeleton from '@/components/Skeleton';
+
+// The page's own heading is real text, so a wait shows the one level-one heading the page keeps.
+export const AccountEmailSkeleton = () => (
+  <PageFrame as="div" narrow>
+    <section className="page-frame__section panel">
+      <PageHeader title="Your Email" />
+      <Skeleton shape="block" quiet />
+    </section>
+  </PageFrame>
+);

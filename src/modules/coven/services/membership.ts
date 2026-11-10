@@ -7,22 +7,16 @@ import { RowId } from '../../../lib/validation';
 import { type WorkspacePermission, rolePermits } from './access-control';
 import type { WorkspaceRole } from '../types';
 
-// CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
-// and the `Membership` it returns is the proof the check ran. The brand below
-// is the whole mechanism — see claude-docs/db/membership-proof.md, "The Membership proof".
+// The brand below is the whole mechanism (claude-docs/db/membership-proof.md, "The Membership proof").
 
 // Not exported, so no other file can name the property and no object literal satisfies `Membership`.
 declare const brand: unique symbol;
 
-// One lookup per (user, workspace) per server render, whatever permission each caller asks for; the check stays uncached. Keyed by
-// the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
+// Keyed by the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
 // finder (claude-docs/graphql/two-transports.md, "The two transports").
 const workspaceSeat = cache(findWorkspaceSeat);
 
-/**
- * Proof that `assertMembership` admitted this user to this workspace at this role. Finders and `AuditWriter` methods demand one,
- * so forgetting the check is a compile error (DESIGN.md §8).
- */
+/** Finders and `AuditWriter` methods demand one, so forgetting the check is a compile error (DESIGN.md §8). */
 export type Membership = {
   readonly workspaceId: string;
   readonly userId: string;
@@ -31,22 +25,10 @@ export type Membership = {
 };
 
 /**
- * The membership check, for every workspace-scoped operation: `permission` is
- * what the call is about to do, checked against the role's statements
- * (`access-control.ts`).
+ * A site keeper gets no bypass, so `session.role` is not read.
  *
- * ```ts
- * const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
- * await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
- * ```
- *
- * A site keeper gets no bypass: keepers curate the compendium and reach no
- * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
- *
- * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —
- * an id that is not a uuid included — or holds one whose role does not carry
- * `permission`.
- * @throws {AccessPaused} the user holds a seat in `workspaceId` and a steward has paused it; carries when the pause ends.
+ * @throws {Forbidden} the email address is unverified; or no live membership of `workspaceId` (a non-uuid id included) carries `permission`.
+ * @throws {AccessPaused} the user's seat in `workspaceId` is paused; carries when the pause ends.
  */
 export async function assertMembership(
   session: Session,
@@ -57,9 +39,24 @@ export async function assertMembership(
 }
 
 /**
- * The caller's own seat in `workspaceId`, for leaving it and nothing else: `assertMembership` for `workspace: read`, except that
- * a paused seat passes. A paused member may still go (the steward's call, M15.55); every other write stays refused by
- * `assertMembership`. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
+ * `assertMembership` for a caller that answers a refusal as a value: the `Forbidden` (a paused seat's `AccessPaused` included) comes back
+ * instead of being thrown. Any other error still throws.
+ */
+export async function tryMembership(
+  session: Session,
+  workspaceId: string,
+  permission: WorkspacePermission,
+): Promise<Membership | Forbidden> {
+  try {
+    return await assertMembership(session, workspaceId, permission);
+  } catch (error) {
+    if (error instanceof Forbidden) return error;
+    throw error;
+  }
+}
+
+/**
+ * The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
  *
  * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.
  */
@@ -70,7 +67,6 @@ export async function assertSeatToLeave(
   return admit(session, workspaceId, { workspace: ['read'] }, true);
 }
 
-/** Both checks above; `pausedMayPass` is true for leaving alone. */
 async function admit(
   session: Session,
   workspaceId: string,
@@ -82,7 +78,6 @@ async function admit(
     throw new Error('assertMembership requires a permission to check');
   }
 
-  // The same rule the pages enforce by redirect: an unverified account reaches the email page and nothing of a coven.
   if (session.emailUnverified) {
     throw new Forbidden(
       'Verify your email address before using a coven. Open the email page from your account to finish.',
@@ -111,18 +106,14 @@ async function admit(
     );
   }
 
-  // The one cast to the brand in the codebase, and the reason the type is
-  // worth anything: it is reachable only past both refusals above.
+  // The one cast to the brand in the codebase: reachable only past both refusals above.
   return { workspaceId, userId: session.userId, role } as Membership;
 }
 
 /**
- * The proofs a read spanning the compendium and, optionally, one coven runs under: none without `workspaceId`, so the
- * compendium alone, else that coven's, checked for `permission`. Every "the compendium, or this coven too" read names its scope
- * this way, so none can widen it by forgetting the check.
+ * No read can widen its scope by forgetting the check.
  *
- * @throws {Forbidden} a coven is named and the caller is signed out, or
- * `assertMembership` refuses them.
+ * @throws {Forbidden} a coven is named and the caller is signed out, or `assertMembership` refuses them.
  */
 export async function readersOf(
   session: Session | null,

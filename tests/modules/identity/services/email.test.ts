@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { ValidationError } from '@/lib/errors';
 import {
@@ -11,6 +11,7 @@ import {
 import { A, B, asUser } from '../../../support/as-user';
 import { asTouch } from '../../../support/db/touch-row';
 import type { EmailUserRow } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The service half: asking for an address writes nothing to `users.email`, since the address becomes the row's at verification, so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
 // What goes out is the sender's business, which is why it is a fake here.
@@ -20,12 +21,8 @@ const NEW = `new${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const sender: EmailVerificationSender = {
@@ -47,7 +44,6 @@ async function userRow(id: string): Promise<EmailUserRow> {
   return row as EmailUserRow;
 }
 
-/** When the row's last verification mail went out; `null` for never. */
 async function setSentAt(id: string, at: string | null): Promise<void> {
   await sql`update users set verification_sent_at = ${at === null ? null : sql`now() - ${at}::interval`} where id = ${id}`;
 }

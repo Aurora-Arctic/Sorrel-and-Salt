@@ -1,26 +1,56 @@
 import { fieldRefusal } from './errors';
+import { limitMessage } from './formats';
 
-/** The most characters a message to a user may hold. */
-export const MESSAGE_MAX_LENGTH = 500;
+/** The most characters a pause's note or message holds, once trimmed: the pause services and the pause forms state it from here. */
+export const PAUSE_TEXT_MAX_LENGTH = 500;
 
-const LONG_MESSAGE = `Keep the message to ${MESSAGE_MAX_LENGTH} characters`;
+const TOO_LONG = limitMessage(PAUSE_TEXT_MAX_LENGTH);
+const PAST_END = 'Choose a time in the future';
+const NO_NOTE = 'Write a note saying why';
+
+/** @throws {ValidationError} on `['until']` when it is given and is not a valid time in the future. `null` and `undefined` mean no end. */
+export function parsePauseEnd(until: Date | null | undefined): void {
+  if (
+    until != null &&
+    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
+  ) {
+    throw fieldRefusal('until', PAST_END);
+  }
+}
 
 /**
- * The message a steward writes to a member they pause: trimmed, and `null` when blank or not given.
- *
- * @throws {ValidationError} on `['message']` when it is over 500 characters.
+ * The note trimmed; `null` when it is blank and not required.
+ * @throws {ValidationError} on `['note']` when it is over 500 characters, or blank and required.
  */
-export function parseOptionalPauseMessage(message: string | null | undefined): string | null {
-  const trimmed = typeof message === 'string' ? message.trim() : '';
-  if (trimmed.length > MESSAGE_MAX_LENGTH) throw fieldRefusal('message', LONG_MESSAGE);
+export function parsePauseNote(
+  note: string | null | undefined,
+  options: { required: true },
+): string;
+export function parsePauseNote(
+  note: string | null | undefined,
+  options: { required: false },
+): string | null;
+export function parsePauseNote(
+  note: string | null | undefined,
+  options: { required: boolean },
+): string | null {
+  const trimmed = typeof note === 'string' ? note.trim() : '';
+  if (!trimmed && options.required) throw fieldRefusal('note', NO_NOTE);
+  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('note', TOO_LONG);
   return trimmed || null;
 }
 
 /**
- * The message a keeper writes to a user they time out or pause on the site: trimmed, and required.
- *
- * @throws {ValidationError} on `['message']` when it is missing, blank or over 500 characters.
+ * `null` when blank or not given.
+ * @throws {ValidationError} on `['message']` when it is over 500 characters.
  */
+export function parseOptionalPauseMessage(message: string | null | undefined): string | null {
+  const trimmed = typeof message === 'string' ? message.trim() : '';
+  if (trimmed.length > PAUSE_TEXT_MAX_LENGTH) throw fieldRefusal('message', TOO_LONG);
+  return trimmed || null;
+}
+
+/** @throws {ValidationError} on `['message']` when it is missing, blank or over 500 characters. */
 export function parseRequiredPauseMessage(message: string | null | undefined): string {
   const trimmed = parseOptionalPauseMessage(message);
   if (!trimmed) throw fieldRefusal('message', 'Write a message to the user');

@@ -4,10 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
 import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
@@ -24,7 +24,8 @@ import {
   RadioGroupField,
   TextField,
   fieldDescription,
-  useFormHistory,
+  useEntityForm,
+  FormErrorSummary,
 } from '../Field';
 import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -143,7 +144,6 @@ function defineKind<Input extends object>({
   const send = saveRequest(create, update);
   return {
     ...copy,
-    // The schema's output is the input the mutation takes; its type is the values'.
     resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
     save: (values, id) => send(values as unknown as Input, id),
     remove: async (variables) => {
@@ -152,15 +152,10 @@ function defineKind<Input extends object>({
   };
 }
 
-/**
- * What differs between the vocabularies: what a group is called, the rows it
- * holds, what a move does to them, and the requests that write it.
- */
 const KINDS: Record<GroupKind, GroupFormKind> = {
   category: defineKind({
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
-    describe: 'What the categories in this group share',
     schema: CategoryGroupInput,
     create: CreateCategoryGroupDocument,
     update: UpdateCategoryGroupDocument,
@@ -169,10 +164,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   form: defineKind({
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
-    // The question a form group answers: what kind of thing is it (DESIGN.md §5).
-    describe: 'What kind of thing the forms in this group are',
-    // Drops the two empty colours, which a form group's input does not take,
-    // and reads the radio group's empty value, None, as the null that clears the icon.
+    // The schema drops the two empty colours a form group does not take, and reads None as null.
     schema: IngredientFormGroupInput.extend({
       icon: z.preprocess(
         (icon) => (icon === '' ? null : icon),
@@ -183,12 +175,9 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     update: UpdateIngredientFormGroupDocument,
     remove: DeleteIngredientFormGroupDocument,
   }),
-  // A deity's tradition: a form group's shape, under its own name.
   tradition: defineKind({
-    // A deity's address carries its tradition's name, as a form's does its group's.
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
-    describe: 'The people or religion whose deities it holds',
     schema: DeityTraditionInput,
     create: CreateDeityTraditionDocument,
     update: UpdateDeityTraditionDocument,
@@ -214,7 +203,6 @@ const COLORS: GroupColorField[] = [
   },
 ];
 
-/** The strip's choices: each icon by its name, then None last, the generic one. */
 const ICONS: readonly RadioOption<FormGroupIcon | ''>[] = [
   ...FORM_GROUP_ICONS.map((icon) => ({
     value: icon,
@@ -235,7 +223,6 @@ const GroupForm = ({
 }: GroupFormProps): ReactElement => {
   const id = useId();
   const spec = KINDS[kind];
-  // What the group and the rows it holds are called is the lists'.
   const { noun, holds } = GROUP_LIST_KINDS[kind];
   const { noun: one, plural: many } = VALUE_LIST_KINDS[holds];
   const title = capitalise(noun);
@@ -251,17 +238,17 @@ const GroupForm = ({
         }
       : EMPTY,
     resolver,
+    mode: 'onTouched',
+    shouldFocusError: false,
   });
   const {
     control,
     handleSubmit,
-    setError,
     setValue,
     getValues,
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const typedName = useWatch({ control, name: 'name' });
-  // Each colour field's partner, which its Match button sets it from.
   const typedColors = useWatch({ control, name: ['colorDark', 'colorLight'] });
   const typed = { colorDark: typedColors[0], colorLight: typedColors[1] };
   // The partner each colour last filled, so it keeps following only while
@@ -278,23 +265,18 @@ const GroupForm = ({
     setValue(partner, paired, { shouldDirty: true });
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
-  // Cancel, and every other way out of the modal, asks first while the form has changes;
-  // a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
-  // Undo and redo, off while a question is up over the form: the unsaved changes', or a
-  // step of the delete.
-  const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, {
-    root,
-    enabled: !discard.asking && step.at === 'idle',
+  const { root, history, setAlert, rootError, send } = useEntityForm({
+    methods,
+    discard,
+    save: (input) => spec.save(input, group?.id),
+    onDone,
+    asking: step.at !== 'idle',
+    toField: ({ path: [field, ...rest] }) =>
+      rest.length === 0 && isField(field) ? field : undefined,
   });
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
-  const [alert, setAlert] = useState<string>();
-
-  const save = useMutation({
-    mutationFn: (input: GroupValues): Promise<void> => spec.save(input, group?.id),
-  });
 
   const remove = useMutation({
     mutationFn: async (target: string | undefined): Promise<void> => {
@@ -307,19 +289,6 @@ const GroupForm = ({
     },
   });
 
-  /** Sends the input; a refusal lands beside its field, or above them all. */
-  const send = async (input: GroupValues): Promise<void> => {
-    setAlert(undefined);
-    try {
-      await save.mutateAsync(input);
-      onDone();
-    } catch (error) {
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
-    }
-  };
-
   const confirmDelete = async (target: string | undefined): Promise<void> => {
     setAlert(undefined);
     setMoveError(undefined);
@@ -327,8 +296,6 @@ const GroupForm = ({
       await remove.mutateAsync(target);
       onDone();
     } catch (error) {
-      // A refused move goes back to the choice, beside the picker that made
-      // it; anything else is a refusal naming its remedy (DESIGN.md §7).
       const issues = readGraphqlIssues(error);
       const onMove = issues.find(({ path }) => path.length === 1 && path[0] === 'moveTo');
       if (onMove && memberCount > 0) {
@@ -344,7 +311,6 @@ const GroupForm = ({
   const others = groups.filter((each) => each.id !== group?.id);
   const rowNoun = plural(memberCount, one, many);
   const rows = `${memberCount} ${rowNoun}`;
-  const rootError = errors.root?.message ?? alert;
 
   // The choosing step's safe answer, which takes the focus as it is asked;
   // the confirming step's are ConfirmQuestion's own.
@@ -378,10 +344,8 @@ const GroupForm = ({
         </ConfirmOverlay>
       );
     }
-    // A label, so title case: "Move Its 3 Categories To".
     const label = `Move Its ${memberCount} ${capitalise(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
-    // Named by the picker's label, the question this step asks.
     return (
       <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={cancelRef}>
         <FieldShell label={label} {...move}>
@@ -397,7 +361,6 @@ const GroupForm = ({
             choices={others.map((each) => ({
               value: each.id,
               label: each.name,
-              // A form group with no icon shows the generic; the other kinds carry none.
               icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
             }))}
             placeholder={`Choose a ${noun}`}
@@ -422,8 +385,8 @@ const GroupForm = ({
 
   const confirming = (target: string | undefined): ReactElement => {
     const destination = others.find((each) => each.id === target);
-    // A refusal is confirmDelete's own to place, back at the choice or in
-    // the alert, so neither question is told it.
+    // A refusal is confirmDelete's to place, at the choice or in the alert, so neither question
+    // is told it.
     if (!destination) {
       return (
         <ConfirmQuestion
@@ -477,6 +440,7 @@ const GroupForm = ({
         >
           <FormHistoryButtons />
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           <TextField<GroupValues>
             name="name"
             label="Name"
@@ -484,13 +448,7 @@ const GroupForm = ({
             autoComplete="off"
             required
           />
-          <TextField<GroupValues>
-            name="description"
-            label="Description"
-            placeholder={spec.describe}
-            multiline
-            required
-          />
+          <TextField<GroupValues> name="description" label="Description" multiline required />
           {kind === 'category' &&
             COLORS.map(({ column, label, hint }) => {
               const { aria, ...shell } = fieldDescription({
@@ -517,7 +475,7 @@ const GroupForm = ({
                         id={shell.controlId}
                         label={label}
                         column={column}
-                        placeholder="Add a hex"
+                        placeholder="#4e8bc2"
                         value={field.value}
                         onChange={(value) => {
                           field.onChange(value);

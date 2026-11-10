@@ -15,15 +15,15 @@ import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
+import { limitMessage } from '@/lib/formats';
+import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 
-// The Invitations tab: render-only, so the page owns the read
-// and this owns what a keeper sees of it and sends, New Invitation beside the
-// heading included (claude-docs/components/admin-invitations.md).
+// claude-docs/components/admin-invitations.md
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The pause's reason, as the page passes it.
 const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
 
 const INVITATIONS = [
@@ -41,6 +41,13 @@ const INVITATIONS = [
     note: null,
     expiresAt: new Date('2026-10-16T09:00:00Z'),
   },
+  {
+    id: 'i3',
+    email: 'cass@example.test',
+    siteRole: 'user' as const,
+    note: null,
+    expiresAt: new Date('2026-10-15T09:00:00Z'),
+  },
 ];
 
 beforeEach(() => {
@@ -51,18 +58,18 @@ beforeEach(() => {
 
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
-/** A role's radio, by the start of its name: its description is read after it. */
-const roleRadio = (role: 'Curator' | 'Keeper') =>
+const roleRadio = (role: 'Coven Creator' | 'Curator' | 'Keeper') =>
   within(dialog()).getByRole('radio', { name: new RegExp(`^${role}`) });
 
 describe('AdminInvitations', () => {
   it('lists each pending invitation with its address, role, reason and expiry', () => {
     render(<AdminInvitations invitations={INVITATIONS} />);
 
-    const [, first, second] = screen.getAllByRole('row');
+    const [, first, second, third] = screen.getAllByRole('row');
     expect(within(first).getByText('ada@example.test')).toBeInTheDocument();
     expect(within(first).getByText('Curator')).toBeInTheDocument();
     expect(within(second).getByText('Keeper')).toBeInTheDocument();
+    expect(within(third).getByText('Coven Creator')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
     expect(
       within(first).getByText(/^\d{1,2} October \d{4}, \d{1,2}:\d{2} (am|pm)$/),
@@ -85,7 +92,7 @@ describe('AdminInvitations', () => {
     );
   });
 
-  it('sends an invitation to the curator role with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
+  it('sends an invitation to create a coven, the user role chosen to begin with, with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
     const calls: CreateAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
       'CreateAdminInvitation',
@@ -99,8 +106,7 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
-    // The lesser role is the one a keeper has to choose against.
-    expect(roleRadio('Curator')).toBeChecked();
+    expect(roleRadio('Coven Creator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
     });
@@ -110,13 +116,16 @@ describe('AdminInvitations', () => {
     expect(send()).toBeEnabled();
     fireEvent.click(send());
 
-    expect(
-      (await screen.findAllByRole('status')).filter((status) =>
-        status.textContent?.includes('cass@example.test'),
-      ),
-    ).toHaveLength(1);
+    // The list's own empty state is a status region already, so the sent notice is waited for by its text.
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole('status')
+          .filter((status) => status.textContent?.includes('cass@example.test')),
+      ).toHaveLength(1),
+    );
     expect(calls).toEqual([
-      { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
+      { email: 'cass@example.test', siteRole: 'user', note: 'Knows the celestial bodies' },
     ]);
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false }),
@@ -133,7 +142,10 @@ describe('AdminInvitations', () => {
     ).toHaveLength(1);
   });
 
-  it('sends the admin role when it is chosen', async () => {
+  it.each([
+    ['Curator', 'curator'],
+    ['Keeper', 'admin'],
+  ] as const)('sends the %s role when it is chosen', async (label, siteRole) => {
     const calls: CreateAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
       'CreateAdminInvitation',
@@ -147,16 +159,14 @@ describe('AdminInvitations', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: 'cass@example.test' },
     });
-    fireEvent.click(roleRadio('Keeper'));
+    fireEvent.click(roleRadio(label));
     fireEvent.click(send());
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(calls).toEqual([{ email: 'cass@example.test', siteRole: 'admin' }]);
+    expect(calls).toEqual([{ email: 'cass@example.test', siteRole }]);
   });
 
-  // Every way out asks first while the form has anything typed: the
-  // guard's shape is tests/components/Modal's, and this its wiring; the close
-  // it makes is the modal's, back to the tab.
+  // Every way out asks first while the form has anything typed; the guard's shape is tests/components/Modal's.
   it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', () => {
     render(<AdminInvitations invitations={[]} inviting />);
 
@@ -166,6 +176,39 @@ describe('AdminInvitations', () => {
       }),
     );
     expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false });
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    render(<AdminInvitations invitations={[]} inviting />);
+    const email = within(dialog()).getByRole('textbox', { name: 'Email Address' });
+    fireEvent.change(email, { target: { value: 'name@' } });
+    fireEvent.blur(email);
+
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
+  it('refuses a reason over its limit on Send Invitation, on the field, without sending', () => {
+    const calls: CreateAdminInvitationMutationVariables[] = [];
+    mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
+      'CreateAdminInvitation',
+      (variables) => {
+        calls.push(variables);
+        return { createAdminInvitation: { id: 'i3' } };
+      },
+    );
+    render(<AdminInvitations invitations={[]} inviting />);
+    const reason = within(dialog()).getByRole('textbox', { name: 'Reason' });
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
+      target: { value: 'cass@example.test' },
+    });
+    fireEvent.change(reason, { target: { value: 'x'.repeat(REASON_LIMIT + 1) } });
+
+    fireEvent.submit(send().closest('form') as HTMLFormElement);
+
+    expect(reason).toHaveAttribute('aria-invalid', 'true');
+    expect(reason).toHaveAccessibleDescription(expect.stringContaining(limitMessage(REASON_LIMIT)));
+    expect(calls).toEqual([]);
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {
@@ -232,7 +275,6 @@ describe('AdminInvitations', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  // In view but unusable while paused, as the role controls are.
   it('locks Invite and every Revoke with the pause as the reason', () => {
     render(
       <>
@@ -241,7 +283,6 @@ describe('AdminInvitations', () => {
       </>,
     );
 
-    // Not opened even by the form's address.
     expect(screen.queryByRole('dialog')).toBeNull();
     const invite = screen.getByRole('button', { name: 'New Invitation' });
     expect(invite).toHaveAttribute('aria-disabled', 'true');
@@ -257,8 +298,7 @@ describe('AdminInvitations', () => {
   });
 });
 
-// The filter: FilterForm's loading state and Clear are CompendiumList's to test, and the shared rows assert the address this one builds and which values count as a filter.
-// This file proves the switch carries the email and the invite form keeps the filter and the page shown. It is a soft navigation from the first page, as every page under /keepers runs its own guard.
+// FilterForm's loading state and Clear are CompendiumList's to test.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
   const email = () => screen.getByRole('searchbox', { name: 'Email' });
@@ -336,5 +376,38 @@ describe('AdminInvitations filter', () => {
       '/keepers/invitations?email=fern&expiring&after=c25',
       { scroll: false },
     );
+  });
+  describe('the invite form checks the address in the browser, as the coven invite dialog does', () => {
+    const emailField = () => within(dialog()).getByRole('textbox', { name: 'Email Address' });
+
+    it('refuses an address the format rule rejects before anything is sent', async () => {
+      const calls: CreateAdminInvitationMutationVariables[] = [];
+      mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
+        'CreateAdminInvitation',
+        (variables) => {
+          calls.push(variables);
+          return { createAdminInvitation: { id: 'i9' } };
+        },
+      );
+      render(<AdminInvitations invitations={[]} inviting />);
+
+      fireEvent.change(emailField(), { target: { value: 'ada@example.invalid' } });
+      fireEvent.click(send());
+
+      await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
+      expect(emailField()).toHaveAccessibleDescription(/\S/);
+      expect(calls).toEqual([]);
+    });
+
+    it('clears the refusal as the address is changed', async () => {
+      render(<AdminInvitations invitations={[]} inviting />);
+      fireEvent.change(emailField(), { target: { value: 'ada.example.test' } });
+      fireEvent.click(send());
+      await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
+
+      fireEvent.change(emailField(), { target: { value: 'ada@example.test' } });
+
+      expect(emailField()).not.toHaveAttribute('aria-invalid', 'true');
+    });
   });
 });

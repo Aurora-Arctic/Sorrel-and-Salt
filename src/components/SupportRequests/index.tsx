@@ -4,6 +4,7 @@ import { type ReactElement } from 'react';
 import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
+import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import LocalTime from '../LocalTime';
 import IconTip, {
@@ -16,7 +17,6 @@ import IconTip, {
   SproutIcon,
 } from '../IconTip';
 import Pager from '../Pager';
-import Skeleton from '../Skeleton';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS } from './filter';
@@ -50,7 +50,6 @@ function emptyText({ about, errorCode }: Filter): string {
   return noMatchText('support requests', filters, emptyList('support requests'));
 }
 
-/** The request's state as text badges under its title: the open one in the accent's tint, the rest muted. */
 const StatusBadges = ({ status }: { status: SupportStatus }): ReactElement => (
   <div className="badges">
     <span className={statusBadgeClass(status)}>{STATUS_LABELS[status]}</span>
@@ -94,7 +93,6 @@ const SupportRequests = ({
   opened,
   assignees = [],
 }: SupportRequestsProps): ReactElement => {
-  // The sender's modal opens on top of the request when one is open, which stays beneath it.
   const userHref =
     viewer.role === 'admin'
       ? (id: string) => supportHref(filter, cursor, opened?.id, id)
@@ -106,7 +104,7 @@ const SupportRequests = ({
           key={`${filter.about}\n${filter.view}\n${filter.errorCode}`}
           filter={filter}
         />
-        <ListBody>
+        <ListBody skeleton={<SupportListBodySkeleton />}>
           <output className="visually-hidden">
             {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
           </output>
@@ -204,7 +202,6 @@ const SupportRequests = ({
               },
               {
                 heading: 'Sender',
-                // Empty for an anonymised request, which the stacked card then drops, label and all.
                 className: 'support-requests__sender-cell',
                 cell: (request) =>
                   !request.anonymised && (
@@ -261,6 +258,7 @@ const SupportRequests = ({
             rows={requests}
             rowKey={(request) => request.id}
             empty={emptyText(filter)}
+            emptyQuiet
             className="data-table--nowrap"
           />
           <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
@@ -270,7 +268,7 @@ const SupportRequests = ({
       <RouteModal
         closeHref={supportHref(filter, cursor)}
         size="listed"
-        loadingBody={<Skeleton shape="detail" side={viewer.role === 'admin'} />}
+        loadingBody={<SupportDetailSkeleton />}
         content={
           opened && {
             heading: {

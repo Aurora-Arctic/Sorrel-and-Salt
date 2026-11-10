@@ -37,7 +37,6 @@ function fillText() {
   fireEvent.change(message(), { target: { value: ' The text is too faint. ' } });
 }
 
-// Writes the subject and message, and chooses Bug when the form opened with nothing chosen.
 function fill() {
   fillText();
   if (!within(aboutGroup()).queryByRole('radio', { checked: true })) {
@@ -63,12 +62,12 @@ describe('SupportForm', () => {
     render(<SupportForm path="/a" />);
     fillText();
     fireEvent.click(send());
-    expect(aboutGroup()).toHaveAccessibleDescription('Choose what this is about.');
+    expect(aboutGroup()).toHaveAccessibleDescription('Error: Choose what this is about.');
     expect(calls).toHaveLength(0);
     expect(screen.queryByRole('status')).toBeNull();
 
     fireEvent.click(aboutRadio('Question'));
-    expect(aboutGroup()).not.toHaveAccessibleDescription('Choose what this is about.');
+    expect(aboutGroup()).not.toHaveAccessibleDescription('Error: Choose what this is about.');
   });
 
   it('shows what each about means inside its card', () => {
@@ -122,12 +121,10 @@ describe('SupportForm', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('states the limits without blocking typing', () => {
+  it('sets no hard limit on typing', () => {
     render(<SupportForm path="/a" />);
     expect(subject()).not.toHaveAttribute('maxlength');
     expect(message()).not.toHaveAttribute('maxlength');
-    expect(subject()).toHaveAccessibleDescription(/120/);
-    expect(message()).toHaveAccessibleDescription(/4000/);
   });
 
   it('counts the characters left only once a field passes 75% of its limit', () => {
@@ -160,7 +157,7 @@ describe('SupportForm', () => {
 
     fireEvent.click(send());
     await waitFor(() => expect(subject()).toHaveFocus());
-    expect(subject()).toHaveAccessibleDescription(/Keep the subject to 120 characters/);
+    expect(subject()).toHaveAccessibleDescription(/120 characters/);
     expect(calls).toHaveLength(0);
   });
 
@@ -273,6 +270,11 @@ describe('SupportForm', () => {
     expect(screen.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
       /Opened from the Error 500 page, reference abc123\. You can change it\./,
     );
+    const reference = screen.getByText('abc123');
+    expect(reference.tagName).toBe('CODE');
+    expect(
+      screen.getByRole('textbox', { name: 'Page' }).getAttribute('aria-describedby'),
+    ).toContain(reference.closest('[id]')?.id);
     fill();
     fireEvent.click(send());
     await screen.findByRole('status');

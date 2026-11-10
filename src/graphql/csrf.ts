@@ -1,5 +1,4 @@
-// Header the site's own client sends on every request, so a script that is not
-// a browser page can say it is not a cross-site form post.
+// Header the site's own client sends, so a script that is not a browser page can say it is not a cross-site form post.
 export const CLIENT_HEADER = 'x-sorrel-client';
 export const CLIENT_HEADER_VALUE = 'web';
 
@@ -9,11 +8,8 @@ function refuse(status: number, message: string): Response {
   return Response.json({ errors: [{ message }] }, { status });
 }
 
-// Refuses a request that could change data unless it is JSON and comes from
-// this site: its Origin names this host, or it carries the client header, which
-// a page on another site cannot add without a preflight that the endpoint
-// never grants. Runs before Yoga, so no resolver runs for a refused request.
-// Returns null when the request may go on.
+// Refuses a data-changing request that is not JSON from this site (claude-docs/graphql/endpoint.md, "Refusing
+// a write from another site"); runs before Yoga. Returns null when it may go on.
 export function refuseCrossSite(request: Request): Response | null {
   if (SAFE_METHODS.has(request.method)) return null;
 

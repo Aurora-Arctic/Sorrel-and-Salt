@@ -3,10 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import SaveStatus from '@/components/SaveStatus';
 import type { SaveStatusProps } from '@/components/SaveStatus/types';
 
-// An autosaving form's status line: inline, a line that always shows the latest, a live region that announces a burst of saves once,
-// an alert with Retry that stays until a save succeeds, and a warning notice for a conflict.
-
-/** 2:02 pm and some seconds on the reader's clock. */
 const at = (minute: number, second = 0) => new Date(2026, 9, 27, 14, minute, second);
 
 function setup(props: Partial<SaveStatusProps> = {}) {
@@ -48,13 +44,11 @@ describe('SaveStatus', () => {
     const { update } = setup({ status: 'saved', savedAt: at(2, 10) });
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
 
-    // Another save 50 s on: the same burst.
     update({ status: 'saving' });
     update({ status: 'saved', savedAt: at(3, 0) });
     expect(screen.getByText('Saved 2:03 pm')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
 
-    // A save more than the gap after the last opens a new burst.
     update({ status: 'saved', savedAt: at(5, 0) });
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:05 pm');
   });
@@ -67,7 +61,6 @@ describe('SaveStatus', () => {
     fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
 
-    // The retry is under way: the alert stays, its button busy.
     update({ status: 'saving' });
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeDisabled();
@@ -103,5 +96,26 @@ describe('SaveStatus', () => {
     fireEvent.click(within(into).getByRole('button', { name: 'Reload Latest' }));
     expect(onReload).toHaveBeenCalledTimes(1);
     into.remove();
+  });
+
+  describe('as an example', () => {
+    it('draws each state with no live region and no alert, and the time as text', () => {
+      // Why it could have announced: the same line, not an example, has a live region and alerts.
+      const live = setup({ status: 'failed', savedAt: at(2) });
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      live.unmount();
+
+      for (const status of ['idle', 'pending', 'saving', 'saved', 'failed', 'conflict'] as const) {
+        const { container, unmount } = setup({ status, savedAt: at(2), example: true });
+
+        expect(container.querySelector('output')).toBeNull();
+        expect(screen.queryByRole('status')).toBeNull();
+        expect(screen.queryByRole('alert')).toBeNull();
+        unmount();
+      }
+      setup({ status: 'saved', savedAt: at(2), example: true });
+      expect(screen.getByText(/^Saved 2:02/).closest('[aria-hidden="true"]')).toBeNull();
+    });
   });
 });

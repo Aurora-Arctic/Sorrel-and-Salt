@@ -5,10 +5,7 @@ import type { Plugin } from 'graphql-yoga';
 /** Field levels a query may nest, `{ ok }` being one (DESIGN.md §7). */
 export const MAX_DEPTH = 7;
 
-/**
- * The limits on what a client may ask. Cost is the complexity plugin's; the rest hold everywhere.
- * Introspection and suggestions are off wherever `production` holds (claude-docs/graphql/protections.md).
- */
+/** Introspection and suggestions are off wherever `production` holds (claude-docs/graphql/protections.md). */
 export function protections({
   production,
 }: {

@@ -33,9 +33,7 @@ import {
   holdSaves,
 } from './ingredient-dialogs';
 
-// The add and edit dialogs of a coven's ingredient: the add opens from the coven's home, its members page and
-// /account, and each save is read back in SQL. Each flow writes its own coven, and its ingredients' invented
-// names share no word, so the duplicate warning never holds a save meant to go through.
+// Each flow writes its own coven, and its ingredients' invented names share no word, so the duplicate warning never holds a save meant to go through.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -50,12 +48,10 @@ function saveIngredient(dialog: Locator): Locator {
   return dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
 }
 
-/** The save's announcement, found by the name it carries: the saved entry's own name is data, not copy. */
 function savedStatus(page: Page, name: string): Locator {
   return page.getByRole('status').filter({ hasText: name });
 }
 
-/** Picks `kind` in the form's Classification, as tests/e2e/admin-compendium.spec.ts does. */
 async function pickClassification(dialog: Locator, kind: string): Promise<void> {
   await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
   await dialog
@@ -65,7 +61,6 @@ async function pickClassification(dialog: Locator, kind: string): Promise<void> 
     .click();
 }
 
-/** The live rows of `name` in `covenId`, read under the raw client. */
 async function savedRows(covenId: string, name: string) {
   return withSql(
     (sql) => sql<
@@ -81,15 +76,11 @@ async function savedRows(covenId: string, name: string) {
   );
 }
 
-/** Whether focus is anywhere inside `scope` now. */
 async function holdsFocus(scope: Locator): Promise<boolean> {
   return scope.evaluate((element) => element.contains(document.activeElement));
 }
 
-/**
- * Makes `userId` a member of `coven` in `role`, stamped by its owner as `seedCoven` writes its members, so a
- * user made for one coven joins another without signing in again.
- */
+/** Stamped by its owner as `seedCoven` stamps members, so a user made for one coven joins another without signing in again. */
 async function joinCoven(coven: Coven, userId: string, role: Role): Promise<void> {
   const owner = Object.values(coven.users)[0];
   await withSql((sql) =>
@@ -106,12 +97,10 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
   createWorkspaceIngredient(workspaceId: $w, input: { name: $name, variants: [] }) { id }
 }`;
 
-// The covens of the first flow: B writes to the first two and only views the third.
 const FIRST = 'Fixture Coven Story 28';
 const SECOND = 'Fixture Second Coven Story 28';
 const VIEWED = 'Fixture Viewed Coven Story 28';
 
-/** An add dialog's accessible name for `coven`: "Add Ingredient to <coven>", with the coven's name escaped as data. */
 function namesCoven(coven: string): RegExp {
   return new RegExp(`^Add Ingredient to ${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
 }
@@ -127,7 +116,6 @@ test(
       C: 'viewer',
       B: 'member',
     });
-    // Signed in as B, the last `seedCoven` made: a member of this coven alone.
 
     await test.step('every page showing the shell opens the dialog, and closing it returns the focus', async () => {
       for (const path of [`/coven/${coven.slug}`, `/coven/${coven.slug}/members`, '/account']) {
@@ -136,8 +124,6 @@ test(
         const dialog = await openAddIngredient(page);
         // Opened by the address, so a reload keeps it and Back leaves it.
         await expect(page).toHaveURL(new RegExp(`\\?new=ingredient-coven-${coven.slug}$`));
-        // In one coven, so there is nothing to choose: no chevron, and the
-        // dialog names the coven it adds to.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
         await expect(dialog).toHaveAccessibleName(namesCoven(FIRST));
         await expect(nameField(dialog)).toBeVisible();
@@ -151,9 +137,7 @@ test(
           expect(onBar).toBe(false);
         }
 
-        // Untouched, so Escape closes at once, and the focus goes back to the button.
-        // From Close, which has no tip: the walk above can end on an ⓘ, whose tip
-        // opens on focus and takes the first Escape for itself (info-tip.md).
+        // From Close, which has no tip: the walk above can end on an ⓘ, whose tip opens on focus and takes the first Escape (info-tip.md).
         await dialog.getByRole('button', { name: 'Close', exact: true }).focus();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
@@ -163,7 +147,6 @@ test(
     });
 
     await test.step("off a coven's pages, the dialog adds to the member's only coven", async () => {
-      // On /account from the step before, which names no coven.
       const dialog = await openAddIngredient(page);
       await nameField(dialog).fill('Vorpelleaf');
       await saveIngredient(dialog).click();
@@ -187,11 +170,9 @@ test(
       const destinations = destinationMenu(page);
       await destinations.toggle.click();
       await expect(destinations.toggle).toHaveAttribute('aria-expanded', 'true');
-      // The covens B writes to, in order; the one B only views is not a destination.
       await expect(destinations.choices).toHaveText([`to ${FIRST}`, `to ${SECOND}`]);
       await expect(destinations.choice(`to ${VIEWED}`)).toHaveCount(0);
 
-      // On the first coven's page, choosing the second adds to the second.
       await destinations.choice(`to ${SECOND}`).click();
       await expect(destinations.menu).toHaveCount(0);
       const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
@@ -235,7 +216,6 @@ test(
       await signInAs(page, 'e@story-28-admin.test', ['discord'], 'admin');
       for (const path of ['/account', '/curator/categories']) {
         await page.goto(path);
-        // One destination, so a plain button with nothing to choose.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
         await shellAddIngredient(page).click();
         await expect(page).toHaveURL(/\/curator\/compendium\?new(?:[=&]|$)/);
@@ -290,7 +270,6 @@ test(
       await expect(dialog).toHaveCount(0);
     });
 
-    // A name the compendium already bears is a question, not a copy.
     await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, its + puts the entry in the cupboard and turns into its Quick Look, the form left open", async () => {
       await withSql(async (sql) => {
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
@@ -331,8 +310,6 @@ test(
       const before = page.url();
       await dialog.getByRole('button', { name: /^Add to My Ingredients: Kaelmoss/ }).click();
 
-      // The + shows the check, then turns into the eye, and the row moves under In This
-      // Coven; the form stays open with what was typed, and the page is not left.
       await expect(
         dialog
           .getByRole('list', { name: 'In This Coven' })
@@ -404,6 +381,15 @@ test(
   },
 );
 
+// A failed Save puts the focus on the form's error summary, which links to the field; following the link focuses it.
+async function expectSummaryLeadsTo(dialog: Locator, field: Locator) {
+  const summary = dialog.getByRole('group', { name: 'There Is a Problem' });
+  await expect(summary).toBeFocused();
+  const id = await field.getAttribute('id');
+  await summary.locator(`a[href="#${id}"]`).click();
+  await expect(field).toBeFocused();
+}
+
 test(
   'errors show beside their fields on leaving one and on submit',
   {
@@ -419,17 +405,13 @@ test(
     await test.step('leaving Name blank once edited marks it, linking its error, and filling it clears the mark', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
-      // What Name describes while valid, so the error is what the mark adds.
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       const valid = await describedIds(name);
 
-      // Left untouched, Name stays quiet: an error shows only once the field
-      // is both edited and left, or the form submitted.
       await name.focus();
       await page.keyboard.press('Tab');
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
-      // Edited to a blank, which the schema trims to nothing, and left.
       await name.fill('   ');
       await page.keyboard.press('Tab');
       await expectFieldError(name, valid);
@@ -463,7 +445,7 @@ test(
       await expect(dialog).toHaveCount(0);
     });
 
-    await test.step('a submit with a field missing marks it and focuses it, saving nothing, until each is filled', async () => {
+    await test.step('a submit with a field missing marks it, and the error summary takes focus and links to it, saving nothing, until each is filled', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       const formal = dialog.getByRole('textbox', { name: 'Formal Name', exact: true });
@@ -479,14 +461,14 @@ test(
 
       await saveIngredient(dialog).click();
       await expectFieldError(name, validName);
-      await expect(name).toBeFocused();
+      await expectSummaryLeadsTo(dialog, name);
       await expect(dialog).toBeVisible();
 
       await name.fill('Dorvenmoss');
       await saveIngredient(dialog).click();
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       await expectFieldError(formal, validFormal);
-      await expect(formal).toBeFocused();
+      await expectSummaryLeadsTo(dialog, formal);
       await expect(dialog).toBeVisible();
       const described = await withSql(
         (sql) => sql`
@@ -515,7 +497,7 @@ test(
       B: 'member',
     });
     await page.goto(`/coven/${coven.slug}`);
-    // The ingredient dialogs save on Close instead of asking (M13.24), so the question is walked on a keeper
+    // The ingredient dialogs save on Close instead of asking, so the question is walked on a keeper
     // form, which still asks (claude-docs/components/modal.md, "Unsaved changes").
     await signInAs(page, 'groups@story-32.test', ['discord'], 'admin');
     await page.goto('/curator/category-groups');
@@ -554,7 +536,6 @@ test(
     });
 
     await test.step('a click outside asks too, and Discard Changes closes, saving nothing', async () => {
-      // Over the backdrop, beside the dialog, as tests/e2e/admin-compendium.spec.ts clicks it.
       await page.mouse.click(8, 300);
       await expect(question.discard).toBeVisible();
       await question.discard.click();
@@ -570,8 +551,6 @@ test(
       await expect(dialog).toHaveCount(0);
     });
 
-    // Leaving the page: a reload raises the browser's own question,
-    // whose wording is the browser's, and a link in the site asks the form's.
     await test.step('a reload with unsaved input raises the browser’s question', async () => {
       await page.getByRole('link', { name: 'Add Group' }).click();
       await name.fill('Halvenseed');
@@ -589,8 +568,7 @@ test(
       await signInAgainAs(page, coven.users.B);
       await withSql((sql) =>
         sql.begin(async (tx) => {
-          // A grant made by hand declares its route, as accounts-setup.ts's does:
-          // the privilege trigger refuses an undeclared change to the right.
+          // A grant made by hand declares its route: the privilege trigger refuses an undeclared change to the right.
           await tx`select set_config('app.privilege_route', 'manual', true)`;
           await tx`update users set can_create_workspace = true where id = ${coven.users.B}`;
         }),
@@ -605,7 +583,6 @@ test(
       const keep = page.getByRole('button', { name: 'Keep Editing' });
 
       await away.click();
-      // Its own dialog over the page, not a card in the page's form.
       await expect(page.getByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
       await expect(keep).toBeFocused();
       await keep.click();
@@ -620,14 +597,12 @@ test(
   },
 );
 
-/** The fixture's Testwort as the edit stories seed it: a coven's own entry with something in each field read back. */
 const TESTWORT = {
   description: 'A fixture root kept for the edit stories.',
   folkNames: ['Fixture Root'],
   categories: ['Protection'],
 };
 
-/** A coven with a member, B, signed in, and a viewer, holding the fixture's Testwort. */
 async function covenWithTestwort(page: Page, story: number) {
   const coven = await seedCoven(page, `Fixture Coven Story ${story}`, `story-${story}.test`, {
     A: 'owner',
@@ -652,7 +627,6 @@ const UPDATE = `mutation ($id: ID!, $w: ID!, $input: IngredientUpdateInput!) {
   updateIngredient(id: $id, workspaceId: $w, input: $input) { id }
 }`;
 
-/** A whole update, as `IngredientUpdateInput` takes one: every field sent, empty but the name. */
 const REFUSED_UPDATE = {
   name: 'Fixture Refusedwort',
   canonicalName: '',
@@ -709,7 +683,6 @@ test(
       await expect(dialog.getByRole('button', { name: 'Edit Root', exact: true })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
-      // Unchanged, so Escape closes at once, and the focus goes back to the row's Edit.
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toBeFocused();
@@ -750,7 +723,6 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toHaveCount(0);
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
-      // The page's Edit is an icon of its own, which a viewer is not drawn.
       await expect(
         page.getByRole('main').getByRole('link', { name: 'Edit Testwort', exact: true }),
       ).toHaveCount(0);

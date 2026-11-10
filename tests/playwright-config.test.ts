@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // The audit projects exist only when asked for, and `npm run e2e` never asks
-// (claude-docs/testing/e2e.md, "The audit"). The config reads the environment as it loads, so
+// (claude-docs/testing/e2e.md, "The audit runs the suite in WebKit, Firefox and as a phone, on demand"). The config reads the environment as it loads, so
 // each case loads it afresh.
 
 const CHROMIUM_PROJECTS = [
@@ -42,7 +42,6 @@ describe('playwright.config.ts', () => {
       PLAYWRIGHT_AUDIT_WS_ENDPOINT: AUDIT_ENDPOINT,
     });
     expect(names(config.projects)).toEqual(CHROMIUM_PROJECTS);
-    // `E2E_AUDIT` set to anything but '1' is the same as unset.
     const off = await load({ E2E_AUDIT: '0', PLAYWRIGHT_AUDIT_WS_ENDPOINT: AUDIT_ENDPOINT });
     expect(names(off.config.projects)).toEqual(CHROMIUM_PROJECTS);
   });

@@ -2,19 +2,17 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
-import ConfirmedAction from './confirmed-action';
-import LockedControl from './locked-control';
+import ConfirmedAction from '../ConfirmedAction';
 import type { PauseControlProps } from './types';
 
 // The primary keeper's switch on keeper grants and revokes: a warning while paused and the control
-// that flips it. Every keeper sees both; only the primary keeper can use it, others see the reason in
-// a tip. Pause asks first; Resume acts at once. The service is the guard
+// that flips it. Every keeper sees the warning; only the primary keeper is shown the control. Pause asks first; Resume acts at once. The service is the guard
 // (claude-docs/components/user-list.md).
 
 const PauseAdminRoleChangesDocument = graphql(`
@@ -43,7 +41,6 @@ const STATES = {
     send: () => graphqlRequest(ResumeAdminRoleChangesDocument),
   },
   open: {
-    // No sentence while changes are on: only the button.
     state: undefined,
     label: 'Pause Keeper Changes',
     done: 'Keeper changes are paused.',
@@ -58,14 +55,10 @@ const STATES = {
 const PAUSE_QUESTION =
   'Pause keeper changes? Until you resume them, no other keeper can grant or revoke the keeper role, approve or revoke coven creation, or invite a keeper.';
 
-/** Why the control cannot be used, to a keeper who is not the primary one. */
-const NOT_PRIMARY = 'Only the primary keeper can pause or resume keeper changes.';
-
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const copy = STATES[paused ? 'paused' : 'open'];
   const [sending, setSending] = useState(false);
-  // Resume's refusal, in a callout under it, as a row's is.
   const feedback = useClickFeedback({ name: copy.label });
 
   async function toggle() {
@@ -79,7 +72,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
       refresh();
     } catch (error) {
       setSending(false);
-      feedback.report(readGraphqlFailure(error).alert);
+      feedback.report(failureMessage(error));
     }
   }
 
@@ -96,11 +89,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {copy.state}
         </Notice>
       )}
-      {!canToggle ? (
-        // In view but unusable, its reason in a tip, as the primary keeper's
-        // Revoke is (on): the notice is the page's one sentence.
-        <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
-      ) : paused ? (
+      {!canToggle ? null : paused ? (
         <>
           {/* Held by aria-disabled rather than disabled while the change is
               out, so the focus stays on it and a refusal is read with the
@@ -119,7 +108,6 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {feedback.feedback}
         </>
       ) : (
-        // Its refusal is said under it by the confirmation, as a row's is.
         <ConfirmedAction
           label={copy.label}
           accessibleName={copy.label}

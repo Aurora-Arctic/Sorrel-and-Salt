@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import Notice from '../../../components/Notice';
 import { NEW_COVEN_PATH } from '../../../lib/coven-path';
@@ -8,10 +9,9 @@ import { requireSession } from '../../../lib/request-session';
 import { firstReachable } from '../../../lib/shell-home';
 import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
+import PageFrame from '@/components/PageFrame';
 
-export const metadata: Metadata = {
-  title: 'Your Coven',
-};
+export const metadata: Metadata = pageTitle('Your Coven');
 
 // The post-sign-in landing for someone with no return path. A member goes into the first coven they can open; one who
 // may create a coven is offered the create page; anyone else is told how to get in. The right is read
@@ -26,7 +26,7 @@ export default async function CovenLandingPage() {
   const pending = viewer.pendingInvitations;
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <section className="page-frame__section" aria-labelledby="coven-landing-heading">
         <PageHeader
           id="coven-landing-heading"
@@ -43,21 +43,12 @@ export default async function CovenLandingPage() {
             {pending === 1
               ? 'You have an invitation waiting. '
               : `You have ${pending} invitations waiting. `}
-            <PendingLink
-              href={ACCOUNT_INVITATIONS_PATH}
-              navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav', head: 'title' }}
-            >
-              See your invitations
-            </PendingLink>
+            <PendingLink href={ACCOUNT_INVITATIONS_PATH}>See your invitations</PendingLink>
           </Notice>
         )}
         {viewer.canCreate ? (
           <p>
-            <PendingLink
-              className="btn btn--solid"
-              href={NEW_COVEN_PATH}
-              navigationTarget={{ region: 'main', shape: 'form', frame: 'narrow' }}
-            >
+            <PendingLink className="btn btn--solid" href={NEW_COVEN_PATH}>
               Create Coven
             </PendingLink>
           </p>
@@ -76,6 +67,6 @@ export default async function CovenLandingPage() {
           </p>
         )}
       </section>
-    </main>
+    </PageFrame>
   );
 }

@@ -7,12 +7,10 @@ import { ConfirmQuestion } from '../Modal';
 import { dayInUtc, printedDateOf } from '../../lib/utc';
 import Notice from '../Notice';
 import { batchName } from './batches';
-import { saveFile } from './save-file';
+import { saveFile } from '../../lib/save-file';
 import { CARDS_PER_SHEET } from '../../lib/invitation-cards/limits';
 
-// What the mint answered, shown once. The tokens live in this component's props alone: nothing here stores them,
-// and the print PDF is the only way to keep them.
-
+// The tokens live in this component's props alone: nothing stores them, the PDF keeps them.
 export interface MintedBatch {
   batchId: string;
   expiresAt: Date | string;
@@ -29,9 +27,7 @@ const MintedCards = ({
   onDone,
 }: {
   batch: MintedBatch;
-  /** Whether the PDF holds a page of backs after each page of fronts. */
   printBacks: boolean;
-  /** Asks before a way out while the PDF is not yet downloaded. */
   guard: DiscardGuard;
   onDownloaded: () => void;
   onDone: () => void;

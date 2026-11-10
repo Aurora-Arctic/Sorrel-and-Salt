@@ -16,10 +16,6 @@ const TABBABLE =
 
 type Probe = { tabbableBefore: number; tabbableAfter: number; x: number; y: number } | null;
 
-/**
- * Picks plain text with a control before and after it, scrolls it to the window's middle and keeps the
- * text and both controls on `window` for the assertions. Returns the point to click, or null.
- */
 async function probe(page: Page): Promise<Probe> {
   return page.evaluate((selector) => {
     const main = document.querySelector('main');
@@ -44,7 +40,6 @@ async function probe(page: Page): Promise<Probe> {
     const next = tabbable.find((control) => follows(target, control))!;
     target.scrollIntoView({ block: 'center' });
     const box = target.getBoundingClientRect();
-    // The first text node's left edge, so the click lands on the text itself.
     const x = box.left + Math.min(4, box.width / 2);
     const y = box.top + box.height / 2;
     // Nothing focusable sits over the point clicked, or the click would focus it.
@@ -68,7 +63,6 @@ const isFocused = (page: Page, which: 'first' | 'next') =>
     which,
   );
 
-/** The first control after `#main` in document order: where Tab goes from it. */
 const firstAfterSkipTarget = (page: Page) =>
   page.evaluate((selector) => {
     const target = document.getElementById('main')!;
@@ -95,7 +89,6 @@ async function clickThenTab(page: Page): Promise<void> {
   await page.mouse.click(point!.x, point!.y);
   await page.keyboard.press('Tab');
 
-  // The old wrapper sent this Tab back to the page's first control.
   expect(await isFocused(page, 'first')).toBe(false);
   expect(await isFocused(page, 'next')).toBe(true);
 }

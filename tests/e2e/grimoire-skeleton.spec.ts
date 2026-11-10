@@ -1,15 +1,19 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { signInAgainAs, signInAs } from './session';
+import { signInAgainAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
+import { holdServerAnswers } from './hold-server-answers';
 
-// The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder
-// card is as tall as a real spell card and the grid has as many columns, at a desktop and a phone width.
+// The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder card is as tall as a
+// real spell card and the grid has as many columns, at desktop and phone width, and at Compact. The wait on a spell page
+// draws the recipe's own frame under the page bar.
 
-/** How far a placeholder card may be from a real card's height: a line of text's worth. */
-const HEIGHT_TOLERANCE = 12;
+/** How far a placeholder card may be from a real card's height, in pixels. */
+const HEIGHT_TOLERANCE = 2;
+
+const SPELL_TITLE = 'Calm Charm';
 
 let coven: Coven;
 
@@ -21,17 +25,19 @@ test.beforeAll(async ({ browser }) => {
       A: 'owner',
     });
     await withSql(async (sql) => {
-      await insertSpell(sql, coven.id, SPELL_TITLE, 'workspace', coven.users.A, 'complete');
+      // A typical card: an intent and three categories, which is what the placeholder is as tall as.
+      const typical = async (title: string, status: 'draft' | 'complete') => {
+        const id = await insertSpell(sql, coven.id, title, 'workspace', coven.users.A, status);
+        await sql`update spells set intent = 'To keep the house and everyone under its roof safe through the winter.' where id = ${id}`;
+        await sql`
+          insert into spell_categories (spell_id, category_id, created_by, updated_by)
+          select ${id}, id, ${coven.users.A}, ${coven.users.A}
+          from categories where deleted_at is null order by name limit 3`;
+      };
+      await typical(SPELL_TITLE, 'complete');
       for (let n = 0; n < 8; n += 1) {
-        await insertSpell(
-          sql,
-          coven.id,
-          `Skeletonwort ${n}`,
-          'workspace',
-          coven.users.A,
-          'complete',
-        );
-        await insertSpell(sql, coven.id, `Draftwort ${n}`, 'workspace', coven.users.A, 'draft');
+        await typical(`Skeletonwort ${n}`, 'complete');
+        await typical(`Draftwort ${n}`, 'draft');
       }
     });
   } finally {
@@ -39,29 +45,6 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-/** Holds back every server-component answer from `hold()` until `release()`, prefetches excepted. */
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const headers = route.request().headers();
-    const rsc = headers.rsc === '1' || new URL(route.request().url()).searchParams.has('_rsc');
-    if (!holding || !rsc || headers['next-router-prefetch'] === '1') return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold: () => {
-      holding = true;
-    },
-    held: () => held.length,
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
-
-/** The first card's height and the column count of the card grid, in the skeleton or on the page. */
 const cardGrid = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     const root = inSkeleton
@@ -85,7 +68,7 @@ for (const width of [1280, 375]) {
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
     const waitingGrid = async () => {
       await expect.poll(server.held).toBeGreaterThan(0);
       await expect(page.getByRole('main').getByRole('status')).toHaveCount(1);
@@ -93,7 +76,6 @@ for (const width of [1280, 375]) {
       return (await cardGrid(page, true))!;
     };
 
-    // From another section.
     await page.goto(`/coven/${coven.slug}/members`);
     server.hold();
     await page
@@ -107,283 +89,166 @@ for (const width of [1280, 375]) {
     const spells = (await cardGrid(page, false))!;
     expect(spells.height).toBeGreaterThan(0);
 
-    // Between its tabs.
     server.hold();
     await page.getByRole('link', { name: 'Drafts', exact: true }).click();
     const betweenTabs = await waitingGrid();
     await server.release();
     await expect(page.getByRole('list', { name: 'Drafts' })).toBeVisible();
+    // A draft card is taller than a complete one, so each wait is compared with its own tab's cards.
+    const drafts = (await cardGrid(page, false))!;
+    expect(drafts.height).toBeGreaterThan(spells.height);
 
-    for (const waiting of [fromSection, betweenTabs]) {
-      expect(waiting.columns).toBe(spells.columns);
-      expect(Math.abs(waiting.height - spells.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
+    for (const [waiting, loaded] of [
+      [fromSection, spells],
+      [betweenTabs, drafts],
+    ] as const) {
+      expect(waiting.columns).toBe(loaded.columns);
+      expect(Math.abs(waiting.height - loaded.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
     }
   });
 }
 
-/** How far a placeholder region may be from the loaded page's, in either axis: a line of text's worth. */
-const REGION_TOLERANCE = 12;
-const SPELL_TITLE = 'Calm Charm';
-
-type Box = { x: number; y: number; width: number; height: number };
-
-/**
- * The boxes of a spell page's regions, in the skeleton (found by the skeleton's own shapes, which carry no
- * role) or on the loaded page (found by role and label).
- */
-const recipeRegions = (page: Page, waiting: boolean) =>
-  page.evaluate((inSkeleton) => {
-    const box = (element: Element | null | undefined): Box | null => {
-      if (!element) return null;
-      const { x, y, width, height } = element.getBoundingClientRect();
-      return { x, y, width, height };
-    };
-    if (inSkeleton) {
-      const root = [...document.querySelectorAll('output')].find(
-        (output) =>
-          !output.closest('[aria-hidden="true"]') &&
-          output.parentElement?.querySelector('.skeleton__recipe'),
-      )?.parentElement;
-      const at = (selector: string) => box(root?.querySelector(selector));
-      return {
-        back: at('.skeleton__recipe-back'),
-        edited: at('.skeleton__recipe-edited'),
-        title: at('.skeleton__recipe-title'),
-        actions: at('.skeleton__recipe-actions'),
-        menu: at('.skeleton__recipe .skeleton__menu'),
-        main: at('.skeleton__recipe-columns'),
-        aside: at('.skeleton__recipe-aside'),
-      };
-    }
-    const named = (role: string, name: string) =>
-      [...document.querySelectorAll(`[role="${role}"], ${role}`)].find((element) =>
-        (element.getAttribute('aria-label') ?? element.textContent ?? '').includes(name),
-      );
-    return {
-      back: box(
-        [...document.querySelectorAll('main a')].find((a) => a.textContent?.startsWith('Back to')),
-      ),
-      edited: box(document.querySelector('main .last-edit')),
-      title: box(document.querySelector('main h1')),
-      actions: box(document.querySelector('main h1')?.nextElementSibling),
-      menu: box(named('nav', 'On This Page')),
-      main: box(document.querySelector('.spell-recipe__columns')),
-      aside: box(named('aside', 'The Cupboard')),
-    };
-  }, waiting);
-
 for (const width of [1280, 375]) {
-  test(`at ${width}px a spell page's wait has the loaded page's regions in their places`, async ({
+  test(`at ${width}px with the Grimoire set to Compact, its wait draws compact cards as tall as the loaded ones`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    const server = await holdServerAnswers(page);
-    const link = page.getByRole('heading', { name: SPELL_TITLE }).getByRole('link');
-    await expect(link).toBeVisible();
-    server.hold();
-    await link.click();
-    await expect.poll(server.held).toBeGreaterThan(0);
-    await expect.poll(async () => (await recipeRegions(page, true)).title).not.toBeNull();
-    // The wait is pinned in the window wherever the page was scrolled to; at the top it stands where the arrived page does.
-    await page.evaluate(() => window.scrollTo(0, 0));
-    const waiting = await recipeRegions(page, true);
-    await server.release();
-    await expect(page.getByRole('heading', { level: 1, name: SPELL_TITLE })).toBeVisible();
-    const loaded = await recipeRegions(page, false);
+    await expect(page.getByRole('list', { name: 'Spells' })).toBeVisible();
+    const compact = page.getByRole('main').getByLabel('Compact', { exact: true });
+    await expect(compact).toBeChecked();
 
-    for (const region of ['back', 'edited', 'title', 'actions', 'menu', 'main', 'aside'] as const) {
-      const real = loaded[region];
-      const shape = waiting[region];
-      // Why the comparison means something: the loaded page has the region.
-      expect(real, `${region} on the loaded page`).not.toBeNull();
-      expect(shape, `${region} in the wait`).not.toBeNull();
-      // On a phone the columns dissolve into the page (`display: contents`) and have no box of their own.
-      if (region === 'main' && real!.width === 0) continue;
-      expect(Math.abs(shape!.x - real!.x), `${region} left edge`).toBeLessThanOrEqual(
-        REGION_TOLERANCE,
-      );
-      expect(Math.abs(shape!.y - real!.y), `${region} top edge`).toBeLessThanOrEqual(
-        REGION_TOLERANCE,
+    // Each tab's loaded cards at Compact and at Regular. Why the comparison means something: Compact (the
+    // default) draws a shorter card than Regular.
+    const measure = async () => {
+      const loaded = (await cardGrid(page, false))!;
+      await compact.uncheck();
+      await expect(compact).not.toBeChecked();
+      await expect
+        .poll(async () => (await cardGrid(page, false))!.height)
+        .toBeGreaterThan(loaded.height);
+      const regular = (await cardGrid(page, false))!;
+      await compact.check();
+      await expect(compact).toBeChecked();
+      await expect.poll(async () => (await cardGrid(page, false))!.height).toBe(loaded.height);
+      return { loaded, regular };
+    };
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
+    const waitingAt = async (tab: string) => {
+      server.hold();
+      await page.getByRole('link', { name: tab, exact: true }).click();
+      await expect.poll(server.held).toBeGreaterThan(0);
+      await expect(
+        page
+          .getByRole('main')
+          .getByRole('status')
+          .filter({ hasText: /^Loading$/ }),
+      ).toHaveCount(1);
+      await expect.poll(() => cardGrid(page, true)).not.toBeNull();
+      const waiting = (await cardGrid(page, true))!;
+      await server.release();
+      await expect(page.getByRole('list', { name: tab })).toBeVisible();
+      await expect(compact).toBeChecked();
+      return waiting;
+    };
+
+    const spells = await measure();
+    const waitingForDrafts = await waitingAt('Drafts');
+    const drafts = await measure();
+    const waitingForSpells = await waitingAt('Spells');
+
+    test.info().annotations.push({
+      type: 'card heights',
+      description: JSON.stringify({ spells, waitingForSpells, drafts, waitingForDrafts }),
+    });
+    for (const [waiting, { loaded, regular }] of [
+      [waitingForSpells, spells],
+      [waitingForDrafts, drafts],
+    ] as const) {
+      expect(waiting.columns).toBe(loaded.columns);
+      expect(Math.abs(waiting.height - loaded.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
+      // Why the match is Compact's: the wait is nearer Compact than Regular.
+      expect(Math.abs(waiting.height - loaded.height)).toBeLessThan(
+        Math.abs(waiting.height - regular.height),
       );
     }
-    // The side column is as wide as the real one; the title and its icons end where the real ones do.
-    expect(Math.abs(waiting.aside!.width - loaded.aside!.width)).toBeLessThanOrEqual(
-      REGION_TOLERANCE,
-    );
-    expect(
-      Math.abs(
-        waiting.actions!.x + waiting.actions!.width - (loaded.actions!.x + loaded.actions!.width),
-      ),
-    ).toBeLessThanOrEqual(REGION_TOLERANCE);
   });
+}
 
-  test(`at ${width}px the Grimoire's wait holds the Compact switch where the loaded filter row does`, async ({
+/** How far the waiting page's frame may be from the loaded page's, in either axis: a line of text's worth. */
+const FRAME_TOLERANCE = 12;
+
+/**
+ * The page bar is `aria-hidden`, empty and outside the main landmark, so it is found by that structure: `rest` notes the
+ * empty hidden marks drawn at rest, `wait` counts the ones drawn since (the bar), and `after` how many of those are still drawn.
+ */
+const pageBars = (page: Page, step: 'rest' | 'wait' | 'after') =>
+  page.evaluate((at) => {
+    const drawn = [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]:empty')].filter(
+      (mark) => {
+        if (mark.closest('main') || mark.hidden) return false;
+        const { width, height } = mark.getBoundingClientRect();
+        return width > 0 && height > 0;
+      },
+    );
+    const noted = window as unknown as { atRest?: Set<Element>; bars?: Element[] };
+    if (at === 'rest') {
+      noted.atRest = new Set(drawn);
+      return 0;
+    }
+    if (at === 'wait') {
+      noted.bars = drawn.filter((mark) => !noted.atRest?.has(mark));
+      return noted.bars.length;
+    }
+    return (noted.bars ?? []).filter((mark) => drawn.includes(mark as HTMLElement)).length;
+  }, step);
+
+for (const width of [1280, 375]) {
+  test(`at ${width}px a spell page's wait draws the recipe's own frame under the page bar, and gives way to the spell`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await signInAgainAs(page, coven.users.A);
-    await page.goto(`/coven/${coven.slug}/members`);
-    const server = await holdServerAnswers(page);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    const server = await holdServerAnswers(page, { prefetch: 'pass' });
+    const link = page.getByRole('heading', { name: SPELL_TITLE }).getByRole('link');
+    await expect(link).toBeVisible();
+    await pageBars(page, 'rest');
+
     server.hold();
-    await page
-      .getByRole('navigation', { name: 'Coven' })
-      .getByRole('link', { name: 'Grimoire', exact: true })
-      .click();
+    await link.click();
     await expect.poll(server.held).toBeGreaterThan(0);
-    const waiting = await page.evaluate(() => {
-      const row = [...document.querySelectorAll('output')]
-        .find(
-          (output) =>
-            !output.closest('[aria-hidden="true"]') &&
-            output.parentElement?.querySelector('.skeleton__filter'),
-        )
-        ?.parentElement?.querySelector('.skeleton__filter');
-      const last = row?.lastElementChild?.getBoundingClientRect();
-      const whole = row?.getBoundingClientRect();
-      return last && whole
-        ? { x: last.x, y: last.y - whole.y, right: last.right, rowHeight: whole.height }
-        : null;
-    });
+
+    // The held list is hidden from readers, so what the main landmark holds now is the wait alone.
+    await expect(page.getByRole('list', { name: 'Spells' })).toHaveCount(0);
+    const main = page.getByRole('main');
+    await expect(main.getByRole('status').filter({ hasText: /^Loading$/ })).toHaveCount(1);
+    await expect(main.getByRole('heading', { level: 1 })).toHaveAccessibleName('Loading');
+    // The recipe's own frame, with no spell in it yet to name it.
+    const frame = main.getByRole('article');
+    await expect(frame).toBeVisible();
+    await expect(frame).toHaveAccessibleName('');
+    // The page bar shows once the wait has lasted its delay.
+    await expect.poll(() => pageBars(page, 'wait')).toBe(1);
+    // The wait is pinned in the window wherever the page was scrolled to; at the top it stands where the arrived page does.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const waiting = await frame.boundingBox();
+
     await server.release();
-    await expect(page.getByRole('list', { name: 'Spells' })).toBeVisible();
-    const loaded = await page.evaluate(() => {
-      const label = [...document.querySelectorAll('main label')].find(
-        (l) => l.textContent === 'Compact',
-      );
-      const field = label?.parentElement?.getBoundingClientRect();
-      const row = label?.closest('form')?.getBoundingClientRect();
-      return field && row
-        ? { x: field.x, y: field.y - row.y, right: field.right, rowHeight: row.height }
-        : null;
-    });
-    expect(loaded, 'the loaded row has a Compact switch').not.toBeNull();
-    expect(waiting, 'the wait has a last control').not.toBeNull();
-    expect(Math.abs(waiting!.x - loaded!.x)).toBeLessThanOrEqual(REGION_TOLERANCE);
-    expect(Math.abs(waiting!.right - loaded!.right)).toBeLessThanOrEqual(REGION_TOLERANCE);
-    expect(Math.abs(waiting!.y - loaded!.y)).toBeLessThanOrEqual(REGION_TOLERANCE);
-    expect(Math.abs(waiting!.rowHeight - loaded!.rowHeight)).toBeLessThanOrEqual(REGION_TOLERANCE);
+
+    const spell = page.getByRole('article', { name: SPELL_TITLE });
+    await expect(page.getByRole('heading', { level: 1, name: SPELL_TITLE })).toBeVisible();
+    await expect(spell).toBeVisible();
+    await expect(main.getByRole('status').filter({ hasText: /^Loading$/ })).toHaveCount(0);
+    await expect.poll(() => pageBars(page, 'after')).toBe(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const loaded = await spell.boundingBox();
+    // Why the comparison means something: both frames were drawn.
+    expect(waiting, 'the wait has a frame').not.toBeNull();
+    expect(loaded, 'the spell has a frame').not.toBeNull();
+    expect(Math.abs(waiting!.x - loaded!.x)).toBeLessThanOrEqual(FRAME_TOLERANCE);
+    expect(Math.abs(waiting!.y - loaded!.y)).toBeLessThanOrEqual(FRAME_TOLERANCE);
+    expect(Math.abs(waiting!.width - loaded!.width)).toBeLessThanOrEqual(FRAME_TOLERANCE);
   });
-}
-
-// Every list page whose wait draws a filter row draws it where the loaded page's row is: measured from the
-// window's top edge, in the wait (pinned there) and on the page that arrives, at a desktop and a phone width.
-
-let adminId = '';
-
-test.beforeAll(async ({ browser }) => {
-  const setup = await browser.newPage();
-  try {
-    adminId = (await signInAs(setup, 'admin@grimoire-skeleton.test', ['discord'], 'admin')).userId;
-  } finally {
-    await setup.close();
-  }
-});
-
-/** The top edge of the filter row: the wait's, or the loaded page's (`.filter-row`). */
-const filterRowTop = (page: Page, waiting: boolean) =>
-  page.evaluate((inSkeleton) => {
-    if (inSkeleton) {
-      const root = document.querySelector('.skeleton:has(.skeleton__filter)');
-      return root?.querySelector('.skeleton__filter')?.getBoundingClientRect().top ?? null;
-    }
-    return document.querySelector('main .filter-row')?.getBoundingClientRect().top ?? null;
-  }, waiting);
-
-const adminLink = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Curator', exact: true })
-    .getByRole('link', { name, exact: true })
-    .click();
-
-const listPages: {
-  name: string;
-  admin?: boolean;
-  start: (c: Coven) => string;
-  press: (page: Page) => Promise<void>;
-  arrived: (page: Page) => Promise<void>;
-}[] = [
-  {
-    name: 'the Grimoire',
-    start: (c) => `/coven/${c.slug}/members`,
-    press: (page) =>
-      page
-        .getByRole('navigation', { name: 'Coven' })
-        .getByRole('link', { name: 'Grimoire', exact: true })
-        .click(),
-    arrived: (page) => expect(page.getByRole('list', { name: 'Spells' })).toBeVisible(),
-  },
-  {
-    name: 'the Drafts tab',
-    start: (c) => `/coven/${c.slug}/grimoire`,
-    press: (page) => page.getByRole('link', { name: 'Drafts', exact: true }).click(),
-    arrived: (page) => expect(page.getByRole('list', { name: 'Drafts' })).toBeVisible(),
-  },
-  {
-    name: 'the coven Ingredients list',
-    start: (c) => `/coven/${c.slug}/members`,
-    press: (page) =>
-      page
-        .getByRole('navigation', { name: 'Coven' })
-        .getByRole('link', { name: 'Ingredients', exact: true })
-        .click(),
-    arrived: (page) => expect(page).toHaveURL(/\/ingredients$/),
-  },
-  {
-    name: 'the Compendium',
-    start: (c) => `/coven/${c.slug}/members`,
-    // Under the tablet width the site links sit in the account menu, opened first.
-    press: async (page) => {
-      const link = page.getByRole('link', { name: 'Compendium', exact: true });
-      if (!(await link.isVisible())) {
-        await page.getByRole('button', { name: 'Fixture A', exact: true }).click();
-      }
-      await link.click();
-    },
-    arrived: (page) => expect(page).toHaveURL(/\/compendium$/),
-  },
-  {
-    name: 'the admin Compendium',
-    admin: true,
-    start: () => '/curator/categories',
-    press: (page) => adminLink(page, 'Compendium'),
-    arrived: (page) => expect(page).toHaveURL(/\/curator\/compendium$/),
-  },
-  {
-    name: 'an admin table list',
-    admin: true,
-    start: () => '/curator/compendium',
-    press: (page) => adminLink(page, 'Categories'),
-    arrived: (page) => expect(page).toHaveURL(/\/curator\/categories$/),
-  },
-];
-
-for (const width of [1280, 375]) {
-  for (const list of listPages) {
-    test(`at ${width}px the wait on ${list.name} holds the filter row where the loaded page does`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await signInAgainAs(page, list.admin ? adminId : coven.users.A);
-      await page.goto(list.start(coven));
-      const server = await holdServerAnswers(page);
-      server.hold();
-      await list.press(page);
-      await expect.poll(server.held).toBeGreaterThan(0);
-      await expect.poll(() => filterRowTop(page, true)).not.toBeNull();
-      await page.evaluate(() => window.scrollTo(0, 0));
-      const waiting = await filterRowTop(page, true);
-      await server.release();
-      await list.arrived(page);
-      await expect.poll(() => filterRowTop(page, false)).not.toBeNull();
-      await page.evaluate(() => window.scrollTo(0, 0));
-      const loaded = await filterRowTop(page, false);
-      // Why the comparison means something: both have a row, and it is not at the very top.
-      expect(loaded!).toBeGreaterThan(0);
-      expect(Math.abs(waiting! - loaded!), `wait ${waiting}, loaded ${loaded}`).toBeLessThanOrEqual(
-        REGION_TOLERANCE,
-      );
-    });
-  }
 }

@@ -14,18 +14,17 @@ import type {
 import { press, typeIn } from '../../support/interact';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Complete on a working's row: the preview first, then Mark Complete
-// (claude-docs/components/record-working.md).
+// claude-docs/components/record-working.md
 
-const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
 const WORKING = '00000000-0000-4000-8000-000000000003';
 const STOCK: StockDialogProps = {
-  workspaceId: WORKSPACE,
+  workspaceId: WORKSPACE_ID,
   ingredientId: 'ing1',
   ingredientName: 'Testwort',
   forms: [{ variantId: 'v1', label: 'Leaf' }],
@@ -76,7 +75,7 @@ function open(steps: readonly WorkingStep[] = STEPS) {
   render(
     <QueryClientProvider client={makeQueryClient()}>
       <CompleteWorkingAction
-        workspaceId={WORKSPACE}
+        workspaceId={WORKSPACE_ID}
         spellId={SPELL}
         workingId={WORKING}
         steps={steps}
@@ -127,7 +126,7 @@ describe('Complete on a working', () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
         <CompleteWorkingAction
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           workingId={WORKING}
           steps={[STEPS[0]!]}
@@ -153,7 +152,7 @@ describe('Complete on a working', () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
         <CompleteWorkingAction
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           workingId={WORKING}
           steps={[STEPS[0]!]}
@@ -208,7 +207,7 @@ describe('Complete on a working', () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
         <CompleteWorkingAction
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           workingId={WORKING}
           steps={[{ ...STEPS[0]!, stock: STOCK }]}
@@ -219,7 +218,7 @@ describe('Complete on a working', () => {
     expect(await screen.findByText(/short by 1 g/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Testwort, Leaf' }));
     const stock = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
-    typeIn(within(stock).getByRole('spinbutton', { name: 'Quantity, Leaf' }), '12');
+    typeIn(await within(stock).findByRole('textbox', { name: 'Quantity, Leaf' }), '12');
     press(within(stock).getByRole('button', { name: 'Save Stock' }));
     await waitFor(() =>
       expect(screen.getByRole('list', { name: 'Deductions' })).toHaveTextContent(
@@ -248,10 +247,9 @@ describe('Complete on a working', () => {
     expect(calls).toEqual([]);
     expect(screen.getByRole('button', { name: 'Keep as Draft' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Mark Complete' }));
-    await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE, id: WORKING }]));
+    await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, id: WORKING }]));
     expect(await screen.findByRole('button', { name: 'Done' })).toBeVisible();
     expect(router.refresh).toHaveBeenCalled();
-    // The list reads the same after as before, a step that took nothing included.
     const rows = within(screen.getByRole('list', { name: 'Deductions' })).getAllByRole('listitem');
     expect(rows).toHaveLength(4);
     expect(rows[1]).toHaveTextContent('units differ · takes nothing');
@@ -266,7 +264,7 @@ describe('Complete on a draft dated ahead', () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
         <CompleteWorkingAction
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           workingId={WORKING}
           steps={STEPS}
@@ -283,7 +281,7 @@ describe('Complete on a draft dated ahead', () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
         <CompleteWorkingAction
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           workingId={WORKING}
           steps={STEPS}

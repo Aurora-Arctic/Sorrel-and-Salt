@@ -10,19 +10,15 @@ import './index.scss';
 
 // Where an autosaving form says how its saves go: inline beside the primary action, never a toast.
 // Only the conflict notice may go elsewhere (`conflictInto`), as it asks for a decision. Screen
-// readers hear only a burst's first save (claude-docs/components/autosave.md).
+// readers hear only a burst's first save (claude-docs/autosave.md).
 
-/** A save more than this long after the last one starts a new burst, and is announced. */
 export const BURST_GAP_MS = 60_000;
 
 type Seen = {
-  /** The last confirmed save this component has shown, in milliseconds. */
   at: number | null;
   /** A failure or conflict since then: the next save is news. */
   interrupted: boolean;
-  /** A failure not yet followed by a save: the alert stays, through a retry. */
   failing: boolean;
-  /** What the live region says. */
   announced: string;
 };
 
@@ -36,6 +32,7 @@ const SaveStatus = ({
   onKeepMine,
   conflictInto,
   className,
+  example = false,
 }: SaveStatusProps): ReactElement => {
   const saved = savedAt ? `${draft ? 'Draft saved' : 'Saved'} ${clockTime(savedAt)}` : '';
 
@@ -68,7 +65,7 @@ const SaveStatus = ({
   const retrying = next.failing && status === 'saving';
   const classes = className ? `save-status ${className}` : 'save-status';
   const conflict = status === 'conflict' && (
-    <Notice kind="warn" block className="save-status__conflict">
+    <Notice kind="warn" block inRegion={example} className="save-status__conflict">
       <span>{conflictMessage}</span>
       <span className="save-status__actions">
         {/* Outline, so the view keeps one solid button: Reload Latest, the safe choice, then a quiet Keep My Version. */}
@@ -88,7 +85,7 @@ const SaveStatus = ({
       {conflict && !conflictInto ? (
         conflict
       ) : next.failing ? (
-        <Notice kind="warn" block className="save-status__failed">
+        <Notice kind="warn" block inRegion={example} className="save-status__failed">
           <span>Could not save.</span>
           <button
             type="button"
@@ -102,8 +99,7 @@ const SaveStatus = ({
           </button>
         </Notice>
       ) : (
-        // Hidden from assistive technology: the live region below says it, once per burst.
-        <span className="save-status__text" aria-hidden="true">
+        <span className="save-status__text" aria-hidden={!example || undefined}>
           {status === 'saving' ? (
             <>
               <Spinner /> Saving…
@@ -113,7 +109,7 @@ const SaveStatus = ({
           )}
         </span>
       )}
-      <output className="save-status__announced">{next.announced}</output>
+      {!example && <output className="save-status__announced">{next.announced}</output>}
     </div>
   );
 };

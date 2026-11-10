@@ -242,6 +242,7 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-stories.mjs'
+              - '.github/scripts/lib/playwright-failures.mjs'
               - '.github/scripts/merge-playwright-coverage.mjs'
               - '.github/workflows/playwright-coverage.yml'
               - 'Docker/Dockerfile.e2e'
@@ -335,8 +336,8 @@ jobs:
 
   # The story suite (M9.1), on the same images as `playwright` and beside it,
   # so it adds nothing to the gate's time. Never a required check: its run step
-  # carries `continue-on-error`, so a red scaffold shows in the Stories comment
-  # without blocking a merge (claude-docs/testing/acceptance.md).
+  # carries `continue-on-error`, so a red scaffold shows in the Playwright
+  # comment's Stories section without blocking a merge (claude-docs/testing/acceptance.md).
   stories:
     needs: [build-e2e-image, build-db-image, changes, gitflow]
     if: needs.changes.outputs.stand-down != 'true'
@@ -353,7 +354,7 @@ jobs:
 
   # The gate suite's and the story suite's JavaScript coverage, merged (M14.28):
   # playwright-coverage.yml downloads whichever coverage artifacts the two
-  # uploaded and posts a "Playwright Coverage" comment. Never a required check
+  # uploaded and writes the Playwright comment's Coverage section. Never a required check
   # (it carries `continue-on-error`, and nothing waits on it). Its `if:`
   # keeps a failed suite from skipping the merge, and stays false on a stand-down.
   # It is a called workflow, not a job here, so that a run which stands down
@@ -414,6 +415,27 @@ jobs:
       - name: Run the workshop specs
         if: needs.changes.outputs.workshop == 'true'
         run: npm run e2e:workshop
+
+  # Starts the Vitest and Playwright comments for this run, before any suite
+  # writes its section (claude-docs/ci/pr-comments.md). It waits for gitflow
+  # because the suites do: a wrong source branch runs no suite, so every section
+  # shows Skipped. No suite needs it, so a failure here never skips a required check.
+  pr-comments:
+    needs: [changes, gitflow]
+    # `!cancelled()` ignores a failed gitflow, so the stand-down is named here.
+    if: ${{ !cancelled() && needs.changes.outputs.stand-down != 'true' }}
+    concurrency:
+      group: pr-gate-pr-comments-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/pr-comments.yml
+    with:
+      pr-number: ${{ github.event.pull_request.number }}
+      vitest-skipped: ${{ (needs.gitflow.result != 'success' || needs.changes.outputs.vitest != 'true') && 'dom,node,db,coverage' || '' }}
+      playwright-skipped: >-
+        ${{ needs.gitflow.result != 'success' && 'gate,stories,coverage' || format('{0},{1},{2}',
+        needs.changes.outputs.playwright != 'true' && 'gate' || '',
+        needs.changes.outputs.stories != 'true' && 'stories' || '',
+        (needs.changes.outputs.playwright != 'true' && needs.changes.outputs.stories != 'true') && 'coverage' || '') }}
 
   # Every check job `needs: gitflow`, so a wrong source branch burns no CI time.
   gitflow:

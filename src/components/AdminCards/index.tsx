@@ -1,16 +1,18 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { noMatchText } from '../../lib/text';
 import { dayInUtc, printedDayOf } from '../../lib/utc';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
+import { AdminCardsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
+import { Mark } from '../UserList/marks';
 import CardAttempts from './attempts';
 import { batchName, STATUS_LABEL } from './batches';
 import CardsFilterForm from './filter';
@@ -19,9 +21,7 @@ import MintForm, { MINT_TITLE } from './mint-form';
 import type { AdminCardsProps, CardsFilter, MintCardsProps } from './types';
 import './index.scss';
 
-// The People page's Invitation Cards tab, `/keepers/invitation-cards`: one row per batch (minted, expiry, cards,
-// status, accepted, refused opens with a View dialog, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
-// (claude-docs/components/admin-cards.md).
+// (claude-docs/components/admin-cards.md)
 
 const RevokeCardBatchDocument = graphql(`
   mutation RevokeInvitationCardBatch($batchId: ID!) {
@@ -31,7 +31,6 @@ const RevokeCardBatchDocument = graphql(`
   }
 `);
 
-/** Mint Cards, the tab's action beside the heading: a link to `?mint`, which opens the form over the list. */
 export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   const href = cardsHref(cursor, true, filter);
   const onClick = useOpenModalClick(href, { title: MINT_TITLE });
@@ -42,7 +41,6 @@ export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   );
 };
 
-/** The empty list, naming the filters in use so a keeper sees what to change. */
 function emptyText({
   batch,
   status,
@@ -75,7 +73,7 @@ const AdminCards = ({
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <CardsFilterForm key={JSON.stringify(filter)} filter={filter} />
-      <ListBody>
+      <ListBody skeleton={<AdminCardsBodySkeleton />}>
         <StackTable
           columns={[
             {
@@ -88,6 +86,12 @@ const AdminCards = ({
               ),
             },
             { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
+            {
+              heading: 'Beta',
+              className: 'user-list__mark-column',
+              headingClassName: 'user-list__mark-column',
+              cell: (batch) => <Mark value={batch.beta} label={batch.beta ? 'Yes' : 'No'} />,
+            },
             { heading: 'Cards', cell: (batch) => batch.cards },
             { heading: 'Accepted', cell: (batch) => batch.accepted },
             {

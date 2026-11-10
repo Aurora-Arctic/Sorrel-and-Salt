@@ -10,15 +10,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellVisibility } from '@/modules/grimoire';
 
-// Deleting a spell: a soft delete of the spell and its steps in one
-// transaction, by a role holding `spell: delete`, of a spell the caller can
-// read. The visibility lock governs widening, not existence, so a shared spell
-// goes too. Who may read which spell is spell-reads.test.ts's; here is who
-// may delete what, and that the two tables fall together or not at all.
-
-// `withAudit` as it is, with one seam: a test may wrap the writer it hands
-// the service, so a failure between the two tables' writes can be staged and
-// the transaction shown to roll both back.
+// `withAudit` as it is, with one seam: a test may wrap the writer so a failure between the two tables' writes shows the transaction rolling both back.
 const seam = vi.hoisted(() => ({
   wrap: undefined as ((write: AuditWriter) => AuditWriter) | undefined,
 }));
@@ -43,7 +35,6 @@ beforeEach(async () => {
   await sql`truncate spells, ingredients cascade`;
 });
 
-/** A spell in W with two instruction steps, written by `author`, as setup rather than through the service. */
 function seed(
   author: typeof A,
   visibility: SpellVisibility = 'workspace',
@@ -61,7 +52,6 @@ function seed(
   );
 }
 
-/** The spell's own tombstone and its steps', read raw: the finders hide a deleted row. */
 async function tombstones(spellId: string) {
   const [spell] = await sql<{ deleted_at: Date | null; deleted_by: string | null }[]>`
     select deleted_at, deleted_by from spells where id = ${spellId}`;
@@ -84,13 +74,11 @@ describe('deleteSpell', () => {
       expect(step.deleted_at).not.toBeNull();
       expect(step.deleted_by).toBe(B.id);
     }
-    // Gone from every finder: the read is a NotFound, as for a spell that never was.
     await expect(readSpell(asUser(B), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(NotFound);
   });
 
   it('deletes a shared spell another member wrote, and a complete one: the rule is about widening, not existence', async () => {
-    // Why this could have been refused: the spell is complete and shared, which locks its
-    // visibility from narrowing.
+    // Why this could have been refused: the spell is complete and shared, which locks its visibility from narrowing.
     const id = await seed(A, 'workspace', { status: 'complete', title: 'Shared Working' });
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, id, { visibility: 'private', expectedRevision: null }),
@@ -115,8 +103,7 @@ describe('deleteSpell', () => {
 
   it('refuses a viewer by direct id, who reads the spell', async () => {
     const id = await seed(B);
-    // Why this could have succeeded: C is a live member of W and reads this very spell;
-    // a member of W with `spell: delete` deletes it (above). C's role lacks the permission.
+    // Why this could have succeeded: C is a live member of W and reads this very spell; a member with `spell: delete` deletes it (above), but C's role lacks it.
     await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
 
     await expect(deleteSpell(asUser(C), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(Forbidden);
@@ -128,8 +115,7 @@ describe('deleteSpell', () => {
 
   it('refuses a member of another coven by direct id, in either coven’s name', async () => {
     const id = await seed(B);
-    // Why this could have succeeded: D holds a live membership, of X, with `spell: delete`
-    // there; the spell's id is real. D is not in W.
+    // Why this could have succeeded: D holds a live membership of X with `spell: delete` there and the id is real; D is not in W.
     const own = await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_X_ID }), D.id);
     await expect(deleteSpell(asUser(D), WORKSPACE_X_ID, own)).resolves.toBeUndefined();
 
@@ -142,8 +128,7 @@ describe('deleteSpell', () => {
 
   it('refuses another member’s private spell as if it did not exist', async () => {
     const hidden = await seed(A, 'private');
-    // Why this could have succeeded: B is a member of W with `spell: delete`, and the spell is
-    // in W; its author deletes the same row (above). B may not read it.
+    // Why this could have succeeded: B is a member of W with `spell: delete` and the spell is in W; its author deletes the same row (above), but B may not read it.
     await expect(readSpell(asUser(B), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
 
     await expect(deleteSpell(asUser(B), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
@@ -163,8 +148,7 @@ describe('deleteSpell', () => {
 
   it('leaves the spell and its steps alive when the write fails part-way', async () => {
     const id = await seed(B);
-    // The steps' write succeeds and the spell's, which follows it, is made to fail: one
-    // transaction, so the steps' tombstones go with it.
+    // The steps' write succeeds and the spell's, which follows it, is made to fail: one transaction, so the steps' tombstones go with it.
     seam.wrap = (write) => ({
       ...write,
       softDeleteSpell: () => Promise.reject(new Error('staged failure')),

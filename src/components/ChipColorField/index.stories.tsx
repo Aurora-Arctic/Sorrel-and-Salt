@@ -5,8 +5,6 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import ChipColorField from '.';
 import type { ChipColorFieldProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/ChipColorField. Each
-// field previews its colour on its own ground whatever the workshop's theme.
 const meta = {
   title: 'Admin / Chip Colour Field',
 } satisfies Meta;
@@ -26,7 +24,6 @@ const Field = ({
   others?: ChipColorFieldProps['others'];
   partner?: string;
   error?: string;
-  // How many times the format toggle is pressed once drawn: hsba, then hsla, then rgba.
   switchFormat?: number;
 }) => {
   const root = useRef<HTMLDivElement>(null);
@@ -68,7 +65,6 @@ export const States: Story = {
       states={{
         'Dark Theme': <Field column="colorDark" initial="#5d8ab1" />,
         'Light Theme': <Field column="colorLight" initial="#286ba6" />,
-        // A shade off another group's colour in the same theme: the warning names it.
         'Near Another Group': (
           <Field
             column="colorDark"
@@ -76,7 +72,6 @@ export const States: Story = {
             others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
           />
         ),
-        // The other colour of the pair is known, so Match is offered.
         'With Partner': <Field column="colorDark" initial="#5d8ab1" partner="#286ba6" />,
         Empty: <Field column="colorDark" initial="" />,
         'Half A Hex': <Field column="colorDark" initial="#5d8" />,
@@ -94,9 +89,6 @@ export const States: Story = {
   ),
 };
 
-// Too dark for the dark card: the field shows the failing ratio before any save. Its colour
-// fails the contrast rule on purpose, so it is its own story, tagged to be exempt from that one
-// rule (claude-docs/workshop.md, 'The every-story check'), and the other states stay checked.
 export const UnderTheFloor: Story = {
   tags: ['shows-low-contrast'],
   render: () => <Field column="colorDark" initial="#0c5393" />,

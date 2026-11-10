@@ -5,26 +5,11 @@ import { Forbidden, ValidationError } from '@/lib/errors';
 import { LastOwner, updateMemberRole } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-// Changing a member's role: owners only, any move between the three
-// roles, an existing member's row and nothing else.
-
 type Role = 'owner' | 'member' | 'viewer';
-
-async function insertCoven(name: string, members: [string, Role][]): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
 
 const roleOf = async (workspaceId: string, userId: string) => {
   const [row] = await sql`
@@ -35,7 +20,7 @@ const roleOf = async (workspaceId: string, userId: string) => {
 
 describe('updateMemberRole', () => {
   it('refuses to make a paused member an owner, saying to lift the pause first, and makes them one once it is lifted', async () => {
-    const covenId = await insertCoven('Fixture Paused Promotion Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Paused Promotion Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -55,7 +40,6 @@ describe('updateMemberRole', () => {
     expect((refusal as Error).message).toMatch(/lift the pause first/);
     expect(await roleOf(covenId, B.id)).toBe('member');
 
-    // A role change that is not a promotion to owner still goes through while the pause stands.
     await updateMemberRole(asUser(A), covenId, B.id, 'viewer');
     expect(await roleOf(covenId, B.id)).toBe('viewer');
 
@@ -65,7 +49,7 @@ describe('updateMemberRole', () => {
   });
 
   it('moves a member between any two roles, in either direction', async () => {
-    const covenId = await insertCoven('Fixture Role Change Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Role Change Coven', [
       [A.id, 'owner'],
       [D.id, 'owner'],
       [B.id, 'viewer'],
@@ -80,7 +64,7 @@ describe('updateMemberRole', () => {
   });
 
   it('refuses a member or a viewer, who do belong to the coven', async () => {
-    const covenId = await insertCoven('Fixture Role Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Role Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -97,18 +81,18 @@ describe('updateMemberRole', () => {
   });
 
   it("refuses an owner of another coven, by this coven's id", async () => {
-    const covenId = await insertCoven('Fixture Home Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Home Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    await insertCoven('Fixture Other Coven', [[D.id, 'owner']]);
+    await insertWorkspace(sql, 'Fixture Other Coven', [[D.id, 'owner']]);
 
     await expect(updateMemberRole(asUser(D), covenId, B.id, 'owner')).rejects.toThrow(Forbidden);
     expect(await roleOf(covenId, B.id)).toBe('member');
   });
 
   it('refuses to demote the only owner, with the way out the guard carries', async () => {
-    const covenId = await insertCoven('Fixture Sole Owner Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Sole Owner Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -122,7 +106,7 @@ describe('updateMemberRole', () => {
   });
 
   it('lets an owner step down while another owner remains', async () => {
-    const covenId = await insertCoven('Fixture Two Owners Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Two Owners Coven', [
       [A.id, 'owner'],
       [B.id, 'owner'],
     ]);
@@ -132,7 +116,7 @@ describe('updateMemberRole', () => {
   });
 
   it('refuses anyone who is not a live member of the coven, and inserts no row', async () => {
-    const covenId = await insertCoven('Fixture Non Member Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Non Member Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -144,7 +128,6 @@ describe('updateMemberRole', () => {
     await sql`update workspace_members set deleted_at = now(), deleted_by = ${A.id}
       where workspace_id = ${covenId} and user_id = ${C.id}`;
 
-    // D belongs to no coven here; C was removed; the invitee has no account row at all.
     for (const target of [D.id, C.id, '00000000-0000-4000-8000-000000000000']) {
       await expect(updateMemberRole(asUser(A), covenId, target, 'owner')).rejects.toThrow(
         Forbidden,
@@ -156,7 +139,7 @@ describe('updateMemberRole', () => {
   });
 
   it('leaves joinedAt alone, and stamps the change on updated_by', async () => {
-    const covenId = await insertCoven('Fixture Joined Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Joined Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -172,7 +155,7 @@ describe('updateMemberRole', () => {
     expect(row.updated_by).toBe(A.id);
   });
   it('refuses to re-role the system user, though another owner exists', async () => {
-    const covenId = await insertCoven('Fixture System Seat Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture System Seat Coven', [
       [A.id, 'owner'],
       [BOOTSTRAP_USER_ID, 'owner'],
     ]);

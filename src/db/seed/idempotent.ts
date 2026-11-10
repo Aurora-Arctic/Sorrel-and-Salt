@@ -8,9 +8,8 @@ import type { FlatTable, GroupTable, ItemTable } from '../vocabularies';
 import type { InsertStamps, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // The moves every seed makes. Writes go through the handle the caller
-// gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
+// gives, not `withAudit` (claude-docs/design-decisions/data.md, "The seed writes through the handle it is given, not through `withAudit`").
 
-/** Thrown inside the transaction to roll a dry run back, and caught outside it. */
 class DryRunRollback<T> extends Error {
   constructor(readonly result: T) {
     super('dry run');

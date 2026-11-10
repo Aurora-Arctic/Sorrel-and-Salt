@@ -6,11 +6,8 @@ import {
   rolePermits,
 } from '@/modules/coven';
 
-// The policy, restated here in the test's own words rather than read out of
-// the module under test: a matrix compared against itself would pass whatever
-// it said. Every role/action pair in the statements is compared at once.
+// The policy is restated in the test's own words: a matrix compared against itself would pass whatever it said.
 const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>>> = {
-  // Reads, and nothing else — CLAUDE.md: "Viewers write nothing".
   viewer: {
     ingredient: ['read'],
     inventory: ['read'],
@@ -18,8 +15,6 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     working: ['read'],
     workspace: ['read'],
   },
-  // The coven's own work, and the right to read who else is in it.
-  // Inviting, changing a role and removing stay with owners.
   member: {
     member: ['read'],
     ingredient: ['read', 'create', 'update', 'delete'],
@@ -28,7 +23,6 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     working: ['read', 'create', 'update', 'delete'],
     workspace: ['read'],
   },
-  // The roll, plus each member's address, and the writes to it, pausing a member's access included.
   owner: {
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],
@@ -43,8 +37,6 @@ const ROLES = Object.keys(PERMITTED) as WorkspaceRole[];
 
 describe('the workspace permission matrix', () => {
   it('grants each role exactly the role/action pairs the policy lists', () => {
-    // One comparison of the whole table, every statement against every role:
-    // a pair granted or refused by mistake fails it, and the diff names it.
     const granted = (role: WorkspaceRole) =>
       Object.fromEntries(
         Object.entries(WORKSPACE_STATEMENTS)
@@ -72,8 +64,7 @@ describe('the workspace permission matrix', () => {
 
 describe('a request naming more than one resource', () => {
   it('needs every one of them, not any of them', () => {
-    // Why this could have passed either way: a member holds the spell half
-    // outright, so an OR would read as success.
+    // Why this could have passed either way: a member holds the spell half outright, so an OR would read as success.
     expect(rolePermits('member', { spell: ['create'] })).toBe(true);
     expect(rolePermits('member', { member: ['invite'] })).toBe(false);
 
@@ -95,8 +86,7 @@ describe('a request naming more than one resource', () => {
   });
 });
 
-// Neither body runs: each `@ts-expect-error` fails `npm run typecheck` the
-// moment the statement map stops constraining what a caller may ask for.
+// Neither body runs: each `@ts-expect-error` fails `npm run typecheck` when the statement map stops constraining callers.
 describe('the vocabulary', () => {
   it('refuses an unknown resource and an unknown action at compile time', () => {
     const unknownResource = () =>

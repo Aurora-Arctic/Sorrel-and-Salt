@@ -9,9 +9,6 @@ import { insertSpell } from '../support/db/insert-spell';
 import { makeSpell } from '../support/fixtures';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// `revision` is a counter the database adds one to on every UPDATE, so a save can name the revision it read and be refused if the row moved
-// (claude-docs/db/grimoire.md, "Revision"). Each table carrying the column adds its own trigger line to `bump_revision()`, as `set_updated_at` does.
-
 const FUNCTION = 'bump_revision';
 const TRIGGER = 'bump_revision';
 
@@ -32,8 +29,6 @@ async function revisionOf(id: string): Promise<number> {
 }
 
 describe('the catalogue', () => {
-  // Read from the catalogue on both sides, so a later table that takes the
-  // column and forgets its trigger line reddens without this file being edited.
   it('attaches bump_revision to every table carrying a revision, and spells, ingredients and cupboard entries carry one', async () => {
     // Tables alone: a view has no trigger of its own to carry.
     const carrying = await sql<{ table_name: string }[]>`
@@ -120,7 +115,7 @@ describe('a spell’s revision', () => {
   });
 });
 
-// `ingredients` holds a coven's own entries and the compendium's alike, so one column guards both forms (M13.23).
+// `ingredients` holds a coven's own entries and the compendium's alike, so one column guards both forms.
 describe('an ingredient’s revision', () => {
   const ingredient = (workspaceId: string | null) =>
     insertIngredient(sql, makeIngredient({ workspaceId, nomenclature: 'none' }), A.id);
@@ -163,7 +158,7 @@ describe('an ingredient’s revision', () => {
   });
 });
 
-// A coven's annotation of a compendium entry autosaves, so it counts saves as an ingredient does (M13.24).
+// A coven's annotation of a compendium entry autosaves, so it counts saves as an ingredient does.
 describe('a cupboard entry’s revision', () => {
   beforeEach(async () => {
     await sql`truncate ingredients cascade`;

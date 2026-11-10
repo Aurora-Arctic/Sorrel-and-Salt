@@ -8,6 +8,7 @@ import {
   supportAboutOf,
   supportClosedHref,
   supportHref,
+  supportViewPath,
 } from '@/lib/support-path';
 import { supportRequestAbout } from '@/modules/support/schema/support-requests';
 
@@ -120,5 +121,11 @@ describe('normaliseIssueLink', () => {
     ]) {
       expect(normaliseIssueLink(bad, ISSUE_REPOSITORY), bad).toBeNull();
     }
+  });
+});
+
+describe('supportViewPath', () => {
+  it('puts the token in the fragment, which never reaches the server', () => {
+    expect(supportViewPath('abc_DEF-123')).toBe('/support/request#abc_DEF-123');
   });
 });

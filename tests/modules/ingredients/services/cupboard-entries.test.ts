@@ -15,7 +15,6 @@ const STAMPS = {
   deletedBy: null,
 };
 
-/** The compendium's Testwort, every overridable column set. */
 const COMPENDIUM: IngredientRow = entryDetail({
   description: 'The compendium’s fixture herb.',
   safetyNotes: 'The compendium’s caution.',
@@ -26,7 +25,6 @@ const COMPENDIUM: IngredientRow = entryDetail({
   toxic: true,
 }).entry;
 
-/** A row naming COMPENDIUM in coven W, every override null unless given. */
 function cupboardEntry(overrides: Partial<CupboardEntryRow> = {}): CupboardEntryRow {
   return {
     id: '00000000-0000-4000-8000-000000000101',
@@ -45,7 +43,6 @@ function cupboardEntry(overrides: Partial<CupboardEntryRow> = {}): CupboardEntry
   };
 }
 
-/** Each override, the column of the compendium row it stands over, and a set value. */
 const COLUMNS = [
   { override: 'label', column: 'name', set: 'Hedgewort' },
   { override: 'description', column: 'description', set: 'Our own words.' },

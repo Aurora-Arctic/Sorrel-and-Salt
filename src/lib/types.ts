@@ -1,9 +1,6 @@
-// Imports nothing: `validation.ts` reaches this file through `errors.ts`, and a
-// validation schema may reach no package but zod — so a type that needs a
-// table or a library goes in `session.ts` or its own module's `types.ts`
+// Imports nothing, because `validation.ts` reaches this file and may reach no package but zod
 // (claude-docs/modules.md, "Where types live").
 
-/** A connection field's arguments, as the Relay plugin hands them to a resolver. */
 export interface ConnectionArgs {
   first?: number | null;
   last?: number | null;
@@ -20,7 +17,6 @@ export interface Cursor {
   id: string;
 }
 
-/** What a repository page finder is asked for. */
 export interface PageRequest {
   after?: Cursor;
   before?: Cursor;
@@ -30,23 +26,14 @@ export interface PageRequest {
   inverted: boolean;
 }
 
-/**
- * One row of a page, with the position it was found at, and whatever else the
- * finder carries beside it — `Edge` — which becomes a field of its edge.
- */
 export type PageEntry<T, Edge extends object = {}> = { cursor: Cursor; node: T } & Edge;
 
-/**
- * A list's size under its filter, and how many of its rows come before a
- * page's first — null on an empty page, which has no first row. Counted from
- * a key and never used to seek, so it labels a page and never finds one.
- */
+/** Counted from a key and never used to seek, so it labels a page and never finds one. */
 export interface PageCount {
   totalCount: number;
   countBefore: number | null;
 }
 
-/** Where a page stands among them all, for a pager's "Page X of Y". */
 export interface PagePosition {
   page: number;
   pages: number;
@@ -71,13 +58,10 @@ export interface SocialProvider {
   hidden?: true;
 }
 
-/** What registering a provider with Better Auth takes beyond its credentials. */
 export interface ProviderProfile {
   /** The profile field naming the provider account; the first one present, where profiles come in more than one shape. */
   accountId: readonly [string, ...string[]];
-  /** Whether a sign-in takes the provider's word that the address is verified. */
   vouches: boolean;
-  /** The provider's own options, read when Better Auth is configured. */
   extra?: () => { tenantId: string };
 }
 
@@ -90,37 +74,27 @@ export type ProviderProfiles<Id extends string = ProviderId> = {
   readonly [P in Id]: ProviderProfile;
 };
 
-/** One of a user's provider accounts: the row id `/unlink-account` takes, and its provider. */
 export interface LinkedAccount {
   id: string;
   providerId: ProviderId;
 }
 
-/** One of a user's passkeys as the account page lists it: the row id the plugin's rename and remove take. */
 export interface AccountPasskey {
   id: string;
-  /** What the person called it, or `null` for one never named. */
   name: string | null;
-  /** When it was added, as an ISO string. */
   createdAt: string;
 }
 
-/** One rule a value broke, pathed to the input field it is about. */
 export interface ValidationIssue {
   /** In the shape of the operation's input — `['folkNames', 2]`; empty for no one field. */
   path: (string | number)[];
   message: string;
 }
 
-/**
- * What a failed GraphQL request leaves a form to say, as `readGraphqlFailure`
- * reads it (src/lib/graphql-failure.ts): under one of the form's own fields,
- * or in its alert region. Never both.
- */
+/** Under one of the form's own fields or in its alert region, never both. */
 export interface Failure {
   /** A VALIDATION issue about one of the fields the form named, with that field's name. */
   field?: { name: string; message: string };
-  /** Everything else, as one readable sentence. */
   alert?: string;
 }
 
@@ -139,19 +113,14 @@ export interface ChainedError {
   constraint_name?: unknown;
 }
 
-/** A category group's two colours, one per theme, as its row stores them. */
 export interface GroupColors {
   colorDark: string;
   colorLight: string;
 }
 
-/** Which of a group's two colours: the one the dark theme wears, or the light. */
 export type GroupColorColumn = keyof GroupColors;
 
-/**
- * The two axes of a colour picker's area, as it lays them out for a format:
- * saturation across, and brightness or lightness up, 100 at the top.
- */
+/** Saturation across, brightness or lightness up, 100 at the top. */
 export type AreaSpace = 'hsb' | 'hsl';
 
 /**
@@ -186,13 +155,8 @@ export interface CitationFields {
   note?: string | null;
 }
 
-/**
- * What `renderShortCitation` reads: the four fields a Chicago short form is
- * made of, so a surface holding a source's citation need carry no more.
- */
 export type ShortCitationFields = Pick<CitationFields, 'kind' | 'title' | 'authors' | 'container'>;
 
-/** One run of a rendered citation, set in italic or roman. */
 export interface CitationPart {
   text: string;
   italic: boolean;
@@ -207,38 +171,22 @@ export type ListHrefParams = Readonly<
   Record<string, string | readonly string[] | boolean | undefined>
 >;
 
-/**
- * The modal a list page has open over it, by its address: `'new'` for the
- * add form, `{ edit }` for the row whose slug or id it edits, none for no
- * modal (src/lib/list-href.ts).
- */
 export type ListDialog = 'new' | { edit: string };
 
-/**
- * A `ListDialog` as the address writes it: `new` a bare flag, `edit` the
- * row's slug or id. A type alias rather than an interface, so it passes as
- * `ListHrefParams` on its own: an interface carries no index signature.
- */
+/** A type alias, not an interface, so it passes as `ListHrefParams`: an interface carries no index signature. */
 export type ListDialogParams = { new: boolean; edit: string | undefined };
 
-/** One cursor, for the page before or the page after (`pagerHrefs`, src/lib/list-href.ts). */
 export type PagerCursor = { after: string } | { before: string };
 
-/**
- * The pager's two ends; an end with no page is left out. Generic over the
- * href's type, so a page's builder keeps Next's typed `Route` while this file
- * imports nothing: `Pager` takes any string.
- */
+/** Generic over the href's type, so a page's builder keeps Next's typed `Route` while this file imports nothing. */
 export interface PagerHrefs<Href extends string = string> {
   previousHref: Href | undefined;
   nextHref: Href | undefined;
 }
 
-/** The signed-in person as the application shell draws them. */
 export interface ShellViewer {
   /** Their user id, which keys the forms' offline copies to them. */
   id?: string;
-  /** The name the site shows for them; the account button's text and its initials. */
   name: string;
   /** A curator or a site admin: the shell adds the Admin and Your Coven links. */
   canCurate: boolean;
@@ -246,11 +194,7 @@ export interface ShellViewer {
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
   verified: boolean;
-  /**
-   * How many coven invitations wait for their verified address: the
-   * account menu's count and the landing's notice. Never read for an
-   * unverified account, which reads 0.
-   */
+  /** Never read for an unverified account, which reads 0. */
   pendingInvitations: number;
   /** Open support requests assigned to them; 0 unless verified and staff. */
   assignedSupport: number;
@@ -260,7 +204,6 @@ export interface ShellViewer {
   accessPause?: { until: Date | null };
 }
 
-/** One coven the viewer belongs to, as the shell's switcher and brand link need it. */
 export interface ShellWorkspace {
   id: string;
   slug: string;
@@ -274,7 +217,6 @@ export interface ShellWorkspace {
   paused: { until: Date | null } | null;
 }
 
-/** The viewer and their covens together: what the shell is drawn from (`src/lib/viewer.ts`). */
 export interface ShellContext {
   viewer: ShellViewer;
   workspaces: ShellWorkspace[];
@@ -283,18 +225,30 @@ export interface ShellContext {
 /** The three documents an account agrees to at once, by their part of the joint version: the terms include the other two. */
 export type AgreementPart = 'terms' | 'disclaimer' | 'ethics';
 
-/** The key of each document an agreement covers, as the documents table holds it. */
 export type AgreementDocumentKey = 'terms' | 'disclaimer' | 'code-of-ethics';
 
 /** The version numbers in force, one per document, each 0 while its document has no published version. */
 export type AgreementVersion = Record<AgreementPart, number>;
 
-/** The version numbers an account stored when it last agreed, each null or absent until it agrees. */
 export type AgreedVersion = Record<AgreementPart, number | null | undefined>;
 
-/** A user row's three agreed numbers, by their column names, each null until the account agrees. */
 export interface AgreedColumns {
   agreedTermsVersion: number | null;
   agreedDisclaimerVersion: number | null;
   agreedEthicsVersion: number | null;
+}
+
+/** A module kept out of the page's first-load scripts, imported at most once however many callers ask (src/lib/use-lazy-module.ts). */
+export interface LazyModule<M> {
+  /** Starts the import on the first call and gives every later call the same promise; a failed import is forgotten, so the next call tries again. */
+  load: () => Promise<M>;
+  /** The module once it has arrived, else null. */
+  loaded: () => M | null;
+}
+
+/** Spread on the control that opens a lazy module's dialog or menu: the pointer reaching it, the focus reaching it or a press beginning on it starts the load. */
+export interface PreloadHandlers {
+  onPointerEnter: () => void;
+  onFocus: () => void;
+  onPointerDown: () => void;
 }

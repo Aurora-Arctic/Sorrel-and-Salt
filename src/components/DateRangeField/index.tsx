@@ -1,8 +1,6 @@
 'use client';
 
 import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { enGB } from 'react-day-picker/locale';
 import {
   CALENDAR_CLASS_NAMES,
   CalendarChevron,
@@ -12,13 +10,13 @@ import {
   useCalendarPopover,
 } from '../DateField/calendar';
 import { isoDay } from '../DateField/day';
+import { dayPickerModule } from '../DateField/lazy-day-picker';
+import { preloadOnIntent, useLazyModule, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import type { DateRangeFieldProps, DayRange } from './types';
 import './index.scss';
 
-// A day-range field: a button showing the range in short words, opening a calendar of two months
-// with quick picks beside it. The first day picked starts the range and the second ends it; one day
-// picked twice is a single day. The calendar is the day field's, in the same popover
-// (claude-docs/components/date-range-field.md).
+// A day-range field: a button showing the range in short words, opening a two-month calendar with quick picks. The
+// calendar is the day field's, in the same popover (claude-docs/components/date-field.md).
 
 // Below this width the calendar shows one month, as two side by side would not fit beside the picks.
 const NARROW = '(max-width: 47.9375rem)';
@@ -86,6 +84,8 @@ export default function DateRangeField({
   const [pending, setPending] = useState<string | null>(null);
   const close = useCallback(() => setOpen(false), []);
   useCalendarPopover({ open, floating, fieldId: id, panel, close });
+  usePreloadWhenIdle(dayPickerModule);
+  const picker = useLazyModule(dayPickerModule, open);
   const first = min ? parseDay(min) : undefined;
   const last = max ? parseDay(max) : undefined;
   const start = parseDay(pending ?? from);
@@ -108,7 +108,6 @@ export default function DateRangeField({
     finish(picked < pending ? { from: picked, to: pending } : { from: pending, to: picked });
   };
 
-  // Looking back, the range's own month is the last one shown; looking ahead, the first.
   const anchor = (past ? (end ?? start) : (start ?? end)) ?? new Date();
   const defaultMonth = past
     ? new Date(anchor.getFullYear(), anchor.getMonth() - (months - 1))
@@ -126,6 +125,7 @@ export default function DateRangeField({
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         {...aria}
+        {...preloadOnIntent(dayPickerModule)}
         onClick={() => {
           if (!open) {
             setMonths(monthsShown());
@@ -179,25 +179,31 @@ export default function DateRangeField({
                 })}
               </div>
             )}
-            <DayPicker
-              mode="range"
-              // Focus moves into the calendar on open so the arrow keys work at once.
-              // oxlint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              locale={enGB}
-              weekStartsOn={1}
-              numberOfMonths={months}
-              selected={start || end ? { from: start, to: end } : undefined}
-              defaultMonth={defaultMonth}
-              startMonth={first}
-              endMonth={last}
-              captionLayout="label"
-              components={{ Chevron: CalendarChevron }}
-              disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
-              // The library's own range rule extends the range it holds; the field's is first then last.
-              onSelect={(_range, day) => pick(day)}
-              classNames={CALENDAR_CLASS_NAMES}
-            />
+            {picker && (
+              <picker.DayPicker
+                mode="range"
+                // Focus moves into the calendar on open so the arrow keys work at once.
+                // oxlint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+                locale={picker.enGB}
+                weekStartsOn={1}
+                numberOfMonths={months}
+                selected={start || end ? { from: start, to: end } : undefined}
+                defaultMonth={defaultMonth}
+                startMonth={first}
+                endMonth={last}
+                captionLayout="label"
+                components={{ Chevron: CalendarChevron }}
+                disabled={[
+                  ...(last ? [{ after: last }] : []),
+                  ...(first ? [{ before: first }] : []),
+                ]}
+                // The library's own range rule extends the range it holds; the field's is first
+                // then last.
+                onSelect={(_range, day) => pick(day)}
+                classNames={CALENDAR_CLASS_NAMES}
+              />
+            )}
           </div>
           <p id={hintId} className="date-range-field__hint" aria-live="polite">
             {pending === null ? HINT.first : HINT.last}

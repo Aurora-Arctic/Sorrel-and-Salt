@@ -27,13 +27,10 @@
   }
 }
 
-// The count at the start ("12") is a step heavier than the words after it.
 .search-sentence__count {
   font-weight: 500;
 }
 
-// The joining words ("or", "and") are the loudest thing in the line: semibold, in the accent,
-// a little apart. No box and no background, so they read as words, not as chosen values.
 .search-sentence__join {
   margin-inline: 0.1em;
   font-weight: 600;
@@ -44,7 +41,6 @@
 .search-sentence__disclosure > summary {
   cursor: pointer;
   width: fit-content;
-  // No native marker: the chevron at the end of the line is the only one.
   list-style: none;
 
   &::-webkit-details-marker {
@@ -59,8 +55,6 @@
   line-height: 1.65;
 }
 
-// The clauses beneath the first line open and close by height. Grid rows 0fr to 1fr is
-// the Baseline way to animate an auto height.
 .search-sentence__tail {
   display: grid;
   grid-template-rows: 0fr;
@@ -82,15 +76,14 @@
   }
 }
 
-// The app's disclosure chevron, turned over while the tail is open on the app's theme
-// transition; it also fades by opacity when a search starts and ends, so it never pops.
+// The app's disclosure chevron, turned over while the tail is open; it also fades by opacity when a search starts and ends, so it never pops.
 .search-sentence__chevron {
   @include disclosure-chevron('.search-sentence__disclosure.is-tail-open');
 
   margin-inline-start: space(1);
   vertical-align: text-bottom;
   transition:
-    transform $theme-transition-duration $theme-transition-easing,
+    transform $motion-long $motion-easing,
     opacity $motion-short ease-out;
 
   &.is-hidden {
@@ -118,6 +111,12 @@
   margin-inline: -1px;
   vertical-align: text-bottom;
   background-color: currentcolor;
+
+  // The fill is dropped, so the caret is painted in the text colour.
+  @include forced-colors {
+    background-color: CanvasText;
+  }
+
   animation: search-sentence-caret 1s steps(1) infinite;
 }
 

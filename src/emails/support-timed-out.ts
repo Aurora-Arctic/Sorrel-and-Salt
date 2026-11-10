@@ -7,8 +7,7 @@ const SUBJECT = 'You Were Timed Out of Support';
 
 const PREVIEW = 'An admin timed your account out of sending support requests.';
 
-// Sent when a keeper sets a support time-out. It states the end, the message written to the user when there is one, and what the
-// time-out stops, and never the keeper's note. It links to the support page, where the user's past requests and the time-out notice stay readable.
+// Never the keeper's note.
 export function SupportTimedOut({
   url,
   until,
@@ -34,5 +33,4 @@ export function SupportTimedOut({
   );
 }
 
-/** The notice of a support time-out for `to`, rendered to the html and plain text `send` takes. */
 export const supportTimedOutMessage = defineMessage<SupportTimedOutProps>(SUBJECT, SupportTimedOut);

@@ -49,10 +49,8 @@ export interface ActorExecutor {
   execute(query: SQL): PromiseLike<unknown>;
 }
 
-/** The audit stamps' four names, read off the factory that builds them. */
 export type StampField = keyof ReturnType<typeof auditStampColumnsReferencing>;
 
-/** The two names the soft-deleted tables add, read off theirs. */
 export type DeletionField = keyof ReturnType<typeof deletionColumnsReferencing>;
 
 type AuditColumnBuilders = ReturnType<typeof auditStampColumnsReferencing> &
@@ -93,7 +91,6 @@ export interface SeedKeyedTable extends LiveTable {
   seedKey: ExtraConfigColumn;
 }
 
-/** What `vocabularyIndexes` reads of a vocabulary table: the columns `vocabularyColumns` built. */
 export interface VocabularyTable extends SeedKeyedTable {
   name: ExtraConfigColumn;
   slug: ExtraConfigColumn;

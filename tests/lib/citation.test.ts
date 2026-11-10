@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { byCitation, citationText, renderCitation } from '@/lib/citation';
 import type { CitationFields, CitationPart } from '@/lib/types';
 
-// DESIGN.md §5, "The citation is rendered, never stored": one renderer, its parts joined back with `_` around the italic ones so each case compares against the seed doc's own Markdown (claude-docs/db/references.md, "The renderer").
-// Each kind's examples are copied from claude-docs/db/deity-vocabulary-seed.md; the rest use invented names.
+// DESIGN.md §5, "The citation is rendered, never stored" (claude-docs/db/references.md, "The renderer"); parts are joined with `_` around italic runs to compare against the seed doc's Markdown.
+// Examples are copied from claude-docs/compendium/deity-vocabulary-seed.md; the rest use invented names.
 
-/** The parts as the seed doc writes them: `_` around each italic run. */
 const marked = (parts: CitationPart[]) =>
   parts.map(({ text, italic }) => (italic ? `_${text}_` : text)).join('');
 
@@ -417,7 +416,6 @@ describe('byCitation', () => {
       '"Zest."',
     ]);
   });
-  // The marks the reference formatter pairs (QUOTE_PAIRS), guillemets included.
   it('ignores a leading guillemet, as the formatter takes one off a title', () => {
     expect(sorted(['«Zest.»', 'Mockleaf.'])).toEqual(['Mockleaf.', '«Zest.»']);
   });

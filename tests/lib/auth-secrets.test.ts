@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { verificationSigningSecret } from '@/lib/auth-secrets';
 
-/** An environment holding only `values`. */
 const env = (values: Record<string, string>) =>
   ({ NODE_ENV: 'test', ...values }) as NodeJS.ProcessEnv;
 

@@ -8,10 +8,8 @@ export const JOBS_INDEX = 'src/lib/jobs/index.ts';
 export const JOBS_RUNTIME = 'src/lib/jobs/runtime.ts';
 export const NEXT_CONFIG = 'next.config.ts';
 
-/** Untracked, gitignored by name, and removed once linted. */
 const PROBE_DIR = 'src/modules/identity/__lint-probe-job__';
 
-/** A service starting a run straight through the SDK, beside the adapter it must go through. */
 export const runtimeProbe = `${PROBE_DIR}/direct-start.ts`;
 
 export const jobBoundary: ProbeSet = {

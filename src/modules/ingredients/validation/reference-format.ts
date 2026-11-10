@@ -1,12 +1,12 @@
 import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
-import type { FieldFormat, ReferenceTextField } from './types';
+import { type FieldFormat, tidy, withScheme } from '../../../lib/formats';
+import type { ReferenceTextField } from './types';
 
 // How a reference's fields are tidied, and the shapes the schema's extra checks accept. Pure and client-safe, so the server stores
 // what the form already showed. A format changes only what it can read with certainty and leaves the rest as typed, since
 // Chicago's forms vary more than any rule would guess (claude-docs/db/references.md, "Formatting and checks").
 
-/** Trimmed, every run of whitespace — a newline, a tab — one space. */
-export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
+export { tidy, withScheme };
 
 /** A title less the quotation marks wrapping the whole of it: the citation quotes the title itself, so typed marks would print twice. */
 export const unquote: FieldFormat = (text) => {
@@ -16,7 +16,6 @@ export const unquote: FieldFormat = (text) => {
     : text;
 };
 
-/** A hyphen, or another dash, as it may be typed between two numbers. */
 const DASHES = '[-‐‑‒—―]';
 const DIGIT_RANGE = new RegExp(`(\\d)\\s*${DASHES}\\s*(?=\\d)`, 'g');
 const NUMERAL_RANGE = new RegExp(`\\b([ivxlcdm]+)\\s*${DASHES}\\s*(?=[ivxlcdm]+\\b)`, 'gi');
@@ -27,15 +26,6 @@ export const dashRanges: FieldFormat = (text) =>
 
 /** As `dashRanges`, and a range of roman numerals too ("xii-xv"), only in a field that holds nothing but numbers. */
 export const dashNumbers: FieldFormat = (text) => dashRanges(text).replace(NUMERAL_RANGE, '$1–');
-
-/** A scheme already given: "https:", "ftp:", "javascript:". */
-const SCHEME = /^[a-z][a-z\d+.-]*:/i;
-/** What reads as a host: a name, a dot, a name, and a path or nothing after. */
-const BARE_HOST = /^[\w-]+(\.[\w-]+)+([/?#]|$)/;
-
-/** An address typed without its scheme, "example.org/x", taken as https. */
-export const withScheme: FieldFormat = (text) =>
-  !SCHEME.test(text) && BARE_HOST.test(text) ? `https://${text}` : text;
 
 const ORDINAL_WORDS = [
   'first',
@@ -54,7 +44,6 @@ const EDITION = new RegExp(
   'i',
 );
 
-/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th … 21st, 22nd. */
 function ordinal(n: number): string {
   const teen = n % 100 >= 11 && n % 100 <= 13;
   const suffix = teen ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
@@ -69,17 +58,13 @@ export const chicagoEdition: FieldFormat = (text) => {
   return `${ordinal(n)} ed.`;
 };
 
-/** A locator: tidied and its ranges dashed, its words — `under "Hecate"`, "chap. 3" — as typed. */
 export const formatLocator: FieldFormat = (text) => dashRanges(tidy(text));
 
 const title: FieldFormat = (text) => unquote(tidy(text));
 const numbers: FieldFormat = (text) => dashNumbers(tidy(text));
 const trimmed: FieldFormat = (text) => text.trim();
 
-/**
- * Each field's format, by what it holds, in the order `CitationFields`
- * declares them, which is the order the form and the schema take them in.
- */
+// Declared in `CitationFields`' order, which is the order the form and the schema take them in.
 export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   title,
   authors: tidy,
@@ -95,7 +80,6 @@ export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   pages: numbers,
   host: tidy,
   url: (text) => withScheme(text.trim()),
-  // The date input's own value, which needs no more.
   modified: trimmed,
   accessed: trimmed,
   note: tidy,

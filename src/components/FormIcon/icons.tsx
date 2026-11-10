@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The form icons, on the section nav's conventions: a 24-unit square, a 1.6 stroke with round ends, no
-// fill, in `currentColor` (claude-docs/components/form-icon.md, "The icons").
+// The form icons, on the section nav's conventions: 24-unit square, 1.6 round stroke, no fill, `currentColor`
+// (claude-docs/components/form-icon.md, "The icons").
 /**
  * Scales a drawing about (12, 12), the stroke scaled back to 1.6; the sprig and drop are drawn smaller,
  * so each scale matches the others' area.
@@ -17,7 +17,6 @@ const sized = (scale: number, cx: number, cy: number, shape: ReactElement): Reac
 );
 
 export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
-  // Drawn 13 by 15, centred on (12, 13).
   botanical: sized(
     1.16,
     12,
@@ -28,7 +27,6 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M12 11.5C15.7 11.5 18.2 9.3 18.5 5.5C14.8 5.5 12.3 7.7 12 11.5z" />
     </>,
   ),
-  // Drawn 16.6 by 16, centred on (12, 12); a shade under the gem by eye.
   animal: sized(
     1.05,
     12,
@@ -56,7 +54,6 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M3.5 10.5h17v1.5a7 7 0 0 1-7 7h-3a7 7 0 0 1-7-7z" />
     </>
   ),
-  // Drawn 12 by 17, centred on (12, 12).
   fluid: sized(
     1.13,
     12,
@@ -66,8 +63,6 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M9 14.5a3 3 0 0 0 1.6 2.6" />
     </>,
   ),
-  // A skeleton key: a three-leaf clover bow, a straight shaft, and a plate bit with a notch between two
-  // teeth. Drawn lying flat and turned 45° about the centre, to use the square's diagonal.
   curio: (
     <g transform="rotate(45 12 12)">
       <path d="M5.8 12A2.2 2.2 0 1 0 3.62 10A2.2 2.2 0 1 0 3.62 14A2.2 2.2 0 1 0 5.8 12z" />
@@ -78,7 +73,7 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
 };
 
 // The generic: a salt spoon drawn on the Backdrop's `salt-spoon.webp`, also the admin nav's Forms mark
-// (claude-docs/design-decisions/m12.6-form-icons.md). Scaled to match the six; each grain is a
+// (claude-docs/design-decisions/ui.md, "Form icons: on the group, with a generic"). Scaled to match the six; each grain is a
 // zero-length stroke the round caps swell into a dot.
 export const SPOON: ReactElement = (
   <g transform="translate(12 12) scale(1.05) translate(-12.23 -12.23)">

@@ -21,7 +21,6 @@ $stuck-pad: space(4);
 $page-gutter: space(4);
 
 .ingredient-search {
-  // The sentinel's anchor.
   position: relative;
 }
 
@@ -88,7 +87,6 @@ $page-gutter: space(4);
     @include sorrel-blend(multiply, $ornament-multiply);
   }
 
-  // As the sorrel goes, the row stays opaque.
   @media (prefers-contrast: more) {
     &::before,
     &::after {
@@ -97,14 +95,18 @@ $page-gutter: space(4);
   }
 }
 
-// The search sentence under the row: the row's margin below is already part of the air, so
-// the sentence takes back the same amount from the stack's gap, and sits a gap from the
-// input as the cards sit a gap from it.
+// The stuck row's shadow is dropped, so a rule along the foot of its full-bleed fill marks where it
+// ends; on the fill, not the row, so it runs the page's width and nothing in the row moves.
+.ingredient-search > search[data-stuck] > .filter-sorrel {
+  @include forced-colors {
+    border-block-end: 1px solid CanvasText;
+  }
+}
+
 .ingredient-search > search + .search-sentence {
   margin-block-start: calc(-1 * #{space(2)});
 }
 
-// One pixel at the row's resting place, which StuckMark watches.
 .ingredient-search__mark {
   position: absolute;
   inset-block-start: calc(-1 * #{$stuck-pad});
@@ -138,7 +140,7 @@ html:has(:is(.app-shell, .public-frame) .ingredient-search) {
 
 // Under the narrow column the row is two controls tall plus its gap, so the root leaves one more
 // control and gap of room.
-@media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
+@include width-to(calc(#{$narrow-column} + 2 * #{space(4)})) {
   html:has(:is(.app-shell, .public-frame) .ingredient-search) {
     scroll-padding-top: calc(
       #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} +

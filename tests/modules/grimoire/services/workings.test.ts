@@ -9,6 +9,7 @@ import {
   deleteWorking,
   getWorking,
   listWorkings,
+  listWorkingsPage,
   recordWorking,
   updateWorking,
 } from '@/modules/grimoire';
@@ -20,9 +21,6 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
-
-// Recording, completing, changing and deleting a working. Who may do each, what completing takes from the jars, and what a failure
-// part-way leaves are asserted by the rows, read raw.
 
 // `withAudit` as it is, with one seam: a test may wrap the writer so a failure between two writes of one transaction can be staged.
 const seam = vi.hoisted(() => ({
@@ -51,7 +49,6 @@ beforeEach(async () => {
 
 const DAY = '2026-10-01';
 
-/** A compendium ingredient with one form, and the coven W's jar of it. */
 async function stocked(name: string, quantity: string | null, unit: Unit | null) {
   const ingredientId = await insertIngredient(
     sql,
@@ -73,7 +70,6 @@ const quantityOf = async (jarId: string) =>
       .quantity_on_hand,
   );
 
-/** A spell in W by `author`, complete and shared unless said otherwise. */
 function spellBy(author: typeof A, extra: Parameters<typeof makeSpell>[0] = {}): Promise<string> {
   return insertSpell(
     sql,
@@ -399,6 +395,25 @@ describe('reading', () => {
     } finally {
       await sql`update workspace_members set deleted_at = null, deleted_by = null where user_id = ${B.id} and workspace_id = ${WORKSPACE_W_ID}`;
     }
+  });
+});
+
+describe('the order of a spell’s workings', () => {
+  it('lists the same order the pages walk, when two workings were recorded within one millisecond', async () => {
+    const spell = await spellBy(A);
+    const first = (await record(A, spell)).working.id;
+    const second = (await record(A, spell)).working.id;
+    // A Date keeps milliseconds and the column keeps microseconds, so only the database can tell these two apart.
+    await sql`update spell_workings set created_at = '2026-10-01 12:00:00.000100+00' where id = ${first}`;
+    await sql`update spell_workings set created_at = '2026-10-01 12:00:00.000200+00' where id = ${second}`;
+
+    const listed = (await listWorkings(asUser(A), WORKSPACE_W_ID, spell)).map((r) => r.working.id);
+    const paged = (
+      await listWorkingsPage(asUser(A), WORKSPACE_W_ID, spell, { limit: 10, inverted: false })
+    ).map((entry) => entry.node.working.id);
+
+    expect(paged).toEqual([second, first]);
+    expect(listed).toEqual(paged);
   });
 });
 

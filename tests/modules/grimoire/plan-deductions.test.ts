@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { planDeductions, type PlanJar, type PlanStep } from '@/modules/grimoire/plan-deductions';
 
-// Spying on the converter, not replacing it: the plan must still be the real one, and the spy
-// shows that a count unit is compared by equality and never handed to it.
+// Spying on the converter, not replacing it: the plan stays the real one, and the spy shows a count unit is compared by equality and never handed to it.
 const convert = vi.hoisted(() => ({ calls: 0 }));
 vi.mock('@/modules/ingredients', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/modules/ingredients')>();

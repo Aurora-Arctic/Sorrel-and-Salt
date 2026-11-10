@@ -1,17 +1,19 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { fold } from '../../lib/text';
+import { FormActions, PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The `/account/email` page's form and the account page's Email section (`embedded`): the address, its
 // verification state, and a new one. Every submit sends mail rather than writing the row, so success
@@ -29,12 +31,11 @@ const SetEmailDocument = graphql(`
   }
 `);
 
-/** How long the submit stays down after a send: one mail a minute from a form. */
 export const RESEND_DELAY_SECONDS = 60;
 
 /** As the column stores it, so "unchanged" compares what the server would see. */
 function normalise(input: string): string {
-  return input.trim().toLowerCase();
+  return fold(input);
 }
 
 // The status line, one per state of the address: the only rendering of that
@@ -47,7 +48,6 @@ export const CHANGE_STATUS = "Enter a new email address and we'll send it a conf
 
 function statusLine(email: string, verified: boolean): string {
   if (email === '') return NO_EMAIL_STATUS;
-  // A verified account back to change it: the confirmation is the other view.
   if (verified) return CHANGE_STATUS;
   return UNVERIFIED_STATUS;
 }
@@ -63,7 +63,6 @@ const EmailForm = ({
   embedded = false,
   accountPath,
 }: EmailFormProps): ReactElement => {
-  const fieldId = useId();
   const [value, setValue] = useState(email);
   const [sentTo, setSentTo] = useState<string>();
   const [alert, setAlert] = useState(error);
@@ -92,7 +91,6 @@ const EmailForm = ({
   const coolingDown = secondsLeft > 0;
 
   const mutation = useMutation({
-    // The link it asks for lands back here, and Continue goes on to `next`.
     mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
@@ -111,7 +109,9 @@ const EmailForm = ({
     if (coolingDown) return;
     setSentTo(undefined);
     setAlert(undefined);
-    setFieldError(undefined);
+    const invalid = validateEmailAddress(normalise(value));
+    setFieldError(invalid?.message);
+    if (invalid) return;
     mutation.mutate(value);
   };
 
@@ -133,9 +133,9 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* Cast: `next` is whatever page sent us here, already run through
               safeReturnPath, so it is a same-site path but not a known route. */}
-          <Link className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
+          <PendingLink className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
             Continue
-          </Link>
+          </PendingLink>
           {accountPath && (
             <a className="btn btn--quiet" href={accountPath}>
               Continue to Account
@@ -146,10 +146,7 @@ const EmailForm = ({
     );
   }
 
-  // Only a verified, unchanged address has nothing to send: an unverified one
-  // resends its link, and any edit is a change request.
   const nothingToDo = verified && normalise(value) === email;
-  const { aria, ...field } = fieldDescription({ id: fieldId, error: fieldError });
 
   return (
     <div className="email-form">
@@ -164,18 +161,23 @@ const EmailForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Email Address" {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="email"
-            autoComplete="email"
-            placeholder="Add your email"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Email Address"
+          type="email"
+          // A new address: "email" would fill in the one the account has now.
+          autoComplete="off"
+          ignorePasswordManagers
+          required
+          placeholder="name@example.com"
+          format={emailFormat}
+          check={emailAddressProblem}
+          value={value}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
+          error={fieldError}
+        />
         <FormActions
           noun="Confirmation"
           label={coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}

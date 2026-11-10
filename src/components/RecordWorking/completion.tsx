@@ -2,26 +2,24 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { GENERIC_FAILURE, failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import JarLine from '../JarLine';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
-import { withUnit } from '../StockBadge/stock-words';
+import { formatQuantity } from '@/lib/quantity';
 import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
 
-// The step before a working is completed: what completing it would take from each jar, read from
-// `workingDeductionPreview`, and a Mark Complete that runs `completeWorking`. The preview and the
-// completion share one plan on the server, so what is shown is what is taken
-// (claude-docs/components/record-working.md).
+// The step before a working is completed: the preview from `workingDeductionPreview`, then `completeWorking`. Both
+// share one plan on the server (claude-docs/components/record-working.md).
 
 export const WorkingDeductionPreviewDocument = graphql(`
   query WorkingDeductionPreview($workspaceId: ID!, $spellId: ID!) {
@@ -68,11 +66,10 @@ type Taken = Plan['deductions'][number];
 type Skipped = Plan['warnings'][number];
 type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
-const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
-// An empty jar has none, the way the recipe page's In the Cupboard panel says it.
+const amount = (quantity: number, unit: string) =>
+  formatQuantity(Number(quantity.toFixed(3)), unit);
 const holds = (quantity: number, unit: string) => (quantity > 0 ? amount(quantity, unit) : 'none');
 
-/** One line of the preview: the step's jar as the recipe page's In the Cupboard panel draws it, then what the step takes from it. */
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
   const { step } = row;
   const taken = 'taken' in row ? row.taken : null;
@@ -81,7 +78,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
   const unstocked = skipped?.reason === 'UNSTOCKED';
   const short = taken !== null && taken.shortfall > 0;
   const held = taken ? { quantity: taken.before, threshold: taken.lowStockThreshold } : null;
-  // Short is Low whatever the Low mark says: the jar is emptied.
   const state = short ? 'low' : held ? stockState(held.quantity, held.threshold) : 'ok';
   const tone = oneOff ? 'ok' : unstocked ? 'empty' : state;
   const form = step.form ?? '';
@@ -97,7 +93,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
         step.stock
           ? {
               ...step.stock,
-              // The same dialog and handler as a jar on the recipe page's In the Cupboard panel.
               ariaLabel: ['Edit Stock', step.stock.ingredientName, form && formLabel(form)]
                 .filter(Boolean)
                 .join(', '),
@@ -166,7 +161,7 @@ export default function WorkingCompletion({
       refresh();
       onCompleted?.();
     },
-    onError: (error) => setFailure(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
+    onError: (error) => setFailure(failureMessage(error)),
   });
 
   if (preview.isError) {

@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DeityInput } from '@/modules/vocabulary/validation/deity';
 
-// What the schema adds over curatedValueInput, whose name, description and
-// dropped slug are tests/lib/validation.test.ts's: the tradition in place of a
-// form's group (claude-docs/db/deity-vocabulary.md).
-
 function failedPaths(input: unknown) {
   const result = DeityInput.safeParse(input);
   expect(result.success).toBe(false);

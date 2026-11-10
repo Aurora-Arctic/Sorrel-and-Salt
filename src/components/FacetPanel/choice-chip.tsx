@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type FocusEvent,
   type KeyboardEvent,
@@ -13,8 +14,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { pressFeedback } from '../../lib/press-feedback';
+import { FieldError } from '../Field/shell';
 import InfoTip from '../InfoTip';
 import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
@@ -24,15 +27,6 @@ import './choice-chip.scss';
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
 // choice; hydrated, the menu fades and stays mounted until the fade ends (see useSlide).
 
-/** How long a leaving menu waits for its fade to end before it closes anyway. */
-const FADE_LIMIT_MS = 400;
-
-/** Motion turned down, or no way to ask, so a change is not held for a fade. */
-export const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/** The right edge of the nearest ancestor that clips its children (the panel's slide clip), or the viewport's. */
 const clipRight = (from: HTMLElement): number => {
   for (let el = from.parentElement; el; el = el.parentElement) {
     if (getComputedStyle(el).overflowX !== 'visible') return el.getBoundingClientRect().right;
@@ -45,28 +39,30 @@ type Phase = 'closed' | 'opening' | 'open' | 'closing';
 export interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
-  /** What the menu and the chip draw in place of `label`, which still names the option: the same words, one of them styled. */
   display?: ReactNode;
-  /** Shown after the name once known; left out for a choice that has none, such as All. */
   count?: number;
-  /** A decorative icon before the label, in the menu and on the chip once chosen. */
   icon?: ReactNode;
+  /** Shown in the menu but cannot be chosen. */
+  disabled?: boolean;
 }
 
 export interface ChoiceChipProps<T extends string> {
-  /** The group's name, and the chip's first word. */
   legend: string;
-  /** The parameter the chosen radio submits under. */
   name: string;
   options: ReadonlyArray<ChoiceChipOption<T>>;
   value: T;
   onChange: (value: T) => void;
   /** Rests on its value and cannot be changed; the chip does not open and takes no focus. */
   disabled?: boolean;
-  /** What the choice means, behind an InfoTip beside the chip. */
   hint?: string;
   /** What the choice means, in a tip bubble on pointer or (while enabled) focus, with no icon; hidden while the menu is open. */
   chipHint?: string;
+  /** A line under the chip, always visible, that describes the group. */
+  note?: ReactNode;
+  /** A message under the chip that describes the group and marks it and its radios invalid. */
+  error?: string;
+  /** False where no labelled field sits beside the chip, such as in a stacked column, so no empty line stands above it. */
+  spacer?: boolean;
 }
 
 export function ChoiceChip<T extends string>({
@@ -78,10 +74,15 @@ export function ChoiceChip<T extends string>({
   disabled,
   hint,
   chipHint,
+  note,
+  error,
+  spacer = true,
 }: ChoiceChipProps<T>): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
   const chipHintId = `${id}-chip-hint`;
+  const noteId = `${id}-note`;
+  const errorId = `${id}-error`;
   const tip = useTip();
   const hydrated = useHydrated();
   const root = useRef<HTMLDetailsElement>(null);
@@ -89,9 +90,9 @@ export function ChoiceChip<T extends string>({
   const [phase, setPhase] = useState<Phase>('closed');
   const chosen = options.find((option) => option.value === value) ?? options[0];
 
-  const open = () => setPhase(fadesAreOff() ? 'open' : 'opening');
+  const open = () => setPhase(prefersReducedMotion() ? 'open' : 'opening');
   const close = (refocus: boolean) => {
-    setPhase((now) => (now === 'closed' ? now : fadesAreOff() ? 'closed' : 'closing'));
+    setPhase((now) => (now === 'closed' ? now : prefersReducedMotion() ? 'closed' : 'closing'));
     if (refocus) summary.current?.focus();
   };
 
@@ -115,15 +116,11 @@ export function ChoiceChip<T extends string>({
     return () => window.clearTimeout(limit);
   }, [phase]);
 
-  // A press outside the chip shuts the menu.
-  useEffect(() => {
-    if (phase === 'closed') return undefined;
-    const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) close(false);
-    };
-    document.addEventListener('pointerdown', outside);
-    return () => document.removeEventListener('pointerdown', outside);
-  }, [phase]);
+  useDismiss({
+    active: phase !== 'closed',
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: () => close(false),
+  });
 
   const shown = phase === 'opening' || phase === 'open';
 
@@ -166,7 +163,10 @@ export function ChoiceChip<T extends string>({
     }
   };
 
-  const describedBy = chipHint ? chipHintId : hint ? hintId : undefined;
+  const describedBy =
+    [chipHint ? chipHintId : hint && hintId, note && noteId, error && errorId]
+      .filter(Boolean)
+      .join(' ') || undefined;
 
   const face = (
     <>
@@ -185,9 +185,11 @@ export function ChoiceChip<T extends string>({
     // A `.field` so its top lines up with the labelled fields beside it: the spacer stands
     // where their label does.
     <div className="field facet-chip">
-      <span className="field__label facet-chip__spacer" aria-hidden="true">
-        &#8203;
-      </span>
+      {spacer && (
+        <span className="field__label facet-chip__spacer" aria-hidden="true">
+          &#8203;
+        </span>
+      )}
       <div
         ref={tip.anchor}
         className="facet-chip__bar"
@@ -199,6 +201,7 @@ export function ChoiceChip<T extends string>({
           className="fieldset facet-chip__group"
           disabled={disabled}
           aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
         >
           <legend className="visually-hidden">{legend}</legend>
           {disabled ? (
@@ -246,6 +249,8 @@ export function ChoiceChip<T extends string>({
                       name={name}
                       value={option.value}
                       checked={option.value === value}
+                      disabled={option.disabled}
+                      aria-invalid={error ? true : undefined}
                       onChange={() => {
                         onChange(option.value);
                         if (hydrated) close(true);
@@ -282,6 +287,12 @@ export function ChoiceChip<T extends string>({
           </InfoTip>
         )}
       </div>
+      {note && (
+        <p id={noteId} className="field__hint">
+          {note}
+        </p>
+      )}
+      <FieldError id={errorId} message={error} />
     </div>
   );
 }

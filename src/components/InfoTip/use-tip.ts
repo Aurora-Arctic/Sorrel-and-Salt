@@ -8,9 +8,8 @@ import type { Tip, TipTiming } from './types';
 
 // A tip's open state as WCAG 1.4.13 asks: shown on hover (after it rests), focus or tap, kept open while
 // the pointer is over it, closed on Escape, blur or leaving. Used by InfoTip, UserList, IconTip and
-// Combobox's tooltips (claude-docs/components/info-tip.md, "Behaviour" and "Placement").
+// Combobox's tooltips (claude-docs/components/info-tip.md, "Contracts" and "Placement").
 
-// Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;
 
 // The default `canOpen`, at module level so `show` keeps one identity for a
@@ -18,13 +17,10 @@ const CLOSE_DELAY_MS = 150;
 // function every render.
 const ALWAYS = () => true;
 
-/** Space kept between a bubble and the edge of the screen. */
 const EDGE_PX = 8;
 
-/** Space between a bubble and the control it belongs to. */
 const GAP_PX = 4;
 
-// The sides a stylesheet may ask for with `--tip-placement`.
 const SIDES = new Set<string>([
   'top',
   'top-start',
@@ -52,20 +48,37 @@ function sideFor(anchor: Element | null | undefined, fallback: Placement): Place
 }
 
 /**
+ * The height of the sticky top bar over the reference, in pixels: the frame publishes it as the inherited
+ * `--sticky-top` (a rem or px length), the one place the bar's height is stated. 0 where none is published.
+ */
+function barInset(reference: Element): number {
+  const raw = getComputedStyle(reference).getPropertyValue('--sticky-top').trim();
+  const amount = parseFloat(raw);
+  if (!Number.isFinite(amount)) return 0;
+  if (raw.endsWith('rem')) {
+    return amount * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16);
+  }
+  return raw.endsWith('px') ? amount : 0;
+}
+
+/**
  * The edges a bubble keeps inside: the nearest ancestor marked
  * `data-tip-boundary` (the filter panel, which is narrower than the screen
- * and whose tips must not leave it), else the screen.
+ * and whose tips must not leave it), else the screen less the sticky top bar,
+ * so a bubble flips or shifts before it slides under the bar.
  */
 const edges = ({ elements }: { elements: { reference: unknown } }) => {
   const reference = elements.reference;
   const marked = reference instanceof Element ? reference.closest('[data-tip-boundary]') : null;
-  return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
+  if (marked) return { padding: EDGE_PX, boundary: marked };
+  const top =
+    reference instanceof Element ? Math.max(EDGE_PX, barInset(reference) + EDGE_PX) : EDGE_PX;
+  return { padding: { top, right: EDGE_PX, bottom: EDGE_PX, left: EDGE_PX } };
 };
 
 /**
- * Whether the tip is open, and its three handlers; `canOpen` is asked as it opens, not watched, as a
- * Combobox entry's fit changes with its width. `placement` is the preferred side; `timing` sets the
- * hover waits, none for IconTip. `anchor`, `bubble` and `bubbleStyle` go to the wrapper and bubble.
+ * `canOpen` is asked as the tip opens, not watched, as a Combobox entry's fit changes with its
+ * width.
  */
 export function useTip(
   canOpen: () => boolean = ALWAYS,
@@ -86,7 +99,6 @@ export function useTip(
     middleware: [offset(GAP_PX), flip(edges), shift(edges)],
   });
 
-  // Followed only while open: a closed bubble has nothing to follow.
   const { reference, floating } = elements;
   useEffect(() => {
     if (!open || !reference || !floating) return;
@@ -100,8 +112,6 @@ export function useTip(
     setSide(sideFor(refs.reference.current as Element | null, placement));
     setOpen(true);
   }, [canOpen, placement, refs]);
-  // Already open, or already waiting, a hover changes nothing but a pending
-  // close: the pointer is back.
   const showSoon = useCallback(() => {
     clearTimeout(closing.current);
     clearTimeout(opening.current);

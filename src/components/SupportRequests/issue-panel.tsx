@@ -1,7 +1,8 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { type FormEvent, type ReactElement, useState } from 'react';
+import { graphql } from '@/lib/graphql-document';
+import type { FieldFormat } from '../../lib/formats';
 import { graphqlRequest } from '../../lib/graphql-client';
 import {
   ISSUE_LINK_EXPECTED,
@@ -10,7 +11,7 @@ import {
   normaliseIssueLink,
 } from '../../lib/support-path';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import IconTip from '../IconTip';
 import { PencilIcon } from '../IconTip/icons';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -30,6 +31,10 @@ const SetIssueUrlDocument = graphql(`
   }
 `);
 
+/** A board link becomes the plain issue address on blur; anything else stays as typed, for the refusal to name. */
+const tidyIssueLink: FieldFormat = (text) =>
+  normaliseIssueLink(text, ISSUE_REPOSITORY) ?? text.trim();
+
 const IssuePanel = ({
   request,
   canEdit = true,
@@ -42,11 +47,6 @@ const IssuePanel = ({
   const [address, setAddress] = useState(request.issueUrl ?? '');
   const [refused, setRefused] = useState(false);
   const { busy, failure, run } = useSupportAction('issueUrl');
-  const { aria, ...field } = fieldDescription({
-    id: useId(),
-    note: ISSUE_LINK_HINT,
-    error: refused ? ISSUE_LINK_EXPECTED : failure.field?.message,
-  });
   const changed = address.trim() !== (request.issueUrl ?? '');
   const discard = useDiscardGuard(changed);
 
@@ -95,22 +95,22 @@ const IssuePanel = ({
       {showForm && (
         <form className="form" noValidate onSubmit={submit}>
           {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-          <FieldShell label="GitHub Issue" note={ISSUE_LINK_HINT} {...field}>
-            <input
-              id={field.controlId}
-              className="input"
-              type="url"
-              autoComplete="off"
-              placeholder="Paste the issue address"
-              {...aria}
-              value={address}
-              disabled={busy}
-              onChange={(event) => {
-                setRefused(false);
-                setAddress(event.target.value);
-              }}
-            />
-          </FieldShell>
+          <PlainTextField
+            name="issueUrl"
+            label="GitHub Issue"
+            note={ISSUE_LINK_HINT}
+            type="url"
+            autoComplete="off"
+            placeholder="Paste a link"
+            format={tidyIssueLink}
+            value={address}
+            disabled={busy}
+            error={refused ? ISSUE_LINK_EXPECTED : failure.field?.message}
+            onChange={(next) => {
+              setRefused(false);
+              setAddress(next);
+            }}
+          />
           <div className="form__actions">
             <BusyButton
               type="submit"

@@ -84,7 +84,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** The error a call rejects with, so a test can read its class and message together. */
 async function refusalOf(call: Promise<unknown>): Promise<Error> {
   const error = await call.then(
     () => undefined,
@@ -270,9 +269,9 @@ describe('pauseUserAccess', () => {
 
     expect(error).toBeInstanceOf(ValidationError);
     expect(issuesOf(error)).toEqual([
-      { path: ['note'], message: 'Keep the note to 500 characters' },
+      { path: ['note'], message: 'Keep this to 500 characters or fewer' },
     ]);
-    expect(error.message).toBe('Keep the note to 500 characters');
+    expect(error.message).toBe('Keep this to 500 characters or fewer');
     expect(await pauseRows(A.id)).toEqual([]);
     const row = await pauseUserAccess(
       asUser(E),

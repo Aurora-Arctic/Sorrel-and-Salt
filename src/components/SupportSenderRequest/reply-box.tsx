@@ -1,18 +1,18 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { type FormEvent, type ReactElement, useState } from 'react';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
+import { MESSAGE_MAX_LENGTH } from '../../modules/support/validation/limits';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from '../SupportRequests/use-support-action';
 import type { SupportSenderReplyBoxProps } from './types';
 
-// The sender's answer on their own request, sent through /api/graphql. While they are timed out the box and the button are
-// shut and a notice above them says when it ends, or that it has no end date; the service refuses the message too.
+// While they are timed out the box and the button are shut; the service refuses the message too.
 
 const SendDocument = graphql(`
   mutation SendSupportMessage($requestId: ID!, $body: String!) {
@@ -29,7 +29,7 @@ const SupportSenderReplyBox = ({
   const [body, setBody] = useState('');
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
-  const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
+  const tooLong = body.trim().length > MESSAGE_MAX_LENGTH;
   const shut = timedOut !== null;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -59,23 +59,23 @@ const SupportSenderReplyBox = ({
         </Notice>
       )}
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Your Reply" {...field}>
-        <textarea
-          id={field.controlId}
-          className="textarea"
-          rows={4}
-          placeholder="Write a reply."
-          {...aria}
-          value={body}
-          disabled={shut || busy}
-          onChange={(event) => setBody(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        name="body"
+        label="Your Reply"
+        multiline
+        rows={4}
+        placeholder="Write a reply"
+        limit={MESSAGE_MAX_LENGTH}
+        disabled={shut || busy}
+        value={body}
+        error={failure.field?.message}
+        onChange={setBody}
+      />
       <div className="support-detail__actions">
         <BusyButton
           type="submit"
           className="btn btn--solid"
-          disabled={shut || body.trim() === '' || busy}
+          disabled={shut || body.trim() === '' || tooLong || busy}
           busy={busy}
           busyLabel="Replying"
         >

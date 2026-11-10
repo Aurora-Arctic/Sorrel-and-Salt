@@ -1,18 +1,16 @@
 'use client';
 
 import { type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { asksAgreement } from '../../lib/agreement-version';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { Required } from '../Field';
-import ConfirmedAction from '../UserList/confirmed-action';
+import { PlainTextField } from '../Field';
+import ConfirmedAction from '../ConfirmedAction';
 import Notice from '../Notice';
 import type { DocumentMailingPanelProps, MailingProgressProps } from './types';
 import './index.scss';
 
-// The mailing page's panel for emailing every account about every document changed since the last email: a summary box for each
-// and one button with its confirmation, each open mailing's progress, with Resume while the provider's monthly allowance has paused
-// it, and the last mailing sent. The service is the guard (claude-docs/components/document-mailing-panel.md).
+// The service is the guard (claude-docs/components/document-mailing-panel.md).
 
 const EmailDocumentsToEveryAccountDocument = graphql(`
   mutation EmailDocumentsToEveryAccount($summaries: [DocumentMailingSummaryInput!]!) {
@@ -42,7 +40,6 @@ const STATE_TEXT = {
 
 const count = (n: number): string => n.toLocaleString('en-GB');
 
-/** The titles as one phrase: "A", "A and B", "A, B, and C". */
 const titlesOf = (titles: readonly string[]): string =>
   titles.length <= 2
     ? titles.join(' and ')
@@ -126,31 +123,19 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
             over {days} {days === 1 ? 'day' : 'days'}.
           </Notice>
           {pending.map((document) => (
-            <div className="field" key={document.versionId}>
-              <label className="field__label" htmlFor={`${id}-${document.versionId}`}>
-                Summary of the {document.title}
-                <Required />
-              </label>
-              <textarea
-                id={`${id}-${document.versionId}`}
-                className="input"
-                rows={4}
-                required
-                aria-required
-                aria-describedby={`${id}-${document.versionId}-hint`}
-                value={summaryOf(document.versionId)}
-                onChange={(event) =>
-                  setSummaries((current) => ({
-                    ...current,
-                    [document.versionId]: event.target.value,
-                  }))
-                }
-              />
-              <p id={`${id}-${document.versionId}-hint`} className="field__hint">
-                What changed in version {document.versionNumber}, in your words. Every account reads
-                it in the email.
-              </p>
-            </div>
+            <PlainTextField
+              key={document.versionId}
+              name={`summary-${document.versionId}`}
+              label={`Summary of the ${document.title}`}
+              hint={`What changed in version ${document.versionNumber}, in your words. Every account reads it in the email.`}
+              required
+              multiline
+              rows={4}
+              value={summaryOf(document.versionId)}
+              onChange={(next) =>
+                setSummaries((current) => ({ ...current, [document.versionId]: next }))
+              }
+            />
           ))}
           <ConfirmedAction
             label="Email Every Account"

@@ -7,10 +7,8 @@ import type { Membership } from '@/modules/coven';
 import { inCompendium, inTiers, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, existsInIncludingSoftDeleted } from './select';
 
-// The tier predicates built on a query. Not in `predicates.ts`: `select.ts`
-// imports that file, so a predicate there built on `existsIn` would make the
-// two import each other. Not in `select.ts` either, which builds queries for
-// any table and names none.
+// The tier predicates built on a query, apart from `predicates.ts` and `select.ts` so no two files import
+// each other.
 
 /**
  * The ingredient `childColumn` names is readable as `readableInTiers` reads one, and holds `where`: how a child table with no

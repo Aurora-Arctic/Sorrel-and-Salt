@@ -13,10 +13,13 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 const { default: AccountMenu } = await import('@/components/AccountMenu');
 const { initialsOf } = await import('@/components/AccountMenu/initials');
 
-// The account button and its disclosure panel. A disclosure, so the
-// button states whether the panel is open and which element it controls.
-
 const button = () => screen.getByRole('button', { name: 'Fixture Owner' });
+
+/** Presses the account button and waits for the panel to show its Sign Out row. */
+const openPanel = async (toggle: HTMLElement): Promise<void> => {
+  fireEvent.click(toggle);
+  await screen.findByRole('button', { name: 'Sign Out' });
+};
 
 const keepPage = (event: Event): void => event.preventDefault();
 
@@ -31,12 +34,23 @@ afterEach(() => {
 });
 
 describe('AccountMenu', () => {
-  it('opens and closes its panel from the button, saying which it controls', () => {
+  it('shows its rows in the same render as the press, with no loading state', () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
+
+    fireEvent.click(button());
+
+    expect(button()).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Your Account' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('opens and closes its panel from the button, saying which it controls', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     expect(button()).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('link', { name: 'Your Account' })).not.toBeInTheDocument();
 
-    fireEvent.click(button());
+    await openPanel(button());
     expect(button()).toHaveAttribute('aria-expanded', 'true');
     const panel = document.getElementById(button().getAttribute('aria-controls') ?? '');
     expect(panel).toContainElement(screen.getByRole('link', { name: 'Your Account' }));
@@ -46,9 +60,9 @@ describe('AccountMenu', () => {
     expect(button()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('closes on Escape and gives the focus back to the button', () => {
+  it('closes on Escape and gives the focus back to the button', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
-    fireEvent.click(button());
+    await openPanel(button());
     screen.getByRole('link', { name: 'Your Account' }).focus();
     expect(button()).not.toHaveFocus();
 
@@ -58,14 +72,14 @@ describe('AccountMenu', () => {
     expect(button()).toHaveFocus();
   });
 
-  it('closes on a press outside it, and stays open on one inside it', () => {
+  it('closes on a press outside it, and stays open on one inside it', async () => {
     render(
       <>
         <p>Elsewhere</p>
         <AccountMenu name="Fixture Owner" verified />
       </>,
     );
-    fireEvent.click(button());
+    await openPanel(button());
 
     fireEvent.pointerDown(screen.getByRole('link', { name: 'Your Account' }));
     expect(button()).toHaveAttribute('aria-expanded', 'true');
@@ -74,25 +88,25 @@ describe('AccountMenu', () => {
     expect(button()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('closes when a link in it is pressed', () => {
+  it('closes when a link in it is pressed', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
-    fireEvent.click(button());
+    await openPanel(button());
 
     fireEvent.click(screen.getByRole('link', { name: 'Your Account' }));
 
     expect(button()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('offers Sign Out alone to an unverified account', () => {
+  it('offers Sign Out alone to an unverified account', async () => {
     render(<AccountMenu name="Fixture Owner" verified={false} />);
 
-    fireEvent.click(button());
+    await openPanel(button());
 
     expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('offers the bar’s links too, for a phone', () => {
+  it('offers the bar’s links too, for a phone', async () => {
     render(
       <AccountMenu
         name="Fixture Owner"
@@ -104,7 +118,7 @@ describe('AccountMenu', () => {
       />,
     );
 
-    fireEvent.click(button());
+    await openPanel(button());
 
     expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
@@ -113,22 +127,26 @@ describe('AccountMenu', () => {
     );
   });
 
-  it('has no count while no invitation waits', () => {
-    render(<AccountMenu name="Fixture Owner" verified pendingInvitations={0} />);
+  it('links the help pages', async () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
     fireEvent.click(button());
+
+    expect(await screen.findByRole('link', { name: 'Help' })).toHaveAttribute('href', '/help');
+  });
+
+  it('has no count while no invitation waits', async () => {
+    render(<AccountMenu name="Fixture Owner" verified pendingInvitations={0} />);
+    await openPanel(button());
 
     expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
     expect(screen.queryByRole('link', { name: /Coven Invitation/ })).not.toBeInTheDocument();
   });
 });
 
-// Coven invitations waiting for the viewer's address: the count is a
-// link of its own to the account page's Invitations section, beside Your
-// Account, which still opens the page itself; the button says how many.
 describe('AccountMenu with pending invitations', () => {
-  it('links the count to the Invitations section and leaves Your Account on the page', () => {
+  it('links the count to the Invitations section and leaves Your Account on the page', async () => {
     render(<AccountMenu name="Fixture Owner" verified pendingInvitations={2} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Fixture Owner, 2 coven invitations' }));
+    await openPanel(screen.getByRole('button', { name: 'Fixture Owner, 2 coven invitations' }));
 
     expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
       'href',
@@ -137,38 +155,38 @@ describe('AccountMenu with pending invitations', () => {
     expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
   });
 
-  it('counts one invitation in the singular', () => {
+  it('counts one invitation in the singular', async () => {
     render(<AccountMenu name="Fixture Owner" verified pendingInvitations={1} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Fixture Owner, 1 coven invitation' }));
+    await openPanel(screen.getByRole('button', { name: 'Fixture Owner, 1 coven invitation' }));
 
     expect(screen.getByRole('link', { name: '1 Coven Invitation' })).toBeInTheDocument();
   });
 
-  it('shows no count to an unverified account, which cannot reach the page', () => {
+  it('shows no count to an unverified account, which cannot reach the page', async () => {
     render(<AccountMenu name="Fixture Owner" verified={false} pendingInvitations={2} />);
-    fireEvent.click(button());
+    await openPanel(button());
 
     expect(screen.queryByRole('link', { name: /Coven Invitation/ })).not.toBeInTheDocument();
   });
 });
 
 describe('initialsOf', () => {
-  it('takes the first letters of the first and last words, up to two', () => {
+  it('takes the first letters of the first and last words, up to two', async () => {
     expect(initialsOf('Rowan Ashby')).toBe('RA');
     expect(initialsOf('rowan  of the ashby')).toBe('RA');
     expect(initialsOf('Rowan')).toBe('R');
   });
 
-  it('never leaves the disc empty', () => {
+  it('never leaves the disc empty', async () => {
     expect(initialsOf('   ')).toBe('?');
   });
 });
 
 describe('AccountMenu support link', () => {
-  it('offers Support in the panel, opening the dialog over the current page', () => {
+  it('offers Support in the panel, opening the dialog over the current page', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument();
-    fireEvent.click(button());
+    await openPanel(button());
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
       expect.stringMatching(/\?support=$/),
@@ -177,17 +195,16 @@ describe('AccountMenu support link', () => {
 
   describe('support counts', () => {
     const ADMIN = [{ label: 'Keepers', href: '/keepers' as Route, base: '/keepers' }];
-    const open = (): void => {
-      fireEvent.click(screen.getByRole('button', { name: /^Fixture Owner/ }));
-    };
+    const open = (): Promise<void> =>
+      openPanel(screen.getByRole('button', { name: /^Fixture Owner/ }));
 
     // The count belongs to the support pages, which are under Keepers; a curator's Curator link carries none.
-    it('carries the assigned count on the Keepers link alone, never on Curator', () => {
+    it('carries the assigned count on the Keepers link alone, never on Curator', async () => {
       const CURATOR = { label: 'Curator', href: '/curator' as Route, base: '/curator' };
       const { unmount } = render(
         <AccountMenu name="Fixture Owner" verified links={[CURATOR]} assignedSupport={3} />,
       );
-      open();
+      await open();
       expect(screen.getByRole('link', { name: 'Curator' })).toHaveAttribute('href', '/curator');
       expect(screen.queryByRole('link', { name: '3 requests assigned to you' })).toBeNull();
       unmount();
@@ -200,19 +217,19 @@ describe('AccountMenu support link', () => {
           assignedSupport={3}
         />,
       );
-      open();
+      await open();
       expect(screen.getAllByRole('link', { name: '3 requests assigned to you' })).toHaveLength(1);
     });
 
-    it('wears no dot and shows no count when nothing waits', () => {
+    it('wears no dot and shows no count when nothing waits', async () => {
       const { container } = render(<AccountMenu name="Fixture Owner" verified links={ADMIN} />);
-      open();
+      await open();
       expect(container.querySelector('.account-menu__dot')).toBeNull();
       expect(screen.getByRole('link', { name: 'Support' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
     });
 
-    it('counts requests assigned to a staff viewer in a link of its own beside Keepers, and dots the avatar', () => {
+    it('counts requests assigned to a staff viewer in a link of its own beside Keepers, and dots the avatar', async () => {
       const { container } = render(
         <AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />,
       );
@@ -220,18 +237,18 @@ describe('AccountMenu support link', () => {
       expect(
         screen.getByRole('button', { name: 'Fixture Owner, 3 requests assigned to you' }),
       ).toBeInTheDocument();
-      open();
+      await open();
       expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
       const count = screen.getByRole('link', { name: '3 requests assigned to you' });
       expect(count).toHaveAttribute('href', '/keepers/support?view=mine');
       expect(count).toHaveTextContent('3');
     });
 
-    it('opens a tip over the Keepers count after the pointer rests on it', () => {
+    it('opens a tip over the Keepers count after the pointer rests on it', async () => {
+      render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />);
+      await open();
       vi.useFakeTimers();
       try {
-        render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />);
-        open();
         expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
         fireEvent.mouseEnter(screen.getByRole('link', { name: '3 requests assigned to you' }));
         act(() => vi.advanceTimersByTime(300));
@@ -241,11 +258,11 @@ describe('AccountMenu support link', () => {
       }
     });
 
-    it('opens a tip over the Support count after the pointer rests on it', () => {
+    it('opens a tip over the Support count after the pointer rests on it', async () => {
+      render(<AccountMenu name="Fixture Owner" verified waitingSupport={3} />);
+      await open();
       vi.useFakeTimers();
       try {
-        render(<AccountMenu name="Fixture Owner" verified waitingSupport={3} />);
-        open();
         expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
         fireEvent.mouseEnter(screen.getByText('3', { selector: '.account-menu__badge' }));
         act(() => vi.advanceTimersByTime(300));
@@ -255,28 +272,28 @@ describe('AccountMenu support link', () => {
       }
     });
 
-    it('counts requests waiting on the sender, and the Support row leads to the list', () => {
+    it('counts requests waiting on the sender, and the Support row leads to the list', async () => {
       const { container } = render(
         <AccountMenu name="Fixture Owner" verified waitingSupport={1} />,
       );
       expect(container.querySelector('.account-menu__dot')).not.toBeNull();
-      open();
+      await open();
       const link = screen.getByRole('link', { name: /^Support, 1 request waiting on you/ });
       expect(link).toHaveAttribute('href', '/account/support');
     });
 
-    it('draws one dot when both counts apply', () => {
+    it('draws one dot when both counts apply', async () => {
       const { container } = render(
         <AccountMenu name="Fixture Owner" verified assignedSupport={1} waitingSupport={1} />,
       );
       expect(container.querySelectorAll('.account-menu__dot')).toHaveLength(1);
     });
 
-    it('shows 99 as 99 and 100 as 99+, saying the cap to a screen reader', () => {
+    it('shows 99 as 99 and 100 as 99+, saying the cap to a screen reader', async () => {
       const { rerender } = render(
         <AccountMenu name="Fixture Owner" verified waitingSupport={99} />,
       );
-      open();
+      await open();
       expect(
         screen.getByRole('link', { name: /^Support, 99 requests waiting on you/ }),
       ).toHaveTextContent('99');
@@ -289,16 +306,16 @@ describe('AccountMenu support link', () => {
       ).toBeInTheDocument();
     });
 
-    it('caps the Keepers count the same way', () => {
+    it('caps the Keepers count the same way', async () => {
       render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={250} />);
-      open();
+      await open();
       expect(screen.getByText('99+')).toBeInTheDocument();
       expect(
         screen.getByRole('link', { name: /more than 99 requests assigned to you/ }),
       ).toBeInTheDocument();
     });
 
-    it('shows neither count for an unverified account', () => {
+    it('shows neither count for an unverified account', async () => {
       const { container } = render(
         <AccountMenu
           name="Fixture Owner"

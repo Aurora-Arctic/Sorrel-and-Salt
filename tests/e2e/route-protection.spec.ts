@@ -1,6 +1,5 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { e2eDatabaseUrl } from './database';
+import { withE2eSql } from './database';
 import { signInAs } from './session';
 
 // The proxy's redirect against the built server (claude-docs/auth/route-protection.md, "Route protection").
@@ -19,6 +18,27 @@ test('a signed-out visit to a protected route lands on /sign-in, keeping its pat
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 });
 
+// The header's Sign In from a public page, then back: the sign-in page sends a signed-in visitor on to `next`.
+test('Sign In from a public page returns to it, query string kept, once signed in', async ({
+  page,
+}) => {
+  await page.goto('/help/glossary?x=1');
+  // The bar's Sign In opens a dialog over the page; its address is what a new tab gets.
+  const signIn = page.getByRole('banner').getByRole('link', { name: 'Sign In' });
+  await expect(signIn).toHaveAttribute(
+    'href',
+    '/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'),
+  );
+  await signIn.click();
+  await expect(page.getByRole('dialog', { name: 'Sign In' })).toBeVisible();
+  await expect(page).toHaveURL('/help/glossary?x=1');
+
+  await signInAs(page, 'return-to-page@route-protection.test');
+  await page.goto('/sign-in?next=' + encodeURIComponent('/help/glossary?x=1'));
+
+  await expect(page).toHaveURL('/help/glossary?x=1');
+});
+
 // The second layer, by client-side navigation: a cookie the proxy still lets
 // through, for a session revoked since the page loaded, is sent to sign in
 // by the shell layout as a link into it is followed.
@@ -29,12 +49,9 @@ test('a revoked session following a link into the shell lands on /sign-in', asyn
   const proceed = page.getByRole('link', { name: 'Continue' });
   await expect(proceed).toBeVisible();
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`delete from sessions where user_id = ${userId}`;
-  } finally {
-    await sql.end();
-  }
+  });
   await proceed.click();
 
   await expect(page).toHaveURL('/sign-in?next=%2Fcoven');

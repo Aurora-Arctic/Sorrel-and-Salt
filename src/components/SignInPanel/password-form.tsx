@@ -1,40 +1,33 @@
 'use client';
 
-import Link from 'next/link';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
-import { reportLeaving } from '../../lib/navigation';
+import { reportLeaving, PendingLink } from '../../lib/navigation';
+import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS, rateLimited } from '../../lib/auth-messages';
+import { newPasswordRefusal } from '../../lib/password-refusals';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
-import { BackChevron } from '../IngredientEntry/back-link';
 import BusyButton from '../BusyButton';
-import PageHeader from '../PageHeader';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import ModeSwitch from './mode-switch';
 import TwoFactorStep from './two-factor-step';
-import type { PasswordFormProps } from './types';
+import type { PasswordFormProps, SignInMode } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
-// (claude-docs/components/sign-in-panel.md, "Email and password").
+// (claude-docs/components/sign-in-panel.md, "Contracts").
 
-/** Sign-in's one refusal, the same for a wrong password and an unknown address. */
-export const WRONG_CREDENTIALS =
-  "That email address and password don't match an account. Please try again.";
 export const SIGN_UP_UNAVAILABLE =
   "We couldn't create your account just now. Please try again later.";
-export const TOO_MANY_ATTEMPTS = 'Too many attempts. Please wait a minute, then try again.';
 export const GENERIC_PASSWORD_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 export const GENERIC_SIGN_UP_ERROR = "We couldn't create your account. Please try again.";
 
 const FIELD_ERRORS: Record<string, { field: 'email' | 'password'; message: string }> = {
-  PASSWORD_TOO_SHORT: { field: 'password', message: 'Use at least 15 characters.' },
-  PASSWORD_TOO_LONG: { field: 'password', message: 'Use 128 characters or fewer.' },
   INVALID_EMAIL: { field: 'email', message: 'Enter an email address, such as name@example.com.' },
 };
-
-type Mode = 'sign-in' | 'sign-up';
 
 interface Failure {
   status?: number;
@@ -48,13 +41,15 @@ interface Refusal {
   password?: string;
 }
 
-// Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive here.
-function refusal(mode: Mode, failure: Failure): Refusal {
+// Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive
+// here.
+function refusal(mode: SignInMode, failure: Failure): Refusal {
+  const chosen = newPasswordRefusal(failure);
+  if (chosen) return { password: chosen };
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
   if (field) return { [field.field]: field.message };
-  // The breached-list refusal carries the server's own sentence, which says why.
   if (failure.code === 'PASSWORD_COMPROMISED') return { password: failure.message };
-  if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
+  if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   if (mode === 'sign-in') {
     return { alert: failure.status === 401 ? WRONG_CREDENTIALS : GENERIC_PASSWORD_SIGN_IN_ERROR };
   }
@@ -72,23 +67,22 @@ async function hasSession(): Promise<boolean> {
 
 const PasswordForm = ({
   next,
-  lastUsed,
+  mode,
+  onModeChange,
+  signUpLandsOnNext,
+  onSignedUp,
   email,
   onEmailChange,
-  onBack,
   onStart,
   onCodeStep,
 }: PasswordFormProps): ReactElement => {
-  const nameId = useId();
-  const emailId = useId();
-  const [mode, setMode] = useState<Mode>('sign-in');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
-  // The address a sign-up was answered for: every sign-up gets the same answer, held or not.
+  // Every sign-up gets the same answer, held or not, so the page does not reveal which addresses
+  // exist.
   const [signedUp, setSignedUp] = useState<string>();
-  // The right password was given for an account with two-factor on: the code step replaces this form.
   const [askingForCode, setAskingForCode] = useState(false);
   const { ref, settle } = useResultFocus<HTMLDivElement>();
 
@@ -96,8 +90,8 @@ const PasswordForm = ({
   const ready =
     email.trim() !== '' && password !== '' && (!signingUp || name.trim() !== '') && !pending;
 
-  const switchTo = (to: Mode): void => {
-    setMode(to);
+  const switchTo = (to: SignInMode): void => {
+    onModeChange(to);
     setProblem({});
     setSignedUp(undefined);
   };
@@ -106,6 +100,11 @@ const PasswordForm = ({
     event.preventDefault();
     // A disabled submit stops a click, not Enter in a field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    if (invalid) {
+      setProblem({ email: invalid.message });
+      return;
+    }
     setPending(true);
     setProblem({});
     setSignedUp(undefined);
@@ -132,7 +131,7 @@ const PasswordForm = ({
     if (signingUp && !(await hasSession())) {
       setPending(false);
       setPassword('');
-      setMode('sign-in');
+      onModeChange('sign-in');
       setSignedUp(address.toLowerCase());
       settle();
       return;
@@ -145,10 +144,15 @@ const PasswordForm = ({
       onCodeStep?.(true);
       return;
     }
+    if (signingUp && onSignedUp) {
+      setPending(false);
+      onSignedUp();
+      return;
+    }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
     // landing, and an unverified one (every new account) to the email page first.
     reportLeaving();
-    window.location.assign(signInPath(next));
+    window.location.assign(signingUp && signUpLandsOnNext && next ? next : signInPath(next));
   };
 
   if (askingForCode) {
@@ -164,27 +168,8 @@ const PasswordForm = ({
     );
   }
 
-  const nameField = fieldDescription({ id: nameId });
-  const emailField = fieldDescription({ id: emailId, error: problem.email });
-
   return (
     <div className="sign-in-panel__password" ref={ref}>
-      <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
-        <BackChevron />
-        Back
-      </button>
-      {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
-      <PageHeader
-        className="sign-in-panel__password-head"
-        headingClassName="auth-title sign-in-panel__password-heading"
-        focusable
-        title={signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
-        suffix={
-          lastUsed && !signingUp ? (
-            <span className="badge badge--last-used">Last Used</span>
-          ) : undefined
-        }
-      />
       {problem.alert && (
         <Notice kind="error" result>
           {problem.alert}
@@ -198,40 +183,33 @@ const PasswordForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {signingUp && (
-          <FieldShell label="Name" required {...nameField}>
-            <input
-              id={nameField.controlId}
-              className="input"
-              type="text"
-              autoComplete="name"
-              placeholder="Add a name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              aria-required
-              {...nameField.aria}
-            />
-          </FieldShell>
-        )}
-        <FieldShell label="Email Address" required {...emailField}>
-          <input
-            id={emailField.controlId}
-            className="input"
-            type="email"
-            autoComplete={signingUp ? 'email' : 'username'}
-            placeholder="Add an email"
-            value={email}
-            onChange={(event) => onEmailChange(event.target.value)}
-            aria-required
-            {...emailField.aria}
+          <PlainTextField
+            label="Name"
+            required
+            autoComplete="name"
+            placeholder="Your name"
+            value={name}
+            onChange={setName}
           />
-        </FieldShell>
+        )}
+        <PlainTextField
+          label="Email Address"
+          required
+          type="email"
+          autoComplete={signingUp ? 'email' : 'username'}
+          placeholder="name@example.com"
+          format={emailFormat}
+          check={emailAddressProblem}
+          value={email}
+          onChange={onEmailChange}
+          error={problem.email}
+        />
         <PasswordField
           label="Password"
           purpose={signingUp ? 'new' : 'current'}
           value={password}
           onChange={(value) => {
             setPassword(value);
-            // A refusal belongs to the value it refused.
             setProblem((was) => (was.password ? { ...was, password: undefined } : was));
           }}
           error={problem.password}
@@ -251,19 +229,10 @@ const PasswordForm = ({
       </form>
       {!signingUp && (
         <p className="sign-in-panel__switch">
-          <Link href="/forgot-password">Forgot Password?</Link>
+          <PendingLink href="/forgot-password">Forgot Password?</PendingLink>
         </p>
       )}
-      <p className="sign-in-panel__switch">
-        {signingUp ? 'Already have an account?' : 'New here?'}{' '}
-        <button
-          type="button"
-          className="btn btn--quiet btn--small"
-          onClick={() => switchTo(signingUp ? 'sign-in' : 'sign-up')}
-        >
-          {signingUp ? 'Sign In Instead' : 'Create an Account'}
-        </button>
-      </p>
+      <ModeSwitch mode={mode} onSwitch={switchTo} />
     </div>
   );
 };

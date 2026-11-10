@@ -2,24 +2,8 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// Controls that stand outside the table too: the confirmation's warning and Reason field, the
-// locked control and the crown's tips. Each file imports this, so AdminInvitations takes only these
+// Controls that stand outside the table too: the locked control and the crown's tips. Each file imports this, so AdminInvitations takes only these
 // rules, not the whole list's stylesheet.
-
-// Approve's unverified-address warning, a step more room than a notice's zero margin. Compounded
-// with `.notice`, whose primitive is `body .notice` in the app (a lone class loses there; the
-// workshop's frame scope hides that). Not nested under `.user-list`, as a modal need not render
-// inside it.
-.notice.user-list__warning {
-  margin-block: space(5);
-}
-
-// The confirmation's Reason field: the warning's step of room above and 2rem below. A wrapper round
-// the field's shell, which takes no class; the invite form's reason takes the same class through
-// this stylesheet.
-.user-list__note {
-  margin-block: space(5) space(6);
-}
 
 // The primary keeper's Revoke and the tip saying why it cannot be used, the
 // tip placed against this wrapper.
@@ -27,13 +11,9 @@
   @include tip-anchor;
 }
 
-// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
-// InfoTip's, placed by `useTip` above the mark or button, no wider than
-// `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`,
-// the marks' and logos' centred tip, which takes no pointer: these stay open while hovered.
+// Not `.user-list__tip`, which takes no pointer: these tips stay open while hovered.
 .user-list__control-tip {
   @include tip-above($tip-layer);
 
-  // Its cell keeps to one line; the reason wraps within the bubble.
   white-space: normal;
 }

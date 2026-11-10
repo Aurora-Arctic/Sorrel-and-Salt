@@ -3,9 +3,7 @@ import { REPO_ROOT } from '../support/paths';
 // @ts-expect-error -- the lint plugin is plain JavaScript, with no declaration file
 import { rules } from '../../lint/source-sweeps.js';
 
-// Each rule of lint/source-sweeps.js, once passing and once failing
-// (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
-// The whole tree is their real test: `npm run lint` fails on any file that breaks one.
+// The tree is the rules' real test: `npm run lint` (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
 
 const at = (file: string) => file;
 const tester = new RuleTester();
@@ -54,7 +52,6 @@ tester.run('spell-visibility-read-in-one-place', rules['spell-visibility-read-in
       code: 'export function readableSpells() { return eq(spells.visibility, "workspace"); }',
     },
     {
-      // The Visibility facet's two helpers, beside the rule.
       filename: at('src/db/repository/spells.ts'),
       cwd: REPO_ROOT,
       code: 'export const visibilityIn = (values) => inArray(spells.visibility, values);',
@@ -156,6 +153,419 @@ test('b', async () => { use(held); });`,
       code: `let held = '';
 test('a', async () => { held = 'x'; });
 test('b', async () => { use(held); });`,
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('in-app-link-through-pending-link', rules['in-app-link-through-pending-link'], {
+  valid: [
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import { PendingLink } from '@/lib/navigation';
+export const Nav = () => <PendingLink href="/spells">Spells</PendingLink>;`,
+    },
+    {
+      // The link status hook draws nothing and navigates nowhere.
+      filename: at('src/components/LinkHint/use-link-pending.ts'),
+      cwd: REPO_ROOT,
+      code: `import { useLinkStatus } from 'next/link';
+export const useLinkPending = () => useLinkStatus().pending;`,
+    },
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import type { LinkProps } from 'next/link';
+export type NavProps = LinkProps;`,
+    },
+    {
+      // PendingLink is the one wrapper every in-app link goes through.
+      filename: at('src/lib/navigation/pending-link.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const PendingLink = (props) => <Link {...props} />;`,
+    },
+    {
+      filename: at('src/components/Nav/index.stories.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const Story = () => <Link href="/spells">Spells</Link>;`,
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Nav/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `import Link from 'next/link';
+export const Nav = () => <Link href="/spells">Spells</Link>;`,
+      errors: 1,
+    },
+    {
+      filename: at('src/app/(shell)/somewhere/page.tsx'),
+      cwd: REPO_ROOT,
+      code: `import NextLink, { useLinkStatus } from 'next/link';
+export default function Page() { return <NextLink href="/spells">Spells</NextLink>; }`,
+      errors: 1,
+    },
+    {
+      // A listed file that no longer imports next/link is reported, so the list cannot outgrow its reasons.
+      filename: at('src/lib/navigation/pending-link.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const PendingLink = () => null;',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('full-page-load-reports-leaving', rules['full-page-load-reports-leaving'], {
+  valid: [
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { reportLeaving(); window.location.assign('/'); };`,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `function again() { reportLeaving(); location.reload(); }`,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const away = () => { reportLeaving(); window.location.replace('/elsewhere'); };`,
+    },
+    {
+      // Neither is a page load: a soft navigation and an object merge.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const go = () => { navigate('/x'); Object.assign(target, source); };`,
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => window.location.assign('/');`,
+      errors: 1,
+    },
+    {
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `function again() { location.reload(); }`,
+      errors: 1,
+    },
+    {
+      // Too late: the bar has already missed the load.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { window.location.assign('/'); reportLeaving(); };`,
+      errors: 1,
+    },
+    {
+      // Reported in the outer function, but the load runs later, in a callback of its own.
+      filename: at('src/components/SignOut/index.tsx'),
+      cwd: REPO_ROOT,
+      code: `const out = () => { reportLeaving(); mutate({ onSuccess: () => window.location.assign('/') }); };`,
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('inputs-use-field', rules['inputs-use-field'], {
+  valid: [
+    {
+      filename: at('src/components/PasswordField/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+    },
+    {
+      filename: at('src/components/AdminCards/mint-form.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+    },
+    {
+      filename: at('src/components/Field/text-control.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+    },
+    {
+      filename: at('src/components/Combobox/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="combobox__input" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="checkbox" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="hidden" name="q" value="x" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="radio" name="q" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="file" />;',
+    },
+    // A honeypot is not typed in by anyone.
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="text" name="website" aria-hidden tabIndex={-1} />;',
+    },
+    // The named exceptions.
+    {
+      filename: at('src/components/ChipColorField/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+    },
+    {
+      filename: at('src/components/IngredientForm/references.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+    },
+    {
+      filename: at('src/components/HelpSearchForm/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="search" name="q" />;',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input className="input" />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="email" />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type={shown ? "text" : "password"} />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <textarea />;',
+      errors: 1,
+    },
+    // A listed file that holds no raw text input is reported.
+    {
+      filename: at('src/components/HelpSearchForm/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="hidden" />;',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('no-number-input', rules['no-number-input'], {
+  valid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="text" inputMode="decimal" />;',
+    },
+    {
+      filename: at('src/components/AdminCards/mint-form.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="number" min={1} max={9} />;',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="number" />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <TextField type={"number"} />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/AdminCards/mint-form.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input type="text" />;',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('schema-limits-are-named', rules['schema-limits-are-named'], {
+  valid: [
+    {
+      filename: at('src/modules/support/validation/support.ts'),
+      cwd: REPO_ROOT,
+      code: "import { z } from 'zod';\nexport const S = z.string().max(SUBJECT_MAX_LENGTH);",
+    },
+    {
+      filename: at('src/modules/support/validation/support.ts'),
+      cwd: REPO_ROOT,
+      code: "import { z } from 'zod';\nexport const S = z.string().min(1, { error: 'Required' });",
+    },
+    {
+      filename: at('src/modules/support/services/rows.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const n = Math.max(0, 5);',
+    },
+    {
+      filename: at('src/modules/support/services/rows.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const n = dates.max(5);',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/modules/support/validation/support.ts'),
+      cwd: REPO_ROOT,
+      code: "import { z } from 'zod';\nexport const S = z.string().max(254);",
+      errors: 1,
+    },
+    {
+      filename: at('src/lib/validation.ts'),
+      cwd: REPO_ROOT,
+      code: "import { z } from 'zod';\nexport const S = z.number().min(100).max(599);",
+      errors: 2,
+    },
+    {
+      filename: at('src/components/BusinessCards/schema.ts'),
+      cwd: REPO_ROOT,
+      code: "import { z } from 'zod';\nexport const S = z.string().min(3);",
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('no-max-length-attribute', rules['no-max-length-attribute'], {
+  valid: [
+    {
+      filename: at('src/components/Field/text-control.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input maxLength={9} />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input />;',
+    },
+    {
+      filename: at('src/components/SignInPanel/two-factor-step.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input maxLength={6} />;',
+    },
+    {
+      filename: at('src/components/PasswordSection/two-factor.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input maxLength={6} />;',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input maxLength={40} />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <TextField maxLength={40} />;',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('use-form-renders-error-summary', rules['use-form-renders-error-summary'], {
+  valid: [
+    {
+      filename: at('src/components/GroupForm/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { const form = useForm(); return <form><FormErrorSummary /></form>; }',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { return <form />; }',
+    },
+    {
+      filename: at('src/components/IngredientEntry/coven-choice.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { const methods = useForm(); return <form />; }',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/GroupForm/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { const form = useForm<{ a: string }>(); return <form />; }',
+      errors: 1,
+    },
+    // A listed file that now renders the summary, or no longer calls useForm, is reported.
+    {
+      filename: at('src/components/IngredientEntry/coven-choice.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { const m = useForm(); return <FormErrorSummary />; }',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/IngredientEntry/coven-choice.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function F() { return <form />; }',
+      errors: 1,
+    },
+  ],
+});
+
+tester.run('placeholder-is-short', rules['placeholder-is-short'], {
+  valid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input placeholder="Add a name" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input placeholder="Search terms" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input placeholder="" />;',
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input placeholder={hint} />;',
+    },
+  ],
+  invalid: [
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <input placeholder="Add your email address" />;',
+      errors: 1,
+    },
+    {
+      filename: at('src/components/Menu/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export const A = () => <TextField placeholder={"Use letters and digits only"} />;',
       errors: 1,
     },
   ],

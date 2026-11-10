@@ -1,13 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 import { sendAs } from './send-as';
 
-// What a curator sees of /keepers/support (M15.31): the requests marked for curators and the ones assigned to them, and nothing
-// else. Story 90 walks the admin side; this proves what no story walks, the curator's narrower page.
+// What a curator sees of /keepers/support: the requests marked for curators and the ones assigned to them, and nothing
+// else. @story-90 walks the admin side; this proves what no story walks, the curator's narrower page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -29,8 +28,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
   const marked = randomUUID();
   const assigned = randomUUID();
   const hidden = randomUUID();
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     for (const [id, subject, visible, assignee] of [
       [marked, 'Marked For Curators', true, null],
       [assigned, 'Assigned To The Curator', false, curatorId],
@@ -94,7 +92,5 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(page.getByText('Kept From Curators')).toHaveCount(0);
       await expect(page.getByText(/No support request has that address/).first()).toBeVisible();
     });
-  } finally {
-    await sql.end();
-  }
+  });
 });

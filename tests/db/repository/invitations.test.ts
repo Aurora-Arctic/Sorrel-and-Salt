@@ -31,20 +31,17 @@ import { eq } from 'drizzle-orm';
 import { makeWorkspace } from '../../support/fixtures';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
-import { A, B, D, E, asUser } from '../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../support/as-user';
 import type { SessionUser } from '../../support/types';
 import { sql, useRawClient } from '../../support/db/probe-tables';
 import type { InvitationOverrides } from './types';
 
 useRawClient();
 
-// The invitation's named writes and finders by tier (claude-docs/db/invitations.md): a `Membership` writes and revokes in its own workspace, a `SiteAdmin` on the site tier (workspace and role both null);
-// the accept and token read take no proof, since the invitee holds none yet, and match either tier. The insert stores the token's hash and the read and accept match one, so a dumped row's hash redeems nothing.
+// By tier (claude-docs/db/invitations.md): the accept and token read take no proof, since the invitee holds none yet. The insert stores the token's hash, so a dumped row's hash redeems nothing.
 
-// Fixed strings, the shape of a `crypto.randomBytes` token in base64url.
 const TOKEN = 'fixture-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const OTHER_TOKEN = 'fixture-token-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-// A's address in another case: the match is case-insensitive.
 const INVITED = A.email.toUpperCase();
 const PAST = () => new Date(Date.now() - 1000);
 
@@ -137,7 +134,6 @@ describe('insertInvitation', () => {
     expect(owners).toMatchObject({ workspaceId: WORKSPACE_W_ID, siteRole: null });
   });
 
-  // The tier is the proof's, whatever a cast smuggled into the values.
   it('takes the tier from the proof alone', async () => {
     const [owners] = await withAudit(asUser(A), (write) =>
       write.insertInvitation(inW, {
@@ -192,8 +188,6 @@ describe('findInvitationByToken', () => {
     expect(await findInvitationByToken(TOKEN)).toBeUndefined();
   });
 
-  // The services tell expired, revoked and accepted apart, each with its own
-  // message, so the read hands back a dead invitation rather than hiding it.
   it('finds an expired, a revoked and an accepted invitation alike', async () => {
     const [expired] = await inviteIntoW({ expiresAt: PAST() });
     const [revoked] = await inviteToSite({ token: OTHER_TOKEN });
@@ -205,7 +199,6 @@ describe('findInvitationByToken', () => {
 });
 
 describe('acceptInvitation', () => {
-  // A is no keeper and B no owner: the accepter is whoever the session names.
   it.each([
     ['a workspace invitation', () => inviteIntoW()],
     ['a site invitation', () => inviteToSite()],
@@ -412,7 +405,6 @@ describe('the owner’s list and a declined invitation', () => {
 });
 
 describe('the pending lists', () => {
-  /** One pending row on each tier and in each workspace, and each way a row stops pending. */
   async function everyKind() {
     const [pendingInW] = await inviteIntoW({ token: 'fixture-token-w-pending' });
     const [pendingInX] = await inviteIntoW({ token: 'fixture-token-x-pending' }, () => inX);
@@ -461,7 +453,6 @@ describe('the pending lists', () => {
     const [oldest] = await inviteIntoW({ token: 'fixture-token-w-1' });
     const [middle] = await inviteIntoW({ token: 'fixture-token-w-2' });
     const [newest] = await inviteIntoW({ token: 'fixture-token-w-3' });
-    // Distinct instants, set apart from insertion order.
     await sql`update invitations set created_at = now() - interval '3 hours' where id = ${oldest!.id}`;
     await sql`update invitations set created_at = now() - interval '2 hours' where id = ${middle!.id}`;
     await sql`update invitations set created_at = now() - interval '1 hour' where id = ${newest!.id}`;
@@ -513,8 +504,6 @@ describe('the pending lists', () => {
   });
 });
 
-// The session's own received invitations. Every finder keeps the workspace tier, the session's verified address and a live coven in SQL, as the token-less accept by id does.
-// Each exclusion is shown to be the cause: remove that one fact and the same row appears.
 describe('the received invitations', () => {
   const FULL = { limit: 101, inverted: false };
   const sorted = (list: string[]) => [...list].sort();
@@ -625,7 +614,6 @@ describe('the received invitations', () => {
   });
 
   it('matches the address whatever its case', async () => {
-    // The control was written with A's address upper-cased; the account holds it lower-cased.
     expect(control.email).toBe(INVITED);
     expect(INVITED).not.toBe(A.email);
     expect(await pageIds()).toEqual([control.id]);
@@ -875,7 +863,6 @@ describe('the received invitations', () => {
       expect(await declineAs(A, control.id)).toHaveLength(1);
     });
 
-    // The first exclusion, another address, has its own test above.
     it.each(exclusions.slice(1))(
       'returns no row for an invitation that is %s, and declines once that is undone',
       async (_kind, setup, restore) => {
@@ -964,7 +951,7 @@ describe('invitation cards', () => {
 
   const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
     withAudit(asUser(E), (write) =>
-      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null }),
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null, beta: false }),
     );
   const cardAccept = (user: SessionUser, token = CARD) =>
     withAudit(asUser(user), (write) => write.acceptInvitation(token));
@@ -1071,7 +1058,6 @@ describe('invitation cards', () => {
     await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
     await cardAccept(B);
     await cardAccept(A, 'cardtokenCCCCCCC');
-    // An address invitation accepted is no card arrival.
     await inviteIntoW({ token: 'fixture-token-w-accepted' });
     await acceptAs(A, 'fixture-token-w-accepted');
 
@@ -1131,7 +1117,6 @@ describe('invitation cards', () => {
       expect(await batches({ batch: 'AAAA' })).toEqual([ALPHA]);
       expect(await batches({ batch: 'bbbb2222-2' })).toEqual([BRAVO]);
       expect(await batches({ batch: '%' })).toEqual([]);
-      // The middle of a number is no start.
       expect(await batches({ batch: '1111' })).toEqual([]);
       expect((await findCardBatchCount(admin, { batch: 'aaaa' }, undefined)).totalCount).toBe(1);
     });
@@ -1146,7 +1131,6 @@ describe('invitation cards', () => {
       expect(await batches({ batch: '%' })).toEqual([BRAVO]);
       expect(await batches({ batch: '_' })).toEqual([]);
       expect(await batches({ batch: 'market' })).toEqual([]);
-      // The number still matches by its start, so a note does not displace it.
       expect(await batches({ batch: 'aaaa' })).toEqual([ALPHA]);
       expect((await findCardBatchCount(admin, { batch: 'autumn' }, undefined)).totalCount).toBe(1);
     });
@@ -1162,7 +1146,6 @@ describe('invitation cards', () => {
 
       expect(await batches({ mintedTo: day(5) })).toEqual([ALPHA]);
       expect(await batches({ mintedFrom: day(5) })).toEqual([BRAVO]);
-      // Minted today, so today as both ends keeps it and drops the one ten days back.
       expect(await batches({ mintedFrom: day(0), mintedTo: day(0) })).toEqual([BRAVO]);
       expect(await batches({ mintedFrom: day(10), mintedTo: day(10) })).toEqual([ALPHA]);
     });
@@ -1172,7 +1155,6 @@ describe('invitation cards', () => {
         .day as string;
       const on = (offset: number) =>
         new Date(Date.parse(today) + offset * 24 * 3600 * 1000).toISOString().slice(0, 10);
-      // The last minute of a day three days on, and of one nine days on.
       const expireOn = (batchId: string, offset: number) =>
         sql`update invitations set expires_at = (${on(offset)}::date)::timestamp at time zone 'UTC' + interval '23 hours 59 minutes' where batch_id = ${batchId}`;
       await expireOn(ALPHA, 3);
@@ -1202,14 +1184,13 @@ describe('invitation cards', () => {
       const REVOKED = '44440000-0000-4000-8000-000000000004';
       await sql`delete from invitations where kind = 'card'`;
       await mint(['cardtokenLIVE0001', 'cardtokenLIVE0002'], LATER(), LIVE);
-      // Live although one card was accepted and one revoked: a third is still pending.
       await mint(['cardtokenLIVE0003'], LATER(), LIVE);
       await mint(['cardtokenUSED0001'], LATER(), USED);
       await mint(['cardtokenEXPD0001'], LATER(), EXPIRED);
       await mint(['cardtokenREVK0001'], LATER(), REVOKED);
       await cardAccept(B, 'cardtokenLIVE0001');
       await sql`update invitations set revoked_at = now() where token_hash = ${sha256('cardtokenLIVE0002')}`;
-      await cardAccept(B, 'cardtokenUSED0001');
+      await cardAccept(C, 'cardtokenUSED0001');
       await sql`update invitations set expires_at = now() - interval '1 hour' where batch_id = ${EXPIRED}`;
       await sql`update invitations set revoked_at = now() where batch_id = ${REVOKED}`;
 
@@ -1271,7 +1252,6 @@ describe('invitation cards', () => {
     });
 
     it('keeps an arrival when any one of its name, address or batch matches', async () => {
-      // "fixture" is in both names, "2222" starts only A's batch: one box, either match keeps the row.
       expect((await arrivals({ query: 'fixture' })).sort()).toEqual([A.id, B.id].sort());
       expect(await arrivals({ query: B.email })).toEqual([B.id]);
     });

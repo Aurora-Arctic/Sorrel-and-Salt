@@ -4,10 +4,8 @@ import { auditStampColumns, users } from '../../identity/schema/users';
 import { idColumn } from '../../../db/schema-parts';
 import { spellWorkings } from './spell-workings';
 
-// Who made a working: a coven member or a typed name. The rows of a working
-// are replaced wholesale when its participants change, so this table has the
-// four stamp columns and no `deleted_at`: a tombstone would hold only a
-// position and a member for nothing (claude-docs/design-decisions/m13.4-spell-workings.md).
+// Rows are replaced wholesale when participants change, so the table has the four stamp columns and no `deleted_at`
+// (claude-docs/design-decisions/grimoire.md, "A working is the record of one making, in three tables").
 export const spellWorkingParticipants = pgTable(
   'spell_working_participants',
   {
@@ -15,7 +13,6 @@ export const spellWorkingParticipants = pgTable(
     workingId: uuid('working_id')
       .notNull()
       .references(() => spellWorkings.id),
-    // A member, or null for someone typed in by name.
     userId: uuid('user_id').references(() => users.id),
     name: text('name'),
     // The order they were entered in, stored and never inferred.

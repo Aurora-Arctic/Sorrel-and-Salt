@@ -16,15 +16,13 @@ import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// A visitor with no account writes about accessibility or signing in: the row, the two topics, the limits that guard it, and
-// the reply that reaches them by email alone (claude-docs/design-decisions/m15-support-review.md).
+// A signed-out send sets no cookie and makes no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link"); tests/e2e/support-signed-out-sender.spec.ts walks the cookie half.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));
@@ -51,7 +49,6 @@ const INPUT = {
   message: 'The code never arrives.',
 } as const;
 
-// The receipt goes out through its job too, whose mail is tested in tests/modules/support/services/support-status-mail.test.ts.
 const receipts = () =>
   startJob.mock.calls.filter(([job]) => job === supportStatusMail).map(([, args]) => args);
 
@@ -68,22 +65,27 @@ const send = (
     clientIp: context.clientIp === undefined ? '203.0.113.7' : context.clientIp,
     notifier: context.mail ?? notifier().mail,
     now: context.now,
-  });
+  } as Parameters<typeof sendSignedOutSupportRequest>[1]);
 
 const count = async () => (await sql`select count(*)::int as n from support_requests`)[0]!.n;
+// Users outlive the reset between tests, so a test compares the count before and after rather than assuming one.
+const userCount = async () => (await sql`select count(*)::int as n from users`)[0]!.n as number;
 
 describe('sendSignedOutSupportRequest', () => {
-  it('stores the request under the signed-out sender with the address beside it, and mails a receipt', async () => {
+  it('stores the request as the signed-out sender, with the address and a view token beside it, makes no account, and mails a receipt', async () => {
     const { mail } = notifier();
+    const usersBefore = await userCount();
 
     await send(INPUT, { mail });
 
     const [row] = await sql`select * from support_requests`;
     expect(row!.created_by).toBe(SIGNED_OUT_SENDER_ID);
+    expect(row!.updated_by).toBe(SIGNED_OUT_SENDER_ID);
+    expect(await userCount()).toBe(usersBefore);
+    expect(row!.view_token_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    // The run carries the request id and the origin; its step reads the address from the row.
     expect(receipts()).toEqual([
       [{ kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' }],
     ]);
@@ -171,7 +173,7 @@ describe('sendSignedOutSupportRequest', () => {
 
     const [row] = await sql`select created_by, sender_email from support_requests`;
     expect(row!.created_by).toBe(SIGNED_OUT_SENDER_ID);
-    expect(row!.created_by).not.toBe(A.id);
+    expect(row!.sender_email).toBe(account!.email);
     expect(await listMySupportRequests(asUser(A), { limit: 101, inverted: false })).toHaveLength(0);
   });
 
@@ -203,7 +205,6 @@ describe('sendSignedOutSupportRequest', () => {
 
       expect(error).toBeInstanceOf(RateLimited);
       expect(await count()).toBe(SIGNED_OUT_IP_LIMIT);
-      // A different client passes.
       await send({ ...INPUT, email: 'one-more@example.test' }, { now, clientIp: '198.51.100.1' });
       expect(await count()).toBe(SIGNED_OUT_IP_LIMIT + 1);
     });

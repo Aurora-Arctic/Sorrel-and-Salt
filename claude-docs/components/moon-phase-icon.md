@@ -2,7 +2,7 @@
 
 The small moon drawn beside a moon phase's name in the spell builder (`src/components/MoonPhaseIcon/`).
 
-`moonPhaseIcon(phase)` (`for-phase.tsx`) returns the drawing for a phase typed as free text, matched to the builder's list ignoring case and surrounding spaces, and `null` for a phase not on it. The builder's Moon Phase field and the grimoire filter's Moon Phase facet both call it, so the list does not import from the builder.
+`moonPhaseIcon(phase)` (`for-phase.tsx`) returns the drawing for a phase typed as free text, matched to the builder's list ignoring case and surrounding spaces, and `null` for a phase not on it. The builder's Moon Phase field and the grimoire filter's Moon Phase facet both call it, so the list does not import from the builder. Its three fills are the theme's `--moon-shadow`, `--moon-lit` and `--moon-mare` (`src/scss/_mixins.scss`).
 
 ## Lit parts
 
@@ -24,19 +24,10 @@ The near side's seven largest maria (dark lava plains, not craters), each an ell
 | Mare Fecunditatis    | -7.83  | 53.67  | 840.35 km  |
 | Mare Nubium          | -20.59 | -17.29 | 714.50 km  |
 
-Projected orthographically, north up and east (Mare Crisium) on the right, the view from the northern hemisphere, with the Moon's radius 1737.4 km and the disc's 8:
+Projected orthographically, north up and east (Mare Crisium) on the right, with the Moon's radius 1737.4 km and the disc's 8:
 
 - x = cos(lat)·sin(lon), y = sin(lat), cosC = cos(lat)·cos(lon)
 - cx = 12 + 8x, cy = 12 − 8y, r = 8·(diameter / 2) / 1737.4
 - ry = r, rx = r·cosC (foreshortened toward the limb), rotated by atan2(−y, x) in degrees, so rx lies along the radius.
 
 A Gazetteer diameter is a feature's greatest extent, so the ellipse is generous for an irregular mare, Oceanus Procellarum most of all; the disc's edge and the lit part clip it. Left out because each is under 1.5px across at a 20px icon: Mare Nectaris (339.39 km), and the craters Tycho (85 km, Wikipedia, "Tycho (lunar crater)") and Copernicus (93 km, Wikipedia, "Copernicus (lunar crater)").
-
-## Styling
-
-`index.scss`: the icon is 1.25em square and sunk 0.25em, as `FormIcon` is, so it takes the size of the line it sits in, and `flex: none` keeps a flex row from squeezing it. Its three fills are the theme's `--moon-shadow`, `--moon-lit` and `--moon-mare` (`src/scss/_mixins.scss`).
-
-## Stories
-
-[`index.stories.tsx`](../../src/components/MoonPhaseIcon/index.stories.tsx), under
-`Grimoire / Moon Phase Icon`: `Default`, every phase in a row with its name beneath.

@@ -1,15 +1,13 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
-import postgres from 'postgres';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
-// The coven page and its section nav against the built server: a viewer opens the page with Leave and without
-// Delete, the keyboard reaches the nav, and the only owner's exit keeps its refusal inside the dialog. A
-// stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
+// The coven page and its section nav against the built server. A stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
 const COVEN_NAME = 'Fixture Coven';
 const COVEN_SLUG = slugify(COVEN_NAME);
@@ -33,32 +31,28 @@ test.beforeAll(async ({ browser, slot }) => {
   }
 });
 
-/** The coven holds its owner and its viewer and no one else. */
 async function seedFixtureCoven(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = { id: (await signInAs(page, `${key}@coven-page.test`)).userId };
   }
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    const [coven] = await sql`
-      insert into workspaces (name, slug, created_by, updated_by)
-      values (${COVEN_NAME}, ${COVEN_SLUG}, ${users.owner.id}, ${users.owner.id})
-      returning id`;
-    for (const role of ['owner', 'viewer'] as const) {
-      await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${coven.id}, ${users[role].id}, ${role}, ${users.owner.id}, ${users.owner.id})`;
-    }
+  await withE2eSql(async (sql) => {
+    const covenId = await insertWorkspace(
+      sql,
+      COVEN_NAME,
+      [
+        [users.owner.id, 'owner'],
+        [users.viewer.id, 'viewer'],
+      ],
+      { slug: COVEN_SLUG, author: users.owner.id },
+    );
     const members = await sql`
       select user_id, role::text from workspace_members
-      where workspace_id = ${coven.id} and deleted_at is null`;
+      where workspace_id = ${covenId} and deleted_at is null`;
     expect(members.map((row) => [row.user_id, row.role]).sort()).toEqual(
       (['owner', 'viewer'] as const).map((role) => [users[role].id, role]).sort(),
     );
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 test('a viewer opens the coven page with its nav, offered Leave and not Delete', async ({
@@ -118,7 +112,6 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
   const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
 
-  // The service's refusal, answered in its place, so nothing is deleted.
   const refusal = 'This coven could not be deleted.';
   await page.route('**/api/graphql', (route) =>
     route.request().postData()?.includes('DeleteWorkspace')

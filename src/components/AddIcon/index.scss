@@ -26,11 +26,15 @@
     background-color: transparent;
     color: $accent;
   }
+
+  // A status mark has no hover, so the icon button's Highlight outline goes.
+  @include forced-colors {
+    &:hover:not(:focus-visible) {
+      outline: 0;
+    }
+  }
 }
 
-// The plus after an add: the spinner turns into the check, which holds, then cross-fades back
-// (`returning`); AddIcon sets `data-state` and times the hold. While the check shows the plus wears
-// the held mark's look, so when every coven holds the entry nothing moves. Reduced motion: no fade.
 .add-icon[data-state] {
   cursor: default;
 
@@ -38,6 +42,17 @@
   &:focus-visible,
   &[aria-expanded='true'] {
     background-color: transparent;
+  }
+
+  // While the check shows the plus has no hover or open look, so the icon button's go.
+  @include forced-colors {
+    &:hover:not(:focus-visible) {
+      outline: 0;
+    }
+
+    &[aria-expanded='true'] {
+      color: ButtonText;
+    }
   }
 }
 
@@ -70,7 +85,6 @@
   }
 }
 
-// The eye arrives the same way where the duplicate warning's + turns into Quick Look.
 .add-icon__plus,
 .add-icon__eye {
   @include arrived;

@@ -24,7 +24,7 @@ Destructive DDL acknowledged: this is the expand step of renaming the `spell_ing
 
 ## Why no deploy breaks
 
-`migrate.yml` runs before `deploy.yml` promotes, so the deploy before this one meets the renamed table for the length of the rollout, and again after any rollback to it. Every statement it sends names `spell_ingredients`, and the view serves each of them: a simple view over one table is updatable in Postgres, so its inserts and updates with `RETURNING` and its soft deletes write the table, and the table's `set_updated_at` trigger fires for them. MB.252 measured this for the `planets` view (`claude-docs/design-decisions/mb.252-table-rename.md`).
+`migrate.yml` runs before `deploy.yml` promotes, so the deploy before this one meets the renamed table for the length of the rollout, and again after any rollback to it. Every statement it sends names `spell_ingredients`, and the view serves each of them: a simple view over one table is updatable in Postgres, so its inserts and updates with `RETURNING` and its soft deletes write the table, and the table's `set_updated_at` trigger fires for them. MB.252 measured this for the `planets` view (`claude-docs/design-decisions/data.md`, "A renamed table leaves a view under its old name").
 
 The new columns do not get in its way. `position` and `body` are nullable, so its inserts, which name neither, still pass. The two CHECKs replacing the exactly-one CHECK admit every row it writes: a step with exactly one of an ingredient and a name holds at most one identity and is not empty. The new amount CHECK admits every such row too, since each carries an identity. No code maps one of the renamed index or constraint names to an error message, so no message changes.
 

@@ -3,23 +3,16 @@
 
 // The closed box's narrowest width, so a short coven name still reads as a control with room
 // before its chevron rather than shrinking to the word. A width, not a gap, so off the space
-// scale; the list's below, like AccountMenu's 13rem, is a floating-panel width.
+// scale. The open list is as wide as the closed box, and no narrower than $panel-min-width.
 $switcher-min-width: 12rem;
-// The open list's narrowest width: wider than the closed box, so under a
-// short chosen name the list still has room for a longer one and for the
-// Create Coven row with its plus.
-$switcher-list-min-width: 15rem;
 
-// The coven's name as the context row's lead: the chosen name in the display face with a chevron
-// inside a hairline border, so the name is also the control; a long one wraps to two lines. The
-// Combobox's select is restyled from here rather than given a variant: each part has its own class,
-// and the compound `.input.combobox__control` is outweighed by one more class.
+// The coven's name as the context row's lead: the name in the display face with a chevron inside a hairline, so the
+// name is the control. The Combobox's select is restyled from here; `.input.combobox__control` is outweighed by one more class.
 .workspace-switcher {
   min-width: $switcher-min-width;
   max-width: 100%;
 
-  // On a phone the control fills the row, as the context row gives it the whole width.
-  @media (max-width: $shell-phone-width) {
+  @include phone-down {
     width: 100%;
   }
 
@@ -29,18 +22,13 @@ $switcher-list-min-width: 15rem;
     border-color: $hairline;
     background-color: transparent;
     cursor: pointer;
-    @include theme-transition(background-color, border-color);
-    @include reduced-motion {
-      transition: none;
-    }
+    @include state-fade(background-color);
 
     &:hover {
       border-color: $hairline;
       background-color: $fill-quiet;
     }
 
-    // Open is told by the edge going from a hairline to the body ink, a
-    // change of weight and not of hue.
     &[aria-expanded='true'] {
       border-color: $text-primary;
     }
@@ -54,10 +42,8 @@ $switcher-list-min-width: 15rem;
     min-height: 0;
     padding-block: space(1);
     overflow: visible;
-    // The h4's face and size, so the name reads as the row's heading. The
-    // line height is its own, closer than the h4's 1.25: the name sits in a
-    // control's box, and a long one wraps to two lines that the h4's leading
-    // would set further apart.
+    // The h4's face and size, so the name reads as the row's heading, with a closer line height of its own so a long
+    // name wrapped to two lines is not set far apart.
     @include heading-face;
     font-size: heading-size(4);
     line-height: 1.1;
@@ -68,6 +54,13 @@ $switcher-list-min-width: 15rem;
 
   .combobox__list {
     z-index: layer('floating');
-    min-width: $switcher-list-min-width;
+    // The list is fixed, so a percentage would measure the window; its width is the closed box's, set inline.
+    min-width: $panel-min-width;
+  }
+
+  .combobox__option {
+    box-sizing: border-box;
+    justify-content: center;
+    min-height: $panel-row-height;
   }
 }

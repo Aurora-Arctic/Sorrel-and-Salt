@@ -4,8 +4,9 @@ import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
-import type { Cursor, PageCount, PageEntry } from '../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
+import { currentWriteTransaction } from './unit-of-work';
 import { hidesColumns, readColumns } from './unread-columns';
 import type {
   Aggregate,
@@ -44,10 +45,8 @@ const SEARCH_WORD_SIMILARITY_THRESHOLD = 0.5;
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Where a read query is built — this, and `existsIn` below for a correlated
-// subquery. Exported for the finders beside it and nowhere else: the index
-// leaves both out and a deep import is banned, so no public handle skips the
-// filter.
+// Where a read query is built, with `existsIn`; exported to the finders beside it only, so no public handle
+// skips the filter.
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -186,7 +185,7 @@ export async function selectFrom(
     });
   }
 
-  if (!keyset) return build(db);
+  if (!keyset) return build(currentWriteTransaction() ?? db);
 
   // An inverted read of a descending key reads it ascending, and the other way round.
   const direction = keyset.request.inverted !== Boolean(keyset.descending) ? desc : asc;
@@ -199,9 +198,9 @@ export async function selectFrom(
   try {
     rows = await readKeyed(keyset, page);
   } catch (error) {
-    // The only client text in a page query is the cursor's, so a data
-    // exception here is a cursor that names no position in this list.
-    if (isDataException(error)) throw new InvalidCursor();
+    // A data exception is a bad cursor only when the cursor's own values fail their casts; any other one is the query's fault.
+    if (isDataException(error) && (await cursorWillNotCast(keyset, keyset.request)))
+      throw new InvalidCursor();
     throw error;
   }
   return rows.map(({ row, key, keyId, ...carried }) => ({
@@ -211,10 +210,6 @@ export async function selectFrom(
   }));
 }
 
-/**
- * The first row `selectFrom` reads under `where`, or `undefined`: a finder's
- * one-row read, for a `where` that names one row or an index that allows one.
- */
 export async function selectOne<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -266,8 +261,8 @@ function readKeyed<T>(
 }
 
 /**
- * Runs a read under these pg_trgm thresholds, each left at the server's when absent, in a transaction setting them with
- * `set_config(…, true)` (`SET LOCAL` with a bind parameter), so they end with it and never ride a pooled connection.
+ * Runs a read under these pg_trgm thresholds, each left at the server's when absent, in a transaction (a savepoint, inside a
+ * write) setting them with `set_config(…, true)` (`SET LOCAL` with a bind parameter), so they end with it and never ride a pooled connection.
  */
 function readUnder<T>(
   thresholds: { similarity?: number; word?: number },
@@ -279,8 +274,10 @@ function readUnder<T>(
     thresholds.word !== undefined &&
       sql`set_config('pg_trgm.word_similarity_threshold', ${String(thresholds.word)}, true)`,
   ].filter((setting): setting is SQL => Boolean(setting));
-  if (settings.length === 0) return Promise.resolve(run(db));
-  return db.transaction(async (tx) => {
+  const inWrite = currentWriteTransaction();
+  if (settings.length === 0) return Promise.resolve(run(inWrite ?? db));
+  // Inside a write the thresholds go in a savepoint on its transaction, which ends them with the read.
+  return (inWrite ?? db).transaction(async (tx) => {
     await tx.execute(sql`select ${sql.join(settings, sql`, `)}`);
     return run(tx);
   });
@@ -325,6 +322,23 @@ function isDataException(error: unknown): boolean {
 }
 
 /**
+ * Whether a cursor on the request carries a value that will not cast to its part's type. The casts run alone, on the
+ * pool, so the failed page read's aborted transaction is not reused.
+ */
+async function cursorWillNotCast(order: KeyOrder, request: PageRequest): Promise<boolean> {
+  for (const cursor of [request.after, request.before]) {
+    if (!cursor || cursor.key.length !== order.sort.length) continue;
+    try {
+      await db.execute(sql`select ${cursorKey(order, cursor)}`);
+    } catch (error) {
+      if (isDataException(error)) return true;
+      throw error;
+    }
+  }
+  return false;
+}
+
+/**
  * A sort part as the order, the bound and the key all read it. An expression is cast to its declared type, so the value
  * ordered on is the one its cursor casts back to (`double precision` against a `real` cursor would replay rows).
  */
@@ -332,7 +346,6 @@ function expressionOf(part: SortPart): SQL | SortColumn {
   return is(part, PgColumn) ? part : sql`cast(${part.expression} as ${sql.raw(part.type)})`;
 }
 
-/** The type a sort part's cursor text is cast back to. */
 function typeOf(part: SortPart): string {
   return is(part, PgColumn) ? part.getSQLType() : part.type;
 }
@@ -351,7 +364,6 @@ export function pageBounds(keyset: Keyset<object>): SQL | undefined {
   );
 }
 
-/** A row's position in the list, `(...sort, id)`, as one row value. */
 function rowKey({ sort, id }: KeyOrder): SQL {
   return sql`(${sql.join([...sort.map(expressionOf), id], sql`, `)})`;
 }

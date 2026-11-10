@@ -6,6 +6,7 @@ import { RadioGroupField, SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
 import IngredientCard from '../src/components/IngredientCard';
 import { Jars } from '../src/components/IngredientCard/story-jars';
+import { CardCategoryVocabulary } from '../src/components/IngredientCard/category-vocabulary';
 import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
 import PageNav from '../src/components/PageNav';
@@ -36,7 +37,7 @@ function seededGroup(name: string): SeedCategoryGroup {
 // The card's sample data, invented (Testwort, never a real plant). Its chips
 // read the seeded groups' colour pairs, as a page's chips would.
 const SPECIMEN_CATEGORIES = ['Protection & Defense', 'Mind & Spirit', 'Craft & Change'].map(
-  (name, i) => ({ category: { id: `specimen-${i}`, name }, group: seededGroup(name) }),
+  (name, i) => ({ id: `specimen-${i}`, name, group: seededGroup(name) }),
 );
 const SPECIMEN_FORMS: SafetyVariant[] = [
   { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
@@ -66,6 +67,9 @@ const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
   ['--accent-solid-hover', 'the solid button under hover — a bigger step'],
   ['--secondary', 'a destructive action, and every error'],
   ['--secondary-hover', 'the secondary under hover / active press'],
+  ['--clay', 'the Ingredients pillar card on the About Us page: its rule, kicker and icon'],
+  ['--woad', 'a pillar card on the About Us page: its rule, kicker and icon'],
+  ['--sloe', 'the Grimoire pillar card on the About Us page: its rule, kicker and icon'],
   ['--text-on-color', 'the label on a solid fill — a solid button, a loud chip'],
 ];
 
@@ -75,7 +79,7 @@ const STILL_LIST: ListNavigation = { pending: false, searching: false, go: () =>
 // Keys only: each value, and the label beside it, is printed by
 // foundations.scss from the map in _variables.scss.
 const SPACE_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-const TYPE_SIZES = ['body', 'small', 'caption', 'overline', 'tab'] as const;
+const TYPE_SIZES = ['body', 'small', 'caption', 'overline', 'tab', 'quote'] as const;
 const RADII = ['sharp', 'control', 'surface', 'pill'] as const;
 
 function SectionHead({
@@ -888,18 +892,20 @@ export default function Foundations(): ReactElement {
           Testwort is flagged toxic — which is what the safety badge is for.
         </SectionHead>
         <div className="fd-stage">
-          <IngredientCard
-            href={route('/compendium/ingredients/testwort-testalis')}
-            label="Testwort"
-            formalName="Fixtura testalis"
-            nomenclature="botanical"
-            kind="own"
-            toxic
-            categories={SPECIMEN_CATEGORIES}
-            variants={SPECIMEN_FORMS}
-          >
-            <Jars />
-          </IngredientCard>
+          <CardCategoryVocabulary categories={SPECIMEN_CATEGORIES}>
+            <IngredientCard
+              href={route('/compendium/ingredients/testwort-testalis')}
+              label="Testwort"
+              formalName="Fixtura testalis"
+              nomenclature="botanical"
+              kind="own"
+              toxic
+              categories={SPECIMEN_CATEGORIES.map(({ id }) => ({ id }))}
+              variants={SPECIMEN_FORMS}
+            >
+              <Jars />
+            </IngredientCard>
+          </CardCategoryVocabulary>
         </div>
       </section>
 

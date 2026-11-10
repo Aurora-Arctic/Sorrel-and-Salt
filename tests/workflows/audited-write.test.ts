@@ -3,14 +3,17 @@ import postgres from 'postgres';
 import { start } from 'workflow/api';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { auditedWriteWorkflow } from './fixtures/audited-write';
+import { useTestDatabase } from '../support/db/database';
 
-// A real run of a test-only workflow (tests/workflows/fixtures/), not a production job: it shows what
-// the SDK's run does with a step that writes through `withAudit` as the System actor.
+// A test-only workflow (tests/workflows/fixtures/), not a production job.
 
 let sql: ReturnType<typeof postgres>;
 
+useTestDatabase((client) => {
+  sql = client;
+});
+
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   await sql`
     create table workflow_probe_notes (
       id uuid primary key default gen_random_uuid(),
@@ -28,7 +31,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await sql`drop table if exists workflow_probe_notes`;
-  await sql.end();
 });
 
 async function newNote(): Promise<string> {

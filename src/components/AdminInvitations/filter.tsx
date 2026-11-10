@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField, SwitchField } from '../Field';
+import { SearchField } from '../Field/search-field';
+import { SwitchField } from '../Field/switch-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { INVITATIONS_PATH, invitationsHref } from './href';
 import type { AdminInvitationsFilterProps } from './types';
@@ -12,7 +13,6 @@ import type { AdminInvitationsFilterProps } from './types';
 const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactElement => {
   const [draftEmail, setDraftEmail] = useState(filter.email);
   const apply = useApplyFilter();
-  /** The filter shown with Expires in 24 Hrs given, the email typed carried, from the first page. */
   const hrefWith = (expiringSoon: boolean) =>
     invitationsHref({ email: draftEmail.trim(), expiringSoon });
 

@@ -1,8 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The width of a mark's column, the chevron's, and the cards' side padding: one set of measures the
-// label row and every summary line share, so their columns line up by construction.
 .access-cards {
   --access-mark-col: #{space(6)};
   --access-chevron-col: #{$glyph-size};
@@ -13,7 +11,6 @@
   max-width: $measure;
 }
 
-// The key: the three marks, each beside its word, in a row.
 .access-cards__key {
   @include list-reset;
   display: flex;
@@ -35,10 +32,8 @@
   font-size: type-size('small');
 }
 
-// The three marks, each a different shape so the colour only confirms it: Yes the site's ✦ in the
-// accent, In Part the same ✦ with one half filled and the other an outline, in the warning ochre,
-// No a short dash in the muted ink. Forced colours would paint the fills away, so there each is
-// drawn in the text colour.
+// The three marks, each a different shape so the colour only confirms it: Yes ✦, In Part a half-filled ✦, No a dash.
+// Forced colours would paint the fills away, so there each is drawn in the text colour.
 .access-cards__mark {
   display: inline-grid;
   flex: none;
@@ -106,7 +101,6 @@
   gap: space(2);
 }
 
-// The shared grid: the name, six mark columns and the chevron's.
 .access-cards__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) repeat(6, var(--access-mark-col)) var(--access-chevron-col);
@@ -132,7 +126,6 @@ $stuck-pad: space(4);
   border-bottom: 1px solid $hairline;
   background-color: $surface-page;
 
-  // Each label's tip wrapper is the grid item; the label is centred in it.
   .icon-tip {
     justify-content: center;
   }
@@ -190,12 +183,10 @@ $stuck-pad: space(4);
   line-height: 1.45;
 }
 
-// The site's disclosure chevron: down while the card is closed, turned over while it is open.
 .access-cards__chevron {
   @include disclosure-chevron('.access-cards__card[open]');
 }
 
-// The open card: each role on a line, its mark, its name and the cell's full wording.
 .access-cards__detail {
   margin: 0;
   padding: space(1) var(--access-pad-x) space(3);
@@ -220,7 +211,6 @@ $stuck-pad: space(4);
     line-height: 1.65;
   }
 
-  // The wording at the small size, as the role beside it, with prose leading.
   dd {
     margin: 0;
     font-size: type-size('small');
@@ -231,7 +221,7 @@ $stuck-pad: space(4);
 // At the width a table turns into cards, the name takes the whole first line and the marks sit
 // beneath it, still in their columns; the label row keeps the same columns, so it still names
 // them, and gives up its own label, which has no room beside six columns.
-@media (max-width: $table-stack-width) {
+@include phone-down {
   .access-cards {
     --access-pad-x: #{space(3)};
   }
@@ -245,7 +235,6 @@ $stuck-pad: space(4);
     padding-inline-end: 0;
   }
 
-  // The first mark starts the second line under the first label, not in the name's column.
   .access-cards__name + .access-cards__mark {
     grid-column: 2;
   }

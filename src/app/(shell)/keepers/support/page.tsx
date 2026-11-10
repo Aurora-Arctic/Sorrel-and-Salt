@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
+import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
 import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
@@ -15,12 +17,8 @@ import { readAssignees, readOpened, readRequests, readViewCounts } from './reads
 import type { SupportRequestsCursor } from '@/components/SupportRequests/types';
 import type { SupportPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Support',
-};
+export const metadata: Metadata = pageTitle('Support');
 
-// The support requests a keeper may read, narrowed in SQL and paged by cursor, with the request
-// `?request=` opens. The page and GraphQL end at the same support services, which are the guard.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const session = await requireCuratorSession();
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);
@@ -39,7 +37,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   return (
     <TabbedPage
       title="Support"
-      tabs={supportViewTabs(filter, counts)}
+      tabs={supportViewTabs(filter, counts).map((tab) => ({
+        ...tab,
+        skeleton: <SupportListSkeleton />,
+      }))}
       open={supportHref(filter)}
       tabsBelow
     >

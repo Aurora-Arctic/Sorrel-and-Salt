@@ -6,9 +6,9 @@ import { workspaces } from '../schema/workspaces';
 import type { MembershipOfUser } from '../types';
 
 /**
- * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site keeper anyone's, by workspace and role alone;
- * any other id is a `Forbidden` in its own slot. Each membership carries the pause standing on its seat, or null. A session whose address is unverified is told of no covens, an empty list in every slot, not a refusal:
- * the shell draws the email page and the public pages from this same call, so a refusal would break them. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
+ * A caller lists their own covens and a site keeper anyone's; any other id is a `Forbidden` in its own slot. An unverified
+ * session gets an empty list in every slot, not a refusal: the shell draws the email page and the public pages from this call.
+ * The admin read yields no `Membership` proof (claude-docs/design-decisions/auth.md, "A site keeper sees which covens a user belongs to").
  */
 export async function membershipsOf(
   session: Session,
@@ -29,19 +29,20 @@ export async function membershipsOf(
     if (!mayList(id)) return new Forbidden();
     return rows.flatMap((row) => {
       const workspace = byId.get(row.workspaceId);
-      // The finder already excludes a soft-deleted workspace; this narrows the
-      // type rather than filtering anything.
+      // Narrows the type; the finder already excludes a soft-deleted workspace.
       return row.userId === id && workspace ? [{ ...row, workspace }] : [];
     });
   });
 }
 
-/**
- * The order the coven switcher lists in: alphabetical by name, the demo coven
- * last. The service's own order is the database's, which looks random. The
- * demo goes last so a coven of the user's own is always the landing; a row
- * with no `demo` sorts by name alone.
- */
+/** The viewer's own seats that are not paused, or none when the list is refused: a paused seat opens nothing, so it is left out rather than refused. */
+export async function liveMembershipsOf(session: Session): Promise<MembershipOfUser[]> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return [];
+  return memberships.filter(({ pause }) => !pause);
+}
+
+/** The demo coven last, so a coven of the user's own is always the landing. */
 export function byCovenName(
   a: { name: string; demo?: boolean },
   b: { name: string; demo?: boolean },
@@ -49,10 +50,7 @@ export function byCovenName(
   return Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 }
 
-/**
- * The slug of the first coven the switcher lists for this account that it can open, passing over one whose access is
- * paused; the first when every one is, or `undefined` for an account in none.
- */
+/** Passes over a coven whose access is paused; the first when every one is. */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);
   if (!memberships || memberships instanceof Error) return undefined;

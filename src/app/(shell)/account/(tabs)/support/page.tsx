@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countMySupportRequests,
@@ -11,10 +12,9 @@ import { requireSession } from '../../../../../lib/request-session';
 import { SUPPORT_LIST_PATH } from '../../../../../lib/support-path';
 import { readOpenedRequest } from './reads';
 import type { SupportListPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
-export const metadata: Metadata = {
-  title: 'Your Support Requests',
-};
+export const metadata: Metadata = pageTitle('Your Support Requests');
 
 // The sender's own requests, one compact row each, with the request `?request=` opens in a dialog. The
 // services take the session, so another sender's rows are outside the queries.
@@ -40,7 +40,8 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
     `${SUPPORT_LIST_PATH}?${new URLSearchParams(cursor).toString()}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
   return (
-    <div className="page-with-nav page-with-nav--headless">
+    <PageWithNav as="div" headless>
+      <p className="lede">Requests you have sent to the keepers, and their replies.</p>
       <SupportList
         requests={rows.map((row, index) => ({
           id: row.id,
@@ -59,6 +60,6 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
         previousHref={hasPreviousPage && startCursor ? href({ before: startCursor }) : undefined}
         nextHref={hasNextPage && endCursor ? href({ after: endCursor }) : undefined}
       />
-    </div>
+    </PageWithNav>
   );
 }

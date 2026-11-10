@@ -7,6 +7,7 @@ import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
+import EmptyState from '../EmptyState';
 import Pager from '../Pager';
 import { ABOUT_OPTIONS } from '../SupportRequests/filter';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
@@ -16,8 +17,7 @@ import { senderStatusLabel } from '../SupportSenderRequest/status';
 import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
 
-// The sender's own support requests, newest first, two lines each: the subject, then its status, kind, sent day and
-// reply count. A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md). The service has already limited the rows to the sender's.
+// A row opens the request in a dialog at `?request=<id>` (claude-docs/components/support-list.md).
 
 const labelOfAbout = (value: string): string =>
   ABOUT_OPTIONS.find((about) => about.value === value)?.label ?? value;
@@ -68,7 +68,9 @@ const SupportList = ({
         </SupportLink>
       </div>
       {requests.length === 0 ? (
-        <p className="support-list__empty">{emptyList('support requests')}</p>
+        <EmptyState size="compact" label="No Support Requests">
+          {emptyList('support requests')}
+        </EmptyState>
       ) : (
         <ul className="support-list__items">
           {requests.map((request) => (

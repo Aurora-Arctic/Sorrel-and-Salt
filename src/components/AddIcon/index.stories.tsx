@@ -5,9 +5,6 @@ import { HeldMark } from '../CompendiumCards/held-mark';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import Spinner from '../Spinner';
 
-// Render-only; behaviour is asserted in tests/components/AddIcon and
-// tests/components/CompendiumCards/add-icon.test.tsx. The workshop serves no
-// /api/graphql, so a press shows its refusal. Names are invented.
 const meta = {
   title: 'Surfaces / Add Icon',
 } satisfies Meta;
@@ -61,9 +58,6 @@ const returning = (
   </IconTip>
 );
 
-// One coven: a press adds at once. Two: the plus is a menu and the first, which
-// holds the entry, is disabled. Pending: spinner. Added: the check draws, holds,
-// fades to the plus. Returning: check and plus cross-fade. Held: every coven holds it.
 export const States: Story = {
   render: () => (
     <StatesGrid

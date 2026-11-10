@@ -19,8 +19,10 @@ export default function ModalButton({
   ariaLabel,
   tip,
   size,
+  readingBody,
   ref,
   onOpen,
+  preload,
   children,
 }: ModalButtonProps): ReactElement {
   const [open, setOpen] = useState(false);
@@ -41,6 +43,7 @@ export default function ModalButton({
       className={className}
       type="button"
       aria-label={ariaLabel}
+      {...preload}
       onClick={() => {
         onOpen?.();
         setOpen(true);
@@ -62,6 +65,7 @@ export default function ModalButton({
           eyebrow={eyebrow}
           qualifier={qualifier}
           size={size}
+          readingBody={readingBody}
           onClose={() => setOpen(false)}
           // Modal gives the focus back to the button; named too, as a click
           // in WebKit leaves the focus on nothing.

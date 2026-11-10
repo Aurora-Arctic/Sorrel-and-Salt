@@ -27,7 +27,6 @@ const ordered = (memberships: readonly UserCoven[]): UserCoven[] =>
     (a, b) => workspaceRoleRank(a.role) - workspaceRoleRank(b.role) || a.name.localeCompare(b.name),
   );
 
-/** A UTC date, as the table's Signed Up column writes one. */
 const Day = ({ at }: { at: Date }): ReactElement => (
   <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
 );
@@ -167,7 +166,7 @@ const UserDetail = ({
     </section>
     {timeouts && (
       <section aria-label="Support Time-Out" className="user-detail__section">
-        <TimeoutPanel userId={user.id} name={user.name} timeouts={timeouts} />
+        <TimeoutPanel target={{ userId: user.id }} name={user.name} timeouts={timeouts} />
       </section>
     )}
     {pauses && (

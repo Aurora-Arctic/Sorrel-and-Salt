@@ -37,7 +37,6 @@ export type {
   WorkspaceIngredientFacets,
 };
 
-// The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };
 
 /** An ingredient as its children's loaders key it; `workspaceId` picks the proof to ask for and is never the scope, so a key claiming the wrong tier gets nothing. */
@@ -62,7 +61,6 @@ export interface CupboardEntryKey {
   workspaceId: string;
 }
 
-/** A cupboard entry as `CupboardEntry` answers it on the wire: the row, with the compendium entry's own name beside the coven's label. */
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
 /**
@@ -85,7 +83,6 @@ export interface ConvertedCompendium {
   dropped: DroppedOnConvert;
 }
 
-/** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
@@ -94,10 +91,8 @@ export type IngredientFields = Omit<
   'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
 >;
 
-/** Where in the input an issue lands, such as `['variants', 1]`, as `ValidationIssue` paths it. */
 export type IssuePath = ValidationIssue['path'];
 
-/** One form of the ingredient as the schema parses it. */
 export type VariantEntry = NonNullable<LocalIngredientInput['variants']>[number];
 
 /**
@@ -134,10 +129,8 @@ export interface PickedLists {
   variants: readonly VariantEntry[] | null | undefined;
 }
 
-/** The tier a write is in, which decides what a pick must be. */
 export type Tier = 'compendium' | 'coven';
 
-/** One `ingredient_deities` row as the table holds it. */
 export type DeityRecord = typeof ingredientDeities.$inferSelect;
 
 /** One deity as a save writes it: the deity linked (none for a typed name) and the name the row holds. */
@@ -217,10 +210,8 @@ export interface SourcingChildren {
   variantReferences: (variants: readonly IngredientVariantRow[]) => Promise<CitedReference[][]>;
 }
 
-/** What the workspace service parses: the form's values, or the mutation's input. */
 export type IngredientValues = z.input<typeof LocalIngredientInput>;
 
-/** What the stock service parses: the row editor's values, or a mutation's input. */
 export type StockValues = z.input<typeof StockInput>;
 
 /** What `saveStock` takes: the stock dialog's whole Save, in three lists so a delete cannot carry a quantity. */
@@ -230,7 +221,6 @@ export interface SaveStockValues {
   delete: string[];
 }
 
-/** What the reference service parses: the form's values, or a mutation's input. */
 export type ReferenceValues = z.input<typeof ReferenceInput>;
 
 /** What a compendium write takes: the form's values or a mutation's input, and the confirmation that it may end another entry's redirect. */
@@ -241,7 +231,6 @@ export interface CompendiumReview {
   reviewedAt: Date;
 }
 
-/** What a compendium address answers: the entry there, or the slug it moved to. */
 export type CompendiumAddress =
   | {
       kind: 'entry';
@@ -251,7 +240,6 @@ export type CompendiumAddress =
     }
   | { kind: 'moved'; slug: string };
 
-/** What a compendium entry's share card draws. */
 export interface CompendiumShareCard {
   name: string;
   /** The formal name, or null when there is none or it only repeats the name. */

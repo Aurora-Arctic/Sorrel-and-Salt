@@ -4,7 +4,6 @@ import type { INGREDIENT_ELEMENTS, NameBasis, NomenclatureKind } from '../schema
 // Apart from the module's types.ts, which reaches the schema tables: a form
 // loads this file, so it imports only what a validation file may.
 
-/** The list fields `dropBlankEntries` clears of blank entries and takes as absent when empty, in either variant. */
 export interface Lists {
   elements?: (typeof INGREDIENT_ELEMENTS)[number][] | null;
   celestialBodies?: string[] | null;
@@ -28,24 +27,14 @@ export type LinkOrNameFields<IdKey extends string> = { [K in IdKey]?: string | n
 export type LinkOrName<IdKey extends string> =
   ({ [K in IdKey]: string } & { name: null }) | ({ [K in IdKey]: null } & { name: string });
 
-/** What each of an entry's refusals says, in the noun of what it lists. */
 export interface LinkOrNameMessages {
-  /** Both halves given. */
   both: string;
-  /** Neither half given, or only blanks. */
   neither: string;
-  /** A link that is not an id, so names nothing. */
   noSuchLink: string;
-  /** The same row linked twice. */
   linkRepeated: string;
-  /** The same name typed twice, in any case. */
   nameRepeated: string;
 }
 
-/**
- * One substitute as the schema reads it, and the form of the linked
- * ingredient it names, if any.
- */
 export type SubstituteFields = LinkOrNameFields<'ingredientId'> & {
   substituteVariantId?: string | null;
 };
@@ -76,7 +65,6 @@ export interface ReferenceLinkEntry {
   supports: string[] | null;
 }
 
-/** One deity as the schema reads it. */
 export type DeityFields = LinkOrNameFields<'deityId'>;
 
 /** One deity as the schema parses it (DESIGN.md §5, `ingredient_deities`): the curated deity picked, whose name the service writes, or a name typed. */
@@ -88,7 +76,6 @@ export interface VariantFields {
   form: string;
 }
 
-/** What `crossFieldRules` reads of either variant's value. */
 export interface Parsed {
   name: string;
   canonicalName?: string | null;
@@ -104,8 +91,7 @@ export interface Parsed {
   variants?: VariantFields[] | null;
 }
 
-/** A reference's text fields, every one but the kind: what `FORMAT_OF` formats. */
 export type ReferenceTextField = Exclude<keyof CitationFields, 'kind'>;
 
 /** How one text field is tidied, the same on the form as it is left and in the schema. */
-export type FieldFormat = (text: string) => string;
+export type { FieldFormat } from '../../../lib/formats';

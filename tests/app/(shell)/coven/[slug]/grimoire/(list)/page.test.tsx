@@ -9,10 +9,6 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 
-// The Grimoire's two tabs, Spells and Drafts, with the guard and services mocked (which spells a reader may list is tests/db/repository/readable-spell-page.test.ts's and tests/modules/grimoire/services/spell-reads.test.ts's) and the tabs' own read run for real.
-// It proves the guard on the slug from the address, one page of 24 of the tab's status, the address becoming the query, each card's assigned categories, and the pager's addresses;
-// also the spell builder's dialog over the tab (`?new=spell-<slug>`, `?edit=<id>`) beside the shell's Add Ingredient (`?new=ingredient-coven-<slug>`).
-
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
   slug: 'fixture-coven',
@@ -21,7 +17,6 @@ const COVEN = {
 const session = { user: { id: 'fixture-user' } };
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-// The address the layout's New Spell reads, as the browser has it.
 const address = vi.hoisted(() => ({ path: '/coven/fixture-coven/grimoire', search: '' }));
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
@@ -52,11 +47,9 @@ const countGrimoireCategories = vi.fn();
 const countGrimoireFacets = vi.fn();
 const assignedCategoriesOf = vi.fn();
 const readSpell = vi.fn();
-// Each spell has no ingredient steps, unless a test says otherwise.
 const stepsOfSpells = vi.fn(async (_session: unknown, refs: unknown[]): Promise<unknown[]> =>
   refs.map((): unknown[] => []),
 );
-// How often each spell was made: none, by default.
 const workingCountsOf = vi.fn(async (_session: unknown, refs: unknown[]) => refs.map(() => 0));
 vi.mock('@/modules/grimoire', () => ({
   workingCountsOf,
@@ -69,11 +62,9 @@ vi.mock('@/modules/grimoire', () => ({
   readSpell,
 }));
 
-// The signed-in viewer, whom Record a Working names as its recorder.
 vi.mock('@/lib/viewer', () => ({
   viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
 }));
-// The coven roster, which the list leaves to the Record a Working dialog to search.
 const memberRoster = vi.fn(async () => []);
 vi.mock('@/modules/coven', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/coven')>()),
@@ -88,7 +79,6 @@ vi.mock('@/modules/identity', async (importOriginal) => ({
   displayNamesOf,
 }));
 
-// The coven’s jars, which the Quick Look’s stock marks read.
 const stockOf = vi.fn();
 vi.mock('@/modules/ingredients', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/ingredients')>()),
@@ -133,7 +123,6 @@ async function renderTab(Page: PageFn, search: Record<string, string | string[]>
 beforeEach(() => {
   vi.clearAllMocks();
   offerCategories([]);
-  // The dialog reads a saved spell's steps once it opens on ?edit=<id>.
   mockGraphQLQuery('SpellBuilderSteps', ({ id }: { id: string }) => ({ spell: { id, steps: [] } }));
   address.path = '/coven/fixture-coven/grimoire';
   address.search = '';
@@ -207,7 +196,6 @@ describe('the Grimoire tabs', () => {
     });
   });
 
-  /** The Categories filter's suggestions, the panel opened. */
   function openCategories() {
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     screen.getByRole('combobox', { name: 'Category' }).focus();
@@ -295,7 +283,6 @@ describe('the Grimoire tabs', () => {
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {
     await renderTab(SpellsPage);
-    // One batch for the page's editors, one for the members the Coven Members facet offers.
     expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
     expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);
@@ -338,7 +325,6 @@ describe('the Grimoire tabs', () => {
 
   it('says what a delete removed, from ?deleted, above the list, as a status', async () => {
     await renderTab(SpellsPage, { deleted: 'Fixture Working' });
-    // Among the page's other status regions, the one carrying the deleted spell's name.
     const notice = screen
       .getAllByRole('status')
       .find((region) => within(region).queryByText('Fixture Working') !== null);
@@ -402,7 +388,6 @@ describe('the spell builder over a Grimoire tab', () => {
   it.each([
     ['owner', 'spell-fixture-coven'],
     ['member', 'spell-fixture-coven'],
-    // `?new=spell` is the current grimoire's, an alias.
     ['member', 'spell'],
   ] as const)(
     'opens New Spell over the tab for a coven %s under ?new=%s, the list still beneath it',
@@ -432,7 +417,6 @@ describe('the spell builder over a Grimoire tab', () => {
     const href = new URL(pencil.getAttribute('href') ?? '', 'https://example.test');
     expect(href.pathname).toBe('/coven/fixture-coven/grimoire/drafts');
     expect(href.searchParams.get('edit')).toBe('s1');
-    // The address it opens over is kept, so closing returns to it as it was.
     expect(href.searchParams.get('query')).toBe('fixture');
     expect(screen.getAllByRole('link', { name: /^Edit / })).toHaveLength(2);
   });
@@ -509,7 +493,6 @@ describe('the spell builder over a Grimoire tab', () => {
 
     expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
     const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-    // A saved spell opens its sections shut.
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
@@ -537,13 +520,11 @@ describe('the spell builder over a Grimoire tab', () => {
         group: GROUP,
       },
     ]);
-    // Testwarding is this spell’s alone: the cards beneath carry none.
     assignedCategoriesOf.mockImplementation(async (_s: unknown, spells: { id: string }[]) =>
       spells.map(({ id }) => (id === SPELL_ID ? [{ id: 'c1', name: 'Testwarding' }] : [])),
     );
     await renderTab(DraftsPage, { edit: SPELL_ID });
 
-    // The spell is the one asked for, so its picks are this spell’s and no other’s.
     expect(assignedCategoriesOf).toHaveBeenCalledWith(session, [
       { id: SPELL_ID, workspaceId: COVEN.id },
     ]);
@@ -611,7 +592,8 @@ describe('the spell builder over a Grimoire tab', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     });
 
-    // The modal fades out first: this test's media query leaves motion on.
+    // The modal fades out first (this test's media query leaves motion on); the end of the fade is sent rather than waited for.
+    fireEvent.transitionEnd(screen.getByRole('dialog'));
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',
@@ -662,7 +644,6 @@ describe('Quick Look over a Grimoire tab', () => {
 
   beforeEach(() => {
     readSpell.mockResolvedValue(SPELL);
-    // No jar of anything, unless a test says otherwise.
     stockOf.mockImplementation(async (_session, refs: unknown[]) => refs.map(() => []));
     stepsOfSpells.mockResolvedValue([[STEP]]);
   });
@@ -703,7 +684,6 @@ describe('Quick Look over a Grimoire tab', () => {
       'href',
       `/coven/fixture-coven/grimoire?query=fixture&spell=${SPELL_ID}&entry=ing-1`,
     );
-    // The page's side column (In the Cupboard, Category Match) is the page's alone.
     expect(within(dialog).queryByRole('region', { name: /Inventory|Category Match/ })).toBeNull();
   });
 
@@ -779,7 +759,6 @@ describe('Quick Look over a Grimoire tab', () => {
         'href',
         `/coven/fixture-coven/grimoire/${SPELL_ID}`,
       );
-      // The list stays beneath it.
       expect(screen.getAllByText('Testwort Charm').length).toBeGreaterThan(0);
     },
   );
@@ -886,6 +865,7 @@ describe('Quick Look over a Grimoire tab', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     });
 
+    fireEvent.transitionEnd(screen.getByRole('dialog'));
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',

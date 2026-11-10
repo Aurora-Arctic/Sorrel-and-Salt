@@ -4,7 +4,6 @@ import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
 import {
   EMAIL_PAGE,
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -16,10 +15,11 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: an address becomes the account's only when the mailed change link is followed from a session holding the row,
 // so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
-// Also covers where an unverified sign-in lands and what a provider that shares no address gets.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
@@ -33,12 +33,8 @@ const STRANGER = `stranger${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();
@@ -48,13 +44,10 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials and nothing else, so one import serves every test.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });
 
-// The harness re-clones per file, not per test; every user here is on this
-// domain or under the placeholder's.
 beforeEach(async () => {
   const mine = sql`
     select id from users where email like ${`%${DOMAIN}`} or email like '%@pending.invalid'
@@ -77,13 +70,11 @@ async function userRow(email: string): Promise<UserRow | undefined> {
   return row as UserRow | undefined;
 }
 
-/** The sender the email page's mutation uses, bound to the browser's own request. */
 function sender(cookie: string) {
   const request = new Request(`${ORIGIN}/api/graphql`, { method: 'POST', headers: { cookie } });
   return emailVerificationSender(request);
 }
 
-/** The link in the one mail sent since the last reset. */
 function mailedLink(): string {
   expect(send).toHaveBeenCalledTimes(1);
   const [message] = send.mock.calls[0];
@@ -96,7 +87,6 @@ function follow(link: string, cookie?: string): Promise<Response> {
   return auth.handler(new Request(link, { headers: cookie ? { cookie } : {} }));
 }
 
-/** An unverified Microsoft sign-up with its session and its row, the sign-up mail discarded. */
 async function signUpUnverified(email = OWNER, sub = 'ms-owner') {
   const response = await signIn('microsoft', { sub, email, verified: true });
   expectSignedIn(response);
@@ -106,16 +96,11 @@ async function signUpUnverified(email = OWNER, sub = 'ms-owner') {
   return { cookie: cookieHeader(response), before };
 }
 
-/** The address a change was asked for and not yet followed, replaced or lapsed. */
 async function pendingOf(id: string): Promise<string | null> {
   const [row] = await sql`select pending_email from users where id = ${id}`;
   return (row?.pending_email as string | null) ?? null;
 }
 
-/**
- * A change link for `address`, as setEmail asks for one: the address written to the row's pending column, then the link
- * requested from the row's own session, carrying `next` if given.
- */
 async function changeLink(
   cookie: string,
   current: string,
@@ -162,7 +147,6 @@ describe('Story 59: asking for a new address', () => {
       // The mail was answered, so the next one is not held back by it.
       verification_sent_at: null,
     });
-    // Cleared in the swap's own write: the pending address is now the row's.
     expect(await pendingOf(before.id)).toBeNull();
     expect(send).toHaveBeenCalledTimes(1);
     expect(send.mock.calls[0]![0].to).toBe(OWNER);
@@ -189,7 +173,6 @@ describe('Story 59: asking for a new address', () => {
   it('refuses a link whose pending address has lapsed as expired, and leaves the row unchanged', async () => {
     const { cookie, before } = await signUpUnverified();
     const link = await changeLink(cookie, OWNER);
-    // What the change job does once the link has expired.
     await sql.begin(async (tx) => {
       await tx`alter table users disable trigger set_updated_at`;
       await tx`update users set pending_email = null where id = ${before.id}`;
@@ -211,7 +194,6 @@ describe('Story 59: asking for a new address', () => {
 
     expect(response.status).toBe(302);
     expect(landingOf(response)).toBe('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
-    // Better Auth's own change branch would have signed the opener in.
     expect(cookieHeader(response)).not.toMatch(/session_token=/);
     expect(await userRow(OWNER)).toEqual(before);
     expect(await userRow(NEW)).toBeUndefined();
@@ -260,7 +242,6 @@ describe('Story 59: asking for a new address', () => {
   });
 });
 
-/** Better Auth's own resend endpoint, posted to directly. */
 function resend(
   cookie: string | undefined,
   email: string,
@@ -336,7 +317,6 @@ describe('Story 59: the link carries on to where the account was going', () => {
 
   const callbackOf = (link: string) => new URL(link).searchParams.get('callbackURL');
 
-  /** Lets the row be mailed again: its sign-up mail was inside the minute. */
   async function outOfCooldown(id: string): Promise<void> {
     await sql`update users set verification_sent_at = now() - interval '61 seconds' where id = ${id}`;
   }

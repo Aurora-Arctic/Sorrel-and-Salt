@@ -1,13 +1,12 @@
 import altairPackage from 'altair-static/package.json';
 
 // The IDE a browser gets at GET /api/graphql outside production. Served by the
-// app, not installed, so the session cookie rides along (claude-docs/manual-api-testing.md).
-// Rendered here, not by Yoga's `renderGraphiQL`, which never sees the request and so cannot make the endpoint absolute.
+// app, not installed, so the session cookie rides along
+// (claude-docs/graphql/manual-api-testing.md). Rendered here, not by Yoga's `renderGraphiQL`, which
+// never sees the request and so cannot make the endpoint absolute.
 
-/** Altair's built assets, from the package version that renders the shell. */
 export const ALTAIR_ASSETS_URL = `https://cdn.jsdelivr.net/npm/altair-static@${altairPackage.version}/build/dist/`;
 
-/** A browser navigating to the endpoint — Yoga's own test for serving an IDE. */
 export function isBrowserNavigation(request: Request): boolean {
   return request.method === 'GET' && (request.headers.get('accept') ?? '').includes('text/html');
 }
@@ -18,7 +17,6 @@ function requestOrigin(request: Request): string {
   return `${url.protocol}//${request.headers.get('host') ?? url.host}`;
 }
 
-/** The Altair page, pointed at this request's own origin. */
 export async function renderAltairPage(request: Request): Promise<string> {
   // Lazy: production never serves the page, so it never loads the package.
   const { renderAltair } = await import('altair-static');

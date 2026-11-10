@@ -1,16 +1,14 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import {
-  CHALLENGE_EXPIRED,
-  CODE_LOCKED,
-  WRONG_CODE,
-} from '@/components/SignInPanel/two-factor-step';
+import { CHALLENGE_EXPIRED, CODE_LOCKED } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { setQuery } from './search-params';
 
-// Story 75's second step. Better Auth's client is mocked at the calls the step makes, so each test sets
+// The second sign-in step (@story-75). Better Auth's client is mocked at the calls the step makes, so each test sets
 // the answer the server gives; tests/db/two-factor.test.ts proves the server gives it.
 vi.mock('next/navigation', async () => ({
+  useRouter: () => ({}),
   useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 
@@ -52,7 +50,6 @@ async function passPassword() {
 describe('SignInPanel, the two-factor step', () => {
   beforeEach(() => {
     vi.stubGlobal('location', { assign });
-    // The panel opened on its email view, as a link to `?method=email` does.
     setQuery('method=email');
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
   });
@@ -97,6 +94,15 @@ describe('SignInPanel, the two-factor step', () => {
     await press(screen.getByRole('button', { name: 'Verify' }));
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: true });
+  });
+
+  it('offers one-time-code autofill for the app’s code and none for a backup code', async () => {
+    await passPassword();
+    expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
+
+    await press(screen.getByRole('button', { name: 'Use a Backup Code' }));
+
+    expect(field('Backup Code')).toHaveAttribute('autocomplete', 'off');
   });
 
   it('takes a backup code instead, as typed', async () => {
@@ -166,16 +172,12 @@ describe('SignInPanel, the two-factor step', () => {
 
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Passkey/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Back to Sign-In Options' }),
+    ).not.toBeInTheDocument();
 
     await press(screen.getByRole('button', { name: 'Start Again' }));
 
-    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument();
-  });
-
-  it('offers the code field an action placeholder', async () => {
-    await passPassword();
-
-    expect(field('Code From Your App')).toHaveAttribute('placeholder', 'Add a code');
+    expect(screen.getByRole('button', { name: 'Back to Sign-In Options' })).toBeInTheDocument();
   });
 });

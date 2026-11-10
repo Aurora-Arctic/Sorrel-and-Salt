@@ -4,20 +4,13 @@ import { Forbidden } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
-import { assertMembership } from './membership';
+import { assertMembership, tryMembership } from './membership';
 import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
- * One page of a coven's live members, in the order they joined, each carrying
- * the coven: `Workspace.members`, and the members page. `query` narrows it
- * to the members whose name holds the text, in any case, for the participant
- * box of Record a Working. One read for
- * the check and one for the page. A coven at a time rather than batched across
- * covens, since no page lists two covens' members at once
- * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
+ * One coven at a time, not batched (claude-docs/design-decisions/data.md, "A coven's members are read a coven at a time, without a loader").
  *
- * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
- * without `member: read`, which an observer does not hold.
+ * @throws {Forbidden} the caller holds no live seat, or holds one without `member: read`, which an observer lacks.
  */
 export async function listMembers(
   session: Session,
@@ -31,11 +24,6 @@ export async function listMembers(
 }
 
 /**
- * Every live member of a coven with their role, read to the end through the
- * same check as `listMembers`. For the pages that must count stewards or
- * name who could be made one, which a single page of the list cannot say once
- * a coven outgrows it.
- *
  * @throws {Forbidden} as `listMembers` does.
  */
 export async function memberRoster(
@@ -47,15 +35,9 @@ export async function memberRoster(
 }
 
 /**
- * The address of each of these users who sits in the coven, read off their
- * own user row so a changed address shows at once:
- * the steward's Email column on the members page. A
- * separate read rather than a wider `CoMember`, which every member reads.
- * Users outside the coven are left out, not refused. One read for the check
- * and one for the addresses.
+ * Read off the user row so a changed address shows at once. Users outside the coven are left out, not refused.
  *
- * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
- * without `member: readEmail`, which only stewards hold.
+ * @throws {Forbidden} the caller holds no live seat, or holds one without `member: readEmail`, which only stewards hold.
  */
 export async function memberEmails(
   session: Session,
@@ -67,10 +49,7 @@ export async function memberEmails(
   return rows.map(({ id, email }) => ({ userId: id, address: email }));
 }
 
-/**
- * `memberEmails` for a batch of members across covens, one answer per key: the address, null for someone no longer seated,
- * or the coven's `Forbidden`, so one refused coven leaves another answered.
- */
+/** A refused coven is its `Forbidden` in its own slot, so it leaves another answered. */
 export async function emailsOfMembers(
   session: Session,
   keys: readonly MemberKey[],
@@ -81,16 +60,10 @@ export async function emailsOfMembers(
   const answers = new Map<string, Map<string, string> | Forbidden>(
     await Promise.all(
       [...covens].map(async ([workspaceId, userIds]) => {
-        try {
-          const emails = await memberEmails(session, workspaceId, userIds);
-          return [
-            workspaceId,
-            new Map(emails.map(({ userId, address }) => [userId, address])),
-          ] as const;
-        } catch (error) {
-          if (error instanceof Forbidden) return [workspaceId, error] as const;
-          throw error;
-        }
+        const membership = await tryMembership(session, workspaceId, { member: ['readEmail'] });
+        if (membership instanceof Forbidden) return [workspaceId, membership] as const;
+        const rows = await findMemberEmails(membership, userIds);
+        return [workspaceId, new Map(rows.map(({ id, email }) => [id, email]))] as const;
       }),
     ),
   );

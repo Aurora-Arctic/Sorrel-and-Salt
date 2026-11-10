@@ -6,8 +6,8 @@ import { SITE_NAME } from '@/lib/site';
 // src/app may write the site's name or a separator itself: a page that did would show the name twice, or a second separator.
 
 const METADATA_FILE = /^src\/app\/.*(page|layout)\.tsx$/;
-/** A `title`, `template` or `default` field set to a string or template literal. */
-const TITLE_FIELD = /\b(?:title|template|default):\s*(['"`])(.*?)\1/g;
+const TITLE_FIELD =
+  /(?:\b(?:title|template|default):|\b(?:pageTitle|noIndexMetadata|publicPageMetadata)\()\s*(['"`])(.*?)\1/g;
 
 describe('page titles', () => {
   it('leave the site name and the separator to the title templates', () => {

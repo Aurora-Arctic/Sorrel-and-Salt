@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import MemberDetail from '@/components/MemberDetail';
 import Modal from '@/components/Modal';
@@ -10,9 +10,7 @@ import { announced } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The member modal's Coven Access section: an owner's pause on one member's access to the coven, and its lifting. The
-// page's own read says whether a pause stands; the member's pauses are read as the modal opens, and again after either
-// write (claude-docs/components/member-detail.md, "Coven Access").
+// claude-docs/components/member-detail.md, "Coven Access"
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, replace: vi.fn() }) }));
@@ -37,7 +35,6 @@ const STANDING = {
   liftedBy: null,
 };
 
-/** Answers the pauses query with `history`, counting the reads, and records each mutation's name and variables. */
 function serve(history: readonly object[]) {
   const reads = { count: 0 };
   mockGraphQLQuery('MemberPauses', () => {
@@ -229,7 +226,6 @@ describe('CovenAccessPanel, while a pause stands', () => {
     expect(within(section()).getAllByText('Paused').length).toBeGreaterThan(0);
     expect(within(section()).queryByRole('button', { name: 'Pause Access' })).toBeNull();
     expect(await within(section()).findByText('Cooling off')).toBeInTheDocument();
-    // The standing pause is not listed again among the earlier ones.
     const ledger = within(section()).getByRole('list', { name: 'Earlier Pauses' });
     expect(within(ledger).getAllByRole('listitem')).toHaveLength(1);
 
@@ -241,5 +237,40 @@ describe('CovenAccessPanel, while a pause stands', () => {
     expect(sent).toEqual([
       { name: 'LiftMemberAccessPause', variables: { workspaceId: 'w', userId: 'u' } },
     ]);
+  });
+});
+
+describe('CovenAccessPanel, while the pauses are read', () => {
+  // A test that stops early still lets the held answer go before happy-dom waits on the request, so it holds up no later test.
+  let release = () => {};
+  afterEach(() => release());
+
+  // The earlier pauses are a round trip away as the modal opens: their place holds a skeleton until they arrive.
+  it('draws a skeleton where the earlier pauses go until the read answers, then the pauses in its place', async () => {
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let requested = false;
+    server.use(
+      graphqlLink.query('MemberPauses', async () => {
+        requested = true;
+        await held;
+        return HttpResponse.json({
+          data: { workspace: { id: 'w', memberPauses: { edges: [{ node: LIFTED }] } } },
+        });
+      }),
+    );
+    renderPanel(null);
+    unfold();
+
+    // Precondition: the read is out, so the panel is waiting on it.
+    await waitFor(() => expect(requested).toBe(true));
+    expect(within(section()).queryByRole('status')).not.toBeNull();
+    expect(within(section()).queryByRole('list', { name: 'Earlier Pauses' })).toBeNull();
+
+    release();
+
+    expect(
+      await within(section()).findByRole('list', { name: 'Earlier Pauses' }),
+    ).toBeInTheDocument();
+    expect(within(section()).queryByRole('status')).toBeNull();
   });
 });

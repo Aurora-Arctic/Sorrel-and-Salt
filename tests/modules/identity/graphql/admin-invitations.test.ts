@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { isObjectType } from 'graphql';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getNamedType, isEnumType, isObjectType, type GraphQLField } from 'graphql';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { schema } from '@/graphql/schema';
 import type { InvitationSender } from '@/modules/identity';
@@ -14,18 +14,12 @@ import type {
   CreateAdminInvitationResult,
   DeclineInvitationByIdResult,
 } from './types';
-
-// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
-// Which callers, addresses and links the services refuse is services/admin-invitations.test.ts's and services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const DOMAIN = '@admin-invitations-graphql.test';
@@ -34,7 +28,6 @@ const INVITED = `grantee${DOMAIN}`;
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-/** A sender that records the invitations it was asked to mail, by id: the token is minted by the mail's step, never here. */
 function recordingSender() {
   const sent: string[] = [];
   const sender: InvitationSender = {
@@ -121,46 +114,48 @@ describe('Mutation.createAdminInvitation', () => {
     ]);
   });
 
+  // A token, hash or link is a string, so a field answering only a Boolean, number or enum cannot carry one, whatever
+  // its name: replyToSupportRequestByViewToken takes a token and answers a Boolean.
+  const canCarryText = (field: GraphQLField<unknown, unknown>) => {
+    const named = getNamedType(field.type);
+    return !isEnumType(named) && !['Boolean', 'Int', 'Float'].includes(named.name);
+  };
+
+  // Named for the mailed token it takes as its argument; it answers the request, whose own type the scan still reads.
+  const TAKES_A_TOKEN = ['Query.supportRequestByViewToken'];
+  // Named for the help front page's quick links; it answers their titles, not their addresses.
+  const NAMES_LINKS = ['HelpRenameEffects.quickLinks'];
+
   it('has no token, hash or link field on any type but the card mint result', () => {
     const carriers: string[] = [];
     for (const type of Object.values(schema.getTypeMap())) {
       if (!isObjectType(type) || type.name.startsWith('__')) continue;
-      for (const name of Object.keys(type.getFields())) {
-        if (/token|hash|link(?!ed)/i.test(name)) carriers.push(`${type.name}.${name}`);
+      for (const [name, field] of Object.entries(type.getFields())) {
+        const path = `${type.name}.${name}`;
+        if (TAKES_A_TOKEN.includes(path) || NAMES_LINKS.includes(path)) continue;
+        if (/token|hash|link(?!ed)/i.test(name) && canCarryText(field)) carriers.push(path);
       }
     }
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);
   });
 
-  // The role is the keeper's choice, and the transport carries it through.
-  it('answers the curator role it was asked to invite to', async () => {
-    const { sender } = recordingSender();
+  // The role is the keeper's choice, and the transport carries it through. `user` is the invitation to create a coven.
+  it.each(['curator', 'user'])(
+    'answers the %s role it was asked to invite to',
+    async (siteRole) => {
+      const { sender } = recordingSender();
 
-    const result = await run<CreateAdminInvitationResult>(
-      asUser(E),
-      CREATE,
-      { email: INVITED, siteRole: 'curator' },
-      { invitations: sender },
-    );
+      const result = await run<CreateAdminInvitationResult>(
+        asUser(E),
+        CREATE,
+        { email: INVITED, siteRole },
+        { invitations: sender },
+      );
 
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.createAdminInvitation).toMatchObject({ siteRole: 'curator' });
-  });
-
-  it('refuses the user role, which no invitation grants, before the service is reached', async () => {
-    const { sent, sender } = recordingSender();
-
-    const result = await run(
-      asUser(E),
-      CREATE,
-      { email: INVITED, siteRole: 'user' },
-      { invitations: sender },
-    );
-
-    expect(result.errors).toHaveLength(1);
-    expect(result.data).toBeUndefined();
-    expect(sent).toEqual([]);
-  });
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.createAdminInvitation).toMatchObject({ siteRole });
+    },
+  );
 
   it('answers a malformed address as VALIDATION on the email', async () => {
     const result = await run(asUser(E), CREATE, { email: 'not-an-address' });
@@ -219,14 +214,10 @@ describe('Mutation.acceptInvitation', () => {
 
 const ACCEPT_BY_ID = `mutation ($id: ID!) { acceptInvitationById(id: $id) { id acceptedAt } }`;
 
-// The transport's half: the answer, and one error code per refusal. Whose
-// address admits, and every dead state, are
-// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.acceptInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
 
-  /** A coven invitation into W for the grantee's address, from A. */
   async function inviteGrantee(expired = false) {
     const [{ id }] = await sql`
       insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
@@ -283,14 +274,10 @@ describe('Mutation.acceptInvitationById', () => {
 
 const DECLINE_BY_ID = `mutation ($id: ID!) { declineInvitationById(id: $id) { id declinedAt acceptedAt } }`;
 
-// The transport's half: the answer, `Invitation.declinedAt`, and one
-// error code per refusal. Whose address admits, and every dead state, are
-// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.declineInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
 
-  /** A pending coven invitation into W for the grantee's address, from A. */
   async function inviteGrantee(token = 'pending-token') {
     const [{ id }] = await sql`
       insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)

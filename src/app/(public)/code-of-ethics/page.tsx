@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, siteUrl } from '../../../lib/site';
+import { publicPageMetadata } from '@/lib/page-metadata';
+import { SITE_NAME } from '../../../lib/site';
 import { currentDocumentPage } from '../_documents';
 
-export const metadata: Metadata = {
-  title: 'Code of Ethics',
-  description: `What ${SITE_NAME} values, and how it handles the cultures, sourcing and access questions its subject raises.`,
-  alternates: { canonical: siteUrl('/code-of-ethics') },
-};
+export const metadata: Metadata = publicPageMetadata(
+  'Code of Ethics',
+  `What ${SITE_NAME} values, and how it handles the cultures, sourcing and access questions its subject raises.`,
+  '/code-of-ethics',
+);
 
-// The text is read from the database, so the page is built per request and never frozen at build time.
+// Read from the database per request, so the page is never frozen at build time.
 export const dynamic = 'force-dynamic';
 
 export default function Page() {

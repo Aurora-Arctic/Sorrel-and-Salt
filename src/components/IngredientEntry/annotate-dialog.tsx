@@ -1,16 +1,12 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import CupboardEntryForm from '../CupboardEntryForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import { LazyCupboardEntryForm } from './lazy-forms';
 import AnnotateMore from './annotate-more';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { AnnotateDialogProps } from './types';
-
-// The coven's Annotate dialog, opened from the address's `?annotate` (on the entry page and over
-// the Ingredients list). It shows while the address asks for it (`opened`) or while an Annotate
-// press loads it; `more` adds Make It Ours and Remove at the form's foot.
 
 export default function AnnotateDialog({
   closeHref,
@@ -28,7 +24,7 @@ export default function AnnotateDialog({
         opened && {
           heading: ANNOTATE_HEADING,
           body: (done) => (
-            <CupboardEntryForm
+            <LazyCupboardEntryForm
               {...opened}
               onDone={done}
               aside={

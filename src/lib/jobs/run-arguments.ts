@@ -48,12 +48,7 @@ function check(value: unknown, path: string, key: string | undefined): void {
   throw new RunArgumentRefused(`a job's run may not hold the value at args${path}`);
 }
 
-/**
- * Refuses `args` unless each value is an id, a kind under `kind` or `how`, a site origin, a return path, a finite number, a
- * boolean or null, in plain objects and arrays.
- *
- * @throws {RunArgumentRefused} naming the first refused value's place.
- */
+/** @throws {RunArgumentRefused} naming the first refused value's place. */
 export function assertRunArguments(args: readonly unknown[]): void {
   args.forEach((arg, index) => check(arg, `[${index}]`, undefined));
 }

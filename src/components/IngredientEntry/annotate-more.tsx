@@ -23,12 +23,10 @@ import type { AnnotateMoreProps } from './types';
 interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   workspaceId: string;
   ingredientId: string;
-  /** The entry as the coven calls it, for the two confirmations. */
   name: string;
   /** Where the dialog closes to, and so where a remove leads without `removedHref`. */
   closeHref: Route;
   onRefused: (message: string) => void;
-  /** The form holds unsaved changes. */
   dirty: boolean;
   /** The form's unsaved-changes confirmation is asking, so this one steps aside until Keep Editing. */
   discardAsking: boolean;
@@ -60,7 +58,6 @@ export default function AnnotateMore({
     workspaceId,
     covenSlug,
     ingredientId,
-    // On the list, where the dialog closes to: the list as it was, read again.
     removedHref: removedHref ?? closeHref,
     onSettle: settle,
     onRefused,

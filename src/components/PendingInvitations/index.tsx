@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
+import { PendingInvitationsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { emptyList } from '../../lib/text';
@@ -10,10 +11,7 @@ import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
 import './index.scss';
 
-// The invitations a steward has sent and nobody has accepted, under the members roll: address, role
-// and status, newest first, with its own pager. A pending one shows its expiry and offers Revoke; a
-// declined one shows when, and offers Remove. The page draws it for stewards only; nothing here
-// decides who may see it (claude-docs/components/pending-invitations.md).
+// The page draws it for stewards only; nothing here decides who may see it (claude-docs/components/pending-invitations.md).
 
 const PendingInvitations = ({
   workspaceId,
@@ -23,7 +21,7 @@ const PendingInvitations = ({
   position,
 }: PendingInvitationsProps): ReactElement => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={<PendingInvitationsBodySkeleton />}>
       <StackTable
         aria-label="Pending Invitations"
         columns={[

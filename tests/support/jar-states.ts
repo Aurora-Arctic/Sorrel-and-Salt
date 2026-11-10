@@ -5,9 +5,7 @@ import type { StockState } from '@/components/StockBadge/types';
 // list (claude-docs/components/stock-badge.md).
 
 export interface JarState {
-  /** What the row of the table says, in words. */
   readonly label: string;
-  /** An invented entry name, unique in this list. */
   readonly name: string;
   readonly quantity: number | null;
   readonly threshold: number | null;

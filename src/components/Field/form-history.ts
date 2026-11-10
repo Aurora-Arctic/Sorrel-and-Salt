@@ -7,18 +7,12 @@ import type {
   HistoryStep,
 } from './types';
 
-// The pure half of a form's undo and redo: the two stacks and the rules for what a new change
-// does to them. The hook owns everything that touches the form, the DOM or the clock.
-
 export const initialHistory: HistoryState = { past: [], future: [] };
 
-/** How many steps are kept; the oldest go first. */
 export const HISTORY_LIMIT = 100;
 
-/** How long a pause in typing ends the step, in milliseconds. */
 export const TYPING_PAUSE_MS = 500;
 
-/** `diffs` folded into `into`: a name already there keeps its `before` and takes the new `after`. */
 function mergeDiffs(into: HistoryDiff[], diffs: HistoryDiff[]): HistoryDiff[] {
   const merged = into.slice();
   for (const diff of diffs) {
@@ -32,7 +26,6 @@ function mergeDiffs(into: HistoryDiff[], diffs: HistoryDiff[]): HistoryDiff[] {
 export function historyReducer(state: HistoryState, action: HistoryAction): HistoryState {
   switch (action.type) {
     case 'recorded':
-      // A new change ends the redo trail, as in every editor.
       return { past: [...state.past, action.step].slice(-action.limit), future: [] };
     case 'extended': {
       const newest = state.past[state.past.length - 1];
@@ -59,11 +52,6 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
   }
 }
 
-/**
- * What a change does to the newest step. In the same tick it joins it (one action setting several
- * fields is one step), as does typing in the same box within the pause, and every change of one pointer
- * hold (a slider drag). Anything else, a select pick included, starts a step.
- */
 export function decideMerge({
   newest,
   name,
@@ -89,7 +77,6 @@ export function decideMerge({
   return 'new';
 }
 
-/** A copy of form values, arrays and plain objects deep, anything else as it is. */
 export function cloneValues<T>(value: T): T {
   if (Array.isArray(value)) return value.map(cloneValues) as T;
   if (
@@ -104,7 +91,6 @@ export function cloneValues<T>(value: T): T {
   return value;
 }
 
-/** Whether two sets of form values hold the same things. */
 export function sameValues(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (Array.isArray(a) || Array.isArray(b)) {

@@ -11,8 +11,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The user modal's Site Access section: setting a pause on a user's access, lifting the one that stands, and the
-// earlier ones beneath (claude-docs/components/user-detail.md, "Site Access").
+// claude-docs/components/user-detail.md, "Contracts"
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -147,6 +146,18 @@ describe('UserDetail, Site Access', () => {
     expect(within(section()).getByRole('textbox', { name: 'Note' })).toHaveAccessibleDescription(
       /Seen by staff only/,
     );
+  });
+
+  it('counts the note and the message against 500 characters without cutting what is typed', () => {
+    renderDetail({ pauses: [] });
+    unfold();
+
+    for (const name of ['Note', /^Message to User/]) {
+      const field = within(section()).getByRole('textbox', { name });
+      fireEvent.change(field, { target: { value: 'x'.repeat(503) } });
+      expect(field).toHaveValue('x'.repeat(503));
+      expect(field).toHaveAccessibleDescription(/3 characters over/);
+    }
   });
 
   it('holds Pause Access, and sends nothing, until the message has text', () => {

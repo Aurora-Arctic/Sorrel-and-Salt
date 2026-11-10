@@ -1,0 +1,7 @@
+kind: web_page
+authors: Maimonides
+title: Mishneh Torah, Vessels of the Sanctuary and Those who Serve Therein, chapter 2
+container: Sefaria
+url: https://www.sefaria.org/Mishneh_Torah%2C_Vessels_of_the_Sanctuary_and_Those_who_Serve_Therein.2?lang=bi
+accessed: '2026-11-06'
+note: "Translated by Eliyahu Touger (Jerusalem: Moznaim, c1986 to c2007), as Sefaria names the version. The reader page loads its text by script, so the chapter was read through Sefaria's text API; halacha numbers are Sefaria's segment numbers."

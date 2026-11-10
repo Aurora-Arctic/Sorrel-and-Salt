@@ -9,9 +9,11 @@ import * as documentMailingRecipients from '@/modules/documents/schema/document-
 import * as documentMailings from '@/modules/documents/schema/document-mailings';
 import * as documentVersions from '@/modules/documents/schema/document-versions';
 import * as documents from '@/modules/documents/schema/documents';
+import * as helpArticles from '@/modules/help/schema/help-articles';
 import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaceMemberPauses from '@/modules/coven/schema/workspace-member-pauses';
+import * as workspaceSlugs from '@/modules/coven/schema/workspace-slugs';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as supportRequests from '@/modules/support/schema/support-requests';
 import * as supportReplies from '@/modules/support/schema/support-replies';
@@ -46,10 +48,10 @@ import * as deityOtherNames from '@/modules/vocabulary/schema/deity-other-names'
 import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 
 // One comparison of the Drizzle schema against the migrated database, table by table: a schema file edited without its migration, or the reverse, fails here.
-// A table's row rules are its module schema test's (claude-docs/testing/db-harness.md, "The db test harness"). A schema file missing from the imports below leaves its table out of the code's set, which the first test fails.
+// A table's row rules are its module schema test's (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`"). A schema file missing from the imports below leaves its table out of the code's set, which the first test fails.
 
 // The expand/contract window (CLAUDE.md rule 10): a drop is two PRs, so between them the migrated database holds what the schema no longer declares; the undeclare task adds its line here and the drop task removes it, and a line outliving its drop fails below
-// (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the old name a renamed table leaves for the deploy before it, with `table` and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a table").
+// (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`"). A `view` is the old name a renamed table leaves for the deploy before it, with `table` and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a table").
 // A pending column the code still declares is compared like any other: only the database side of an undeclared one is set aside.
 const PENDING_DROPS: readonly {
   table: string;
@@ -71,9 +73,11 @@ const MODULES = [
   documentMailings,
   documentVersions,
   documents,
+  helpArticles,
   cardInvitationAttempts,
   invitations,
   workspaceMemberPauses,
+  workspaceSlugs,
   workspaces,
   supportRequests,
   supportReplies,
@@ -117,7 +121,6 @@ const TABLES = [
 const byName = new Map(TABLES.map((table) => [getTableConfig(table).name, table]));
 const NAMES = [...byName.keys()].sort();
 
-/** `pg_constraint.confdeltype`, in the words Drizzle's `onDelete` uses. */
 const ON_DELETE: Record<string, string> = {
   a: 'no action',
   r: 'restrict',
@@ -136,7 +139,6 @@ const asCatalogued = (type: string) =>
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** What the code declares of `table`: the same facts the catalogue is read for. */
 function declared(table: PgTable) {
   const { columns, foreignKeys, checks, indexes } = tableFacts(table);
   return {
@@ -176,7 +178,6 @@ function declared(table: PgTable) {
   };
 }
 
-/** The same facts as the migrated database holds them. */
 async function migrated(name: string) {
   const columns = await sql<
     { name: string; type: string; notNull: boolean; hasDefault: boolean }[]
@@ -260,7 +261,6 @@ async function migratedAndKept(name: string, code: ReturnType<typeof declared>) 
   };
 }
 
-/** The public tables the migrations built, as the catalogue lists them. */
 async function migratedTables(): Promise<string[]> {
   const rows = await sql<{ name: string }[]>`
     select relname as name from pg_class
@@ -269,7 +269,6 @@ async function migratedTables(): Promise<string[]> {
   return rows.map((row) => row.name).sort();
 }
 
-/** The public views the migrations built, which the schema declares none of. */
 async function migratedViews(): Promise<string[]> {
   const rows = await sql<{ name: string }[]>`
     select relname as name from pg_class
@@ -307,8 +306,6 @@ describe('the Drizzle schema against the migrated database', () => {
     },
   );
 
-  // What makes the drop task remove its line: one left behind names an object
-  // the catalogue no longer holds.
   it('declares a pending drop only for an object the database still holds', async () => {
     if (PENDING_DROPS.length === 0) {
       expect(PENDING_DROPS).toEqual([]);

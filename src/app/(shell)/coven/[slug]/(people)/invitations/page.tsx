@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { notFound } from 'next/navigation';
 import PendingInvitations from '../../../../../../components/PendingInvitations';
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
@@ -12,9 +13,7 @@ import {
 import type { CovenLayoutParams } from '../../types';
 import type { InvitationsPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Invitations',
-};
+export const metadata: Metadata = pageTitle('Invitations');
 
 // The invitations a steward has sent and nobody has answered, newest first, with Revoke. Stewards
 // only: the addresses are those of people who have not joined. The permission (`member: invite`)

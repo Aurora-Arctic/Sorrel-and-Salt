@@ -1,42 +1,58 @@
 import { z } from 'zod';
 import {
+  ERROR_REFERENCE_MAX_LENGTH,
   ISSUE_LINK_EXPECTED,
   ISSUE_REPOSITORY,
   PAGE_NOT_ON_SITE,
   isSitePage,
   normaliseIssueLink,
 } from '../../../lib/support-path';
-import { requiredText } from '../../../lib/validation';
+import { EMAIL_MAX_LENGTH } from '../../../lib/email-address';
+import {
+  PATH_TOO_LONG,
+  SUBJECT_REQUIRED,
+  MESSAGE_REQUIRED,
+  ABOUT_REQUIRED,
+} from '../../../lib/support-messages';
+import { trimEnds } from '../../../lib/formats';
+import { limitedText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
-export const SUBJECT_MAX_LENGTH = 120;
-export const MESSAGE_MAX_LENGTH = 4000;
-export const PATH_MAX_LENGTH = 500;
-export const ERROR_REFERENCE_MAX_LENGTH = 100;
+import {
+  HTTP_STATUS_MAX,
+  HTTP_STATUS_MIN,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from './limits';
 
-export { ISSUE_REPOSITORY };
+export {
+  ERROR_REFERENCE_MAX_LENGTH,
+  ISSUE_REPOSITORY,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+};
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
-export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LENGTH, {
-  error: `Keep the message to ${MESSAGE_MAX_LENGTH} characters`,
-});
+export const SupportMessage = limitedText(MESSAGE_REQUIRED, MESSAGE_MAX_LENGTH, trimEnds);
+
+const About = z.enum(supportRequestAbout.enumValues, { error: ABOUT_REQUIRED });
 
 export const SupportRequestInput = z.object({
-  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
-  subject: requiredText('Write a subject').max(SUBJECT_MAX_LENGTH, {
-    error: `Keep the subject to ${SUBJECT_MAX_LENGTH} characters`,
-  }),
+  about: About,
+  subject: limitedText(SUBJECT_REQUIRED, SUBJECT_MAX_LENGTH),
   message: SupportMessage,
   path: z
     .string()
-    .max(PATH_MAX_LENGTH, { error: 'That page address is too long' })
+    .max(PATH_MAX_LENGTH, { error: PATH_TOO_LONG })
     .refine(isSitePage, { error: PAGE_NOT_ON_SITE })
     .nullish(),
   errorCode: z
     .number()
     .int()
-    .min(100, { error: 'That is not an HTTP status' })
-    .max(599, { error: 'That is not an HTTP status' })
+    .min(HTTP_STATUS_MIN, { error: 'That is not an HTTP status' })
+    .max(HTTP_STATUS_MAX, { error: 'That is not an HTTP status' })
     .nullish(),
   errorReference: z
     .string()
@@ -66,18 +82,18 @@ export const SIGNED_OUT_ABOUTS = [
 
 // A signed-out request. `website` is the honeypot: a field no person sees, so a value in it is a bot.
 export const SignedOutSupportRequestInput = z.object({
-  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
+  about: About,
   email: z
     .string()
     .trim()
     .toLowerCase()
-    .max(254, { error: 'That address is too long' })
+    .max(EMAIL_MAX_LENGTH, { error: 'That address is too long' })
     .pipe(z.email({ error: 'Enter an email address' })),
   subject: SupportRequestInput.shape.subject,
   message: SupportMessage,
   path: SupportRequestInput.shape.path,
   errorCode: SupportRequestInput.shape.errorCode,
-  errorReference: z.string().trim().max(64, { error: 'That reference is too long' }).nullish(),
+  errorReference: SupportRequestInput.shape.errorReference,
   website: z.string().nullish(),
 });
 

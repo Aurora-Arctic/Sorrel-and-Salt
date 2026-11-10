@@ -12,9 +12,6 @@ import { UNIT_OPTIONS } from '../StockFields';
 import StepRow from '.';
 import OneOffBadge from './one-off-badge';
 
-// Render-only; what shows and when is asserted in tests/components/StepRow. The builder's own
-// row (SpellBuilder / Spell Builder, With Steps) wires these slots to the spell's form; here the
-// slots hold the same fields and buttons with nothing behind them.
 const meta = {
   title: 'Grimoire / Step Row',
 } satisfies Meta;
@@ -27,7 +24,6 @@ const List = ({ children }: { children: ReactNode }) => (
 
 const NAME = 'Testwort (Dried Leaf)';
 const SAFETY = { toxic: true, safetyNotes: 'Keep away from the skin; wash hands after use.' };
-// Notes without toxicity: SafetyMark draws Caution rather than Toxic.
 const CAUTION = { toxic: false, safetyNotes: 'Strong scent; air the room while working.' };
 
 interface Values {
@@ -49,7 +45,6 @@ const EditButton = ({ open, onClick }: { open: boolean; onClick: () => void }) =
   </button>
 );
 
-// A card that opens and closes from its pencil or its face, as the builder's does.
 function Card({ initiallyOpen, editing }: { initiallyOpen: boolean; editing?: boolean }) {
   const [open, setOpen] = useState(initiallyOpen);
   const methods = useForm<Values>({
@@ -174,7 +169,6 @@ export const States: Story = {
               name="Mockleaf (Oil)"
               icon="fluid"
               marks={<SafetyMark {...SAFETY} />}
-              // Level 4 under the grid's level-3 names; the builder's step list puts it at 5.
               note={<SafetyNote level={4} compact {...SAFETY} />}
             />
           </List>

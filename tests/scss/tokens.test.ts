@@ -4,8 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
 
-// The colours the sign-in, account and admin pages depend on stay legible in both themes (claude-docs/styling.md, "Brand colours"): control marks at 3:1 (WCAG 1.4.11), text and button labels at 4.5:1.
-// One assertion per theme, the functional half; how they look is the workshop's and the axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
+// Control marks at 3:1 (WCAG 1.4.11), text and button labels at 4.5:1, in both themes (claude-docs/styling.md, "Brand colours"); how it looks is the workshop's and the axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
 const SCSS_DIR = fromRoot('src/scss');
 
@@ -15,7 +14,6 @@ function compile(source: string): string {
   return compileString(source, { style: 'expanded', loadPaths: [SCSS_DIR] }).css;
 }
 
-/** The declarations of the first rule matching `selector`, as property → value. */
 function declarations(css: string, selector: string): Record<string, string> {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) throw new Error(`No rule for ${selector} in:\n${css}`);
@@ -32,7 +30,6 @@ function declarations(css: string, selector: string): Record<string, string> {
   );
 }
 
-/** The custom properties a theme mixin sets. */
 function surfaces(theme: Theme): Record<string, string> {
   return declarations(
     compile(`@use 'mixins' as m; .probe { @include m.theme-${theme}; }`),
@@ -59,7 +56,6 @@ function toHex(value: string, theme: Theme): string {
     .join('')}`;
 }
 
-/** `color-mix(in srgb, a weight, b)` for two hexes, each channel rounded to a byte as the browser does. */
 function mixed(a: string, b: string, weight: number): string {
   const channels = (hex: string) => [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
   const [from, to] = [channels(a), channels(b)];
@@ -69,8 +65,6 @@ function mixed(a: string, b: string, weight: number): string {
     .join('')}`;
 }
 
-/** Every brand's parts, each read through `brand-color()`, as brand → part → value. */
-/** The weight a `color-mix()` gives `token`, as a fraction: the mix the contrast rows compute. */
 function weightOf(mix: string | undefined, token: string): number {
   const found = new RegExp(`var\\(${token}\\) (\\d+(?:\\.\\d+)?)%`).exec(mix ?? '');
   if (!found) throw new Error(`no ${token} weight in ${mix}`);
@@ -128,7 +122,6 @@ describe('the brand and text colours clear their floors on the page and the card
     const row = (pair: string, a: string, b: string, floor: number) =>
       table.push({ pair, ratio: contrastRatio(toHex(a, theme), toHex(b, theme)), floor });
 
-    // A white button is marked out by its edge; a coloured one by its fill.
     for (const [brand, { fill, ink, hover, edge }] of Object.entries(brands())) {
       row(`${brand} ${edge ? 'edge' : 'fill'} on the page`, edge ?? fill, page, 3);
       row(`${brand} ink on its fill`, ink, fill, 4.5);
@@ -140,8 +133,7 @@ describe('the brand and text colours clear their floors on the page and the card
       row(`${token} on the page`, tokens[token], page, 4.5);
       row(`${token} on the card`, tokens[token], card, 4.5);
     }
-    // The banner's heavy foot rule, a line rather than text, against the page
-    // beneath it.
+    // The banner's heavy foot rule is a line, not text, so it needs 3:1, not 4.5:1.
     row('the banner rule on the page', tokens['--secondary'], page, 3);
     // The user list's Impersonate column: wax text on a wax tint, 6% over the
     // page and 5% over a banded row's card (UserList/index.scss).
@@ -173,7 +165,6 @@ describe('the brand and text colours clear their floors on the page and the card
     row('an Edit pencil on its tint', accent, mixed(accent, card, 0.2), 3);
 
     // The switch (`.switch`, _primitives.scss) is a control, so 3:1 (WCAG 1.4.11): off, its muted edge against the page and card and its thumb on the card; on and hovered on, its filled track against both and its thumb on the fill.
-    // Hovered off, the edge takes the body ink, which clears 4.5 above.
     for (const [state, fill] of [
       ['on', tokens['--accent']],
       ['hovered on', tokens['--accent-solid-hover']],
@@ -250,7 +241,6 @@ describe('the brand and text colours clear their floors on the page and the card
       ['card', card],
     ] as const) {
       row(`the warning's bar on the ${ground}`, warning, under, 3);
-      // Words in the warning colour, as a shortfall in Record a Working's preview says it, are text: 4.5:1.
       row(`text in the warning colour on the ${ground}`, warning, under, 4.5);
       row(
         `the warning's triangle on its tint on the ${ground}`,
@@ -354,5 +344,65 @@ describe('the brand and text colours clear their floors on the page and the card
     }
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
+  });
+});
+
+// Needs Review is the ochre warning as a tint, so it reads as a warning and not as the red alarm (claude-docs/styling.md, "Badge palettes").
+describe('the needs-review badge palette is the warning ochre and clears its floors', () => {
+  it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
+    const tokens = surfaces(theme);
+    const part = (name: string) => toHex(tokens[`--badge-needs-review-${name}`], theme);
+    const warning = toHex(tokens['--warning'], theme);
+
+    if (theme === 'dark') expect(part('fg')).toBe(warning);
+    for (const ground of ['--surface-page', '--surface-card']) {
+      const under = toHex(tokens[ground], theme);
+      expect(
+        contrastRatio(part('fg'), part('bg')),
+        `label on tint, ${ground}`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(part('border'), under), `edge on ${ground}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
+describe("the faceted jar's two bands are solid theme tokens that swap roles between themes", () => {
+  it.each(['--jar-shade', '--jar-shine'])(
+    '%s is a solid colour with a value for each theme',
+    (name) => {
+      const [light, dark] = [surfaces('light')[name], surfaces('dark')[name]];
+      expect(light, `${name} in light`).toBeDefined();
+      expect(dark, `${name} in dark`).toBeDefined();
+      expect(toHex(light, 'light')).not.toBe(toHex(dark, 'dark'));
+    },
+  );
+
+  it('the shade is darker than the card in light and lighter in dark, and the shine the reverse', () => {
+    const lum = (hex: string) => contrastRatio(hex, '#000000');
+    for (const theme of ['light', 'dark'] as const) {
+      const tokens = surfaces(theme);
+      const [card, shade, shine] = ['--surface-card', '--jar-shade', '--jar-shine'].map((name) =>
+        lum(toHex(tokens[name], theme)),
+      );
+      expect(shade < card, `shade below card in ${theme}`).toBe(theme === 'light');
+      expect(shine > card, `shine above card in ${theme}`).toBe(theme === 'light');
+    }
+  });
+});
+
+// An About Us pillar card wears one hue: a 3px rule, the kicker and the icon in it, on a 5% wash of it over the card (claude-docs/components/about-pillars.md).
+// The kicker is text (4.5:1) and the rule and icon are marks (3:1), on the wash and on the page the band sits on.
+describe('the pillar hues clear their floors on their card wash and on the page', () => {
+  it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
+    const tokens = surfaces(theme);
+    const page = toHex(tokens['--surface-page'], theme);
+    const card = toHex(tokens['--surface-card'], theme);
+
+    for (const token of ['--accent', '--clay', '--sloe', '--woad']) {
+      const hue = toHex(tokens[token], theme);
+      const wash = mixed(hue, card, 0.05);
+      expect(contrastRatio(hue, wash), `${token} text on its wash`).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(hue, page), `${token} mark on the page`).toBeGreaterThanOrEqual(3);
+    }
   });
 });

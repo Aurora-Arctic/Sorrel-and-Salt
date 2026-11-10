@@ -1,14 +1,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import StockDialog, { StockDialogModal, StockJarButton } from '@/components/StockDialog';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { SaveStockMutation, SaveStockMutationVariables } from '@/gql/graphql';
 import { choose, press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
 
-// The Edit Stock dialog on a coven card: the jars the coven holds of the ingredient in a list, the chosen one's fields beside it, and a form added or a jar removed in the same dialog, all saved as one `saveStock`.
 // The service is the guard and is tested there; this proves what the dialog sends (only what changed) when it lets Save through, and where a refusal lands.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -44,23 +44,20 @@ beforeEach(() => {
 const trigger = () => screen.getByRole('button', { name: 'Edit Stock, Testwort' });
 const dialog = () => screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
 const inDialog = () => within(dialog());
-const quantity = (form: string) =>
-  inDialog().getByRole('spinbutton', { name: `Quantity, ${form}` });
+const quantity = (form: string) => inDialog().getByRole('textbox', { name: `Quantity, ${form}` });
 const noQuantity = (form: string) =>
-  inDialog().queryByRole('spinbutton', { name: `Quantity, ${form}` });
+  inDialog().queryByRole('textbox', { name: `Quantity, ${form}` });
 const threshold = (form: string) =>
-  inDialog().getByRole('spinbutton', { name: `Low Stock At, ${form}` });
+  inDialog().getByRole('textbox', { name: `Low Stock At, ${form}` });
 const unit = (form: string) => inDialog().getByRole('combobox', { name: `Unit, ${form}` });
 const save = () => inDialog().getByRole('button', { name: /^Sav(e|ing) Stock$/ });
 const removeButton = (form: string) => inDialog().getByRole('button', { name: `Remove ${form}` });
 const undo = (form: string) => inDialog().getByRole('button', { name: `Undo Remove ${form}` });
 const addForm = () => inDialog().queryByRole('combobox', { name: 'Add Form' });
 const addButton = () => inDialog().queryByRole('button', { name: 'Add' });
-/** A form's button in the list, named by the form and then its marks and amount. */
 const pick = (form: string) => inDialog().getByRole('button', { name: new RegExp(`^${form}\\b`) });
 const queryPick = (form: string) =>
   inDialog().queryByRole('button', { name: new RegExp(`^${form}\\b`) });
-/** A form's item in the list: its button and, beside it, its badge. */
 const item = (form: string) =>
   within(
     inDialog()
@@ -73,10 +70,8 @@ function open(props: Partial<StockDialogProps> = {}) {
   fireEvent.click(trigger());
 }
 
-/** Chooses a form in the list, so its fields are the ones drawn. */
 const chooseJar = (form: string) => press(pick(form));
 
-/** Picks a form under Add Form and presses Add. */
 function addJar(form: string) {
   fireEvent.click(addForm()!);
   fireEvent.click(screen.getByRole('option', { name: form }));
@@ -88,7 +83,6 @@ const offered = () =>
     .getAllByRole('option')
     .map((option) => option.textContent);
 
-/** Answers as the service does for a saved batch, keeping what the dialog sent. */
 function mockSaving() {
   const calls: SaveStockMutationVariables[] = [];
   mockGraphQLMutation<SaveStockMutation, SaveStockMutationVariables>('SaveStock', (variables) => {
@@ -103,6 +97,11 @@ async function sent(calls: SaveStockMutationVariables[]) {
   await waitFor(() => expect(calls).toHaveLength(1));
   return calls[0]!;
 }
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+});
 
 describe('StockDialog', () => {
   // Opened from a page that is not a coven's, the dialog names the coven it writes to in
@@ -134,13 +133,11 @@ describe('StockDialog', () => {
 
     expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
     expect(pick('Oil')).not.toHaveAttribute('aria-current');
-    // A form the coven holds no jar of is not in the list.
     expect(queryPick('Resin')).toBeNull();
 
-    expect(quantity('Flower')).toHaveValue(250);
+    expect(quantity('Flower')).toHaveValue('250');
     expect(unit('Flower')).toHaveTextContent('g');
-    expect(threshold('Flower')).toHaveValue(30);
-    // Only the chosen jar's fields are drawn.
+    expect(threshold('Flower')).toHaveValue('30');
     expect(noQuantity('Oil')).toBeNull();
   });
 
@@ -148,8 +145,7 @@ describe('StockDialog', () => {
     open({ jars: [...PROPS.jars].reverse() });
 
     expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
-    expect(quantity('Flower')).toHaveValue(250);
-    // The list's buttons, in the order drawn.
+    expect(quantity('Flower')).toHaveValue('250');
     const listed = inDialog().getAllByRole('button', { name: /^(Flower|Oil)\b/ });
     expect(listed).toEqual([pick('Flower'), pick('Oil')]);
   });
@@ -162,13 +158,13 @@ describe('StockDialog', () => {
 
     expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Oil')).toHaveValue(50);
+    expect(quantity('Oil')).toHaveValue('50');
     expect(unit('Oil')).toHaveTextContent('ml');
-    expect(threshold('Oil')).toHaveValue(10);
+    expect(threshold('Oil')).toHaveValue('10');
     expect(noQuantity('Flower')).toBeNull();
 
     chooseJar('Flower');
-    expect(quantity('Flower')).toHaveValue(200);
+    expect(quantity('Flower')).toHaveValue('200');
   });
 
   it('marks a form Edited while its amounts differ from when the dialog opened', () => {
@@ -218,6 +214,30 @@ describe('StockDialog', () => {
     });
   });
 
+  it('refuses an unreadable amount at its field, sends nothing, and chooses the form that holds it', async () => {
+    const calls = mockSaving();
+    open();
+
+    chooseJar('Oil');
+    typeIn(quantity('Oil'), 'a lot');
+    chooseJar('Flower');
+    typeIn(quantity('Flower'), '251');
+    press(save());
+
+    await waitFor(() => expect(pick('Oil')).toHaveAttribute('aria-current', 'true'));
+    expect(quantity('Oil')).toHaveAccessibleDescription(/Enter an amount as a number, like 2.5/);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('sends a point amount as the number it means', async () => {
+    const calls = mockSaving();
+    open();
+
+    typeIn(quantity('Flower'), '2.5');
+
+    expect((await sent(calls)).input.update?.[0]?.input.quantityOnHand).toBe(2.5);
+  });
+
   it('offers only the forms with no jar, with Add off until one is picked', () => {
     open();
 
@@ -227,7 +247,6 @@ describe('StockDialog', () => {
     fireEvent.click(screen.getByRole('option', { name: 'Resin' }));
 
     expect(addButton()).toBeEnabled();
-    // Picked is not added: nothing is in the list or to save until Add.
     expect(queryPick('Resin')).toBeNull();
     expect(save()).toBeDisabled();
   });
@@ -240,11 +259,10 @@ describe('StockDialog', () => {
 
     expect(pick('Resin')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    // A new form counts as edited, and adding it is itself a change.
     expect(pick('Resin')).toHaveAccessibleName(/Edited/);
     expect(save()).toBeEnabled();
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
-    expect(quantity('Resin')).toHaveValue(null);
+    expect(quantity('Resin')).toHaveValue('');
 
     typeIn(quantity('Resin'), '12');
     choose('Unit, Resin', 'g');
@@ -294,7 +312,7 @@ describe('StockDialog', () => {
     expect(save()).toBeEnabled();
 
     press(undo('Flower'));
-    expect(quantity('Flower')).toHaveValue(5);
+    expect(quantity('Flower')).toHaveValue('5');
     expect(flower().getByRole('button', { name: 'Low Stock' })).toBeInTheDocument();
     expect(save()).toBeDisabled();
 
@@ -313,11 +331,9 @@ describe('StockDialog', () => {
     expect(queryPick('Resin')).toBeNull();
     expect(inDialog().queryByRole('button', { name: 'Undo Remove Resin' })).toBeNull();
     expect(save()).toBeDisabled();
-    // Its form is on offer again, and the first jar is chosen.
     expect(addForm()).toBeInTheDocument();
     expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
 
-    // Saved beside another change, it is in no list.
     chooseJar('Oil');
     typeIn(quantity('Oil'), '40');
     const { input } = await sent(calls);
@@ -410,10 +426,9 @@ describe('StockDialog', () => {
     const alert = await inDialog().findByRole('alert');
     expect(alert).toHaveTextContent('You cannot change this coven.');
     expect(undo('Flower')).toBeInTheDocument();
-    // An issue naming no form marks none.
     expect(pick('Oil')).not.toHaveAccessibleName(/Needs a Fix/);
     chooseJar('Oil');
-    expect(quantity('Oil')).toHaveValue(40);
+    expect(quantity('Oil')).toHaveValue('40');
     expect(router.refresh).not.toHaveBeenCalled();
     expect(save()).toBeEnabled();
   });
@@ -438,7 +453,6 @@ describe('StockDialog', () => {
     typeIn(quantity('Oil'), '-1');
     addJar('Resin');
     typeIn(threshold('Resin'), '-2');
-    // Chosen when Save is pressed: a form with no issue.
     chooseJar('Flower');
     press(save());
 
@@ -474,7 +488,7 @@ describe('StockDialog', () => {
 
     const jar = await inDialog().findByRole('group', {
       name: 'Resin',
-      description: 'The coven already holds a jar of this form',
+      description: 'Error: The coven already holds a jar of this form',
     });
     expect(jar).toBeInTheDocument();
     expect(pick('Resin')).toHaveAccessibleName(/Needs a Fix/);
@@ -502,8 +516,8 @@ describe('StockDialog', () => {
     expect(inDialog().queryByRole('list')).toBeNull();
     const blank = inDialog().getByRole('group', { name: 'No Form Chosen' });
     expect(blank).toHaveAccessibleDescription('Add a form to enter its stock.');
-    expect(within(blank).getByRole('spinbutton', { name: 'Quantity' })).toBeDisabled();
-    expect(within(blank).getByRole('spinbutton', { name: 'Low Stock At' })).toBeDisabled();
+    expect(within(blank).getByRole('textbox', { name: 'Quantity' })).toBeDisabled();
+    expect(within(blank).getByRole('textbox', { name: 'Low Stock At' })).toBeDisabled();
     expect(within(blank).getByRole('combobox', { name: 'Unit' })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -523,7 +537,7 @@ describe('StockDialog', () => {
     addJar('Oil');
 
     expect(inDialog().queryByRole('group', { name: 'No Form Chosen' })).toBeNull();
-    expect(inDialog().queryByRole('spinbutton', { name: 'Quantity' })).toBeNull();
+    expect(inDialog().queryByRole('textbox', { name: 'Quantity' })).toBeNull();
     expect(quantity('Oil')).toBeEnabled();
     expect(unit('Oil')).not.toHaveAttribute('aria-disabled');
     expect(removeButton('Oil')).toBeInTheDocument();
@@ -536,8 +550,7 @@ describe('StockDialog openOn', () => {
 
     expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Oil')).toHaveValue(50);
-    // Nothing was added: a held form needs no new row.
+    expect(quantity('Oil')).toHaveValue('50');
     expect(queryPick('Resin')).toBeNull();
     expect(save()).toBeDisabled();
   });
@@ -548,11 +561,10 @@ describe('StockDialog openOn', () => {
 
     expect(pick('Resin')).toHaveAttribute('aria-current', 'true');
     expect(pick('Flower')).not.toHaveAttribute('aria-current');
-    expect(quantity('Resin')).toHaveValue(null);
+    expect(quantity('Resin')).toHaveValue('');
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
     // The one new row, not two, and the form is no longer on offer under Add Form.
     expect(inDialog().getAllByRole('button', { name: /^Resin\b/ })).toHaveLength(1);
-    // Opened, the dialog is unedited: the row is a place to fill, not a change.
     expect(save()).toBeDisabled();
 
     typeIn(quantity('Resin'), '12');

@@ -2,14 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getAuthTables } from 'better-auth/db';
 import { IMPERSONATION_PATHS, impersonationEnabled } from '@/lib/impersonation';
 import { warmImport } from '../support/warm-import';
+import { ORIGIN } from '../support/constants';
 
 warmImport(() => import('@/lib/auth'));
 
 // Better Auth's `admin` plugin is registered for impersonation alone, and only where both hold:
 // the flag is set and the deploy target is not production. Elsewhere it is never constructed, so
 // its endpoints are absent rather than refusing (claude-docs/auth/impersonation.md).
-
-const ORIGIN = 'http://localhost:8000';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -35,7 +34,6 @@ async function authUnder(flag: string, target: string) {
   return (await import('@/lib/auth')).auth;
 }
 
-/** Every `/admin/*` path the instance mounts, whichever plugin brought it. */
 function mountedAdminPaths(auth: Awaited<ReturnType<typeof authUnder>>): string[] {
   return Object.values(auth.api as Record<string, { path?: string }>)
     .map((endpoint) => endpoint.path)
@@ -43,7 +41,6 @@ function mountedAdminPaths(auth: Awaited<ReturnType<typeof authUnder>>): string[
     .sort();
 }
 
-/** What the handler answers for a bare POST to `path`, signed out. */
 async function statusOf(auth: Awaited<ReturnType<typeof authUnder>>, path: string) {
   const response = await auth.handler(
     new Request(`${ORIGIN}/api/auth${path}`, {
@@ -55,8 +52,6 @@ async function statusOf(auth: Awaited<ReturnType<typeof authUnder>>, path: strin
   return response.status;
 }
 
-// One environment each way: which environments turn it on is
-// impersonationEnabled's, above.
 describe('registration', () => {
   it('mounts exactly the two impersonation endpoints where it is on', async () => {
     const auth = await authUnder('true', 'preview');
@@ -64,7 +59,6 @@ describe('registration', () => {
     // The allowlist, compared by name: an endpoint a Better Auth upgrade adds
     // fails here rather than going through unnoticed.
     expect(mountedAdminPaths(auth)).toEqual([...IMPERSONATION_PATHS].sort());
-    // Answers, refusing a signed-out caller, rather than 404ing.
     expect(await statusOf(auth, '/admin/impersonate-user')).toBe(401);
   });
 

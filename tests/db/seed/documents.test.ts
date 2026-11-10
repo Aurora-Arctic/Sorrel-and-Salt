@@ -1,25 +1,26 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { seedDocuments } from '@/db/seed/documents';
 import type { SeedDocument } from '@/db/seed/types';
 import { E } from '../../support/as-user';
 import { insertDocument, insertDocumentVersion } from '../../support/db/insert-document';
+import { useTestDatabase } from '../../support/db/database';
 
 // What running the documents seed writes: each file as its document and published version 1, dated by its front matter, and
 // nothing once a document holds a version, so a keeper's published text is never overwritten. The shape every seed shares —
 // stamps, idempotency, no resurrection, the dry run — is index.test.ts's; that the shipped files read clean is documents-files.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

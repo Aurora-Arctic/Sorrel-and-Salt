@@ -83,10 +83,8 @@ describe('PageNav', () => {
         .map((link) => link.getAttribute('href')),
     ).toEqual(['#two', '#three']);
     expect(group).not.toContainElement(screen.getByRole('link', { name: 'First' }));
-    // The label is not an entry.
     expect(screen.getAllByRole('link')).toHaveLength(3);
 
-    // The observer still reaches an entry inside the group.
     enter('three', true);
     expect(screen.getByRole('link', { name: 'Third' })).toHaveAttribute('aria-current', 'location');
     expect(screen.getByRole('link', { name: 'First' })).not.toHaveAttribute('aria-current');
@@ -118,12 +116,10 @@ describe('PageNav', () => {
   // view; wider, it stands open with no toggle. happy-dom keeps a closed disclosure's content in the
   // accessibility tree, so the fold's state is its `open` attribute, read from the group it is.
   describe('collapsible', () => {
-    /** The summary has no ARIA role, so it is found as the disclosure group's own toggle. */
     const toggleOf = (fold: HTMLElement) => fold.querySelector(':scope > summary') as HTMLElement;
 
     afterEach(() => vi.restoreAllMocks());
 
-    /** Reports the tablet band (min-width) as matching, keeping the environment's reduced motion. */
     function wideViewport() {
       vi.spyOn(window, 'matchMedia').mockImplementation(
         (query: string) =>
@@ -160,7 +156,6 @@ describe('PageNav', () => {
       expect(fold).toHaveAttribute('open');
       expect(within(fold).getByRole('link', { name: 'First' })).toHaveAttribute('href', '#one');
 
-      // The environment reports reduced motion, so the close waits for no slide.
       fireEvent.click(toggleOf(fold));
       expect(fold).not.toHaveAttribute('open');
       expect(screen.getByRole('navigation', { name: 'On This Page' })).toBe(nav);
@@ -184,8 +179,6 @@ describe('PageNav', () => {
     });
   });
 
-  // `data-more-above` and `data-more-below` are the state the page's stylesheet reads to fade an edge
-  // that hides entries: attributes on the navigation, not copy or class.
   describe('scroll-edge attributes', () => {
     let frames: FrameRequestCallback[] = [];
 
@@ -196,7 +189,6 @@ describe('PageNav', () => {
     });
     afterEach(() => vi.restoreAllMocks());
 
-    /** Gives the navigation a scroll box and position, fires a scroll and runs the queued frame. */
     function scroll(el: HTMLElement, box: { top: number; height: number; client: number }) {
       Object.defineProperty(el, 'scrollHeight', { configurable: true, value: box.height });
       Object.defineProperty(el, 'clientHeight', { configurable: true, value: box.client });

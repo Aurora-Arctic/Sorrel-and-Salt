@@ -3,6 +3,8 @@
 import { type ReactElement, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
+import Skeleton from '../Skeleton';
+import SkeletonText from '../Skeleton/text';
 import { ChevronIcon } from '../IconTip/icons';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
@@ -35,7 +37,12 @@ const inTabletBand = (): boolean =>
   typeof window.matchMedia === 'function' && window.matchMedia(TABLET_BAND).matches;
 const inTabletBandNever = (): boolean => false;
 
-export default function PageNav({ label, entries, collapsible }: PageNavProps): ReactElement {
+export default function PageNav({
+  label,
+  entries,
+  collapsible,
+  pending,
+}: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
   const wide = useSyncExternalStore(subscribeToBand, inTabletBand, inTabletBandNever);
   const hydrated = useHydrated();
@@ -51,7 +58,6 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
       .filter((el): el is HTMLElement => el !== null);
     if (targets.length === 0) return;
 
-    // Sections currently inside the band; the topmost one in page order wins.
     const visible = new Set<string>();
     const observer = new IntersectionObserver(
       (changes) => {
@@ -113,43 +119,59 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
           .join(' ') || undefined
       }
     >
-      <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
-        {entry.label}
-      </a>
+      {pending ? (
+        <span className="page-nav__pending">
+          <SkeletonText>{entry.label}</SkeletonText>
+        </span>
+      ) : (
+        <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
+          {entry.label}
+        </a>
+      )}
     </li>
   );
 
   // The entries stay one flat list for the observer above; only the drawing
-  // nests a group, its label naming its list.
-  const list = (
-    <ul>
-      {itemsOf(entries).map((item, at) =>
-        item.kind === 'entry' ? (
-          link(item.entry)
-        ) : (
-          <li
-            key={`group-${at}`}
-            className={
-              [
-                item.entries[0]?.apart && 'page-nav__apart',
-                // A group of narrow-only entries is hidden whole, label included.
-                item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
-              ]
-                .filter(Boolean)
-                .join(' ') || undefined
-            }
-          >
-            <span className="page-nav__group" id={`${groupId}-${at}`}>
-              {item.label}
+  // nests a group, its label naming its list. A skeleton with no entries draws bars.
+  const list =
+    pending && entries.length === 0 ? (
+      <ul aria-hidden="true">
+        {Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
+          <li key={at}>
+            <span className="page-nav__pending">
+              <Skeleton shape="line" quiet />
             </span>
-            <ul aria-labelledby={`${groupId}-${at}`}>
-              {item.entries.map((entry) => link(entry, false))}
-            </ul>
           </li>
-        ),
-      )}
-    </ul>
-  );
+        ))}
+      </ul>
+    ) : (
+      <ul aria-hidden={pending ? true : undefined}>
+        {itemsOf(entries).map((item, at) =>
+          item.kind === 'entry' ? (
+            link(item.entry)
+          ) : (
+            <li
+              key={`group-${at}`}
+              className={
+                [
+                  item.entries[0]?.apart && 'page-nav__apart',
+                  item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
+            >
+              <span className="page-nav__group" id={`${groupId}-${at}`}>
+                {pending ? <SkeletonText>{item.label}</SkeletonText> : item.label}
+              </span>
+              <ul aria-labelledby={`${groupId}-${at}`}>
+                {item.entries.map((entry) => link(entry, false))}
+              </ul>
+            </li>
+          ),
+        )}
+      </ul>
+    );
 
   return (
     <nav

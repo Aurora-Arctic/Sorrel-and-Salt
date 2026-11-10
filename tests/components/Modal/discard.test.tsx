@@ -2,18 +2,14 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { type ReactElement, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The App Router as a component test sees it: each call a mock. Vitest hoists
-// the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { default: Modal, DiscardQuestion, useDiscardGuard } = await import('@/components/Modal');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// useDiscardGuard's hold on leaving the page, through useLeaveGuard: a tab close or reload asks the browser's question wherever the form is, and an in-app navigation asks Discard or Keep Editing from a form on a page.
 // In a modal the page behind is inert and the navigations that start there are the form's own, after a save or discard, so they go unheld (claude-docs/components/modal.md, "Unsaved changes"). On a page the question opens as its own dialog; in a modal it is drawn over the form.
 
-/** A form with one field, guarded, drawing the question over itself while asking. */
 function GuardedForm({ close = () => {} }: { close?: () => void }): ReactElement {
   const [name, setName] = useState('');
   const discard = useDiscardGuard(name !== '');
@@ -30,7 +26,6 @@ function GuardedForm({ close = () => {} }: { close?: () => void }): ReactElement
   );
 }
 
-/** A link elsewhere on the page. */
 function Go(): ReactElement {
   const navigation = usePendingNavigation();
   return (
@@ -45,7 +40,6 @@ const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
 const type = (value: string) =>
   fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value } });
 
-/** A tab close or reload as the browser raises it: true when something cancelled it. */
 function unload(): boolean {
   const event = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(event);
@@ -85,7 +79,6 @@ describe('useDiscardGuard on a page', () => {
     fireEvent.click(button('Go'));
     const dialog = question();
     expect(dialog).toBeInTheDocument();
-    // A dialog of its own, not a card in the form.
     expect(dialog!.closest('form')).toBeNull();
     await waitFor(() =>
       expect(within(dialog!).getByRole('button', { name: 'Keep Editing' })).toHaveFocus(),
@@ -97,7 +90,6 @@ describe('useDiscardGuard on a page', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
     expect(router.push).not.toHaveBeenCalled();
 
-    // Escape is Keep Editing too.
     fireEvent.click(button('Go'));
     fireEvent(question()!, new Event('cancel', { cancelable: true }));
     expect(question()).toBeNull();

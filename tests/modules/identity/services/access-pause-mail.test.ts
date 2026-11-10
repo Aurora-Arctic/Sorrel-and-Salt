@@ -9,10 +9,7 @@ import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { accessPauseStep } from '@/modules/identity/jobs/access-pause-mail-steps';
 import { A, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-
-// The mail a site access pause sends its user. Setting one starts a run holding the pause's id, the kind and the origin alone;
-// the run's step reads the user and the pause when it sends, and sends nothing once the pause is lifted or gone. The note is
-// for staff and reaches no mail; the message to the user does. What the template says is tests/emails/pause-notices.test.tsx.
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -39,7 +36,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = 'Staff only: shared the account.';
 const MESSAGE = 'Your access is paused while we look into a report.';
@@ -51,13 +47,11 @@ const emailOf = async (userId: string) =>
 const pausesOf = async (userId: string) =>
   sql`select id, message from user_access_pauses where user_id = ${userId} order by created_at`;
 
-/** The access pause mail runs started so far, each run's one argument. */
 const pauseRuns = () =>
   startJob.mock.calls
     .filter(([job]) => job === accessPauseMail)
     .map(([, args]) => (args as [AccessPauseMail])[0]);
 
-/** Runs each started run's step, as the job would, and returns the mails the transport took. */
 async function sendPauseRuns() {
   sent.length = 0;
   for (const run of pauseRuns()) await accessPauseStep(run);

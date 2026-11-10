@@ -12,9 +12,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
-// The two reads behind `/keepers/users`: the list and the providers linked to each listed account.
-// Both are a site admin's alone, refused at the service by direct call rather than by the page being out of reach (claude-docs/auth/admin-users.md, "The user list").
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -22,13 +19,9 @@ useTestDatabase((client) => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-// Invented accounts beside the cast, written once for the file: a pending
-// signup, a soft-deleted user, and a name holding the LIKE wildcards.
 const PENDING = '00000000-0000-0000-0000-0000000000a1';
 const DELETED = '00000000-0000-0000-0000-0000000000a2';
 const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
-// Invented accounts under support time-outs and site access pauses: one standing with no end date, one standing to a date,
-// one run out and one lifted of each. The last two hold a row each that no longer stands.
 const TIMED_OPEN = '00000000-0000-0000-0000-0000000000b1';
 const TIMED_DATED = '00000000-0000-0000-0000-0000000000b2';
 const TIMED_RUN_OUT = '00000000-0000-0000-0000-0000000000b3';
@@ -91,7 +84,6 @@ beforeAll(async () => {
   `;
 });
 
-// Every live user but the seed's bootstrap user, which the list leaves out.
 async function listableUsers(): Promise<ListedUserRow[]> {
   return sql<ListedUserRow[]>`
     select id, name from users
@@ -107,7 +99,6 @@ async function names(filter: UserFilter): Promise<string[]> {
 describe('listUsers', () => {
   it('lists every live user to a keeper, by name and then id', async () => {
     const expected = await listableUsers();
-    // The cast and this file's two live users.
     expect(expected.map((row) => row.id)).toEqual(
       expect.arrayContaining([A.id, B.id, C.id, D.id, E.id, PENDING, WILDCARD]),
     );
@@ -279,8 +270,6 @@ describe('providersOf', () => {
   });
 });
 
-// The terms, disclaimer and code of ethics versions each user last agreed to, which the user table and the user modal show as one
-// joint version: the numbers on their row, none for one who never agreed.
 describe('the versions a user agreed to', () => {
   const AGREED = { agreedTermsVersion: 7, agreedDisclaimerVersion: 3, agreedEthicsVersion: 5 };
   const NEVER = {

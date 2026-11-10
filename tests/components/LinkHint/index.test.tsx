@@ -42,9 +42,7 @@ describe('LinkHint', () => {
   });
 });
 
-// A link that wears the chain icon shows no dot: the icon is what turns into
-// the loading ring while the link is pending. The
-// ring is the shared Spinner, found by its class as it has no role.
+// A link wearing the chain icon shows no dot: the icon turns into the loading ring, the shared Spinner, found by class as it has no role.
 describe('LinkIconHint', () => {
   beforeEach(() => {
     pending = false;

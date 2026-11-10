@@ -12,7 +12,8 @@ import { WORKS } from './works';
 
 // The attribution audit: a read over every entry file that ranks the citations whose source may describe another taxon than the
 // entry's formal name, for the curator to settle. Pure: files, sources and fetched Wikipedia pages in, a report out (`audit-run.ts`
-// does the I/O). Each heuristic is a reason to doubt, so a candidate carries its evidence (claude-docs/db/compendium-seed/README.md, "The attribution audit").
+// does the I/O). Each heuristic is a reason to doubt, so a candidate carries its evidence
+// (claude-docs/compendium/compendium-seed/README.md, "The attribution audit").
 
 const TAXONOMIC = new Set(['botanical', 'fungal', 'zoological']);
 
@@ -155,7 +156,9 @@ function nameKey(value: string): string {
 /**
  * Whether a Wikipedia page is the article on exactly the formal name given, for a
  * mineral or chemical (no taxobox). Rocks, groups and pages with no infobox do not
- * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Matching a mineral or chemical page")
+ * count; a variety needs its own article. Anything less stays a doubt for a
+ * person. (claude-docs/compendium/compendium-seed/README.md, "Matching a mineral
+ * or chemical page")
  */
 export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
   const templates = templatesIn(page);

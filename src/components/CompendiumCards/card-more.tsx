@@ -2,7 +2,9 @@
 
 import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
+import { preloadOnIntent, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import { MoreMenu } from '../IconTip';
+import { covenChoiceModule } from '../IngredientEntry/lazy-coven-choice';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
 import EditStock, { type StockPlace } from '../IngredientEntry/edit-stock';
@@ -19,12 +21,11 @@ import type { CompendiumCardMoreProps, CompendiumCardPlace } from './types';
 
 // The three dots on a compendium card: Edit Stock, Annotate, Make It Ours and Remove, in the dialogs
 // the entry page shares. Drawn only when it holds a choice; Quick Look carries `leaveHref`, where a
-// remove leads (claude-docs/components/compendium-cards.md, "The More menu on a card").
+// remove leads (claude-docs/components/compendium-cards.md, "The three dots").
 
 type Asking = 'stock' | 'annotate' | 'own' | 'remove';
 type Can = 'canAnnotate' | 'canMakeOurs' | 'canRemove';
 
-/** The covens a choice may act in: those that hold the entry (the page's) and let the role do it. */
 const among = (places: readonly CompendiumCardPlace[], can: Can) =>
   places.filter((place) => place[can]);
 
@@ -35,6 +36,7 @@ export default function CompendiumCardMore({
   places,
   leaveHref,
 }: CompendiumCardMoreProps): ReactElement | null {
+  usePreloadWhenIdle(covenChoiceModule);
   const [asking, setAsking] = useState<Asking>();
   const [alert, setAlert] = useState<string>();
   const [target, setTarget] = useState(places[0]?.workspaceId);
@@ -42,7 +44,6 @@ export default function CompendiumCardMore({
   const back = () => (trigger.current?.isConnected ? trigger.current : null);
   const settle = () => setAsking(undefined);
 
-  // The covens that may update stock carry the stock the page read for them.
   const stockers = places.flatMap(({ workspaceId, name: coven, stock }): StockPlace[] =>
     stock ? [{ workspaceId, name: coven, stock }] : [],
   );
@@ -50,8 +51,6 @@ export default function CompendiumCardMore({
   const owners = among(places, 'canMakeOurs');
   const removers = among(places, 'canRemove');
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
-  // One coven that may annotate: a link to the entry's page with its dialog open, pressed open at
-  // once as the other dialog links are.
   const annotateHref = annotators.length === 1 ? annotators[0].annotateHref : ('' as Route);
   const openAnnotate = useOpenModalClick(annotateHref, ANNOTATE_HEADING);
   const writes = useCupboardWrites({
@@ -110,7 +109,12 @@ export default function CompendiumCardMore({
 
   return (
     <>
-      <MoreMenu ref={trigger} name={name} {...choices} />
+      <MoreMenu
+        ref={trigger}
+        name={name}
+        preload={preloadOnIntent(covenChoiceModule)}
+        {...choices}
+      />
       {asking === 'stock' && (
         <EditStock
           places={stockers}

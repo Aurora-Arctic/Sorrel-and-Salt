@@ -18,8 +18,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The override form of a compendium entry in a coven's cupboard (claude-docs/components/cupboard-entry-form.md): a field is sent only when it changed, and null hands it back to the compendium.
-// An emptied list is sent as an empty list, the coven having cleared it on purpose.
+// claude-docs/components/cupboard-entry-form.md
 
 const COMPENDIUM: CompendiumValues = {
   name: 'Testwort',
@@ -76,8 +75,6 @@ const save = () => screen.getByRole('button', { name: 'Save Annotation' });
 const label = () => screen.getByRole('textbox', { name: 'Label' });
 
 describe('CupboardEntryForm', () => {
-  // A tip only where it says a rule: the
-  // label's uniqueness, and that an emptied list says the entry has none.
   it('gives Label and the four lists a tip, and Description and Safety Notes none', () => {
     renderForm();
 
@@ -135,7 +132,6 @@ describe('CupboardEntryForm', () => {
     const calls = captureSaves();
     const onDone = renderForm();
 
-    // Colours start as the Compendium's single entry; taking it out is the coven clearing them.
     press('Remove green');
     press(save());
 
@@ -179,5 +175,52 @@ describe('CupboardEntryForm', () => {
     await waitFor(() => expect(label()).toBeInvalid());
     expect(label()).toHaveAccessibleDescription(/another entry/i);
     expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('lists a refused Save at the top, takes the focus there, and links to the field', async () => {
+    mockGraphQLError('AnnotateCupboardEntry', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['label'], message: 'Another entry in this coven has that label' }],
+    });
+    renderForm();
+
+    typeIn(label(), 'Fixture Wort');
+    await act(async () => fireEvent.click(save()));
+
+    const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
+    expect(summary).toHaveFocus();
+    expect(screen.getByRole('link', { name: /another entry/i })).toHaveAttribute(
+      'href',
+      `#${label().id}`,
+    );
+  });
+
+  it('tidies a label when it is left, and keeps a description’s line breaks', () => {
+    captureSaves();
+    renderForm();
+
+    typeIn(label(), '  Fixture   Wort ');
+    fireEvent.blur(label());
+    expect(label()).toHaveValue('Fixture Wort');
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One\n\nTwo');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One\n\nTwo');
+  });
+
+  it('trims the ends of a description and safety notes when they are left', () => {
+    captureSaves();
+    renderForm();
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One  \n\nTwo   \n\n  ');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One  \n\nTwo');
+
+    const notes = screen.getByRole('textbox', { name: 'Safety Notes' });
+    typeIn(notes, '  Keep dry \n');
+    fireEvent.blur(notes);
+    expect(notes).toHaveValue('Keep dry');
   });
 });

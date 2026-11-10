@@ -14,8 +14,10 @@ import {
   FilterSelectField,
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   type FormHistory,
+  PlainTextField,
   ReasonField,
   SearchField,
   RadioGroupField,
@@ -25,9 +27,6 @@ import {
   fieldDescription,
 } from '.';
 
-// Render-only; the forms that use the fields assert them. Each TextField sits in a
-// react-hook-form `FormProvider`, with the error put in the form's state. The
-// hint's tip opens on hover, a tap, or the ⓘ's focus.
 const meta = {
   title: 'Forms / Field',
 } satisfies Meta;
@@ -39,8 +38,6 @@ interface Values {
   group: string;
 }
 
-// An error is shown once the form has been submitted, or its field edited and
-// left, so the form is submitted on mount against a resolver that finds it.
 const Form = ({ errors, children }: { errors?: FieldErrors<Values>; children: ReactNode }) => {
   const methods = useForm<Values>({
     defaultValues: { name: 'Testwort', group: '' },
@@ -74,11 +71,8 @@ const NOTED_OPTIONS = [
   GROUP_OPTIONS[2],
 ];
 
-// An error found away from the field itself, as a server's refusal is.
 const TAKEN = { name: { type: 'server', message: 'Testwort is already taken.' } };
 
-// Pending: its text being looked up, the spinner inside the box at its right end. With Note: shut
-// while something else is checked.
 export const States: Story = {
   render: () => (
     <StatesGrid
@@ -256,8 +250,6 @@ export const States: Story = {
   ),
 };
 
-// A plain-state form's own control in the same shell: the ids and the
-// attributes come from `fieldDescription`, the control is the caller's.
 export const PlainShell: Story = {
   render: () => {
     const { aria, ...field } = fieldDescription({
@@ -280,9 +272,6 @@ export const PlainShell: Story = {
   },
 };
 
-// A slide toggle held in the caller's state as a list filter holds it: off, on,
-// and shut either way, each label above its toggle. Tab to one for the focus
-// ring; press and hold for the stretched thumb.
 const Toggle = ({
   label,
   on = false,
@@ -340,7 +329,6 @@ export const RadioGroup: Story = {
   },
 };
 
-// The strip layout: the same native radios, drawn as one bar of icons, None last.
 export const RadioStrip: Story = {
   render: () => {
     const [icon, setIcon] = useState<FormGroupIcon | ''>('');
@@ -367,8 +355,6 @@ export const RadioStrip: Story = {
   },
 };
 
-// The segmented layout: a text bar, each segment's name with how many
-// entries it would leave. The compendium filter's Toxic, and its Match without counts.
 export const RadioSegmented: Story = {
   render: () => {
     const [toxic, setToxic] = useState('any');
@@ -404,8 +390,6 @@ export const RadioSegmented: Story = {
   },
 };
 
-// The cards layout: one compact bordered card per row, the hint beside the name and wrapping
-// under it on a phone. Nothing is chosen at first, and the error shows when it is not.
 export const RadioCards: Story = {
   render: () => {
     const [value, setValue] = useState<string | null>(null);
@@ -433,8 +417,6 @@ export const RadioCards: Story = {
   },
 };
 
-// A segmented group disabled as a whole, as the compendium filter's Toxic is when every
-// matching entry shares one toxicity: dashed borders, no hover, Any selected, a hint why.
 export const RadioSegmentedDisabled: Story = {
   render: () => (
     <div className="form" style={{ maxWidth: '24rem' }}>
@@ -456,14 +438,10 @@ export const RadioSegmentedDisabled: Story = {
   ),
 };
 
-// A form's row of actions: Save off until there is something to save, then
-// on, then busy; Cancel quiet; Delete apart at the far end on an edit; and a
-// form that sends rather than saves, its submit renamed.
 const noop = () => {};
 
 type ActionHandlers = { onCancel: () => void; onDelete: () => void; onSave: () => void };
 
-// Each button calls the handler its row was given, which the Actions panel logs.
 export const Actions: StoryObj<ActionHandlers> = {
   args: { onCancel: fn(), onDelete: fn(), onSave: fn() },
   render: ({ onCancel, onDelete, onSave }) => (
@@ -508,9 +486,6 @@ export const Actions: StoryObj<ActionHandlers> = {
   ),
 };
 
-// The row at work, a form of one field: Save wakes when the field changes, holds
-// busy, then settles; Cancel restores the field; Delete removes the form.
-// `status` is an arg so the controls panel sets it.
 type InUseArgs = ActionHandlers & {
   status: 'editing' | 'saving' | 'saved' | 'cancelled' | 'deleted';
 };
@@ -571,8 +546,6 @@ export const ActionsInUse: StoryObj<InUseArgs> = {
     );
   },
 };
-// A form's Undo and Redo, which read the form's history from its context and
-// draw nothing without one: both ready, then neither.
 const history = (canUndo: boolean, canRedo: boolean): FormHistory => ({
   undo: noop,
   redo: noop,
@@ -604,7 +577,6 @@ export const HistoryButtons: Story = {
   ),
 };
 
-// A keeper change's optional Reason, held in plain state, its hint behind the ⓘ.
 export const Reason: Story = {
   render: () => {
     const [reason, setReason] = useState('');
@@ -616,9 +588,6 @@ export const Reason: Story = {
   },
 };
 
-// A list filter's search box, its submit the magnifier at its end, named
-// Search. Its form goes nowhere here: a filter's FilterForm opens the list
-// (Forms / Filter Form). Tab past the text for the submit's focus ring.
 const Search = () => {
   const [query, setQuery] = useState('');
   return (
@@ -640,9 +609,6 @@ const Search = () => {
 
 export const SearchBox: Story = { render: () => <Search /> };
 
-// A list filter's closed set as the browser draws it once hydrated: the
-// select-only box and the same set typed into. The server draws each as a native
-// select at the same width, so hydration moves nothing.
 const GROUPS = [
   { value: 'fixture-substance', label: 'Fixture Substance' },
   { value: 'testwort-wards', label: 'Testwort Wards' },
@@ -674,5 +640,84 @@ export const FilterSelect: Story = {
         typeahead
       />
     </form>
+  ),
+};
+
+const PlainTextDemo = () => {
+  const [value, setValue] = useState('  Testwort   Fixture ');
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <PlainTextField label="Name" value={value} onChange={setValue} limit={20} />
+    </div>
+  );
+};
+
+/** No react-hook-form: leave the field and the spaces are tidied; the count shows from 75% of the limit. */
+export const PlainText: Story = { render: () => <PlainTextDemo /> };
+
+interface SummaryValues {
+  name: string;
+  email: string;
+}
+
+const Summarised = () => {
+  const methods = useForm<SummaryValues>({
+    defaultValues: { name: '', email: '' },
+    mode: 'onTouched',
+    shouldFocusError: false,
+    resolver: async (values) => ({
+      values: {},
+      errors: {
+        ...(values.name ? {} : { name: { type: 'required', message: 'Enter a name' } }),
+        ...(values.email.includes('@')
+          ? {}
+          : { email: { type: 'pattern', message: 'Enter an email address' } }),
+      },
+    }),
+  });
+  return (
+    <FormProvider {...methods}>
+      <form
+        className="form"
+        style={{ maxWidth: '32rem' }}
+        onSubmit={methods.handleSubmit(() => {})}
+        noValidate
+      >
+        <FormErrorSummary />
+        <TextField<SummaryValues> name="name" label="Name" required />
+        <TextField<SummaryValues> name="email" label="Email" type="email" required />
+        <button type="submit" className="btn">
+          Save
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+/** Press Save with the fields empty: the summary takes focus and links to each field. */
+export const ErrorSummary: Story = { render: () => <Summarised /> };
+
+/** Phone keyboards and browser help: each field below sets the attributes an identifier needs. */
+export const BrowserAttributes: Story = {
+  render: () => (
+    <Form>
+      <TextField<Values>
+        name="name"
+        label="Email"
+        type="email"
+        autoComplete="email"
+        enterKeyHint="next"
+      />
+      <TextField<Values> name="group" label="Phone" type="tel" autoComplete="tel" />
+    </Form>
+  ),
+};
+
+/** Typing past the limit is allowed; the count shows from 75% and Save refuses. */
+export const SoftLimit: Story = {
+  render: () => (
+    <Form>
+      <TextField<Values> name="name" label="Name" limit={10} />
+    </Form>
   ),
 };

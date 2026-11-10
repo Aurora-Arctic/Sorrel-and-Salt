@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
+import { COMPENDIUM_CACHE_DATABASE, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // The compendium read answered from Next's data cache, not Postgres, until a keeper's write expires it. Runs
@@ -9,14 +9,8 @@ import { signInAs } from './session';
 // no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"); serial, since the second test reads what the first warmed.
 test.describe.configure({ mode: 'serial' });
 
-async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(COMPENDIUM_CACHE_DATABASE), { onnotice: () => {} });
-  try {
-    return await work(sql);
-  } finally {
-    await sql.end();
-  }
-}
+const inDatabase = <T>(work: (sql: postgres.Sql) => Promise<T>) =>
+  withE2eSql(work, COMPENDIUM_CACHE_DATABASE);
 
 const run = randomBytes(4).toString('hex');
 const asAdmin = { database: COMPENDIUM_CACHE_DATABASE };
@@ -43,14 +37,10 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   await expect(add).toBeVisible();
   await expect(page.getByRole('link', { name: renamed, exact: true })).toHaveCount(0);
 
-  // The control: a filter never read before misses the cache, so it reads
-  // Postgres, which holds the rename.
   await page.goto(`/curator/compendium?query=${encodeURIComponent(renamed)}`);
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
-// A keeper's write expires the tag, so the very next load reads
-// Postgres — the admin's own entry, and the rename the cache was hiding above.
 test('an admin edit is visible on the next page load', async ({ page }) => {
   await signInAs(page, `writer-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
   await page.goto('/curator/compendium');
@@ -72,7 +62,6 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
     .getByRole('option', { name: 'None' })
     .click();
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
-  // The edit dialog, named by the entry's saved name, is the save landed.
   await expect(
     page.getByRole('dialog', { name: `Edit Ingredient, ${added}`, exact: true }),
   ).toBeVisible();
@@ -82,8 +71,6 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
-// A compendium entry's share card is drawn once and then served from Next's cache, under the same tag as the
-// read it draws from, so the keeper's write that expires the read draws the card afresh.
 test("an entry's share card is drawn once, until a keeper edit draws it again", async ({
   page,
 }) => {
@@ -114,7 +101,6 @@ test("an entry's share card is drawn once, until a keeper edit draws it again", 
   );
   expect(await draw()).toEqual(first);
 
-  // Any admin write to the compendium expires the tag; adding an entry is the one the test above proves.
   await page.goto('/curator/compendium');
   const add = page.getByRole('link', { name: 'Add Ingredient' });
   await add.click();
@@ -134,6 +120,5 @@ test("an entry's share card is drawn once, until a keeper edit draws it again", 
 
   const redrawn = await draw();
   expect(redrawn).not.toEqual(first);
-  // Drawn once more, then served from the cache again.
   expect(await draw()).toEqual(redrawn);
 });

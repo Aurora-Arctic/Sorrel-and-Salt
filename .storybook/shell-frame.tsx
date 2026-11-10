@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import AdminNav from '../src/components/AdminNav';
-import { adminTarget } from '../src/components/AdminNav/target';
 import AppShell from '../src/components/AppShell';
 import ContextRow from '../src/components/ContextRow';
 import CovenNav from '../src/components/CovenNav';
@@ -89,7 +88,9 @@ export const ShellFrame = ({
   if (signedOut)
     return (
       <WorkshopPathname.Provider value={open === DEFAULT_OPEN[area] ? '/compendium' : open}>
-        <PublicFrame>{children}</PublicFrame>
+        <PublicFrame configured={['discord', 'google', 'facebook', 'microsoft']}>
+          {children}
+        </PublicFrame>
       </WorkshopPathname.Provider>
     );
   return (
@@ -111,11 +112,7 @@ export const ShellFrame = ({
           <RouteModalProvider>
             <ContextRow
               lead={
-                <PendingLink
-                  href="/keepers"
-                  className="context-row__name"
-                  navigationTarget={adminTarget('/keepers')}
-                >
+                <PendingLink href="/keepers" className="context-row__name">
                   Admin
                 </PendingLink>
               }

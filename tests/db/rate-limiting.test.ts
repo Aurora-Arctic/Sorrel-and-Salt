@@ -1,5 +1,6 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
+import { useTestDatabase } from '../support/db/database';
 
 // Better Auth's limiter through its real endpoint, counting in `rate_limits` (claude-docs/auth/rate-limiting.md, "Rate limiting"). NODE_ENV=production, as every deploy: outside it the limiter is off.
 // Better Auth reads NODE_ENV once at load, so it is stubbed before the first import; `TEST`, which Vitest sets, is cleared.
@@ -22,12 +23,11 @@ const OTHER_VISITOR = '198.51.100.9';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+useTestDatabase((client) => {
+  sql = client;
 });
 
 afterAll(async () => {
-  await sql.end();
   vi.unstubAllEnvs();
 });
 

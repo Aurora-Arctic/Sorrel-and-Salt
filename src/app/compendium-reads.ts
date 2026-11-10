@@ -6,7 +6,8 @@ import type {
 } from '../components/CompendiumList/types';
 import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
-import { NotFound } from '../lib/errors';
+import { Forbidden, NotFound } from '../lib/errors';
+import { orMissing } from '../lib/or-not-found';
 import { readNumberedPage } from '../lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
 import type { Session } from '../lib/session';
@@ -22,6 +23,8 @@ import {
   listCompendium,
   listCompendiumHeldIn,
   readCompendiumEntry,
+  readCompendiumReview,
+  readSourcingScore,
   variantsOf,
 } from '@/modules/ingredients';
 import type { CovenPick } from '@/modules/ingredients';
@@ -50,13 +53,11 @@ export const readCompendium = cache(
     variables: string,
     after: string | undefined,
     before: string | undefined,
-    // The admin table pages by the default; the public cards by `CARD_PAGE_SIZE`.
     size: number = DEFAULT_PAGE_SIZE,
     viewer: Session | null = null,
   ) => {
-    // Written by this page from the table a few lines below, and checked again by the service.
+    // Written by the page from its parameter table, and checked again by the service.
     const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
-    // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
     const page = await readNumberedPage(
       { after, before },
       (request) => listCompendium(filter, request, viewer),
@@ -90,7 +91,6 @@ export const readCompendiumHeldIn = cache(
   },
 );
 
-/** The page's variables as the held-in reads take them: the picked covens and Not In apart from the rest. */
 function heldInOf(variables: string): {
   covens: CovenPick;
   filter: Parameters<typeof listCompendium>[0];
@@ -106,16 +106,13 @@ function heldInOf(variables: string): {
   return { covens: covensNot ? { covenIds, covensNot } : { covenIds }, filter };
 }
 
-/** A page of entries with each one's live forms and their icons, for the table and the cards. */
 async function withForms<Page extends { edges: readonly { node: { id: string } }[] }>(page: Page) {
-  // Each entry's live forms, for the Form column: one batch for the page, through the read
-  // `Ingredient.variants` resolves through.
   const forms = await variantsOf(
     null,
     page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
   );
   const variants = forms.map((answer) => {
-    // A compendium ref is never refused.
+    // A compendium ref is never refused, so an error answer is a bug.
     if (answer instanceof Error) throw answer;
     return answer;
   });
@@ -133,7 +130,6 @@ async function withForms<Page extends { edges: readonly { node: { id: string } }
   );
   return {
     ...page,
-    // The same forms for the public card, which wears the icon, the flag and the notes of each.
     variants: variants.map((own) =>
       own.map(({ form, formId, toxic, safetyNotes }): SafetyVariant => {
         const icon = (formId && iconOfForm.get(formId)) || null;
@@ -171,10 +167,6 @@ export const readFormIcons = cache(async (): Promise<Map<string, FormGroupIcon>>
   return icons;
 });
 
-/**
- * Every live deity with its tradition's name, by id and slug, for the Deities filter; the tradition
- * tells `hecate-greek` from `hecate-roman`. Read page by page; public, so no session.
- */
 export const readDeities = cache(async () => {
   const [rows, traditions] = await Promise.all([
     allPages((page) => listDeities({}, page)),
@@ -188,10 +180,6 @@ export const readDeities = cache(async () => {
   });
 });
 
-/**
- * Every live category with its group's name and colours, and its slug, for the Categories box. Read
- * page by page; public, data-cached by the services, and `cache` keeps the request to one read.
- */
 export const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]> => {
   const rows = await allPages((page) => listCategories({}, page));
   const groups = await categoryGroupsOf([...new Set(rows.map(({ groupId }) => groupId))]);
@@ -223,7 +211,7 @@ export const readFacets = cache(async (variables: string, viewer: Session | null
   return compendiumFacets(filter, viewer);
 });
 
-/** `readFacets` over the entries the picked covens hold. Per viewer, so never data-cached. */
+/** Per viewer, so never data-cached (rule 6). */
 export const readFacetsHeldIn = cache(async (session: Session, variables: string) => {
   const { covens, filter } = heldInOf(variables);
   return compendiumFacetsHeldIn(session, covens, filter);
@@ -255,7 +243,6 @@ export async function readCardCategoriesOf(
   });
 }
 
-/** `readCardCategoriesOf` for compendium entries by id, signed out: public reference data. */
 export function readCardCategories(ids: readonly string[]): Promise<CardCategory[][]> {
   return readCardCategoriesOf(
     null,
@@ -280,3 +267,22 @@ export const readCompendiumDetails = cache(
     }
   },
 );
+
+/**
+ * The curator's review read: when the entry was last reviewed (an ISO string, since the list page sends it to a client component) and whether it shows. Per viewer, never in the cached reads. A refusal or a missing entry means no switch, never an error page.
+ */
+export function readEntryReview(curator: Session | null, id: string) {
+  if (!curator) return Promise.resolve(undefined);
+  return orMissing(async () => {
+    const found = await readCompendiumReview(curator, id);
+    // A curator's read reaches a hidden entry too, so the switch starts from the row's own flag.
+    const row = await getIngredient(curator, id);
+    return { reviewedAt: found?.reviewedAt.toISOString() ?? null, shown: row.shown };
+  }, Forbidden);
+}
+
+/** The curator's sourcing score, from its own guarded, uncached read. A refusal or a missing entry means no score. */
+export function readEntrySourcing(curator: Session | null, id: string) {
+  if (!curator) return Promise.resolve(undefined);
+  return orMissing(() => readSourcingScore(curator, id), Forbidden);
+}

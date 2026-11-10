@@ -7,11 +7,44 @@
   @include stack(3);
 }
 
-// A refusal's head is the heading alone, PageHeader's row, which the stack's gap spaces as it spaces the column.
 .invitation-acceptance > .page-header {
   margin-bottom: 0;
 }
 
+// Signed out only (the choices exist only then): the grant stands a step further from the title
+// and from the choices than the other states' lede does.
+.invitation-acceptance:has(> .invitation-acceptance__choices) {
+  row-gap: space(4);
+
+  > .header {
+    row-gap: space(3);
+  }
+}
+
 .invitation-acceptance__actions {
   margin: 0;
+}
+
+// Two equal choices side by side, each as wide as the other; one column on a phone.
+.invitation-acceptance__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: space(3);
+
+  @include phone-down {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// Quiet links at their own width, centred as a row; full width, one under the other, on a phone.
+.invitation-acceptance__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: space(3);
+
+  @include phone-down {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

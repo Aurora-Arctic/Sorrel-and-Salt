@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
@@ -9,12 +10,10 @@ import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// The form's six sections as disclosures: a new entry opens with every one open, an edit with every one closed to its summary line; each heading opens and closes its own; Open All and Close All do every one.
-// A save that finds an error in a closed section opens it so the focus reaches the field (claude-docs/components/ingredient-form.md, "Sections").
+// claude-docs/components/ingredient-form.md, "Sections fold"
 
 const SECTIONS = ['Identity', 'Details & Care', 'Correspondences', 'Relations', 'Sources', 'Forms'];
 
-/** An entry with something in its Identity, as the summary line reads it back. */
 const TESTWORT: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -33,16 +32,13 @@ function renderForm(values?: IngredientFormValues) {
   );
 }
 
-/** A section's heading button, by the section's title. */
 const toggle = (title: string) => screen.getByRole('button', { name: title });
 const expanded = (title: string) => toggle(title).getAttribute('aria-expanded') === 'true';
-/** Which sections are open, by title, in page order. */
 const openSections = () => SECTIONS.filter(expanded);
 
 // Fields are found by label (`control`), which reaches a field in a closed
 // section too, so a test can say whether it is in view.
 
-/** Changes the entry's description, so Save has something to send, and closes its section again. */
 function changeDescription() {
   fireEvent.click(toggle('Details & Care'));
   type('Description', 'A fixture herb.');
@@ -67,7 +63,6 @@ describe('IngredientForm’s sections', () => {
     expect(openSections()).toEqual([]);
     expect(control('Name')).not.toBeVisible();
     expect(control('Safety Notes')).not.toBeVisible();
-    // Each closed heading is described by its summary line, the entry's own values in Identity's.
     for (const title of SECTIONS) expect(toggle(title)).toHaveAccessibleDescription();
     expect(toggle('Identity')).toHaveAccessibleDescription(
       expect.stringMatching(/Testwort.*Fixtura testalis/),
@@ -101,7 +96,6 @@ describe('IngredientForm’s sections', () => {
     ));
 
     const openAll = screen.getByRole('button', { name: 'Open All' });
-    // In the modal's header rather than in the form.
     expect(openAll.closest('form')).toBeNull();
 
     fireEvent.click(openAll);
@@ -130,7 +124,6 @@ describe('IngredientForm’s sections', () => {
     expect(toggle('Identity')).toHaveAccessibleDescription(expect.stringContaining('Mockwort'));
     fireEvent.click(toggle('Identity'));
 
-    // The same box, never unmounted, still holding the text.
     expect(control('Name')).toBe(name);
     expect(name).toHaveValue('Mockwort');
   });
@@ -157,7 +150,6 @@ describe('IngredientForm’s sections', () => {
 
   it('opens a closed section a save finds the schema’s error in, its field focused, and sends nothing', async () => {
     const calls = acceptUpdate();
-    // A colour typed into its box and never added, which a save refuses.
     renderForm({ ...TESTWORT, drafts: { ...TESTWORT.drafts, colors: 'Fixture Red' } });
     changeDescription();
     expect(expanded('Correspondences')).toBe(false);
@@ -167,7 +159,7 @@ describe('IngredientForm’s sections', () => {
     await waitFor(() => expect(expanded('Correspondences')).toBe(true));
     const colour = control('Colour');
     expect(colour).toBeInvalid();
-    expect(colour).toHaveFocus();
+    expectSummaryLinksTo(colour);
     expect(openSections()).toEqual(['Correspondences']);
     expect(calls).toHaveLength(0);
   });
@@ -186,6 +178,6 @@ describe('IngredientForm’s sections', () => {
     await waitFor(() => expect(expanded('Details & Care')).toBe(true));
     const notes = control('Safety Notes');
     expect(notes).toBeInvalid();
-    expect(notes).toHaveFocus();
+    expectSummaryLinksTo(notes);
   });
 });

@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import { ORIGIN, PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { asTouch } from '../support/db/touch-row';
 import { asManualFix } from '../support/db/privileges';
 import { importAuth } from '../support/auth-module';
@@ -16,8 +16,10 @@ import {
 import { BREACHED_CHECK_TIMEOUT_MS } from '@/lib/breached-password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
-// Story 70 through Better Auth's real endpoints, with the breached-password service stubbed at the network:
+// Password sign-in (@story-70) through Better Auth's real endpoints, with the breached-password service stubbed at the network:
 // the policy in DESIGN.md §8, "Passwords", and claude-docs/auth/passwords.md.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -31,14 +33,11 @@ const STRONG = 'Testwort crowns the eastern hedge';
 const BREACHED = 'Testwort password breached';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
-// Every request the stub answered, so a test can read what left the server.
 const pwnedRequests: Request[] = [];
 const server = setupServer(pwnedRange([BREACHED], pwnedRequests));
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
@@ -84,7 +83,6 @@ async function credentialOf(userId: string) {
   return row as { password: string | null } | undefined;
 }
 
-/** A verified password account, so a sign-in test is not explained by the address being unproved. */
 async function verifiedAccount(password: string, email = OWNER) {
   const response = await signUp(password, email);
   expect(response.status, await response.clone().text()).toBe(200);
@@ -92,7 +90,6 @@ async function verifiedAccount(password: string, email = OWNER) {
   send.mockReset();
 }
 
-/** The link in the one mail sent so far. */
 function mailedVerifyLink(): string {
   expect(send).toHaveBeenCalledTimes(1);
   const link = send.mock.calls[0][0].text.match(/https?:\/\/\S+\/verify-email\?[^\s\]]+/)?.[0];

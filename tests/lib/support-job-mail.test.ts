@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { supportReplyMessage, supportStatusMessage } from '@/lib/support-job-mail';
+import {
+  supportClosingNoticeMessage,
+  supportReplyMessage,
+  supportStatusMessage,
+} from '@/lib/support-job-mail';
+import { ORIGIN } from '../support/constants';
 
-// The mails a job's step builds. A reply: a signed-in sender is told one is waiting, without its text, and a signed-out sender is
-// sent it whole. The received and resolved mails: linked to the request, or for a signed-out sender to the support page alone.
-
-const ORIGIN = 'http://localhost:8000';
 const REPLY = {
   requestId: 'req-1',
   requestSubject: 'The jar will not open',
@@ -26,14 +27,15 @@ describe('supportReplyMessage', () => {
     expect(message.html).not.toContain(REPLY.body);
   });
 
-  it('sends a signed-out sender the reply itself, linked to the support page alone', async () => {
+  it('tells a signed-out sender a reply is waiting, without its text, and never links to the account pages', async () => {
     const message = await supportReplyMessage(ORIGIN, 'visitor@example.test', {
       ...REPLY,
       signedOut: true,
     });
 
     expect(message.to).toBe('visitor@example.test');
-    expect(message.text).toContain(REPLY.body);
+    expect(message.text).not.toContain(REPLY.body);
+    expect(message.html).not.toContain(REPLY.body);
     expect(message.text).toContain(`${ORIGIN}/support`);
     expect(message.text).not.toContain('/account');
     expect(message.html).not.toContain('/account');
@@ -88,4 +90,47 @@ describe('supportStatusMessage', () => {
 
     expect(message.text).toContain('5 working days');
   });
+});
+
+// The mailed link carries its token in the fragment, which a browser never sends to the server or in a Referer header.
+describe('the signed-out view link', () => {
+  const TOKEN = 'Tok3n_from-the-mail';
+  const LINK = `${ORIGIN}/support/request#${TOKEN}`;
+
+  const mails = [
+    [
+      'reply',
+      () =>
+        supportReplyMessage(ORIGIN, 'visitor@example.test', {
+          ...REPLY,
+          signedOut: true,
+          viewToken: TOKEN,
+        }),
+    ],
+    [
+      'received',
+      () => supportStatusMessage('received', ORIGIN, 'visitor@example.test', 'S', null, TOKEN),
+    ],
+    [
+      'resolved',
+      () => supportStatusMessage('resolved', ORIGIN, 'visitor@example.test', 'S', null, TOKEN),
+    ],
+    [
+      'closing-soon',
+      () =>
+        supportClosingNoticeMessage(ORIGIN, 'visitor@example.test', 'S', null, 86_400_000, TOKEN),
+    ],
+  ] as const;
+
+  it.each(mails)(
+    'links the %s mail to the token in the fragment, never in the path',
+    async (_, build) => {
+      const message = await build();
+
+      expect(message.text).toContain(LINK);
+      expect(message.html).toContain(LINK);
+      expect(message.text).not.toContain(`/support/request/${TOKEN}`);
+      expect(message.html).not.toContain(`/support/request/${TOKEN}`);
+    },
+  );
 });

@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { resetPassword } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
@@ -8,12 +7,12 @@ import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/passwo
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
-import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import type { ResetPasswordFormProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
-// The reset page's form: the new password for the account a mailed link names. The token is spent by the
-// first reset, which signs out every session the account held (claude-docs/components/reset-password-form.md).
+// The first reset spends the token and signs out every session the account held (claude-docs/components/reset-password-form.md).
 
 export const GENERIC_RESET_ERROR = "We couldn't set your new password. Please try again.";
 
@@ -55,7 +54,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
     const refusal = newPasswordRefusal(error);
     if (refusal) setFieldError(refusal);
     else if (error.code === 'INVALID_TOKEN') setSpent(true);
-    else if (error.status === 429) setAlert(TOO_MANY_ATTEMPTS);
+    else if (rateLimited(error)) setAlert(TOO_MANY_ATTEMPTS);
     // A 500 is the breached-password check unreachable, which refuses rather than waves through.
     else setAlert(error.status === 500 ? PASSWORD_CHECK_UNAVAILABLE : GENERIC_RESET_ERROR);
   };
@@ -68,9 +67,9 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           signed out.
         </Notice>
         <p>
-          <Link className="btn btn--solid" href="/sign-in">
+          <PendingLink className="btn btn--solid" href="/sign-in">
             Sign In
-          </Link>
+          </PendingLink>
         </p>
       </div>
     );
@@ -84,9 +83,9 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           minutes.
         </Notice>
         <p>
-          <Link className="btn btn--solid" href="/forgot-password">
+          <PendingLink className="btn btn--solid" href="/forgot-password">
             Ask for a New Link
-          </Link>
+          </PendingLink>
         </p>
       </div>
     );

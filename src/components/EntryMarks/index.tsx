@@ -6,7 +6,6 @@ import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
 import './index.scss';
 
-/** A badge's place in the row, from its palette's colour: green, the neutral tints, red. */
 type Tone = 'green' | 'neutral' | 'red';
 
 interface Mark {
@@ -88,17 +87,16 @@ const EntryMarks = ({
       ),
     });
   }
-  // The curators' review mark: green with its day once reviewed, in the attention
-  // colour while not. A coven's own entry is never reviewed, so it has neither.
+  // The curators' review mark: green with its day once reviewed, in the warning
+  // ochre while not. A coven's own entry is never reviewed, so it has neither.
   if (kind !== 'own' && reviewedAt !== undefined) {
     if (reviewedAt === null) {
       marks.push({
         key: 'review',
         tone: 'red',
-        node: <output className="badge badge--attention">Needs Review</output>,
+        node: <output className="badge badge--needs-review">Needs Review</output>,
       });
     } else {
-      // Reviewed By Curator stands last in the row, with its day in the badge's tip, not beside it.
       reviewed = (
         <TipMark
           label="Reviewed By Curator"
@@ -108,8 +106,6 @@ const EntryMarks = ({
       );
     }
   }
-  // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
-  // card draws its own beside the name (`safety={false}`).
   if (safety) {
     marks.push({
       key: 'safety',

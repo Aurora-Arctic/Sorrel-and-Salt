@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
-import { FilterSelectField, SearchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
@@ -9,7 +10,7 @@ import type { GroupedValueListFilterProps } from './types';
 
 // A curated vocabulary's filter: a name search and, for a grouped kind, its group; the group applies
 // once a choice settles, carrying the unsearched name. The server draws a native `<select>`, so before
-// hydration the magnifier submits `query=&group=` (claude-docs/components/grouped-value-list.md, "The filter").
+// hydration the magnifier submits `query=&group=` (claude-docs/components/grouped-value-list.md, "Contracts").
 
 const GroupedValueListFilter = ({
   kind,
@@ -24,7 +25,6 @@ const GroupedValueListFilter = ({
     [groups],
   );
 
-  /** The filter shown with the group given, the name typed carried, from the first page. */
   const hrefWith = (chosen: string) =>
     groupedValuesHref(kind, { query: draftQuery.trim(), group: chosen });
 

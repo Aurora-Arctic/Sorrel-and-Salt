@@ -23,16 +23,13 @@ import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
+import { rowCells } from '../../support/table';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// `/curator/compendium`'s filter, table and pager: each entry with its formal name and live forms, an Edit link opening it in the page's modal,
-// the filter that narrows them to the keeper's to-do lists, and the pager (claude-docs/components/compendium-list.md).
-
-// The fixtures and the filter row's controls are shared with filter.test.tsx, which renders the
-// row and its search sentence without the table.
+// claude-docs/components/compendium-list.md
 
 describe('CompendiumList', () => {
   it('lists each entry with its formal name and every live form', () => {
@@ -63,7 +60,6 @@ describe('CompendiumList', () => {
     ).not.toBeChecked();
   });
 
-  // Categories column: the card's chips, the first few shown and the rest behind +N.
   it("shows each entry's categories as chips, the rest behind a +N button", () => {
     render(<CompendiumList {...props()} />);
 
@@ -74,7 +70,6 @@ describe('CompendiumList', () => {
     const list = within(rows[1]).getByRole('list', { name: 'Categories' });
     expect(within(list).getByText('Testward')).toBeInTheDocument();
     expect(within(list).getByText('Testcraft')).toBeInTheDocument();
-    // The category past the limit waits in the +N button's panel, hidden until it opens.
     const more = within(list).getByRole('button', { name: '1 more category for Testwort' });
     expect(more).toHaveTextContent('+1');
     const panel = document.getElementById(more.getAttribute('aria-controls') ?? '');
@@ -89,11 +84,10 @@ describe('CompendiumList', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(within(rows[2]).queryByRole('list', { name: 'Categories' })).toBeNull();
     const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
-    const cells = within(rows[2]).getAllByRole('cell');
+    const cells = rowCells(rows[2]);
     expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
-  // Each form wears its group's icon; a form with none wears the spoon.
   it('draws each form with its group icon in the Form column', () => {
     const { container: botanical } = render(<FormIcon name="botanical" />);
     const { container: spoon } = render(<FormIcon name={null} />);
@@ -108,7 +102,6 @@ describe('CompendiumList', () => {
     ]);
   });
 
-  // Who last edited each row, and when, as the coven's member list has it.
   it('shows who last edited each row and when in an Updated column', () => {
     render(<CompendiumList {...props()} />);
 
@@ -179,12 +172,12 @@ describe('CompendiumList', () => {
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
-  it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {
+  it('names the entry page it leads to by its address while it loads', async () => {
     let target: unknown;
     function Probe() {
       const state = useNavigationState();
       useEffect(() => {
-        target = state.target;
+        target = state.href;
       });
       return null;
     }
@@ -204,7 +197,7 @@ describe('CompendiumList', () => {
     });
 
     expect(router.push.mock.calls[0]?.[0]).toBe('/compendium/ingredients/fixture-salt');
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe('/compendium/ingredients/fixture-salt');
     await act(async () => arrive());
   });
 
@@ -216,6 +209,26 @@ describe('CompendiumList', () => {
       <CompendiumList {...props({ entries: [], filter: { ...NO_FILTER, query: 'nothing' } })} />,
     );
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  // A filter that matched nothing offers the way back to the whole list: its own address, every filter
+  // dropped. A compendium that is empty with no filter has nothing to clear.
+  it('offers Clear Filters where a filter matched nothing, back to the list with no filter', () => {
+    const filter: CompendiumListFilter = {
+      ...NO_FILTER,
+      query: 'nothing',
+      withoutReferences: true,
+    };
+    const { unmount } = render(<CompendiumList {...props({ entries: [], filter })} />);
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      compendiumHref(NO_FILTER),
+    );
+    unmount();
+
+    render(<CompendiumList {...props({ entries: [] })} />);
+    expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
   });
 
   it('bolds each filter value in the empty sentence and leaves the joining words plain', () => {
@@ -232,7 +245,6 @@ describe('CompendiumList', () => {
     const sentence = screen.getByText('“nothing”', { selector: 'strong' }).parentElement;
     const bold = [...(sentence?.querySelectorAll('strong') ?? [])].map((each) => each.textContent);
     expect(bold).toEqual(['“nothing”', '“Fixture Oil”', 'No Refs', 'Testward', 'Testcraft']);
-    // The sentence is more than its values: what joins them is not bold.
     expect(sentence?.textContent?.length).toBeGreaterThan(bold.join('').length);
   });
 
@@ -258,7 +270,6 @@ describe('the sort', () => {
     ]);
     expect(heading('Name')).toHaveAttribute('aria-sort', 'ascending');
     expect(heading('Sourcing Score')).not.toHaveAttribute('aria-sort');
-    // Sorted already, so Name leads to its reverse; the score to its first direction, lowest first.
     expect(
       within(heading('Name')).getByRole('link', { name: 'Name, Sorted A to Z' }),
     ).toHaveAttribute('href', '/curator/compendium?sort=name&order=desc');
@@ -373,13 +384,9 @@ describe('compendiumHref', () => {
     expect(compendiumHref(NO_FILTER)).toBe('/curator/compendium');
   });
 });
-// While a filter or a page is on its way, the list gives way to its loading status and the row
-// is off. These cases render the table, which the filter row's own test (filter.test.tsx) leaves out.
 describe('the list while a filter is on its way', () => {
   readyFilterRow(router.push);
 
-  // While the filtered list reads, the list gives way to the loading status and the row is
-  // off: every control `aria-disabled` and the form `aria-busy`, until the new list renders.
   it('turns the row off and the list to a status until the filtered list arrives', async () => {
     let arrive = () => {};
     const arrives = new Promise<void>((resolve) => {
@@ -406,7 +413,6 @@ describe('the list while a filter is on its way', () => {
     expect(row()).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
 
-    // A submit while the first is on its way goes nowhere.
     fireEvent.submit(row());
     expect(router.push).toHaveBeenCalledTimes(1);
 
@@ -444,13 +450,11 @@ describe('the list while a filter is on its way', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: /Next/ }));
     });
-    // The page is on its way, so the list gave way to its status; the sentence did not move.
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(typing()).toBe(false);
   });
 
-  // The details the sentence opens to: the one holding its Show or Hide Search Details control.
   const details = () =>
     screen.getByText(/^(Show|Hide) Search Details$/).closest('details') as HTMLElement;
 
@@ -473,7 +477,6 @@ describe('the list while a filter is on its way', () => {
         await waitFor(() => expect(details().hasAttribute('open')).toBe(true));
       }
       const wasOpen = details().hasAttribute('open');
-      // Every change of the details' open state from here on.
       const seen: boolean[] = [];
       const watch = new MutationObserver(() => seen.push(details().hasAttribute('open')));
       watch.observe(details(), { attributes: true, attributeFilter: ['open'] });

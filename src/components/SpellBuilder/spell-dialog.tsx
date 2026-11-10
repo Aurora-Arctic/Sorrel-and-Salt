@@ -9,18 +9,18 @@ import { graphqlQuery } from '../../lib/graphql-client';
 import { withParam } from '../../lib/list-href';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
+import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type { ModalHeading } from '../Modal/types';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { copiedHrefOf } from '../SpellRecipe/copied-href';
 import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
+import { SpellEditSkeleton } from './skeleton';
 import { SpellBuilderStepsDocument } from './steps/documents';
 import type { SpellDialogProps } from './types';
 
-// The spell builder as a modal over the grimoire: New Spell opens it under `?new=spell-<slug>`, a
-// spell's Edit under `?edit=<id>`, and a draft's first save swaps `?new` for `?edit=<id>`. Close
-// saves first (./save-on-close.ts). A client part because the builder's handlers are functions.
-// (claude-docs/components/spell-builder.md, "The spell dialog and its address")
+// The spell builder as a modal over the grimoire, open while the address carries `?new=spell-<slug>` or `?edit=<id>`.
+// A client part because the builder's handlers are functions (claude-docs/components/spell-builder.md, "The spell dialog and its address").
 
 /**
  * `closeHref` with a saved spell's dialog open over it, `?edit=<id>`. Built here rather than
@@ -28,10 +28,8 @@ import type { SpellDialogProps } from './types';
  */
 const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', id);
 
-/**
- * The dialog's head for a new spell, headed as Add Ingredient's is: the coven it
- * lands in over the title, and the dialog named by the phrase, "New Spell to Whitethorn Coven".
- */
+const EDIT_SPELL = 'Edit Spell';
+
 export const newSpellHeading = (covenName: string): ModalHeading => ({
   title: 'New Spell',
   destination: covenName,
@@ -50,6 +48,8 @@ export default function SpellDialog({
   userId,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
+  // A press of Edit opens over the saved spell's shut sections; New Spell's open form keeps the plain bars.
+  const editPressed = useRouteModalOpener()?.loading?.eyebrow === EDIT_SPELL;
   const adding = useSearchParams().get(NEW);
   const opened =
     adding === null ? read : opensNewSpell(adding, covenSlug) && canCreate ? {} : undefined;
@@ -72,11 +72,12 @@ export default function SpellDialog({
   });
   const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
-    ? { eyebrow: 'Edit Spell', title: spell.title?.trim() || UNTITLED_SPELL }
+    ? { eyebrow: EDIT_SPELL, title: spell.title?.trim() || UNTITLED_SPELL }
     : newSpellHeading(covenName);
   return (
     <RouteModal
       closeHref={closeHref}
+      loadingBody={editPressed ? <SpellEditSkeleton canDelete={canDelete} /> : undefined}
       content={
         opened && {
           heading,

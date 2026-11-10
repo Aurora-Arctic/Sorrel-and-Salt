@@ -19,8 +19,6 @@ import { CategoryGroupInput } from '../validation/category-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CategoryGroupRow, CuratedGroup } from '../types';
 
-// The category groups: public reads, and writes for a curator or a keeper alone (claude-docs/db/categories.md, "Category group service details").
-
 /** The groups, and the categories filed under them, which a delete moves and a rename leaves alone: a category's slug is its own name alone. */
 const GROUPS: CuratedGroup<typeof categoryGroups> = {
   table: categoryGroups,
@@ -36,19 +34,15 @@ const GROUPS: CuratedGroup<typeof categoryGroups> = {
   },
 };
 
-/** One page of the live category groups, alphabetical by name: the group a category is filed under is picked from these. */
 export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
   return findPage(categoryGroups, [categoryGroups.name], page);
 }
 
-/** How many live category groups `listCategoryGroups` pages, and how many come before `start`: "Page X of Y". */
 export function countCategoryGroups(start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(categoryGroups, [categoryGroups.name], start);
 }
 
 /**
- * The live group at this address, for the admin page to edit.
- *
  * @throws {NotFound} no live group holds the slug.
  */
 export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGroupRow> {
@@ -58,8 +52,6 @@ export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGrou
 }
 
 /**
- * Adds a category group, its slug derived from the name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `CategoryGroupInput` (a colour under the floor on its own column), or its slug is a live group's.
  */

@@ -9,14 +9,9 @@ import {
   variantInput,
 } from '../fixtures';
 
-/** What `createCompendiumEntry` and `updateCompendiumEntry` take. */
 type CompendiumEntryInput = Parameters<typeof createCompendiumEntry>[1];
 
-/**
- * The compendium entry fixture for the files that write compendium entries. Reads the live curated
- * forms by folded name once per file: every form is a pick, so `entry` picks the row each form's
- * text names unless the test states its `formId`, as the keeper's autofill would.
- */
+// Every form is a pick: `entry` picks the row each form's text names unless the test states `formId`, as the keeper's autofill would.
 export function useCompendiumEntryInput(sql: () => postgres.Sql) {
   let formIds: Map<string, string>;
   beforeAll(async () => {
@@ -27,11 +22,6 @@ export function useCompendiumEntryInput(sql: () => postgres.Sql) {
     formIds = new Map(rows.map((row) => [row.fold as string, row.id as string]));
   });
 
-  /**
-   * The fixture as a keeper's input: everything but the tier and category names, its substitutes and deities
-   * typed, each form picked by its text unless the variant states `formId`. One curated form, Herb, unless
-   * the test states `variants`.
-   */
   return function entry(
     overrides: Overrides<IngredientFixture> = {},
   ): CompendiumEntryInput & { variants: NonNullable<CompendiumEntryInput['variants']> } {

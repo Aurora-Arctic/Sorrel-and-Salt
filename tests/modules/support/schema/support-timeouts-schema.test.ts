@@ -8,9 +8,11 @@ import { findStandingSupportTimeoutsFor } from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { asUser } from '../../../support/as-user';
 import { supportTimeouts } from '@/modules/support/schema/support-timeouts';
+import { addressCountKey } from '@/lib/send-count-key';
 
-const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at'];
+const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at', 'address_key'];
 const ACTIVE_INDEX = 'support_timeouts_user_until_idx';
+const ADDRESS_INDEX = 'support_timeouts_address_key_idx';
 const ADMIN = FIXTURE_USERS.E.id;
 const SENDER = FIXTURE_USERS.A.id;
 
@@ -28,9 +30,16 @@ describe('support_timeouts schema', () => {
     expect(byName.lifted_at.notNull).toBe(false);
   });
 
+  // A signed-out sender has no account of its own, so its time-out names only the address key.
+  it('declares user_id and address_key both nullable', () => {
+    expect(byName.user_id.notNull).toBe(false);
+    expect(byName.address_key.notNull).toBe(false);
+  });
+
   it('declares its index over rows not yet lifted', () => {
-    expect(Object.keys(byIndexName)).toEqual([ACTIVE_INDEX]);
+    expect(Object.keys(byIndexName).sort()).toEqual([ADDRESS_INDEX, ACTIVE_INDEX].sort());
     expect(byIndexName[ACTIVE_INDEX].config.where).toBeDefined();
+    expect(byIndexName[ADDRESS_INDEX].config.where).toBeDefined();
   });
 
   it('has a foreign key to the account', () => {
@@ -44,6 +53,33 @@ let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
 describe('support_timeouts table', () => {
+  it('accepts a time-out on an address key alone, with no account', async () => {
+    const [row] = await sql`
+      insert into support_timeouts (user_id, address_key, note, created_by, updated_by)
+      values (null, ${addressCountKey('visitor@example.test')}, 'Spam', ${ADMIN}, ${ADMIN}) returning user_id, address_key`;
+
+    expect(row.user_id).toBeNull();
+    expect(row.address_key).toBe(addressCountKey('visitor@example.test'));
+  });
+
+  it('refuses a time-out that names neither an account nor an address key', async () => {
+    const error = await failureOf(
+      sql`insert into support_timeouts (user_id, address_key, note, created_by, updated_by)
+          values (null, null, 'Spam', ${ADMIN}, ${ADMIN})`,
+    );
+
+    // The column is nullable, so only the CHECK can refuse it.
+    expect(error.code).toBe('23514');
+  });
+
+  it('accepts a time-out that names both an account and its address key', async () => {
+    const [row] = await sql`
+      insert into support_timeouts (user_id, address_key, note, created_by, updated_by)
+      values (${SENDER}, ${addressCountKey('visitor@example.test')}, 'Spam', ${ADMIN}, ${ADMIN}) returning user_id`;
+
+    expect(row.user_id).toBe(SENDER);
+  });
+
   it('refuses a time-out for no user', async () => {
     const error = await failureOf(
       sql`insert into support_timeouts (user_id, until, note, created_by, updated_by)

@@ -1,6 +1,18 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, scanBothThemes } from './axe';
+import { MODAL_SCANS, ROUTE_SCANS, type Persona } from './axe-scans';
+import {
+  MODAL_OPENERS,
+  recordUnreached,
+  reportSweep,
+  ROUTE_VISITS,
+  scanBothThemes as collectBothThemes,
+  seedWorld,
+  signIn,
+  type SweepResult,
+  visit,
+} from './axe-sweep';
 import { recreateE2eDatabase } from './database';
 import {
   compendiumVariant,
@@ -65,15 +77,6 @@ test('a title that goes absent after the wait does not fail the scan', async ({ 
 // Filters, a card hovered and focused, the builder with a step open, Record a Working's two steps, and the
 // recipe page with its workings and an ingredient's Quick Look. Each test seeds its own coven.
 
-/** Scans the page in the dark theme and the light, the site's default first. */
-async function scanBothThemes(page: Page) {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await assertNoAccessibilityViolations(page);
-  }
-}
-
-/** A coven owned by A, signed in, with one complete shared spell laying 2 g of a 20 g jar of Rosemary. */
 async function covenWithSpell(page: Page, name: string, domain: string) {
   const coven = await seedCoven(page, name, domain, { A: 'owner' });
   const spellId = await withSql(async (sql) => {
@@ -220,4 +223,65 @@ test.describe('the grimoire', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await scanBothThemes(page);
   });
+});
+
+// The sweep over tests/e2e/axe-scans.ts in both themes, one test per person for pages and one for modals, each
+// seeding its own coven so another test recreating the slot's database cannot take its rows. Findings are
+// collected, not thrown, so one run lists every page; the full result goes to .reports/axe-sweep/.
+test.describe('the accessibility sweep', () => {
+  const personas = [...new Set(ROUTE_SCANS.flatMap(({ as }) => as as readonly Persona[]))];
+  for (const persona of personas) {
+    const routes = ROUTE_SCANS.filter(({ as }) => (as as readonly Persona[]).includes(persona));
+    test(`every page, as ${persona}`, async ({ page }) => {
+      test.setTimeout(60_000 + routes.length * 30_000);
+      // One stuck opener fails its own scan, not the whole test.
+      page.setDefaultTimeout(8_000);
+      const world = await seedWorld(page);
+      await signIn(page, world, persona);
+      const result: SweepResult = { persona, findings: [], unreached: [] };
+      for (const scan of routes) {
+        const { route } = scan;
+        const path = ROUTE_VISITS[route](world);
+        if (path === null) continue;
+        await test.step(route, async () => {
+          try {
+            await visit(page, path, 'status' in scan ? scan.status : undefined);
+            await collectBothThemes(page, route, result);
+          } catch (error) {
+            await recordUnreached(page, route, error, result);
+          }
+        });
+      }
+      expect(reportSweep(`${persona}-pages`, result)).toBe('');
+    });
+  }
+
+  const modalPersonas = [...new Set(MODAL_SCANS.map(({ as }) => as as Persona))];
+  for (const persona of modalPersonas) {
+    // Two-factor signs in an account of its own, so it goes last.
+    const modals = MODAL_SCANS.filter(({ as }) => as === persona).sort(
+      (a, b) => Number(a.id === 'two-factor-warning') - Number(b.id === 'two-factor-warning'),
+    );
+    test(`every modal, as ${persona}`, async ({ page }) => {
+      test.setTimeout(60_000 + modals.length * 30_000);
+      // One stuck opener fails its own scan, not the whole test.
+      page.setDefaultTimeout(8_000);
+      const world = await seedWorld(page);
+      await signIn(page, world, persona);
+      const result: SweepResult = { persona, findings: [], unreached: [] };
+      for (const { id } of modals) {
+        await test.step(id, async () => {
+          try {
+            const dialog = await MODAL_OPENERS[id](page, world);
+            await expect(dialog).toBeVisible({ timeout: 10_000 });
+            await collectBothThemes(page, id, result, dialog);
+          } catch (error) {
+            await recordUnreached(page, id, error, result);
+          }
+          await page.keyboard.press('Escape').catch(() => {});
+        });
+      }
+      expect(reportSweep(`${persona}-modals`, result)).toBe('');
+    });
+  }
 });

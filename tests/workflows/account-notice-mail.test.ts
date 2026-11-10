@@ -5,20 +5,22 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { accountNoticeMail } from '@/modules/identity/jobs/account-notice-mail';
 import type { AccountNotice } from '@/modules/identity';
+import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
-// The notice to the address a completed change left, end to end in the SDK's local world, against a stand-in Mailpit that can
-// be told to fail. The run holds the account id and the origin; the step reads `former_email` when it sends and clears it once
-// the transport took the mail, or once every attempt has failed, since nothing would send it again.
+// The run holds the account id and the origin; the step reads `former_email` when it sends and clears it once the transport took the mail or every attempt failed, since nothing would send it again.
 
 const DOMAIN = '@account-notice-run.test';
 const LEFT = `left${DOMAIN}`;
 const NOW_AT = `now${DOMAIN}`;
-const ORIGIN = 'http://localhost:8000';
-const MAILPIT_URL = 'http://mailpit.test';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
-// What `former_email` held as each attempt reached the transport.
 const heldAtAttempt: (string | null)[] = [];
 const received: { to: string; text: string }[] = [];
 let userId: string;
@@ -26,7 +28,7 @@ let userId: string;
 const formerOf = async () =>
   (await sql`select former_email, updated_by from users where id = ${userId}`)[0]!;
 
-// Answers fetch itself rather than listening on a port: the local world finds its queue by this process's port.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -42,7 +44,6 @@ async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Re
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -58,7 +59,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(async () => {

@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { NEAR_COLOR_DELTA, colorDistance, nearColor } from '@/lib/near-color';
 
-// How close two groups' colours in one theme may stand before the picker warns.
-
 describe('colorDistance', () => {
   it('is 0 for a colour on itself and 1 from black to white', () => {
     expect(colorDistance('#4e8bc2', '#4E8BC2')).toBe(0);
@@ -12,11 +10,9 @@ describe('colorDistance', () => {
 
   it('reads a nudge of a few steps as near, and two seeded neighbours as apart', () => {
     expect(colorDistance('#4e8bc2', '#4a87bf')).toBeLessThan(NEAR_COLOR_DELTA);
-    // The two seeded greens, the closest pair in either theme.
     expect(colorDistance('#7b9132', '#379835')).toBeGreaterThan(NEAR_COLOR_DELTA);
   });
 
-  // So no seeded group warns of another, in either theme.
   it('keeps every seeded group clear of every other within its theme', () => {
     for (const column of ['colorDark', 'colorLight'] as const) {
       for (const a of CATEGORY_GROUPS) {

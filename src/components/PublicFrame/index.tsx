@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import type { ReactElement } from 'react';
+import { type ReactElement, Suspense } from 'react';
 import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import { PendingLink } from '../../lib/navigation';
+import { SignInLink, SignInLinkWithQuery } from './sign-in-link';
 import ThemeToggle from '../ThemeToggle';
 import SiteNav from '../AppShell/site-nav';
 import type { SiteLink } from '../AppShell/types';
@@ -10,35 +10,27 @@ import type { PublicFrameProps } from './types';
 import '../AppShell/index.scss';
 import './index.scss';
 
-// The frame round a public page for a signed-out visitor: skip link, site name, a nav of the
-// Compendium and the way in, and the page; a signed-in visitor gets `AppShell` instead. A server
-// component whose nav is the shell's `SiteNav`, so the chrome is in the HTML a crawler receives;
-// the body is the shell's `MainBody`. claude-docs/components/public-frame.md.
+// A server component, so the nav is in the HTML a crawler receives (claude-docs/components/public-frame.md).
 
-// The one link the public bar holds; the shell's `SiteNav` draws it.
 const COMPENDIUM_LINK: readonly SiteLink[] = [
   { label: 'Compendium', href: '/compendium', base: '/compendium' },
 ];
 
-const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
+const PublicFrame = ({ configured, children }: PublicFrameProps): ReactElement => (
   <div className="public-frame">
     <a className="skip-link" href="#main">
       Skip to Content
     </a>
     <header className="public-frame__bar">
       <div className="public-frame__bar-inner">
-        <PendingLink
-          href="/"
-          className="public-frame__brand"
-          navigationTarget={{ region: 'main', shape: 'page' }}
-        >
+        <PendingLink href="/" className="public-frame__brand">
           <BrandName block="public-frame" />
         </PendingLink>
         <SiteNav links={COMPENDIUM_LINK} />
         <div className="public-frame__end">
-          <Link className="btn btn--solid btn--medium" href="/sign-in">
-            Sign In
-          </Link>
+          <Suspense fallback={<SignInLink />}>
+            <SignInLinkWithQuery configured={configured} />
+          </Suspense>
           {/* The shell’s wrapper (AppShell/index.scss). */}
           <span className="app-shell__theme">
             <ThemeToggle variant="inline" />

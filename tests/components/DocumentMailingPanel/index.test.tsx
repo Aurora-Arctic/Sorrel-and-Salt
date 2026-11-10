@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The mailing page's panel for emailing every account about every document changed since the last email: a summary box for each
 // pending document and one button, its confirmation, each open mailing's progress, Resume for a paused one, and the last sent.
-// What the confirm's modal does when asked, busy and refused is ConfirmedAction's (tests/components/UserList/confirmed-action.test.tsx);
+// What the confirm's modal does when asked, busy and refused is ConfirmedAction's (tests/components/ConfirmedAction/index.test.tsx);
 // this file proves what the panel shows and sends.
 
 const MAILING_ID = '00000000-0000-4000-8000-0000000000e1';

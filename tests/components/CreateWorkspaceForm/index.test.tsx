@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreateWorkspaceMutation, CreateWorkspaceMutationVariables } from '@/gql/graphql';
+import { limitMessage } from '@/lib/formats';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -13,8 +14,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// The create-workspace page's form. MSW answers the mutation in the shape /api/graphql answers, so a refusal is read through the route's own error mapping.
-// That the service refuses a user without the right is tests/modules/coven/services/workspace-creation.test.ts's.
+// MSW answers the mutation in /api/graphql's shape, so a refusal is read through the route's own error mapping.
 
 function renderForm(ui: ReactNode = <CreateWorkspaceForm />) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -24,7 +24,6 @@ const nameField = () => screen.getByRole('textbox', { name: 'Name' });
 const create = () => screen.getByRole('button', { name: /^Creat/ });
 const submit = () => fireEvent.submit(create().closest('form') as HTMLFormElement);
 
-/** Answers `CreateWorkspace` as the service would: a slug from the trimmed name. */
 function acceptCreate(slug = 'fixture-coven') {
   const calls: CreateWorkspaceMutationVariables[] = [];
   mockGraphQLMutation<CreateWorkspaceMutation, CreateWorkspaceMutationVariables>(
@@ -43,7 +42,25 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
-  // Its label says it; a tip restating it went.
+  it('tidies the name when the field is left, so the person sees what is sent', () => {
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: '  Fixture    Coven ' } });
+    fireEvent.blur(nameField());
+
+    expect(nameField()).toHaveValue('Fixture Coven');
+  });
+
+  it('counts a name past the limit without cutting it', () => {
+    renderForm();
+    const long = 'x'.repeat(83);
+
+    fireEvent.change(nameField(), { target: { value: long } });
+
+    expect(nameField()).toHaveValue(long);
+    expect(nameField()).toHaveAccessibleDescription('3 characters over');
+  });
+
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
@@ -112,6 +129,34 @@ describe('CreateWorkspaceForm', () => {
     expect(create()).toBeEnabled();
   });
 
+  it('clears a refusal on the name as soon as the person edits it', async () => {
+    mockGraphQLError('CreateWorkspace', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'Keep this to 80 characters or fewer' }],
+    });
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+    await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
+
+    fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+
+    expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('refuses a name past the limit on Save with the shared wording, without asking the server', async () => {
+    const calls = acceptCreate();
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+
+    expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
+    expect(calls).toHaveLength(0);
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it('puts any other refusal in the alert region, in the server’s words', async () => {
     mockGraphQLError('CreateWorkspace', {
       code: 'FORBIDDEN',
@@ -128,10 +173,7 @@ describe('CreateWorkspaceForm', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  // Leaving with a name typed: the page sits in the site's
-  // NavigationProvider, as the providers put it.
   describe('guarding a typed name', () => {
-    /** A link elsewhere on the page, as the site menu is. */
     function Go() {
       const navigation = usePendingNavigation();
       return (
@@ -150,7 +192,6 @@ describe('CreateWorkspaceForm', () => {
       );
     }
 
-    /** A tab close or reload as the browser raises it: true when something cancelled it. */
     function unload(): boolean {
       const event = new Event('beforeunload', { cancelable: true });
       window.dispatchEvent(event);
@@ -160,9 +201,7 @@ describe('CreateWorkspaceForm', () => {
     const link = () => screen.getByRole('button', { name: 'Compendium' });
     const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
 
-    // The guard's shape (Keep Editing, Discard Changes, a dialog outside the
-    // form) is proved once at tests/components/Modal/discard.test.tsx; this is
-    // the form's wiring of it.
+    // The guard's shape is proved at tests/components/Modal/discard.test.tsx; this is the form's wiring.
     it('holds a link and a tab close once a name is typed', () => {
       renderOnPage();
       fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });

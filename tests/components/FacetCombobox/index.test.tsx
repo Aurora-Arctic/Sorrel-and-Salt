@@ -5,8 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import FacetCombobox from '@/components/FacetCombobox';
 import type { FacetComboboxProps } from '@/components/FacetCombobox/types';
 
-// A filter's closed set with how many entries each value would leave: the multi-select box with counts, zero rows last and disabled,
-// and each chosen value a hidden input of the filter's GET form (claude-docs/components/facet-combobox.md).
+// claude-docs/components/facet-combobox.md
 
 const CHOICES = [
   { value: 'air', label: 'Testair', count: 3 },
@@ -77,7 +76,6 @@ describe('FacetCombobox', () => {
     expect(screen.queryByText(PROPS.placeholder as string)).not.toBeInTheDocument();
     unmount();
 
-    // Left out, it is derived from the label, still in place of the ordinary one.
     render(<FacetCombobox {...PROPS} choices={choices} />);
     expect(screen.getByText(/Elements/, { ignore: 'label, legend' })).toBeInTheDocument();
     expect(screen.queryByText(PROPS.placeholder as string)).not.toBeInTheDocument();

@@ -7,5 +7,4 @@ import { createContext, useContext } from 'react';
 // pending. The link says so here instead, for whatever sits inside it.
 export const LinkPendingContext = createContext(false);
 
-/** True while the `PendingLink` around the caller has a navigation on its way. */
 export const useEnclosingLinkPending = (): boolean => useContext(LinkPendingContext);

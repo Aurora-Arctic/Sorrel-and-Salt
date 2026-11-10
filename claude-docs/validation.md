@@ -13,16 +13,7 @@ In each module's `validation/` directory, a third public surface beside
 `index.ts` and `schema/*.ts` ([`modules.md`](modules.md), "The public
 surface"):
 
-| File                                                         | Exports                                             |
-| ------------------------------------------------------------ | --------------------------------------------------- |
-| `src/modules/ingredients/validation/ingredient.ts`           | `LocalIngredientInput`, `CompendiumIngredientInput` |
-| `src/modules/ingredients/validation/stock.ts`                | `StockInput`                                        |
-| `src/modules/grimoire/validation/spell.ts`                   | `SpellInput`, `UpdateSpellInput`                    |
-| `src/modules/grimoire/validation/spell-step.ts`              | `SpellStepInput`                                    |
-| `src/modules/vocabulary/validation/category.ts`              | `CategoryInput`                                     |
-| `src/modules/vocabulary/validation/category-group.ts`        | `CategoryGroupInput`                                |
-| `src/modules/vocabulary/validation/ingredient-form-value.ts` | `IngredientFormValueInput`                          |
-| `src/modules/vocabulary/validation/ingredient-form-group.ts` | `IngredientFormGroupInput`                          |
+Each module's `validation/` holds one file per input (`ingredient.ts`, `stock.ts`, `spell.ts`, `spell-step.ts`, `category.ts`, `category-group.ts`, `ingredient-form-value.ts`, `ingredient-form-group.ts`, `reference.ts` and so on); the exports are named `<Thing>Input`.
 
 Each export is both a schema and, under the same name, the type of its parsed
 output. A form sends `z.input<typeof …>`: its values as typed, unparsed, so
@@ -41,10 +32,12 @@ and `schema/quantities.ts`, which the tables are built from too, so a closed
 set or a column's shape is written down once, and these in `src/lib/`: `validation.ts`, the shared
 shapes below; `citation.ts`, for the day pattern and the quotation marks the
 reference formatter shares with the renderer; and `contrast.ts` and
-`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. A `.oxlintrc.json` override for `src/modules/*/validation/**` and
+`group-colors.ts` (kept apart so the validation schema reaches nothing but zod), the arithmetic `CategoryGroupInput` holds a colour to. A `.oxlintrc.json` override for `src/modules/*/validation/**` and
 `src/lib/validation.ts` fails a runtime import of `server-only`, `postgres`,
 `drizzle-orm`, anything under `src/db` or a service, and `next build` fails a
 client bundle that reaches `server-only` however indirectly.
+
+**Email addresses.** One schema, `EmailAddress` in `src/lib/email-address-schema.ts` (apart from the helpers in `email-address.ts` so first-load client code does not pull in zod), trims and lowercases the whole address, then checks the shape; every form and input schema that takes an address uses it, and the field's `format` is `emailFormat` in `email-address.ts`, the same trim and lowercase, so the box shows the address as it is saved. Support length limits (`SUBJECT_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`, `PATH_MAX_LENGTH`) live in `src/modules/support/validation/limits.ts`, which client code may import; the service imports the same numbers.
 
 ## Raising the error
 
@@ -70,10 +63,9 @@ compare with a `uuid` column, since anything else is a driver error there.
 and malformed refused alike with the message saying what to choose: a
 category's or a form's `groupId`, a deity's `traditionId`. It is
 `RowId`'s shape rather than `z.uuid()`'s, which refuses the seed's
-hand-written ids and so refused a parent the service would have found
-(MB.209).
+hand-written ids and so refused a parent the service would have found.
 
-The text shapes every module shares are there too (MB.209), so a message or
+The text shapes every module shares are there too, so a message or
 a rule changes in one place:
 
 - **`requiredText(message)`**: trimmed, and blank or missing refused with
@@ -98,7 +90,7 @@ refused, and that is "required", not "blank". They differ only in
 
 - **`LocalIngredientInput`**, for the workspace tier. Only `name` is required.
   With no formal name and no kind, `nomenclature` becomes `none`, so story 29's
-  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind becomes `unknown` (MB.161):
+  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind becomes `unknown`:
   the one kind that admits a name without claiming its system, where `none`
   would contradict the name and `botanical` is the silent guess §5 forbids.
 - **`CompendiumIngredientInput`**, for the compendium tier. The admin must answer
@@ -108,7 +100,7 @@ Rules both variants enforce:
 
 - **The kind↔name coupling**, in both directions, as the database CHECK does:
   `none` with a formal name is refused, any of the five named kinds without
-  one is refused, and `unknown` takes either (MB.161). Both are pathed to `canonicalName`, so the CHECK is never
+  one is refused, and `unknown` takes either. Both are pathed to `canonicalName`, so the CHECK is never
   what a user sees.
 - **`canonicalName`** is optional and trimmed, and a blank one becomes
   `null` — which the database CHECK on the column accepts, so a blank never
@@ -117,7 +109,7 @@ Rules both variants enforce:
   checks a variant's `form` against the curated vocabulary: on a coven's
   ingredient it is an autofill and not a constraint, and the compendium's
   check reads the database, so it is the service's (below). Whether a
-  variant's `formId`, the curated form picked (MB.167), names a curated form,
+  variant's `formId`, the curated form picked, names a curated form,
   and whether its `form` folds to that form's name, read the database too
   (DESIGN.md §5, `ingredient_forms`).
 - **Folk names, within one ingredient.** `name` may not also be one of the
@@ -168,8 +160,7 @@ Rules both variants enforce:
   creates it first, through `ReferenceInput` below, and sends its id.
 - **Closed sets.** `nomenclature` and the entries of `elements` come from
   the pgEnums' lists, in `schema/ingredient-enums.ts`.
-- **`elements` is a list of that closed set** (DESIGN.md §5, MB.157; built by
-  MB.159, replacing the single `element`): an array of the five, each entry
+- **`elements` is a list of that closed set** (DESIGN.md §5): an array of the five, each entry
   refused at its position (`['elements', i]`) if it is not one of them,
   with "Choose one of the five elements". A repeat is refused at the
   repeat's position, the second occurrence, naming the element — "Fire is
@@ -179,15 +170,11 @@ Rules both variants enforce:
   Nothing is trimmed and no entry is blank, since an enum has neither, so a
   list left with no entries, `[]`, is the only absence, and
   `dropBlankEntries` turns it into `null` as it does an emptied text list.
-  The list keeps the order chosen and is never reordered. Neither schema
-  keeps `element`, so a caller still sending it has it stripped like any
-  unknown key.
-- **`celestialBodies`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5,
-  MB.134; built by MB.136, replacing the single `planet`, `zodiac` and
-  `color`): free text, each entry trimmed, blank entries dropped by
+  The list keeps the order chosen and is never reordered. A caller sending the old single `element` has it stripped like any unknown key.
+- **`celestialBodies`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5): free text, each entry trimmed, blank entries dropped by
   `dropBlankEntries` after the cross-field rules, and a list left with no
   entries `null`. A repeat but for case is refused at the repeat, blanks
-  counted, as a folk name's is (MB.167), though no unique index stands behind
+  counted, as a folk name's is, though no unique index stands behind
   a list, so a list is never silently stored doubled. An entry is never
   reordered, since each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
@@ -200,7 +187,7 @@ Rules both variants enforce:
   astrology vocabularies"), and on a coven's ingredient an entry off them is
   as valid as one on them. A colour has no vocabulary and no suggestions.
 
-**A compendium entry holds curated values alone** (MB.162). After
+**A compendium entry holds curated values alone**. After
 `CompendiumIngredientInput` parses, `createCompendiumEntry` and
 `updateCompendiumEntry` hold each variant's `form` and each deity to a pick of a live
 curated row — a form under a live group, a deity under a live tradition —
@@ -220,7 +207,7 @@ and colours have no list and are not checked
 ([`db/identity-model.md`](db/identity-model.md), "The ingredient identity
 model").
 
-**An ingredient's forms are `variants`** (MB.219). Each entry is a whole
+**An ingredient's forms are `variants`**. Each entry is a whole
 form, every field but `id` sent, as `IngredientVariantInput` declares it,
 since an entry replaces the row it names: `form` through `requiredText`,
 `""` and `[]` for none elsewhere, and the parse keeps them as sent, so what
@@ -233,21 +220,21 @@ at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
 one form of the ingredient it links: an id, and only beside a link, refused at
 `['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
 form reads the database, so it is the service's. **A form's link names a
-form** (MB.115, the owner's call): a form stands in for a form, so a
+form**: a form stands in for a form, so a
 variant's substitute with `ingredientId` and no `substituteVariantId` is
 refused at `['variants', i, 'substitutes', j, 'substituteVariantId']`
 (`formLinkRules`). The ingredient's own list may still link an
 ingredient whole, and a name needs no form. Seeds write raw, not through the
 schema, so a seeded link is not held to it. With no `variants` sent the
 list is left absent, and the service reads it as no form, as an absent child
-list always reads. The GraphQL input types require it (MB.222), so through the
+list always reads. The GraphQL input types require it, so through the
 API a client sends `[]` for none.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
 default would otherwise overwrite a kind the input merely left out.
 
-**MB.215: both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 now adds are an ingredient's forms, and MB.219 gives each schema them as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. Until MB.222 the top-level `form` and `formId` still parsed, and became one variant when `variants` was absent. MB.222 removed both, and the top-level rule that a picked `formId` stands beside its `form` text, refused at `['formId']` or `['form']`, went with them: every form rule is now per variant ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**Both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 adds are an ingredient's forms, which each schema takes as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. There is no top-level `form` or `formId`: every form rule is per variant ([`ingredients.md`, "An ingredient and its forms"](design-decisions/ingredients.md#an-ingredient-and-its-forms)).
 
 ## Stock
 
@@ -278,7 +265,7 @@ non-blank CHECKs need. The text fields are one list, `REFERENCE_TEXT_FIELDS`,
 read off `FORMAT_OF` in `reference-format.ts`, whose type is every
 `CitationFields` key but `kind`, so a field the renderer gains and the
 formatter lacks fails the type check; the schema is built from the list, with
-`title`, `url` and the two days overriding it (MB.209). `url`
+`title`, `url` and the two days overriding it. `url`
 is an absolute http(s) address a browser can follow, and `modified` and
 `accessed` are calendar days, `YYYY-MM-DD` (`CalendarDay`). Per `kind`: a chapter, an
 article and an entry each need their `container`, named as the kind names it
@@ -296,22 +283,21 @@ extended where the vocabulary has more: a trimmed, non-blank `name` and
 sent. `CategoryInput` adds a `groupId` as `requiredRowId` takes it,
 refused with "Choose a group", and `DeityInput` a `traditionId`, refused
 with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with a
-`groupId` as `CategoryInput` takes it; its `endRedirect` went with MB.220,
-since a form's rename moves no compendium entry's address.
+`groupId` as `CategoryInput` takes it; it has no `endRedirect`, since a form's rename moves no compendium entry's address.
 
 `IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
 the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `color`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
 refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
 held to 4.5:1 against its own theme's harder surface, the dark card or the
-light page (MB.36), through `chipContrast` in `src/lib/contrast.ts`, and
+light page, through `chipContrast` in `src/lib/contrast.ts`, and
 refused at its own column with the ratio: "The light theme colour reads
 2.99:1 on the light page — it needs at least 4.5:1". The ratio is cut to two
 places rather than rounded, so a refused 4.499 never shows as 4.50. The check
 is the schema's rather than the service's alone, so the form refuses before
 the request; it reads nothing but the hex, so it stays client-safe. The pair is then held to one hue, to within 10° (`MAX_HUE_DISTANCE`, `src/lib/group-colors.ts`), or to two greys, and refused at `colorLight` otherwise; Zod runs that object-level check even after a colour has failed its own, so it speaks only once both colours have passed.
 
-The celestial body and zodiac vocabularies (MB.95) share one shape:
+The celestial body and zodiac vocabularies share one shape:
 `vocabulary/validation/astrology-value.ts` builds `CelestialBodyInput` and
 `ZodiacSignInput` as the shape alone, each saying its own noun — "Give the
 sign a name".
-The spell (MB.8) adds its own schema when it lands.
+The spell adds its own schema when it lands.

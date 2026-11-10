@@ -1,6 +1,5 @@
-// CLAUDE.md rule 2: the only application code that imports the client (claude-docs/db/client-imports.md, "Who may import the client").
-// `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
-// bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
+// CLAUDE.md rules 2 and 4 (claude-docs/db/repository-files.md, "Who may import the client"). `db` is not re-exported, so
+// `withAudit`'s `AuditWriter` is the sole write mechanism. Import this file, never a sibling.
 
 export { rotateInvitationToken, withAudit } from './write';
 export {
@@ -112,6 +111,7 @@ export {
   findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
+export { findWorkspaceHoldingSlug, findWorkspaceSlugs } from './workspace-slugs';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findHoldsPasskey,
@@ -135,6 +135,7 @@ export {
   findCardCount,
   findCardPositions,
   findInvitationByToken,
+  hasAcceptedCard,
   findInvitationInWorkspace,
   findInvitedCoven,
   findReceivedInvitation,
@@ -150,6 +151,7 @@ export {
 } from './invitations';
 export {
   findStandingSupportTimeout,
+  findStandingSupportTimeoutByAddress,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -162,6 +164,9 @@ export {
   findSupportRequestsDueToAnonymise,
   findSupportRequestsDueToClose,
   findReplyAwaitingNotice,
+  findSupportRequestByViewTokenHash,
+  findPublicSupportReplies,
+  countSenderRepliesSince,
   findSupportRepliesFor,
   findSupportRequestCount,
   findSupportViewCounts,
@@ -169,6 +174,7 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  findSupportTimeoutsForAddresses,
   RESOLVED_CLOSES_AFTER_DAYS,
   findStandingSupportTimeoutsFor,
 } from './support';
@@ -192,6 +198,24 @@ export {
   findPublishedDocumentVersionPage,
   findUnsentDocumentMailingRecipientPage,
 } from './documents';
+export {
+  findAllHelpArticleChildren,
+  findHelpArticleBySlug,
+  findHelpArticleChildren,
+  findHelpArticlePathPage,
+  findHelpArticleSlugsByIds,
+  findHelpArticleHoldingSlug,
+  findHelpArticleIndexPage,
+  findHelpArticleKeeperPage,
+  findHelpArticlesWhoseBodyHolds,
+  findHelpArticleSearchPage,
+  findHelpArticleStaffPage,
+  findHelpFaqPage,
+  findHelpGlossaryPage,
+  findLastHelpPosition,
+  findAllHelpOrdered,
+} from './help';
+export type { HelpArticleRow } from './help';
 export {
   findStandingUserAccessPause,
   findStandingUserAccessPausesFor,
@@ -278,4 +302,9 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';
+export type {
+  DocumentMailingItem,
+  DocumentMailingRow,
+  PendingDocumentVersion,
+  WorkspaceSlugRow,
+} from './types';

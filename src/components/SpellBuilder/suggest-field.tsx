@@ -2,6 +2,7 @@
 
 import { type ReactElement, useMemo } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
+import { tidy } from '@/lib/formats';
 import Combobox from '../Combobox';
 import { matchesLabelOrGroup } from '../Combobox/match';
 import { FieldShell, useField } from '../Field';
@@ -40,14 +41,19 @@ export function SpellSuggestField({
         labelId={shell.labelId}
         value={text}
         onChange={field.onChange}
-        onBlur={field.onBlur}
+        onBlur={() => {
+          // Typed text is kept as typed, apart from its spacing.
+          if (tidy(text) !== text) field.onChange(tidy(text));
+          field.onBlur();
+        }}
         onPick={(value) => field.onChange(value)}
         suggestions={suggestions}
         offerTyped
-        // The value's own mark in the box, there while the text is a listed
-        // name: a value typed outside the list draws none.
         icon={icon?.(text)}
         placeholder={placeholder}
+        spellCheck={false}
+        autoCapitalize="none"
+        enterKeyHint="next"
         inputRef={field.ref}
         name={field.name}
         {...aria}

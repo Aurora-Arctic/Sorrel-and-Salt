@@ -1,20 +1,14 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { SetUserRoleResult } from './types';
-
-// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, the reason reaching the ledger, and one refusal per error code, read as the browser reads them.
-// Which callers and targets the service refuses is services/user-role.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const GRANTEE = '00000000-0000-0000-0000-0000000000e1';

@@ -2,10 +2,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ComboboxTypeahead } from '@/components/Combobox/typeahead';
+import { useTurkishCaseFolding } from '../../support/turkish-locale';
 
-// The type-ahead box: a closed set chosen by typing, the list
-// narrowing to the choices whose label holds the text, and only a choice
-// ever the value (claude-docs/components/combobox.md, "The type-ahead box").
+// claude-docs/components/combobox.md, "The type-ahead box"
 
 const TRADITIONS = [
   { value: 'fixtural', label: 'Fixtural' },
@@ -13,15 +12,16 @@ const TRADITIONS = [
   { value: 'testic', label: 'Old Testic' },
 ];
 
-/** The box with its value held outside it, and shown, as a form holds a field's. */
 function Harness({
   initial = '',
   clearable,
   onSettle,
+  match,
 }: {
   initial?: string;
   clearable?: boolean;
   onSettle?: (value: string) => void;
+  match?: (query: string) => readonly (typeof TRADITIONS)[number][];
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -36,6 +36,7 @@ function Harness({
         placeholder="Choose a tradition"
         required
         clearable={clearable}
+        match={match}
       />
       <output aria-label="Value">{value}</output>
     </>
@@ -59,7 +60,6 @@ describe('ComboboxTypeahead', () => {
 
     expect(screen.getByRole('listbox')).toBeVisible();
     expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
-    // No "use what you typed" row: nothing but a choice can be picked.
     type('zzz');
     expect(options()).toEqual([]);
   });
@@ -124,14 +124,11 @@ describe('ComboboxTypeahead', () => {
 
     type('old testic');
     expect(value()).toHaveTextContent('testic');
-    // Left, the box reads the choice's own label.
     fireEvent.blur(box());
     expect(box()).toHaveValue('Old Testic');
   });
 
-  // A press where the hidden clear sits lands on
-  // the indicators' strip, `visibility` passing it through, and enters the
-  // box as a press on the rest of the control does.
+  // A press where the hidden clear sits lands on the indicators' strip (`visibility` passes it through) and enters the box.
   it('enters the box from a press where its hidden clear sits', () => {
     render(<Harness initial="" clearable />);
     const kept = screen
@@ -143,9 +140,6 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveFocus();
   });
 
-  // An empty box keeps its clear's room, so the
-  // clear is drawn from the first render, hidden from the tree and the tab
-  // order while there is nothing to clear, and offered once there is.
   it('clears to no choice from its clear, offered while it holds text or a choice and kept, hidden, while it does not', () => {
     render(<Harness initial="" clearable />);
     const clear = () => screen.queryByRole('button', { name: 'Clear Tradition' });
@@ -172,8 +166,6 @@ describe('ComboboxTypeahead', () => {
     expect(kept()).toHaveAttribute('tabindex', '-1');
   });
 
-  // A choice may say what it is besides its label: a member's role.
-  // The row reads it, the chosen box describes it, and typing never matches it.
   it('reads a qualified choice with its qualifier, describes the chosen one by it, and matches the label alone', () => {
     const [plain, ...rest] = TRADITIONS;
     function Qualified() {
@@ -203,13 +195,10 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveValue('Fixtural');
     expect(box()).toHaveAccessibleDescription('(Fixture Isle) Practised on the isle.');
 
-    // Typed over in another case, the box is being typed in, not describing.
     type('fixtural');
     expect(box()).not.toHaveAccessibleDescription(/Fixture Isle/);
   });
 
-  // A form group's icon leads the chosen label, as the select-only
-  // box's closed value draws it; typed over, the box is being typed in.
   it('draws the chosen choice icon before the text once the box reads its label, never while typed', () => {
     const [marked, ...rest] = TRADITIONS;
     function Marked() {
@@ -242,8 +231,6 @@ describe('ComboboxTypeahead', () => {
     expect(control().querySelector('[aria-hidden="true"] [data-mark]')).toBeNull();
   });
 
-  // A filter applies a choice, not each letter typed: it hears the
-  // value once a pick, the clear or leaving the box settles it.
   it('settles on a pick, on its clear and on leaving the box, never while typed', () => {
     const onSettle = vi.fn();
     render(<Harness clearable onSettle={onSettle} />);
@@ -267,5 +254,41 @@ describe('ComboboxTypeahead', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear Tradition' }));
     expect(onSettle).toHaveBeenLastCalledWith('');
     expect(onSettle).toHaveBeenCalledTimes(4);
+  });
+  it('lists what a given match returns, in its order, for the typed text alone', () => {
+    const match = vi.fn((query: string) => (query === 'q' ? [TRADITIONS[2], TRADITIONS[0]] : []));
+    render(<Harness initial="mockish" match={match} />);
+
+    // A box reading its choice opens on every choice, without asking the match.
+    fireEvent.click(box());
+    expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
+    expect(match).not.toHaveBeenCalled();
+
+    type('Q');
+    expect(match).toHaveBeenLastCalledWith('q');
+    expect(options()).toEqual(['Old Testic', 'Fixtural']);
+    fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
+    expect(value()).toHaveTextContent('fixtural');
+  });
+});
+
+describe('ComboboxTypeahead under a Turkish-locale browser', () => {
+  it('finds a choice whose label has a capital I by the same word in lower case', () => {
+    const restore = useTurkishCaseFolding();
+    try {
+      render(
+        <ComboboxTypeahead
+          id="tradition"
+          label="Tradition"
+          value=""
+          onChange={() => {}}
+          choices={[{ value: 'irisic', label: 'Irisic' }]}
+        />,
+      );
+      type('irisic');
+      expect(options()).toEqual(['Irisic']);
+    } finally {
+      restore();
+    }
   });
 });

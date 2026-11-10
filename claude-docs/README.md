@@ -6,7 +6,7 @@ file gets fixed.
 
 **The summaries are the working set** — the current shape of each area, and
 enough to start a task without opening anything else. They are meant to be
-self-sufficient: if you need a transcript or an archived record to understand
+self-sufficient: if you need an archived record to understand
 how the system works today, that is a defect in the summary, not a research step.
 
 **The agent guidance sits beside this directory**, not in it: `CLAUDE.md` at the
@@ -14,30 +14,31 @@ root is loaded on every turn, and its long forms are `.claude/rules/<area>.md`,
 each loaded only once a file in its area is read ([`agent-skills.md`](agent-skills.md),
 "Rule files"). The full command table is [`commands.md`](commands.md).
 
-| Path                                | What it holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DESIGN.md`                         | The specification. The source of truth for behaviour.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `TASKS.md`                          | The work breakdown's index: the deferrals, the execution-order table and the list of milestone files, corrected in place. The rules every task follows are `CLAUDE.md`'s. The live list of what to do is the GitHub issue tracker (see [`CLAUDE.md`](../CLAUDE.md)).                                                                                                                                                                                                                            |
-| `tasks/<milestone>.md`              | One milestone section of the breakdown each (`m0` … `m11`, `m7a`, `mb`, `mw`), read as one document in the order `scripts/tasks-md.mjs` declares. A task is read by its `**<ID> — ` heading, never the file.                                                                                                                                                                                                                                                                                    |
-| `waves/wave-NN.md`                  | Why a wave's tasks sit where they do — the reasoning column of `TASKS.md`'s execution-order table, one file per wave, linked from its row.                                                                                                                                                                                                                                                                                                                                                      |
-| `backlog.md`                        | The owner's running list of what comes after v1 — fonts, design, v2's billing, V3, and the public launch's WAF and RLS. Not a task list: a task is minted when it is scheduled.                                                                                                                                                                                                                                                                                                                 |
-| `task-tracking.md`                  | The issue tracker and Project board: title and status rules, `scripts/task-board.mjs`, the close-on-merge Action, and the one-off Asana migration script.                                                                                                                                                                                                                                                                                                                                       |
-| `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached. [`modules.md`](modules.md) is the one that says where code lives: the five domain modules, what each owns, and the boundary between them.                                                                                                                                                                                                                                 |
-| `loading.md`                        | The loading standard (M12.33): the three parts of a wait (control, region, page), the reduced-motion pulse, the coven switch, why there is no `loading.tsx`, how to adopt it, and the sourced research behind it.                                                                                                                                                                                                                                                                               |
-| `dependencies.md`                   | What is behind, blocked or unfixable among the direct dependencies, how to rerun the audit, and when to look again.                                                                                                                                                                                                                                                                                                                                                                             |
-| `security-headers.md`               | The headers every page carries (content security policy, referrer policy, `nosniff`), why HSTS is left to Vercel, and how to allow a new third-party source.                                                                                                                                                                                                                                                                                                                                    |
-| `<summary>/<section>.md`            | **A summary too large to read whole, one `## ` section a file** — `db/`, `auth/`, `ci/`, `testing/` and `graphql/` — moved as is, and a `### ` subsection too when it is large enough to read alone. `<summary>.md` is their index: it keeps every `## ` and `### ` heading with a link, and a sentence for each section. Code cites the file, and a reader opens it, rather than the index. `scripts/split-doc.mjs` makes the split and `scripts/repoint-doc-citations.mjs` points code at it. |
-| `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                                                                                                                                                                                                                                                                                                                                                                  |
-| `transcripts/<subsystem>.md`        | **Frozen as of MB.31** — how a subsystem reached its shape. No longer appended to; a PR body is the record now.                                                                                                                                                                                                                                                                                                                                                                                 |
-| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place, never archived mid-project.                                                                                                                                                                                                                                                                                                                                                                        |
-| `archive/m0/`, `archive/wave-<n>/`  | **Frozen.** M0's and waves 1–2's transcripts and decision records, plus text cut from a live doc. Nothing new goes in. See [`archive/`](archive/README.md).                                                                                                                                                                                                                                                                                                                                     |
+| Path                         | What it holds                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DESIGN.md`                  | The specification. The source of truth for behaviour.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `TASKS.md`                   | The work breakdown's index: the deferrals, the execution-order table and the list of milestone files, corrected in place. The rules every task follows are `CLAUDE.md`'s. The live list of what to do is the GitHub issue tracker (see [`CLAUDE.md`](../CLAUDE.md)).                                                                                                                                                                                                |
+| `tasks/<milestone>.md`       | One milestone section of the breakdown each (`m0` … `m11`, `m7a`, `mb`, `mw`), read as one document in the order `scripts/tasks-md.mjs` declares. A task is read by its `**<ID> — ` heading, never the file.                                                                                                                                                                                                                                                        |
+| `waves/wave-NN.md`           | Why a wave's tasks sit where they do — the reasoning column of `TASKS.md`'s execution-order table, one file per wave, linked from its row.                                                                                                                                                                                                                                                                                                                          |
+| `backlog.md`                 | The owner's running list of what comes after v1 — fonts, design, v2's billing, V3, and the public launch's WAF and RLS. Not a task list: a task is minted when it is scheduled.                                                                                                                                                                                                                                                                                     |
+| `task-tracking.md`           | The issue tracker and Project board: title and status rules, `scripts/task-board.mjs`, the close-on-merge Action, and the one-off Asana migration script.                                                                                                                                                                                                                                                                                                           |
+| `<subsystem>.md`             | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached. [`modules.md`](modules.md) is the one that says where code lives: the five domain modules, what each owns, and the boundary between them.                                                                                                                                                                                                     |
+| `loading.md`                 | The loading standard (M12.33): the three parts of a wait (control, region, page), the reduced-motion pulse, the coven switch, why there is no `loading.tsx`, how to adopt it, and the sourced research behind it.                                                                                                                                                                                                                                                   |
+| `dependencies.md`            | What is behind, blocked or unfixable among the direct dependencies, how to rerun the audit, and when to look again.                                                                                                                                                                                                                                                                                                                                                 |
+| `day-1.md`                   | The reading order for a new engineer and the one request-path diagram.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `design/`                    | DESIGN.md's §5, §7 and §9, one file each: `data-model.md`, `graphql/README.md`, `routes.md`.                                                                                                                                                                                                                                                                                                                                                                        |
+| `security-headers.md`        | The headers every page carries (content security policy, referrer policy, `nosniff`), why HSTS is left to Vercel, and how to allow a new third-party source.                                                                                                                                                                                                                                                                                                        |
+| `<summary>/<section>.md`     | **A summary too large to read whole, one `## ` section a file** — `db/`, `auth/`, `ci/`, `testing/` and `graphql/` — moved as is, and a `### ` subsection too when it is large enough to read alone. `<summary>/README.md` is their index: a flat list of the files with a sentence for each. Code cites the file, and a reader opens it, rather than the index. `scripts/split-doc.mjs` makes the split and `scripts/repoint-doc-citations.mjs` points code at it. |
+| `components/<name>.md`       | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                                                                                                                                                                                                                                                                                                                                      |
+| `design-decisions/<area>.md` | One of nine area docs, a section per decision — what was decided, why, and what it rules out. Live; superseded in place. `design-decisions/INDEX.md` lists every decision by area.                                                                                                                                                                                                                                                                                  |
+| `archive/`                   | **Frozen.** Tarred decision records and the bodies of closed-wave task entries (`archive/tasks-closed-waves.tar.gz`), and text cut from a live doc. Nothing new goes in. Never read.                                                                                                                                                                                                                                                                                |
 
 ## What lives where, and what to read
 
 - A **summary** is the page you read first, and the only one you should need. It
   carries the decision and the constraint, not the story of how they were
   reached. Where a constraint would look arbitrary without a reason, give the
-  reason in a clause; the argument at length is its decision record's, cited
+  reason in a clause; the argument at length is its section in the area doc under `design-decisions/`, cited
   ("One home per fact" below).
 - A **code comment** is the other half of that rule, pointing the other way. The
   comment says what the code is and why it is not the obvious alternative; the
@@ -47,28 +48,36 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
   comment is the copy that gets pasted into sixteen files and drifts. The rule
   in full is "Comments in code" below. Prose that leaves a comment lands in the
   summary for its subsystem, never in `archive/`.
-- A **transcript** was written as work landed, one entry per task or session.
-  MB.31 stopped that: the five that exist are frozen, and a PR body now carries
-  what one would have said.
-- A **decision record** captures the reasoning behind one contested choice so it
-  does not get re-argued.
+- A **decision record**, a section of an area doc under `design-decisions/`,
+  captures the reasoning behind one contested choice so it does not get
+  re-argued.
 - A summary is corrected in the PR that makes it wrong — "Correcting a doc"
   below.
+
+`node scripts/split-doc.mjs` moves a doc's sections into their own files as they are, editing only links (a `../` on each relative one, intra-doc anchors repointed), and `node scripts/repoint-doc-citations.mjs` rewrites citations after a heading moves.
+
+## What a doc holds
+
+A live doc holds only what adding a feature in its area needs, and holds each fact once. The test for every sentence is two questions: would an agent adding a feature here need it, and is it said nowhere else? A no to either cuts it, or turns it into a clause and a citation to the fact's one home. Two kinds of sentence, judged differently:
+
+- **A binding fact stays**, whatever its age or how much like background it reads: a rule that still binds, a constraint's reason, a named exception, a command, a path, an env var, a number with its unit. Cutting one of these is a loss, and a doc that would drop one to get shorter is not made shorter.
+- **History goes**: what was tried, who decided, when, which task, what it replaced. Age is not the test; what the sentence does is. A decision record keeps the argument behind a choice that would otherwise be re-argued, and the rest is deleted or tarballed in `archive/`.
 
 ## One home per fact
 
 A summary stands on its own for the **current shape**, and cites for the
 **argument**. Each fact has one home, and every other mention is a clause and a
-citation, so that a correction is one edit and a read is one page (MB.147):
+citation, so that a correction is one edit and a read is one page:
 
-| Fact                                | Home                                                       |
-| ----------------------------------- | ---------------------------------------------------------- |
-| A binding rule                      | `CLAUDE.md`, or its long form in `.claude/rules/<area>.md` |
-| Specified behaviour and data model  | `DESIGN.md`, cited by §                                    |
-| A subsystem's current shape         | its summary, `<subsystem>.md` or `<summary>/<section>.md`  |
-| The argument for a contested choice | its decision record in `design-decisions/`                 |
-| A task's scope                      | its entry in `tasks/<milestone>.md`                        |
-| Ordering reasoning                  | its wave's `waves/wave-NN.md`                              |
+| Fact                                            | Home                                                            |
+| ----------------------------------------------- | --------------------------------------------------------------- |
+| A binding rule                                  | `CLAUDE.md`, or its long form in `.claude/rules/<area>.md`      |
+| Specified behaviour and data model              | `DESIGN.md`, cited by §                                         |
+| A subsystem's current shape                     | its summary, `<subsystem>.md` or `<summary>/<section>.md`       |
+| The argument for a contested choice             | its section in the area doc under `design-decisions/`           |
+| A task's scope                                  | its entry in `tasks/<milestone>.md`                             |
+| Ordering reasoning                              | its wave's `waves/wave-NN.md`                                   |
+| A nuance a reader must be warned of in the code | a one-line comment; its detail is the owning doc section, cited |
 
 - A **task entry** keeps its story, scope and acceptance criteria, and cites the
   §, summary or rule it implements. Its "Decided while building" keeps the
@@ -88,18 +97,28 @@ that two or more live docs and skills share, and the pairs sharing most, while
 `node scripts/doc-overlap.mjs <a.md> <b.md>` prints the passages one shares
 with the other. It is a report, not a guard, because a citation's clause
 legitimately repeats a few words of what it cites and no threshold tells that
-from a copy. MB.147's pass took it from 7,536 runs to 3,937, working pair
-by pair from the largest and stopping where a pair shares under about 60.
+from a copy; work pair by pair from the largest and stop where a pair shares
+under about 60.
 
 ## Comments in code
 
-A comment describes the code as it is. It says what this is and, where the
-obvious alternative would be wrong, why it is built this way instead, in one
-present-tense clause. Everything else about the code lives here, under
-`claude-docs/`: when it was built, which task built it, who decided, what was
-tried first, and what will replace it. A reader should get through a file with
-nothing but the code open (`CLAUDE.md`, Conventions; the record is
-`design-decisions/m14.32-comment-guidelines.md`).
+A comment is only what warns the reader of a nuance the code cannot show; the
+detail lives here, under `claude-docs/`. Before writing or keeping one, ask
+whether the reader loses anything without it that the identifier, its type,
+the next line of code or the cited doc does not give back; if not, it goes. A
+comment that survives says what this is and, where the obvious alternative
+would be wrong, why it is built this way instead, in one present-tense clause.
+Everything else about the code lives in the docs: when it was built, which task
+built it, who decided, what was tried first, and what will replace it. A
+reader should get through a file with nothing but the code open (`CLAUDE.md`,
+Conventions; the record is `design-decisions/process.md`, "Comments say how the code works, and nothing else").
+
+- **Cut** a description that restates the name, the type or the next line; a
+  JSDoc that only names what a function does when the name says it; a story or
+  test comment narrating the steps below it; the "what" half of a what-and-why
+  when the what is the next line; a section divider no tool reads; an
+  `@param` or `@returns` that restates the type; a file header listing the
+  file's exports.
 
 - **History never appears in a comment.** No task id (`M10.5`, `MB.115`,
   `MW.15`), no `Story 14` or `Wave 11`, no "the owner's call", no date, no
@@ -124,31 +143,33 @@ nothing but the code open (`CLAUDE.md`, Conventions; the record is
   belongs on the shared helper, the type, or the doc it describes, and the
   copies become a pointer or nothing. A `@throws` line, a stories-file note or
   a framework fact repeated across files is the sign.
-- **Plain writing applies**: everyday words, the thing described before it is
-  named, one idea per sentence (`.claude/rules/writing.md`, "Code comments").
+- **Write it plainly, in the present tense, with no actors and no time.** Say
+  what the thing is first, in everyday words, then the one clause of why if the
+  obvious alternative would be wrong: `Rows the viewer may see, filtered in SQL
+so a private spell never reaches the resolver.` Not "X was added so that",
+  "the owner chose" or "until Y lands". One idea per line and one line per field
+  or prop; a doc pointer is a citation after the clause it supports, never a
+  paragraph restating the section (`.claude/rules/writing.md`).
 - **Review holds this rule**, with no mechanical guard on density or on history
-  markers, by the owner's decision of 2026-10-29: a density guard cannot be
-  written without penalising the comments the third bullet protects, and a
-  marker guard was declined. Citation is held by review too, since MB.224
-  retired its guard with the rest of the agent-only tooling's tests: a
-  `claude-docs/` path resolves and never points into `archive/`, in code, in
-  `CLAUDE.md` and in the markdown under `.claude/`, and a section is cited in
-  the file it lives in, not through a split summary's index —
-  `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db.md`'s heading
+  markers: a density guard cannot be written without penalising the comments
+  the "These stay" bullet protects. Citation form is held by review too: a
+  `claude-docs/` path resolves and never points into `archive/`, in
+  code, in `CLAUDE.md` and in the markdown under `.claude/`, and a section is
+  cited in the file it lives in, not through a split summary's index —
+  `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db/README.md`'s heading
   for it.
 
 ## Correcting a doc
 
-A doc is corrected in the PR that makes it wrong (MB.31). There is no scheduled
+A doc is corrected in the PR that makes it wrong. There is no scheduled
 compression pass: a statement goes stale in a particular diff, and that diff is
-where it is cheapest to fix and hardest to forget. `MW.15`, the v1 close-out,
-is the one remaining pass over the whole set. Decision records stay live and
-are superseded in place.
+where it is cheapest to fix and hardest to forget. Decision records stay live
+and are superseded in place.
 
-- **The test is "is this statement out of date?", not "is this narrative?"**
-  Two things are never cut for being old: a forward-looking rule that still
-  binds later work, and history that is still true. Trimming a rule because it
-  reads like background is how a rule gets lost.
+- **Two tests, in order: "is this statement out of date?", then "does adding a
+  feature need it?"** A wrong statement is corrected. A right one stays if it
+  is a binding fact and goes if it is history, by the split in "What a doc
+  holds" above; a rule that reads like background is still a rule.
 - **A summary must stand on its own.** If understanding how the system works
   today means opening a decision record or an archived file, that is a defect
   in the summary, not a research step.
@@ -157,25 +178,13 @@ are superseded in place.
   documented behaviour. A documentary asymmetry — one change argued at length,
   its reversal recorded nowhere — is evidence of intent, not proof of it. Ask.
 
-## `archive/` is written, not read
+## `archive/` is never read
 
-Everything under `archive/` is write-once, and **nothing there is required
-reading**. It exists so that superseded text stays recoverable without sitting
-in the way of the docs every session opens first. Treat it as out of context:
-
-- **Do not read it for context.** Archived files record what was believed when
-  they were written and are allowed to be wrong. A live doc that sends you into
-  `archive/` to understand the system is a bug in the live doc.
-- **Do not edit it to correct something.** Fix the live doc instead.
-- **Nothing new goes in.** MB.31 retired the compression pass that filled it, so
-  the archive is closed at what waves 1–2 put there. Text that leaves a live doc
-  now either moves to another live doc because it still binds, or goes, and git
-  history is the record.
+`claude-docs/archive/` exists, is closed, and is never read: its tarballs record what was believed when they were written and are allowed to be wrong. A live doc that sends you into it to understand the system is a bug in the live doc; fix the live doc instead. Text that leaves a live doc either moves to another live doc because it still binds, or is deleted (git history is the record), or, when it is a whole file of history worth keeping in the repository, is added to a tarball there and listed in `archive/README.md`.
 
 ## Naming
 
 Lower-kebab-case, matching the component directory names — `theme-toggle.md`,
-not `THEME-TOGGLE.md`. A subsystem summary and its transcript share a filename
-(`styling.md` ↔ `transcripts/styling.md`). A section file is named for its
+not `THEME-TOGGLE.md`. A section file is named for its
 heading, shortened and without the task id — `db/keyset-pages.md` for "Keyset
 pages (M3.6)".

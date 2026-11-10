@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 
-// What the mail carries — its recipient and its link. Its wording and its
-// design are the story's (src/emails/admin-invitation.stories.tsx).
-
 const URL = 'http://localhost:8000/invite/fixture-token';
 
 const INVITER = 'Fixture Owner';
@@ -17,7 +14,6 @@ const message = (siteRole: 'curator' | 'admin' = 'admin') =>
   });
 
 describe('adminInvitationMessage', () => {
-  // A button, and the link written out beneath it for a client that hides buttons.
   it('addresses the mail, with the link once in the text and in two HTML anchors', async () => {
     const mail = await message();
 

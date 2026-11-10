@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   usePathname: () => '/coven/hearth',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -14,7 +15,7 @@ describe('SiteFooter', () => {
     render(<SiteFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(6);
+    expect(screen.getAllByRole('link')).toHaveLength(8);
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
       '/coven/hearth?support=',
@@ -35,6 +36,15 @@ describe('SiteFooter', () => {
     ).toHaveAttribute('href', '/privacy');
   });
 
+  it('links to the help pages, which a signed-out visitor may read', () => {
+    render(<SiteFooter />);
+    expect(
+      within(screen.getByRole('navigation', { name: 'Footer' })).getByRole('link', {
+        name: 'Help',
+      }),
+    ).toHaveAttribute('href', '/help');
+  });
+
   it('links to the disclaimer', () => {
     render(<SiteFooter />);
     expect(
@@ -42,6 +52,15 @@ describe('SiteFooter', () => {
         name: 'Disclaimer',
       }),
     ).toHaveAttribute('href', '/disclaimer');
+  });
+
+  it('links to the About Us page', () => {
+    render(<SiteFooter />);
+    expect(
+      within(screen.getByRole('navigation', { name: 'Footer' })).getByRole('link', {
+        name: 'About Us',
+      }),
+    ).toHaveAttribute('href', '/about');
   });
 
   it('links to the terms of use', () => {

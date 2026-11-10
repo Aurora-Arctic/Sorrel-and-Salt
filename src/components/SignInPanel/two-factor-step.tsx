@@ -1,20 +1,19 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
+import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
+import { PlainTextField, SwitchField } from '../Field';
 import Notice from '../Notice';
-import PageHeader from '../PageHeader';
 import type { TwoFactorStepProps } from './types';
 
 // The second step of a password sign-in with two-factor on: a code from an authenticator app, or a
 // backup code. The right password has already been checked; this step's answer is what signs in
-// (claude-docs/components/sign-in-panel.md, "Two-factor").
+// (claude-docs/components/sign-in-panel.md, "Contracts").
 
-export const WRONG_CODE = "That code isn't right. Please try again.";
 export const CODE_LOCKED =
   'Too many wrong codes. Your account is locked for 15 minutes; please try again after that.';
 export const CHALLENGE_EXPIRED =
@@ -34,7 +33,6 @@ interface Refusal {
 }
 
 function refusal(failure: Failure): Refusal | 'restart' {
-  // The attempt itself is over: its cookie expired, or it spent its own allowance of codes.
   if (failure.code === 'INVALID_TWO_FACTOR_COOKIE') return 'restart';
   if (failure.code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE') return 'restart';
   if (failure.code === 'ACCOUNT_TEMPORARILY_LOCKED') return { alert: CODE_LOCKED };
@@ -45,14 +43,12 @@ function refusal(failure: Failure): Refusal | 'restart' {
 }
 
 const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement => {
-  const codeId = useId();
   const [method, setMethod] = useState<Method>('app');
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
 
-  // An app's code is digits, often shown in two groups; a backup code is taken as typed bar its ends.
   const entered = method === 'app' ? code.replace(/\s/g, '') : code.trim();
   const ready = entered !== '' && !pending;
 
@@ -83,15 +79,8 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
     window.location.assign(signInPath(next));
   };
 
-  const codeField = fieldDescription({ id: codeId, error: problem.code });
-
   return (
     <div className="sign-in-panel__password">
-      <PageHeader
-        className="sign-in-panel__password-head"
-        headingClassName="auth-title sign-in-panel__password-heading"
-        title="Enter Your Code"
-      />
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
       <p>
         {method === 'app'
@@ -100,30 +89,22 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
       </p>
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
-        <FieldShell
+        <PlainTextField
+          // A new input for each method, so the browser's one-time-code autofill is offered only for the app's.
+          key={method}
           label={method === 'app' ? 'Code From Your App' : 'Backup Code'}
           required
-          {...codeField}
-        >
-          <input
-            // A new input for each method, so the browser's one-time-code autofill is offered only for the app's.
-            key={method}
-            placeholder="Add a code"
-            id={codeField.controlId}
-            className="input"
-            type="text"
-            inputMode={method === 'app' ? 'numeric' : 'text'}
-            autoComplete={method === 'app' ? 'one-time-code' : 'off'}
-            spellCheck={false}
-            // The step replaces the password form, so the field the person was typing in is gone.
-            // oxlint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            aria-required
-            {...codeField.aria}
-          />
-        </FieldShell>
+          placeholder={method === 'app' ? '123456' : undefined}
+          inputMode={method === 'app' ? 'numeric' : undefined}
+          autoComplete={method === 'app' ? 'one-time-code' : 'off'}
+          spellCheck={false}
+          // The step replaces the password form, so the field the person was typing in is gone.
+          // oxlint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          value={code}
+          onChange={setCode}
+          error={problem.code}
+        />
         <SwitchField
           label="Trust This Device for 30 Days"
           name="trustDevice"

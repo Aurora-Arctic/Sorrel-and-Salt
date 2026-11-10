@@ -15,7 +15,6 @@ import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 
 const ID = '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60';
 
-/** `count` rows keyed `k000`, `k001`, …, as a repository page would return them. */
 function rows(count: number, from = 0): PageEntry<{ n: number }>[] {
   return Array.from({ length: count }, (_, index) => {
     const n = from + index;
@@ -67,6 +66,18 @@ describe('cursor', () => {
     expect(decoded).toEqual({ k: ['Testwort'], i: ID });
   });
 
+  // The codec runs in the browser without `Buffer`, so a cursor already in a link, written by `Buffer`, must still read, and a
+  // new one must read the same, letters past ASCII included.
+  it('writes and reads the same base64url as Node, for a key past ASCII', () => {
+    const cursor = { key: ['Ærøskøbing wort', '月桂'], id: ID };
+    const byNode = Buffer.from(JSON.stringify({ k: cursor.key, i: cursor.id })).toString(
+      'base64url',
+    );
+
+    expect(encodeCursor(cursor)).toBe(byNode);
+    expect(decodeCursor(byNode)).toEqual(cursor);
+  });
+
   it('refuses a cursor that is not one of its own', () => {
     const forged = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
 
@@ -79,7 +90,6 @@ describe('cursor', () => {
       forged({ k: ['Testwort'] }),
       forged({ k: ['Testwort'], i: 7 }),
       forged({ k: ['Testwort'], i: '' }),
-      // A key with no parts (the single-part shape), and a part that is not text.
       forged({ k: 'Testwort', i: ID }),
       forged({ k: [], i: ID }),
       forged({ k: ['Testwort', 7], i: ID }),
@@ -178,8 +188,6 @@ describe('resolvePage', () => {
   });
 });
 
-// An admin list's page and its "Page X of Y": one page of the default size
-// after or before a cursor, counted from its own first row.
 describe('resolveNumberedPage', () => {
   it('reads the first page of the default size, and counts from its first row', async () => {
     let asked: PageRequest | undefined;

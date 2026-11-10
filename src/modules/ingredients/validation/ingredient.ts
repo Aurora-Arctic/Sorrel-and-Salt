@@ -2,13 +2,14 @@ import { z } from 'zod';
 import {
   CITED_ENTRY_FIELDS,
   CITED_VARIANT_FIELDS,
-  INGREDIENT_ELEMENTS,
   NAME_BASES,
   NAMELESS_KIND,
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
+import { trimEnds } from '../../../lib/formats';
 import { RowId, optionalText, requiredText } from '../../../lib/validation';
+import { elementArray, textEntries } from './lists';
 import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
@@ -25,13 +26,11 @@ import type {
   VariantFields,
 } from './types';
 
-// One ingredient as IngredientForm submits it: the resolver and the service both parse it, since the browser is not
-// the only caller. Two variants, one per tier (claude-docs/validation.md, "The two ingredient variants").
+// Both parse it, since the browser is not the only caller (claude-docs/validation.md, "The two ingredient variants").
 
 /** Blank entries stay through the cross-field rules so an issue's index counts the rows sent; `dropBlankEntries` then drops them, and a list left with none is absent. */
-const textList = z.array(z.string().trim()).nullish();
+const textList = textEntries.nullish();
 
-/** The entries of a list that are not blank, in order. */
 const nonBlank = <T extends string>(list: T[]) => list.filter((entry) => entry !== '');
 
 function withoutBlanks<T extends string>(list: T[] | null | undefined) {
@@ -49,19 +48,6 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   folkNames: withoutBlanks(value.folkNames),
 });
 
-/** Closed: the five values and nothing typed (DESIGN.md §5). Kept in the order chosen, and a repeat is refused rather than dropped, as the form never offers an element twice. */
-const elementArray = z
-  .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
-  .superRefine((elements, ctx) => {
-    elements.forEach((element, index) => {
-      if (elements.indexOf(element) === index) return;
-      ctx.addIssue({
-        code: 'custom',
-        path: [index],
-        message: `${element[0]?.toUpperCase()}${element.slice(1)} is already chosen`,
-      });
-    });
-  });
 const elementList = elementArray.nullish();
 
 /** A substitute links an ingredient or names one (DESIGN.md §5, `ingredient_substitutes`): halves trimmed and blank as absent, a blank entry refused later so the service's refusal still counts the rows sent. */
@@ -86,7 +72,6 @@ const referenceLink = z.object({
   supports: z.array(z.string().trim()).nullish(),
 });
 
-/** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
 function asLinkOrName<IdKey extends string>(
   idKey: IdKey,
   entries: LinkOrNameFields<IdKey>[],
@@ -108,7 +93,6 @@ function asLinkOrName<IdKey extends string>(
   });
 }
 
-/** Each substitute as the one half it carries, with the form a link names. */
 function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
   return asLinkOrName('ingredientId', entries).map((entry, index) => ({
     ...entry,
@@ -116,7 +100,6 @@ function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
   }));
 }
 
-/** Each reference as its id, locator and the two attributes, once `referenceRules` has held it to an id; each field it supports once. */
 function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
   return entries.map(({ referenceId, locator, nameBasis, supports }) => ({
     referenceId,
@@ -126,7 +109,6 @@ function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
   }));
 }
 
-/** Each substitute and deity as the one half it carries, and each reference as its id and locator. */
 function asEntries<
   T extends {
     substitutes?: SubstituteFields[] | null;
@@ -198,14 +180,14 @@ const fields = {
   name: requiredText('Give the ingredient a name'),
   // No format regex: §5's formal names defeat one.
   canonicalName: optionalText(),
-  description: optionalText(),
+  description: optionalText(trimEnds),
   elements: elementList,
   // Free text lists like a form: the vocabularies suggest and nothing here refuses; the compendium service holds its tier to them, and a coven's stay free text.
   celestialBodies: textList,
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
-  safetyNotes: optionalText(),
+  safetyNotes: optionalText(trimEnds),
   // The ingredient's own flag, independent of each form's; absent on a create is off.
   toxic: z.boolean().nullish(),
   substitutes: z.array(substitute).nullish(),
@@ -224,7 +206,6 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
       : 'Not a classification',
 });
 
-/** The rules across fields: the database's kind-to-name CHECK, a folk name that is neither the name nor another folk name, and each list entry once. */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
   const named = value.canonicalName != null;
@@ -273,7 +254,6 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   variantRules(value.variants ?? [], ctx);
 }
 
-/** The forms across the list: each folded form once, as `ingredient_variants_form_unique` holds it, and each id once; refused at the repeat. */
 function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
   for (const index of repeatsOf(entries.map((entry) => entry.form))) {
     ctx.addIssue({
@@ -296,7 +276,6 @@ function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
   });
 }
 
-/** Where each entry repeats an earlier one but for case (the `lower(name)` fold), by its position as sent with blanks counted. */
 function repeatsOf(entries: readonly string[]): number[] {
   const seen = new Set<string>();
   return entries.flatMap((entry, index) => {
@@ -308,7 +287,6 @@ function repeatsOf(entries: readonly string[]): number[] {
   });
 }
 
-/** Each entry of an ordered list once, folded as folk names are; a repeat but for case and spacing is refused at the repeat. */
 function refuseRepeats(field: string, entries: readonly string[], ctx: z.RefinementCtx) {
   for (const index of repeatsOf(entries)) {
     ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
@@ -316,8 +294,7 @@ function refuseRepeats(field: string, entries: readonly string[], ctx: z.Refinem
 }
 
 /**
- * Each entry of `field` is exactly one of a link (by `idKey`) and a name, and listed once; a name equal to a linked
- * row's is text beside a link, not a repeat. A link is compared as sent, as the index compares it.
+ * A name equal to a linked row's is text beside a link, not a repeat; a link is compared as sent, as the index compares it.
  */
 function linkOrNameRules<IdKey extends string>(
   field: string,
@@ -351,7 +328,6 @@ function linkOrNameRules<IdKey extends string>(
   };
 }
 
-/** A deity picked from the curated list, or typed. */
 const deityRules = linkOrNameRules('deities', 'deityId', {
   both: 'A deity is picked or typed, not both',
   neither: 'Name the deity, or pick one',
@@ -360,7 +336,6 @@ const deityRules = linkOrNameRules('deities', 'deityId', {
   nameRepeated: 'This deity is already listed',
 });
 
-/** A substitute linking an ingredient, or naming one that is not entered. */
 const substituteLinkRules = linkOrNameRules('substitutes', 'ingredientId', {
   both: 'A substitute links an ingredient or names one, not both',
   neither: 'Name the substitute, or choose an ingredient',
@@ -397,8 +372,7 @@ function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCt
 }
 
 /**
- * Each reference names one by its id and is listed once whatever its locator (`reference_links_ingredient_unique`), and supports only
- * `fields`, the ones the row it cites has: an entry's, or a form's.
+ * Listed once whatever its locator (`reference_links_ingredient_unique`); supports only `fields`, the ones the row it cites has.
  */
 function referenceRules(
   entries: ReferenceLinkFields[],
@@ -427,13 +401,11 @@ function referenceRules(
   });
 }
 
-/** What a coven's citation is refused, by attribute: each is the compendium's to record. */
 const COMPENDIUM_ONLY = {
   nameBasis: 'Only a compendium citation records how its source names the ingredient',
   supports: 'Only a compendium citation records the fields its source supports',
 } as const;
 
-/** A coven's citations, the entry's and each form's, carry neither compendium attribute. */
 function covenCitationRules(
   value: {
     references?: ReferenceLinkFields[] | null;
@@ -468,9 +440,7 @@ function categoryRules(ids: readonly string[], ctx: z.RefinementCtx) {
 }
 
 /**
- * The compendium tier: the admin answers `nomenclature` explicitly, since
- * every compendium entry declares one (§5). `shown` is the entry's place in the public compendium: left out, a create is shown
- * (the column's default) and an update leaves the flag as it is.
+ * The admin answers `nomenclature` explicitly, since every compendium entry declares one (§5). `shown` left out: a create is shown (the column's default), an update leaves the flag as it is.
  */
 export const CompendiumIngredientInput = z
   .object({ ...fields, nomenclature, shown: z.boolean().nullish() })

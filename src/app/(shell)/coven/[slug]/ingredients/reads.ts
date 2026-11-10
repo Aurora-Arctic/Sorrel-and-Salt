@@ -1,8 +1,9 @@
+import { orMissing } from '@/lib/or-not-found';
 import 'server-only';
 import { cache } from 'react';
 import { readCardCategoriesOf, readFormIcons } from '../../../../compendium-reads';
 import type { SafetyVariant } from '../../../../../components/SafetyNote/types';
-import { Forbidden, NotFound } from '../../../../../lib/errors';
+import { Forbidden } from '../../../../../lib/errors';
 import { readNumberedPage } from '../../../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
@@ -31,10 +32,6 @@ import {
 
 type Filter = Parameters<typeof listWorkspaceIngredients>[2];
 
-/**
- * One page of `CARD_PAGE_SIZE` entries with its count and all a card draws, each one batch for the
- * page. Each edge keeps its `cupboardEntry` for the label and the Annotated and Retired marks.
- */
 export const readCovenIngredients = cache(
   async (
     workspaceId: string,
@@ -55,7 +52,6 @@ export const readCovenIngredients = cache(
       (start) => countWorkspaceIngredients(session, workspaceId, filter, start),
       CARD_PAGE_SIZE,
     );
-    // Each ref names the entry's own tier (null for the compendium), as GraphQL's loaders do.
     const refs = page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId }));
     const [forms, categories, jars, lastEdits, formIcons] = await Promise.all([
       variantsOf(session, refs, heldBy),
@@ -64,7 +60,6 @@ export const readCovenIngredients = cache(
         session,
         page.edges.map(({ node }) => ({ ingredientId: node.id, workspaceId })),
       ),
-      // Who last touched each card, the names resolved in one batch for the page.
       lastEditsOf(
         session,
         workspaceId,
@@ -99,49 +94,31 @@ export const readCovenIngredients = cache(
   },
 );
 
-/** How many entries each filter's choices would list, for the filter as the address holds it. */
 export const readCovenFacets = cache(async (workspaceId: string, variables: string) => {
   const session = await requireSession();
   const filter: Filter = JSON.parse(variables);
   return workspaceIngredientFacets(session, workspaceId, filter);
 });
 
-/**
- * The coven's own entry `?edit=<id>` names, with its form values, read as the signed-in member.
- * Nothing for an unreachable id or a compendium entry; any other failure is let through.
- */
 export async function readEditedEntry(workspaceId: string, id: string) {
   const session = await requireSession();
-  let entry: Awaited<ReturnType<typeof getIngredient>>;
-  try {
-    entry = await getIngredient(session, id, workspaceId);
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  const entry = await orMissing(() => getIngredient(session, id, workspaceId), Forbidden);
+  if (!entry) return undefined;
   if (entry.workspaceId !== workspaceId) return undefined;
   return { entry, values: await entryValues(entry, session) };
 }
 
-/**
- * The entry `?entry=<id>` opens details of, read as the signed-in member: the coven's own, or a
- * held compendium entry under the coven's label, retired included. Nothing for an unreachable id,
- * and other failures are let through. With it, `detail` and the coven's `jars` for Edit Stock.
- */
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();
-  let entry: Awaited<ReturnType<typeof getIngredient>>;
-  try {
-    entry = await getIngredient(session, id, membership.workspaceId);
-  } catch (error) {
-    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
-    throw error;
-  }
+  const entry = await orMissing(
+    () => getIngredient(session, id, membership.workspaceId),
+    Forbidden,
+  );
+  if (!entry) return undefined;
   // A retired entry is read in the coven, whose cupboard entry is its proof.
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);
-  // The same read the cards make, for the one entry.
   const lastEditOf = async () =>
     (await lastEditsOf(session, membership.workspaceId, [entry]))[0] ?? null;
   if (entry.workspaceId === membership.workspaceId) {
@@ -150,7 +127,6 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
-  // The viewer's covens that hold it, this one among them, for the details' links.
   const [read, covens, jars, lastEdit] = await Promise.all([
     detailOf(),
     covensHolding(id),

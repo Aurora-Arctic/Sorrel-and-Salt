@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import NameForm from '@/components/NameForm';
+import { characterCountText } from '@/components/Field/character-count';
+import { NAME_MAX_LENGTH, NameInput } from '@/modules/identity/validation/name';
 import type { SetNameMutation, SetNameMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -19,7 +21,6 @@ const nameField = () => screen.getByRole('textbox', { name: 'Name' });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
-/** Answers `SetName` with the row renamed as the server would, trimmed. */
 function acceptSetName() {
   const calls: SetNameMutationVariables[] = [];
   mockGraphQLMutation<SetNameMutation, SetNameMutationVariables>('SetName', (variables) => {
@@ -39,6 +40,12 @@ describe('NameForm', () => {
   // Whether Save is off until there is something to save is FormActions' rule
   // (tests/components/Field/form-actions.test.tsx); what counts as a change is
   // this form's: the server trims the name.
+  it('fills the name from the browser’s own details', () => {
+    renderForm(<NameForm name="Ada Fixture" />);
+
+    expect(nameField()).toHaveAttribute('autocomplete', 'name');
+  });
+
   it('does not count outer whitespace as a change to the name', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 
@@ -58,7 +65,6 @@ describe('NameForm', () => {
 
     expect(await screen.findByRole('status')).toBeVisible();
     expect(calls).toEqual([{ name: ' Ada Renamed ' }]);
-    // The saved name is the new baseline, as the server stored it.
     expect(nameField()).toHaveValue('Ada Renamed');
     expect(save()).toBeDisabled();
   });
@@ -86,5 +92,39 @@ describe('NameForm', () => {
     submit();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Confirm your email address first');
+  });
+  it('marks the name as required', () => {
+    renderForm(<NameForm name="Ada Fixture" />);
+
+    expect(nameField()).toHaveAttribute('aria-required', 'true');
+  });
+
+  it.each(['', '   '])(
+    'refuses a name cleared to %j with the shared rule’s words, on the field, without sending',
+    (cleared) => {
+      const calls = acceptSetName();
+      const refusal = NameInput.safeParse({ name: cleared }).error?.issues[0]?.message;
+      expect(refusal).toBeTruthy();
+      renderForm(<NameForm name="Ada Fixture" />);
+
+      fireEvent.change(nameField(), { target: { value: cleared } });
+      expect(save()).toBeEnabled();
+      submit();
+
+      expect(nameField()).toHaveAttribute('aria-invalid', 'true');
+      expect(nameField()).toHaveAccessibleDescription(expect.stringContaining(refusal!));
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it('counts down to the name’s limit as it nears it', () => {
+    renderForm(<NameForm name="Ada Fixture" />);
+    const length = NAME_MAX_LENGTH - 5;
+
+    fireEvent.change(nameField(), { target: { value: 'a'.repeat(length) } });
+
+    expect(nameField()).toHaveAccessibleDescription(
+      expect.stringContaining(characterCountText(length, NAME_MAX_LENGTH)),
+    );
   });
 });

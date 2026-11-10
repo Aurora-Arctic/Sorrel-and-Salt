@@ -11,6 +11,8 @@ import type {
   SupportViewer,
 } from '@/components/SupportRequests/types';
 import type {
+  LiftSupportTimeoutMutation,
+  LiftSupportTimeoutMutationVariables,
   ReplyToSupportRequestMutation,
   ReplyToSupportRequestMutationVariables,
   SetSupportRequestIssueUrlMutation,
@@ -19,9 +21,9 @@ import type {
   TimeOutSupportSenderMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { rowCells } from '../../support/table';
 
-// The admin Support page, render-only: the page owns the reads, this owns what a viewer sees of a
-// request and sends from it (claude-docs/components/support-requests.md).
+// claude-docs/components/support-requests.md
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({
@@ -33,7 +35,8 @@ const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
 const ADMIN_ONLY = ['Assignee', 'GitHub Issue', 'For'];
 
-const ROW: SupportRequestEntry = {
+// Asserted rather than declared, so the fixture compiles while the entry type still carries fields this page no longer reads.
+const ROW = {
   id: 'r1',
   about: 'bug',
   subject: 'The moon icon is missing',
@@ -50,7 +53,7 @@ const ROW: SupportRequestEntry = {
   senderReplied: false,
   betaTester: false,
   resolvedBySender: false,
-};
+} as SupportRequestEntry;
 
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
@@ -74,18 +77,14 @@ const open = (viewer: SupportViewer, detail: Partial<SupportRequestDetailEntry> 
   );
 
 const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) });
-/** Turns the composer from its default, an internal note, to a reply. */
 const chooseReply = () => fireEvent.click(within(dialog()).getByRole('radio', { name: 'Reply' }));
 
-// The Time-Out fold starts closed; its toggle is the one Time-Out button that says whether it is open.
 const openTimeOut = () =>
   fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out', expanded: false }));
 
 const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time Out Sender' });
 
-// The question the button opens, answered.
 const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
-// The question Resolve opens over the dialog, a group named by its text.
 const resolveQuestion = () => screen.findByRole('group', { name: /sender sees it as resolved/ });
 
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
@@ -137,6 +136,17 @@ describe('Error reference', () => {
 });
 
 describe('Reply', () => {
+  it('counts the reply against 4000 characters without cutting what is typed', () => {
+    open(ADMIN);
+    chooseReply();
+    const body = within(dialog()).getByRole('textbox', { name: /^Your Reply/ });
+
+    fireEvent.change(body, { target: { value: 'x'.repeat(4002) } });
+
+    expect(body).toHaveValue('x'.repeat(4002));
+    expect(body).toHaveAccessibleDescription(/2 characters over/);
+  });
+
   it('is disabled until there is a body, then sends it and reads the page again', async () => {
     const sent: ReplyToSupportRequestMutationVariables[] = [];
     mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
@@ -459,9 +469,58 @@ describe('Time-Out', () => {
     expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
     expect(panel.queryByLabelText('For')).toBeNull();
   });
+
+  it('shows a signed-out sender’s standing address time-out with Lift in place of the form, and lifts it by its id after asking', async () => {
+    const lifted: LiftSupportTimeoutMutationVariables[] = [];
+    mockGraphQLMutation<LiftSupportTimeoutMutation, LiftSupportTimeoutMutationVariables>(
+      'LiftSupportTimeout',
+      (variables) => {
+        lifted.push(variables);
+        return { liftSupportTimeout: { id: 't-address' } };
+      },
+    );
+    open(ADMIN, {
+      sender: { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' },
+      signedOut: true,
+      timeouts: [
+        {
+          id: 't-address',
+          until: null,
+          note: 'Repeated sends',
+          liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
+        },
+      ],
+    });
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.queryByLabelText('For')).toBeNull();
+
+    fireEvent.click(panel.getByRole('button', { name: 'Lift' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lift Time-Out' }));
+
+    await waitFor(() => expect(lifted).toEqual([{ id: 't-address' }]));
+  });
 });
 
 describe('Issue', () => {
+  it('turns a project-board link into the plain issue address when the field is left', () => {
+    open(ADMIN);
+    const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
+
+    fireEvent.change(field, {
+      target: {
+        value:
+          'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?pane=issue&issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409',
+      },
+    });
+    fireEvent.blur(field);
+
+    expect(field).toHaveValue('https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409');
+  });
+
   it('says a pasted address that is not an issue on the project beside its field', async () => {
     mockGraphQLError('SetSupportRequestIssueUrl', {
       code: 'VALIDATION',
@@ -554,7 +613,7 @@ describe('An anonymised request', () => {
       .getAllByRole('columnheader')
       .findIndex((header) => header.textContent === 'Sender');
     expect(column).toBeGreaterThan(-1);
-    return within(row).getAllByRole('cell')[column];
+    return rowCells(row)[column];
   };
 
   it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
@@ -673,13 +732,50 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
   });
 
-  it('offers a keeper no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+  it('offers a keeper the Time-Out for a signed-out sender with an address, as for a signed-in one', () => {
     const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
     const { unmount } = open(ADMIN);
     expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
     unmount();
     open(ADMIN, { sender: visitor, signedOut: true });
-    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
+  });
+
+  // Every signed-out request is written as the one stand-in account, so the time-out names the request, whose address the
+  // server keys it by, never the stand-in.
+  it('sends a signed-out sender’s time-out by the request, not the stand-in account, after asking', async () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const byRequest: { requestId: string; note: string }[] = [];
+    const byAccount: unknown[] = [];
+    mockGraphQLMutation<
+      { timeOutSignedOutSender: { __typename: 'SupportTimeout'; id: string } },
+      { requestId: string; note: string }
+    >('TimeOutSignedOutSender', (variables) => {
+      byRequest.push(variables);
+      return { timeOutSignedOutSender: { __typename: 'SupportTimeout', id: 't' } };
+    });
+    mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
+      'TimeOutSupportSender',
+      (variables) => {
+        byAccount.push(variables);
+        return { timeOutSupportSender: { __typename: 'SupportTimeout', id: 't' } };
+      },
+    );
+    open(ADMIN, { sender: visitor, signedOut: true });
+    openTimeOut();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
+      target: { value: 'Repeated sends' },
+    });
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Message to User/ }), {
+      target: { value: 'Please keep each request to one problem.' },
+    });
+    fireEvent.click(timeOutSubmit());
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(byRequest).toHaveLength(1);
+    expect(byRequest[0]).toMatchObject({ requestId: 'r1', note: 'Repeated sends' });
+    expect(byAccount).toEqual([]);
   });
 
   it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {
@@ -849,6 +945,21 @@ describe('Dates', () => {
 });
 
 describe('Unsaved input in the dialog', () => {
+  it('counts a reply as unsaved only when it has more than whitespace', () => {
+    open(ADMIN);
+    chooseReply();
+    const box = within(dialog()).getByLabelText(/^Your Reply/);
+    const leavingAsks = (): boolean => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    fireEvent.change(box, { target: { value: '   ' } });
+    expect(leavingAsks()).toBe(false);
+    fireEvent.change(box, { target: { value: 'Noted.' } });
+    expect(leavingAsks()).toBe(true);
+  });
+
   const close = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
 
   it.each([
@@ -1012,8 +1123,7 @@ describe('The views', () => {
     const first = screen.getByRole('row', { name: /First/ });
     expect(within(first).getByRole('button', { name: 'Sender Replied' })).toBeInTheDocument();
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    const cellIn = (row: HTMLElement, heading: string) =>
-      within(row).getAllByRole('cell')[columns.indexOf(heading)];
+    const cellIn = (row: HTMLElement, heading: string) => rowCells(row)[columns.indexOf(heading)];
     expect(
       within(cellIn(first, 'Sender')).getByRole('button', { name: 'Beta Tester' }),
     ).toBeInTheDocument();
@@ -1228,7 +1338,7 @@ describe('the date columns', () => {
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
     expect(columns).toContain('Created');
     expect(columns).toContain('Last From Sender');
-    const cells = within(screen.getByRole('row', { name: /The moon icon/ })).getAllByRole('cell');
+    const cells = rowCells(screen.getByRole('row', { name: /The moon icon/ }));
     expect(cells[columns.indexOf('Created')]).toHaveTextContent('2026-10-29 9:00 am');
     expect(cells[columns.indexOf('Last From Sender')]).toHaveTextContent('2026-10-30 2:05 pm');
   });

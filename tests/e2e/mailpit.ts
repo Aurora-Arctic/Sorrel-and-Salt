@@ -35,7 +35,6 @@ export async function latestMessageTo(
 
   const deadline = Date.now() + timeout;
   for (;;) {
-    // Newest first.
     const { messages } = await get<{ messages: Summary[] }>(search);
     if (messages.length > 0) {
       const detail = await get<Detail>(mailpitUrl(`/api/v1/message/${messages[0].ID}`));
@@ -52,3 +51,6 @@ export async function latestMessageTo(
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 }
+
+/** The address-verification link in a mailed message. */
+export const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;

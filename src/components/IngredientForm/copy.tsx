@@ -9,7 +9,8 @@ import { plural } from '@/lib/text';
 import IconTip, { CopyIcon } from '../IconTip';
 import Notice from '../Notice';
 import { RemoveIcon } from './icons';
-import { FIELD_NOUNS, entryText, fold } from './values';
+import { fold } from '@/lib/text';
+import { FIELD_NOUNS, entryText } from './values';
 import type {
   CopiedField,
   CopyFromIngredientProps,
@@ -26,14 +27,12 @@ import type {
 // adds the ingredient's value to the variant's, never taking away (claude-docs/components/
 // ingredient-form.md, "Copying from the ingredient").
 
-/** The text `own` takes from `theirs`: theirs into an empty box, else after a blank line, once. */
 function copiedText(own: string, theirs: string): string {
   const taken = theirs.trim();
   if (taken === '' || own.includes(taken)) return own;
   return own.trim() === '' ? taken : `${own.trimEnd()}\n\n${taken}`;
 }
 
-/** `own`, then each of `theirs` whose key `own` lacks, in their order, once each. */
 function copiedEntries<T>(
   own: readonly T[],
   theirs: readonly T[],
@@ -49,7 +48,6 @@ function copiedEntries<T>(
   return [...own, ...added];
 }
 
-/** A substitute's key, as the save's: its link by id, a name by its folded text. */
 const substituteKey = ({ link, value }: SubstituteListEntry): string =>
   link ? `link:${link.id}` : `name:${fold(value)}`;
 
@@ -66,13 +64,11 @@ function sameForm(entry: SubstituteListEntry, form: string): SubstituteListEntry
 
 const FORM_FIELDS: ReadonlySet<string> = new Set(CITED_VARIANT_FIELDS);
 
-/** The ingredient's citation as a form's: what it supports kept only where a form has the field, as its deities it has not. */
 const asFormCitation = (entry: ReferenceListEntry): ReferenceListEntry => ({
   ...entry,
   supports: entry.supports.filter((field) => FORM_FIELDS.has(field)),
 });
 
-/** A substitute list as its entries and the form each links: what a copy left it as. */
 const listKeyOf = (entries: readonly SubstituteListEntry[]): string =>
   entries.map((entry) => `${substituteKey(entry)}/${entry.variantId ?? ''}`).join('|');
 
@@ -92,7 +88,6 @@ function skippedFrom(own: VariantFormValues, theirs: IngredientFormValues): Subs
   );
 }
 
-/** The variant's value for `field` with the ingredient's copied in, and how many entries were added. */
 function merged(
   field: CopiedField,
   own: VariantFormValues,
@@ -134,11 +129,6 @@ function merged(
   }
 }
 
-/**
- * What a copy says, for a screen reader: "Copied 3 celestial bodies from the
- * ingredient", and, for a variant's substitutes, how many it skipped for
- * having no form like the variant's, "Skipped 1 with no Oil form".
- */
 function said(field: CopiedField, added: number, skipped = 0, form = ''): string {
   if (skipped > 0) {
     const none = form.trim() === '' ? 'no form like this one' : `no ${formLabel(form)} form`;
@@ -213,11 +203,6 @@ export function CopyFromIngredient({
   );
 }
 
-/**
- * The state of the notice of what a variant's substitute copy skipped: `onSkip` for the Copy From
- * Ingredient, `copyButton` for its `buttonRef`, and the props for `SkippedNotice`. The notice goes
- * once the list changes other than by its Copy Anyway: what it named may be listed now.
- */
 export function useSkippedCopy(listed: readonly SubstituteListEntry[]) {
   const [skipped, setSkipped] = useState<SkippedCopy | null>(null);
   const copyButton = useRef<HTMLButtonElement>(null);

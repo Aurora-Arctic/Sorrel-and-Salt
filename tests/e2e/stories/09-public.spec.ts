@@ -40,6 +40,9 @@ test(
 
     await page.getByRole('banner').getByRole('link', { name: 'Sign In' }).click();
 
-    await expect(page).toHaveURL(/\/sign-in/);
+    // Sign In opens over the entry, which stays where it was.
+    const signIn = page.getByRole('dialog', { name: 'Sign In' });
+    await expect(signIn.getByRole('button', { name: 'Continue with Email' })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
   },
 );

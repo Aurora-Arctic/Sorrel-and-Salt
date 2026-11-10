@@ -1,7 +1,8 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { FilterSelectField, SearchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { SproutIcon } from '../IconTip/icons';
@@ -19,7 +20,6 @@ import type { SupportAbout, SupportRequestsFilterProps, SupportStatus } from './
 
 export const ABOUT_OPTIONS: readonly { value: SupportAbout; label: string }[] = SUPPORT_ABOUTS;
 
-/** Every status a request can show. */
 export const STATUS_LABELS: Record<SupportStatus, string> = {
   open: 'Open',
   waiting_on_sender: 'Waiting on Sender',
@@ -27,7 +27,6 @@ export const STATUS_LABELS: Record<SupportStatus, string> = {
   closed: 'Closed',
 };
 
-/** Each sender group's mark, the same one its senders carry in the table. */
 const SENDER_ICONS: Record<SupportSenderGroup, ReactElement> = {
   beta_tester: <SproutIcon />,
 };
@@ -52,7 +51,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       <SearchField
         label="Error #"
         name="error"
-        placeholder="Search error numbers"
+        placeholder="Error numbers"
         value={draftCode}
         onChange={setDraftCode}
       />

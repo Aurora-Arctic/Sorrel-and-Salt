@@ -27,7 +27,6 @@ import type {
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
-import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
@@ -42,6 +41,7 @@ import {
   findPageInScopeIncludingSoftDeleted,
   findPageInTiers,
 } from './finders';
+import { categoryArms as categoryArmsFor, pointsLive } from './category-arms';
 import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import {
   fold,
@@ -55,7 +55,7 @@ import {
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
 import { sourcingScoreExpression } from './sourcing-score';
-import { curated, inLiveGroup } from './vocabularies';
+import { curated } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 import type {
   SearchField,
@@ -195,7 +195,7 @@ export function findDeitiesOfIngredients(
 /**
  * The live substitutes of these ingredients, or of these variants (`of` says which the ids name), each beside the ingredient it links, soft-deleted or not,
  * or null for a typed name. The escape hatch that skips the linked ingredient's filter and no other, so a link to a deleted ingredient reads as its last name
- * (claude-docs/db/soft-delete.md, "Soft-delete filtering"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Tier-scoped reads").
+ * (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],
@@ -427,7 +427,6 @@ export async function findIngredientSuggestions(
   const ranked = formRank(form);
   const sort = ranked ? [ranked, ...list.order.sort] : list.order.sort;
   const order = { ...list.order, sort };
-  // The coven holds a live cupboard row for the compendium entry.
   const held = existsIn(
     workspaceCompendiumEntries,
     and(
@@ -596,7 +595,6 @@ export function findWorkspaceIngredientByIdentity(
   );
 }
 
-/** The row's `identity_key` is the one `identity` would key as. */
 function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
   // A parameter's type is otherwise left to `coalesce` to infer.
   const text = (value: string | null | undefined) => sql`${value ?? null}::text`;
@@ -688,14 +686,12 @@ function heldInAnyOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), heldBy(memberships)) as SQL;
 }
 
-/**
- * Its Not In: a compendium entry no live cupboard row of the proofs' covens names. A removed row does not hold the entry, so it stays listed.
- */
+/** A compendium entry no live cupboard row of the proofs' covens names; a removed row does
+ * not hold it. */
 function heldInNoneOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), not(heldBy(memberships))) as SQL;
 }
 
-/** Some live cupboard row of one of the proofs' covens names the entry. */
 function heldBy(memberships: readonly Membership[]): SQL {
   return existsIn(
     workspaceCompendiumEntries,
@@ -839,26 +835,19 @@ export function hasNoForm(): SQL {
   return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
 }
 
-/**
- * The category filter: under `all` one correlated `EXISTS` per id, so an entry carries every one; under `any` a single `EXISTS` over the list.
- * The category may be filed on the entry or on a live form, and the variant's liveness is read here; the category itself must be live too, through `pointsLive` (claude-docs/db/compendium-read.md, "Filter arms").
- */
-function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
-  if (categoryIds.length === 0) return [];
-  const carries = (category: SQL | undefined) =>
-    existsIn(
-      ingredientCategories,
-      and(
-        eq(ingredientCategories.ingredientId, ingredients.id),
-        category,
-        pairIsLive(ingredientCategories),
-        pointsLive(categories, ingredientCategories.categoryId),
-      ),
-    );
-  return mode === 'any'
-    ? [carries(inArray(ingredientCategories.categoryId, [...categoryIds]))]
-    : categoryIds.map((categoryId) => carries(eq(ingredientCategories.categoryId, categoryId)));
-}
+/** The category filter. The category may be filed on the entry or on a live form, and the variant's liveness is read here (claude-docs/db/compendium-read.md, "Filter arms"). */
+const categoryArms = (categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] =>
+  categoryArmsFor(
+    {
+      table: ingredientCategories,
+      owner: ingredientCategories.ingredientId,
+      category: ingredientCategories.categoryId,
+      outer: ingredients.id,
+      also: pairIsLive(ingredientCategories),
+    },
+    categoryIds,
+    mode,
+  );
 
 /**
  * A category pair counts: it is the entry's own, or its variant is live. The table is hard-deleted, so a pair outlives the soft-deleted variant it belongs to.
@@ -911,9 +900,6 @@ export function listOrVariantHolds(
   ) as SQL;
 }
 
-/**
- * `list` holds an entry folding as `value` does, both sides trimmed and lower-cased as the suggestions fold one.
- */
 function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
   return inArray(fold(value), listFolds(list));
 }
@@ -975,17 +961,6 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
 }
 
 /**
- * The curated row a link's `column` names is live, and so is its group: what the facets' join to the same row reads, so a value the facets count at nothing lists nothing.
- * A curator cannot delete a row a compendium entry links, but a coven's own entry keeps its link through the delete.
- */
-export function pointsLive(
-  vocabulary: typeof categories | typeof deities,
-  column: AnyPgColumn,
-): SQL {
-  return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
-}
-
-/**
  * The two toxic flags read together: an entry is toxic when its own flag is on or a live variant's is, and not toxic when neither is.
  * Not toxic is the negation of the same predicate, so the two settings always split the list between them. Absent means any.
  */
@@ -1001,7 +976,6 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   return toxic === 'toxic' ? flagged : not(flagged);
 }
 
-/** The shown flag: the shown entries unless the filter asks for the hidden ones or both. */
 export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
   if (listing === 'all') return undefined;
   return eq(ingredients.shown, listing !== 'hidden');

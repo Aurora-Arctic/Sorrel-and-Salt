@@ -6,6 +6,7 @@ import { requireCovenMembership } from '@/lib/request-session';
 import { rolePermits } from '@/modules/coven';
 import type { CovenLayoutProps } from '../../types';
 import NewSpellAction from './new-spell-action';
+import { GrimoirePanelSkeleton } from './skeleton';
 
 // The coven's Grimoire as two tabs, Spells and Drafts, each its own address
 // (claude-docs/components/grimoire-list.md). Each page runs its own guard, as a layout does not
@@ -17,18 +18,12 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
     {
       href: `/coven/${slug}/grimoire` as Route,
       label: 'Spells',
-      filtered: true,
-      shape: 'cards',
-      density: 'compact',
-      card: 'spell',
+      skeleton: <GrimoirePanelSkeleton />,
     },
     {
       href: `/coven/${slug}/grimoire/drafts` as Route,
       label: 'Drafts',
-      filtered: true,
-      shape: 'cards',
-      density: 'compact',
-      card: 'spell',
+      skeleton: <GrimoirePanelSkeleton drafts />,
     },
   ];
   const action = rolePermits(membership.role, { spell: ['create'] }) ? (

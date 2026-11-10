@@ -4,9 +4,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
-// The Change Role control: it asks which role in a modal, sends
-// the change, and closes the modal when the answer comes back, since the
-// member's row survives the re-read and does not replace it.
+// The modal closes when the answer comes back, since the member's row survives the re-read and does not replace it.
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
@@ -82,7 +80,6 @@ describe('RoleControl', () => {
     render(<RoleControl workspaceId="w" userId="u" name="Testwort" currentRole="member" />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
-    // The first other role is the viewer, below a member.
     expect(screen.getByRole('button', { name: 'Demote' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: /^Steward/ }));
     expect(screen.getByRole('button', { name: 'Promote' })).toBeInTheDocument();

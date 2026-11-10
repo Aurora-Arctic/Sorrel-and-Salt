@@ -13,21 +13,12 @@ import { curates } from '../../../../../lib/site-roles';
 import { entryJsonLd } from '../../../../../lib/json-ld';
 import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
+import { readEntryReview, readEntrySourcing } from '@/app/compendium-reads';
 import { entryValues } from '@/app/entry-values';
-import {
-  getIngredient,
-  readCompendiumEntry,
-  readCompendiumEntryAsCurator,
-  readCompendiumReview,
-  readSourcingScore,
-} from '@/modules/ingredients';
+import { readCompendiumEntry, readCompendiumEntryAsCurator } from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
-
-// One compendium entry at its public address, readable signed out. The read is cached and sessionless,
-// but a curator also reaches a hidden entry, uncached. The page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
-// coven slug answers 404; a moved slug answers 308.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -49,8 +40,6 @@ const entryAt = cache(async (slug: string) => {
   }
 });
 
-// Title (the formal name tells two entries with one label apart), description and
-// canonical link. A missing or moved address gets none, as it renders no page.
 export async function generateMetadata({ params }: CompendiumEntryParams): Promise<Metadata> {
   const found = await entryAt((await params).slug);
   if (found?.kind !== 'entry') return {};
@@ -68,34 +57,6 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
 // A coven entry cannot be read here, so a link to one has no page to go to.
 const hrefOf = ({ slug, workspaceId }: LinkedIngredient): Route | undefined =>
   workspaceId === null ? addressOf(slug) : undefined;
-
-// The curator's own review read. A refusal or a missing entry means no switch, never an error page.
-async function reviewOf(id: string) {
-  const curator = await getSession();
-  if (!curator) return undefined;
-  try {
-    const found = await readCompendiumReview(curator, id);
-    // A curator's read reaches a hidden entry too, so the switch starts from the row's own flag.
-    const row = await getIngredient(curator, id);
-    return { reviewedAt: found?.reviewedAt ?? null, shown: row.shown };
-  } catch (error) {
-    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
-
-// The curator's sourcing score, from its own guarded, uncached read: never part of the cached public
-// read above. A refusal or a missing entry means no score, never an error page.
-async function sourcingOf(id: string) {
-  const curator = await getSession();
-  if (!curator) return undefined;
-  try {
-    return await readSourcingScore(curator, id);
-  } catch (error) {
-    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
 
 export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
@@ -127,9 +88,9 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
   // The review switch's read, for a curator or keeper only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
-  const review = canEdit ? await reviewOf(entry.id) : undefined;
-  // Beside it, the sourcing score: the head shows it, and the edit form's Sources opens with it.
-  const sourcing = canEdit ? await sourcingOf(entry.id) : undefined;
+  const curator = canEdit ? await getSession() : null;
+  const review = await readEntryReview(curator, entry.id);
+  const sourcing = await readEntrySourcing(curator, entry.id);
 
   return (
     <>
@@ -144,7 +105,6 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
         back={{
           href: '/compendium' as Route,
           label: 'Compendium',
-          // The admin list is the same list under its own name.
           also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
         }}
         accessPause={shell?.viewer.accessPause}
@@ -159,7 +119,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
                 ...(review && {
                   review: {
                     reviewed: review.reviewedAt !== null,
-                    reviewedAt: review.reviewedAt?.toISOString() ?? null,
+                    reviewedAt: review.reviewedAt,
                   },
                 }),
               }
@@ -169,7 +129,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
           review && (
             <ReviewMark
               ingredientId={entry.id}
-              reviewedAt={review.reviewedAt?.toISOString() ?? null}
+              reviewedAt={review.reviewedAt}
               alongside={
                 <ShownToggle
                   ingredientId={entry.id}

@@ -23,10 +23,8 @@ import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
-// The account page's list of the ways into this account: each roster provider, linked or addable,
-// removable while another is left, then the password and the passkeys, each linking to its section. Adding is Better Auth's /link-social, removing /unlink-account.
-// A session too old to remove one is offered a fresh sign-in in place of every Remove. The heading
-// and intro are the page's (claude-docs/components/sign-in-methods.md).
+// The account page's list of the ways into this account. A session too old to remove one is offered a fresh sign-in in
+// place of every Remove. The heading and intro are the page's (claude-docs/components/sign-in-methods.md).
 
 const SignInMethods = ({
   passwordHeld,
@@ -40,10 +38,8 @@ const SignInMethods = ({
   // Seeded from the server's list; a removal answers in place rather than
   // reloading the page.
   const [accounts, setAccounts] = useState(linked);
-  // The server-rendered callback error, which no press here raised, so it is
-  // a `Notice` rather than a click's callout; any press here clears it. A
-  // press's own failure goes in a callout under its control, which each row
-  // keeps (claude-docs/components/click-feedback.md).
+  // The server-rendered callback error, which no press here raised, so a `Notice` rather than a click's callout; any
+  // press here clears it (claude-docs/components/click-feedback.md).
   const [alert, setAlert] = useState<SignInMethodError | undefined>(error);
   const [pending, setPending] = useState<string>();
   const announce = useAnnounce();
@@ -62,7 +58,6 @@ const SignInMethods = ({
     return () => window.removeEventListener('pageshow', restored);
   }, []);
 
-  // Each answers the failure to say under the row's control, or nothing.
   const handleAdd = async (providerId: ProviderId): Promise<string | undefined> => {
     if (!configured.includes(providerId)) return undefined;
     setAlert(undefined);
@@ -96,8 +91,8 @@ const SignInMethods = ({
   ): Promise<string | undefined> => {
     setAlert(undefined);
     setPending(account.id);
-    // A refusal answers `error` with a code; a dropped connection throws, and
-    // takes the generic sentence.
+    // A refusal answers `error` with a code; a dropped connection throws, and takes the generic
+    // sentence.
     const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
       error: { code: undefined },
     }));
@@ -105,14 +100,11 @@ const SignInMethods = ({
     // The row survives a refusal, so the sentence goes under its Remove.
     if (result?.error) return unlinkErrorMessage(result.error.code);
     setAccounts((current) => current.filter((candidate) => candidate.id !== account.id));
-    // Seen as the row turning to Add; said in the page's status region.
     announce(`${label} was removed from your sign-in methods.`);
     return undefined;
   };
 
-  // Sign out, then sign in again landing back here, which makes the session
-  // fresh. The call and its failure are SignOutButton's: a refusal answers
-  // `error` and a dropped connection throws, and either says so.
+  // Sign out, then sign in again landing back here, which makes the session fresh.
   const handleSignInAgain = async (): Promise<void> => {
     // `aria-disabled` lets a click through, so a second one is refused here.
     if (signingOut) return;
@@ -125,11 +117,11 @@ const SignInMethods = ({
       signInAgain.report(GENERIC_FAILURE);
       return;
     }
+    reportLeaving();
     window.location.assign(signInPath(ACCOUNT_SIGN_IN_PATH));
   };
 
   const removal: ProviderRemoval = accounts.length < 2 ? 'last' : fresh ? 'offered' : 'withheld';
-  // A failure with no provider it belongs to stays at the head of the list.
   const listAlert = alert && alert.providerId === undefined ? alert.message : undefined;
 
   return (

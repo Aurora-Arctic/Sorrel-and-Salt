@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { supportClosingSoonMessage, timeLeft } from '@/emails/support-closing-soon';
 import { supportReceivedMessage } from '@/emails/support-received';
 import { supportResolvedMessage } from '@/emails/support-resolved';
+import { ORIGIN } from '../support/constants';
 
-// What the received, resolved and closing-soon mails carry: the request's name, a link, a plain-text part, and for a sender with
-// no account a link to nothing behind a sign-in.
-
-const ORIGIN = 'http://localhost:8000';
 const REQUEST_PAGE = `${ORIGIN}/account/support?request=req-1`;
 const SUPPORT_PAGE = `${ORIGIN}/support`;
 const SUBJECT = 'The jar will not open';

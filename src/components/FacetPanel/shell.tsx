@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -13,10 +14,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
-import { fadesAreOff } from './choice-chip';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
@@ -25,13 +26,9 @@ import './index.scss';
 // up, `showModal()` below it. Before the script it is drawn inline and open, and every control
 // submits through the GET form (claude-docs/components/facet-panel.md).
 
-/** How long a leaving sheet waits for its slide out before it closes anyway (longer than `$sheet-slide` in index.scss), for a browser that never reports the end. */
-const LEAVE_LIMIT_MS = 400;
-
 /** The tablet width and up, where the panel drops down over the results instead of being a sheet. Repeats `$shell-tablet-width` (`_variables.scss`), as a script cannot read Sass; a test fails if the two part. */
 export const WIDE = '(min-width: 56rem)';
 
-/** The Filters button, the Clear All beside it and the panel they open, around whatever filters a list passes: FacetPanel's for the ingredient lists, its categories for the grimoire. */
 export function FacetShell({
   count,
   clearHref,
@@ -45,7 +42,6 @@ export function FacetShell({
   const titleId = `${id}-title`;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  // Whether this opening is the modal sheet, fixed when it opens.
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
   // The sheet sliding out: it stays open, with `is-closing` on it, until the slide ends.
@@ -61,7 +57,7 @@ export function FacetShell({
   // happens when it is already shut. `snap` shuts with no motion; otherwise the sheet slides out
   // right and the panel up, and motion turned down (or no way to ask) closes either at once.
   const leave = () => {
-    if (!modal.current || fadesAreOff()) {
+    if (!modal.current || prefersReducedMotion()) {
       slide.close(modal.current);
       return;
     }
@@ -86,13 +82,10 @@ export function FacetShell({
     leave();
   };
   const dismiss = () => shut(false);
-  // Apply Filters submits the form around the panel, which applies everything held, so
-  // the panel only has to shut.
   const closeOnSubmit = () => {
     returnFocus();
     leave();
   };
-  // Clear All empties what is held and applies at once; a panel left open shuts with it.
   const clear = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!onClear || opensElsewhere(event)) return;
     event.preventDefault();
@@ -100,7 +93,6 @@ export function FacetShell({
     if (slide.shown) closeOnSubmit();
   };
 
-  // The dialog follows the slide: opened on its way open, closed once the slide has ended.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || !hydrated) return;
@@ -117,29 +109,18 @@ export function FacetShell({
   // The net for a slide whose end the browser never reports.
   useEffect(() => {
     if (!leaving) return undefined;
-    const limit = setTimeout(finishLeaving, LEAVE_LIMIT_MS);
+    const limit = setTimeout(finishLeaving, FADE_LIMIT_MS);
     return () => clearTimeout(limit);
   });
 
-  // A press outside the open panel shuts it, applying what was held, as Escape does. The Filters
-  // button and the bar's Clear All have their own press handlers, so they are left to them. On
-  // the modal sheet the page is inert and the backdrop is the dialog's own box: see onPointerDown.
-  useEffect(() => {
-    if (!slide.shown) return undefined;
-    const outside = (event: PointerEvent) => {
-      const target = event.target;
-      if (modal.current || !(target instanceof Node)) return;
-      if (dialogRef.current?.contains(target)) return;
-      if (
-        target instanceof Element &&
-        target.closest('.facet-panel__button, .facet-panel__clear')
-      ) {
-        return;
-      }
-      dismiss();
-    };
-    document.addEventListener('pointerdown', outside);
-    return () => document.removeEventListener('pointerdown', outside);
+  useDismiss({
+    active: slide.shown,
+    inside: (target) =>
+      modal.current ||
+      Boolean(dialogRef.current?.contains(target)) ||
+      (target instanceof Element &&
+        target.closest('.facet-panel__button, .facet-panel__clear') !== null),
+    onOutsidePress: dismiss,
   });
 
   // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and

@@ -31,8 +31,7 @@ import {
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a grouped curated value, one per kind (a category, an ingredient form or a deity): a name, a description and a group, saved through the kind's mutations, with a delete behind a confirmation on an existing value.
-// A rename says it carries onto the compendium. MSW answers the mutations in the route's own shape (claude-docs/components/grouped-value-form.md).
+// claude-docs/components/grouped-value-form.md
 
 const CATEGORY_GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Protection' },
@@ -539,14 +538,14 @@ describe('GroupedValueForm, a deity', () => {
       ]);
     });
 
-    it("refuses at the box a name the list holds, or the deity's own name", () => {
+    it("refuses at the box a name the list holds, or the deity's own name", async () => {
       renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
 
       addName('testrina');
-      expect(box()).toHaveAccessibleDescription(/already listed/);
+      await waitFor(() => expect(box()).toHaveAccessibleDescription(/already listed/));
       typeIn(box(), 'Testra');
       press('Add Other Name');
-      expect(box()).toHaveAccessibleDescription(/already the name/);
+      await waitFor(() => expect(box()).toHaveAccessibleDescription(/already the name/));
 
       expect(listed()).toEqual(['Remove Testrina']);
     });

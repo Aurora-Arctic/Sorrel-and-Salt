@@ -1,17 +1,19 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { graphql } from '../../gql';
+import { type FormEvent, type ReactElement, useState } from 'react';
+import { graphql } from '@/lib/graphql-document';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
+import { FormActions } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
-// The create-workspace page's form: one name, sent to `createWorkspace`, then the new coven's index. A
-// plain controlled input, not react-hook-form, as every refusal is the server's, the creation gate's
+// A plain controlled input, not react-hook-form: every refusal is the server's, the creation gate's
 // included (claude-docs/components/create-workspace-form.md).
 
 const CreateWorkspaceDocument = graphql(`
@@ -29,19 +31,14 @@ const CreateWorkspaceForm = (): ReactElement => {
   const [value, setValue] = useState('');
   const [alert, setAlert] = useState<string>();
   const [fieldError, setFieldError] = useState<string>();
-  // Set once the coven exists and the page is on its way: the button stays busy until
-  // the next page replaces this one, so a second press cannot make a second coven.
+  // Stays busy until the next page replaces this one, so a second press cannot make a second coven.
   const [leaving, setLeaving] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      // The new coven's home replaces the whole of this page, not only a coven body; it has its
-      // contents menu.
-      navigate(`/coven/${slug}`, {
-        target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
-      });
+      navigate(`/coven/${slug}`);
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
       refresh();
@@ -53,13 +50,7 @@ const CreateWorkspaceForm = (): ReactElement => {
     },
   });
 
-  const { aria, ...field } = fieldDescription({
-    id: useId(),
-    error: fieldError,
-  });
-
   const busy = mutation.isPending || leaving;
-  // A blank name has nothing to create: the service would refuse it.
   const empty = value.trim() === '';
   // A typed name, kept from a link, a tab close or a reload. Not while busy: the
   // navigation to the new coven is this form's own, and the render it reads is the
@@ -71,6 +62,10 @@ const CreateWorkspaceForm = (): ReactElement => {
     // A disabled submit stops a click, not a form submitted by other means.
     if (empty || busy) return;
     setAlert(undefined);
+    if (value.trim().length > COVEN_NAME_LIMIT) {
+      setFieldError(limitMessage(COVEN_NAME_LIMIT));
+      return;
+    }
     setFieldError(undefined);
     mutation.mutate(value);
   };
@@ -82,20 +77,19 @@ const CreateWorkspaceForm = (): ReactElement => {
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
         {/* No tip: the label says it. */}
-        <FieldShell label="Name" required {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="text"
-            autoComplete="off"
-            placeholder="Add a name"
-            required
-            aria-required
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Name"
+          required
+          autoComplete="off"
+          placeholder="Add a name"
+          limit={COVEN_NAME_LIMIT}
+          value={value}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
+          error={fieldError}
+        />
         {/* Offered only when there is something to create, and busy, saying so, from
                     the press to the next page. */}
         <FormActions

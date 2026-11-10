@@ -2,9 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import Spinner from '.';
 
-// Render-only; the spinner is hidden from assistive technology, and the
-// controls that hold it assert their busy state. It shows after 100ms, so a
-// story reload shows it appear.
 const meta = {
   title: 'Feedback / Spinner',
 } satisfies Meta;

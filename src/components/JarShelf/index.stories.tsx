@@ -5,9 +5,6 @@ import { BOTTLES, JARS, type SHAPES } from './shapes';
 import type { StockForm, StockJar } from '../StockDialog/types';
 import type { HeldJar, ShelfForm } from './types';
 
-// Render-only; the vessel pick and the level are asserted in tests/components/JarShelf, and
-// the press in tests/components/IngredientEntry. In the workshop the dialog a press opens
-// reaches no server. Every name is invented.
 const meta = {
   title: 'Ingredients / Jar Shelf',
 } satisfies Meta;
@@ -55,13 +52,10 @@ const edit = {
   jars: FORMS.flatMap(({ variantId, jar }): StockJar[] => (jar ? [{ ...jar, variantId }] : [])),
 };
 
-/** A role that may not edit: plain figures, no buttons. */
 const viewerNode = <JarShelf forms={FORMS} seed={SEED} />;
 
-/** A role that may edit: each jar, the empty one too, opens Edit Stock on its form. */
 const defaultNode = <JarShelf forms={FORMS} seed={SEED} edit={edit} />;
 
-/** One form alone, as an entry with a single variant has. */
 const oneFormNode = <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} />;
 
 const STATES_STATES: Record<string, ReactNode> = {
@@ -78,12 +72,10 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-/** Part-full: at the threshold, so the level stands at half with the low-stock mark showing. */
 const PART_FULL: Pick<HeldJar, 'quantity' | 'threshold'> = { quantity: 10, threshold: 10 };
 
 type ShapeName = keyof typeof SHAPES;
 
-/** Each shape on the shelf's own plank and cell, empty then part-full, named beneath. */
 function ShapeGroup({ heading, shapes }: { heading: string; shapes: readonly ShapeName[] }) {
   return (
     <section>
@@ -105,7 +97,6 @@ function ShapeGroup({ heading, shapes }: { heading: string; shapes: readonly Sha
   );
 }
 
-/** Every drawing in `SHAPES`, grouped by use, read from the lists so a new shape appears unedited. */
 export const EveryShape: Story = {
   name: 'Every Shape',
   render: () => (

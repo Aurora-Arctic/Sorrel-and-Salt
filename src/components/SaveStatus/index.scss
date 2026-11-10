@@ -1,8 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Inline beside the form's primary action: one line of small muted text, or
-// the alert or notice that replaces it.
 .save-status {
   display: inline-flex;
   align-items: center;
@@ -50,7 +48,6 @@
   gap: space(2);
 }
 
-// The live region is for screen readers alone: the line above is what shows.
 .save-status__announced {
   @include visually-hidden;
 }

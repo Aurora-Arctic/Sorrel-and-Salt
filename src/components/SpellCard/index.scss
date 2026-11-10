@@ -1,16 +1,14 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
 @use 'compact' as *;
 @use '../IngredientCard/specimen-card' as *;
 
-// The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
-// this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
-// and shadow are not on the article but on the `.spell-card__face` layer (_smoulder.scss),
-// so the smouldering edge can burn through both.
+// The Foundations specimen (`.specimen`, _primitives.scss) carries the layout. The face and shadow are on the
+// `.spell-card__face` layer (_smoulder.scss), so the smouldering edge can burn through both.
 .spell-card {
   @include smoulder-base;
-  @include theme-transition(color);
 
   // The containing block for the title link's stretched `::after` below.
   position: relative;
@@ -18,14 +16,8 @@
   color: $text-primary;
   border-radius: radius('surface');
 
-  @include reduced-motion {
-    transition: none;
-  }
-
-  // The content, positioned so it paints over the face and the glow before it, in the
-  // order of the markup, with no z-index anywhere: a z-index on the card, or on a layer
-  // behind it, needs a stacking context round the card, and one on the card would trap
-  // the category chips' tips beneath the next card.
+  // The content, positioned so it paints over the face and glow in markup order, with no z-index anywhere: one on the
+  // card would trap the category chips' tips beneath the next card.
   > * {
     position: relative;
   }
@@ -40,7 +32,6 @@
   }
 }
 
-// The defs of `SpellCardFilters`: rendered for their filter only, taking no room.
 .spell-card-filters {
   position: absolute;
   width: 0;
@@ -48,16 +39,12 @@
   overflow: hidden;
 }
 
-// The whole card is the link, as an ingredient card's is: the title's one `<a>` stretches an
-// empty `::after` over the article, not an `<a>` around the card, which a screen reader would
-// read whole as the link's name. Plain ink, no underline, at rest or on hover. The top row is
-// left unpositioned so the overlay is placed against the article.
+// The whole card is the link, as an ingredient card's is: the title's `<a>` stretches an empty `::after` over the
+// article. The top row is left unpositioned so the overlay is placed against the article.
 .spell-card > .specimen__top {
   position: static;
 }
 
-// The title link, the title block, the badge row, the badge size and the plain chips are
-// IngredientCard's (_specimen-card.scss). The ring goes round the card, drawn on the article below.
 @include specimen-card('.spell-card', '.spell-card__heading', '.spell-card__title', $ring: false);
 
 // The focus ring, on the article's own `::after`: it comes after the burn layers in the markup,
@@ -72,9 +59,8 @@
   pointer-events: none;
 }
 
-// The words and the badges are positioned so they paint over the face and the glow, as the
-// card's direct children do (the top row is left static above, for the overlay's sake). The
-// badges also pass a click through to the overlay.
+// Positioned so they paint over the face and the glow; the badges pass a click through to the
+// overlay.
 .spell-card__title-text {
   position: relative;
 }
@@ -84,16 +70,12 @@
   pointer-events: none;
 }
 
-// h3's size, as an ingredient card's name: one of many in a grid.
 .spell-card__title {
   margin: 0;
   font-size: heading-size(3);
   hyphens: auto;
 }
 
-// The intent passes a click through to the title link's overlay, as the plain chips do: it is
-// positioned by the content rule above, which paints it over the overlay.
-// Three lines at most and then an ellipsis: the whole of it is the recipe page's.
 .spell-card__intent {
   display: -webkit-box;
   overflow: hidden;
@@ -102,8 +84,7 @@
   pointer-events: none;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
-  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 3;
 }
 
@@ -114,8 +95,6 @@
   pointer-events: none;
 }
 
-// Who last edited and how often it has been made, on one line in the edit line's ink, `space(5)`
-// clear of what is above as the edit line alone is; it wraps whole words on a narrow card.
 .spell-card__foot-line {
   display: flex;
   flex-wrap: wrap;
@@ -138,7 +117,6 @@
   }
 }
 
-// The buttons follow the line with no gap of their own, as they follow the edit line alone.
 .specimen__foot > .spell-card__foot-line + .specimen__actions {
   margin-top: 0;
 }
@@ -147,4 +125,22 @@
 // Regular choice sits on <html> (data-card-density, CardDensitySwitch).
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include spell-card-compact;
+}
+
+// The skeleton: the card's frame at the height the grimoire's cards stand (`$card-skeleton-heights`), the
+// block filling it.
+.spell-card--skeleton {
+  @include card-skeleton-fill;
+  box-sizing: border-box;
+}
+
+@each $kind in ('spell', 'spell-draft') {
+  .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'regular');
+  }
+
+  [data-density='compact']:not(:root[data-card-density='regular'] *)
+    .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'compact');
+  }
 }

@@ -2,14 +2,16 @@
 
 import { type ReactElement, useState } from 'react';
 import { oneOf } from '../../lib/search-params';
-import { FilterSelectField, SearchField, SwitchField } from '../Field';
+import { FilterSelectField } from '../Field/filter-select-field';
+import { SearchField } from '../Field/search-field';
+import { SwitchField } from '../Field/switch-field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { USERS_PATH, userListHref } from './href';
 import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
 // The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and the three switches apply on change
-// (claude-docs/components/user-list.md, "The user link and the filter").
+// (claude-docs/components/user-list.md, "Filter").
 const UserListFilter = ({
   query,
   awaitingApproval,
@@ -19,7 +21,6 @@ const UserListFilter = ({
 }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
-  /** The filter shown with one field changed, the search text typed carried, from the first page. */
   const hrefWith = (change: Partial<UserListFilterValue>) =>
     userListHref({ query: draftQuery.trim(), awaitingApproval, role, timedOut, paused, ...change });
 

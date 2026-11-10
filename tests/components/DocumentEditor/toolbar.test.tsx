@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { warmImport } from '../../support/warm-import';
+import { linkAddressProblem } from '@/lib/link-address';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -15,13 +16,10 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 // The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
 warmImport(() => import('@/components/DocumentEditor/editor'));
 
-// The editor's toolbar offers only what the public page draws, and each button changes the document as its markdown shows:
-// what is proved is the text a Save Draft sends, since that markdown is what a reader is shown once it is published.
-
-/** The buttons the toolbar holds: everything the renderer draws that a toolbar can add, and nothing it cannot. */
 const BUTTONS = [
   'Heading 2',
   'Heading 3',
+  'Pull Quote',
   'Bold',
   'Italic',
   'Link',
@@ -33,7 +31,6 @@ const BUTTONS = [
   'Redo',
 ];
 
-/** Renders the editor on `body`, and records the markdown each Save Draft sends. */
 async function renderEditor(body: string) {
   const saved: string[] = [];
   mockGraphQLMutation<SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables>(
@@ -68,13 +65,11 @@ const settle = () =>
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
 
-/** Clicks a toolbar button, as a pointer does, and lets the editor settle. */
 async function press(name: string): Promise<void> {
   fireEvent.click(button(name));
   await settle();
 }
 
-/** The text node of the editor that holds `words`. */
 function textNodeHolding(text: HTMLElement, words: string): Text {
   const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -83,10 +78,7 @@ function textNodeHolding(text: HTMLElement, words: string): Text {
   throw new Error(`No text node holds ${words}`);
 }
 
-/**
- * Selects `words` in the editor, as a drag over them would; with `caret`, puts the caret inside them instead.
- * The editor reads a selection on `selectionchange`, throttled, so the wait lets it land.
- */
+// The editor reads a selection on `selectionchange`, throttled, so the wait lets it land.
 async function select(text: HTMLElement, words: string, { caret = false } = {}): Promise<void> {
   const node = textNodeHolding(text, words);
   const start = node.textContent!.indexOf(words);
@@ -104,7 +96,6 @@ async function select(text: HTMLElement, words: string, { caret = false } = {}):
   });
 }
 
-/** Clicks Save Draft and returns the markdown it sent. */
 async function saveDraft(saved: string[]): Promise<string> {
   const save = screen.getByRole('button', { name: 'Save Draft' });
   await waitFor(() => expect(save).toBeEnabled());
@@ -123,15 +114,14 @@ describe('the document editor’s toolbar', () => {
     // Undo and Redo stay in the tab order with nothing to undo or redo, so they say so rather than being disabled.
     expect(button('Undo')).toHaveAttribute('aria-disabled', 'true');
     expect(button('Redo')).toHaveAttribute('aria-disabled', 'true');
-    // Nothing else: no image, underline, raw HTML or any other button the page could not draw.
     expect(within(toolbar()).getAllByRole('button')).toHaveLength(BUTTONS.length);
     for (const name of BUTTONS) expect(button(name).querySelector('svg')).not.toBeNull();
   });
 
-  // Each block button turns the paragraph holding the caret into its block.
   it.each([
     ['Heading 2', '## Fixturewort grows here.'],
     ['Heading 3', '### Fixturewort grows here.'],
+    ['Pull Quote', '> Fixturewort grows here.'],
     ['Bulleted List', '- Fixturewort grows here.'],
     ['Numbered List', '1. Fixturewort grows here.'],
   ])('%s turns the paragraph holding the caret into %j', async (name, expected) => {
@@ -143,7 +133,18 @@ describe('the document editor’s toolbar', () => {
     expect(await saveDraft(saved)).toBe(expected);
   });
 
-  // Each mark button marks the selected words and nothing else.
+  it('Pull Quote shows pressed once it has wrapped the paragraph, and not after a second press', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'grows', { caret: true });
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
+
+    await press('Pull Quote');
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'true');
+
+    await press('Pull Quote');
+    expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it.each([
     ['Bold', '**Fixturewort** grows here.'],
     ['Italic', '_Fixturewort_ grows here.'],
@@ -173,6 +174,55 @@ describe('the document editor’s toolbar', () => {
     );
   });
 
+  it('Link tidies a bare host to https:// on leaving the field, and links to it', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    const address = within(dialog).getByRole('textbox', { name: 'Address' });
+    fireEvent.change(address, { target: { value: ' example.test/fixturewort ' } });
+    fireEvent.blur(address);
+    await waitFor(() => expect(address).toHaveValue('https://example.test/fixturewort'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Link' })).toBeNull());
+
+    expect(await saveDraft(saved)).toBe(
+      '[Fixturewort](https://example.test/fixturewort) grows here.',
+    );
+  });
+
+  it('Link refuses an address the page would not open, and keeps the dialog', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Address' }), {
+      target: { value: 'javascript:alert(1)' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+
+    expect(await within(dialog).findByRole('textbox', { name: 'Address' })).toBeInvalid();
+    expect(screen.getByRole('dialog', { name: 'Add Link' })).toBeInTheDocument();
+  });
+
+  it('Link flags an address the page would not open when the field is left, linked to the field', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    const address = within(dialog).getByRole('textbox', { name: 'Address' });
+    fireEvent.change(address, { target: { value: 'https://localhost' } });
+    fireEvent.blur(address);
+
+    expect(address).toHaveAttribute('aria-invalid', 'true');
+    expect(address).toHaveAccessibleDescription(
+      expect.stringContaining(linkAddressProblem('https://localhost') as string),
+    );
+  });
+
   it('Table inserts a table the markdown writes with a header row', async () => {
     const { saved, text } = await renderEditor('Fixturewort grows here.');
     await select(text, 'here', { caret: true });
@@ -185,7 +235,6 @@ describe('the document editor’s toolbar', () => {
     expect(markdown).toMatch(/^\|.*\|\n\|(\s*:?-+:?\s*\|)+$/m);
   });
 
-  // The next number after those in use, so a new note never takes an existing note's place.
   it('Footnote inserts the next note’s reference at the caret, and its definition', async () => {
     const { saved, text } = await renderEditor(
       'Fixturewort grows here.[^1] Testwort grows there.\n\n[^1]: A cited source.',
@@ -215,7 +264,6 @@ describe('the document editor’s toolbar', () => {
     expect(await saveDraft(saved)).toBe('**Fixturewort** grows here.');
   });
 
-  // Undoing back to the text last loaded or saved leaves nothing to save or publish.
   it('Undo back to the opened text leaves nothing to save or publish', async () => {
     const { text } = await renderEditor('Fixturewort grows here.');
     await select(text, 'Fixturewort');
@@ -240,7 +288,6 @@ describe('the document editor’s toolbar', () => {
     await press('Undo');
 
     expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
-    // The saved draft is still there to publish.
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
   });
 
@@ -279,6 +326,16 @@ describe('the document editor’s toolbar', () => {
 
       await select(text, 'Testwort', { caret: true });
       expect(button('Heading 2')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('the pull quote button, for the quote holding the caret', async () => {
+      const { text } = await renderEditor('> Fixturewort\n\nTestwort grows here.');
+
+      await select(text, 'Fixturewort', { caret: true });
+      expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'true');
+
+      await select(text, 'Testwort', { caret: true });
+      expect(button('Pull Quote')).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('a list button, for the list item holding the caret', async () => {

@@ -8,9 +8,7 @@ import { useListNavigation } from '../ListFrame';
 import PagerEndContent from './end-content';
 import type { PagerLinkProps } from './types';
 
-// An end that leads somewhere. A plain left click goes through the list's `ListFrame` skeleton; a
-// soft end is `next/link` (prefetched), a plain end a bare anchor. A modified or middle click is
-// the browser's (claude-docs/components/pager.md).
+// A modified or middle click is the browser's (claude-docs/components/pager.md).
 const PagerLink = ({ href, label, soft }: PagerLinkProps): ReactElement => {
   const { go } = useListNavigation();
 

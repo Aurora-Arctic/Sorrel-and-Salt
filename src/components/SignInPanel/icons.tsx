@@ -4,11 +4,9 @@ import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
 // Each provider's own brand mark, from its published assets
-// (claude-docs/components/sign-in-panel.md, "Provider branding"). The fills are the artwork's, and
+// (claude-docs/components/sign-in-panel.md, "Contracts"). The fills are the artwork's, and
 // the grounds the marks sit on are the provider's colours from `$brand-palettes`, not our tokens.
 
-// Google's "G" logo, as published for "Sign in with Google" buttons. No chip: the mark is
-// multicolour and reads on any ground.
 export function GoogleIcon(): ReactElement {
   return (
     <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
@@ -32,9 +30,6 @@ export function GoogleIcon(): ReactElement {
   );
 }
 
-// Discord's current "Symbol" mark, traced from the SVG in Discord's brand-asset download
-// (discord.com/branding, Logo, Symbol), not the retired "Clyde" face icon. Drawn in white
-// directly on the blurple button, as Discord's own site does; the mark needs no chip.
 export function DiscordIcon(): ReactElement {
   return (
     <svg viewBox="0 0 126.644 96" width="21" height="15.75" aria-hidden="true">
@@ -46,10 +41,8 @@ export function DiscordIcon(): ReactElement {
   );
 }
 
-// Meta's "Secondary Logo" asset (meta.com/brand/resources/facebook/logo): one path that
-// traces the circle's outer edge and the "f" together, so filling it white over a blue
-// backing circle leaves the "f" as a hole the blue shows through. The chip below supplies
-// that backing circle in Facebook's own blue.
+// One path traces the circle and the "f" together, so filled white over the blue chip below
+// shows the blue through the "f".
 export function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">
@@ -79,8 +72,6 @@ export function FacebookMark(): ReactElement {
   );
 }
 
-// Microsoft's four-colour square mark, as published for "Sign in with Microsoft" buttons. No
-// chip: it sits directly on the button's own white ground.
 export function MicrosoftIcon(): ReactElement {
   return (
     <svg viewBox="0 0 21 21" width="18" height="18" aria-hidden="true">
@@ -92,10 +83,8 @@ export function MicrosoftIcon(): ReactElement {
   );
 }
 
-// Every provider's mark by id, the one table SignInPanel's buttons and the ProviderMark
-// circle both read, so a provider added to `ProviderId` fails to compile until it has one.
-// Facebook's two forms are a prop rather than two entries, since only the ground it sits on
-// differs.
+// Every provider's mark by id, read by SignInPanel's buttons and the ProviderMark circle, so a provider added to
+// `ProviderId` fails to compile until it has one.
 export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
   google: GoogleIcon,
   discord: DiscordIcon,

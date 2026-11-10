@@ -1,14 +1,11 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { useSupportAction } from '../SupportRequests/use-support-action';
-
-// Resolves the sender's own request without a reply, through /api/graphql. The service allows it while the request is open
-// or waiting on the sender, so a sender who has their answer need not wait for staff.
 
 const ResolveDocument = graphql(`
   mutation ResolveMySupportRequest($id: ID!) {

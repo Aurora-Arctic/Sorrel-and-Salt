@@ -1,6 +1,4 @@
-// The coven module's behaviour surface. Schema tables are reached at
-// `@/modules/coven/schema/*`; `services/*`, `graphql/*`, `loaders/*` and
-// `types.ts` are internal to the module.
+// Schema tables are reached at `@/modules/coven/schema/*`; `services/*`, `graphql/*`, `loaders/*` and `types.ts` are internal.
 export * from './services/access-control';
 export * from './services/invitations';
 export * from './services/last-owner';
@@ -12,6 +10,7 @@ export * from './services/members';
 export * from './services/memberships';
 export * from './services/workspace-creation';
 export * from './services/workspace-deletion';
+export * from './services/workspace-rename';
 export * from './services/workspace-by-id';
 export * from './services/workspace-by-slug';
 export * from './loaders/member-emails';

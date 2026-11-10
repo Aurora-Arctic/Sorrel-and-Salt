@@ -18,9 +18,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven's Grimoire list: a card per spell in the list named Grimoire, the title
-// search and the Categories filter, and a status region when there is no card to show
-// (claude-docs/components/grimoire-list.md).
+// claude-docs/components/grimoire-list.md
 
 const client = makeQueryClient();
 const List = (props: GrimoireListProps): ReactElement => (
@@ -167,8 +165,7 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
   });
 
-  // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
-  // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
+  // The roles named are the state's data: nothing else tells a viewer who to ask.
   it.each([
     ['complete', 'No Spells'],
     ['draft', 'No Drafts'],
@@ -185,6 +182,16 @@ describe('GrimoireList', () => {
       expect(state()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
     },
   );
+
+  it('links an empty tab to the Grimoire help article', () => {
+    render(<List {...props({ status: 'complete', spells: [], total: 0, position: undefined })} />);
+
+    expect(
+      within(screen.getByRole('status', { name: 'No Spells' })).getByRole('link', {
+        name: 'Learn More',
+      }),
+    ).toHaveAttribute('href', '/help/grimoire');
+  });
 
   it('names the drafts tab in its empty region', () => {
     render(
@@ -216,6 +223,53 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('status', { name: 'No Spells' })).toBeNull();
   });
 
+  // The empty region says there are none, so the count line above it, which would say so too, is not drawn:
+  // the one status region left is the empty one. With a filter in force the count line stays, as it carries
+  // the search sentence the no-match region leans on.
+  it('draws no count line over an empty tab, and keeps it over a filter that matched nothing', () => {
+    // The title box's results announcer is a status region too, empty until a search offers titles.
+    const saying = () => screen.getAllByRole('status').filter((region) => region.textContent);
+    const empty = { spells: [], total: 0, position: undefined };
+    const { unmount } = render(<List {...props(empty)} />);
+    expect(saying()).toEqual([screen.getByRole('status', { name: 'No Spells' })]);
+    unmount();
+
+    render(
+      <List
+        {...props({
+          ...empty,
+          filter: { query: 'nothing', categories: [], categoryMode: 'all', ...OPEN },
+        })}
+      />,
+    );
+    expect(saying()).toHaveLength(2);
+  });
+
+  // A filter that matched nothing offers the way back to the whole tab: its own address, every filter
+  // dropped. An empty tab with no filter has nothing to clear.
+  it('offers Clear Filters where a filter matched nothing, back to the tab with no filter', () => {
+    const empty = { spells: [], total: 0, position: undefined };
+    render(
+      <List
+        {...props({
+          ...empty,
+          status: 'draft',
+          path: `${PATH}/drafts` as Route,
+          filter: { query: 'nothing', categories: ['testwarding'], categoryMode: 'all', ...OPEN },
+        })}
+      />,
+    );
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      `${PATH}/drafts`,
+    );
+    cleanup();
+
+    render(<List {...props(empty)} />);
+    expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
+  });
+
   it("searches by title from its own tab's address", () => {
     render(
       <List
@@ -225,7 +279,6 @@ describe('GrimoireList', () => {
     const form = filterForm('Filter the Grimoire');
     expect(form).toHaveAttribute('action', PATH);
     expect(within(form).getByRole('combobox', { name: 'Title' })).toHaveValue('hearth');
-    // Any submits an empty value, which the address reads as no filter, as the compendium's Toxic does.
     expect(sent(form)).toBe('query=hearth&visibility=');
   });
 
@@ -282,7 +335,6 @@ describe('GrimoireList', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
-    // Moon Phases, Days of the Week and Coven Members type to narrow; Visibility is a chip of radios.
     const show = (field: string) => {
       const box = screen.getByRole('combobox', { name: field });
       box.focus();
@@ -471,8 +523,6 @@ describe('GrimoireList', () => {
       expect(screen.getByRole('status', { name: 'No Matches' })).toBeInTheDocument();
     });
   });
-  // A picked title opens the spell's Quick Look over the list as it stands, as the
-  // card's eye does, the page and the filter kept and the text typed and not searched not applied.
   describe('picking a title from the dropdown', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });

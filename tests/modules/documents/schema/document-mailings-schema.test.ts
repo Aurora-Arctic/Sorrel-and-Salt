@@ -8,9 +8,6 @@ import { documentMailings } from '@/modules/documents/schema/document-mailings';
 import { documentMailingRecipients } from '@/modules/documents/schema/document-mailing-recipients';
 import { documentMailingItems } from '@/modules/documents/schema/document-mailing-items';
 
-// One email to every account about every document changed since the last: a mailing, one item per document version it covers,
-// and one row per account in it, so a retried batch mails no one twice.
-
 const VERSION_UNIQUE = 'document_mailings_version_unique';
 const MAILING_USER_UNIQUE = 'document_mailing_recipients_mailing_user_unique';
 const ITEM_UNIQUE = 'document_mailing_items_mailing_version_unique';
@@ -33,8 +30,7 @@ describe('document_mailings schema', () => {
     );
   });
 
-  // A mailing names its versions through its items; the version and summary columns hold only what a mailing written before
-  // the items carried.
+  // The version and summary columns hold only what a mailing written before the items carried.
   it('declares the status and count required, the version, summary and finish time nullable, and a mailing sending by default', () => {
     for (const column of ['status', 'recipient_count']) {
       expect(byName[column].notNull, column).toBe(true);
@@ -45,8 +41,7 @@ describe('document_mailings schema', () => {
     expect(byName.status.default).toBe('sending');
   });
 
-  // `replaced` marks a mailing a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
-  // monthly quota stopped, until a keeper resumes it.
+  // `replaced`: a newer mailing of the same document stopped it; `paused`: the mail provider's monthly quota did, until a keeper resumes.
   it('takes a status of sending, sent, replaced or paused', () => {
     expect(documentMailings.status.enumValues).toEqual(['sending', 'sent', 'replaced', 'paused']);
   });
@@ -138,7 +133,6 @@ describe('document_mailing_items schema', () => {
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A fresh published version of a fresh document, its id. */
 async function aPublishedVersion(): Promise<string> {
   const [document] = await sql`
     insert into documents (key, title, lede, created_by, updated_by)
@@ -198,7 +192,6 @@ describe('document_mailings table', () => {
 
     expect(replaced.status).toBe('replaced');
     expect(replaced.finished_at).toBeInstanceOf(Date);
-    // 22P02 is invalid_text_representation: the enum refuses the value.
     expect(error.code).toBe('22P02');
   });
 
@@ -233,7 +226,6 @@ describe('document_mailings table', () => {
   it('refuses a mailing of a version that does not exist', async () => {
     const error = await failureOf(aMailing(crypto.randomUUID()));
 
-    // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 
@@ -243,7 +235,6 @@ describe('document_mailings table', () => {
 
     const second = await failureOf(aMailing(versionId));
 
-    // 23505 is unique_violation.
     expect(second.code).toBe('23505');
     expect(second.constraint_name).toBe(VERSION_UNIQUE);
     await softDelete('document_mailings', first.id);
@@ -317,7 +308,6 @@ describe('document_mailing_recipients table', () => {
       values (${mailingId}, ${B.id}, now(), now(), ${ADMIN}, ${ADMIN})
     `);
 
-    // 23514 is check_violation.
     expect(error.code).toBe('23514');
   });
 
@@ -397,7 +387,6 @@ describe('document_mailing_items table', () => {
       values (${mailingId}, ${await aPublishedVersion()}, ${ADMIN}, ${ADMIN})
     `);
 
-    // 23502 is not_null_violation.
     expect(error.code).toBe('23502');
   });
 });

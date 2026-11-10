@@ -1,11 +1,12 @@
 'use client';
 
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 import {
   type FieldError as FormFieldError,
   type FieldPath,
   type FieldValues,
   get,
+  useFormContext,
   useFormState,
 } from 'react-hook-form';
 import { fieldDescription } from './description';
@@ -13,27 +14,24 @@ import { useEditedFieldsContext } from './edited-fields';
 import { useSettledWhilePressed } from './pointer-held';
 import type { FieldDescription } from './types';
 
-/**
- * The part of a react-hook-form field's state that decides whether its error
- * is drawn.
- */
 export type ShownState = {
   isSubmitted: boolean;
   touchedFields: unknown;
-  /** The fields the person has ever edited; null or absent tracks nothing. */
   edited?: ReadonlySet<string> | null;
+  /** The field holds no text. */
+  empty?: boolean;
 };
 
 /**
- * Whether the error on `name` is shown: after a submit, every error; before one, only a field the
- * person has both left and edited. "Edited" is any change event ever made, as `dirtyFields` unsets when
- * the value returns to its default. With no `edited` record the rule is touched alone.
+ * A field's error shows once a save is tried, or once the field is left after an edit: any change
+ * event ever made, as `dirtyFields` unsets when the value returns to its default. A form with no edit
+ * record cannot tell an edit from a visit, so it holds back an empty field's error to the save.
  */
 export function errorShown(
-  { isSubmitted, touchedFields, edited }: ShownState,
+  { isSubmitted, touchedFields, edited, empty }: ShownState,
   name: string,
 ): boolean {
-  return isSubmitted || (Boolean(get(touchedFields, name)) && (!edited || edited.has(name)));
+  return isSubmitted || (Boolean(get(touchedFields, name)) && (edited ? edited.has(name) : !empty));
 }
 
 /**
@@ -43,13 +41,14 @@ export function errorShown(
 export function useField<V extends FieldValues>(
   name: FieldPath<V>,
   hint?: string,
-  note?: string,
+  note?: ReactNode,
   describedBy?: string,
   invalid?: boolean,
 ): FieldDescription {
   const id = useId();
   const state = useFormState<V>({ name });
   const edited = useEditedFieldsContext();
+  const { getValues } = useFormContext<V>();
   const raw: string | undefined = get<unknown, FormFieldError | undefined>(
     state.errors,
     name,
@@ -59,7 +58,12 @@ export function useField<V extends FieldValues>(
   const error = useSettledWhilePressed(
     raw &&
       errorShown(
-        { isSubmitted: state.isSubmitted, touchedFields: state.touchedFields, edited },
+        {
+          isSubmitted: state.isSubmitted,
+          touchedFields: state.touchedFields,
+          edited,
+          empty: getValues(name) === '',
+        },
         name,
       )
       ? raw

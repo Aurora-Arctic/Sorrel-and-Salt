@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { ValuePage } from '../../value-page';
 import type { ValueRouteProps } from '../../types';
 
-export const metadata: Metadata = {
-  title: 'Forms',
-};
+export const metadata: Metadata = pageTitle('Forms');
 
-// The curated ingredient forms, in the page shape every curated value shares.
 export default function AdminFormsPage({ searchParams }: ValueRouteProps) {
   return ValuePage({ kind: 'form', searchParams });
 }

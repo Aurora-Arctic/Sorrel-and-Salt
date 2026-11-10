@@ -4,17 +4,12 @@ import { LinkIcon } from '../IconTip';
 import Spinner from '../Spinner';
 import './index.scss';
 
-// The workshop has no Next router, so `useLinkStatus` (stubbed in
-// .storybook/UnoptimizedLink.tsx) is always false. The two states are drawn as the
-// markup `LinkHint` renders; behaviour is asserted in tests/components/LinkHint.
 const meta = {
   title: 'Navigation / Link Hint',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// A link that wears the chain icon has no dot: the icon turns into the ring. Drawn as the markup
-// `LinkIconHint` renders for each state.
 export const States: Story = {
   render: () => (
     <StatesGrid

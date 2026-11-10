@@ -32,10 +32,6 @@ import SpellMoreMenu from './more-menu';
 import type { InventoryDoor, RecipeStep } from './types';
 import SpellRecipe from '.';
 
-// Render-only; what shows and when is asserted in tests/components/SpellRecipe. The page states
-// draw the recipe as its page does (src/app/(shell)/coven/[slug]/grimoire/[id]/page.tsx): the head's
-// controls, the Workings section and the side column. A dropdown, not a grid: the page's sections
-// carry fixed ids.
 const meta = {
   title: 'Grimoire / Spell Recipe',
 } satisfies Meta;
@@ -57,15 +53,12 @@ const FACTS = {
 };
 const ASSIGNED = ['Protection', 'Clarity', 'Healing'];
 
-// The recipe page draws no supply verdict in the rows: its side column gives them.
 const PAGE_STEPS: RecipeStep[] = RECIPE_STEPS.map((step) =>
   step.kind === 'ingredient' ? { ...step, supply: null } : step,
 );
 
-// The side column holds the steps whose ingredient is still there; Testmoss was deleted since.
 const ASIDE_STEPS = BUILDER_STEPS.filter(({ id }) => id !== 'step-6').map(stepValueOf);
 
-/** Each linked step's Quick Look eye, and Edit Stock behind its jar for a role that updates stock. */
 const DOORS: InventoryDoor[] = RECIPE_STEPS.flatMap((step) =>
   step.kind === 'ingredient' && step.look && step.variantId
     ? [
@@ -99,7 +92,6 @@ const Page = ({
   status?: SpellStatus;
   visibility?: SpellVisibility;
 }) => {
-  // Only a complete spell is worked.
   const canRecord = status === 'complete';
   const listPath = (status === 'draft' ? `${GRIMOIRE}/drafts` : GRIMOIRE) as Route;
   return (
@@ -171,10 +163,6 @@ const Page = ({
   );
 };
 
-// Quick Look: the recipe's body in a modal over the grimoire list, its headings a level down under
-// the dialog's title, and each step's supply verdict and Quick Look eye in its row, since the modal
-// has no side column. A draft or private spell carries its badges under the title. The workshop's
-// router goes nowhere, so Close, Escape and the links leave Open Again (`Reopenable`).
 const Look = ({
   member,
   status = 'complete',
@@ -213,14 +201,9 @@ const Look = ({
 );
 
 const STATES: Record<string, ReactNode> = {
-  // Every slot filled: categories, the head's controls, two workings and a draft one, the side
-  // column (the landmark The Cupboard), a toxic form, a one-off and a step whose ingredient was
-  // deleted since. The steps name their ingredients as plain text: the eye is in The Cupboard alone.
   Complete: <Page />,
-  // A draft is not worked: no Record a Working, and Workings empty.
   Draft: <Page status="draft" />,
   Private: <Page visibility="private" />,
-  // A member's: the Edit pencil beside the title, and no badge for a complete shared spell.
   'Quick Look': <Look member />,
   'Quick Look Draft': <Look member status="draft" />,
   'Quick Look Private': <Look member visibility="private" />,
@@ -236,8 +219,6 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// A phone's width: On This Page stands after the intent and categories and over the facts, and
-// The Cupboard follows the recipe, before Workings.
 export const Phone: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => <Page />,

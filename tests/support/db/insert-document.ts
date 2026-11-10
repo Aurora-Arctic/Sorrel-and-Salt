@@ -1,9 +1,5 @@
 import type postgres from 'postgres';
 
-// How a test writes a document and its versions that it is not testing the writing of. Raw, as `insertIngredient` is: setup must
-// not depend on the code under test. Columns are the tables' own names.
-
-/** A document's row: an invented title and lede unless `fields` says otherwise. */
 export interface DocumentSeed {
   key: string;
   title?: string;
@@ -11,7 +7,6 @@ export interface DocumentSeed {
   deleted_at?: Date | null;
 }
 
-/** A version's row: published on 4 March 2026 unless `fields` says otherwise. A draft carries no `published_at`. */
 export interface DocumentVersionSeed {
   number: number;
   body?: string;
@@ -21,7 +16,6 @@ export interface DocumentVersionSeed {
   deleted_at?: Date | null;
 }
 
-/** Writes a document stamped by `author`, and returns its id. */
 export async function insertDocument(
   sql: postgres.Sql,
   {
@@ -38,7 +32,6 @@ export async function insertDocument(
   return row.id as string;
 }
 
-/** Writes one version of `documentId` stamped by `author`, and returns its id. */
 export async function insertDocumentVersion(
   sql: postgres.Sql,
   documentId: string,
@@ -67,20 +60,14 @@ export async function insertDocumentVersion(
   return row.id as string;
 }
 
-/** A mailing's row and its items: sending, of no accounts, started now, each item's summary invented, unless `fields` says otherwise. */
 export interface DocumentMailingSeed {
-  /** The versions the mailing covers, each with its summary. */
   items: readonly { versionId: string; summary?: string }[];
   status?: 'sending' | 'sent' | 'replaced' | 'paused';
   recipient_count?: number;
-  /** Seconds before now the mailing was started, which orders the queue. */
   startedSecondsAgo?: number;
 }
 
-/**
- * Writes a mailing and its items stamped by `author`, as a mailing written since the items table leaves it: no version or summary
- * of its own. A sent mailing is finished now. Returns its id.
- */
+// No version or summary of its own, as a mailing written since the items table leaves it.
 export async function insertDocumentMailing(
   sql: postgres.Sql,
   { items, status = 'sending', recipient_count = 0, startedSecondsAgo = 0 }: DocumentMailingSeed,

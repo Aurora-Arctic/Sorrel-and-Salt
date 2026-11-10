@@ -1,25 +1,39 @@
 import type { Route } from 'next';
+import type { ProviderId } from '../../lib/types';
 
-/** What `/invite/[token]` and `/i/[token]` know of the link for this visitor, read on the server. */
 export type InvitationAcceptanceProps =
-  /** No session: nothing of the invitation is read until one holds it. `card` for the short card link. */
-  | { status: 'signed-out'; signInHref: string; card?: boolean }
-  /** The service's reason, in its words; `emailHref` for a matching address not yet verified. `token` is the link's, sent to record the refused open. */
+  /**
+   * No session: nothing of the invitation is read until one holds it. `next` is the link itself; `card` for the short card
+   * link; `lead` the choice drawn first and solid, the other following it outlined.
+   */
+  | {
+      status: 'signed-out';
+      next: string;
+      configured: readonly ProviderId[];
+      card?: boolean;
+      lead: SignedOutLead;
+      /** A verification link was refused on its way back here; never the reason, which the page does not repeat. */
+      linkFailed?: boolean;
+    }
+  /** Signed in with an address not yet verified: the message went to `email`, and its link comes back here. */
+  | {
+      status: 'unverified';
+      emailHref: string;
+      /** A verification link was refused on its way back here; never the reason, which the page does not repeat. */
+      linkFailed?: boolean;
+    }
   | {
       status: 'refused';
       message: string;
       emailHref?: string;
-      /** For an account that already used the card: where it starts its coven. */
       startCovenHref?: Route;
       token?: string;
     }
-  /** This session may accept: what the invitation grants, and where accepting lands. */
   | {
       status: 'acceptable';
       token: string;
       tier: 'site';
-      /** The site role accepting grants. */
-      siteRole: 'curator' | 'admin';
+      siteRole: 'user' | 'curator' | 'admin';
       landing: Route;
     }
   | {
@@ -29,10 +43,12 @@ export type InvitationAcceptanceProps =
       landing: Route;
       covenName?: string;
     }
-  /** A card admits any verified account: it names no address, coven or batch. */
   | {
       status: 'acceptable';
       token: string;
       tier: 'card';
       landing: Route;
     };
+
+/** The signed-out choice an invitation leads with. */
+export type SignedOutLead = 'sign-up' | 'sign-in';

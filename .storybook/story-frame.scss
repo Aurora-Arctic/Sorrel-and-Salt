@@ -13,7 +13,7 @@
   // The story's gutter, a phone's own at phone width (3rem a side would leave a 375px story 279px).
   padding: 3rem;
 
-  @media (max-width: 30rem) {
+  @include width-to(30rem) {
     padding: space(4);
   }
 
@@ -24,13 +24,6 @@
   overflow: hidden;
   background-color: $surface-page;
   color: $text-primary;
-  @include theme-transition(background-color, color);
-}
-
-@include reduced-motion {
-  .workshop-story-frame {
-    transition: none;
-  }
 }
 
 // A state that draws the whole app shell (ShellFrame, ./shell-frame.tsx) or the signed-out frame

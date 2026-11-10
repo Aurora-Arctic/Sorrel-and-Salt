@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countReceivedInvitations,
@@ -15,13 +16,10 @@ import { requireSession } from '../../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
 import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
-export const metadata: Metadata = {
-  title: 'Your Account',
-};
+export const metadata: Metadata = pageTitle('Your Account');
 
-// The account page: name, address and waiting coven invitations, each its own section under its own heading, with ids
-// prefixed so no form's id meets them.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
@@ -34,13 +32,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       (start) => countReceivedInvitations(session, start),
     ),
   ]);
-  // The pager stays at the section: a page of invitations is what was asked for.
   const invitationsHref = (cursor: Record<string, string>) =>
     `${ACCOUNT_PATH}?${new URLSearchParams(cursor).toString()}#${ACCOUNT_INVITATIONS_ID}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
 
   return (
-    <div className="page-with-nav page-with-nav--headless">
+    <PageWithNav as="div" headless>
       <PageNav
         label="On This Page"
         entries={[
@@ -100,6 +97,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
         />
       </section>
-    </div>
+    </PageWithNav>
   );
 }

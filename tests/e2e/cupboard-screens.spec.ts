@@ -7,10 +7,6 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The three cupboard screens on a compendium entry seen from a coven: the plus beside the pencil (Add),
-// Annotate, and Remove from the three dots. One walk: the owner adds the entry, annotates its label, hands
-// the label back to the Compendium, and removes the entry.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -45,9 +41,6 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   }
   const entryPage = `/coven/${coven.slug}/ingredients/${ingredientId}`;
   const heading = (name: string) => page.getByRole('heading', { level: 1, name });
-  // A choice among the entry's icons (Annotate) or in the three dots (Make It Ours, Remove, the
-  // bin only where Remove is the one choice left), each named for
-  // the entry as it is called now.
   const choose = async (name: string, entry = 'Fixture Screens Wort') => {
     const main = page.getByRole('main');
     if (name === 'Annotate')
@@ -58,7 +51,6 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
     }
   };
 
-  // Add is the card's plus beside the pencil, as on the public page.
   const plus = () =>
     page.getByRole('main').getByRole('button', {
       name: `${ADD}: Fixture Screens Wort`,
@@ -94,11 +86,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await plus().click();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   await expect(plus()).toHaveCount(0);
-  // The one coven that may add holds it now: the card's check in the plus's place.
   await expect(
     page.getByRole('main').getByRole('button', { name: `${HELD}: Fixture Screens Wort` }),
   ).toBeVisible();
-  // The failed try's badge went with the button it belonged to.
   await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
 
   await choose('Annotate');
@@ -111,10 +101,8 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page).toHaveURL(/\/ingredients\/[^?]+$/);
   await expect(heading('Fixture Our Screenwort')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
-  // Annotated wins over Compendium.
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
 
-  // The form opens on the coven's label; handing it back restores the compendium's.
   await choose('Annotate', 'Fixture Our Screenwort');
   await dialog.getByRole('button', { name: 'Restore Original: Label' }).click();
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
@@ -123,25 +111,21 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 
-  // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });
   await assertNoAccessibilityViolations(page);
   await choose('Annotate');
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
-  // Closed with nothing changed, the dialog gives the focus back to the Annotate icon where
-  // the press began.
   await expect(page.getByRole('link', { name: 'Annotate Fixture Screens Wort' })).toBeFocused();
 
   await choose('Remove');
-  await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+  // A yes-or-no question is an alert dialog.
+  const question = page.getByRole('alertdialog');
+  await question.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(plus()).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
-  // The confirmation stays until the re-read drops the entry, then closes onto
-  // the page's heading: Remove went with the entry, and the button left offers
-  // something else.
-  await expect(dialog).toBeHidden();
+  await expect(question).toBeHidden();
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
   await assertNoAccessibilityViolations(page);
 });

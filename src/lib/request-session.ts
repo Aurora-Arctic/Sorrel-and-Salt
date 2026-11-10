@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -7,8 +8,9 @@ import { assertCurator, assertSiteAdmin, standingAccessPause } from '@/modules/i
 import { agreementIsCurrent } from './agreement-version';
 import { auth } from './auth';
 import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
-import { AccessPaused, Forbidden } from './errors';
+import { AccessPaused, CovenMoved, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
+import { movedCovenPath } from './coven-path';
 import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
@@ -17,31 +19,20 @@ import { toUserRole } from './session-role';
 import { isFreshSession } from './session-fresh';
 import type { AccountPasskey, AgreedVersion, LinkedAccount } from './types';
 
-// Where the request becomes a service-level `Session`: server components and
-// the GraphQL context call this, then hand the result to a service. A service
-// never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
-// protection").
+// Where the request becomes a service-level `Session`; a service never calls it
+// (claude-docs/auth/route-protection.md, "Route protection").
 
-/**
- * Whether Better Auth would still call a session created at `createdAt` fresh (the `/unlink-account` check), so the account
- * page can withhold Remove rather than offer a refused press. The window is Better Auth's resolved `freshAge` (pinned in
- * tests/lib/auth.test.ts); 0 turns the check off, as there.
- */
+/** The window is Better Auth's resolved `freshAge` (pinned in tests/lib/auth.test.ts); 0 turns the check off, as there. */
 async function isFresh(createdAt: Date | string): Promise<boolean> {
   return isFreshSession(createdAt, (await auth.$context).sessionConfig.freshAge);
 }
 
-/**
- * The pause standing on a session's user, which is the one check of a paused session: every page but support's sends it to
- * the paused page, and every API call but support's refuses it. Asked of every session, an impersonation's included, since
- * a paused account still signs in.
- */
+/** Asked of every session, an impersonation's included, since a paused account still signs in. */
 async function accessPauseOf(userId: string): Promise<SessionState['accessPause']> {
   const pause = await standingAccessPause(userId);
   return pause && { until: pause.until };
 }
 
-/** The versions the account stored when it last agreed, which Better Auth reads into the session with the row. */
 function agreedVersionOf(user: object): AgreedVersion {
   const part = (field: string) => Reflect.get(user, field) as number | null | undefined;
   return {
@@ -51,10 +42,7 @@ function agreedVersionOf(user: object): AgreedVersion {
   };
 }
 
-/**
- * Everything Better Auth knows of the request's session, the standing pause included, read from the headers given. For
- * the GraphQL context, which has no `headers()`; a page reads it through the guards below.
- */
+/** For the GraphQL context, which has no `headers()`; a page reads it through the guards below. */
 export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
   if (!result)
@@ -84,10 +72,7 @@ function actingSession({ session, accessPause }: SessionState): Session | null {
   return accessPause ? null : session;
 }
 
-/**
- * The signed-in user for these request headers, or `null`. Asks the database through Better Auth, so an expired, revoked or
- * forged cookie is `null` though the proxy's cookie check passed it. For the proxy, which has no `headers()`; a page calls `getSession()`.
- */
+/** Asks the database through Better Auth, so an expired, revoked or forged cookie is `null` though the proxy's cookie check passed it. */
 export async function sessionFromHeaders(requestHeaders: Headers): Promise<Session | null> {
   return actingSession(await sessionStateFromHeaders(requestHeaders));
 }
@@ -119,28 +104,15 @@ export async function getShellSession(): Promise<{
   return accessPause ? { session, accessPause } : { session };
 }
 
-/**
- * Whether the signed-in account's address is verified; `false` with no session.
- * For the front page, which offers an unverified account the email page rather
- * than a page that would send it there. From the same per-request lookup.
- */
+/** For the front page, which offers an unverified account the email page rather than a page that would send it there. */
 export async function sessionIsVerified(): Promise<boolean> {
   return (await getSessionState()).emailVerified;
 }
 
-/**
- * Whether this request's session is recent enough for Better Auth to remove a
- * sign-in method; `false` with no session. For the account page, after
- * `requireSession()`, from the same per-request lookup.
- */
 export async function sessionIsFresh(): Promise<boolean> {
   return (await getSessionState()).sessionFresh;
 }
 
-/**
- * The versions the signed-in account last agreed to, each null until it agrees; absent with no session. For the acceptance page,
- * which names what changed since, from the same per-request lookup.
- */
 export async function sessionAgreedVersion(): Promise<AgreedVersion | undefined> {
   return (await getSessionState()).agreedVersion;
 }
@@ -151,10 +123,9 @@ async function forwardedReturnPath(): Promise<string | undefined> {
 }
 
 /**
- * The signed-in user or a redirect to `/sign-in` carrying the page's path as `?next=`, or to the paused page while a pause
- * stands on the session's user, from every page but support's: `requireSession()` without its email
- * check, for the shell layout only. The shell is drawn round the email page, and a layout throwing the email redirect there
- * loops the router (claude-docs/auth/route-protection.md, "Where the email redirect is thrown").
+ * The signed-in user or a redirect, without `requireSession()`'s email check, for the shell layout only: a
+ * layout throwing the email redirect loops the router (claude-docs/auth/route-protection.md, "Where the email
+ * redirect is thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
   return signedInFrom(await getSessionState());
@@ -170,11 +141,7 @@ async function signedInFrom({ session, accessPause }: SessionState): Promise<Ses
   return session;
 }
 
-/**
- * The signed-in user, or a redirect to `/sign-in` with the page's path as `?next=`, or to the email page while the address is
- * unverified (a provisional account can do nothing else), or to the acceptance page until it has agreed to the current terms. Every protected page calls it before reading anything
- * (claude-docs/auth/admin-bootstrap.md, "The email page").
- */
+/** Every protected page calls it before reading anything (claude-docs/auth/admin-bootstrap.md, "The email page"). */
 export async function requireSession(): Promise<Session> {
   const state = await getSessionState();
   const session = await signedInFrom(state);
@@ -193,9 +160,8 @@ export async function requireSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()` then the site-role check: a signed-in non-keeper gets Next's forbidden page (403), not a redirect or 404,
- * as `/keepers` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
- * since a layout does not re-run on client-side navigation.
+ * A signed-in non-keeper gets Next's forbidden page (403), not a redirect or 404, as `/keepers` is a known path
+ * (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it, since a layout does not re-run on client-side navigation.
  */
 export async function requireAdminSession(): Promise<Session> {
   const session = await requireSession();
@@ -208,10 +174,7 @@ export async function requireAdminSession(): Promise<Session> {
   return session;
 }
 
-/**
- * `requireSession()` then the curation check: a curator or a keeper passes, anyone else gets the forbidden page. The people
- * pages call `requireAdminSession()`, which a curator fails (claude-docs/auth/admin-guard.md, "The curator guard").
- */
+/** The people pages call `requireAdminSession()`, which a curator fails (claude-docs/auth/admin-guard.md, "The curator guard"). */
 export async function requireCuratorSession(): Promise<Session> {
   const session = await requireSession();
   try {
@@ -226,31 +189,23 @@ export async function requireCuratorSession(): Promise<Session> {
 // One lookup per slug per request, however many layouts and pages ask.
 const covenOf = cache(async (slug: string) => membershipBySlug(await requireSession(), slug));
 
-/**
- * `requireSession()`, then the workspace the `/coven/[slug]` address names and the proof the user is a member. A refusal is
- * Next's 404, not 403: an unknown slug and a coven the user is not in must look the same (claude-docs/auth/coven-guard.md,
- * "The coven guard"). A member whose access to the coven is paused holds a seat, so is sent to the coven's paused page
- * instead. The layout and every page beneath it call it.
- */
+/** A refusal is a 404, not a 403 (claude-docs/auth/coven-guard.md, "The coven guard"); a member whose access is paused goes to the coven's paused page. */
 export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
   try {
     return await covenOf(slug);
   } catch (error) {
     // First, since AccessPaused is a Forbidden too.
     if (error instanceof AccessPaused) redirect(covenPausedPath(slug));
+    if (error instanceof CovenMoved)
+      redirect(movedCovenPath((await forwardedReturnPath()) ?? '', error.slug) as Route);
     if (error instanceof Forbidden) notFound();
     throw error;
   }
 }
 
-/** Every account row Better Auth holds for the signed-in user, provider and password alike. */
 const userAccounts = cache(async () => auth.api.listUserAccounts({ headers: await headers() }));
 
-/**
- * The signed-in user's provider accounts, asked of Better Auth, whose table
- * they are. For the account page, after `requireSession()`; Better Auth
- * refuses a request with no session.
- */
+/** Asked of Better Auth, whose table they are; it refuses a request with no session. */
 export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
   const accounts = await userAccounts();
   return accounts.flatMap(({ id, providerId }) =>
@@ -258,16 +213,12 @@ export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
   );
 });
 
-/** Whether the signed-in account has a password, which the account page then changes rather than sets. */
 export const hasPassword = cache(async (): Promise<boolean> => {
   const accounts = await userAccounts();
   return accounts.some(({ providerId }) => providerId === 'credential');
 });
 
-/**
- * The signed-in user's passkeys, asked of the passkey plugin, whose table they are, and cut to what the account page
- * shows. For the account page, after `requireSession()`.
- */
+/** Asked of the passkey plugin, whose table they are. */
 export const accountPasskeys = cache(async (): Promise<AccountPasskey[]> => {
   const passkeys = await auth.api.listPasskeys({ headers: await headers() });
   return passkeys.map(({ id, name, createdAt }) => ({

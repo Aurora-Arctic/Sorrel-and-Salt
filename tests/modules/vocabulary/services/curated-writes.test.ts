@@ -31,7 +31,6 @@ beforeEach(() => {
   repository.withAudit.mockReset();
 });
 
-/** A driver error as Postgres reports a unique violation, wrapped as Drizzle wraps one. */
 function violation(index: string): Error {
   const cause = Object.assign(new Error('duplicate key'), {
     code: '23505',
@@ -69,7 +68,6 @@ describe('refuseSlugCollision', () => {
 });
 
 describe('deleteGroup', () => {
-  /** A live form group holding live forms, and another live group to move them to. */
   async function groupAndTarget(): Promise<{ id: string; moveTo: string }> {
     const [held] = await sql<{ id: string }[]>`
       select g.id from ingredient_form_groups g

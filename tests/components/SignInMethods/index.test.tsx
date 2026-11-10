@@ -31,11 +31,9 @@ const press = (element: Element) =>
     fireEvent.click(element);
   });
 
-/** Drawn under the page's status region, as the root layout mounts it. */
 const renderOnPage = (ui: ReactElement) =>
   render(<StatusRegionProvider>{ui}</StatusRegionProvider>);
 
-/** A failure said in a callout under the control, the focus left on it. */
 async function expectCalloutUnder(control: HTMLElement, sentence: string) {
   expect(await screen.findByRole('alert')).toHaveTextContent(sentence);
   expect(control).toHaveFocus();
@@ -43,7 +41,6 @@ async function expectCalloutUnder(control: HTMLElement, sentence: string) {
   expect(control).toHaveAccessibleDescription(expect.stringContaining(sentence));
 }
 
-/** Presses a row's Remove, then the Remove in the dialog it opens. */
 async function removeAndConfirm(control: HTMLElement) {
   await press(control);
   await press(
@@ -53,7 +50,6 @@ async function removeAndConfirm(control: HTMLElement) {
   );
 }
 
-/** The list item naming a provider. */
 function row(label: string): HTMLElement {
   const item = screen
     .getAllByRole('listitem')
@@ -75,7 +71,6 @@ describe('SignInMethods', () => {
     render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
     expect(screen.getAllByRole('listitem')).toHaveLength(5);
-    // A linked row is the one without an Add.
     expect(within(row('Discord')).queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
     for (const label of ['Google', 'Microsoft']) {
       expect(within(row(label)).getByRole('button', { name: `Add ${label}` })).toBeInTheDocument();
@@ -216,7 +211,6 @@ describe('SignInMethods', () => {
     expect(linkSocialMock).not.toHaveBeenCalled();
   });
 
-  // Greyed rather than gone, so the reason sits under the control it explains.
   it('with one method left, its Remove is greyed and says why', () => {
     unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
     render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
@@ -254,7 +248,6 @@ describe('SignInMethods', () => {
 
     expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign In Again' })).toHaveAccessibleDescription(/\S/);
-    // Not the last method's reason: neither row is the only one.
     expect(within(row('Discord')).queryByRole('paragraph')).not.toBeInTheDocument();
   });
 
@@ -355,12 +348,10 @@ describe('SignInMethods', () => {
 
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
     expect(screen.queryByRole('dialog')).toBeNull();
-    // Said in the page's status region, and seen in the row that turned to Add.
     await waitFor(() => expect(status).not.toBeEmptyDOMElement());
     expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.queryByRole('alert')).toBeNull();
     expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toHaveFocus();
-    // Back to one: the survivor's Remove is greyed.
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -383,13 +374,11 @@ describe('SignInMethods', () => {
 
     await removeAndConfirm(remove);
 
-    // The dialog's Remove is busy until the answer, and a second press sends nothing.
     const dialog = screen.getByRole('dialog', { name: 'Remove Sign-In Method' });
     const confirm = within(dialog).getByRole('button', { name: /^Remov/ });
     expect(confirm).toHaveAttribute('aria-busy', 'true');
     await press(confirm);
     expect(unlinkAccountMock).toHaveBeenCalledTimes(1);
-    // Behind it, the pressed row is busy and the others wait, disabled.
     expect(remove).toHaveAttribute('aria-busy', 'true');
     expect(screen.getByRole('button', { name: 'Remove Discord', hidden: true })).toBeDisabled();
     await act(async () => finish({ data: { status: true }, error: null }));

@@ -17,11 +17,7 @@ import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 
-// The keeper's editing of the four documents: the read the editor opens on, saving into a draft (opening one when none is open),
-// publishing that draft, and changing the title and lede. Each is a keeper's alone, through assertSiteAdmin, so a curator who
-// curates the compendium reaches none of it (claude-docs/design-decisions/m15.59-document-editor-scope.md). That a publish
-// empties the cached public reads is documents-cache.test.ts's; the signed-out caller is refused at the GraphQL scope
-// (tests/db/graphql-query-scopes.test.ts), since a service is never called without a session.
+// Signed-out callers are refused at the GraphQL scope (tests/db/graphql-query-scopes.test.ts); a service is never called without a session.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -34,7 +30,6 @@ let disclaimerId: string;
 beforeEach(async () => {
   vi.mocked(revalidateTag).mockClear();
   await sql`truncate documents cascade`;
-  // The privacy policy at versions 1 and 2 with 3 an open draft; the disclaimer at version 1 with no draft.
   privacyId = await insertDocument(
     sql,
     { key: 'privacy', title: 'Fixture Policy', lede: 'What the fixture keeps.' },
@@ -61,7 +56,6 @@ beforeEach(async () => {
   await insertDocumentVersion(sql, disclaimerId, { number: 1, body: 'Fixture disclaimer.' }, E.id);
 });
 
-/** Every version of `documentId`, oldest first, as stored. */
 async function versionsOf(documentId: string) {
   return sql<
     { number: number; body: string; status: string; revision: number; updated_by: string }[]
@@ -71,7 +65,6 @@ async function versionsOf(documentId: string) {
     order by number`;
 }
 
-/** The newest version of `documentId`, as stored. */
 async function lastVersionOf(documentId: string) {
   const versions = await versionsOf(documentId);
   return versions[versions.length - 1];
@@ -230,9 +223,7 @@ describe('publishDocumentDraft', () => {
   });
 });
 
-// Restore Published Version: the draft goes, as a soft delete, and the published text is what the editor shows again.
 describe('discardDocumentDraft', () => {
-  /** The open draft of `documentId` as stored, deleted or not. */
   async function draftRowOf(documentId: string) {
     const [row] = await sql<{ id: string; deleted_at: Date | null; deleted_by: string | null }[]>`
       select id, deleted_at, deleted_by from document_versions
@@ -340,8 +331,37 @@ describe('updateDocument', () => {
   });
 });
 
-// Each call is made by direct id, as a forged request would make it. E's same call succeeds, A holds no site role, and F passes
-// the curation check, so each refusal is the admin check's and would fail with it removed.
+// Direct-id calls: E's same call succeeds, A holds no site role and F passes only the curation check, so each refusal is the admin check's.
+describe('the About Us document is edited by a keeper alone', () => {
+  it('refuses a direct write from a non-keeper, and the same request succeeds for a keeper', async () => {
+    const aboutId = await insertDocument(
+      sql,
+      { key: 'about', title: 'Fixture About', lede: 'Who the fixture is.' },
+      E.id,
+    );
+    await insertDocumentVersion(sql, aboutId, { number: 1, body: 'Fixture about.' }, E.id);
+    const write = (session: Session) =>
+      saveDocumentDraft(session, aboutId, {
+        body: 'Fixture about, edited.',
+        expectedRevision: null,
+      });
+    // Preconditions: the callers are a curator, a steward and a practitioner, none a keeper, and the keeper is.
+    expect(() => assertCurator(asUser(F))).not.toThrow();
+    expect([asUser(A).role, asUser(B).role]).toEqual(['user', 'user']);
+
+    for (const who of [F, B, A]) {
+      await expect(write(asUser(who)), who.id).rejects.toBeInstanceOf(Forbidden);
+    }
+    expect(await versionsOf(aboutId)).toHaveLength(1);
+
+    await expect(write(asUser(E))).resolves.toMatchObject({
+      number: 2,
+      body: 'Fixture about, edited.',
+    });
+    expect(await versionsOf(aboutId)).toHaveLength(2);
+  });
+});
+
 describe('the editing services are a keeper’s alone', () => {
   const CALLS: [string, (session: Session) => Promise<unknown>][] = [
     ['readDocumentForEditing', (session) => readDocumentForEditing(session, 'privacy')],

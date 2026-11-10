@@ -1,12 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import type { EmailVerificationSender } from '@/modules/identity';
 import { noSender } from '../../../support/email-verification';
 import { B, asUser } from '../../../support/as-user';
 import { run as runOperation } from '../../../support/graphql/run';
-
-// `setEmail` over the real schema, with a sender that records what it was asked to mail: the mutation's `next` is where the link lands afterwards (claude-docs/auth/admin-bootstrap.md, "The email page"), and its one `VALIDATION` is read as the browser reads it.
-// What the service refuses is services/email.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
+import { useTestDatabase } from '../../../support/db/database';
 
 const NEW = 'new@set-email.test';
 
@@ -20,12 +18,8 @@ const SET_EMAIL = /* GraphQL */ `
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 async function run(variables: Record<string, unknown>) {

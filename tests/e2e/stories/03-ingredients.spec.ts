@@ -37,22 +37,18 @@ import {
   openAddIngredient,
 } from './ingredient-dialogs';
 
-// Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
-// and everything a member does from it. Every story here walks it. Each story writes its own coven, so one story's rows
-// never decide another's counts.
+// Each story writes its own coven, so one story's rows never decide another's counts.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** A seeded compendium entry the coven holds, by label, form and, for a shared label, formal name. */
 interface Jar extends Stock {
   name: string;
   form: string;
   canonicalName?: string;
 }
 
-/** Stocks each of `jars` in `coven`, written by its first user. */
 async function stockJars(sql: postgres.Sql, coven: Coven, jars: Jar[]): Promise<string[]> {
   const author = Object.values(coven.users)[0];
   const ids: string[] = [];
@@ -63,7 +59,6 @@ async function stockJars(sql: postgres.Sql, coven: Coven, jars: Jar[]): Promise<
   return ids;
 }
 
-/** A coven with one owner, signed in, on its ingredient list. */
 async function ownCoven(page: Page, story: number) {
   const coven = await seedCoven(page, `Fixture Coven Story ${story}`, `story-${story}.test`, {
     A: 'owner',
@@ -89,7 +84,6 @@ test(
         { quantity: 4, unit: 'piece', threshold: 3 },
         coven.users.A,
       );
-      // A local entry with no jar of it yet is listed too.
       await localIngredient(sql, coven.id, coven.users.A, {
         name: 'Fixture Unstocked',
         nomenclature: 'none',
@@ -212,8 +206,7 @@ test(
     });
 
     await test.step('clearing the search brings the whole list back', async () => {
-      // The search box's own clear empties it and applies the empty search
-      // (claude-docs/components/ingredient-search.md).
+      // claude-docs/components/ingredient-search.md
       await filterOf(page).getByRole('button', { name: 'Clear Name' }).click();
       await expect(cards).toHaveCount(4);
       await expect(nameSearch(page)).toHaveValue('');
@@ -228,8 +221,7 @@ test(
   { tag: '@story-22' },
   async ({ page }) => {
     const coven = await ownCoven(page, 22);
-    // Protection: Rosemary and Bay Laurel. Cleansing: Rosemary, Selenite and
-    // Sea Salt. Both: Rosemary alone (the seed's categories, src/db/seed/).
+    // Both: Rosemary alone (the seed's categories, src/db/seed/).
     await withSql((sql) =>
       stockJars(sql, coven, [
         { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
@@ -266,7 +258,7 @@ test(
       await page.reload();
       await expect(cards).toHaveCount(1);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
-      // A pick is a chip with its own Remove (claude-docs/components/category-picker.md).
+      // claude-docs/components/category-picker.md
       const panel = await openFilters(page);
       for (const name of ['Protection', 'Cleansing']) {
         await expect(panel.getByRole('button', { name: `Remove Category: ${name}` })).toBeVisible();
@@ -298,11 +290,9 @@ test(
         coven.users.A,
       );
       return stockJars(sql, coven, [
-        // Out: nothing left.
         { name: 'Rosemary', form: 'Herb', quantity: 0, unit: 'g', threshold: 10 },
         // Low at the threshold itself, not only below it.
         { name: 'Sea Salt', form: 'Salt', quantity: 10, unit: 'g', threshold: 10 },
-        // Well stocked.
         { name: 'Selenite', form: 'Crystal', quantity: 5, unit: 'piece', threshold: 3 },
         // Low under the weight default of 10 g, spared by its zero threshold.
         { name: 'Bay Laurel', form: 'Leaf', quantity: 1, unit: 'g', threshold: 0 },
@@ -323,9 +313,7 @@ test(
         await expect(lowBadge(rowOf(list, name))).toHaveCount(0);
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
-      // Each badge is a drawing alone, named in full for a screen reader, and its tip says the state in words,
-      // not a colour alone. The tip is an icon tip, hidden from the accessibility tree, so it is found with
-      // `includeHidden` in its badge's row, by its words. Axe holds their contrast.
+      // The tip is an icon tip, hidden from the accessibility tree, so it is found with `includeHidden` in its badge's row.
       const tipIn = (row: Locator, words: string) =>
         row.getByRole('tooltip', { includeHidden: true }).filter({ hasText: words });
       await outBadge(rowOf(list, 'Rosemary')).focus();
@@ -341,8 +329,7 @@ test(
     });
 
     await test.step('the low-stock filter keeps the low rows, in the address', async () => {
-      // `lowStockOnly`, a switch as the keeper's Without References is
-      // (claude-docs/components/compendium-list.md); "Low Stock Only" is this spec's choice.
+      // claude-docs/components/compendium-list.md; "Low Stock Only" is this spec's choice.
       const panel = await openFilters(page);
       await panel.getByRole('switch', { name: 'Low Stock Only' }).click();
       await applyFilters(page, panel);
@@ -366,9 +353,7 @@ test(
       await crystal.threshold.fill('5');
       await editor.save.click();
 
-      // The dialog is a child of the card and previews its own Low Stock badge from what is
-      // typed, so the badge below only proves the save once the dialog has closed (it closes
-      // after the save is answered).
+      // The dialog previews its own Low Stock badge from what is typed, so the card's badge proves the save only once the dialog has closed.
       await expect(editor.dialog).toHaveCount(0);
       await expect(lowBadge(row)).toBeVisible();
       const [stock] = await withSql(
@@ -380,7 +365,6 @@ test(
   },
 );
 
-/** A stock row's quantity, unit and threshold as the database holds them. */
 async function stockOf(id: string) {
   const [row] = await withSql(
     (sql) => sql<{ quantity: number; unit: string; threshold: number }[]>`
@@ -390,7 +374,6 @@ async function stockOf(id: string) {
   return row;
 }
 
-/** A coven's live jars of the entry called `name`, by form, as the database holds them. */
 async function jarsOf(coven: Coven, name: string) {
   return withSql(
     (sql) => sql<{ form: string; quantity: number; unit: string; threshold: number }[]>`
@@ -456,7 +439,6 @@ test(
       await editor.open.click();
       const herb = editor.jar('Herb');
       await herb.quantity.fill('0.5');
-      // Within the dimension: weight to weight (CLAUDE.md, unit conversion).
       await herb.pickUnit('kg');
       await herb.threshold.fill('0.1');
       await editor.save.click();
@@ -475,10 +457,8 @@ test(
       const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
       await editor.open.click();
       await editor.addForm.click();
-      // The form held is not offered again.
       await expect(page.getByRole('option', { name: 'Herb', exact: true })).toHaveCount(0);
       await page.getByRole('option', { name: 'Oil', exact: true }).click();
-      // Picking a form adds nothing yet: Add does, and chooses it, its Quantity focused.
       await expect(editor.jar('Oil').group).toHaveCount(0);
       await editor.addButton.click();
       const oil = editor.jar('Oil');
@@ -493,9 +473,7 @@ test(
         { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
         { form: 'Oil', quantity: 30, unit: 'ml', threshold: 5 },
       ]);
-      // With every form held there is nothing left to add. The card reads again once the dialog
-      // has closed, and the dialog is drawn from what the card was given.
-      // The card's own Oil jar line (the forms are Quick Look's, not the card's).
+      // The card reads again once the dialog has closed; the forms are Quick Look's, not the card's.
       await expect(
         rowOf(list, 'Rosemary')
           .getByRole('listitem')
@@ -512,14 +490,12 @@ test(
     await test.step('Remove is staged until Save, and Undo takes it back', async () => {
       const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
       await editor.open.click();
-      // The dialog opens on Herb, the first jar.
       await editor.choose('Oil');
       const oil = editor.jar('Oil');
       await oil.remove.click();
       await expect(oil.undo).toBeVisible();
       await oil.undo.click();
       await expect(oil.quantity).toHaveValue('30');
-      // Undone, nothing differs from what is held: nothing to save.
       await expect(editor.save).toBeDisabled();
       await oil.remove.click();
       await expect(editor.save).toBeEnabled();
@@ -539,14 +515,12 @@ test(
       const root = editor.jar('Root');
       await editor.open.focus();
       await page.keyboard.press('Enter');
-      // Opening moves the focus into the first field, Quantity.
       await expect(root.quantity).toBeFocused();
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type('6');
       await page.keyboard.press('Enter');
 
       await expect(editor.dialog).toHaveCount(0);
-      // Closing hands the focus back to what opened it.
       await expect(editor.open).toBeFocused();
       expect(await jarsOf(coven, 'Testwort')).toEqual([
         { form: 'Root', quantity: 6, unit: 'piece', threshold: 3 },
@@ -556,8 +530,6 @@ test(
       await expect(root.quantity).toBeFocused();
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type('9');
-      // An edit not yet saved is asked about first: the question opens on
-      // Keep Editing, and Shift+Tab reaches Discard Changes before it.
       await page.keyboard.press('Escape');
       await expect(page.getByRole('button', { name: 'Keep Editing' })).toBeFocused();
       await page.keyboard.press('Shift+Tab');
@@ -569,8 +541,7 @@ test(
     });
 
     await test.step('a save that fails on the network puts nothing on the page and explains', async () => {
-      // The network fails the write and nothing else, so the page's own
-      // reads still answer: a failure the member could meet on a train.
+      // The network fails the write and nothing else, so the page's own reads still answer.
       await page.route('**/api/graphql', (route) =>
         route.request().postData()?.includes('mutation') ? route.abort('failed') : route.continue(),
       );
@@ -582,9 +553,7 @@ test(
 
       await expect(editor.dialog.getByRole('alert')).toBeVisible();
       await expect(editor.jar('Herb').quantity).toHaveValue('99');
-      // The card's own Herb line, not the dialog nested in the same `li`, whose
-      // list reads the 99 typed: the line still reading 0.5 kg is the proof no
-      // 99 reached the card, where it would read 99 kg in its place.
+      // The card's own Herb line, not the dialog nested in the same `li` whose list reads the 99 typed.
       await expect(
         row.getByRole('listitem').filter({ hasText: 'Herb' }).filter({ hasText: '0.5 kg' }),
       ).toBeVisible();
@@ -601,7 +570,6 @@ test(
         .click();
       const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
       await expect(details).toBeVisible();
-      // The window carries the same Edit Stock button as the card.
       const editor = stockEditor(details, 'Rosemary');
       await editor.open.click();
       await expect(editor.dialog).toBeVisible();
@@ -644,7 +612,6 @@ test(
       await stockJars(sql, coven, [
         { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
       ]);
-      // Rosemary's other form, which the coven does not hold yet.
       return compendiumVariant(sql, 'Rosemary', 'Oil');
     });
     await signInAgainAs(page, coven.users.A);
@@ -669,11 +636,9 @@ test(
     });
     await editor.save.click();
 
-    // The refusal is the form's own, said on its jar, which is chosen to show it.
     await expect(editor.jar('Oil').group).toContainText('already holds this form');
     await expect(editor.dialog).toBeVisible();
     await expect(editor.jar('Oil').quantity).toHaveValue('12');
-    // The refusal wrote nothing of the batch.
     expect(await jarsOf(coven, 'Rosemary')).toEqual([
       { form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
       { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
@@ -713,8 +678,7 @@ test(
     await expect(cardsIn(list)).toHaveCount(2);
     await markDocument(page);
 
-    // A coven's own entry's Delete is in its Edit Ingredient dialog, not on its card; the
-    // dialog's Delete Ingredient asks over the form, the `deleteIngredient` mutation.
+    // A coven's own entry's Delete is in its Edit Ingredient dialog, not on its card.
     const edit = editIngredientControl(rowOf(list, 'Testwort'), 'Testwort', 'Fixtura testalis');
     const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');
     const bin = dialog.getByRole('button', { name: 'Delete Ingredient', exact: true });
@@ -751,11 +715,8 @@ test(
       await expect(rowOf(list, 'Testwort')).toHaveCount(0);
       await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
       expect(await stillSameDocument(page)).toBe(true);
-      // The dialog and its card went, so the focus goes to the page's heading.
       await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
-      // The page's one status region carries the item the delete removed.
       await expect(page.getByRole('status').filter({ hasText: 'Testwort' })).toHaveCount(1);
-      // Soft: the row is marked deleted, not removed; the other entry is untouched.
       expect(await deletedAt(testwort.ingredientId)).not.toBeNull();
       expect(await deletedAt(keptwort.ingredientId)).toBeNull();
     });
@@ -774,7 +735,6 @@ test(
       await dialog.getByRole('button', { name: 'Save Ingredient', exact: true }).click();
       await expect(dialog).toHaveCount(0);
 
-      // A save opens the new entry's own page; its card is then back in the list.
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
       await page.goto(listPath(coven));
       await expect(rowOf(list, 'Testwort', 'Fixtura testalis')).toHaveCount(1);
@@ -785,7 +745,6 @@ test(
             and name = 'Testwort' and canonical_name = 'Fixtura testalis'
           order by created_at`,
       );
-      // The deleted row is kept, still marked deleted, and the new entry is its own row.
       expect(rows).toHaveLength(2);
       expect(rows[0]).toMatchObject({ id: testwort.ingredientId });
       expect(rows[0].deleted_at).not.toBeNull();
@@ -819,12 +778,11 @@ test(
   async ({ page }) => {
     const coven = await ownCoven(page, 26);
     const main = page.getByRole('main');
-    // The two states are two named status regions, told apart by which is there
-    // (claude-docs/components/coven-cards.md, "The empty and no-match states").
+    // claude-docs/components/coven-cards.md, "The empty and no-match states".
     const empty = main.getByRole('status', { name: 'No Ingredients' });
     const noMatch = main.getByRole('status', { name: 'No Matches' });
-    // The empty state's own add, in the page rather than the shell's bar.
-    const firstAdd = main.getByRole('button', { name: 'Add Ingredient' });
+    // The header's action is the one way to add, an empty cupboard included.
+    const firstAdd = main.getByRole('link', { name: 'Add Ingredient' });
 
     await test.step('with nothing held, the page offers the first add', async () => {
       const response = await page.goto(listPath(coven));
@@ -832,14 +790,13 @@ test(
       await expect(empty).toBeVisible();
       await expect(noMatch).toHaveCount(0);
       await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-      await expect(empty.getByRole('button', { name: 'Add Ingredient' })).toBeVisible();
+      await expect(firstAdd).toBeVisible();
+      await expect(empty.getByRole('button')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
-      // The button only acts once the page has hydrated, and the Filters
-      // button exists only then (claude-docs/components/facet-panel.md).
+      // Filters is a button only once the page has hydrated (claude-docs/components/facet-panel.md).
       await expect(page.getByRole('button', { name: /^Filters/ })).toBeVisible();
       await firstAdd.click();
-      // The shell's own dialog, for this coven.
       await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -859,8 +816,6 @@ test(
       await searchCovenList(page, 'Knitbone');
       await expect(noMatch).toBeVisible();
       await expect(empty).toHaveCount(0);
-      await expect(firstAdd).toHaveCount(0);
-      // It draws no clear of its own: the filter row's clears do that.
       await expect(noMatch.getByRole('button')).toHaveCount(0);
       await expect(noMatch.getByRole('link', { name: 'Search the Compendium' })).toHaveAttribute(
         'href',
@@ -911,9 +866,7 @@ test(
     const cards = cardsIn(list);
     await expect(cards).toHaveCount(4);
 
-    // The three states are a choice chip in the Filters panel, a `group` by role (All, Local and Compendium),
-    // and in-stock-only is a switch (claude-docs/components/facet-panel.md). A change is held until Apply
-    // Filters. They are found whether the panel is open or shut, so a reload can read them.
+    // Found whether the panel is open or shut, so a reload can read them (claude-docs/components/facet-panel.md).
     const panel = page.getByRole('dialog', { name: 'Filters', includeHidden: true });
     const source = panel.getByRole('group', { name: 'Source', includeHidden: true });
     const inStock = panel.getByRole('switch', { name: /^In Stock/, includeHidden: true });

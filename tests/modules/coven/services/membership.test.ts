@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { AccessPaused, Forbidden } from '@/lib/errors';
@@ -9,25 +9,16 @@ import {
   assertMembership,
 } from '@/modules/coven';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-
-// The cast against the `standard` seed every db worker's clone carries: A owns
-// W, B works in it, C reads it, D is a member of X alone, and E is a site
-// admin in no workspace at all.
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 describe('assertMembership', () => {
-  // One permission per role, chosen as the first thing that role may do and
-  // the one below it may not. access-control.test.ts has the full matrix;
-  // these are what prove the service consults it.
+  // One permission per role, the first thing it may do that the one below may not; access-control.test.ts has the full matrix.
   const CASES: {
     label: string;
     user: typeof A;
@@ -50,9 +41,7 @@ describe('assertMembership', () => {
   }
 
   it('refuses a viewer the writes a member holds', async () => {
-    // Why this could have succeeded: C is a live member of W and is admitted
-    // for the read a moment earlier, so the refusal is the policy and not a
-    // missing row.
+    // Why this could have succeeded: C is a live member admitted for the read a moment earlier, so the refusal is the policy, not a missing row.
     await expect(
       assertMembership(asUser(C), WORKSPACE_W_ID, { spell: ['read'] }),
     ).resolves.toMatchObject({ role: 'viewer' });
@@ -73,9 +62,7 @@ describe('assertMembership', () => {
   });
 
   it('refuses a member of another workspace', async () => {
-    // Why this could have succeeded: D is a real member of a real workspace,
-    // so the finder is reached and the fixture is not empty. Only the
-    // workspace asked for is wrong.
+    // Why this could have succeeded: D is a real member of a real workspace, so the finder is reached; only the workspace asked for is wrong.
     await expect(
       assertMembership(asUser(D), WORKSPACE_X_ID, { spell: ['create'] }),
     ).resolves.toMatchObject({ workspaceId: WORKSPACE_X_ID, role: 'member' });
@@ -86,9 +73,7 @@ describe('assertMembership', () => {
   });
 
   it('refuses a site keeper, who is a member of nothing', async () => {
-    // Why this could have succeeded: E's session says `admin`, the role that
-    // would carry a bypass if one existed. It does not — a keeper curates the
-    // compendium and reaches no workspace (CLAUDE.md).
+    // Why this could have succeeded: E's session says `admin`, the role a bypass would ride on if one existed; a keeper reaches no workspace (CLAUDE.md).
     expect(asUser(E).role).toBe('admin');
 
     await expect(
@@ -104,8 +89,7 @@ describe('assertMembership', () => {
     ).rejects.toBeInstanceOf(Forbidden);
   });
 
-  // Asked of the database, an id that is not a uuid is a driver error rather
-  // than a refusal. B is a member of W, so the only thing refused is the id.
+  // An id that is not a uuid is a driver error rather than a refusal; B is a member of W, so only the id is refused.
   it.each(['not-a-coven', WORKSPACE_W_ID.slice(0, -1), ''])(
     'refuses a workspace id that is not a uuid, %o',
     async (workspaceId) => {
@@ -120,9 +104,7 @@ describe('assertMembership', () => {
   );
 
   it('refuses a membership that has been soft-deleted', async () => {
-    // Why this could have succeeded: B's row is present and admits B a moment
-    // earlier, so the refusal below is the `deleted_at IS NULL` filter and not
-    // a missing fixture.
+    // Why this could have succeeded: B's row admitted B a moment earlier, so the refusal is the `deleted_at IS NULL` filter, not a missing fixture.
     await expect(
       assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['create'] }),
     ).resolves.toMatchObject({ role: 'member' });
@@ -147,7 +129,6 @@ describe('assertMembership', () => {
   });
 
   describe('a paused member', () => {
-    /** A pause on B in W, written as the seed would, and closed again by the caller. */
     async function pauseB(until: string | null) {
       const [row] = await sql`
         insert into workspace_member_pauses (workspace_id, user_id, until, note, created_by, updated_by)
@@ -162,8 +143,7 @@ describe('assertMembership', () => {
     }
 
     it('is refused every read and write by direct id, with AccessPaused rather than a bare Forbidden', async () => {
-      // Why this could have succeeded: B is admitted to W for both a read and a
-      // write before the pause, so the refusal below is the pause alone.
+      // Why this could have succeeded: B is admitted to W for a read and a write before the pause, so the refusal is the pause alone.
       await expect(
         assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
       ).resolves.toMatchObject({ role: 'member' });
@@ -178,13 +158,11 @@ describe('assertMembership', () => {
           await expect(refusal).rejects.toBeInstanceOf(AccessPaused);
           await expect(refusal).rejects.toMatchObject({ until: new Date('2099-01-01T00:00:00Z') });
         }
-        // An open-ended pause carries no end.
         await clearPauses();
         await pauseB(null);
         await expect(
           assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
         ).rejects.toMatchObject({ name: 'AccessPaused', until: null });
-        // The seat stays: the row is live and keeps its role.
         const [seat] = await sql`
           select role, deleted_at from workspace_members
            where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}
@@ -219,7 +197,6 @@ describe('assertMembership', () => {
           assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
         ).rejects.toBeInstanceOf(AccessPaused);
 
-        // Time passes: the end moves behind now, and the row stays unlifted.
         await sql`update workspace_member_pauses set until = now() - interval '1 minute' where id = ${id}`;
 
         await expect(
@@ -256,8 +233,7 @@ describe('assertMembership', () => {
     });
 
     it('answers a non-member with a bare Forbidden, never AccessPaused, so the two stay apart', async () => {
-      // D holds no seat in W; a pause row naming D there (which no service
-      // writes) still leaves D a stranger rather than a paused member.
+      // D holds no seat in W; a pause row naming D there (which no service writes) still leaves D a stranger, not a paused member.
       await sql`
         insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
         values (${WORKSPACE_W_ID}, ${D.id}, ${A.id}, ${A.id})
@@ -273,9 +249,7 @@ describe('assertMembership', () => {
   });
 
   it('refuses a request in the connector form the same way', async () => {
-    // The `{ actions, connector }` shape reaches the refusal message by a
-    // different path than a bare array, and a message that throws is a
-    // refusal that becomes a 500.
+    // The `{ actions, connector }` shape reaches the refusal message by a different path than a bare array; a message that throws becomes a 500.
     await expect(
       assertMembership(asUser(C), WORKSPACE_W_ID, {
         spell: { actions: ['update', 'delete'], connector: 'OR' },
@@ -284,21 +258,18 @@ describe('assertMembership', () => {
   });
 
   it('rejects an empty permission rather than authorizing vacuously', async () => {
-    // Not a Forbidden: an owner would sail through it too, so it is a bug in
-    // the caller and reads as one.
+    // Not a Forbidden: an owner would sail through it too, so it is a bug in the caller.
     const refusal = assertMembership(asUser(A), WORKSPACE_W_ID, {});
     await expect(refusal).rejects.toThrow('requires a permission');
     await expect(refusal).rejects.not.toBeInstanceOf(Forbidden);
   });
 });
 
-// Neither body runs: each `@ts-expect-error` fails `npm run typecheck` the
-// moment the brand stops being required, which no runtime assertion can see.
+// Neither body runs: each `@ts-expect-error` fails `npm run typecheck` the moment the brand stops being required.
 describe('the Membership brand', () => {
   it('cannot be satisfied by an object literal', () => {
     const forge = (): Membership =>
-      // @ts-expect-error — the brand is not exported, so no literal can carry
-      // it: a proof is what `assertMembership` returns or it does not exist.
+      // @ts-expect-error — the brand is not exported, so no literal can carry it.
       ({ workspaceId: WORKSPACE_W_ID, userId: A.id, role: 'owner' });
 
     expect(forge).toBeInstanceOf(Function);
@@ -306,8 +277,7 @@ describe('the Membership brand', () => {
 
   it('cannot be cast to from the session a caller already holds', () => {
     const forge = () =>
-      // @ts-expect-error — a session is not a proof. This is the realistic
-      // forgery: the caller has one of these and wants the other.
+      // @ts-expect-error — a session is not a proof; the realistic forgery is a caller holding one wanting the other.
       asUser(A) as Membership;
 
     expect(forge).toBeInstanceOf(Function);

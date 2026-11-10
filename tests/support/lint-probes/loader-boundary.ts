@@ -6,10 +6,8 @@ import type { ProbeSet } from '../types';
 
 export const DEFINE_LOADER = 'src/graphql/loaders/define-loader.ts';
 
-/** Untracked, gitignored by name, and removed once linted. */
 const PROBE_DIR = 'src/graphql/loaders/__lint-probe-loader__';
 
-/** A loader built at module level, beside the one file allowed to build one. */
 export const runtimeProbe = `${PROBE_DIR}/module-level.ts`;
 
 export const loaderBoundary: ProbeSet = {

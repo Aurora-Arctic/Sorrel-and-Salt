@@ -3,7 +3,7 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { sql, useProbeTables } from '../support/db/probe-tables';
 
 // The seeded System account a job writes as; a real run writing as it is tests/workflows/audited-write.test.ts
-// (claude-docs/design-decisions/m15.49-job-mechanism.md).
+// (claude-docs/design-decisions/support.md, "The site has a durable job mechanism").
 
 useProbeTables();
 

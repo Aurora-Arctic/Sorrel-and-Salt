@@ -6,12 +6,14 @@ import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { slugify } from '../../lib/slugify';
 import { users } from '../../modules/identity/schema/users';
+import { workspaceSlugs } from '../../modules/coven/schema/workspace-slugs';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // The demo coven: the one workspace flagged `demo`, with a steward seat for the system user and every keeper and an observer seat for
-// everyone else. Reference data, seeded on every environment after the compendium (claude-docs/db/demo-coven-seed.md). Additive:
-// a seat that exists, soft-deleted or not, is left as it is, so a person who left stays out.
+// everyone else. Reference data, seeded on every environment after the compendium
+// (claude-docs/db/demo-scenario.md). Additive: a seat that exists, soft-deleted or not, is left as
+// it is, so a person who left stays out.
 
 export const DEMO_COVEN_NAME = 'Sorrel & Salt Demo';
 
@@ -41,6 +43,7 @@ export async function seedDemoCoven(
 export async function seedDemoCovenSeats(tx: SeedTransaction): Promise<void> {
   const workspaceId = await ensureWorkspace(tx);
   if (workspaceId === null) return;
+  await ensureAddress(tx, workspaceId);
 
   const people = await tx
     .select({ id: users.id, role: users.role })
@@ -64,6 +67,18 @@ export async function seedDemoCovenSeats(tx: SeedTransaction): Promise<void> {
     columns: ['workspaceId', 'userId'],
     where: eq(workspaceMembers.workspaceId, workspaceId),
     toRow: (seat) => ({ ...seat, invitedBy: null }),
+  });
+}
+
+/** The coven's current address in `workspace_slugs`, once however often the seed runs. */
+async function ensureAddress(tx: SeedTransaction, workspaceId: string): Promise<void> {
+  const [coven] = await tx
+    .select({ slug: workspaces.slug })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId));
+  await insertMissingBy(tx, workspaceSlugs, [{ workspaceId, slug: coven.slug }], {
+    columns: ['slug'],
+    toRow: (address) => address,
   });
 }
 

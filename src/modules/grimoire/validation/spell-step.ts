@@ -1,26 +1,15 @@
 import { z } from 'zod';
-import { requiredText } from '../../../lib/validation';
-import { MAX_QUANTITY } from '../../ingredients/schema/quantities';
+import { type FieldFormat, trimEnds } from '../../../lib/formats';
+import { quantity, requiredText } from '../../../lib/validation';
 import { UNITS } from '../../ingredients/schema/units';
 
-// One step of a spell's recipe, as the builder and the mutation both read it.
-// It mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts)
-// one for one, so the database refuses nothing a user could have been told
-// about here. The CHECK each rule mirrors is named beside it.
-
-// Not a CHECK: a negative amount says something, so it is said here, in the
-// words the stock schema uses (claude-docs/db/stock.md).
-const quantity = z
-  .number({ error: 'Quantity must be a number' })
-  .nonnegative({ error: 'Quantity cannot be negative' })
-  .max(MAX_QUANTITY, {
-    error: `Quantity is too large — the most it can be is ${MAX_QUANTITY.toLocaleString('en', { maximumFractionDigits: 3 })}`,
-  });
+// Mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts) one for one, so the database refuses nothing a user
+// could have been told about; the CHECK each rule mirrors is named beside it.
 
 // A present-but-blank field is refused (the *_not_blank CHECKs), unlike
 // `optionalText`, which reads blank as absent: a step with a blank
 // instruction is a mistake, not an empty field.
-const present = (message: string) => requiredText(message).nullish();
+const present = (message: string, format?: FieldFormat) => requiredText(message, format).nullish();
 
 export const SpellStepInput = z
   .object({
@@ -28,15 +17,12 @@ export const SpellStepInput = z
     // where it is absent, and a saved step left out of the list is removed
     // (claude-docs/db/grimoire.md, "Saving a recipe").
     id: z.guid({ error: 'This step is not one of the spell’s' }).nullish(),
-    // What to do at this step.
-    body: present('Write the instruction, or remove it'),
-    // A linked ingredient and the form of it laid, or a name written for this
-    // jar and its form.
+    body: present('Write the instruction, or remove it', trimEnds),
     ingredientId: z.guid({ error: 'Choose an ingredient from the list' }).nullish(),
     variantId: z.guid({ error: 'Choose a form from the list' }).nullish(),
     name: present('Give the ingredient a name'),
     form: present('Give the form a name, or remove it'),
-    quantity: quantity.nullish(),
+    quantity: quantity('Quantity').nullish(),
     // The units module's list, never a second one here.
     unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
   })

@@ -1,24 +1,23 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import { usePendingNavigation } from '../../lib/navigation';
+import { failureMessage } from '../../lib/graphql-failure';
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import IconTip from '../IconTip';
+import { HistoryIcon } from '../IconTip/icons';
+import Skeleton from '../Skeleton';
 import { LocalDay } from '../SupportRequests/day-range';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { Ledger, PauseFields, Until, endOf, pauseReady } from './access-pause-parts';
 import type { PausePanelProps, PauseSpan, StandingPause } from './types';
 import '../SupportRequests/timeout-panel.scss';
 
 // A pause on someone's access, inside a modal: the one that stands with Lift Pause, or the form that sets one, and the
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its
-// own words and its own writes (claude-docs/components/user-detail.md, "Site Access").
+// own words and its own writes (claude-docs/components/user-detail.md, "Contracts").
 
-/** What a refusal says: the service's own sentence, or the one generic sentence. */
-const refusal = (error: unknown) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE;
-
-/** The pause that stands: a badge, its end, the note, who set it and when, and Lift Pause. */
 const StandingCard = ({
   pause,
   copy,
@@ -29,7 +28,7 @@ const StandingCard = ({
   return (
     <div className="timeout-panel__card">
       <p className="timeout-panel__head">
-        <span className="badge badge--caution">Paused</span>
+        <span className="badge badge--caution">{copy.badge}</span>
         <span>
           <Until until={pause.until} />
         </span>
@@ -43,17 +42,17 @@ const StandingCard = ({
         </p>
       )}
       <ConfirmedAction
-        label="Lift Pause"
-        accessibleName="Lift Pause"
-        confirmLabel="Lift"
+        label={copy.liftLabel}
+        accessibleName={copy.liftLabel}
+        confirmLabel={copy.liftConfirm}
         openClass="btn btn--quiet btn--small"
-        title="Lift the Pause?"
+        title={copy.liftTitle}
         question={copy.liftQuestion(pause.until)}
         busy="Lifting"
         confirmClass="btn btn--destructive"
         announcement={copy.lifted}
         inModal
-        refusal={refusal}
+        refusal={failureMessage}
         send={lift}
         onSent={() => {
           onChanged?.();
@@ -64,7 +63,6 @@ const StandingCard = ({
   );
 };
 
-/** The form that sets a pause: how long, the note, and a confirm before it is sent. */
 const PauseForm = ({
   name,
   copy,
@@ -108,18 +106,18 @@ const PauseForm = ({
       />
       <div className="form__actions">
         <ConfirmedAction
-          label="Pause Access"
-          accessibleName="Pause Access"
-          confirmLabel="Pause"
+          label={copy.pauseLabel}
+          accessibleName={copy.pauseLabel}
+          confirmLabel={copy.pauseConfirm}
           openClass="btn btn--quiet"
           disabled={!ready}
-          title={`Pause Access for ${name}?`}
+          title={copy.pauseTitle(name)}
           question={copy.pauseQuestion(end ?? null)}
-          busy="Pausing"
+          busy={copy.pauseBusy}
           confirmClass="btn btn--destructive"
           announcement={copy.paused}
           inModal
-          refusal={refusal}
+          refusal={failureMessage}
           send={() => {
             const until = endOf(span, day, new Date());
             if (until === undefined) return Promise.reject(new Error('No end chosen'));
@@ -140,17 +138,18 @@ const PauseForm = ({
   );
 };
 
-/** A folded section holding the pause that stands, or the form to set one, and the earlier pauses beneath. */
 const PausePanel = ({
   title,
   name,
   standing,
   earlier,
+  earlierLoading = false,
   copy,
   noteRequired,
   pause,
   lift,
   onChanged,
+  earlierHref,
 }: PausePanelProps): ReactElement => {
   const [folded, setFolded] = useState(false);
 
@@ -160,7 +159,7 @@ const PausePanel = ({
         title={title}
         summary={
           <span className="timeout-panel__summary">
-            {standing && <span className="badge badge--caution">Paused</span>}
+            {standing && <span className="badge badge--caution">{copy.badge}</span>}
             <span className="timeout-panel__muted">
               {standing ? (
                 <>
@@ -171,6 +170,16 @@ const PausePanel = ({
               )}
             </span>
           </span>
+        }
+        info={
+          earlier.length > 0 && earlierHref ? (
+            <IconTip tip={copy.earlierTitle}>
+              <PendingLink className="timeout-panel__icon" href={earlierHref}>
+                <HistoryIcon />
+                <span className="visually-hidden">{copy.earlierTitle}</span>
+              </PendingLink>
+            </IconTip>
+          ) : undefined
         }
         fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
       >
@@ -185,7 +194,12 @@ const PausePanel = ({
             onChanged={onChanged}
           />
         )}
-        {earlier.length > 0 && <Ledger pauses={earlier} />}
+        {earlierLoading ? (
+          <Skeleton shape="line" count={2} />
+        ) : (
+          earlier.length > 0 &&
+          !earlierHref && <Ledger pauses={earlier} title={copy.earlierTitle} />
+        )}
       </CollapsibleSection>
     </div>
   );

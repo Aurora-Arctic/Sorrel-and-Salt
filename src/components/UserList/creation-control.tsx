@@ -1,10 +1,10 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
-import ConfirmedAction from './confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { CreationControlProps } from './types';
@@ -39,7 +39,6 @@ const CreationControl = ({
   action,
   inModal = false,
 }: CreationControlProps): ReactElement =>
-  // Locked while keeper changes are paused, as Change Role is.
   paused ? (
     <LockedControl
       label={action === 'approve' ? 'Approve' : 'Revoke'}
@@ -51,10 +50,8 @@ const CreationControl = ({
     <ConfirmedAction
       label="Approve"
       accessibleName={`Approve ${name}`}
-      // Quiet, the body ink.
       openClass="btn btn--quiet btn--small"
       title="Approve Coven Creation"
-      // The user's name in bold.
       question={
         <>
           Let <strong>{name}</strong> create covens?
@@ -67,8 +64,6 @@ const CreationControl = ({
       withNote
       announcement={`${name} may now create covens.`}
       inModal={inModal}
-      // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
@@ -76,7 +71,6 @@ const CreationControl = ({
     <ConfirmedAction
       label="Revoke"
       accessibleName={`Revoke approval for ${name}`}
-      // Plain, as Approve is: the red is its confirmation's Revoke.
       openClass="btn btn--quiet btn--small"
       title="Revoke Coven Creation"
       question={
@@ -89,8 +83,6 @@ const CreationControl = ({
       withNote
       announcement={`${name} may no longer create covens.`}
       inModal={inModal}
-      // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />

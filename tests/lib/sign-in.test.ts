@@ -16,13 +16,12 @@ import {
 
 // Where a sign-in with no return path lands, decided by the role the account holds once the
 // callback has run. Not `/`: `/` is the public front door, and someone who just signed in has
-// been through it already (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+// been through it already (claude-docs/design-decisions/auth.md, "Where the post-sign-in landing lives").
 describe('postSignInLanding', () => {
   it('sends a keeper to the keepers area', () => {
     expect(postSignInLanding('admin')).toBe('/keepers');
   });
 
-  // A curator's work is the curation pages, which have their own area.
   it('sends a curator to the curator area', () => {
     expect(postSignInLanding('curator')).toBe('/curator');
   });
@@ -32,8 +31,6 @@ describe('postSignInLanding', () => {
   });
 });
 
-// What SignInPanel hands `signIn.social`, so that the callback can tell a
-// sign-in that asked for nowhere from one that asked for `/coven`.
 describe('socialSignInTarget', () => {
   it('heads for the return path, with an error callback carrying it, and no flag', () => {
     expect(socialSignInTarget('/coven/hearth')).toEqual({
@@ -58,9 +55,7 @@ describe('socialSignInTarget', () => {
   });
 });
 
-// Where route protection sends a signed-out visitor, and one half of the return
-// path's round trip: /sign-in reads `next` back through safeReturnPath, so what
-// goes in must be what comes out.
+// One half of the return path's round trip: /sign-in reads `next` back through safeReturnPath, so what goes in must come out.
 describe('signInPath', () => {
   const roundTrip = (returnPath: string) => {
     const next = new URL(signInPath(returnPath), 'http://localhost').searchParams.get('next');
@@ -108,6 +103,30 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/\\evil.example')).toBeUndefined();
   });
 
+  it('is no return path for a backslash anywhere in the path', () => {
+    expect(safeReturnPath('/compendium\\evil')).toBeUndefined();
+  });
+
+  it.each(['/sign-in', '/sign-in?next=%2Fcoven', '/forgot-password', '/reset-password?token=x'])(
+    'is no return path for an auth page: %s',
+    (path) => {
+      expect(safeReturnPath(path)).toBeUndefined();
+    },
+  );
+
+  it('keeps a path that only starts like an auth page', () => {
+    expect(safeReturnPath('/sign-in-help')).toBe('/sign-in-help');
+  });
+
+  it.each([
+    '/compendium/ingredients/achiote-bixa-orellana',
+    '/help/glossary',
+    '/privacy',
+    '/compendium?q=rose&page=2',
+  ])('keeps a public page: %s', (path) => {
+    expect(safeReturnPath(path)).toBe(path);
+  });
+
   it('is no return path for a path with no leading slash', () => {
     expect(safeReturnPath('coven/hearth')).toBeUndefined();
   });
@@ -117,15 +136,11 @@ describe('safeReturnPath', () => {
   });
 });
 
-// The callback error page must show one of our sentences, never Better
-// Auth's or the provider's own error_description text.
 describe('signInErrorMessage', () => {
   it('returns undefined for no code', () => {
     expect(signInErrorMessage(undefined)).toBeUndefined();
   });
 
-  // Each code the callback can land with has a sentence of its own; the
-  // wording is the copy's, not this file's.
   it('gives each known callback code a sentence of its own', () => {
     const codes = ['access_denied', 'sign_in_to_verify', 'email_not_verified'];
     const messages = codes.map((code) => signInErrorMessage(code));
@@ -183,8 +198,6 @@ describe('linkErrorMessage', () => {
     expect(linkErrorMessage(['access_denied', 'access_denied'])).toBeUndefined();
   });
 
-  // A cancelled link, an account signing in elsewhere (which only its holder
-  // can learn), and a dead state each say their own thing.
   it('gives each known link code a sentence of its own', () => {
     const codes = ['access_denied', 'account_already_linked_to_different_user', 'state_mismatch'];
     const messages = codes.map((code) => linkErrorMessage(code));
@@ -200,10 +213,7 @@ describe('linkErrorMessage', () => {
   });
 });
 
-// Better Auth's /unlink-account refusals, by the code in its JSON body.
 describe('unlinkErrorMessage', () => {
-  // The last method staying, and a session too old to remove one (the
-  // endpoint wants one younger than a day), each say their own thing.
   it('gives each known refusal a sentence of its own', () => {
     const last = unlinkErrorMessage('FAILED_TO_UNLINK_LAST_ACCOUNT');
     const stale = unlinkErrorMessage('SESSION_NOT_FRESH');

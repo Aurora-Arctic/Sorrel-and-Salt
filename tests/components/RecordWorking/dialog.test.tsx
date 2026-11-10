@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
   RecordWorkingMembersQuery,
@@ -19,17 +19,16 @@ import {
   mockGraphQLMutation,
   mockGraphQLQuery,
 } from '../../support/msw/graphql';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { server } from '../../support/msw/server';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Record a Working dialog: a draft saved from a complete spell's page, or an existing working
-// changed (claude-docs/components/record-working.md).
+// claude-docs/components/record-working.md
 
-const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
-// The coven's members as the server holds them: the box searches them as the user types.
 const MEMBERS = [
   { id: 'u1', name: 'Testa Owner' },
   { id: 'u2', name: 'Mocka Member' },
@@ -37,7 +36,6 @@ const MEMBERS = [
 const RECORDER = { userId: 'u1', name: 'Testa Owner' };
 const STEPS = [{ id: 's1', name: 'Testwort' }];
 
-/** Answers the participant box's search as the server does, with the members whose name holds the text. */
 function mockMembers(users: readonly { id: string; name: string | null }[] = MEMBERS) {
   const asked: RecordWorkingMembersQueryVariables[] = [];
   mockGraphQLQuery<RecordWorkingMembersQuery, RecordWorkingMembersQueryVariables>(
@@ -48,7 +46,7 @@ function mockMembers(users: readonly { id: string; name: string | null }[] = MEM
       const edges = users
         .filter(({ name }) => name === null || name.toLowerCase().includes(text))
         .map((user) => ({ node: { user } }));
-      return { workspace: { id: WORKSPACE, members: { edges } } } as RecordWorkingMembersQuery;
+      return { workspace: { id: WORKSPACE_ID, members: { edges } } } as RecordWorkingMembersQuery;
     },
   );
   return asked;
@@ -96,7 +94,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
   render(
     wrap(
       <RecordWorkingButton
-        workspaceId={WORKSPACE}
+        workspaceId={WORKSPACE_ID}
         spellId={SPELL}
         spellName="Testwort Tonic"
         spellVisibility={visibility}
@@ -107,6 +105,11 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
   );
   fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
 }
+
+// The calendar loads apart from the date field; it has arrived by the time a person opens the dialog.
+beforeAll(async () => {
+  await dayPickerModule.load();
+});
 
 describe('Record a Working', () => {
   it('saves a draft naming a picked member, then closes and refreshes the page', async () => {
@@ -121,7 +124,7 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
-      workspaceId: WORKSPACE,
+      workspaceId: WORKSPACE_ID,
       spellId: SPELL,
       input: {
         note: 'Under the new moon',
@@ -149,12 +152,11 @@ describe('Record a Working', () => {
     const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
     for (const value of ['M', 'Mo', 'Moc']) fireEvent.change(people, { target: { value } });
     expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
-    expect(asked).toEqual([{ workspaceId: WORKSPACE, query: 'Moc', first: 10 }]);
+    expect(asked).toEqual([{ workspaceId: WORKSPACE_ID, query: 'Moc', first: 10 }]);
   });
 
   it('leaves the members already taking part out of the matches', async () => {
     openButton();
-    // Both names hold the letter, and the recorder already takes part.
     fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
       target: { value: 'a' },
     });
@@ -259,7 +261,22 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
     await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
-    expect(people).toHaveAccessibleDescription('Choose a member of this coven');
+    expect(people).toHaveAccessibleDescription('Error: Choose a member of this coven');
+  });
+
+  it('describes the Note by the service’s refusal of it', async () => {
+    mockGraphQLError('RecordWorking', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['note'], message: 'Keep the note shorter' }],
+    });
+    openButton();
+    const note = within(dialog()).getByRole('textbox', { name: 'Note' });
+    expect(note).not.toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() => expect(note).toHaveAttribute('aria-invalid', 'true'));
+    expect(note).toHaveAccessibleDescription('Error: Keep the note shorter');
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {
@@ -361,7 +378,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -380,7 +397,7 @@ describe('Edit Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
-      workspaceId: WORKSPACE,
+      workspaceId: WORKSPACE_ID,
       id: 'w9',
       input: { note: 'Second try', participants: [{ userId: 'u1' }] },
     });
@@ -391,7 +408,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -411,7 +428,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}
@@ -423,14 +440,12 @@ describe('Edit Working', () => {
     const complete = within(dialog()).getByRole('button', { name: 'Complete' });
     if (enabled) expect(complete).toBeEnabled();
     else expect(complete).toBeDisabled();
-    // The reason is written under the buttons, where a keyboard or touch reader finds it without the tip.
     const reason = within(dialog()).queryByText('Complete on or after 1 January 2999');
     if (enabled) expect(reason).toBeNull();
     else {
       expect(reason).toBeVisible();
       expect(complete).toHaveAccessibleDescription('Complete on or after 1 January 2999');
     }
-    // A draft dated ahead still saves.
     expect(within(dialog()).getByRole('button', { name: 'Save Working' })).toBeInTheDocument();
   });
 
@@ -438,7 +453,7 @@ describe('Edit Working', () => {
     render(
       wrap(
         <RecordWorkingDialog
-          workspaceId={WORKSPACE}
+          workspaceId={WORKSPACE_ID}
           spellId={SPELL}
           spellVisibility="workspace"
           steps={STEPS}

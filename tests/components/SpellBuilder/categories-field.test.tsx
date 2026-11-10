@@ -17,7 +17,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The categories a spell is assigned in the builder: what it intends, picked as chips and sent with the save.
 // That the service writes exactly the set sent, and refuses a viewer and another coven's member, is tests/modules/grimoire/services/spells.test.ts's.
 
 // Invented categories, with uuid ids, as the shared schema refuses any other.
@@ -39,8 +38,6 @@ const CATEGORIES: CategoryNode[] = [
 ];
 const [TESTWARD, SHIELD] = CATEGORIES;
 
-// A saved spell opens with its sections shut, so its are opened
-// with Open All, as a person reaches the field in Purpose, unless `shut`.
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } = {}) {
   offerCategories(CATEGORIES);
   const view = render(
@@ -57,7 +54,6 @@ const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement)
 const box = () => screen.getByRole('combobox', { name: 'Category' });
 const chip = (name: string) => screen.queryByRole('button', { name: `Remove ${name}` });
 
-/** Opens the picker's list, if shut, and picks the category once the categories have been read. */
 const pick = async (name: string) => {
   if (box().getAttribute('aria-expanded') !== 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
@@ -68,7 +64,6 @@ const pick = async (name: string) => {
   );
 };
 
-/** The spell as the server answers a save: its fields as sent, at `revision`. */
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
   return {
     id,
@@ -116,7 +111,6 @@ function acceptUpdate() {
   return calls;
 }
 
-/** A saved spell the builder opens, filed under `categoryIds`. */
 const savedSpell = (categoryIds: string[]): SpellBuilderSpell => ({
   id: 's9',
   revision: 3,
@@ -143,7 +137,6 @@ describe('the spell builder’s categories', () => {
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.categoryIds).toEqual([TESTWARD.id, SHIELD.id]);
-    // What was saved is the new start: the picks stay, and Save goes off.
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     expect(chip('Testward')).toBeInTheDocument();
     expect(chip('Fixture Shield')).toBeInTheDocument();
@@ -172,7 +165,6 @@ describe('the spell builder’s categories', () => {
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ id: 's9', input: { categoryIds: [SHIELD.id] } });
-    // Removing the last one sends an empty set, which clears them all.
     await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     fireEvent.click(chip('Fixture Shield') as HTMLElement);
     submit();
@@ -200,7 +192,6 @@ describe('the spell builder’s categories', () => {
     });
     submit();
 
-    // Left out, the service keeps the set as it is.
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input).not.toHaveProperty('categoryIds');
     expect(chip('Testward')).toBeInTheDocument();
@@ -226,7 +217,6 @@ describe('the spell builder’s categories', () => {
     expect(box()).toHaveAccessibleDescription(/Fixture Shield/);
     expect(box()).not.toHaveAccessibleDescription(/Testward/);
     // Placed beside its field, so no notice above the form repeats it.
-    // Only the save status speaks; no notice repeats the field’s error.
     expect(
       screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
     ).toEqual([]);

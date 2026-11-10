@@ -18,7 +18,30 @@ listings:
     nameBasis: stated
     source: wikipedia-peyote
     locator: Distribution and habitat, conservation paragraph
+closedPractice:
+  - tradition: Native American Church
+    kind: closed
+    quote: We reject the attempts to grasp onto our indigenous ways and deceive the public by claiming them as their own for their own personal enjoyment or for profit.
+    source: ict-ncnac-2016
+    locator: 'Statement of the National Council of Native American Churches, 13 February 2016, signed by the presidents of the Native American Church of North America, Azzee'' Bee Nahagha of Dine Nation, and the Native American Churches of Oklahoma and South Dakota. The same statement: "We oppose the attempts of non-Natives to come in and misuse government protection of traditional Native American religion to conduct illegal activity that has nothing to do with our traditional ways."'
+  - tradition: Native American Church
+    kind: closed
+    quote: The only plant that serves as a sacrament is Peyote, and without Peyote, indigenous Native American Church ceremonies cannot take place.
+    source: narf-ncnac-2016
+    locator: NARF's report of the same statement, after "Nothing could be further from the truth."
+  - tradition: Native American Church
+    kind: closed
+    quote: Respect and defer to representative indigenous leadership even if it is hard for you to understand.
+    source: chacruna-ipci-open-letter-2021
+    locator: 'Open letter of the Indigenous Peyote Conservation Initiative, in which the National Council of Native American Churches and the initiative "ask that Peyote not be decriminalized". The initiative''s Public Statements page (ipci-public-statements) also lists their joint statement of 20 February 2020 on decriminalisation ordinances "as they pertain to Peyote".'
+  - tradition: Wixárika
+    kind: closed
+    quote: We reject the attempts to grasp onto our indigenous ways and deceive the public by claiming them as their own for their own personal enjoyment or for profit.
+    source: ict-ncnac-2016
+    locator: The same statement, also signed by Santos De La Cruz Carrillo for the Consejo Regional Wixarika, Mexico
 questions:
   - 'Peyote and the Native American Church: the page says US law (the American Indian Religious Freedom Act as amended in 1994, and 21 CFR 1307.31) exempts use in bona fide Native American Church ceremonies, and that US v. Boyll extended it to all persons in traditional Indian religious use regardless of race. That is a legal exemption, not a statement that the practice is closed to other people. The previous lane read the National Congress of American Indians resolution SAC-21-038 and found it does not say the practice is closed to others either. No closedPractice row is recorded. Recommendation: leave it unrecorded unless you want legal restriction recorded as a different kind of fact.'
+  - "Answered by the owner 2026-11-06: mark it closed, naming the Native American Church and the Wixárika. The statement of the National Council of Native American Churches (ict-ncnac-2016, narf-ncnac-2016), whose signatories include the Consejo Regional Wixárika, is the people's own representative body speaking, which the closed kind requires. The federal exemption stays a legal fact, not a closure; the legal restriction passes to M17.3."
   - 'The Texas listing is Wikipedia prose ("the state has listed it as an endangered species") with no list or assessor named. Find the assessment, or drop the row? Recommendation: find the Texas Parks and Wildlife listing, or drop the row.'
   - 'The CITES Appendices (valid from 5 March 2026) list the whole family: p. 64, Appendix II column, "CACTACEAE spp. (Except the species included in Appendix I and Pereskia spp., Pereskiopsis spp. and Quiabentia spp. which are not included in the Appendices)", with annotation #4. They do not print Lophophora williamsii by name, and no Appendix I row prints it. Owner: say whether a family-wide listing may be recorded. Recommendation: yes, as list: cites with nameBasis: resolved, with annotation #4 quoted in the locator.'
+  - 'Recorded 2026-11-06: peyote is named in Schedule I of the federal Controlled Substances Act, so its entry leaves the compendium under N2.1 (claude-docs/design-decisions/m17.2-no-controlled-substances.md). The closed-practice mark is recorded here as the finding and is seeded for no entry. The Texas and CITES questions above were not put to the owner; with the entry removed they change nothing that is seeded.'

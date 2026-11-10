@@ -2,9 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import BusyButton from '.';
 
-// Render-only; the busy state is asserted by the forms that use it (NameForm,
-// EmailForm, the account menu's Sign Out and the rest). Each variant idle and busy, side by
-// side, since the spinner and the label swap are the whole of the component.
 const meta = {
   title: 'Forms / Busy Button',
 } satisfies Meta;

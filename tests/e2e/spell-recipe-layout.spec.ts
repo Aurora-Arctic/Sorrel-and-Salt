@@ -12,9 +12,6 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The recipe page's screen layout: Workings closes the main column, under the body, and never
-// stands in the side column that holds the jar panels.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -47,7 +44,6 @@ for (const [name, size] of [
     const note = await box(page.getByText('A closing note'));
     const aside = await box(page.getByRole('complementary', { name: 'The Cupboard' }));
 
-    // The rows carry no list marker.
     const marker = await page
       .getByRole('list', { name: 'Workings' })
       .getByRole('listitem')
@@ -55,7 +51,6 @@ for (const [name, size] of [
       .evaluate((el) => getComputedStyle(el, '::before').content);
     expect(['none', 'normal']).toContain(marker);
 
-    // Under the body, in the body's column.
     expect(workings.top).toBeGreaterThan(note.bottom);
     expect(workings.left).toBeLessThan(steps.left + 4);
     // Not in the side column: on a desktop it is beside it, on a phone it stands below it, the jar between the body and Workings.
@@ -71,7 +66,7 @@ for (const [name, size] of [
   ['desktop', { width: 1280, height: 900 }],
   ['phone', { width: 390, height: 844 }],
 ] as const) {
-  test(`the header's icon buttons start level with the title's first line on a ${name}, wrapped title`, async ({
+  test(`the header's icon buttons ${name === 'phone' ? "sit under the title's last line" : "start level with the title's first line"} on a ${name}, wrapped title`, async ({
     page,
   }) => {
     const coven = await seedCoven(page, `Fixture Coven Head ${name}`, `spell-head-${name}.test`, {
@@ -91,14 +86,12 @@ for (const [name, size] of [
     await expect(edit).toBeVisible();
     const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
     const [titleBox, editBox] = [await box(title), await box(edit)];
-    // The title wraps, and the button sits at its top rather than its middle.
     expect(titleBox.height).toBeGreaterThan(editBox.height * 1.5);
-    expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
+    if (name === 'phone') expect(editBox.top).toBeGreaterThanOrEqual(titleBox.bottom);
+    else expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
   });
 }
 
-// The facts strip gives the moon phase's cell the room its name and drawing need, so the phase never
-// wraps at desktop width.
 test('the moon phase sits on one line in the facts strip on a desktop', async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Moon', 'spell-moon.test', { A: 'owner' });
   const { A } = coven.users;
@@ -147,8 +140,6 @@ test("the side column's Quick Look eye is a 24px target with a smaller glyph, an
   expect(glyph.width).toBeLessThan(target.width);
 });
 
-// Each working row's badges sit right after its date, whatever else the row holds, so the gap from
-// the date to the first badge is the same on a draft row and a complete one.
 test('the badges of a draft and a complete working sit the same distance after the date on a desktop', async ({
   page,
 }) => {
@@ -181,7 +172,6 @@ test('the badges of a draft and a complete working sit the same distance after t
         }),
     ),
   );
-  // The draft row has the extra Draft badge and the extra Complete button, the complete row neither.
   await expect(rows.nth(0).locator('.badge')).toHaveCount(2);
   await expect(rows.nth(1).locator('.badge')).toHaveCount(1);
   expect(Math.abs(draft! - complete!)).toBeLessThanOrEqual(1);
@@ -217,7 +207,6 @@ for (const [name, size] of [
         ? ['Steps', 'Workings']
         : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
     );
-    // The group label and its list go with the links on a desktop, and stand over them below it.
     await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
     });
@@ -229,7 +218,6 @@ for (const [name, size] of [
       expect(await top('The Cupboard')).toBeLessThan(await top('Workings'));
     }
     if (name === 'desktop') {
-      // Left of the body, not above it.
       const navBox = await nav.evaluate((el) => el.getBoundingClientRect().toJSON());
       const stepsBox = await page
         .getByRole('list', { name: 'Steps' })
@@ -250,10 +238,10 @@ for (const [name, size] of [
   ['tablet', { width: 800, height: 900 }],
   ['phone', { width: 390, height: 844 }],
 ] as const) {
-  test(`the title takes the head's row with its action icons beside it on a ${name}`, async ({
+  test(`the title takes the head's row with its action icons ${name === 'phone' ? 'beneath' : 'beside'} it on a ${name}`, async ({
     page,
   }) => {
-    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-head-${name}.test`, {
+    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-title-${name}.test`, {
       A: 'owner',
     });
     const { A } = coven.users;
@@ -280,13 +268,14 @@ for (const [name, size] of [
     const title = await box(page.getByRole('heading', { level: 1 }));
     const actions = await box(page.locator('.spell-recipe__actions'));
     const edited = await box(page.locator('.spell-recipe__head .last-edit'));
-    // The Edited line stands over the title, not beside it, and the title keeps most of the row
-    // with the icons at its end, on the title's first line.
     expect(edited.bottom).toBeLessThanOrEqual(title.top + 1);
     expect(title.width).toBeGreaterThan(head.width / 2);
     expect(title.left).toBeLessThanOrEqual(head.left + 1);
-    expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
-    expect(actions.top).toBeLessThan(title.top + 60);
+    if (name === 'phone') expect(actions.top).toBeGreaterThanOrEqual(title.bottom);
+    else {
+      expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
+      expect(actions.top).toBeLessThan(title.top + 60);
+    }
   });
 }
 
@@ -399,10 +388,8 @@ for (const [name, size] of [
     const calendar = page.getByRole('grid');
     await expect(calendar).toBeVisible();
 
-    // The field after the date has not moved down.
     expect(await noteTop()).toBe(before);
 
-    // The calendar's box is whole: inside the window, and its far corner is the calendar, not the dialog's edge.
     const box = (await page.locator('.calendar-panel').boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
@@ -414,7 +401,6 @@ for (const [name, size] of [
     );
     expect(corner).toBe(true);
 
-    // A short date, 1 May 1900, takes no less room than today's.
     await page.getByRole('combobox', { name: /Year/ }).click();
     // The open list draws above the calendar's own layer and a press on it leaves the calendar open.
     const listed = await page.getByRole('option', { name: '2020' }).boundingBox();
@@ -457,7 +443,6 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
   const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
   await expect(words).toContainText('needs 3 g · have 1 g · short by 2 g');
 
-  // Every part (needs, have, short by) stands on one line, so no unit sits alone under its number.
   const parts = await words.locator('> span').evaluateAll((spans) =>
     spans.map((span) => {
       const range = document.createRange();
@@ -490,7 +475,6 @@ test('on a phone the jump menu stands under the intent and over the facts', asyn
   const intent = await box(page.getByText('To draw a steady hand'));
   const nav = await box(page.getByRole('navigation', { name: 'On This Page' }));
   const facts = await box(page.getByText('4 oz jar'));
-  // The reader learns what the spell is for before the five links that jump past it.
   expect(nav.top).toBeGreaterThanOrEqual(intent.bottom);
   expect(nav.bottom).toBeLessThanOrEqual(facts.top);
 });
@@ -533,7 +517,6 @@ test('on a phone the keyboard reaches the jump menu after the intent and categor
   await page.keyboard.press('Tab');
   await expect(nav.getByRole('link').first()).toBeFocused();
 
-  // Backwards from the same place the keyboard lands before the chips, outside the menu.
   await lastChip.click();
   await page.keyboard.press('Shift+Tab');
   const before = await chips.evaluate((el) => {
@@ -576,7 +559,6 @@ test('on a phone the keyboard reaches The Cupboard after the recipe and before W
   const sideTop = await side.evaluate((el) => el.getBoundingClientRect().top);
   expect(await workings.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(sideTop);
 
-  // Where each Tab lands: in the side column, in Workings, or elsewhere.
   const where = () =>
     page.evaluate(() => {
       const active = document.activeElement;
@@ -586,7 +568,6 @@ test('on a phone the keyboard reaches The Cupboard after the recipe and before W
       return 'elsewhere';
     });
 
-  // The note closes the recipe and holds nothing focusable; a click on it starts the sequence there.
   await page.getByText('A closing note').click();
   const seen: string[] = [];
   for (let i = 0; i < 30 && !seen.includes('workings'); i++) {
@@ -597,3 +578,53 @@ test('on a phone the keyboard reaches The Cupboard after the recipe and before W
   expect(seen).toContain('workings');
   expect(seen.slice(0, seen.indexOf('workings')).every((at) => at === 'side')).toBe(true);
 });
+
+for (const visibility of ['private', 'workspace'] as const) {
+  test(`a ${visibility} spell's title breaks only between words at 375px`, async ({ page }) => {
+    const coven = await seedCoven(
+      page,
+      `Fixture Words ${visibility}`,
+      `spell-words-${visibility}.test`,
+      {
+        A: 'owner',
+      },
+    );
+    const { A } = coven.users;
+    const title = 'Blackthorn Threshold Warding Vow';
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, title, visibility, A, 'complete'),
+    );
+    await signInAgainAs(page, A);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const heading = page.getByRole('heading', { level: 1, name: title });
+    await expect(heading).toBeVisible();
+    // Each word's glyphs, measured as a range: a word split across lines, by a break or a hyphen, has a box on each.
+    const lines = await heading.evaluate((h1) => {
+      const text = [...h1.childNodes].find(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      );
+      if (!text?.textContent) return null;
+      const words: Record<string, number> = {};
+      const range = document.createRange();
+      for (const match of text.textContent.matchAll(/\S+/g)) {
+        range.setStart(text, match.index);
+        range.setEnd(text, match.index + match[0].length);
+        words[match[0]] = new Set(
+          [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+        ).size;
+      }
+      return words;
+    });
+    expect(lines).toEqual({ Blackthorn: 1, Threshold: 1, Warding: 1, Vow: 1 });
+
+    // The badges and the icon buttons wrap beneath the title rather than squeeze it.
+    const titleBottom = await heading.evaluate((h1) => h1.getBoundingClientRect().bottom);
+    const beside = page.locator('.spell-recipe__head .page-header > :not(h1)');
+    const tops = await beside.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
+    // The icons, and the Private badge on a private spell.
+    expect(tops).toHaveLength(visibility === 'private' ? 2 : 1);
+    for (const top of tops) expect(top).toBeGreaterThanOrEqual(titleBottom);
+  });
+}

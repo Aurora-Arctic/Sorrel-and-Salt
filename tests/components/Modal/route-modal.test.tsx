@@ -12,7 +12,6 @@ const { RouteModalContext } = await import('@/components/Modal/route-modal-provi
 const { EditLink } = await import('@/components/IconTip');
 const { default: MenuButton } = await import('@/components/MenuButton');
 
-// A page's one modal place: the form its address opens, or, while a press's navigation is on its way, the pressed modal's head over a skeleton in the same dialog, which the form then fills.
 // Also the links that open it so (claude-docs/components/modal.md, "Opening at once").
 
 const CLOSE: Route = '/curator/categories';
@@ -143,8 +142,7 @@ describe('RouteModalProvider', () => {
   });
 });
 
-// The focus goes back to the link that opened the modal (Modal's own) or, once that is drawn afresh or was never there, to a link to the address it opened, or to the page's heading
-// (claude-docs/components/modal.md, "Giving the focus back"). The page here is drawn again by hand, as the close's navigation would draw it.
+// claude-docs/components/modal.md, "Giving the focus back"
 describe('RouteModal giving the focus back', () => {
   function Page({ open, drawn }: { open: boolean; drawn: number }) {
     return (
@@ -244,7 +242,6 @@ describe('RouteModal giving the focus back', () => {
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
   });
 
-  // A pasted address or a reload: nothing opened it.
   it("goes to the page's heading when nothing opened it", async () => {
     const view = render(
       <main>
@@ -269,57 +266,13 @@ describe('RouteModal giving the focus back', () => {
 });
 
 describe('EditLink outside a provider', () => {
-  it('is a plain link', () => {
+  it('navigates to its address through the router, without a scroll to the top', () => {
     render(<EditLink href={EDIT} name="Testcraft" heading={HEADING} />);
 
-    // `true`: nothing prevented the link's own navigation.
-    expect(fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }))).toBe(true);
-  });
-});
-
-describe('two modal places on one page', () => {
-  // A list whose names open a details modal and whose Edit opens the edit
-  // modal over it: each place shows only the press meant for it.
-  const DETAILS: Route = '/curator/categories?entry=testcraft';
-  const DETAILS_HEADING: ModalHeading = { eyebrow: 'Ingredient', title: 'Testcraft' };
-  const NameLink = () => {
-    const onClick = useOpenModalClick(DETAILS, DETAILS_HEADING, 'details');
-    return (
-      <a href="/compendium/ingredients/testcraft" onClick={onClick}>
-        Testcraft
-      </a>
-    );
-  };
-  const renderPage = () =>
-    render(
-      <Navigating push={router.push}>
-        <RouteModalProvider>
-          <NameLink />
-          <EditLink href={EDIT} name="Testcraft" heading={HEADING} />
-          <RouteModal place="details" closeHref={CLOSE} />
-          <RouteModal closeHref={CLOSE} />
-        </RouteModalProvider>
-      </Navigating>,
-    );
-
-  it('shows a press of the name in the details place alone', async () => {
-    renderPage();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Testcraft' }));
-    });
-
-    expect(router.push).toHaveBeenCalledWith(DETAILS, { scroll: false });
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(screen.getByRole('dialog', { name: 'Ingredient, Testcraft' })).toBeInTheDocument();
-  });
-
-  it('shows a press of Edit in the unnamed place alone, as before', async () => {
-    renderPage();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }));
-    });
-
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
+    // Precondition: the link carries its address, so it still works as a link to the browser.
+    expect(screen.getByRole('link', { name: 'Edit Testcraft' })).toHaveAttribute('href', EDIT);
+    // `false`: the link's own navigation was prevented, the router's taking its place.
+    expect(fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }))).toBe(false);
+    expect(router.push).toHaveBeenCalledWith(EDIT, { scroll: false });
   });
 });

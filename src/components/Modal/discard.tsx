@@ -4,6 +4,7 @@ import { type ReactElement, useContext, useEffect, useRef, useState } from 'reac
 import { createPortal } from 'react-dom';
 import { useLeaveGuard } from '@/lib/navigation';
 import { CloseGuardContext } from './close-guard';
+import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
 import Modal from './modal';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
@@ -21,9 +22,7 @@ import './index.scss';
 export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const slot = useContext(CloseGuardContext);
   const [asking, setAsking] = useState(false);
-  // How many times a way out was tried again while asking; each flashes the question.
   const [flashes, setFlashes] = useState(0);
-  // The close the question holds back, made by Discard Changes.
   const held = useRef<(() => void) | null>(null);
   const keepEditingRef = useRef<HTMLButtonElement>(null);
 
@@ -95,21 +94,16 @@ function OnPage({ guard }: DiscardQuestionProps): ReactElement {
       {(close) => (
         <>
           <p>You have unsaved changes. Discard them?</p>
-          <div className="modal__actions">
-            <button
-              type="button"
-              className="btn btn--destructive"
-              onClick={() => {
-                discard();
-                close();
-              }}
-            >
-              Discard Changes
-            </button>
-            <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={close}>
-              Keep Editing
-            </button>
-          </div>
+          <ConfirmAnswersRow
+            label="Discard Changes"
+            onConfirm={() => {
+              discard();
+              close();
+            }}
+            safeLabel="Keep Editing"
+            safeRef={keepEditingRef}
+            onSafe={close}
+          />
         </>
       )}
     </Modal>,
@@ -117,7 +111,6 @@ function OnPage({ guard }: DiscardQuestionProps): ReactElement {
   );
 }
 
-/** The question over the form, in its modal's layer, flashing on each way out tried again. */
 function InModal({ guard }: DiscardQuestionProps): ReactElement {
   const { discard, keepEditing, keepEditingRef, flashes } = guard;
   return (
@@ -132,14 +125,13 @@ function InModal({ guard }: DiscardQuestionProps): ReactElement {
       <output className="visually-hidden">
         {flashes > 0 && `You have unsaved changes.${flashes % 2 ? '' : '\u00a0'}`}
       </output>
-      <div className="modal__actions">
-        <button type="button" className="btn btn--destructive" onClick={discard}>
-          Discard Changes
-        </button>
-        <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={keepEditing}>
-          Keep Editing
-        </button>
-      </div>
+      <ConfirmAnswersRow
+        label="Discard Changes"
+        onConfirm={discard}
+        safeLabel="Keep Editing"
+        safeRef={keepEditingRef}
+        onSafe={keepEditing}
+      />
     </ConfirmOverlay>
   );
 }

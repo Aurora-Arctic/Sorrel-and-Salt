@@ -26,10 +26,8 @@ import type {
   SeedWorkspaceIngredient,
 } from './types';
 
-// A coven's content, written for any coven: every helper takes the coven it fills, and none assumes that the author is a
-// member of it. Idempotent the way `standard` is: inserts what is missing by identity, ignoring `deleted_at` so a
-// soft-deleted row is not restored, updating nothing already present
-// (claude-docs/db/demo-scenario.md, "The content helpers").
+// A coven's content, for any coven: helpers assume nothing about the author's membership and insert only what
+// is missing, ignoring `deleted_at` (claude-docs/db/demo-scenario.md, "The content helpers").
 
 /**
  * An entry's identity as the seed keys it: the formal name, or the label without one, lower-cased (what
@@ -350,7 +348,7 @@ function layerIdentity(
 
 /**
  * A jar's recipe is seeded whole or not at all: a step's identity is a place in a shared sequence, so patching one into an
- * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
+ * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "Idempotency, and a jar's stack seeded whole or not at all").
  */
 export async function insertMissingSteps(
   tx: SeedTransaction,

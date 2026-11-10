@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { E, F, asUser } from '../../../support/as-user';
+import { USER_ID } from '../../../support/constants';
 
 // The site role's checks, and the proofs the compendium-tier writes and the people page demand (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
-// Each reads the session's role and nothing else: a workspace role is a different axis.
-
-const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 describe('assertSiteAdmin', () => {
   it('admits a keeper, with the proof naming them', () => {

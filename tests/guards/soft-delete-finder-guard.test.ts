@@ -3,13 +3,12 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
+// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
 // Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
 
 const REPOSITORY = 'src/db/repository';
 const INDEX = `${REPOSITORY}/index.ts`;
 
-/** Every exported finder allowed to skip a filter, each saying so in its name. */
 const ESCAPE_HATCHES = [
   'findManyIncludingSoftDeleted',
   'findIngredientsInSpellsIncludingSoftDeleted',
@@ -20,7 +19,7 @@ const ESCAPE_HATCHES = [
   'findCupboardEntryIncludingSoftDeleted',
 ];
 
-/** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering"). */
+/** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"). */
 const INTERNAL_HATCHES: Record<string, string[]> = {
   existsInIncludingSoftDeleted: ['inUseIngredientParent'],
   findPageInScopeIncludingSoftDeleted: ['findWorkspaceIngredientPage'],
@@ -32,9 +31,20 @@ const INTERNAL_HATCHES: Record<string, string[]> = {
   ],
 };
 
+/** The folder's arrow-function predicates that carry `notSoftDeleted(...)` for the finders sharing them, each with its file. */
+const FILTERING_PREDICATES: Record<string, string> = {
+  standingOnUser: `${REPOSITORY}/support.ts`,
+};
+
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
-/** Every file in the folder, by repo-relative path. Subdirectories are not the repository's. */
+function predicateBody(name: string): string {
+  const text = source(FILTERING_PREDICATES[name]);
+  const start = text.search(new RegExp(`^const ${name}\\s*=`, 'm'));
+  expect(start, `${name} is declared as a top-level const`).toBeGreaterThanOrEqual(0);
+  return text.slice(start, text.indexOf(';\n', start) + 1);
+}
+
 const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
   .map((entry) => `${REPOSITORY}/${entry.name}`);
@@ -42,7 +52,6 @@ const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
 const declaration = (name: string) =>
   new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
 
-/** The `{` that opens a function's body: past the parenthesised parameters (which may destructure), then the first brace outside the return type's `<...>`. */
 function bodyStart(text: string, from: number): number {
   // Generics come first and may hold parentheses of their own, so the parameter list is the first `(` outside `<...>`.
   let index = from;
@@ -66,7 +75,6 @@ function bodyStart(text: string, from: number): number {
   throw new Error('no function body found');
 }
 
-/** The body of the one top-level `function name(...) { ... }`, by brace matching. */
 function functionBody(name: string): string {
   const files = FILES.filter((file) => declaration(name).test(source(file)));
   expect(files, `${name} is declared as a top-level function in exactly one file`).toHaveLength(1);
@@ -83,7 +91,6 @@ function functionBody(name: string): string {
   throw new Error(`unbalanced braces reading ${name}`);
 }
 
-/** The finders the index re-exports, `type` re-exports left out: the repository's surface. */
 const FINDERS = [...source(INDEX).matchAll(/^export\s*\{([^}]*)\}\s*from\s*['"][^'"]+['"]/gm)]
   .flatMap((match) => match[1].split(','))
   .map((name) => name.trim())
@@ -122,7 +129,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin, or another the
       // index exports and this guard holds, never a hatch), `readableSpells` or `readableWorkings` (with the visibility rule),
       // `readableInTiers` (with the tier) or `curated` (with the group's).
-      const delegates = finders.some(
+      const delegates = [...finders, ...Object.keys(FILTERING_PREDICATES)].some(
         (sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body),
       );
       expect(
@@ -132,6 +139,14 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
           ),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
+    }
+  });
+
+  it('admits a shared predicate only while it applies the filter itself', () => {
+    for (const name of Object.keys(FILTERING_PREDICATES)) {
+      expect(predicateBody(name), `${name} applies notSoftDeleted(...)`).toMatch(
+        /notSoftDeleted\(/,
+      );
     }
   });
 

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { contentSecurityPolicy } from '@/lib/security-headers';
 import { nextConfig } from '../../next.config';
 
-// What the browser is told on each path: every rule whose `source` matches the path contributes its
-// headers. Next reads a source as path-to-regexp; the rules here are one regex group, which a RegExp reads too.
+// Next reads a `source` as path-to-regexp; the rules here are one regex group, which a RegExp
+// reads too.
 async function headersFor(path: string): Promise<Record<string, string>> {
   const rules = (await nextConfig.headers?.()) ?? [];
   const applied: Record<string, string> = {};
@@ -52,5 +52,15 @@ describe('security headers', () => {
     const headers = await headersFor('/api/graphql');
     expect(headers['content-security-policy']).toBeUndefined();
     expect(headers['x-content-type-options']).toBe('nosniff');
+  });
+
+  // The page reads its request from the fragment in the browser; nothing of it is kept by a cache or sent as a referrer.
+  it('sends the mailed-link page no-store and no referrer, and leaves the support page cacheable', async () => {
+    const view = await headersFor('/support/request');
+    expect(view['cache-control']).toContain('no-store');
+    expect(view['referrer-policy']).toBe('no-referrer');
+    expect(view['content-security-policy']).toContain("frame-ancestors 'none'");
+
+    expect((await headersFor('/support'))['cache-control']).toBeUndefined();
   });
 });

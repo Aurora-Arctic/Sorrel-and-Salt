@@ -1,28 +1,21 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
 import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
 import type { GrantedUserResult, RevokedUserResult } from './types';
-
-// `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, and one refusal per error code, read as the browser reads them.
-// Which roles the service refuses is services/workspace-creation.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const PENDING = '00000000-0000-0000-0000-0000000000c1';
 const NOWHERE = '00000000-0000-0000-0000-0000000000c9';
 
 beforeEach(async () => {
-  // The ledger references the user each test writes it for.
   await sql`truncate user_privilege_changes`;
   await sql`delete from users where id = ${PENDING}`;
   await sql`

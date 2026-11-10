@@ -1,0 +1,169 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.help-index {
+  h2 {
+    margin-block: space(8) space(3);
+  }
+
+  // A section is where the jump menu lands, under the shell's bar. Beside the menu the column's gap alone stands
+  // between the band and the Guides heading, as the search box stands above a page title elsewhere, in place of a
+  // heading's own top margin; the FAQ heading keeps a further step, so the long guide list ends before it.
+  &__section {
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  // The FAQ stack has no gap, so an entry’s tint runs down to the next entry’s rule; the step the gap gave sits in the
+  // entries’ own padding and in the first entry’s margin, so the height is the same.
+  &__section--faq {
+    gap: 0;
+  }
+
+  &__section--faq > .help-article__title + &__faq {
+    margin-block-start: space(4);
+  }
+
+  &.page-with-nav &__section > h2:first-child {
+    margin-block-start: 0;
+  }
+
+  &.page-with-nav &__section + &__section > h2:first-child {
+    margin-block-start: space(6);
+  }
+
+  // The FAQ heading stands in one row with a keeper's Edit FAQ (HelpArticleView/title.scss): the row takes the
+  // heading's margins, and the heading none of its own.
+  &__section > .help-article__title {
+    margin-block: space(8) space(3);
+
+    > h2 {
+      margin-block: 0;
+    }
+  }
+
+  &.page-with-nav &__section + &__section > .help-article__title:first-child {
+    margin-block-start: space(6);
+  }
+
+  // Under a back link the link's own bottom margin is the step to Guides, as it is to a guide's title: a section is a
+  // flex stack, so its heading's top margin would add to it.
+  .help-article__parent + &__section > h2:first-child {
+    margin-block-start: 0;
+  }
+
+  // Each quick link a pill on the guide cards' surface and hover pair, so the ways in above the guides look like the guides.
+  // A link's own spacing on the pill, so the skeleton's unlinked titles (a span) take the links' widths.
+  &__quick {
+    @include list-reset;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(2);
+    margin-block: space(4) 0;
+
+    > li > * {
+      display: inline-block;
+      padding: space(1) space(3);
+      border: 1px solid $hairline;
+      border-radius: radius('pill');
+      background-color: $surface-card;
+      color: $text-primary;
+      font-size: type-size('small');
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      @include state-fade(background-color, border-color);
+    }
+
+    > li > a:hover {
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+      color: $text-primary;
+    }
+
+    > li > a:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__guides {
+    @include list-reset;
+
+    display: grid;
+    gap: space(3);
+
+    @include width-from(40rem) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  // A left bar that turns accent on hover; the title's link covers the card (card-link), so the card is one target.
+  // The hover rule names .card--quiet too, as that primitive's own hover border would otherwise outrank it.
+  &__guide {
+    position: relative;
+    border-inline-start: $rule-heavy solid $hairline;
+    border-start-start-radius: radius('sharp');
+    border-end-start-radius: radius('sharp');
+
+    &.card--quiet:hover,
+    &.card--quiet:focus-within {
+      border-inline-start-color: $accent;
+    }
+
+    .eyebrow {
+      margin-block-end: space(1);
+    }
+
+    h3 {
+      margin: 0 0 space(1);
+      font-size: heading-size(4);
+    }
+
+    h3 a {
+      @include card-link;
+    }
+
+    > p:last-child {
+      margin: 0;
+      font-size: type-size('small');
+      color: $text-muted;
+    }
+  }
+
+  &__faq {
+    // The entry owns the space beneath its answer, so its tint runs down to the next rule; the rules and the tint reach
+    // the same overhang past the text, which the padding keeps in place.
+    margin-inline: calc(-1 * #{$ruled-row-overhang});
+    padding: space(5) $ruled-row-overhang calc(#{space(5)} + #{space(4)});
+    border-block-start: 1px solid $hairline;
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    // The question an address names, as the glossary marks a term.
+    @include target-highlight;
+
+    &:target::before {
+      inset-inline: 0;
+      border-inline-start: 0;
+    }
+
+    h3 {
+      margin: 0 0 space(2);
+      font-size: heading-size(4);
+    }
+
+    &-self {
+      @include entry-anchor('.help-index__faq');
+    }
+
+    > p:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  // The back link's look, on its own line, its chevron as far below the last answer as the parent link's stands below the
+  // search box: the last entry's margin, less a step for the line box above the chevron.
+  & &__top {
+    display: flex;
+    width: fit-content;
+    margin-block-start: calc(-1 * #{space(1)});
+  }
+}

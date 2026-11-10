@@ -4,9 +4,6 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 
-// New Spell opens the dialog already holding the form, so the centred dialog does not grow and jump under the
-// pointer (it was 518px then 720px at 1280 by 800). Proved by state: the form is there from the first frame
-// and the dialog's height never changes.
 test.use({ reducedMotion: 'no-preference' });
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -71,7 +68,6 @@ for (const viewport of [
     if (viewport.width >= 1280) expect(width).toBe(560);
     else expect(width).toBeLessThan(viewport.width);
 
-    // The Jar is one column at every width: the jar details above the steps.
     const details = await page.getByRole('group', { name: 'Jar Details' }).boundingBox();
     const list = await page.getByRole('heading', { name: 'What Goes In' }).boundingBox();
     if (!details || !list) throw new Error('The Jar draws no column');

@@ -7,9 +7,12 @@ vi.mock('@/modules/ingredients', () => ({
     { slug: 'testwort', name: 'Testwort', canonicalName: null, lastModified: new Date() },
   ]),
 }));
-
-// A crawler is let into the public compendium on production and
-// nowhere else; every other deploy asks to be left alone.
+vi.mock('@/modules/help', () => ({
+  listHelpArticlePaths: vi.fn(async () => [
+    '/help/testwort-guide',
+    '/help/testwort-guide/testwort-page',
+  ]),
+}));
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -35,8 +38,10 @@ describe('robots', () => {
       '/support',
       '/privacy',
       '/disclaimer',
+      '/about',
       '/terms',
       '/code-of-ethics',
+      '/help',
       '/llms.txt',
       '/robots.txt',
       '/.well-known/ai-catalog.json',
@@ -71,6 +76,11 @@ describe('robots', () => {
     // Fetchable so a crawler reads the page's own noindex.
     ['/support', true],
     ['/support?support=', true],
+    ['/help', true],
+    ['/help/glossary', true],
+    ['/help/testwort-guide', true],
+    // Fetchable so a crawler reads the page's own noindex.
+    ['/help/search', true],
     ['/llms.txt', true],
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
@@ -106,6 +116,7 @@ describe('robots', () => {
     const paths = (await sitemap()).map(({ url }) => new URL(url).pathname);
 
     expect(paths).toContain('/compendium');
+    expect(paths).toContain('/help/testwort-guide/testwort-page');
     expect(paths.filter((path) => !allowed(path))).toEqual([]);
   });
 

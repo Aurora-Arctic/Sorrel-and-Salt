@@ -1,16 +1,13 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
+import { fold } from '@/lib/text';
 import Combobox from '.';
 import type { ComboboxChoice, ComboboxOption, ComboboxTypeaheadProps } from './types';
 
 // A closed set chosen by typing, react-select's single select: only a choice is ever the value. Not re-exported from the folder's index, as the lint refuses an import cycle
 // (claude-docs/components/combobox.md, "The type-ahead box").
 
-// Not the ingredient form's `fold`: this matches what a person types against a label they read, so it folds in their locale.
-const fold = (text: string) => text.trim().toLocaleLowerCase();
-
-/** The choice the text names in full, whatever its case, or none. */
 const choiceNamed = (choices: readonly ComboboxChoice[], text: string) =>
   choices.find((choice) => fold(choice.label) === fold(text));
 
@@ -26,6 +23,7 @@ export function ComboboxTypeahead({
   placeholder,
   required,
   clearable,
+  match,
   inputRef,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
@@ -39,25 +37,26 @@ export function ComboboxTypeahead({
     if (selected && choiceNamed(choices, text) !== selected) setText(selected.label);
   }
 
-  // The text narrows the list once it is not the choice's own label.
   const query = selected && text === selected.label ? '' : fold(text);
-  // A qualified choice's row reads its label with the qualifier in brackets; the text a pick writes and the query match the label alone.
+  // A qualified row shows its qualifier in brackets; the pick's text and query match the label.
   const suggestions = useMemo(
     () => ({
-      options: choices
-        .filter((choice) => choice.label.toLocaleLowerCase().includes(query))
-        .map((choice): ComboboxOption => ({
-          value: choice.label,
-          label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
-          key: choice.value,
-          icon: choice.icon,
-        })),
+      options: (query === ''
+        ? choices
+        : match
+          ? match(query)
+          : choices.filter((choice) => fold(choice.label).includes(query))
+      ).map((choice): ComboboxOption => ({
+        value: choice.label,
+        label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
+        key: choice.value,
+        icon: choice.icon,
+      })),
       pending: false,
     }),
-    [choices, query],
+    [choices, query, match],
   );
 
-  // Text that names no choice is no value: the field holds none.
   const type = (next: string) => {
     setText(next);
     const named = choiceNamed(choices, next)?.value ?? '';
@@ -78,7 +77,6 @@ export function ComboboxTypeahead({
         onSettle?.(option.key);
       }}
       onBlur={() => {
-        // Left naming a choice in another case, the box reads its label.
         const named = choiceNamed(choices, text);
         if (named && named.label !== text) setText(named.label);
         onSettle?.(named?.value ?? '');
@@ -101,7 +99,6 @@ export function ComboboxTypeahead({
           : undefined
       }
       suggestions={suggestions}
-      // The chosen choice's qualifier and icon, once the box reads its label as written.
       qualifier={selected && text === selected.label ? selected.qualifier : undefined}
       icon={selected && text === selected.label ? selected.icon : undefined}
       offerTyped={false}

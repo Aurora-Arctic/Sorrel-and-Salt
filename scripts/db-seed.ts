@@ -1,24 +1,8 @@
 #!/usr/bin/env node
-// The repo's one database CLI: reaching the database means importing the
-// client, and that exemption set is six files pinned by test (claude-docs/db/client-imports.md,
-// "Who may import the client"). `categories`, `forms`, `astrology`, `deities`,
-// `sources`, `compendium`, `demo-coven` and `documents` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
-// Node's own type stripping resolves no extensionless relative import.
-//
-// Usage: npm run db:seed              # SEED_SCENARIO, default minimal
-//        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
-//        npm run db:seed:sources      # after the vocabularies it links
-//        npm run db:seed:compendium   # after the vocabularies and sources
-//        npm run db:seed:demo-coven   # after the compendium; seats every account
-//        npm run db:seed:documents    # the site's documents, version 1 of each
-//        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
-//        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
-//          --adopt also lists the ADOPTED lines, as migrate.yml does
-//          --force lifts refusals 1 to 4
-//        npm run db:seed:reference -- [--dry-run] [--adopt] [--force]
-//          all seven above in one transaction, which a dry run rolls back once
-//        npm run db:drop              # drop the schema, nothing else
-//        npm run db:reset             # drop, migrate, seed
+// The repo's one database CLI, run through `tsx`; the files that may import the client are pinned by test
+// (claude-docs/db/repository-files.md, "Who may import the client").
+// Usage: npm run db:seed | db:seed:<target> | db:drop | db:reset
+// (claude-docs/commands.md, "Database seeding")
 
 // Hands a client to seed(), which writes as the bootstrap user rather than
 // through a session.
@@ -33,6 +17,7 @@ import { seedSources } from '../src/db/seed/sources.ts';
 import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
 import { formatContentReport } from '../src/db/seed/demo-coven-content.ts';
 import { seedDocuments } from '../src/db/seed/documents.ts';
+import { seedHelp } from '../src/db/seed/help.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals, keptLines } from '../src/db/seed/compendium/report.ts';
@@ -51,6 +36,7 @@ const FLAGS: Record<string, readonly string[]> = {
   sources: ['--dry-run'],
   'demo-coven': ['--dry-run'],
   documents: ['--dry-run'],
+  help: ['--dry-run'],
   compendium: ['--dry-run', '--adopt', '--force'],
   reference: ['--dry-run', '--adopt', '--force'],
 };
@@ -64,7 +50,6 @@ for (const flag of flags) {
 }
 const dryRun = flags.has('--dry-run');
 
-/** The line a reference seed ends on: what it seeded, or that a dry run wrote nothing. */
 const done = (what: string): void => {
   console.log(
     dryRun ? `Dry run: ${what} were seeded and rolled back; nothing written.` : `Seeded ${what}.`,
@@ -91,6 +76,10 @@ try {
       console.log(line);
     }
     done("the vocabularies' sources and their links");
+  } else if (target === 'help') {
+    // An entry the list dropped prints a RETIRED line, or a KEPT line saying why it stays.
+    for (const line of await seedHelp(db, { dryRun })) console.log(line);
+    done('the help articles, the FAQ and the glossary');
   } else if (target === 'documents') {
     await seedDocuments(db, { dryRun });
     done('the privacy policy, the disclaimer, the code of ethics and the terms');
@@ -100,10 +89,8 @@ try {
     if (skipped) console.log(skipped);
     done('the demo coven, its seats and its contents');
   } else if (target === 'compendium' || target === 'reference') {
-    // One line per entry the run updated, refused, left pending or
-    // found retired, then the totals; a refused entry exits 1, which fails
-    // the deploy's seed step so the refusal is read, not buried. `reference`
-    // runs the five vocabulary seeds first, in the same transaction.
+    // A refused entry exits 1 so the deploy's seed step fails and the refusal is read; `reference` runs the
+    // five vocabulary seeds first, in one transaction.
     const force = flags.has('--force');
     const report =
       target === 'reference'
@@ -137,7 +124,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "documents", "reference" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "documents", "help", "reference" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {

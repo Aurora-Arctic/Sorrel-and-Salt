@@ -6,15 +6,13 @@ import PasswordSection, {
   GENERIC_CHANGE_ERROR,
   WRONG_CURRENT_PASSWORD,
 } from '@/components/PasswordSection';
-import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import type { SetPasswordMutation, SetPasswordMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The account page's Password section. Changing goes through Better Auth's client, mocked at its one
-// call; setting a first password is the `setPassword` mutation, answered by MSW in /api/graphql's shape.
-// tests/db/password-reset.test.ts proves what the server does with each.
+// Changing goes through Better Auth's client, mocked at its one call; tests/db/password-reset.test.ts proves what the server does with each.
 const changePassword = vi.fn();
 const requestPasswordReset = vi.fn();
 let sessionEmail: string | undefined = 'testwort@example.com';
@@ -65,6 +63,19 @@ describe('PasswordSection, changing a password', () => {
     expect(change()).toBeDisabled();
     await act(async () => type('New Password', CHOSEN));
     expect(change()).toBeEnabled();
+  });
+
+  it('names the current password to confirm with and the new one to set', () => {
+    renderSection(<PasswordSection hasPassword />);
+
+    expect(screen.getByLabelText(/^Current Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'current-password',
+    );
+    expect(screen.getByLabelText(/^New Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'new-password',
+    );
   });
 
   it('sends both passwords as typed, signing out every other session, and clears the fields', async () => {

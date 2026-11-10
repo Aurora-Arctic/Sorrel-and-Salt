@@ -1,12 +1,6 @@
-// Builds the mail's corner images (claude-docs/email.md, "Design"):
-//
-//   node scripts/email-ornaments.ts
-//
-// Each is one of Backdrop's grey photographs blended onto one theme's page
-// colour, with the blend and opacity the site's theme gives it, and flattened
-// to an opaque PNG. A mail client supports neither `mix-blend-mode` nor WebP
-// reliably, so the blend happens here. Re-run it after changing a photograph
-// or the palette, and commit what it writes.
+// Builds the mail's corner images as opaque PNGs, the blend done here because mail clients do not support it
+// (claude-docs/email.md, "Design").
+// Usage: node scripts/email-ornaments.ts; commit what it writes.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import sharp from 'sharp';
@@ -15,7 +9,6 @@ import { ORNAMENTS, ornamentPath, type Corner } from '../src/emails/ornaments.ts
 
 const ROOT = join(import.meta.dirname, '..');
 
-/** The PNG for one corner on one theme. */
 export async function composeOrnament(
   corner: Corner,
   theme: keyof typeof EMAIL_THEMES,

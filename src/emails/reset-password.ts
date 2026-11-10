@@ -4,7 +4,6 @@ import type { ResetPasswordProps } from './types';
 
 const SUBJECT = 'Reset Your Password';
 
-// The inbox line beside the subject.
 const PREVIEW = 'Choose a new password for your account. The link works for 15 minutes, once.';
 
 // No greeting by name: a stranger can ask for this mail for any address, so it says nothing the address
@@ -32,5 +31,4 @@ export function ResetPassword({ url, origin = new URL(url).origin, part }: Reset
   );
 }
 
-/** The reset mail for `to`, rendered to the html and plain text `send` takes. */
 export const resetPasswordMessage = defineMessage<ResetPasswordProps>(SUBJECT, ResetPassword);

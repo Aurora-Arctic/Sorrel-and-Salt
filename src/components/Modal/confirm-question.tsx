@@ -1,8 +1,8 @@
 'use client';
 
 import { type ReactElement, useRef } from 'react';
-import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
-import BusyButton from '../BusyButton';
+import { failureMessage } from '../../lib/graphql-failure';
+import ConfirmAnswersRow from '../ConfirmDialog/answers';
 import { ConfirmOverlay } from './confirm-overlay';
 import { DiscardQuestion } from './discard';
 import type { ConfirmQuestionProps } from './types';
@@ -36,50 +36,36 @@ export function ConfirmQuestion({
       await action();
     } catch (error) {
       if (!onRefused) throw error;
-      onRefused(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
+      onRefused(failureMessage(error));
     }
   };
   return (
     <ConfirmOverlay question={question} safe={keep}>
       {details}
-      <div className="modal__actions">
-        <BusyButton
-          className={`btn btn--${tone}`}
-          disabled={running}
-          busy={busy}
-          busyLabel={busyLabel}
-          onClick={() => void run(onConfirm)}
-        >
-          {confirmLabel}
-        </BusyButton>
-        {also && (
-          <BusyButton
-            className="btn btn--destructive"
-            disabled={running}
-            busy={also.busy}
-            busyLabel={also.busyLabel}
-            onClick={() => void run(also.onClick)}
-          >
-            {also.label}
-          </BusyButton>
-        )}
-        <button
-          ref={keep}
-          type="button"
-          className="btn btn--quiet"
-          // Shut only beside a second answer, whose action cannot be taken back.
-          disabled={also !== undefined && running}
-          onClick={onKeep}
-        >
-          {keepLabel}
-        </button>
-      </div>
+      <ConfirmAnswersRow
+        label={confirmLabel}
+        className={`btn btn--${tone}`}
+        busyLabel={busyLabel}
+        busy={busy}
+        disabled={running}
+        onConfirm={() => void run(onConfirm)}
+        also={
+          also && {
+            label: also.label,
+            busyLabel: also.busyLabel,
+            busy: also.busy,
+            disabled: running,
+            onClick: () => void run(also.onClick),
+          }
+        }
+        safeLabel={keepLabel}
+        safeRef={keep}
+        // Shut only beside a second answer, whose action cannot be taken back.
+        safeDisabled={also !== undefined && running}
+        onSafe={onKeep}
+      />
     </ConfirmOverlay>
   );
 }
 
-/**
- * Said, as a warning notice, in a confirmation over a form whose page goes with the answer (Make It
- * Ours's over the Annotate dialog).
- */
 export const UNSAVED_CHANGES_LOST = 'Changes you have not saved are lost.';

@@ -33,7 +33,6 @@ const CATEGORIES: CuratedVocabulary<typeof categories> = {
   noun: 'category',
 };
 
-/** One page of the live categories under `filter`, by group then name, each under a live group. A blank query is no query. */
 export function listCategories(
   filter: CategoryFilter,
   page: PageRequest,
@@ -41,7 +40,6 @@ export function listCategories(
   return list.list(filter, page);
 }
 
-/** How many categories `listCategories` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countCategories(
   filter: CategoryFilter,
   start: Cursor | undefined,
@@ -50,8 +48,6 @@ export function countCategories(
 }
 
 /**
- * The live category at this address, for the admin page to edit.
- *
  * @throws {NotFound} no live category holds the slug.
  */
 export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
@@ -61,8 +57,6 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
 }
 
 /**
- * Adds a category, its slug derived from the name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `CategoryInput`, names no live group, or its slug is a live category's.
  */
@@ -131,7 +125,6 @@ export async function deleteCategory(session: Session, id: string): Promise<void
   expireCompendium();
 }
 
-/** The input parsed, its group checked live: a foreign key admits a retired one. */
 async function parseCategory(input: CategoryInput): Promise<CategoryInput> {
   const { fields } = await parseUnderLiveParent(CategoryInput, input, {
     table: categoryGroups,

@@ -16,8 +16,7 @@ import { documents } from './documents';
 
 export const documentVersionStatus = pgEnum('document_version_status', ['draft', 'published']);
 
-// One version of a document's text, numbered from 1 per document. A document has at most one open draft; publishing dates it, and a
-// published version is never edited again. Marked `namedWrites`: reached only through the draft methods.
+// At most one open draft per document; a published version is never edited again. Marked `namedWrites`: reached only through the draft methods.
 export const documentVersions = namedWrites(
   pgTable(
     'document_versions',
@@ -29,7 +28,6 @@ export const documentVersions = namedWrites(
       number: integer('number').notNull(),
       body: text('body').notNull(),
       status: documentVersionStatus('status').notNull().default('draft'),
-      // Set when the draft is published, null while it is a draft.
       publishedAt: timestamp('published_at'),
       revision: revisionColumn(),
       ...auditColumns,

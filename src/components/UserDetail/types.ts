@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { WorkspaceRole } from '@/modules/coven';
 import type { SupportTimeoutEntry } from '../SupportRequests/types';
@@ -24,7 +25,6 @@ export type UserDetailUser = Pick<
   | 'agreedEthicsVersion'
 >;
 
-/** One live coven the user belongs to, as the service answered it. */
 export interface UserCoven {
   workspaceId: string;
   name: string;
@@ -36,14 +36,12 @@ export interface UserCoven {
 export interface UserDetailProps {
   user: UserDetailUser;
   memberships: readonly UserCoven[];
-  /** The user's support time-outs, newest first; the Time-Out section shows when this is given. */
   timeouts?: SupportTimeoutEntry[];
   /**
    * The user's access pauses, newest first; the Site Access section shows when this is given, which is never for the
    * primary keeper or the viewing admin's own account.
    */
   pauses?: AccessPauseEntry[];
-  /** Whether impersonation is registered here; off by default. */
   canImpersonate?: boolean;
   /**
    * Whether keeper changes are locked for the viewing keeper, as the list reads it: the role
@@ -52,19 +50,16 @@ export interface UserDetailProps {
   changesPaused?: boolean;
 }
 
-/** An account named on a pause: who set it or lifted it. */
 export interface AccessPausePerson {
   id: string;
   name: string;
 }
 
-/** One pause on a user's access to the site, as the user modal draws it. */
 export interface AccessPauseEntry {
   id: string;
-  /** When the pause ends by itself; null for a pause with no end date. */
+  /** When it ends by itself; null for a pause with no end date. */
   until: Date | null;
   note: string | null;
-  /** When it was set. */
   createdAt: Date;
   liftedAt: Date | null;
   /** The keeper who set it; null if no live account holds the id. */
@@ -76,7 +71,6 @@ export interface AccessPauseEntry {
 /** How long a pause is set for: a day, a week or a month from now, until a picked day, or with no end date. */
 export type PauseSpan = 'day' | 'week' | 'month' | 'date' | 'none';
 
-/** The fields that set a pause, held by the form that draws them. */
 export interface PauseFieldsProps {
   span: PauseSpan;
   onSpan: (span: PauseSpan) => void;
@@ -85,57 +79,56 @@ export interface PauseFieldsProps {
   onDay: (day: string) => void;
   note: string;
   onNote: (note: string) => void;
-  /** Who reads the note, beneath the field. */
   noteHint: string;
   notePlaceholder: string;
   /** Marks the note and the message required, for a sanction that must say why: a site pause or a support time-out, never a coven pause. */
   noteRequired?: boolean;
   message: string;
   onMessage: (message: string) => void;
-  /** The message field's label: who it is written to. */
   messageLabel: string;
   messagePlaceholder: string;
 }
 
-/** The pause that stands, as far as it is known: its end always, the rest once read. */
 export type StandingPause = Pick<AccessPauseEntry, 'until'> &
   Partial<Pick<AccessPauseEntry, 'note' | 'createdAt' | 'setBy'>>;
 
-/** The words a pause panel uses, which differ between the site and a coven. */
 export interface PausePanelCopy {
-  /** Who reads the note, beneath the field. */
   noteHint: string;
   notePlaceholder: string;
-  /** The message field's label: who it is written to. */
   messageLabel: string;
   messagePlaceholder: string;
   /** The question Pause Access asks, given the end chosen; null for no end date. */
   pauseQuestion: (end: Date | null) => ReactNode;
-  /** The question Lift Pause asks, given the standing pause's end. */
   liftQuestion: (until: Date | null) => ReactNode;
-  /** Said once a pause is set. */
   paused: string;
-  /** Said once a pause is lifted. */
   lifted: string;
+  /** The badge on a standing pause. */
+  badge: string;
+  pauseLabel: string;
+  pauseConfirm: string;
+  pauseTitle: (name: string) => string;
+  pauseBusy: string;
+  liftLabel: string;
+  liftConfirm: string;
+  liftTitle: string;
+  /** The heading over the earlier pauses. */
+  earlierTitle: string;
 }
 
-/** A pause on someone's access, in a modal: the user modal's Site Access, or the member modal's Coven Access. */
 export interface PausePanelProps {
-  /** The section's title, which is also its name. */
   title: string;
-  /** Whom the pause is on, as the confirm's title names them. */
   name: string;
-  /** The pause that stands now; undefined while their access is open. */
   standing: StandingPause | undefined;
-  /** Every pause but the standing one, newest first. */
   earlier: readonly AccessPauseEntry[];
+  /** Whether the earlier pauses are still being read: their place holds a skeleton. */
+  earlierLoading?: boolean;
   copy: PausePanelCopy;
   /** Marks the note and the message required and holds Pause Access until both have text: a site pause needs one, a coven pause does not. */
   noteRequired?: boolean;
   /** Sends the pause, until an end or with none, with its note. */
   pause: (until: Date | null, note: string | undefined, message: string | null) => Promise<unknown>;
-  /** Sends the lift of the standing pause. */
   lift: () => Promise<unknown>;
-  /** Called after either write succeeds, besides the page being read again. */
   onChanged?: () => void;
+  /** Where the earlier pauses are read in full; they are then not listed beneath the panel. */
+  earlierHref?: Route;
 }

@@ -1,31 +1,25 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { start } from 'workflow/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalCleanup } from '@/modules/identity/jobs/provisional-cleanup';
 import { provisionalCleanupBatch } from '@/modules/identity/jobs/provisional-cleanup-batch';
+import { useTestDatabase } from '../support/db/database';
 
-// The daily provisional cleanup, run end to end by the SDK's local world: the coordinator that reads the lapsed ids a page at a
-// time and starts a batch run per page, and the batch runs that delete. No run sleeps, so none is woken. Other files share the
-// database and may leave lapsed rows of their own, so a coordinator's batch count is asserted only as a floor.
+// No run sleeps, so none is woken. Other files share the database and may leave lapsed rows of their own, so a coordinator's batch count is asserted only as a floor.
 
 const DOMAIN = '@provisional-cleanup-run.test';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+useTestDatabase((client) => {
+  sql = client;
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
-/** A user holding a provider sign-in, as a sign-up through one leaves it, last touched `age` ago. */
 async function signUp(label: string, verified: boolean, age: string): Promise<string> {
   const [{ id }] = await sql`
     insert into users (name, email, email_verified, created_by, updated_by)
@@ -53,7 +47,6 @@ async function signUp(label: string, verified: boolean, age: string): Promise<st
 const exists = async (userId: string) =>
   (await sql`select 1 from users where id = ${userId}`).length === 1;
 
-/** One day's run of the coordinator; how many batches it started. */
 async function runDay(): Promise<number> {
   const run = await start(provisionalCleanup, []);
   return run.returnValue;
@@ -110,10 +103,44 @@ describe('a cleanup batch', () => {
     expect(await exists(lapsed)).toBe(false);
   });
 
-  it('logs a batch that fails every attempt and leaves the account for the next day', async () => {
-    // A lapsed account whose removal the database refuses: the delete step throws on every one of the SDK's attempts.
+  it('logs an account the database refuses to delete, counts it as not removed, and leaves it for the next day', async () => {
     const doomed = await signUp('doomed', false, '2 days');
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await sql`
+      create or replace function refuse_cleanup_delete() returns trigger language plpgsql as $$
+      begin
+        if old.email like '%${sql.unsafe(DOMAIN)}' then raise exception 'removal refused'; end if;
+        return old;
+      end $$
+    `;
+    await sql`create trigger refuse_cleanup_delete before delete on users for each row execute function refuse_cleanup_delete()`;
+    try {
+      const run = await start(provisionalCleanupBatch, [[doomed]]);
+
+      expect(await run.returnValue).toBe(0);
+      expect(await exists(doomed)).toBe(true);
+      expect(
+        logged.mock.calls.some(([line]) =>
+          String(line).includes(`Could not delete the lapsed provisional account ${doomed}`),
+        ),
+      ).toBe(true);
+    } finally {
+      await sql`drop trigger refuse_cleanup_delete on users`;
+      await sql`drop function refuse_cleanup_delete()`;
+    }
+
+    const retry = await start(provisionalCleanupBatch, [[doomed]]);
+    expect(await retry.returnValue).toBe(1);
+    expect(await exists(doomed)).toBe(false);
+  });
+  it('reports a batch that fails every attempt outside the per-account delete, removes nothing, and leaves it for the next day', async () => {
+    // The step can throw past the per-account catch only from that catch itself: the database refuses the delete, and the log
+    // of the refusal throws, so every attempt fails and the run falls to its failure report.
+    const doomed = await signUp('lost-batch', false, '2 days');
+    const logged = vi.spyOn(console, 'error').mockImplementation((line) => {
+      if (String(line).includes('Could not delete the lapsed provisional account'))
+        throw new Error('log down');
+    });
     await sql`
       create or replace function refuse_cleanup_delete() returns trigger language plpgsql as $$
       begin
@@ -128,14 +155,16 @@ describe('a cleanup batch', () => {
       expect(await run.returnValue).toBeNull();
       expect(await exists(doomed)).toBe(true);
       expect(
-        logged.mock.calls.some(([line]) => String(line).includes('every attempt failed')),
+        logged.mock.calls.some(([line]) =>
+          String(line).includes('every attempt failed; a batch of 1 accounts is left'),
+        ),
       ).toBe(true);
     } finally {
       await sql`drop trigger refuse_cleanup_delete on users`;
       await sql`drop function refuse_cleanup_delete()`;
+      logged.mockRestore();
     }
 
-    // Removal works again, so a later batch takes the account the failed one left.
     const retry = await start(provisionalCleanupBatch, [[doomed]]);
     expect(await retry.returnValue).toBe(1);
     expect(await exists(doomed)).toBe(false);

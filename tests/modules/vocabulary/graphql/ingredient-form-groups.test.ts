@@ -1,20 +1,17 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { createLoaders } from '@/graphql/loaders';
 import { formSlug, slugify } from '@/lib/slugify';
 import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { FormGroupNode } from './types';
-
-// The three form-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
-// That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code. Roles and the services' own rules are services/ingredient-form-groups.test.ts's;
-// signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+
+useTestDatabase((client) => {
+  sql = client;
 });
-afterAll(() => sql.end());
 
 let substance: string;
 beforeAll(async () => {
@@ -88,9 +85,6 @@ describe('createIngredientFormGroup', () => {
   });
 });
 
-// The icon standing for the group, an enum on the wire as in the
-// table. Which values the service takes, and that an absent one clears, are
-// the service test's; here, that the enum carries them both ways.
 describe('icon', () => {
   it('is written and read back over the wire, and cleared by a null', async () => {
     const created = await run<{ createIngredientFormGroup: FormGroupNode }>(asUser(E), CREATE, {
@@ -132,7 +126,7 @@ describe('updateIngredientFormGroup', () => {
     const id = await seedGroup('Fixture Matter');
     await seedForm('Fixture Shard', id, 'Fixture Matter');
     const session = asUser(E);
-    // One set of loaders across the three, so the read before fills the cache.
+    // One set of loaders across the three, so the read before fills the cache the write must clear.
     const context = { loaders: createLoaders(session) };
     const READ = `query { ingredientFormValues(query: "Fixture Shard") { edges { node { slug group { name } } } } }`;
     const before = await run(session, READ, {}, context);

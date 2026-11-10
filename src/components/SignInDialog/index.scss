@@ -1,0 +1,44 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The inbox view's one link, centred under the sentence; full width on a phone, as the dialog's buttons are.
+.sign-in-dialog__inbox {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+
+  @include phone-down {
+    flex-direction: column;
+  }
+}
+
+// The dialog is the sign-in page's card: as wide (`$narrow-column`, which the card takes from `.page-frame--narrow`),
+// padded as `.sign-in-panel.panel` is, and its head spaced as the page's, so both draw one column with one set of gaps.
+.modal-dialog:has(.sign-in-panel, .sign-in-dialog__inbox) {
+  // On a phone, the page frame's `space(4)` gutter rather than Modal's own edge gap, so it is the card's width there too.
+  width: min($narrow-column, calc(100vw - #{space(4)} * 2));
+  // The browser's own cap on a modal dialog (`100% - 2em - 6px`) would hold it short of that.
+  max-width: none;
+  padding: space(5) space(6) space(6);
+
+  > .modal-dialog__main {
+    margin: 0 calc(-1 * #{space(6)}) calc(-1 * #{space(6)});
+  }
+
+  .modal-dialog__body {
+    padding: 0 space(6) space(6);
+  }
+
+  // The page's head gap is `space(3)` under Back and the header's `space(2)` under the title.
+  .modal-dialog__heading > .sign-in-panel__back {
+    margin-block-end: space(1);
+  }
+
+  .modal-dialog__under {
+    row-gap: space(2);
+
+    > .lede {
+      margin: 0;
+    }
+  }
+}

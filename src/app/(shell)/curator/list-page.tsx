@@ -1,5 +1,5 @@
 import 'server-only';
-import { NotFound } from '../../../lib/errors';
+import { orMissing } from '../../../lib/or-not-found';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { single, trimmed } from '../../../lib/search-params';
 import type { ListPlace, ListSearchParams } from './types';
@@ -8,12 +8,10 @@ import type { ListPlace, ListSearchParams } from './types';
 // the `?edit=` lookup that turns a stale slug into a notice rather than an error page. The pager's
 // two hrefs are `pagerHrefs` in src/lib/list-href.ts, pure so pages outside admin call it.
 
-/** The name filter, cursor and modal the address asks for; `own` is the page's value of `?new`. */
 export function readListPlace(params: ListSearchParams, own?: string): ListPlace {
   const { after, before } = readPageCursors(params);
   const value = params.new === undefined ? undefined : (single(params.new) ?? '');
   return {
-    // Blank is no filter: a native submit sends `query=`.
     query: trimmed(params.query),
     after,
     before,
@@ -26,28 +24,11 @@ export function readListPlace(params: ListSearchParams, own?: string): ListPlace
   };
 }
 
-/**
- * What `read` finds, or `undefined` on `NotFound`: a renamed or deleted `?edit=` row shows
- * `MissingNotice` over the list. Any other failure is thrown.
- */
-export async function readOrMissing<T>(read: () => Promise<T>): Promise<T | undefined> {
-  try {
-    return await read();
-  } catch (error) {
-    if (error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
-
-/**
- * The row `?edit=` names, and whether it is gone (`missing`). An add wins over `?edit=`, so reads
- * nothing; a blank `?edit=` names none.
- */
 export async function readEditPlace<T>(
   { adding, editSlug }: Pick<ListPlace, 'adding' | 'editSlug'>,
   read: (slug: string) => Promise<T>,
 ): Promise<{ edited: T | undefined; missing: boolean }> {
   if (adding || !editSlug) return { edited: undefined, missing: false };
-  const edited = await readOrMissing(() => read(editSlug));
+  const edited = await orMissing(() => read(editSlug));
   return { edited, missing: edited === undefined };
 }

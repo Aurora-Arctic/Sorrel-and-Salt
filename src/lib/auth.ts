@@ -20,7 +20,8 @@ import {
 import { BASE_ERROR_CODES } from '@better-auth/core/error';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
-// this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
+// this cannot go through withAudit — claude-docs/db/repository-files.md, "Who
+// may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
@@ -78,10 +79,8 @@ import {
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
-// A provider that shared no address — Discord for an account without a
-// verified one, Facebook under narrowed permissions — would end the callback
-// at `email_not_found`. The placeholder lets the row and its session exist, so
-// /account/email can ask for one (claude-docs/auth/admin-bootstrap.md, "The email page").
+// A provider sharing no address would end the callback at `email_not_found`; the placeholder lets /account/email ask
+// for one (claude-docs/auth/admin-bootstrap.md, "The email page").
 function orPlaceholder(providerId: ProviderId, accountId: unknown, email: unknown) {
   if (email) return {};
   return { email: placeholderEmail(providerId, String(accountId)), emailVerified: false };
@@ -94,10 +93,8 @@ async function isExplicitLink(): Promise<boolean> {
   return (await hasRequestState()) && (await getOAuthState())?.link !== undefined;
 }
 
-// Inside an explicit link every provider vouches: there the value feeds only
-// Better Auth's link gate, and the account signs in by its id from then on.
-// On a sign-in each provider keeps its own answer (claude-docs/auth/admin-bootstrap.md,
-// "Linking a second provider").
+// Inside an explicit link every provider vouches; on a sign-in each keeps its own answer
+// (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
 async function vouchWhenLinking(): Promise<{ emailVerified?: true }> {
   return (await isExplicitLink()) ? { emailVerified: true } : {};
 }
@@ -126,8 +123,7 @@ function mapProfile(id: ProviderId) {
   });
 }
 
-// Registered only when id and secret are both present, so `next dev` runs with neither. The roster is in
-// social-providers.ts and what differs per provider in social-providers-config.ts's `PROFILE`; a sign-in earns an account only.
+// Registered only when id and secret are both present, so `next dev` runs with neither.
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -144,11 +140,8 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
   return providers;
 }
 
-// Per request, not a `BETTER_AUTH_URL` variable: production spans three origins. Outside production the host is fixed
-// (`next dev --hostname 0.0.0.0` would make every `redirect_uri` `0.0.0.0:8000`) and the port is the server's own
-// (Next sets `PORT`), so a second dev server or an e2e slot is not refused as an invalid origin. The e2e servers are
-// production builds that answer the browser at localhost, the one plain-http host it lets use a passkey, so they take the
-// fixed host too, under the gate that keeps every deploy off it (claude-docs/testing/e2e.md, "Passkeys").
+// Per request, not a `BETTER_AUTH_URL` variable: production spans three origins. The e2e servers take a fixed localhost
+// host under a gate that keeps every deploy off it (claude-docs/auth/config.md, "Base URL").
 function baseURL(): BetterAuthOptions['baseURL'] {
   if (process.env.NODE_ENV === 'production' && !plainSessionCookie()) {
     return {
@@ -206,7 +199,6 @@ function refuseVerification(ctx: HookContext, code: string, message: string): AP
   return new APIError('FORBIDDEN', { code, message });
 }
 
-/** A link opened from a session that does not hold the row it names. */
 function refuseWrongAccount(ctx: HookContext): APIError {
   return refuseVerification(
     ctx,
@@ -224,20 +216,12 @@ function refuseSignedOut(ctx: HookContext): APIError {
   return new APIError('FOUND', undefined, { Location: SIGN_IN_TO_VERIFY_PATH });
 }
 
-/**
- * The session the request carries, or `null`. Better Auth's helper is typed
- * for an endpoint's context, which a hook's holds everything of but is not
- * declared as.
- */
+/** Better Auth's helper is typed for an endpoint's context, which a hook's holds everything of. */
 function sessionOf(ctx: HookContext) {
   return getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
 }
 
-/**
- * The roster providers the user's accounts sign in with, for the mail that
- * names them. Better Auth types `providerId` as any string; one outside the
- * roster has no label to name it by, so it is left out.
- */
+/** One outside the roster has no label to name it by, so it is left out. */
 export async function linkedProviderIds(
   context: Pick<AuthContext, 'internalAdapter'>,
   userId: string,
@@ -262,7 +246,6 @@ async function requireOwnResend(ctx: HookContext): Promise<void> {
   }
 }
 
-/** The passkey endpoints that verify a ceremony and act on it. */
 const PASSKEY_VERIFY_PATHS = new Set([
   '/passkey/verify-authentication',
   '/passkey/verify-registration',
@@ -283,10 +266,8 @@ function pinPasskeyOrigin(ctx: HookContext): void {
 }
 
 /**
- * Removes the account's own passkey here rather than in the plugin, refusing the last one when the account has no other
- * way to sign in: no other passkey, no account for a roster provider and no password. The repository checks and deletes
- * under one lock, so two removals at once cannot each see the other passkey and leave none; the plugin's own delete
- * would run apart from the check.
+ * Removes the account's own passkey here, not in the plugin, so the repository's locked check can refuse the last way
+ * in (claude-docs/auth/plugins.md, "Passkeys").
  */
 async function keepAWayIn(ctx: HookContext) {
   const session = await sessionOf(ctx);
@@ -321,7 +302,8 @@ function tokenClaims(token: unknown): { email?: string; updateTo?: string } | un
 
 // The change branch of /verify-email (a token carrying `updateTo`) calls no `beforeEmailVerification` and mints a session
 // for whoever opened the link, so the rule is applied here first: only a session holding the row may follow it, and the
-// address must still be free or the unique index fails the write (claude-docs/auth/admin-bootstrap.md, "The email page").
+// address must still be free or the unique index fails the write
+// (claude-docs/auth/admin-bootstrap.md, "The email page").
 async function gateEmailChange(ctx: HookContext): Promise<void> {
   const claims = tokenClaims(ctx.query?.token);
   if (!claims?.email || !claims.updateTo) return;
@@ -345,17 +327,13 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   await actingUser.set(session.user.id);
 }
 
-// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring claude-docs/auth/passwords.md.
+// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring
+// claude-docs/auth/passwords.md.
 
-/** Why a breached password is refused, rather than only that it is. */
 const PASSWORD_BREACHED_MESSAGE =
   'This password appears in a known data breach, so someone could guess it. Choose another.';
 
-/**
- * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
- * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken. The job's step reads the
- * address and the ways in from the rows, so the run carries the account id and the origin alone.
- */
+/** Answers as a new sign-up does, so only the mailbox learns the address is taken. */
 async function mailExistingHolder({ user }: { user: { id: string } }) {
   await scheduleAccountNotice({
     kind: 'account-exists',
@@ -367,16 +345,13 @@ async function mailExistingHolder({ user }: { user: { id: string } }) {
 /** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
 const RESET_TOKEN_SECONDS = 15 * 60;
 
-/** This request's site origin, for a link in a mail sent from inside one of Better Auth's endpoints. */
 function endpointOrigin(): string {
   return new URL(getCurrentAuthEndpointContext().context.baseURL).origin;
 }
 
 /**
- * Mails a reset link to a verified address. An unverified one gets nothing, so a reset never reaches an
- * inbox the account has not proved; the request answers the same either way. The mail's job reads the token
- * Better Auth just stored when it sends, so the run carries the account id alone, and the link always opens
- * the reset page, so a request cannot point it anywhere else.
+ * Mails a reset link to a verified address only, and answers the same either
+ * way (claude-docs/auth/passwords.md, "Reset and change").
  */
 async function mailResetLink({
   user,
@@ -399,7 +374,6 @@ const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>
   locked: false,
 }));
 
-/** Whether the signed-in account has a password to guess at: a credential row of its own holding one. */
 async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean> {
   const accounts = await ctx.context.internalAdapter.findAccounts(userId);
   return accounts.some(
@@ -409,12 +383,8 @@ async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean>
 }
 
 /**
- * Holds an endpoint that checks the signed-in account's own password: while the account's password lock is on, it
- * swaps the password for one no hash can match, so the request is refused as a wrong password; a two-factor path
- * instead refuses with a paused code. `/change-password` also
- * signs out every other session whatever the request asks, so a change always shuts out whoever else held the old
- * password, and `/two-factor/disable` needs a fresh session, so a stolen old cookie and the password cannot turn the
- * second factor off.
+ * Holds an endpoint that checks the account's own password while its password lock is on
+ * (claude-docs/auth/passwords.md, "Lockout").
  */
 async function holdHeldPassword(ctx: HookContext, field: string) {
   const session = await sessionOf(ctx);
@@ -452,10 +422,8 @@ async function countHeldPassword(ctx: HookContext, field: string) {
 }
 
 /**
- * Counts one failure and, when it starts the first lock of a series, mails the account's owner; a later lock in the same
- * series sends nothing, so guessing on cannot mail the owner every hour. The mail carries a reset link made the way
- * Better Auth makes its own, so the owner can choose a new password at once rather than wait out the lock. Like the
- * reset mail, it goes only to a verified address, and runs after the answer, so the answer shows nothing.
+ * Counts one failure and mails the owner only when it starts the first lock of
+ * a series (claude-docs/auth/passwords.md, "Lockout").
  */
 async function countFailure(ctx: HookContext, userId: string) {
   const lock = await recordFailedPasswordSignIn(userId);
@@ -481,7 +449,6 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
   });
 }
 
-/** Tells the account a change on its account page replaced its password. */
 async function mailChangeNotice(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (isAPIError(returned) || returned instanceof Response) return;
@@ -559,7 +526,6 @@ async function holdLockedSignIn(ctx: HookContext) {
   }
 }
 
-/** Counts a wrong password against an unlocked account, and clears the count on a successful sign-in. */
 async function countPasswordSignIn(ctx: HookContext) {
   const newSession = ctx.context.newSession;
   if (newSession) return clearFailedPasswordSignIns(newSession.user.id);
@@ -579,6 +545,24 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
+/** A failure is logged, as the sign-in stands either way. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
+async function claimForVerifiedAccount(
+  user: { id: string; email: string; emailVerified: boolean },
+  ctx:
+    | { context?: { logger?: { error: (message: string, ...args: any[]) => void } } }
+    | null
+    | undefined,
+): Promise<void> {
+  if (!user.emailVerified) return;
+  try {
+    const { claimSignedOutRequests } = await import('@/modules/support');
+    await claimSignedOutRequests(user);
+  } catch (error) {
+    (ctx?.context?.logger ?? console).error(`support claim failed: user ${user.id}`, error);
+  }
+}
+
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
@@ -587,7 +571,8 @@ export const auth = betterAuth({
   // before versions existed (claude-docs/auth/config.md, "Rotating the secret").
   secrets: authSecrets(),
   baseURL: baseURL(),
-  // Empty but on the e2e servers, whose browsers post from localhost or devcontainer (claude-docs/testing/e2e.md).
+  // Empty but on the e2e servers, whose browsers post from localhost or
+  // devcontainer (claude-docs/testing/e2e.md).
   trustedOrigins: e2eTrustedOrigins(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
@@ -595,21 +580,21 @@ export const auth = betterAuth({
     usePlural: true,
     schema: { users, sessions, accounts, verifications, rateLimits, passkeys, twoFactors },
   }),
-  // Better Auth's own default, stated so a bump cannot move it: on in every
-  // deploy, off under `next dev` and the test suites. In the database because
-  // each Fluid Compute instance would otherwise count alone
-  // (claude-docs/auth/rate-limiting.md, "Rate limiting").
+  // Better Auth's default, stated so a bump cannot move it; counted in the database, as each instance would otherwise
+  // count alone (claude-docs/auth/rate-limiting.md, "Rate limiting").
   rateLimit: {
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
     // Sign-in's own rule, for the passkey ceremonies, which ship none. A custom rule replaces every other on its paths,
-    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
+    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md,
+    // "Rate limiting").
     customRules: {
       '/passkey/*': { window: 10, max: 3 },
     },
   },
-  // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
-  // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
+  // Cookie only: `storeInDatabase` would add a users column nothing reads
+  // (claude-docs/auth/plugins.md, "Plugins"). Impersonation is never constructed at production, nor
+  // where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     // Fails closed: an unreachable or silent service refuses the password, never waves it through.
@@ -633,10 +618,9 @@ export const auth = betterAuth({
     twoFactor({ issuer: SITE_NAME }),
   ],
   advanced: {
-    // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base
-    // URL is https, which a production build forces. The audit's e2e servers alone
-    // set it false, so a WebKit page on a plain-http origin sends the cookie it holds
-    // (claude-docs/testing/e2e.md, "A signed-in browser without a provider").
+    // Absent leaves Better Auth's `__Secure-` rule; only the e2e servers set it
+    // false (claude-docs/testing/e2e.md, "A signed-in browser without a
+    // provider").
     ...(plainSessionCookie() && { useSecureCookies: false }),
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {
@@ -714,19 +698,15 @@ export const auth = betterAuth({
     },
   },
   emailAndPassword: emailAndPassword(),
-  // `/update-user` writes `name` and `image` outside `withAudit`; the name
-  // is `setName`'s, the audited write. Refused at the router, before
-  // the endpoint or any hook runs, with a 404 (claude-docs/auth/admin-bootstrap.md,
-  // "The account page").
+  // `/update-user` writes outside `withAudit`, so the router refuses it with a 404
+  // (claude-docs/auth/admin-bootstrap.md, "The account page").
   disabledPaths: ['/update-user'],
   user: {
     // Off, pinned by test: on, a user could move the primary keeper's address
     // to another account. An email changes through the verified flow.
     changeEmail: { enabled: false },
-    // Never refuses: it only records what the provider said, for the hook below.
-    // Not on an explicit link, whose vouch `vouchWhenLinking` lent and which
-    // must not reach promotion. Better Auth names an implicit link at sign-in
-    // `link-account` too, so the state, not `source.action`, tells them apart.
+    // Never refuses: it only records what the provider said. Not on an explicit link, which must not reach promotion;
+    // the state tells the two apart, not `source.action`.
     validateUserInfo: async ({ user, source }) => {
       if (source.method !== 'oauth' || !source.oauth) return;
       if (await isExplicitLink()) return;
@@ -804,10 +784,6 @@ export const auth = betterAuth({
 
       const noReturnPath = await asksNoReturnPath();
 
-      // An unverified account can do nothing else, so it lands on the email
-      // page, address prefilled, until the address is proven; where the
-      // sign-in was going rides along. The endpoint's own redirect is the
-      // `location` already in the response headers, and its cookies stay.
       if (!user.emailVerified) {
         const landing = new URL(
           ctx.context.responseHeaders?.get('location') ?? '/',
@@ -820,10 +796,7 @@ export const auth = betterAuth({
         });
       }
 
-      // With no return path, the landing is the role's as it stands after any
-      // promotion just now; otherwise the endpoint's redirect already goes
-      // where the sign-in asked, `/coven` included. A member goes into their
-      // first coven (`signedInLanding`).
+      // With no return path the landing is the role's after any promotion (`signedInLanding`).
       if (noReturnPath) {
         const role = outcome === 'promoted' ? 'admin' : toUserRole(user.role);
         throw new APIError('FOUND', undefined, {
@@ -833,6 +806,15 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session, ctx) => {
+          const user = await ctx?.context.internalAdapter.findUserById(session.userId);
+          if (!user) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
+      },
+    },
     user: {
       create: {
         // Writes outside `withAudit` (CLAUDE.md rule 3): there is no session yet,
@@ -885,6 +867,10 @@ export const auth = betterAuth({
         },
       },
       update: {
+        after: async (user, ctx) => {
+          if (!user || !user.emailVerified) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
         // The same self-stamp as the create hook, outside `withAudit` for the
         // same reason: the verify write is the identity completing. Merged into
         // Better Auth's own UPDATE, so the row says who and the trigger says when.

@@ -4,11 +4,9 @@ import IconTip, { CheckIcon, EditLink } from '@/components/IconTip';
 import MenuButton from '@/components/MenuButton';
 import Modal from '@/components/Modal';
 
-// A word above an icon control, "Edit" over a pencil: shown once the pointer rests on the control or at its focus, gone the moment the pointer leaves, and dismissed by Escape.
-// It is decoration only, since the control's own name says more (claude-docs/components/icon-tip.md).
+// claude-docs/components/icon-tip.md
 
-// Open, the tip is in the page but kept out of the accessibility tree, so
-// it is found with `hidden`; shut, it is not in the page at all.
+// Open, the tip is kept out of the accessibility tree, so it is found with `hidden`.
 const tip = () => screen.queryByRole('tooltip', { hidden: true });
 
 function renderTip() {
@@ -41,7 +39,6 @@ describe('IconTip', () => {
     expect(tip()).toHaveClass('icon-tip__bubble');
     expect(tip()).not.toHaveClass('icon-tip__bubble--closing');
 
-    // Closed at once, with no wait to cross onto it: it stays only for its fade.
     fireEvent.mouseLeave(button);
     expect(tip()).toHaveClass('icon-tip__bubble--closing');
     act(() => vi.advanceTimersByTime(120));
@@ -86,7 +83,6 @@ describe('IconTip', () => {
     const button = renderTip();
     act(() => button.focus());
 
-    // `false`: the default was prevented.
     expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(false);
     act(() => vi.advanceTimersByTime(500));
     expect(tip()).toBeNull();
@@ -95,9 +91,7 @@ describe('IconTip', () => {
     expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(true);
   });
 
-  // happy-dom turns no Escape into the dialog's `cancel`; stood in for as a
-  // browser behaves, the cancel fired only for a keydown left unhandled. Its
-  // `showModal` and `close` are the shared stub's (tests/support/setup-dom.ts).
+  // happy-dom fires no `cancel` on Escape; it is stood in for as a browser behaves (showModal and close are tests/support/setup-dom.ts's).
   describe('inside a modal', () => {
     const escape = (target: HTMLElement) => {
       if (fireEvent.keyDown(target, { key: 'Escape' })) {
@@ -131,7 +125,6 @@ describe('IconTip', () => {
   });
 });
 
-// A tip over a control that opens a menu: while the menu is open the menu says what the control does, so the tip stays shut however the pointer or focus reaches the control, and is back for the next hover once the menu is closed.
 describe('IconTip around a menu button', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -154,7 +147,6 @@ describe('IconTip around a menu button', () => {
     return screen.getByRole('button', { name: 'Add Fixture Salt' });
   }
 
-  // A hover: the pointer enters and rests the 300ms a tip waits for.
   const rest = (button: HTMLElement) => {
     fireEvent.mouseEnter(button);
     act(() => vi.advanceTimersByTime(300));

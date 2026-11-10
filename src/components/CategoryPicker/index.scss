@@ -1,8 +1,5 @@
 @use '../../scss/variables' as *;
 
-// Layout only: the box, its entries and its list are the Combobox's, an entry's
-// colour its group's row.
-
 // The legend, entries and box sit further apart than a single field's label and control, and a label
 // and its info tip share a line so an open tip spans the field beneath. Doubled, to outweigh the
 // primitives' `body .fieldset`.
@@ -18,9 +15,13 @@
   }
 }
 
-// Why the box offers nothing: the read failed.
 .category-picker__status {
   margin: 0;
   color: $text-muted;
   font-size: type-size('small');
+}
+
+/* A held pick's skeleton: about the width of a short chip. */
+.category-picker__held {
+  inline-size: 6rem;
 }

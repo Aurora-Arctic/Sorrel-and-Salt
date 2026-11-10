@@ -30,6 +30,7 @@ import {
 } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The query count, observed at the repository: every read the path reaches is
 // wrapped so the test counts calls without changing what they answer. A seat
@@ -57,13 +58,16 @@ const countOf = () =>
 
 let sql: ReturnType<typeof postgres>;
 
+useTestDatabase((client) => {
+  sql = client;
+});
+
 // Three of §6's seeded categories, picked by name so the expectation reads;
 // the ids are what the loader answers with.
 const CATEGORY_NAMES = ['Banishing', 'Protection', 'Cleansing'];
 let categoryIds: Map<string, string>;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string);
   const rows = await sql`
     select id, name from categories where name in ${sql(CATEGORY_NAMES)} and deleted_at is null
   `;
@@ -83,7 +87,6 @@ async function addIngredient(
 ): Promise<Written> {
   const id = await insertIngredient(
     sql,
-    // Its folk names typed as its substitutes too: a third child read the same way.
     makeIngredient({
       name,
       workspaceId,
@@ -96,7 +99,6 @@ async function addIngredient(
   );
   return {
     ref: { id, workspaceId },
-    // What each loader answers: sorted by name, whatever order they were written in.
     folkNames: [...folkNames].sort(),
     categories: [...categories].sort(),
   };
@@ -137,7 +139,6 @@ const loadersFor = (session: Session | null) =>
 
 type Loaders = ReturnType<typeof loadersFor>;
 
-/** The second form each ingredient a test gave one has, by the ingredient's id. */
 const variantOf = new Map<string, string>();
 
 /** The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how a variant's loaders are asked, so a key that lies about its ingredient's tier lies about the variant's too. */
@@ -169,15 +170,12 @@ const folkNames = async (loaders: Loaders, ref: IngredientKey) =>
 const substituteNames = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.substitutesByIngredient.load(ref)).map((substitute) => substitute.name);
 
-/** The forms each ingredient comes in, as `Ingredient.variants` lists them. */
 const variantForms = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.variantsByIngredient.load(ref)).map((variant) => variant.form);
 
-/** The books the ingredient itself cites, as `Ingredient.references` lists them. */
 const citations = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.referencesByIngredient.load(ref)).map(({ reference }) => reference.title);
 
-/** What the second form of `ref`'s ingredient adds, through that form's own loaders. */
 const variantCategoryNames = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.categoriesByVariant.load(variantKey(ref))).map((category) => category.name);
 
@@ -379,7 +377,6 @@ describe('who the ingredient-children loaders answer', () => {
     categoriesByIngredient: ['Protection'],
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
-    // The fixture's own form, a variant, and the one added.
     variantsByIngredient: ['Fixture Gum', 'Testform'],
     referencesByIngredient: ['Fixture Herbal'],
     categoriesByVariant: ['Protection'],
@@ -397,7 +394,6 @@ describe('who the ingredient-children loaders answer', () => {
     compendium = await addIngredient('Mockleaf', null, ['Testbane'], ['Protection']);
     await addVariant(local);
     await addVariant(compendium);
-    // A book the ingredient itself cites, beside the one its form cites.
     const herbal = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
     for (const { ref } of [local, compendium]) {
       await insertReferenceLink(sql, ref.id, herbal, A.id, 'p. 1');

@@ -1,14 +1,16 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
+import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { batchName } from './batches';
+import { Mark } from '../UserList/marks';
 import UserLink from '../UserList/user-link';
 import ArrivalsFilterForm from './arrivals-filter';
 import DownloadCsv from './download-csv';
@@ -16,8 +18,7 @@ import { NO_ARRIVALS_FILTER } from './href';
 import type { AdminArrivalsProps, ArrivalsActionsProps, ArrivalsFilter } from './types';
 import './index.scss';
 
-// The People page's Card Sign-Ups tab, `/keepers/card-sign-ups`: every account that accepted a card, with the date, the
-// batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
+// (claude-docs/components/admin-cards.md)
 
 const ArrivalsCsvDocument = graphql(`
   query CardArrivalsCsv($query: String) {
@@ -25,13 +26,11 @@ const ArrivalsCsvDocument = graphql(`
   }
 `);
 
-/** The CSV of the arrivals the filter shows: the same query the list holds. */
 export const readArrivalsCsv = async (
   filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
 ): Promise<string> =>
   (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
-/** The empty list, naming the search in use so a keeper sees what to change. */
 function emptyText({ query }: ArrivalsFilter): string {
   return noMatchText('sign-ups', query ? [`“${query}”`] : [], 'No one has accepted a card yet.');
 }
@@ -47,7 +46,7 @@ const AdminArrivals = ({
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <ArrivalsFilterForm key={JSON.stringify(filter)} filter={filter} />
-      <ListBody>
+      <ListBody skeleton={<CardArrivalsBodySkeleton />}>
         <StackTable
           columns={[
             {
@@ -70,6 +69,12 @@ const AdminArrivals = ({
               cell: (arrival) => <LocalTime at={arrival.acceptedAt} />,
             },
             { heading: 'Batch', cell: (arrival) => batchName(arrival.batchId) },
+            {
+              heading: 'Beta',
+              className: 'user-list__mark-column',
+              headingClassName: 'user-list__mark-column',
+              cell: (arrival) => <Mark value={arrival.beta} label={arrival.beta ? 'Yes' : 'No'} />,
+            },
             {
               heading: 'Covens Owned',
               cell: (arrival) =>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import UserList from '../../../../../components/UserList';
 import { USER_MODAL_ORIGINS, userListHref } from '../../../../../components/UserList/href';
@@ -29,9 +30,7 @@ import { readOpenedUser } from './opened-user';
 import { userHeading } from './user-heading';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
-export const metadata: Metadata = {
-  title: 'Users',
-};
+export const metadata: Metadata = pageTitle('Users');
 
 // The page and GraphQL's `users` end at the same service, paged by the same helper (rules 1 and 8)
 // and counted for the pager as every admin list is; a cursor naming no row gives the first page
@@ -47,7 +46,6 @@ const readUsers = cache(
     after: string | undefined,
     before: string | undefined,
   ) => {
-    // An unset switch is no filter, left out rather than sent false.
     const filter = {
       query: query || undefined,
       awaitingApproval,
@@ -61,7 +59,6 @@ const readUsers = cache(
       (request) => listUsers(session, filter, request),
       (start) => countUsers(session, filter, start),
     );
-    // One batch each for the page, never a read per row (rules 7 and 9).
     const ids = page.edges.map((edge) => edge.node.id);
     const [providers, timeouts, pauses] = await Promise.all([
       providersOf(session, ids),
@@ -72,15 +69,12 @@ const readUsers = cache(
       const linked = providers[index];
       // A keeper's batch answers every slot; a refusal here is the guard's bug.
       if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
-      // Read from ADMIN_BOOTSTRAP_EMAIL, so the label follows the variable.
       return {
         ...node,
         providers: linked,
         supportTimeout: timeouts[index] ? { until: timeouts[index].until } : undefined,
         accessPause: pauses[index] ? { until: pauses[index].until } : undefined,
         primaryAdmin: isPrimaryAdmin(node),
-        // Its modal over this page, the filter and cursor kept, under the head the loaded modal
-        // carries.
         openHref: userListHref(here, cursorOf(after, before), node.id),
         heading: userHeading(node),
       };
@@ -89,7 +83,6 @@ const readUsers = cache(
   },
 );
 
-/** The cursor the page stands at, as the pager's and the modal's links keep it. */
 function cursorOf(after: string | undefined, before: string | undefined): PagerCursor | undefined {
   if (after) return { after };
   return before ? { before } : undefined;
@@ -107,22 +100,16 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const awaitingApproval = params.awaiting !== undefined;
   const timedOut = params['timed-out'] !== undefined;
   const paused = params.paused !== undefined;
-  // Either role, or none: a hand-edited value is no filter rather than an error.
   const role = oneOf(ROLES, single(params.role));
-  // Blank is no modal, as a blank `?edit=` is.
   const userParam = single(params.user) || undefined;
-  // Where the modal was opened from, so Close goes back there; a value outside the set is the list.
   const from = oneOf(Object.keys(USER_MODAL_ORIGINS) as UserModalOrigin[], single(params.from));
 
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, timedOut, paused, after, before),
-    // The pause on keeper changes and whether this keeper may flip it, which the switch beside the
-    // heading reads too (`@action/users`).
     readPauseState(session),
     userParam ? readOpenedUser(session, userParam) : undefined,
   ]);
   const canImpersonate = impersonationEnabled();
-  // The pause as the list's controls read it, for the modal's own.
   const changesPaused = Boolean(adminChanges && changesLocked(adminChanges));
 
   return (

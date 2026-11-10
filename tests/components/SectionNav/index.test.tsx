@@ -4,8 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SectionNavItem } from '@/components/SectionNav/types';
 import { currentHrefs, hrefs } from '../../support/links';
 
-// The page the test pretends to be on; Next's own hook reads the App
-// Router's state, which a component test does not mount.
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
@@ -14,7 +12,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: SectionNav } = await import('@/components/SectionNav');
 
-// The section nav (claude-docs/components/section-nav.md): a row of tabs that is a bottom bar on a phone, with the sections past the fourth behind a More button.
+// claude-docs/components/section-nav.md
 // Which tabs show at which width is the stylesheet's, so a test sees every tab and, shut, no More list.
 
 const ITEMS: readonly SectionNavItem[] = [
@@ -35,7 +33,6 @@ const FEW = ITEMS.slice(0, 4);
 
 const nav = () => screen.getByRole('navigation', { name: 'Test' });
 const more = () => within(nav()).queryByRole('button');
-// The links in the row, which the shut More list does not add to.
 const row = () => within(nav()).getAllByRole('link');
 
 beforeEach(() => {
@@ -49,16 +46,16 @@ describe('SectionNav', () => {
     expect(hrefs(row())).toEqual(ITEMS.map(({ href }) => href));
   });
 
-  it.each([
-    // A `matches` address marks the section it belongs to; `isAtPath` owns the rest.
-    ['/curator/category-groups', ['/curator/categories']],
-  ])('marks only the section at %s as current', (path, expected) => {
-    pathname.mockReturnValue(path);
+  it.each([['/curator/category-groups', ['/curator/categories']]])(
+    'marks only the section at %s as current',
+    (path, expected) => {
+      pathname.mockReturnValue(path);
 
-    render(<SectionNav label="Test" sections={ITEMS} />);
+      render(<SectionNav label="Test" sections={ITEMS} />);
 
-    expect(currentHrefs(row())).toEqual(expected);
-  });
+      expect(currentHrefs(row())).toEqual(expected);
+    },
+  );
 
   it('draws no More button when the sections fit', () => {
     render(<SectionNav label="Test" sections={FEW} />);
@@ -74,7 +71,6 @@ describe('SectionNav', () => {
       expect(button).toHaveAccessibleName('More');
       expect(button).toHaveAttribute('aria-expanded', 'false');
       expect(document.getElementById(button.getAttribute('aria-controls')!)).toBeInTheDocument();
-      // Shut, its links are out of the accessibility tree.
       expect(within(nav()).getAllByRole('link')).toHaveLength(ITEMS.length);
     });
 
@@ -135,12 +131,12 @@ describe('SectionNav', () => {
       expect(more()).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('takes the page you are on, marked current, when it is one of the hidden sections', () => {
+    it('keeps its own name, marked current, when the page you are on is one of the hidden sections', () => {
       pathname.mockReturnValue('/curator/celestial-bodies');
 
       render(<SectionNav label="Test" sections={ITEMS} />);
 
-      expect(more()).toHaveAccessibleName('More: Astrology');
+      expect(more()).toHaveAccessibleName('More');
       expect(more()).toHaveAttribute('aria-current', 'page');
     });
 

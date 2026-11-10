@@ -8,7 +8,6 @@ import TabbedPage from '../TabbedPage';
 import PendingInvitations from '.';
 import type { PendingInvitationEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/PendingInvitations.
 const meta = {
   title: 'Coven / Invitations Sent',
 } satisfies Meta;
@@ -52,9 +51,6 @@ const WithDeclinedView = () => (
 
 const withDeclinedNode = <WithDeclinedView />;
 
-// The page as the coven's people layout draws it for an owner: the shell, the
-// Members heading, the Members and Invitations toggle with Invitations open, and
-// Invite at the heading's end (src/app/(shell)/coven/[slug]/(people)/layout.tsx).
 const emptyNode = (
   <ShellFrame area="coven" open="/coven/fixture-coven/invitations">
     <TabbedPage
@@ -70,7 +66,6 @@ const emptyNode = (
   </ShellFrame>
 );
 
-// The middle page of three, both pager ends live.
 const pagedNode = (
   <PendingInvitations
     workspaceId="w"
@@ -81,7 +76,6 @@ const pagedNode = (
   />
 );
 
-// Revoke pressed, then confirmed: no server answers, so the refusal shows under the row's button.
 const RevokeRefusedView = () => {
   useSteps([() => press('Revoke the invitation to fern@fixture.test'), () => pressLast('Revoke')]);
   return <PendingInvitations workspaceId="w" invitations={[INVITATIONS[0]]} />;

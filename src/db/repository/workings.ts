@@ -7,7 +7,7 @@ import type { PageEntry, PageRequest } from '../../lib/types';
 import type { Membership } from '@/modules/coven';
 import { applyAudit } from '../audit';
 import { findPageInScope } from './finders';
-import { scopedTo } from './predicates';
+import { newestFirst, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
 import { readableWorkings } from './spells';
 import type {
@@ -54,28 +54,25 @@ export async function isParticipantOfWorking(
   return rows.length > 0;
 }
 
-/** A spell's workings the reader may read, newest day first (then newest recorded). */
+// Newest day first, then newest recorded, then by id (the pager adds it).
+const WORKING_ORDER: readonly SortPart[] = [
+  newestFirst(spellWorkings.workedOn),
+  newestFirst(spellWorkings.createdAt),
+];
+
+// Every row of a spell's workings in one page; a spell holds a handful, so this is not a way round the pager's limit.
+const EVERY_WORKING: PageRequest = { limit: 2 ** 31 - 1, inverted: false };
+
+/** A spell's workings the reader may read, in the order `findWorkingsPage` pages them. */
 export async function findWorkingsInSpell(
   membership: Membership,
   spellId: string,
 ): Promise<WorkingRow[]> {
-  const rows = await selectFrom(
-    spellWorkings,
-    and(readableWorkings(membership), eq(spellWorkings.spellId, spellId)),
-  );
-  return rows.sort(
-    (a, b) => b.workedOn.localeCompare(a.workedOn) || b.createdAt.getTime() - a.createdAt.getTime(),
-  );
+  const entries = await findWorkingsPage(membership, spellId, EVERY_WORKING);
+  return entries.map((entry) => entry.node);
 }
 
-// Newest day first, then newest recorded, then by id. The key is ascending, so each instant is negated, as numeric to keep the
-// microseconds a Date drops.
-const WORKING_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${spellWorkings.workedOn})`, type: 'numeric' },
-  { expression: sql`-extract(epoch from ${spellWorkings.createdAt})`, type: 'numeric' },
-];
-
-/** One page of a spell's workings the reader may read, in the order `findWorkingsInSpell` lists them. */
+/** One page of a spell's workings the reader may read, newest day first, then newest recorded. */
 export function findWorkingsPage(
   membership: Membership,
   spellId: string,

@@ -35,10 +35,11 @@ import {
 import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
+import { ORIGIN } from '../../../support/constants';
 
 // A curator curates the compendium and reaches nothing on the people page. Each row is called by direct id, as a forged request would call it, so the menu hiding People is not what refuses.
 // Each refusal is proven against the same call succeeding for the caller it is meant for, and F is proven to pass the curation check, so a row stays green only while the people page's own guard refuses a curator
-// (claude-docs/design-decisions/m11.20-curator-role.md).
+// (claude-docs/design-decisions/auth.md, "A third site role, `curator`").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 vi.mock('@/lib/mail', () => ({ send }));
@@ -50,7 +51,6 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@curator-boundary.test';
 const PLAIN = '00000000-0000-0000-0000-0000000000e1';
-const ORIGIN = 'http://localhost:8000';
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -59,7 +59,6 @@ const sender = () => invitationSender(new Request(`${ORIGIN}/api/graphql`, { met
 let adminInvitationId: string;
 let covenInvitationId: string;
 
-/** A pending invitation, inserted as the seed would; site tier unless a coven is named. */
 async function invite(email: string, by: string, workspaceId: string | null): Promise<string> {
   const [row] = await sql`
     insert into invitations (email, token_hash, workspace_id, role, site_role, created_by, updated_by, expires_at)

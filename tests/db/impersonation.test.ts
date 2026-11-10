@@ -1,26 +1,21 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { ORIGIN, cookieHeader } from '../support/oauth';
+import { cookieHeader } from '../support/oauth';
 import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
-
-// Through Better Auth's real endpoints with the plugin registered: a keeper becomes the user they impersonate (role, coven, stamps) and Stop returns their own session
-// (claude-docs/auth/impersonation.md, "Impersonation").
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 let auth: AuthInstance;
@@ -33,12 +28,10 @@ beforeAll(async () => {
   requestSession = await import('@/lib/request-session');
 });
 
-// The harness clones per file, not per test.
 beforeEach(async () => {
   await sql`delete from sessions`;
 });
 
-/** A session row for `userId` and the cookie Better Auth would have set for it. */
 async function signedInAs(userId: string): Promise<string> {
   const context = await auth.$context;
   const token = randomBytes(24).toString('base64url');
@@ -64,7 +57,6 @@ function post(path: string, cookie: string, body?: unknown): Promise<Response> {
 const impersonate = (cookie: string, userId: string) =>
   post('/admin/impersonate-user', cookie, { userId });
 
-/** A live user with no workspace, of the role given. */
 async function insertUser(role: 'user' | 'admin'): Promise<string> {
   const id = randomUUID();
   await sql`
@@ -95,7 +87,6 @@ describe('impersonating a user', () => {
     const target = await insertUser('user');
     expect((await impersonate(asE, target)).status).toBe(200);
 
-    // A keeper holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${target}`,
@@ -207,7 +198,6 @@ describe('stopping', () => {
 // A paused user is shown to the admin as the paused user sees the site: every signed-in page goes to the paused page and every
 // signed-in API call is refused with the pause's code (claude-docs/auth/impersonation.md, "Impersonation").
 describe('impersonating a paused user', () => {
-  /** The user a cookie signs in, read back through get-session; `undefined` when it signs in nobody. */
   async function sessionOf(cookie: string) {
     const response = await auth.handler(
       new Request(`${ORIGIN}/api/auth/get-session`, { headers: { cookie } }),
@@ -216,7 +206,6 @@ describe('impersonating a paused user', () => {
     return body?.user?.id;
   }
 
-  /** One GraphQL operation through the real route, as the browser sends it with `cookie`. */
   async function graphql(cookie: string, query: string) {
     const { POST } = await import('@/app/api/graphql/route');
     const response = await POST(

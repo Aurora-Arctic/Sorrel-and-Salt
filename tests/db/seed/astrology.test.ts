@@ -1,14 +1,21 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seedAstrology } from '@/db/seed/astrology';
 import type { VocabularyRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 // What a re-run of the celestial body and zodiac seed leaves of a keeper's edits; the shape every seed shares is index.test.ts's.
-// The vocabulary's content is the seed doc's to review (claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
+// The vocabulary's content is the seed doc's to review
+// (claude-docs/compendium/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 async function allRows(table: string): Promise<VocabularyRow[]> {
@@ -16,12 +23,7 @@ async function allRows(table: string): Promise<VocabularyRow[]> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('seedAstrology(db) over a database a keeper has edited', () => {

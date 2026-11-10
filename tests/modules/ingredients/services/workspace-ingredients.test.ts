@@ -54,7 +54,6 @@ async function rowOf(id: string) {
   return row;
 }
 
-/** Every folk name of the ingredient, tombstones included, oldest first. */
 function folkNameRows(ingredientId: string) {
   return sql`
     select id, name, created_by, deleted_at, deleted_by, xmin::text as xmin

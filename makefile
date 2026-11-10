@@ -6,7 +6,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-debug build start \
+.PHONY: help install setup dev dev-debug build start \
 	lint lint-fix format format-check typecheck check-destructive-ddl check-migration-order pre-commit \
 	test-stories test-debug test-ui e2e-ui e2e-trace \
 	db-generate db-migrate db-seed db-drop db-reset db-reset-demo db-studio db-psql codegen \
@@ -27,6 +27,10 @@ help:
 ## Install dependencies
 install:
 	npm install
+
+## Copy each example env and editor file to its git-ignored name, keeping any that exist
+setup:
+	npm run setup
 
 ## Next.js dev server on port 8000
 dev:

@@ -10,7 +10,7 @@ import {
 } from '../support/db/table-metadata';
 
 // A catalogue sweep: a table added without `...auditColumns` fails here, where a per-file copy would not exist, and a spread removed from a schema file leaves the migrated columns standing.
-// Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness").
+// Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`").
 
 /** Hard-deleted, so four stamps and no tombstone. */
 const STAMPED = [
@@ -84,7 +84,7 @@ describe('the audit columns', () => {
           .map((row) => row.table_name),
       ),
     ].filter((table) => STAMP_COLUMNS.every((column) => audit(table).columns[column]));
-    expect(AUDITED_TABLES).toHaveLength(44);
+    expect(AUDITED_TABLES).toHaveLength(46);
     expect(stamped.sort()).toEqual(AUDITED_TABLES);
 
     expect(Object.fromEntries(AUDITED_TABLES.map((table) => [table, audit(table)]))).toEqual(

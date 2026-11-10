@@ -12,18 +12,14 @@ type ReferenceRow = CitedReference['reference'];
 // section they support, the notes and the full bibliography in the References section at the foot
 // (claude-docs/components/ingredient-entry.md, "Structure").
 
-/** One note: a source cited by one section, with the locator it was cited at. */
 interface Note {
   number: number;
-  /** The section's key, which its numbers are found by. */
   section: string;
-  /** What the note's way back says: "Details", or the form's name. */
   sectionLabel: string;
   reference: ReferenceRow;
   locator: string | null;
 }
 
-/** A source in the bibliography, and the notes that cite it. */
 interface Entry {
   reference: ReferenceRow;
   notes: number[];
@@ -31,16 +27,12 @@ interface Entry {
 
 export interface ReferenceNotes {
   notes: Note[];
-  /** Every source once, alphabetical. */
   bibliography: Entry[];
-  /** The numbers a section ends with. */
   numbersOf: (section: string) => number[];
 }
 
-/** The key of the ingredient's own section; a form's is its anchor. */
 export const DETAILS = 'details';
 
-/** The notes of a page: the ingredient's links first, then each form's in page order; `anchors` and `labels` follow `detail.variants`. */
 export function referenceNotes(
   detail: Pick<IngredientDetail, 'references' | 'variants'>,
   anchors: readonly string[],
@@ -74,7 +66,6 @@ export function referenceNotes(
 const italicised = (parts: readonly CitationPart[]): ReactNode[] =>
   parts.map((part, at) => (part.italic ? <cite key={at}>{part.text}</cite> : part.text));
 
-/** A short form's close: Chicago ends a note with a period, inside a quoted title's quotation marks, and none after "?" or "!". */
 function closed(parts: CitationPart[]): CitationPart[] {
   const last = parts[parts.length - 1];
   if (!last) return parts;
@@ -91,7 +82,6 @@ function closed(parts: CitationPart[]): CitationPart[] {
 /** A locator closing a note: the period Chicago ends a note with, unless it has one. */
 const endNote = (text: string): string => (/[?!.]$/.test(text) ? text : `${text}.`);
 
-/** The id of a number's link, which its note's way back targets. */
 const markId = (number: number) => `note-ref-${number}`;
 const noteId = (number: number) => `note-${number}`;
 /** The two blocks of the References section, as bare words so no prefixed id can equal them (claude-docs/components/ingredient-entry.md, "Structure"). */

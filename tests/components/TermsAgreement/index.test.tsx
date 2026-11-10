@@ -8,11 +8,10 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { leavingAtEachLoad } from '../../support/location';
 
-// The acceptance page's body: it links the terms, and its one button records agreement to the version it showed, then goes to where
-// the account was headed. The server refuses a version no longer in force (tests/modules/identity/services/terms.test.ts).
+// The server refuses a version no longer in force (tests/modules/identity/services/terms.test.ts).
 
-// Terms 3, disclaimer 1, code of ethics 2.
 const IN_FORCE = { terms: 3, disclaimer: 1, ethics: 2 };
 
 const AGREED = {
@@ -42,7 +41,6 @@ function renderAgreement(changed: TermsAgreementProps['changed'] = ['terms']) {
   );
 }
 
-/** Where each link in the list of changed documents goes, in order. */
 const changedHrefs = () =>
   within(screen.getByRole('list'))
     .getAllByRole('link')
@@ -91,7 +89,6 @@ describe('TermsAgreement', () => {
     const releases: (() => void)[] = [];
     afterEach(() => releases.splice(0).forEach((release) => release()));
 
-    /** Answers AgreeToTerms once released, counting every ask. */
     function holdAgreement() {
       const calls: unknown[] = [];
       let release: () => void = () => undefined;
@@ -158,5 +155,17 @@ describe('TermsAgreement', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(assign).not.toHaveBeenCalled();
+  });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it goes to the destination', async () => {
+    const leaving = leavingAtEachLoad(assign);
+    mockGraphQLMutation('AgreeToTerms', () => ({ agreeToTerms: AGREED }));
+    renderAgreement();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Agree & Continue' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/coven/hearth'));
+    expect(leaving).toEqual([true]);
   });
 });

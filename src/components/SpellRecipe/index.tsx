@@ -6,15 +6,12 @@ import { UNTITLED_SPELL } from '../SpellCard';
 import SpellMarks from '../SpellMarks';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
-import type { PageNavEntry } from '../PageNav/types';
 import { SpellRecipeLead, SpellRecipeRest } from './body';
 import SpellRecipeSummary from './summary';
-import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
+import { JAR_ID, recipeMenu } from './sections';
 import type { SpellRecipeProps } from './types';
 
-// A saved spell as a page: purpose, four facts, steps, note (the body's two boxes, which Quick Look
-// also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
-// `action` slot's, for the roles that may. Its print
+// A saved spell as a page, read-only; the page's controls are the `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
@@ -39,29 +36,11 @@ const SpellRecipe = ({
   // The side column's lines carry the Quick Look eyes, so a step names its ingredient plainly; the
   // Quick Look modal, which has no side column, keeps the eye on its steps.
   const plain = steps.map((step) => (step.kind === 'ingredient' ? { ...step, look: null } : step));
-  // One entry per section drawn, so none links to nothing.
-  const entries: PageNavEntry[] = [
-    ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
-    // The side column stands beside the recipe from a tablet up, so the menu names its two
-    // sections only where it is stacked.
-    ...(aside
-      ? [
-          {
-            href: `#${CATEGORY_MATCH_ID}` as const,
-            label: 'Category Match',
-            group: 'The Cupboard',
-            narrowOnly: true,
-          },
-          {
-            href: `#${INVENTORY_ID}` as const,
-            label: 'In the Cupboard',
-            group: 'The Cupboard',
-            narrowOnly: true,
-          },
-        ]
-      : []),
-    ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: 'Workings' }] : []),
-  ];
+  const entries = recipeMenu({
+    steps: steps.length > 0,
+    aside: Boolean(aside),
+    workings: Boolean(workings),
+  });
   return (
     <article
       className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}${entries.length > 0 ? ' spell-recipe--with-nav' : ''}`}

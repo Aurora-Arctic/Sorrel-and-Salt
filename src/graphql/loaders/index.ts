@@ -26,9 +26,11 @@ import {
   substitutesByVariant,
   variantsByIngredient,
 } from '@/modules/ingredients';
+import { helpChildrenByParent } from '@/modules/help';
 import {
   repliesByRequest,
   tierBySender,
+  timeoutsByAddress,
   timeoutsBySender,
   usersOnRequests,
 } from '@/modules/support';
@@ -42,9 +44,7 @@ import {
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
 
-// Every loader the context builds, by the name a resolver reads it as. Each
-// is added by the task that adds its schema, off its module's index
-// (claude-docs/graphql/loaders.md, "Loaders").
+// Built per request, never at module level (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at module level").
 const LOADERS = {
   memberEmailsByMember,
   membershipsByUser,
@@ -53,6 +53,7 @@ const LOADERS = {
   usersByIdForAdmin,
   repliesByRequest,
   tierBySender,
+  timeoutsByAddress,
   timeoutsBySender,
   usersOnRequests,
   cardPositionById,
@@ -78,11 +79,11 @@ const LOADERS = {
   workingCountBySpell,
   assignedCategoriesBySpell,
   derivedCategoriesBySpell,
+  helpChildrenByParent,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 export type Loaders = Built<typeof LOADERS>;
 
-/** One request's instances of `factories`. */
 export function buildLoaders<F extends Record<string, LoaderFactory<never, unknown>>>(
   factories: F,
   session: Session | null,

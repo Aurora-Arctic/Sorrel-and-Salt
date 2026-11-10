@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import EmptyState from '../EmptyState';
+import Skeleton from '../Skeleton';
 import { SortSelect } from './sort-select';
 import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './types';
 
@@ -45,10 +47,6 @@ function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
   );
 }
 
-/**
- * A sortable heading: a link to the column's other direction when the list is sorted by it, and to its first direction when
- * not. Its name says the order in force, "Name, Sorted A to Z"; the arrow is for the eye alone.
- */
 function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): ReactNode {
   const { current, href, labels } = sort;
   return (
@@ -63,7 +61,6 @@ function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): 
   );
 }
 
-/** The sort select's choices: the other orders first, then each sortable column both ways. */
 function sortChoices<Row>(
   columns: readonly StackColumn<Row>[],
   others: StackTableProps<Row>['otherOrders'] = [],
@@ -85,19 +82,40 @@ function StackTable<Row>({
   rows,
   rowKey,
   empty,
+  emptyLabel,
+  emptyAction,
+  emptyQuiet,
   'aria-label': label,
   className,
   otherOrders,
+  pendingRows,
+  pendingKind,
 }: StackTableProps<Row>): ReactElement {
-  if (!rows.length) return <p>{empty}</p>;
+  const pending = pendingRows !== undefined;
+  if (!pending && !rows.length)
+    return (
+      <EmptyState size="compact" label={emptyLabel} action={emptyAction} quiet={emptyQuiet}>
+        {empty}
+      </EmptyState>
+    );
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
   const sorting = shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
   return (
     <div className="data-table-frame">
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
-      {sorting && <SortSelect choices={sorting.choices} current={sorting.current} />}
+      {sorting && (
+        <SortSelect choices={sorting.choices} current={sorting.current} disabled={pending} />
+      )}
       <table
-        className={['data-table data-table--stack', className].filter(Boolean).join(' ')}
+        aria-hidden={pending || undefined}
+        className={[
+          'data-table data-table--stack',
+          pending &&
+            `data-table--pending data-table--pending-${pendingKind ?? 'default'} skeleton-text`,
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         aria-label={label}
         {...tableRole('table')}
       >
@@ -113,8 +131,13 @@ function StackTable<Row>({
               >
                 {column.hiddenHeading ? (
                   <span className="visually-hidden">{column.heading}</span>
-                ) : column.sort ? (
+                ) : column.sort && !pending ? (
                   <SortHeading heading={column.heading} sort={column.sort} />
+                ) : column.sort ? (
+                  <span className="data-table__sort-link">
+                    <span>{column.heading}</span>
+                    <SortArrow current={undefined} />
+                  </span>
                 ) : (
                   column.heading
                 )}
@@ -123,21 +146,57 @@ function StackTable<Row>({
           </tr>
         </thead>
         <tbody {...tableRole('rowgroup')}>
-          {rows.map((row) => (
-            <tr key={rowKey(row)} {...tableRole('row')}>
-              {shown.map((column) => (
-                // An action's cell has no label: it spans the card, or stands at
-                // its top right beside the first line.
-                <td
-                  key={column.heading}
-                  className={cellClass(column)}
-                  {...stackCell(column.action ? '' : column.heading)}
-                >
-                  {column.cell(row)}
-                </td>
+          {pending
+            ? Array.from({ length: pendingRows }, (_, at) => (
+                <tr key={at} {...tableRole('row')}>
+                  {/* At phone width the row is one block in the card's frame; the cells wait for the table. */}
+                  <td className="card-skeleton__fill" aria-hidden="true" />
+                  {shown.map((column) => (
+                    <td
+                      key={column.heading}
+                      className={cellClass(column)}
+                      {...stackCell(column.action ? '' : column.heading)}
+                    >
+                      {column.action ? (
+                        <span
+                          className="btn btn--small data-table__pending-action"
+                          aria-hidden="true"
+                        >
+                          &nbsp;
+                        </span>
+                      ) : (
+                        <Skeleton shape="line" quiet />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : rows.map((row) => (
+                <tr key={rowKey(row)} {...tableRole('row')}>
+                  {shown.map((column, at) => {
+                    // An action's cell has no label: it spans the card, or stands at
+                    // its top right beside the first line.
+                    const cell = stackCell(column.action ? '' : column.heading);
+                    // The first column names the row, so a screen reader moving down a column
+                    // hears which row it is in.
+                    return at === 0 ? (
+                      <th
+                        key={column.heading}
+                        scope="row"
+                        className={cellClass(column)}
+                        {...cell}
+                        {...tableRole('rowheader')}
+                      >
+                        {column.cell(row)}
+                      </th>
+                    ) : (
+                      <td key={column.heading} className={cellClass(column)} {...cell}>
+                        {column.cell(row)}
+                      </td>
+                    );
+                  })}
+                </tr>
               ))}
-            </tr>
-          ))}
         </tbody>
       </table>
     </div>

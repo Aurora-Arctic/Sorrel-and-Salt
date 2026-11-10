@@ -25,7 +25,6 @@ export const supportReplies = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // A request's replies, read in order.
     index('support_replies_request_idx')
       .on(table.requestId, table.createdAt)
       .where(sql`${table.deletedAt} is null`),

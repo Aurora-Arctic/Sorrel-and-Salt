@@ -1,104 +1,24 @@
 # Invitation Acceptance
 
-`src/components/InvitationAcceptance/` — the panel of `/invite/[token]`, the
-one route an invitation's mailed link opens (MB.70 built it with the site
-tier, M7.5 added the workspace's). Server component `src/app/invite/[token]/page.tsx` reads where the
-visitor stands and hands down one of three states; this component shows it
-and sends the accept. The rules it shows are
-[`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
+`src/components/InvitationAcceptance/` is the panel of `/invite/[token]`, the route an invitation's mailed link opens, for both the site tier and the workspace's, and of `/i/[token]`, a printed card's short link. The server component `src/app/invite/[token]/invitation-panel.tsx` reads where the visitor stands and hands down one of the states in `types.ts`; this component shows it and sends the accept. The rules are in [`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
 
-## The three states
+## Contracts
 
-- **`signed-out`** — no session. The page reads nothing of the invitation,
-  so a stranger holding the link learns nothing of it, and offers **Sign In**,
-  `signInPath` of the link itself, so the sign-in comes back here.
-- **`refused`** — the accept service's own reason, in its words, from
-  `invitationStanding`: a dead link, a different address, a pause, or an
-  address not yet verified. Only the last carries `emailHref`, the email
-  page with the link as its `next`, offered as **Confirm Your Email**. An account
-  that already used the card carries `startCovenHref` (`/coven/new`), offered as
-  **Start a Coven**. No message names a workspace.
-- **`acceptable`** — what the invitation grants, by tier, and **Accept
-  Invitation**. A site invitation names its role, `siteRole`, curator or
-  admin (M11.20). The click sends `acceptInvitation`, which checks everything
-  again and decides; the button stays busy, with a spinner, until
-  `router.push` reaches `landing` (`/keepers` for a keeper's site invitation, `/curator` for a curator's,
-  `/coven/[slug]` for a coven's, the slug coming from the standing; the
-  sentence names the coven, `covenName`, which only this state carries: the
-  standing reaches it after the address checks, so no refusal can say it). A
-  refusal is said in the service's words by `useClickFeedback`'s callout
-  ([`click-feedback.md`](click-feedback.md), M12.31): an alert floating under
-  Accept, which keeps the focus and is described by "Last try failed: …"; a
-  dismissed callout comes back from the badge beside it, and the next press
-  clears it. Accept is `aria-disabled` while it sends, not `disabled`, so the
-  browser does not take the focus off it, and `accept()` ignores a second
-  press itself. A success says nothing of its own: the landing is the answer,
-  so the hook's `announce` is not called.
-
-The page uses `getSession()`, not `requireSession()`: an unverified account
-would otherwise be redirected to the email page without being told why, and
-the signed-out state is the page's to show.
-
-## What a refused link says
-
-Each reason has one sentence, from `MESSAGES` in
-`src/modules/identity/services/invitation-acceptance.ts`, and no sentence names a coven. Two are
-worth knowing:
-
-- **A declined link** (M10.34) says "This invitation was declined. If you change your mind, ask
-  whoever sent it for a new one." The invitee's answer outranks the owner's Remove that may follow.
-- **A link into a deleted coven** (MB.119, decision f) has a reason of its own, `closed`: "The coven
-  this invitation was for has been deleted, so it can't be accepted." It sits after the dead-link
-  and address checks, so a link in two states reports the earlier (an accepted one still says
-  accepted) and another address learns nothing of the coven.
+- **`signed-out`**: the page reads nothing of the invitation, so a stranger holding the link learns nothing of it. It offers **Create Account** and **Sign In** as two choices of equal size, the one named by `lead` first in the document and solid (`.btn--solid`), the other after it outlined (plain `.btn`), so the tab order follows what is seen. `leadOf` in `invitation-panel.tsx` is the one place `lead` is decided, from the address alone, since nothing of the invitation is read signed out. A card leads with `sign-up`, since it goes to someone new. So does a link carrying the site-invitation marker `?for=site`, which the site tier's mail adds ([`db/invitations.md`](../db/invitations.md), "The mail"). Every other invitation leads with `sign-in`. The marker is never checked against the invitation, so a hand-edited one changes only the button order. A site invitation mailed before the marker existed has none, so it keeps the coven order. The page passes `next` as the bare `/invite/<token>`: `verifiedLanding` and the sign-in page's ledes match that path exactly, and once a visitor is signed in there are no choices left to order. A support request's stored path drops any query and redacts the token (`redactPath`). Each choice is a `SignInDialog` ([`sign-in-dialog.md`](sign-in-dialog.md)) carrying the link itself as `next` and the server's `configured` providers. Each opens the sign-in dialog in its own mode over the page and comes back to the link, where Accept Invitation stays a separate press. An address invitation gives the dialog a lede per mode saying to use the invited address; a card (`card`) gives none, since any verified account may accept one. Both set `signUpLandsOnNext`, so a new email account loads the invitation itself, and its verification link lands back on the invitation with no confirmed view between (`verifiedLanding`, [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)). The invitation page has no terms gate, so a new account meets the terms page on the first protected page it opens after accepting.
+- **`unverified`**: the account matched the invited address but has not verified it, as a new email account has not. The lede says the address is not confirmed yet, to check the inbox or press Confirm Your Email for a new message, and that its link comes back here; it names no address, as it reads the same to a new account and an older one. When the page was reached with `?error=` (a verification link refused on its way back, as `verifiedLanding` sends an invitation's link straight here), the page passes `linkFailed`, and an error `Notice` says, in one fixed sentence, that the link expired or is not valid and to press Confirm Your Email; the code itself is never shown. The signed-out state reads it too, as the link can come back to a browser with no session, and its notice stands above the choices and says to sign in for a new one. No other state reads it. Both sentences are `LINK_FAILED` in `index.tsx`. The card page (`/i/[token]`) reads no query, and nothing sends it one: `verifiedLanding` lands only `/invite/<token>` on itself, so a card's verification link comes back to the email page. Under it are the quiet **Confirm Your Email** (`emailHref`, the email page with the link as its `next`) and **Back to Home**. The server reads the address with `getMe` only to tell a stand-in from a real one: a stand-in address (`isPlaceholderEmail`) has no inbox, so that account keeps the `refused` state instead.
+- **`refused`**: the accept service's own reason, from `invitationStanding`: a dead link, a different address, a pause, or an unverified stand-in address. Only the last carries `emailHref` (the email page with the link as its `next`, **Confirm Your Email**). An account that already used a card carries `startCovenHref` (`/coven/new`, **Start a Coven**). No message names a workspace.
+- **`acceptable`**: what the invitation grants, by tier, and **Accept Invitation**. A site invitation names its `siteRole`. The sentence names the coven (`covenName`) only in this state: the standing reaches it after the address checks, so no refusal can say it.
+- **The click sends `acceptInvitation`**, which checks everything again and decides. The button stays busy until `router.push` reaches `landing`: `/keepers` for a keeper's site invitation, `/curator` for a curator's, `/coven/[slug]` for a coven's. Accept is `aria-disabled` while it sends, not `disabled`, so the browser keeps the focus on it, and `accept()` ignores a second press itself. A success says nothing, since the landing is the answer, so `announce` is not called.
+- **A refusal on accept is `useClickFeedback`'s callout** ([`click-feedback.md`](click-feedback.md)): an alert floating under Accept, described by "Last try failed: …". `readGraphqlFailure` (`src/lib/graphql-failure.ts`) reads the failure; `GENERIC_FAILURE` is the sentence when the server sent none.
+- **The page uses `getSession()`, not `requireSession()`:** an unverified account would be redirected to the email page without being told why, and the signed-out state is the page's to show.
+- **A refused link has one sentence per reason**, from `MESSAGES` in `src/modules/identity/services/invitation-acceptance.ts`, none naming a coven. Two are worth knowing:
+  - A declined link says to ask whoever sent it for a new one. The invitee's answer outranks a steward's Remove that may follow.
+  - A link into a deleted coven has its own reason, `closed`. It sits after the dead-link and address checks, so a link in two states reports the earlier and another address learns nothing of the coven.
 
 ## Styling
 
-A `.panel` (MB.119, decision c), as sign-in's panel, the email page's and the create page's are:
-the root is `panel invitation-acceptance`, and its `PageHeader` ([`page-header.md`](page-header.md)) holds the
-`h1` and the grant sentence as its `lede`. A refusal has no grant, so its head is the heading
-alone, its row's margin dropped so the panel's gap spaces it, and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
-its `main` is the page frame, `.page-frame.page-frame--narrow`
-([`styling.md`](../styling.md), "The page frame"): it centres the panel,
-holds it clear of the top inset and caps it at the forms' column,
-`$narrow-column` (28rem), so the panel sets no width of its own.
-`.invitation-acceptance` only stacks the header, the alert and the button a
-`space(3)` apart. A refused link's reason is a `Notice`
-([`notice.md`](notice.md)) as an error, so it is an alert the server renders;
-a failed accept is the click-feedback callout instead, read by
-`readGraphqlFailure` (`src/lib/graphql-failure.ts`), whose `GENERIC_FAILURE`
-is the sentence when the server sent none. Accept's wrapper is a `div`, not
-the other states' `p`, because the callout is a `div`. The
-buttons and the spinner are the primitives', Accept drawn through
-`BusyButton` ([`busy-button.md`](busy-button.md)). Tokens used: `space()`.
+The signed-out choices are `.invitation-acceptance__choices`, a grid of two equal columns, stacked at or under `$shell-phone-width`. In this state alone, the grant stands a `space()` step further from the title (12px) and from the choices (16px) than other states' ledes do, through a rule on `.invitation-acceptance:has(> .invitation-acceptance__choices)`. The inbox state's quiet links are `.invitation-acceptance__row`, a centred row at their own widths that stacks full width at the same breakpoint; the choices' wrapper is a `div`, since each draws its dialog beside it and a dialog in a `p` is invalid HTML. A `.panel`; its `PageHeader` ([`page-header.md`](page-header.md)) holds the `h1` and the grant sentence as its `lede`. A refusal's lede says only that the invitation cannot be used, and the alert beneath says why; a Back to Home link follows it, so the page is never a dead end. The head is centred, as the other card pages' are (`.card-page-header`, with the heading at `.auth-title` size). On a live card's page (`/i/[token]`), the panel is `.card-landing__card`, the second column of `.card-landing__grid` (`_primitives.scss`), for a beta batch and a plain one alike. The words come first in the document and the panel stands to their right, `$narrow-column` wide, `space(8)` from them, sticky under the bar. Its head and text are left-aligned there, and the buttons keep their labels centred. At or under `$shell-tablet-width` the panel stacks under the words, left-aligned and at most `$narrow-column` wide, and full width at or under `$shell-phone-width`. `/invite/[token]` and a closed card's page draw the panel alone in `.page-frame--narrow`, with nothing beside it, so they stay centred like the other card pages. The page has no AppShell, so its `main` is `.page-frame.page-frame--narrow` ([`styling.md`](../styling.md), "The page frame"), which sets the panel's width. A refusal's reason is an error `Notice` ([`notice.md`](notice.md)). Accept's wrapper is a `div`, not a `p`, because the callout is a `div`. Accept is a `BusyButton` ([`busy-button.md`](busy-button.md)).
 
-## Stories
+## Stories and tests
 
-[`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
-`Pages / Invitation Acceptance`, each inside the page's own
-`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. The `States` dropdown opens with Signed Out, the sign-in prompt a visitor with no session gets for any link, valid or not (the page reads nothing of the invitation until someone is signed in). Render-only, bar
-the failed accept.
-
-- **The states:** `SignedOut` is its own story; `States`, with a control that chooses Default, Acceptable Curator, Acceptable Coven, Unverified, and one for each other
-  refusal: Invalid, Accepted, Revoked, Expired, Declined, Deleted Coven,
-  Different Address and Paused. The refusal sentences are copied from the service's `MESSAGES`,
-  as a story cannot import a server-only module.
-- **A failed accept:** `AcceptRefused` presses Accept on mount
-  (`usePressOnMount`); the workshop has no API, so the request fails and the callout says
-  `GENERIC_FAILURE` under the button.
-
-## Tests
-
-`tests/components/InvitationAcceptance/index.test.tsx` renders each state,
-sends the accept against MSW with the token as its variable and checks the
-landing, names the role a site invitation grants, and checks a failed accept: the callout says the
-service's sentence, the focus stays on Accept with its "Last try failed" description, the badge
-brings a dismissed callout back, a second press is not sent while busy, and the next press clears
-the callout and lands. `tests/e2e/stories/01-invitations.spec.ts` walks the page for stories 4–7;
-story 7's test presses Accept on a page left open after its link expired, and checks in the
-browser that the callout appears, the focus stays on Accept, Escape closes it, the badge reopens
-it, axe passes and the page does not scroll sideways at 375px.
-`tests/e2e/workspace-invitation.spec.ts` walks a coven's invitation (M7.7):
-the owner invites by mail, the invited account accepts and lands in the
-coven, and a used link and a revoked one are each refused with a different
-message, neither naming the coven.
+`src/components/InvitationAcceptance/index.stories.tsx` (`Pages / Invitation Acceptance`: `SignedOut`, `States` (Signed Out Card and Check Your Inbox among them), and `AcceptRefused`, which presses Accept on mount so the workshop's missing API fails the request). Its refusal sentences are copied from `MESSAGES`, as a story cannot import a server-only module. Tests: `tests/components/InvitationAcceptance/index.test.tsx`, `tests/app/invite/invitation-panel.test.tsx` (which state the server hands down), `tests/e2e/sign-in-dialog.spec.ts` (the two choices, equal and stacked on a phone, the inbox state's notice for `?error=`, the email form's dialog within a phone's width, and the round trip to Accept Invitation), `tests/e2e/stories/01-invitations.spec.ts` (stories 4 to 7) and `tests/e2e/workspace-invitation.spec.ts` (a used link and a revoked one each refused with a different message, neither naming the coven).

@@ -1,13 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { buildSchema, type DocumentNode, Kind, print } from 'graphql';
+import { buildSchema } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { MAX_DEPTH, protections } from '@/graphql/armor';
 import * as documents from '@/gql/graphql';
 import { fromRoot } from '../support/paths';
 
-// DESIGN.md §7's depth limit holds for the browser's own documents too: a document the server refuses is a screen that cannot save. graphql-armor counts a fragment spread as a level of its own (`flattenFragments` is off), which the type checker cannot see.
-// Each operation codegen typed is sent through the server's own protections over the committed SDL, with no resolvers: the depth rule refuses at validation, before anything runs.
+// DESIGN.md §7's depth limit holds for the browser's own documents: each codegen operation is sent through the server's protections over the committed SDL, which refuse at validation.
 
 const yoga = createYoga({
   schema: buildSchema(readFileSync(fromRoot('src/graphql/schema.graphql'), 'utf8')),
@@ -15,13 +14,13 @@ const yoga = createYoga({
   logging: false,
 });
 
-const operations = Object.entries(documents).filter(
-  (entry): entry is [string, DocumentNode] =>
-    typeof entry[1] === 'object' &&
-    entry[1] !== null &&
-    (entry[1] as DocumentNode).kind === Kind.DOCUMENT &&
-    (entry[1] as DocumentNode).definitions.some((d) => d.kind === Kind.OPERATION_DEFINITION),
-);
+// Codegen writes each document as a string object holding its query text; a fragment's text opens with `fragment`, so only operations pass.
+const operations = Object.entries(documents)
+  .filter(
+    ([, value]) =>
+      value instanceof String && /^\s*(query|mutation|subscription)\s/.test(String(value)),
+  )
+  .map(([name, document]) => [name, String(document)] as const);
 
 async function depthErrorsOf(query: string): Promise<string[]> {
   const response = await yoga.fetch('http://localhost/graphql', {
@@ -54,6 +53,6 @@ describe(`every client document is within the depth limit of ${MAX_DEPTH}`, () =
   });
 
   it.each(operations)('%s', async (_name, document) => {
-    expect(await depthErrorsOf(print(document))).toEqual([]);
+    expect(await depthErrorsOf(document)).toEqual([]);
   });
 });

@@ -1,0 +1,60 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// One row per term: the term beside its definition from 40rem, stacked beneath it on a phone.
+.help-glossary {
+  dl {
+    margin: 0;
+  }
+
+  &__entry {
+    // The rules and the highlight reach the same step past the text each side; the padding keeps the text where it was.
+    margin-inline: calc(-1 * #{$ruled-row-overhang});
+    padding: space(4) $ruled-row-overhang;
+    border-block-start: 1px solid $hairline;
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    &:last-child {
+      border-block-end: 1px solid $hairline;
+    }
+
+    // The term an address names (a mark’s link, “See in Glossary”).
+    @include target-highlight;
+
+    // The tint fills the padded row, as wide as the rules, with no edge line.
+    &:target::before {
+      inset-inline: 0;
+      border-inline-start: 0;
+    }
+
+    @include width-from(40rem) {
+      display: grid;
+      grid-template-columns: 11rem 1fr;
+      gap: space(4);
+    }
+  }
+
+  dt {
+    margin-block-end: space(1);
+    font-family: $font-heading;
+    font-size: heading-size(4);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  dd {
+    margin-inline-start: 0;
+
+    > p:first-child {
+      margin-block-start: 0;
+    }
+
+    > p:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  &__self {
+    @include entry-anchor('.help-glossary__entry');
+  }
+}

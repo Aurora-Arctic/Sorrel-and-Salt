@@ -8,10 +8,7 @@ import type { Failure, ValidationIssue } from './types';
 /** The one sentence for a request that got no usable answer: a network fault, a crash, a refusal with no message. */
 export const GENERIC_FAILURE = "That didn't work. Please try again.";
 
-/**
- * What a failed request leaves to say: beside a field, or in the alert region. A VALIDATION issue whose path starts with one of
- * `fields` is a `field`; any other failure is an `alert`, with the server's sentence or `GENERIC_FAILURE`. No fields, always an `alert`.
- */
+/** A VALIDATION issue whose path starts with one of `fields` is a `field`; any other failure is an `alert`. */
 export function readGraphqlFailure(error: unknown, fields: readonly string[] = []): Failure {
   if (!(error instanceof GraphQLClientError)) return { alert: GENERIC_FAILURE };
   const first = error.errors?.[0];
@@ -26,10 +23,7 @@ export function readGraphqlFailure(error: unknown, fields: readonly string[] = [
   return { alert: first?.message || GENERIC_FAILURE };
 }
 
-/**
- * Every issue a failed request carries, for a form that places each field error at once and joins the rest into its alert. A
- * VALIDATION refusal gives its own list; anything else is one issue with no path.
- */
+/** A VALIDATION refusal gives its own list; anything else is one issue with no path. */
 export function readGraphqlIssues(error: unknown): ValidationIssue[] {
   if (error instanceof GraphQLClientError) {
     const extensions = error.errors?.[0]?.extensions as
@@ -41,11 +35,12 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
   return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }
 
-/**
- * Places every issue a failed save carries on a react-hook-form form: a field
- * `toField` names gets its own error, the rest join into one message on `root`.
- * Answers whether it set any error. (claude-docs/modules.md, "Placing server issues on a form")
- */
+/** The one sentence to show for a failed request: the first issue of a VALIDATION refusal, else the error's own message, else GENERIC_FAILURE. */
+export function failureMessage(error: unknown): string {
+  return readGraphqlIssues(error)[0].message;
+}
+
+/** Answers whether it set any error (claude-docs/modules.md, "Placing server issues on a form"). */
 export function placeServerIssues<Name extends string>(
   error: unknown,
   setError: (name: Name | 'root', error: ErrorOption) => void,

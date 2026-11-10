@@ -4,7 +4,6 @@ import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import {
   LINK_LANDING,
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -15,28 +14,23 @@ import {
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
-// Through Better Auth's real endpoints: a second provider is added
-// from a signed-in session with /link-social, and from then on signs in by its
-// account id (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
-
+// A second provider is added with /link-social, then signs in by its account id
+// (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
 
 const DOMAIN = '@account-linking.test';
 const OWNER = `owner${DOMAIN}`;
 const STRANGER = `stranger${DOMAIN}`;
-// The Microsoft mailbox of the owner, a different address from their Discord one.
 const OWNER_ELSEWHERE = `owner.elsewhere${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();
@@ -46,12 +40,10 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials and nothing else, so one import serves every test.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });
 
-// The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
@@ -84,13 +76,11 @@ async function accountsOf(userId: string) {
   `) as unknown as { id: string; provider_id: string; account_id: string }[];
 }
 
-/** Who a cookie signs in as, asked of Better Auth rather than read off the table. */
 async function sessionUserId(cookie: string): Promise<string | undefined> {
   const session = await auth.api.getSession({ headers: new Headers({ cookie }) });
   return session?.user.id;
 }
 
-/** A verified Discord sign-up for `email`: its row and its session. */
 async function discordUser(email: string, sub = '1001') {
   const response = await signIn('discord', { sub, email, verified: true });
   expectSignedIn(response);
@@ -129,10 +119,8 @@ describe('Story 1: adding a second provider from a signed-in session', () => {
     const later = await signIn('microsoft', { sub: 'ms-owner', email: OWNER, verified: false });
 
     expect(later.status).toBe(302);
-    // Not the email page: the row is the Discord-verified one.
     expect(landingOf(later)).toBe('/coven');
     expect(await sessionUserId(cookieHeader(later))).toBe(owner.row.id);
-    // The link and the sign-in wrote nothing to the row.
     expect(await userRow(OWNER)).toEqual(owner.row);
   });
 
@@ -168,7 +156,6 @@ describe('Story 1: adding a second provider from a signed-in session', () => {
       'discord',
       'google',
     ]);
-    // No placeholder reached the row: a link never rewrites it.
     expect(await userRow(OWNER)).toEqual(owner);
   });
 

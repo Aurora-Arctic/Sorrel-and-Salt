@@ -3,7 +3,7 @@ import type { SQL } from 'drizzle-orm';
 import { applyAudit } from '../audit';
 import { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { Membership } from '@/modules/coven';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { newestFirst, notSoftDeleted, scopedTo } from './predicates';
 import { findPageInWorkspace } from './finders';
 import { selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
@@ -77,10 +77,7 @@ export function findStandingWorkspaceMemberPauses(
   );
 }
 
-// A coven's pauses, newest first.
-const HISTORY_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${workspaceMemberPauses.createdAt})`, type: 'numeric' },
-];
+const HISTORY_ORDER: readonly SortPart[] = [newestFirst(workspaceMemberPauses.createdAt)];
 
 /**
  * One page of the pauses set in the proof's coven, standing, run out and lifted alike, newest first (CLAUDE.md rule 8); one
@@ -100,7 +97,6 @@ export function findWorkspaceMemberPausePage(
   );
 }
 
-/** The coven pause's two named writes, beside its finders. `writerFor` spreads them into the writer. */
 export function workspaceMemberPauseWrites({
   tx,
   session,

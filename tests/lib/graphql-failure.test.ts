@@ -3,12 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
 
-// The admin forms' reading of a refused save: every field issue beside its field, everything
-// else in one alert, the form choosing which paths are its fields.
-
 type Values = { name: string; description: string };
 
-/** A VALIDATION refusal carrying these issues, as the server sends one. */
 function refusal(
   fieldErrors: { path: (string | number)[]; message: string }[],
 ): GraphQLClientError {
@@ -18,7 +14,6 @@ function refusal(
   });
 }
 
-/** The flat forms' reading: a field for a one-segment path it shows. */
 const flat = ({ path }: { path: (string | number)[] }) =>
   path.length === 1 && (path[0] === 'name' || path[0] === 'description')
     ? (path[0] as keyof Values)

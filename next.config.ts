@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // `make docker-codegen` loads the dev server as `http://sorrel-app:8000`, and
   // `next dev` 403s cross-origin `/_next/*` for every host but localhost — a
   // rejected HMR socket under Turbopack means the page never hydrates.
-  allowedDevOrigins: ['sorrel-app'],
+  allowedDevOrigins: ['sorrel-app', 'devcontainer'],
   // `next dev` and the e2e webServer's production build would otherwise
   // share `.next/`, and a concurrent dev rebuild can corrupt what e2e is
   // serving; playwright.config.ts sets it.
@@ -28,12 +28,12 @@ const nextConfig: NextConfig = {
   headers: async () => securityHeaders(process.env.NODE_ENV === 'development'),
   experimental: {
     // Off, as Server Fast Refresh would re-run an edited GraphQL module and add its fields to the builder twice, failing every request until a restart
-    // (claude-docs/debugging.md).
+    // (claude-docs/testing/debugging.md).
     turbopackServerFastRefresh: false,
     // Off, so a restart of `next dev` compiles from the files on disk: the
     // dev cache kept on disk since Next 16.1 went on serving an old Sass
     // partial behind `@use` until it was deleted. Builds keep their own cache
-    // (claude-docs/debugging.md, "A restart compiles from the files").
+    // (claude-docs/testing/debugging.md, "A restart compiles from the files").
     turbopackFileSystemCacheForDev: false,
     // `forbidden()` and `src/app/(shell)/forbidden.tsx`: the `/curator` and `/keepers` guard's 403
     // (claude-docs/auth/admin-guard.md, "The admin guard").

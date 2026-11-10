@@ -1,27 +1,28 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes } from 'node:crypto';
 import postgres from 'postgres';
-import { ORIGIN } from '../support/oauth';
 import { B } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // The Sign Out button, through Better Auth's real endpoint: the session row goes, and the same cookie then
 // reads as no one. The Playwright server cannot make this call, since Better Auth refuses the plain-http
-// origin the remote browser reaches it on (claude-docs/components/account-menu.md, "Testing").
+// origin the remote browser reaches it on (claude-docs/components/account-menu.md, "Contracts").
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let auth: AuthInstance;
 let requestSession: typeof import('@/lib/request-session');
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   auth = await importAuth({});
   requestSession = await import('@/lib/request-session');
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

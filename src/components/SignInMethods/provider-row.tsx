@@ -9,7 +9,7 @@ import type { ProviderRowProps } from './types';
 
 // One provider as linked (Remove, which asks first), addable (Add) or unavailable (greyed Add
 // with a note), told apart by control and words, not hue. A press's failure is a callout under
-// the control (claude-docs/components/sign-in-methods.md, "The rows").
+// the control (claude-docs/components/sign-in-methods.md, "Contracts").
 export function ProviderRow({
   provider,
   state,
@@ -61,9 +61,8 @@ export function ProviderRow({
       <ProviderMark id={provider.id} />
       <span className="sign-in-methods__label">{provider.label}</span>
       {state === 'linked' ? (
-        // Better Auth refuses the last one, and any from a stale session, too;
-        // this only keeps the offer honest. The last says why in its row; a
-        // withheld one is explained once, above the list.
+        // Better Auth refuses the last one, and any from a stale session; this only keeps the
+        // offer honest.
         removal === 'offered' ? (
           // The name stays "Remove Discord" while busy: the aria-label holds it.
           // The pressed one is `aria-disabled` and keeps the focus, refusing a
@@ -112,7 +111,6 @@ export function ProviderRow({
           aria-describedby={unavailable ? noteId : undefined}
           busy={busy}
           busyLabel="Adding"
-          // Once pressed, the button waits out the hop and a second press does nothing.
           onClick={busy ? undefined : () => void run(onAdd)}
         >
           Add

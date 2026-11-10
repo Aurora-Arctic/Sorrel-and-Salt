@@ -39,7 +39,6 @@ describe('support_replies table', () => {
           values (pg_catalog.gen_random_uuid(), 'Hello', ${AUTHOR}, ${AUTHOR})`,
     );
 
-    // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 

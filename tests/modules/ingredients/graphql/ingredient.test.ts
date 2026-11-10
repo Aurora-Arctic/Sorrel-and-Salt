@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
@@ -15,17 +15,19 @@ import { insertReference, insertVariantReferenceLink } from '../../../support/db
 import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { IngredientNode, IngredientVariantNode } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The `ingredient` detail query: a compendium entry for anyone, and a coven's own entry for its members when they name the coven. Non-null: a miss is `NOT_FOUND`.
 // Which callers are refused at which rows is services/compendium.test.ts's; here: the coven forwarded, and one refusal per code on the wire.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let compendiumId: string;
 let localId: string;
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
@@ -131,7 +133,6 @@ describe('ingredient', () => {
     });
 
     it('as FORBIDDEN under a coven the caller is not in', async () => {
-      // D is signed in and a member elsewhere.
       expect(asUser(D).userId).toBe(D.id);
 
       const result = await run(asUser(D), { id: localId, workspaceId: WORKSPACE_W_ID });
@@ -221,7 +222,6 @@ describe('ingredient', () => {
         references: [{ reference: { title: 'Fixture Barks' }, locator: 'p. 3' }],
         audit: { createdBy: A.id, updatedBy: A.id },
       },
-      // The ingredient's own Testform, which owns none of the bark's children.
       expect.objectContaining({
         form: 'Testform',
         formChoice: null,

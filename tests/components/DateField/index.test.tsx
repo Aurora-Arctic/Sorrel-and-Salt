@@ -1,10 +1,15 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import DateField from '@/components/DateField';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 
-// The day picker field: a button showing the day, opening a calendar that cannot pick past `max`
-// (claude-docs/components/date-field.md).
+// claude-docs/components/date-field.md
+
+// The calendar loads on its own; these tests start after it has arrived, as a person opening the field after the page has been idle finds it.
+beforeAll(async () => {
+  await dayPickerModule.load();
+});
 
 function Harness({
   initial = '2026-03-10',

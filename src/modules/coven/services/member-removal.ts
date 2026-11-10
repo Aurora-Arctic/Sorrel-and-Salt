@@ -7,17 +7,11 @@ import { assertNotLastOwner } from './last-owner';
 import { assertMembership, assertSeatToLeave } from './membership';
 import { assertNotSystemSeat } from './system-seat';
 
-// A member goes, removed by a steward or leaving. Both soft-delete the row and run the last-owner guard in the writing transaction.
+// Both soft-delete the row and run the last-owner guard in the writing transaction.
 // A removed member invited back is not inserted again: the row still holds the pair, so accepting revives it.
 
 /**
- * Removes `userId` from the workspace. The caller needs `member: remove`,
- * which only stewards hold, and the person must be a live member already. A
- * steward may remove themselves here as well; the guard stops that when they
- * are the last.
- *
- * @throws {Forbidden} the caller is not a steward of the workspace, or `userId`
- * is not a live member of it or is the system user.
+ * @throws {Forbidden} not a steward of the workspace, or `userId` is not a live member or is the system user.
  * @throws {LastOwner} the removal would leave the workspace without a steward.
  */
 export async function removeMember(
@@ -26,7 +20,6 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { member: ['remove'] });
-  // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
   assertNotSystemSeat(userId);
 
@@ -38,11 +31,7 @@ export async function removeMember(
 }
 
 /**
- * The caller leaves the workspace. Every role may, an observer included, so no
- * `member` statement is asked for: `workspace: read`, which every role holds,
- * only proves the caller is a live member. A member whose access is paused may
- * leave too (`assertSeatToLeave`). The row left is the session's own and there
- * is no argument to name another's, so leaving cannot reach anyone else.
+ * Every role may leave, so `workspace: read` only proves the caller is a live member; a paused member may leave too (`assertSeatToLeave`).
  *
  * @throws {Forbidden} the caller is not a member of the workspace.
  * @throws {LastOwner} the caller is its only owner.

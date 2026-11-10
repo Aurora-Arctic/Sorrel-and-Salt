@@ -3,11 +3,7 @@ import type { CitationFields, CitationPart } from './types';
 // The one Chicago renderer (DESIGN.md §5): a reference's fields to its bibliography entry as italic or roman parts. Pure and
 // client-safe, as the page, picker, sort and seed test all call it (claude-docs/db/references.md, "The renderer").
 
-/**
- * A day as a date input and a `date` column write it, `YYYY-MM-DD`, its year,
- * month and day captured. Here rather than in the reference formatter because
- * this file prints the day and lib is what both may import.
- */
+/** Here rather than in the reference formatter because this file prints the day and lib is what both may import. */
 export const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /**
@@ -47,10 +43,7 @@ const MONTHS = [
   'December',
 ];
 
-/**
- * `fields` in Chicago bibliography form, one sentence per element the kind prints, each closed by a period. A field the kind does
- * not print is not rendered; neighbouring runs of one style merge, so the parts alternate.
- */
+/** A field the kind does not print is not rendered; neighbouring runs of one style merge, so the parts alternate. */
 export function renderCitation(fields: CitationFields): CitationPart[] {
   const sentences = sentencesOf(fields).filter((sentence) => sentence.length > 0);
   const runs = sentences.flatMap((sentence, index) =>
@@ -59,7 +52,6 @@ export function renderCitation(fields: CitationFields): CitationPart[] {
   return merge(runs);
 }
 
-/** The citation as one plain string, italics dropped: `citation` on the wire. */
 export function citationText(fields: CitationFields): string {
   return renderCitation(fields)
     .map((part) => part.text)
@@ -147,7 +139,6 @@ function sentencesOf(fields: CitationFields): CitationPart[][] {
   }
 }
 
-/** The fields with every blank one taken as absent. */
 function present(fields: CitationFields): Partial<Record<keyof CitationFields, string>> {
   return Object.fromEntries(
     Object.entries(fields).flatMap(([key, value]) =>
@@ -194,23 +185,19 @@ function accessed(on: string | undefined): CitationPart[] {
   return on ? closed([roman(`Accessed ${day(on)}`)]) : [];
 }
 
-/** A note, after the citation in parentheses, its period inside them. */
 function note(text: string | undefined): CitationPart[] {
   if (!text) return [];
   return [roman('('), ...closed(marked(text, false)), roman(')')];
 }
 
-/** A title in quotation marks, its period inside them. */
 function quoted(title: string): CitationPart[] {
   return [roman('"'), ...closed(marked(title, false)), roman('"')];
 }
 
-/** One roman field as a sentence of its own, or nothing when it is absent. */
 function sentence(text: string | undefined): CitationPart[] {
   return text ? closed([roman(text)]) : [];
 }
 
-/** `runs`, with a period added unless the last of them already ends in one. */
 function closed(runs: CitationPart[]): CitationPart[] {
   const text = runs.map((run) => run.text).join('');
   return /[.?!]["”]?$/.test(text) ? runs : [...runs, roman('.')];
@@ -269,7 +256,6 @@ function closingMark(text: string, open: number): number {
   return -1;
 }
 
-/** Neighbouring runs of one style as one, and empty runs gone. */
 export function merge(runs: CitationPart[]): CitationPart[] {
   const parts: CitationPart[] = [];
   for (const run of runs) {

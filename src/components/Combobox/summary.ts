@@ -1,20 +1,12 @@
 'use client';
 
-import {
-  type FocusEvent,
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from 'react';
+import { type FocusEvent, type KeyboardEvent, useCallback, useId, useRef, useState } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from './position';
 
 // A linked entry's summary panel: opened and shut by a press on the entry's text, placed beneath the chip, shut by Escape, a press elsewhere or the focus leaving
 // (claude-docs/components/combobox.md, "A linked entry's summary").
 
-/** The summary's open state, and the props its button and its panel spread. */
 export function useEntrySummary() {
   const [open, setOpen] = useState(false);
   // State rather than a ref, so the panel's placement is told once the button exists.
@@ -36,15 +28,8 @@ export function useEntrySummary() {
     [opener],
   );
 
-  // A press anywhere but the button or the panel shuts it; on the capture phase, so a press the target stops still counts.
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!holds(event.target)) close(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown, true);
-    return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [open, holds, close]);
+  // A press anywhere but the button or the panel shuts it, so a press the target stops still counts.
+  useDismiss({ active: open, inside: holds, onOutsidePress: () => close(false) });
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (!open || event.key !== 'Escape') return;
@@ -53,7 +38,6 @@ export function useEntrySummary() {
     event.stopPropagation();
     close(true);
   };
-  // Tabbing on past the panel, or back before the button, shuts it; a blur to nowhere does not.
   const onBlur = (event: FocusEvent) => {
     if (open && event.relatedTarget !== null && !holds(event.relatedTarget)) close(false);
   };

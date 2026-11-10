@@ -16,12 +16,8 @@ import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
+import { useTestDatabase } from '../support/db/database';
 
-// CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
-// repository's keyset finders exactly as a connection resolver will.
-
-// Scratch tables, as in tests/db/repository/: the contract is about the shape,
-// not any one domain table.
 const leaves = pgTable('pagination_probe_leaves', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
@@ -50,6 +46,10 @@ void (() => findPage(jars, [jars.label], PAGE_REQUEST));
 
 let sql: ReturnType<typeof postgres>;
 
+useTestDatabase((client) => {
+  sql = client;
+});
+
 const AUDIT_DDL = `
   created_at timestamp not null default now(),
   created_by uuid not null,
@@ -59,7 +59,6 @@ const AUDIT_DDL = `
   deleted_by uuid`;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string);
   await sql.unsafe(`
     create table pagination_probe_leaves (
       id uuid primary key default gen_random_uuid(),
@@ -80,7 +79,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await sql`drop table if exists pagination_probe_leaves`;
   await sql`drop table if exists pagination_probe_jars`;
-  await sql.end();
 });
 
 beforeEach(async () => {
@@ -88,7 +86,6 @@ beforeEach(async () => {
   await sql`truncate pagination_probe_jars`;
 });
 
-/** Sixty live leaves with thirty names held twice, so half the page boundaries fall between rows sharing a sort key and only the id decides; plus one soft-deleted leaf. */
 async function seedLeaves() {
   await sql`
     insert into pagination_probe_leaves (name, created_by, updated_by)
@@ -99,7 +96,6 @@ async function seedLeaves() {
     values ('Leaf 15', ${session.userId}, ${session.userId}, now(), ${session.userId})`;
 }
 
-/** The ids of every live leaf in the order `ORDER BY name, id` gives — the answer key. */
 async function expectedOrder(): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`
     select id from pagination_probe_leaves where deleted_at is null order by name, id`;
@@ -112,7 +108,6 @@ function leafPage(args: ConnectionArgs): Promise<Page<Leaf>> {
   return resolvePage(args, (request) => findPage(leaves, [leaves.name], request));
 }
 
-/** Follows `endCursor` until the last page, collecting ids and page sizes. */
 async function walkForward(first?: number, between?: (seen: string[]) => Promise<void>) {
   const ids: string[] = [];
   const sizes: number[] = [];
@@ -174,8 +169,6 @@ describe('Keyset pagination through the repository', () => {
 
     const { ids } = await walkForward(10, async (seen) => {
       if (seen.length !== 10) return;
-      // One row lands behind the reader and one ahead; one unseen row goes,
-      // and so does the very row the cursor names.
       [{ id: insertedBehind }] = await withAudit(session, (write) =>
         write.insert(leaves, { name: 'Leaf 00' }),
       );
@@ -188,11 +181,9 @@ describe('Keyset pagination through the repository', () => {
       await withAudit(session, (write) => write.softDelete(leaves, eq(leaves.id, deletedAtCursor)));
     });
 
-    // Every row that lived throughout is seen exactly once, in order.
     const survivors = original.filter((id) => id !== deletedAhead);
     expect(ids.filter((id) => survivors.includes(id))).toEqual(survivors);
     expect(new Set(ids).size).toBe(ids.length);
-    // Ahead of the cursor, a change shows; behind it, none replays.
     expect(ids).toContain(insertedAhead);
     expect(ids).not.toContain(insertedBehind);
     expect(ids).not.toContain(deletedAhead);
@@ -261,6 +252,33 @@ describe('Keyset pagination through the repository', () => {
     await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
   });
 
+  // A data exception the query itself raises (here a name that is not a number) is a fault, not a cursor.
+  const NAME_AS_NUMBER = fragment`${leaves.name}::int > 0`;
+  const VALID_CURSOR = {
+    key: ['Leaf 01'],
+    id: '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60',
+  };
+
+  it('rethrows a data exception from a page sent without a cursor', async () => {
+    await seedLeaves();
+    const attempt = resolvePage({}, (request) =>
+      findPage(leaves, [leaves.name], request, NAME_AS_NUMBER),
+    );
+
+    await expect(attempt).rejects.toThrow();
+    await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
+  });
+
+  it('rethrows a data exception that does not come from a valid cursor', async () => {
+    await seedLeaves();
+    const attempt = resolvePage({ after: encodeCursor(VALID_CURSOR) }, (request) =>
+      findPage(leaves, [leaves.name], request, NAME_AS_NUMBER),
+    );
+
+    await expect(attempt).rejects.toThrow();
+    await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
+  });
+
   it('refuses a cursor whose id is not an id', async () => {
     await expect(
       leafPage({ after: encodeCursor({ key: ['Leaf 07'], id: 'seven' }) }),
@@ -292,9 +310,6 @@ const COMPUTED: SortPart[] = [
   leaves.name,
 ];
 
-// "Page X of Y" for a list read through `findPage`: the count of its own rows,
-// soft-deleted ones left out, and how many come before a page's first row in
-// its own order, ties split by id as the page splits them.
 describe('findPageCount', () => {
   it('counts the live rows findPage pages, and how many come before a page’s first row', async () => {
     await seedLeaves();
@@ -318,7 +333,6 @@ describe('findPageCount', () => {
 });
 
 describe('Keyset pagination on a compound, computed key', () => {
-  /** Forty leaves over five lengths and fifteen names, so rows tie on the computed part, on both, and only the id separates them. */
   async function seedTies() {
     await sql`
       insert into pagination_probe_leaves (name, created_by, updated_by)

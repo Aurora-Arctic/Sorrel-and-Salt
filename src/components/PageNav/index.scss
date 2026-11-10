@@ -1,33 +1,31 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A vertical menu of jump links. The current entry carries a bar on the edge
-// facing away from the page on a phone (left), toward the page on a wide
-// screen (right, where the text is also right-aligned).
-// claude-docs/components/page-nav.md
+// A vertical menu of jump links. The current entry's bar is on the edge facing away from the page on a phone,
+// toward it on a wide screen (claude-docs/components/page-nav.md).
 .page-nav {
-  // The phone's bar rule's accent, softened toward the card.
   --page-nav-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
 
   ul {
     @include list-reset;
   }
 
-  a {
+  a,
+  .page-nav__pending {
     display: flex;
     align-items: center;
-    // Tighter than a control: a column of short entries, read at a glance.
     padding: space(1) space(4);
     border-radius: 0;
     color: $text-muted;
+    // A link takes the global link spacing; the skeleton's span has none of its own, and a bar narrower
+    // than the label it stands for would sit short of the real one.
+    letter-spacing: 0.02em;
     text-align: start;
     text-decoration: none;
-    // An entry too long for the column breaks into lines of even length, as the headings do, so no
-    // line is left holding one word; a single-line entry is untouched.
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the entry wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
     box-shadow: inset $rule-heavy 0 0 0 transparent;
-    @include theme-transition(background-color, color);
+    @include state-fade(background-color, color);
 
     &:hover {
       background: $fill-quiet;
@@ -43,6 +41,22 @@
       color: $text-primary;
       box-shadow: inset $rule-heavy 0 0 0 var(--page-nav-bar);
     }
+
+    // The bar is a shadow, which is dropped, so a heavy border carries it; Canvas at rest, as a
+    // transparent border would be painted CanvasText. Hover takes a Highlight outline.
+    @include forced-colors {
+      border-inline-start: $rule-heavy solid Canvas;
+      padding-inline-start: calc(#{space(4)} - #{$rule-heavy});
+
+      &[aria-current='location'] {
+        border-inline-start-color: CanvasText;
+      }
+
+      &:hover:not(:focus-visible) {
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
+    }
   }
 
   // A group's label: a heading over its entries, not a link, in the
@@ -57,8 +71,6 @@
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    // The body ink, not the eyebrow's muted one: the entries under it are muted, and the label
-    // stands apart by being darker.
     color: $text-primary;
   }
 
@@ -68,21 +80,17 @@
     margin-block-start: space(1);
   }
 
-  // A group's entries are not stepped in from its label at any width: the label alone sets
-  // them apart. A step in read as too much room to their left on a phone, and on a wide
-  // screen, where the text is right-aligned, pushed them off the column's edge.
-
-  // Beside a group, a top-level entry is the page's own section and reads a
-  // step above body copy, as the group's entries do not: a size between
-  // body and the smallest heading, which the scale has no step for.
-  &--grouped > ul > li > a {
+  // A top-level entry beside a group reads a step above body copy: a size the scale has no step
+  // for.
+  // Entries are not stepped in from the label: an indent read as too much room on a phone and
+  // pushed right-aligned text off the column's edge on a wide screen.
+  &--grouped > ul > li > a,
+  &--grouped > ul > li > .page-nav__pending {
     font-size: $nav-link-size;
   }
 
-  // An item set apart takes a gap a step wider than a group label's, the label giving up its own
-  // break so the gap is not doubled. A short hairline halfway through the gap is a pseudo-element
-  // from the entries' inset; half a pixel is taken off so the 1px rule's centre sits on the
-  // middle.
+  // An item set apart takes a gap a step wider than a group label's, the label giving up its own break; the short
+  // hairline is a pseudo-element, half a pixel off so the 1px rule's centre sits on the middle.
   .page-nav__apart {
     $break: space(6);
 
@@ -96,7 +104,8 @@
       inset-inline-start: space(4);
     }
 
-    > a {
+    > a,
+    > .page-nav__pending {
       font-size: inherit;
     }
 
@@ -105,8 +114,6 @@
     }
   }
 
-  // On a phone a collapsible menu folds behind its label: a bordered card, as an access card is, whose
-  // label row is the toggle. From a tablet up the card's box is dropped (below).
   .page-nav__fold {
     border: 1px solid $hairline;
     border-radius: radius('surface');
@@ -125,7 +132,7 @@
     cursor: pointer;
     font-weight: 400;
     list-style: none;
-    @include theme-transition(background-color);
+    @include state-fade(background-color);
 
     &::-webkit-details-marker {
       display: none;
@@ -133,6 +140,13 @@
 
     &:hover {
       background-color: $fill-highlight-field;
+    }
+
+    @include forced-colors {
+      &:hover:not(:focus-visible) {
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
     }
 
     &:focus-visible {
@@ -167,7 +181,7 @@
     }
   }
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     // The menu stands open from a tablet up, so its fold has no label, card or slide.
     .page-nav__fold {
       border: 0;
@@ -200,7 +214,8 @@
       }
     }
 
-    a {
+    a,
+    .page-nav__pending {
       justify-content: flex-end;
       text-align: end;
       --page-nav-bar: #{$accent};
@@ -209,10 +224,50 @@
       &[aria-current='location'] {
         box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
       }
+
+      @include forced-colors {
+        border-inline-start: 0;
+        border-inline-end: $rule-heavy solid Canvas;
+        padding-inline: space(4) calc(#{space(4)} - #{$rule-heavy});
+
+        &[aria-current='location'] {
+          border-inline-end-color: CanvasText;
+        }
+      }
     }
 
     .page-nav__group {
       text-align: end;
+    }
+
+    // A skeleton's bars end at the column's right edge, as the labels do, and differ in length as
+    // labels do; the widths cycle, since the entries are not yet known.
+    .page-nav__pending .skeleton__line {
+      margin-inline-start: auto;
+    }
+
+    li:nth-child(6n + 1) > .page-nav__pending .skeleton__line {
+      width: 60%;
+    }
+
+    li:nth-child(6n + 2) > .page-nav__pending .skeleton__line {
+      width: 80%;
+    }
+
+    li:nth-child(6n + 3) > .page-nav__pending .skeleton__line {
+      width: 45%;
+    }
+
+    li:nth-child(6n + 4) > .page-nav__pending .skeleton__line {
+      width: 70%;
+    }
+
+    li:nth-child(6n + 5) > .page-nav__pending .skeleton__line {
+      width: 55%;
+    }
+
+    li:nth-child(6n) > .page-nav__pending .skeleton__line {
+      width: 75%;
     }
 
     .page-nav__apart::before {
@@ -221,9 +276,7 @@
   }
 }
 
-// An entry for a section that stands under the text on a narrow window and beside it on a wide one
-// has no place in the menu once it is beside it.
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .page-nav .page-nav__narrow {
     display: none;
   }
@@ -233,4 +286,16 @@
 // mixin's `<open> &` selector reads `.page-nav__fold… .page-nav__chevron`, not through `.page-nav`.
 .page-nav__chevron {
   @include disclosure-chevron('.page-nav__fold:is(.is-open, .page-nav__fold--static[open])');
+}
+
+// A skeleton's pending entry: the bar fills the entry, as a label would, and is as tall as the line a
+// label takes, so the menu keeps its height.
+.page-nav__pending > .skeleton {
+  flex: 1;
+}
+
+.page-nav__pending .skeleton__line {
+  block-size: 0.7lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
 }

@@ -15,7 +15,13 @@ test('a signed-out visitor sends a request about signing in', async ({ page }) =
   await assertNoAccessibilityViolations(page);
 
   await page.getByRole('radio', { name: /^Account/ }).check();
-  await expect(page.getByRole('button', { name: 'Send Request' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Send Request' }).click();
+  await expect(page.getByRole('textbox', { name: 'Email' })).toBeFocused();
+  await expect(page.getByRole('textbox', { name: 'Email' })).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await expect(page.getByText(/within 5 working days/)).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Email' }).fill('visitor@signed-out.test');
   await page.getByRole('textbox', { name: 'Subject' }).fill('The code never arrives');
   await page

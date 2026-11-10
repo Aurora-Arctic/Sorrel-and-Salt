@@ -7,7 +7,6 @@ function release(event: PointerEvent<HTMLElement>): void {
   event.currentTarget.removeAttribute('data-pressed');
 }
 
-/** Spread on a control to mark it `data-pressed` while a pointer presses it. */
 export const pressFeedback = {
   onPointerDown(event: PointerEvent<HTMLElement>): void {
     if (event.button === 0) event.currentTarget.setAttribute('data-pressed', '');

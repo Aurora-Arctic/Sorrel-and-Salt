@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
@@ -9,8 +10,10 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
 
-// The `/curator/compendium` page: the guard, one page of the compendium under the address's filter, and the modal its address opens (`?new=ingredient-compendium` or a bare `?new`, `?edit=` an entry by slug, an old slug sent on to the new one).
-// The guard, services and entry values are mocked: what they decide is tests/lib/request-session.test.ts's, the compendium services' tests' and tests/db/entry-values.test.ts's.
+// The form loads on first use; loading it once up front keeps each test off a cold import.
+beforeAll(async () => {
+  await loadCompendiumEntryForm();
+});
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({
@@ -18,21 +21,16 @@ vi.mock('@/lib/request-session', () => ({
   getSession: async () => ADMIN,
 }));
 
-// The plus beside the details' pencil is for covens the viewer may add in, tests/app/plus-covens.test.ts's;
-// a keeper in no coven has none, so the details draw neither it nor its check.
 vi.mock('@/lib/viewer', () => ({
   viewerIfSignedIn: async () => undefined,
   covenRolesIfSignedIn: async () => undefined,
 }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
 vi.mock('@/app/(shell)/curator/editors', () => ({ editorStamps }));
 
-// The categories are `readCardCategories`'s, tested with the public page; the page's part is
-// asking once for the entries it lists and handing each its own.
 const readCardCategories = vi.fn(async (ids: readonly string[]) =>
   ids.map((id) => [
     {
@@ -49,20 +47,12 @@ vi.mock('@/app/compendium-reads', async (importOriginal) => ({
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
-// The edited entry's sourcing score, none here: its own tests are the dialog's and the component's.
 const readSourcingScore = vi.fn(async () => null);
 const variantsOf = vi.fn();
-// The details modal's sections, read uncached with the curator's session.
 const ingredientDetailOf = vi.fn();
-// How many entries each filter's choices would list, which also
-// names the forms the Form box offers.
 const compendiumFacets = vi.fn();
-// The curator's own covens that hold the open entry, for the details' In Your Cupboards.
-// Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
-// The open entry's review mark, read uncached with the curator's session.
 const readCompendiumReview = vi.fn();
-// The entry the edit modal opens, read with the curator's session for its shown flag.
 const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readSourcingScore,
@@ -77,17 +67,11 @@ vi.mock('@/modules/ingredients', () => ({
   covensHoldingEntry,
 }));
 
-// The curated forms, read through the vocabulary module, and the two batches
-// that give each listed form and each Form choice its group's icon.
 const listIngredientFormValues = vi.fn();
 const formChoicesOf = vi.fn();
 const formGroupsOf = vi.fn();
-// ...and the live categories with their groups, which the Categories box offers
-// and the address's slugs are turned into ids against.
 const listCategories = vi.fn();
 const categoryGroupsOf = vi.fn();
-// ...and the live deities with their traditions, which the address's deity
-// slugs are turned into ids against.
 const listDeities = vi.fn();
 const listDeityTraditions = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
@@ -103,8 +87,6 @@ vi.mock('@/modules/vocabulary', () => ({
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
-// The form is its own tests' (tests/components/IngredientForm/); here only what the dialog
-// hands it, and that its delete and the modal's Close close the dialog where the page says.
 const formProps = vi.fn();
 vi.mock('@/components/IngredientForm', () => ({
   default: (props: { onDeleted: () => void; review?: { reviewed: boolean } }) => {
@@ -126,7 +108,6 @@ vi.mock('@/components/IngredientForm', () => ({
     );
   },
 }));
-/** The entry the form was last handed, or none for an add. */
 const formEntry = (): unknown => (formProps.mock.lastCall?.[0] as { entry?: unknown })?.entry;
 
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
@@ -139,7 +120,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, redirect }));
 
 const { default: AdminCompendiumPage } = await import('@/app/(shell)/curator/compendium/page');
 
-/** The edit dialog's name: its eyebrow, then the entry and its formal name. */
 const EDITING_TESTWORT = 'Edit Ingredient, Testwort, Fixtura testalis';
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
@@ -155,7 +135,6 @@ const TESTWORT = {
   updatedAt: new Date('2026-03-04T05:06:07.000Z'),
 };
 
-/** Testwort as the form edits it. */
 const TESTWORT_VALUES: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -169,7 +148,6 @@ const entry = <T extends { id: string; name: string }>(node: T) => ({
   cursor: { key: [node.name], id: node.id },
 });
 
-/** A full page and one more, so the pager links both ways. */
 const fullPage = () =>
   Array.from({ length: 26 }, (_, index) =>
     entry({
@@ -185,14 +163,12 @@ async function renderPage(params: Record<string, string | string[]> = {}) {
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
 
-/** The page awaited and not drawn, for a test that asserts only what it read. */
 async function readPage(params: Record<string, string | string[]> = {}) {
   await AdminCompendiumPage({ searchParams: Promise.resolve(params) });
 }
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree, without the `listing` every keeper read carries or the score every keeper row carries. */
 function lastFilter(): unknown {
   const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as {
     listing?: string;
@@ -204,7 +180,6 @@ function lastFilter(): unknown {
   return rest;
 }
 
-/** The list's filter as the facets are read under it: the facets carry no score. */
 function facetFilter(): unknown {
   const { withSourcingScore: _score, ...rest } = (listCompendium.mock.lastCall?.[0] ?? {}) as {
     withSourcingScore?: boolean;
@@ -218,23 +193,19 @@ const lastListing = () =>
 // A blank is left out of the variables, so no filter is no variables.
 const NO_FILTER = {};
 
-/** The filter every link below keeps, as the address spells it. */
 const FILTERED = {
   query: 'test',
   forms: ['Fixture Oil', 'Fixture Powder'],
   withoutReferences: '1',
   withoutForms: '1',
-  // Read from the address alone, with no control for it.
   elements: ['fire', 'earth'],
 };
 const FILTERED_HREF =
   '/curator/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth';
 
-/** A curated form as its service lists it, keyed by name as the finder pages it. */
 const curatedForm = (name: string, index: number) =>
   entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
-/** The service's counts when no entry carries anything. */
 const NO_FACETS = {
   forms: [],
   deities: [],
@@ -280,28 +251,22 @@ beforeEach(() => {
     ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
     folkNames: ['Fixture Adminbane'],
   });
-  // Every entry listed comes in one form, Herb.
   variantsOf.mockReset();
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
     refs.map(() => [{ form: 'Herb' }]),
   );
-  // A form that is only text has no curated row, so no icon.
   formChoicesOf.mockReset();
   formChoicesOf.mockImplementation(async (ids: string[]) => ids.map(() => null));
   formGroupsOf.mockReset();
   formGroupsOf.mockImplementation(async (ids: string[]) => ids.map(() => new Error('none')));
-  // Two curated forms, on one page.
   listIngredientFormValues.mockReset();
   listIngredientFormValues.mockResolvedValue(['Fixture Oil', 'Fixture Powder'].map(curatedForm));
-  // Two forms some entry carries, counted; nothing else is offered.
   compendiumFacets.mockReset();
   compendiumFacets.mockResolvedValue({ ...NO_FACETS, forms: FORM_COUNTS });
-  // No deities until a test asks.
   listDeities.mockReset();
   listDeities.mockResolvedValue([]);
   listDeityTraditions.mockReset();
   listDeityTraditions.mockResolvedValue([]);
-  // Two live categories, in one group.
   listCategories.mockReset();
   listCategories.mockResolvedValue(CATEGORY_ROWS.map(entry));
   categoryGroupsOf.mockReset();
@@ -330,13 +295,10 @@ describe('the /curator/compendium page', () => {
     expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
-    // A curator sees hidden entries too, so the admin list reads every entry unless asked otherwise.
     expect(lastListing()).toBe('all');
-    // The page's forms, read in one batch for the entries it lists.
     expect(variantsOf).toHaveBeenCalledExactlyOnceWith(null, [
       { id: TESTWORT.id, workspaceId: null },
     ]);
-    // The page's categories, read in one batch too, and the entry shows its own.
     expect(readCardCategories).toHaveBeenCalledExactlyOnceWith([TESTWORT.id]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     expect(within(row).getByRole('list', { name: 'Categories' })).toBeInTheDocument();
@@ -351,8 +313,6 @@ describe('the /curator/compendium page', () => {
   });
 });
 
-// What each parameter parses to is tests/components/CompendiumList/params.test.ts's; here
-// only that the parsed filter, and the lookups the page makes for it, reach the reads.
 describe('the /curator/compendium filter', () => {
   it('reads ?query= trimmed, a repeated ?forms= as a list and ?withoutReferences=1 into the list and its count', async () => {
     await readPage({
@@ -377,7 +337,6 @@ describe('the /curator/compendium filter', () => {
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 
-  // The services decide who may filter by the mark, so the page hands them the session.
   it('reads ?reviewed= into the filter, passed with the session to the list, its count and the facets', async () => {
     await readPage({ reviewed: '1' });
     expect(lastFilter()).toEqual({ reviewed: true });
@@ -392,7 +351,6 @@ describe('the /curator/compendium filter', () => {
     await renderPage({ categories: ['testward', 'testcraft'] });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
-    // The links keep the slugs the address spelt, never the ids.
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
       '/curator/compendium?categories=testward&categories=testcraft&new=ingredient-compendium',
@@ -427,7 +385,6 @@ describe('the /curator/compendium filter', () => {
     const forms = Array.from({ length: 101 }, (_, index) =>
       curatedForm(`Fixture Form ${String(index).padStart(3, '0')}`, index),
     );
-    // As the finder pages: the rows after the cursor, as many as asked for.
     listIngredientFormValues.mockImplementation(async (_filter: unknown, request: PageRequest) => {
       const start = request.after
         ? forms.findIndex(({ node }) => node.id === request.after?.id) + 1
@@ -494,7 +451,6 @@ describe('the /curator/compendium modal', () => {
     },
   );
 
-  // `?new` is a link from the list, so it wins over an `?edit=` left beside it.
   it('opens the empty form on ?new beside an ?edit=, reading no entry', async () => {
     await renderPage({ new: 'ingredient-compendium', edit: TESTWORT.slug });
 
@@ -558,28 +514,29 @@ describe('the /curator/compendium modal', () => {
   });
 });
 
-// A name's details modal over the list: `?entry=<slug>`, which an Edit
-// inside it opens the edit modal over, `?entry=<slug>&edit=<slug>`, so closing
-// the edit goes back to the details.
 describe('the /curator/compendium details modal', () => {
   const DETAILS_TESTWORT = 'Testwort';
   const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
   const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });
+  // The details body loads on first use, so each test waits for its head before looking inside.
+  const loaded = async () => {
+    await screen.findByRole('link', { name: 'See in Compendium' });
+    return details();
+  };
 
   it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(within(details()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
+    expect(within(await loaded()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${TESTWORT.slug}`,
     );
-    expect(within(details()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
+    expect(within(await loaded()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
       'href',
       `${ON_DETAILS}&edit=${TESTWORT.slug}`,
     );
-    // The details read no form values: only an edit does.
     expect(entryValues).not.toHaveBeenCalled();
   });
 
@@ -588,24 +545,23 @@ describe('the /curator/compendium details modal', () => {
 
     expect(ingredientDetailOf).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT);
     expect(
-      within(within(details()).getByRole('region', { name: 'Caution' })).getByText(
+      within(within(await loaded()).getByRole('region', { name: 'Caution' })).getByText(
         'Fixture admin caution.',
       ),
     ).toBeInTheDocument();
     expect(
-      within(within(details()).getByRole('list', { name: 'Folk Names' })).getByText(
+      within(within(await loaded()).getByRole('list', { name: 'Folk Names' })).getByText(
         'Fixture Adminbane',
       ),
     ).toBeInTheDocument();
   });
 
-  // The badge and switch that mark the entry reviewed, on the admin's own read of the mark.
   it("shows the entry's review mark in the details, read with the curator's session", async () => {
     readCompendiumReview.mockResolvedValue({ reviewedAt: new Date('2026-10-01T09:30:00.000Z') });
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
+    expect(within(await loaded()).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
   });
 
   it("shows the switch above the edit form's buttons, for the entry it edits", async () => {
@@ -627,7 +583,7 @@ describe('the /curator/compendium details modal', () => {
   it('shows an entry with no mark as needing review', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
+    expect(within(await loaded()).getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
   });
 
   it("reads no entry's sections when no details are open", async () => {
@@ -647,7 +603,7 @@ describe('the /curator/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    const covens = within(details()).getByRole('list', { name: 'In Your Cupboards' });
+    const covens = within(await loaded()).getByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/coven\/fixture-coven\/ingredients\//),
@@ -658,7 +614,6 @@ describe('the /curator/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     const row = screen.getAllByRole('row')[1];
-    // The name's href is the entry's page; the press's address is the details'.
     expect(within(row).getByRole('link', { name: 'Testwort' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${TESTWORT.slug}`,
@@ -666,12 +621,13 @@ describe('the /curator/compendium details modal', () => {
     expect(
       within(row).getByRole('link', { name: EDITING_TESTWORT.replace(' Ingredient,', '') }),
     ).toHaveAttribute('href', `${FILTERED_HREF}&edit=${TESTWORT.slug}`);
+    await loaded();
   });
 
   it('closes the details back to the filtered page they opened over', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
@@ -681,6 +637,7 @@ describe('the /curator/compendium details modal', () => {
 
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
     expect(details()).toBeInTheDocument();
+    await loaded();
     const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Close' }));
@@ -688,15 +645,14 @@ describe('the /curator/compendium details modal', () => {
     expect(router.replace).toHaveBeenCalledWith(ON_DETAILS, { scroll: false });
   });
 
-  // A form's duplicates warning opens a match's details over the form.
   it('opens the details over an add form on ?entry= with ?new, closing back to the form, with no Edit', async () => {
     await renderPage({ ...FILTERED, new: 'ingredient-compendium', entry: TESTWORT.slug });
 
     // Why it could have an Edit: the details alone carry one.
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
-    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    expect(within(await loaded()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`, {
       scroll: false,
@@ -706,17 +662,15 @@ describe('the /curator/compendium details modal', () => {
   it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: 'fixture-other' });
 
-    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    expect(within(await loaded()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
 
-    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+    fireEvent.click(within(await loaded()).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`, {
       scroll: false,
     });
   });
 
-  // The delete's confirm is tests/components/IngredientForm/compendium.test.tsx's; here only
-  // where the page sends the stacked edit once the form says it has deleted.
   it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
     const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });

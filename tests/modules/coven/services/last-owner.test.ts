@@ -4,29 +4,10 @@ import { Forbidden } from '@/lib/errors';
 import { assertMembership, assertNotLastOwner, LastOwner } from '@/modules/coven';
 import { A, B, C, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-// The last-owner guard: a change that would leave a workspace with no
-// owner is refused, and the refusal says which way out the interface can offer.
-
-async function insertCoven(
-  name: string,
-  members: [string, 'owner' | 'member' | 'viewer'][],
-): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
-
-/** Runs the guard as `actor` would: under their proof, inside the writing transaction. */
 async function guard(
   actor: typeof A,
   workspaceId: string,
@@ -40,7 +21,7 @@ async function guard(
 
 describe('assertNotLastOwner', () => {
   it('refuses to demote, remove or let leave the only owner, offering the others as promotable', async () => {
-    const covenId = await insertCoven('Fixture Last Owner Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Last Owner Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -56,7 +37,7 @@ describe('assertNotLastOwner', () => {
   });
 
   it('tells the only member to delete the coven instead', async () => {
-    const covenId = await insertCoven('Fixture Lone Owner Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Lone Owner Coven', [[A.id, 'owner']]);
 
     const error = await guard(A, covenId, A.id, null).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(LastOwner);
@@ -64,7 +45,7 @@ describe('assertNotLastOwner', () => {
   });
 
   it('lets two owners each step down to one, and then stops', async () => {
-    const covenId = await insertCoven('Fixture Two Owner Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Two Owner Coven', [
       [A.id, 'owner'],
       [B.id, 'owner'],
     ]);
@@ -75,7 +56,7 @@ describe('assertNotLastOwner', () => {
   });
 
   it('lets a non-owner go, and an owner keep the role', async () => {
-    const covenId = await insertCoven('Fixture Free Passage Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Free Passage Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);

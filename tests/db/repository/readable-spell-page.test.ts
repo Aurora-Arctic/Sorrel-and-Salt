@@ -37,7 +37,6 @@ beforeEach(async () => {
 
 type User = typeof A;
 
-/** By title. A draft may go untitled, and a sort key must be NOT NULL. */
 const byTitle: SortPart = {
   expression: sqlExpression`coalesce(${spells.title}, '')`,
   type: 'text',
@@ -66,8 +65,6 @@ const spellPage = async (membership: Membership) =>
   );
 
 const stepPage = async (membership: Membership) =>
-  // Every fixture step sits at place 1 of its own spell, so the order is the
-  // id's and the bodies are compared as a set.
   (await findPageInReadableSpells(membership, spellSteps, [spellSteps.position], FIRST_PAGE))
     .map((entry) => entry.node.body)
     .sort();
@@ -134,7 +131,6 @@ describe('findPageInReadableSpells', () => {
 });
 
 describe('findGrimoirePage', () => {
-  /** Sets spells' stamps with the `updated_at` trigger off so the value holds; one statement, so spells stamped together share `now()` to the microsecond. */
   const stamp = (ids: string | string[], created: string, updated: string) =>
     sql.begin(async (tx) => {
       await tx`alter table spells disable trigger set_updated_at`;
@@ -144,7 +140,6 @@ describe('findGrimoirePage', () => {
         where id in ${sql([ids].flat())}`;
     });
 
-  /** Three of A's shared spells whose three orders all differ, and B's private one. */
   async function grimoire() {
     const birch = await spellBy(A, 'Birch Charm', 'workspace');
     const alder = await spellBy(A, 'Alder Jar', 'workspace');
@@ -258,7 +253,6 @@ describe('findManyInSpells', () => {
 });
 
 describe('the grimoire search and category filter', () => {
-  /** A spell with an intent and assigned categories, by name. */
   const spellWith = (
     author: User,
     title: string,
@@ -288,7 +282,6 @@ describe('the grimoire search and category filter', () => {
   const countOf = async (user: User, query: GrimoireQuery) =>
     (await findGrimoireCount(await proofFor(user), query, undefined)).totalCount;
 
-  /** A's shared spells and B's private one, which matches every search below. */
   async function grimoire() {
     const hearth = await spellWith(A, 'Hearth Charm', { categories: ['Protection'] });
     const calm = await spellWith(A, 'Moon Jar', {
@@ -316,7 +309,6 @@ describe('the grimoire search and category filter', () => {
   });
 
   it('ranks a search best match first, whatever the chosen order, and counts before a cursor in that rank', async () => {
-    // Written oldest first, so newest first would list them in reverse.
     const inIntent = await spellWith(A, 'Moon Jar', { intent: 'To keep the hearth calm' });
     const later = await spellWith(A, 'Old Hearth');
     const early = await spellWith(A, 'Hearth Charm');
@@ -331,7 +323,6 @@ describe('the grimoire search and category filter', () => {
       ),
     ).toEqual([early, later, inIntent]);
 
-    // A title outranks an intent; between two titles, the earlier hit leads.
     for (const order of ['CREATED_DESC', 'TITLE_ASC'] as const) {
       expect(await ranked(order)).toEqual([early, later, inIntent]);
     }
@@ -409,7 +400,6 @@ describe('the grimoire search and category filter', () => {
     });
   });
 
-  /** Each category's count, keyed by its id, as the Categories filter reads it. */
   const categoryCountsOf = async (user: User, query: GrimoireQuery) =>
     Object.fromEntries(
       (await findGrimoireCategoryCounts(await proofFor(user), query)).map(({ value, count }) => [
@@ -470,7 +460,6 @@ describe('the grimoire search and category filter', () => {
 });
 
 describe('the grimoire facets', () => {
-  /** A spell of W by `author`, with the facet fields written as given. */
   const made = (
     author: User,
     title: string,
@@ -578,7 +567,6 @@ describe('the grimoire facets', () => {
       moonPhases: ['Full Moon'],
       daysOfWeek: ['Friday'],
     });
-    // Moon phases ignore the moon pick and keep the day; days the reverse.
     expect(counts.moonPhases).toEqual({ 'Full Moon': 1, 'New Moon': 1 });
     expect(counts.daysOfWeek).toEqual({ Friday: 1, Monday: 1 });
     expect(counts.visibilities).toEqual({ workspace: 1 });

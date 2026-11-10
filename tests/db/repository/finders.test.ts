@@ -114,16 +114,11 @@ describe('soft-delete filtering', () => {
   });
 });
 
-// CLAUDE.md rule 5's second layer. The proofs below are real ones, minted by
-// `assertMembership` against the seeded cast: there is no other way to get one,
-// which is the property under test.
 describe('the Membership proof', () => {
   let inW: Membership;
   let inX: Membership;
 
   beforeAll(async () => {
-    // A owns W and D is a member of X — `standard`, the scenario every db
-    // worker's clone carries.
     inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['create'] });
     inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['create'] });
   });
@@ -315,9 +310,6 @@ describe('the Membership proof', () => {
     expect(deleteAnUnscopedTableById).toBeInstanceOf(Function);
   });
 
-  // The same shape for the two extra spell scopes. A private spell excluded by a predicate the caller
-  // could simply not have written is absent; a private spell the generic finders will not compile against
-  // is impossible, and only the second survives the next service that forgets.
   it('refuses the generic finders a spell and its contents at compile time', () => {
     const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
       // @ts-expect-error — `spells` carries `visibility`, so the generic scoped

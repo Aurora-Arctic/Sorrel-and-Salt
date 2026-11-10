@@ -1,41 +1,39 @@
+import { prefersReducedMotion } from './motion';
 import { type CSSProperties, type TransitionEvent, useEffect, useState } from 'react';
 
 // A section that slides open and shut by height (grid rows, 0fr to 1fr), the Baseline way to animate `auto`. Its content is in the page, whole, throughout, never faded or
 // unmounted early. The state stays "closing" until the transition's own end event, so a `<details>` or `<dialog>` keeps its `open`; a longer timer is the net for one that never ran.
 
-/** The slide's length; the same number is the CSS transition, set through `--slide-ms`. */
+/** Also the CSS transition's length, set through `--slide-ms`. */
 export const SLIDE_MS = 350;
-
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
 export type SlideState = 'closed' | 'opening' | 'open' | 'closing';
 
 export interface Slide {
   state: SlideState;
-  /** True while the section is open or on its way open. */
   shown: boolean;
   open: () => void;
   /** `snap`: no slide, for a modal sheet that has none. */
   close: (snap?: boolean) => void;
   onTransitionEnd: (event: TransitionEvent<HTMLElement>) => void;
-  /** The base class, with `<base>--open` added once the rows have grown. */
   className: string;
   style: CSSProperties;
 }
 
 export function useSlide(base: string, initial: SlideState = 'closed'): Slide {
   const [state, setState] = useState<SlideState>(initial);
-  const reduced = () => window.matchMedia(REDUCED_QUERY).matches;
   const open = () =>
     setState((now) =>
       now === 'open' || now === 'opening'
         ? now
-        : reduced() || now === 'closing'
+        : prefersReducedMotion() || now === 'closing'
           ? 'open'
           : 'opening',
     );
   const close = (snap = false) =>
-    setState((now) => (now === 'closed' ? now : snap || reduced() ? 'closed' : 'closing'));
+    setState((now) =>
+      now === 'closed' ? now : snap || prefersReducedMotion() ? 'closed' : 'closing',
+    );
 
   useEffect(() => {
     if (state === 'opening') {

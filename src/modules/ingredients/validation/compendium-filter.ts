@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MIN_QUERY_LENGTH } from './query-length';
 import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
@@ -11,10 +12,7 @@ import {
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
 
-// The compendium list's filter as the `compendium` query receives it, parsed
-// by the service because the browser is not the only caller. Zod only, like
-// every validation file: the form's side of the search box loads it too
-// (claude-docs/validation.md, "Where the schemas live").
+// Zod only, so the form side loads it too (claude-docs/validation.md, "Where the schemas live").
 
 /**
  * Optional text as a filter takes it: blank, null or missing is no filter, so
@@ -46,9 +44,6 @@ const filterElements = z
   .nullish()
   .transform((elements) => (elements && elements.length > 0 ? elements : undefined));
 
-/** The shortest query that searches: one character is a trigram or two that half the compendium shares, so it ranks by noise. */
-export const MIN_QUERY_LENGTH = 2;
-
 export const CompendiumFilter = z.object({
   // Counted in composed code points, so `ñ` is one character however it was typed.
   query: filterText.transform((query) =>
@@ -66,7 +61,6 @@ export const CompendiumFilter = z.object({
   deityIds: filterIds,
   zodiacSigns: filterTexts,
   celestialBodies: filterTexts,
-  // An entry whose own `elements` holds any one listed.
   elements: filterElements,
   // `any`, like null or missing, is no filter.
   toxic: z
@@ -119,10 +113,9 @@ export const CompendiumFilter = z.object({
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
 export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 
-// The coven's ingredient list takes the compendium's search, categories and
-// facets, but not the keeper's two to-do lists, so it parses
-// them exactly as the compendium does; the two settings that need a coven's
-// own rows and jars are its alone.
+// The coven's list takes the compendium's search, categories and facets but not
+// the keeper's two to-do lists; the two settings that need a coven's own rows
+// and jars are its alone.
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   query: true,
   categoryIds: true,

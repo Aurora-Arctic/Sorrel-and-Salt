@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -7,11 +7,14 @@ import { seedAstrology } from '@/db/seed/astrology';
 import { DEITY_TRADITIONS, seedDeities } from '@/db/seed/deities';
 import { deitySlug } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow } from './types';
-
-// What a re-run of the deity seed leaves of a keeper's edits, and how it finds its own rows by key once a keeper has renamed them.
-// The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
+import { useTestDatabase } from '../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 async function allTraditions(): Promise<DeityTraditionRow[]> {
@@ -28,12 +31,7 @@ async function countOf(table: string): Promise<number> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('seedDeities(db) over a database a keeper has edited', () => {
@@ -43,8 +41,6 @@ describe('seedDeities(db) over a database a keeper has edited', () => {
     expect(await countOf('deities')).toBe(0);
   });
 
-  // The vocabulary is the keeper's, and a description is the part of
-  // a curated row most likely to be rewritten.
   it('does not overwrite a description a keeper has since rewritten', async () => {
     await seedDeities(db);
     await sql`
@@ -64,8 +60,6 @@ describe('seedDeities(db) over a database a keeper has edited', () => {
 
   it('leaves a deity and tradition a keeper has since renamed alone, and adds nothing', async () => {
     await seedDeities(db);
-    // As the admin pages would leave them: every deity under the renamed
-    // tradition re-slugged under its new name, so the backfill finds nothing to do.
     await sql`update deity_traditions set name = 'Hellenic', slug = 'hellenic' where slug = 'greek'`;
     await sql`update deities set name = 'Phoebus' where seed_key = 'apollo'`;
     const [hellenic] = await sql<{ id: string }[]>`
@@ -105,8 +99,6 @@ describe('seedDeities(db) over a database a keeper has edited', () => {
     expect(apollo).toMatchObject({ tradition_id: hellenic.id, slug: 'apollo-hellenic' });
   });
 
-  // Unkeyed is what marks it as not the seed's; the author does not matter to
-  // the seed, so it is the one user an emptied database holds once a seed ran.
   it('takes a live row a keeper wrote under a seed name as present, without an error', async () => {
     await seedAstrology(db);
     const [admin] = await sql<{ id: string }[]>`
@@ -124,15 +116,12 @@ describe('seedDeities(db) over a database a keeper has edited', () => {
   });
 });
 
-// The other names a deity answers to, loaded beside it. A keeper's removal is held as the deities are; stamps and a re-run are index.test.ts's sweep,
-// and which names are listed is reviewed in claude-docs/db/deity-vocabulary-seed.md, not tested.
 describe('seedDeities(db) loads each deity’s other names', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
     expect(await countOf('deity_other_names')).toBe(0);
   });
 
-  /** Each deity's live other names, by its seed key. */
   async function liveOtherNames(): Promise<Map<string, string[]>> {
     const rows = await sql<{ seed_key: string; name: string }[]>`
       select d.seed_key, o.name from deity_other_names o

@@ -3,9 +3,11 @@ import {
   findManyByIds,
   findSupportRepliesFor,
   findSupportTimeoutsFor,
+  findSupportTimeoutsForAddresses,
   findStandingSupportTimeoutsFor,
 } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
+import { addressCountKey } from '../../../lib/send-count-key';
 import type { Session } from '../../../lib/session';
 import { inIdOrder } from '../../../lib/in-id-order';
 import { assertSiteAdmin } from '../../identity';
@@ -15,8 +17,6 @@ import type { SupportReplyRow, SupportTimeoutRow } from '../types';
 import { requireVerified, viewerOf } from './access';
 import { supportTiersForSenders } from './lifecycle';
 import type { SupportSenderTier } from './lifecycle';
-
-// The batches behind the loaders on a request: its replies, its sender's time-outs, and the people named on it.
 
 /**
  * The replies to each request, oldest first, none where the viewer may not read the request: a reader's scope is in the
@@ -46,6 +46,26 @@ export async function timeoutsForSenders(
   const rows = await findSupportTimeoutsFor(userIds);
   const sorted = [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return userIds.map((id) => sorted.filter((timeout) => timeout.userId === id));
+}
+
+/**
+ * The time-outs set on each signed-out sender's address, newest first, for the emails asked. A site admin's alone: every
+ * slot of anyone else's load is refused. A signed-out sender has no account, so a time-out names the address key alone.
+ */
+export async function timeoutsForAddresses(
+  session: Session,
+  emails: readonly string[],
+): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
+  try {
+    assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
+  } catch (error) {
+    if (!(error instanceof Forbidden)) throw error;
+    return emails.map(() => error);
+  }
+  const keys = emails.map(addressCountKey);
+  const rows = await findSupportTimeoutsForAddresses(keys);
+  const sorted = [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return keys.map((key) => sorted.filter((timeout) => timeout.addressKey === key));
 }
 
 /**

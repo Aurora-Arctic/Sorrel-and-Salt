@@ -2,8 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import ErrorPage from '@/components/ErrorPage';
 
-// The shared body of the 404 and 500 screens: a heading, a reason
-// and the way onward, never an error's own text (claude-docs/components/error-page.md).
+// claude-docs/components/error-page.md
 
 describe('ErrorPage', () => {
   it('renders the way onward it is given', () => {
@@ -32,5 +31,16 @@ describe('ErrorPage', () => {
       </ErrorPage>,
     );
     expect(screen.getByText(/abc123/)).toBeInTheDocument();
+  });
+
+  it('adds no main landmark when the page around it already owns one', () => {
+    render(
+      <ErrorPage title="Gone" reason="Nothing here." withinMain>
+        <a href="/">Home</a>
+      </ErrorPage>,
+    );
+
+    expect(screen.queryByRole('main')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Gone' })).toBeInTheDocument();
   });
 });

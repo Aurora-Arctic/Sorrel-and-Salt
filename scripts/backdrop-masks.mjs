@@ -1,9 +1,6 @@
-// Builds the images beside `Backdrop` from a source photograph, which is not committed (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture"):
-//
-//   node scripts/backdrop-masks.mjs <name> <source image> [preview dir]
-//
-// RGB is the subject's levelled luminance with a chroma floor under it; alpha is presence, spatial and not tonal: the ground is the empty region connected
-// to the border, so a shadow enclosed by the subject keeps full presence instead of reading as the lightest thing on parchment.
+// Builds the images beside `Backdrop` from an uncommitted source photograph: `node scripts/backdrop-masks.mjs
+// <name> <source image> [preview dir]` (claude-docs/components/backdrop.md, "The image is tone and shape, not
+// a picture").
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
@@ -38,10 +35,9 @@ const GAMMA = 0.75;
 const PRESENCE_GAIN = 2.5;
 // Below this a pixel counts as empty for the ground fill.
 const EMPTY = 0.12;
-// A present blob this small and this dark is a knot or a droplet on the ground
-// that levelling let through, never a piece of the subject. The tone cut is
-// low because a loose salt grain is small too, and its shadowed side pulls
-// its mean well under the salt's own brightness.
+// A small, dark present blob is a knot or droplet that levelling let through; the tone cut stays low because
+// a loose salt grain is small too (claude-docs/components/backdrop.md, "The image is tone and shape, not a
+// picture").
 const SPECK_AREA = 2000;
 const SPECK_TONE = 0.35;
 // What the previews reproduce: the theme where each blend layer is visible, at
@@ -109,8 +105,6 @@ for (let i = 0; i < W * H; i++) {
   presence[i] = Math.min(1, Math.max(l, chroma) * PRESENCE_GAIN);
 }
 
-// The ground fill: empty pixels reachable from the border are ground; the rest
-// are pockets inside the subject and stay.
 const exterior = new Uint8Array(W * H);
 const queue = [];
 const seed = (i) => {
@@ -148,7 +142,6 @@ for (let i = 0; i < W * H; i++) {
   if (!bordersGround) presence[i] = 1;
 }
 
-// The speck filter: connected present components, dropped when small and dark.
 const seen = new Uint8Array(W * H);
 for (let start = 0; start < W * H; start++) {
   if (seen[start] || presence[start] < EMPTY) continue;

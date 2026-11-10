@@ -25,16 +25,11 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The grimoire's list of spells, named after its page as the ingredient list is. */
 function grimoireList(page: Page): Locator {
   return page.getByRole('list', { name: 'Spells' });
 }
 
-/**
- * Every control in the page's main region that starts a write, by the verb its name opens with: Add
- * Ingredient, New Spell, Edit Stock, Delete Coven, Remove a member, Invite. Matched by verb, so a new write
- * control under one of these verbs is caught too.
- */
+/** Matched by verb, so a new write control under one of these verbs is caught too. */
 const WRITE_VERB = /^(Add|New|Create|Edit|Delete|Remove|Invite|Change|Make|Save)\b/;
 
 function writeControls(page: Page): Locator {
@@ -44,15 +39,13 @@ function writeControls(page: Page): Locator {
     .or(main.getByRole('link', { name: WRITE_VERB }));
 }
 
-/**
- * A field a member edits stock or a spell's visibility with; a viewer is offered none. The filter form (the
- * `search` landmark) is left out, since its switches change nothing stored; `:not(search *)` skips it.
- */
+/** The filter form (the `search` landmark) is left out, since its switches change nothing stored; `:not(search *)` skips it. */
 function editingFields(page: Page): Locator {
   const main = page.getByRole('main');
   const outsideFilter = page.locator(':not(search *)');
   return main
     .getByRole('spinbutton')
+    .or(main.getByRole('textbox', { name: /^(Quantity|Low Stock At)/ }))
     .and(outsideFilter)
     .or(main.getByRole('switch').and(outsideFilter))
     .or(main.getByLabel('Visibility').and(outsideFilter));
@@ -121,8 +114,7 @@ test(
       await expect(rowOf(ingredientList(page), 'Rosemary')).toBeVisible();
       await expect(writeControls(page)).toHaveCount(0);
       await expect(editingFields(page)).toHaveCount(0);
-      // The shell's Add Ingredient adds to the coven whose page it is on
-      // (claude-docs/components/app-shell.md): absent or disabled here.
+      // The shell's Add Ingredient adds to the coven whose page it is on: absent or disabled here (claude-docs/components/app-shell.md).
       await expect(
         page.getByRole('button', { name: 'Add Ingredient', disabled: false }),
       ).toHaveCount(0);
@@ -138,7 +130,6 @@ test(
       await expect(rowOf(grimoireList(page), 'Fixture Working')).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
-      // The coven's own page: Leave Coven is the viewer's, Delete Coven the owner's alone.
       await page.goto(`/coven/${coven.slug}`);
       await expect(page.getByRole('button', { name: 'Leave Coven' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Delete Coven' })).toHaveCount(0);
@@ -148,14 +139,11 @@ test(
 
     await test.step('the viewer is refused at every write address', async () => {
       // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts).
-      // There is no edit address for an ingredient row: stock is edited in place
-      // and the edit modal opens from the row.
+      // There is no edit address for an ingredient row: stock is edited in place and the edit modal opens from the row.
       for (const path of [`/coven/${coven.slug}/invitations`, `/coven/${coven.slug}/members`]) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBe(404);
       }
-      // The spell builder is a dialog over the grimoire: its address
-      // shows a viewer the grimoire, and no dialog.
       await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
       await expect(page.getByRole('heading', { name: 'Grimoire' })).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -177,7 +165,6 @@ test(
           'mutation ($w: ID!, $id: ID!) { deleteIngredient(workspaceId: $w, id: $id) }',
           { w: coven.id, id: testwort.ingredientId },
         ],
-        // The stock removal; its arguments follow deleteIngredient's.
         [
           'mutation ($w: ID!, $id: ID!) { deleteStock(workspaceId: $w, id: $id) }',
           { w: coven.id, id: stockId },
@@ -302,7 +289,6 @@ test(
     };
 
     await test.step('before the edit the card names A, who wrote the entry and its jar', async () => {
-      // The answer must move when B edits.
       await signInAgainAs(page, B);
       await page.goto(path);
       await expect(row).toContainText('Fixture A');
@@ -337,11 +323,7 @@ test(
   },
 );
 
-/**
- * The card's `<time>` stands for `at`, the jar's own `updated_at`, to the second (the attribute may drop the
- * microseconds). The server's HTML holds the short absolute date, which the browser swaps for the relative
- * phrase on load; it is fetched from inside the page so the request carries its session.
- */
+/** Fetched from inside the page so the request carries its session. The server's HTML holds the short absolute date, which the browser swaps for the relative phrase on load. */
 async function expectEditedAt(row: Locator, at: Date) {
   const time = editedAt(row);
   await expect(time).toHaveAttribute('datetime', /.+/);
@@ -353,10 +335,8 @@ async function expectEditedAt(row: Locator, at: Date) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.querySelector(`time[datetime="${moment}"]`)?.textContent ?? null;
   }, datetime);
-  // The absolute date the server drew: the edit's day, in UTC.
   expect(served).toContain(String(at.getUTCFullYear()));
   expect(served).toContain(String(at.getUTCDate()));
   await expect(time).toBeVisible();
-  // Once the page has loaded the visible text is the relative phrase, in place of the date.
   await expect(time).toHaveText(/ ago$|^just now$/);
 }

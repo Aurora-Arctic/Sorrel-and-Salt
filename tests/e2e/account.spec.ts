@@ -1,8 +1,7 @@
-import postgres from 'postgres';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // The account page, signed in: its Name, Email and Sign-In Methods sections. The default server
@@ -24,9 +23,7 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
   await expect(main.getByRole('textbox', { name: 'Email Address' })).toHaveValue(
     'one-method@account-page.test',
   );
-  // No way across to the email page; the nav's Email link stays on this one.
   await expect(main.locator('a[href^="/account/email"]')).toHaveCount(0);
-  // The sign-in sections live on the Sign-In tab.
   await page.goto('/account/sign-in');
   // The only method's Remove is greyed, not gone, with its reason as its description.
   await expect(main.getByRole('button', { name: /^Remove/ })).toHaveAttribute(
@@ -39,7 +36,6 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
     'true',
   );
 
-  // The on-page nav jumps to a section.
   const nav = main.getByRole('navigation', { name: 'On This Page' });
   await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
   await expect(page).toHaveURL(/#sign-in-methods$/);
@@ -74,12 +70,9 @@ test('two linked and a failed link have no accessibility violations', async ({ p
 // settled means two quiet seconds with no further fetch. A full load never loops, so the account is verified
 // while the page draws, then made unverified: the click is then a real router navigation.
 async function markUnverified(userId: string): Promise<void> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`update users set email_verified = false where id = ${userId}`;
-  } finally {
-    await sql.end();
-  }
+  });
 }
 
 async function expectSettledOnEmailPage(page: Page, next: string): Promise<void> {

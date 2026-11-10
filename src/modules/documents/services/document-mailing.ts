@@ -16,6 +16,7 @@ import { NotFound, ValidationError } from '@/lib/errors';
 import { jobTokenActive, startJob } from '@/lib/jobs';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
+import { trimEnds } from '@/lib/formats';
 import { parseInput, requiredText } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { z } from 'zod';
@@ -33,16 +34,14 @@ import type {
   DocumentMailingSummary,
 } from '../types';
 
-// Emailing every account about every document changed since the last sent mailing, in one joint mail. The reads and writes are a
-// keeper's alone; the daily start is the cron route's and runs as the System account. The run that sends the mail is
-// jobs/document-mailing.ts.
+// The reads and writes are a keeper's alone; the daily start is the cron route's and runs as the System account.
 
-/** Recipient rows written per insert, so a statement stays under the driver's parameter limit. */
+/** So a statement stays under the driver's parameter limit. */
 const RECIPIENT_CHUNK = 500;
 
 const SummariesInput = z.object({
   summaries: z.array(
-    z.object({ versionId: z.string(), summary: requiredText('Write what changed') }),
+    z.object({ versionId: z.string(), summary: requiredText('Write what changed', trimEnds) }),
   ),
 });
 
@@ -77,7 +76,6 @@ async function summarise(
   };
 }
 
-/** The version ids a sending or paused mailing covers, read from their items. */
 async function openVersionIds(open: readonly DocumentMailingRow[]): Promise<Set<string>> {
   const items = await findDocumentMailingItems(open.map((mailing) => mailing.id));
   return new Set(items.map((item) => item.versionId));
@@ -93,7 +91,6 @@ async function overview(): Promise<DocumentMailingOverview> {
     countDocumentMailsSentToday(),
   ]);
   const shown = lastSent ? [...open, lastSent] : open;
-  // Every shown mailing's items in one read, rather than one read per mailing.
   const items = await findDocumentMailingItems(shown.map((mailing) => mailing.id));
   const inOpen = new Set(
     items
@@ -116,9 +113,6 @@ async function overview(): Promise<DocumentMailingOverview> {
 }
 
 /**
- * Every document changed since the last sent mailing, how many accounts a mailing would reach and in how many days, the sending
- * and paused mailings, and the last one sent.
- *
  * @throws {Forbidden} the session is not a site keeper.
  */
 export async function readDocumentMailings(session: Session): Promise<DocumentMailingOverview> {
@@ -126,7 +120,6 @@ export async function readDocumentMailings(session: Session): Promise<DocumentMa
   return overview();
 }
 
-/** Refuses `summaries` unless they name every pending version, and no other, once each. */
 function assertCoversPending(
   pending: readonly PendingDocumentVersion[],
   summaries: readonly { versionId: string }[],
@@ -145,13 +138,10 @@ function assertCoversPending(
 }
 
 /**
- * Starts one mailing of every pending document to every account it counts, with the keeper's summary of each, replaces every
- * sending and paused mailing, and starts the run that sends the mail. A lock held for the transaction makes two keepers sending at
- * once start one mailing: the second finds every pending version already in it, and is refused.
+ * A lock held for the transaction makes two keepers sending at once start one mailing; the second is refused.
  *
- * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} a summary is blank, nothing is pending, the summaries do not name exactly the pending versions, or every
- *   pending version is in a sending or paused mailing already.
+ * @throws {Forbidden} not a keeper.
+ * @throws {ValidationError} a summary is blank, nothing is pending, the summaries do not name exactly the pending versions, or every pending version is in a sending or paused mailing already.
  */
 export async function emailDocumentsToEveryAccount(
   session: Session,
@@ -202,8 +192,6 @@ export async function emailDocumentsToEveryAccount(
 }
 
 /**
- * Sets a paused mailing sending again, keeping what it has sent, and starts its run.
- *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no mailing holds the id.
  * @throws {ValidationError} the mailing is not paused.
@@ -229,10 +217,7 @@ export async function resumeDocumentMailing(
   return overview();
 }
 
-/**
- * Carries the longest-waiting sending mailing on into a new UTC day, unless a run of it is still asleep between batches. Only the daily
- * cron route calls it, as the System account, so it takes no session. Returns the run's id, or null when nothing was started.
- */
+/** Only the daily cron route calls it, as the System account, so it takes no session. */
 export async function startDailyDocumentMailing(origin: string): Promise<string | null> {
   const oldest = await findOldestSendingDocumentMailing();
   if (!oldest) return null;

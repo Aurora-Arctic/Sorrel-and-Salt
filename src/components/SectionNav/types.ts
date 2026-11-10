@@ -1,7 +1,5 @@
 import type { Route } from 'next';
-import type { NavigationTarget } from '../../lib/navigation';
 
-/** The icons the section navs draw, one per section (icons.tsx). */
 export type SectionIconName =
   | 'overview'
   | 'ingredients'
@@ -15,39 +13,24 @@ export type SectionIconName =
   | 'people'
   | 'invitations'
   | 'support'
-  | 'documents';
+  | 'documents'
+  | 'businessCards'
+  | 'help';
 
-/**
- * One section: a tab on a wide screen, an item in the bottom bar on a phone.
- * The icon is a name, not an element, so the list can stay on the server and
- * cross to the client part as plain data.
- */
+// The icon is a name, not an element, so the list can cross to the client part as plain data.
 export interface SectionNavItem {
   label: string;
-  /** A number after the label, as the facet count draws it: the Support link's requests waiting on staff. */
   count?: number;
   href: Route;
   icon: SectionIconName;
-  /**
-   * Current only at its own address. The coven index needs it, being the
-   * ancestor of every coven page; the others are current beneath theirs too.
-   */
+  /** Current only at its own address: the coven index is the ancestor of every coven page. */
   exact?: boolean;
-  /** Other addresses the section is current on: Categories on its Groups tab's. */
   matches?: readonly Route[];
-  /**
-   * Starts a new group of sections: a hairline stands before it in the row,
-   * and above it in the More list. The admin nav's People, after the
-   * compendium's pages.
-   */
+  /** Starts a new group: a hairline stands before it in the row, and above it in the More list. */
   apart?: boolean;
-  /** What the page draws while it is on its way: its region and shape. */
-  target?: NavigationTarget;
 }
 
 export interface SectionNavProps {
-  /** The nav's `aria-label`, distinct on a page: "Coven", "Admin". */
   label: string;
-  /** In their order; the first four stay in view when the room is short, the rest go behind More. */
   sections: readonly SectionNavItem[];
 }

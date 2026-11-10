@@ -16,10 +16,8 @@ const {
 
 export const COVEN_PARAMS = defineSearchParams({
   ...SHARED,
-  // Only the coven's own entries (`?source=local`) or only those it holds a jar of from the
-  // compendium (`?source=compendium`); a junk value reads as both.
   source: choiceParam('source', INGREDIENT_SOURCES, 'source'),
-  // Only entries with a jar not at 0. Written `1`, the value its switch submits natively.
+  // Written `1`, the value its switch submits natively.
   inStock: searchParam({
     name: 'inStock',
     variable: 'inStock',
@@ -27,7 +25,6 @@ export const COVEN_PARAMS = defineSearchParams({
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,
   }),
-  // Only entries with a jar badged Low Stock or Out of Stock. Written `1`, as inStock is.
   lowStockOnly: searchParam({
     name: 'lowStockOnly',
     variable: 'lowStockOnly',

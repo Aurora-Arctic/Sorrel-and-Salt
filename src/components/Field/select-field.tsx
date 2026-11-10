@@ -9,7 +9,7 @@ import type { SelectFieldProps } from './types';
 import { useField } from './use-field';
 
 /**
- * A closed set on the combobox's select-only box (DESIGN.md §14), or, with `typeahead`, its type-ahead
+ * A closed set on the combobox's select-only box (claude-docs/design-decisions/ingredients.md, "A closed set wears the combobox"), or, with `typeahead`, its type-ahead
  * box. In whichever react-hook-form form provides it.
  */
 export function SelectField<V extends FieldValues = FieldValues>({

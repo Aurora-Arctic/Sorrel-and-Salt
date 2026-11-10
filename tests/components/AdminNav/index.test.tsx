@@ -2,25 +2,21 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
 
-// The page the test pretends to be on; Next's own hook reads the App
-// Router's state, which a component test does not mount.
+// Next's hook reads the App Router's state, which a component test does not mount.
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
-const { default: AdminNav, CuratorNav } = await import('@/components/AdminNav');
+const { default: AdminNav, CuratorNav, CuratorContents } = await import('@/components/AdminNav');
 
-// Two navs, one per area (claude-docs/components/admin-nav.md): the `/curator` layout's lists the curation pages,
-// the `/keepers` layout's the support and people pages. Each links a page at its first tab and marks the page you are on.
-// Which pages show in the row and which behind More is the stylesheet's, so every page is in the row here.
+// claude-docs/components/admin-nav.md
 
 const curatorNav = () => screen.getByRole('navigation', { name: 'Curator' });
 const keepersNav = () => screen.getByRole('navigation', { name: 'Keepers' });
 const linksIn = (nav: HTMLElement) => within(nav).getAllByRole('link');
 
-// Each curation page linked at its first tab, in the sections' order.
 const CURATION = [
   '/curator/compendium',
   '/curator/categories',
@@ -28,12 +24,13 @@ const CURATION = [
   '/curator/deities',
   '/curator/celestial-bodies',
 ];
-// People and Invitations, each at its first tab: a keeper's alone.
 const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
-// The documents, opened at their first tab, the privacy policy: a keeper's alone.
 const DOCUMENTS = '/keepers/documents/terms';
+const BUSINESS_CARDS = '/keepers/business-cards';
+const HELP = '/keepers/help';
+const STAFF_HELP = '/help/staff';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
 
@@ -42,14 +39,13 @@ describe('CuratorNav', () => {
     pathname.mockReturnValue('/curator');
   });
 
-  it('links every curation page in a row, in its sections’ order, and nothing under /keepers', () => {
+  it('links every curation page in a row, in its sections’ order, then Staff Help, and nothing under /keepers', () => {
     render(<CuratorNav />);
 
-    expect(hrefs(linksIn(curatorNav()))).toEqual(CURATION);
+    expect(hrefs(linksIn(curatorNav()))).toEqual([...CURATION, STAFF_HELP]);
   });
 
   it.each([
-    // The index marks none; a page marks its own entry, on any of its tabs.
     ['/curator', []],
     ['/curator/categories', ['/curator/categories']],
     ['/curator/category-groups', ['/curator/categories']],
@@ -68,11 +64,13 @@ describe('AdminNav, the Keepers nav', () => {
     pathname.mockReturnValue('/keepers');
   });
 
-  it('links a keeper to Support, People, Invitations and Documents, and to no curation page', () => {
+  it('links a keeper to Support, People, Invitations, Documents, Help, Business Cards and Staff Help, and to no curation page', () => {
     render(<AdminNav managesPeople />);
 
     const links = hrefs(linksIn(keepersNav()));
-    expect(sorted(links)).toEqual(sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS]));
+    expect(sorted(links)).toEqual(
+      sorted([SUPPORT, PEOPLE, INVITATIONS, DOCUMENTS, HELP, BUSINESS_CARDS, STAFF_HELP]),
+    );
     expect(within(keepersNav()).getByRole('link', { name: 'People' })).toHaveAttribute(
       'href',
       PEOPLE,
@@ -81,17 +79,24 @@ describe('AdminNav, the Keepers nav', () => {
       'href',
       INVITATIONS,
     );
+    expect(within(keepersNav()).getByRole('link', { name: 'Business Cards' })).toHaveAttribute(
+      'href',
+      BUSINESS_CARDS,
+    );
+    expect(within(keepersNav()).getByRole('link', { name: 'Staff Help' })).toHaveAttribute(
+      'href',
+      STAFF_HELP,
+    );
   });
 
   // Why the curator's list could have held more: the same nav with `managesPeople` lists both people pages.
-  it('links a curator to Support alone, which every other keepers page refuses them anyway', () => {
+  it('links a curator to Support and Staff Help alone, as every other keepers page refuses them anyway', () => {
     render(<AdminNav managesPeople={false} />);
 
-    expect(hrefs(linksIn(keepersNav()))).toEqual([SUPPORT]);
+    expect(hrefs(linksIn(keepersNav()))).toEqual([SUPPORT, STAFF_HELP]);
   });
 
   it.each([
-    // The index marks none; a page marks its own entry on any of its tabs, and each tab marks only its own page.
     ['/keepers', []],
     ['/keepers/users', [PEOPLE]],
     ['/keepers/privilege-changes', [PEOPLE]],
@@ -101,6 +106,8 @@ describe('AdminNav, the Keepers nav', () => {
     ['/keepers/support', [SUPPORT]],
     ['/keepers/documents/privacy', [DOCUMENTS]],
     ['/keepers/documents/disclaimer', [DOCUMENTS]],
+    ['/keepers/documents/about', [DOCUMENTS]],
+    ['/keepers/business-cards', [BUSINESS_CARDS]],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
@@ -125,5 +132,14 @@ describe('AdminNav support count', () => {
     expect(within(keepersNav()).getByRole('link', { name: /Support/ })).toHaveTextContent(
       /^Support$/,
     );
+  });
+});
+
+describe('CuratorContents, the curator index', () => {
+  it('lists every curation page under no group heading named Compendium, then the guides', () => {
+    render(<CuratorContents />);
+
+    expect(screen.queryByRole('heading', { name: 'Compendium' })).not.toBeInTheDocument();
+    expect(hrefs(screen.getAllByRole('link'))).toEqual([...CURATION, '/help/staff']);
   });
 });

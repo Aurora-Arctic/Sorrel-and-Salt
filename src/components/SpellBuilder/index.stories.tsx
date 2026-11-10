@@ -18,14 +18,11 @@ import { press, setInputValue, submitForm, useSteps } from '../../../.storybook/
 import { Reopenable } from '../../../.storybook/reopenable';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { mirrorKey } from '../../lib/autosave/mirror';
-import { CategoriesDocument } from '../IngredientForm/categories';
+import { CategoriesDocument } from '../CategoryPicker/categories';
 import SpellDialog from './spell-dialog';
 import { SpellBuilderStepsDocument, SpellIngredientSuggestionsDocument } from './steps/documents';
 import type { SpellBuilderStep, SpellBuilderValues, SpellDialogSpell } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SpellBuilder. Each state answers the
-// requests it sends through the workshop's fake API: the categories, a saved spell's steps, and
-// the save or refusal it shows. The query client is the app's own, from .storybook/preview.tsx.
 const meta = {
   title: 'Grimoire / Spell Builder',
 } satisfies Meta;
@@ -47,7 +44,6 @@ const SAVED: SpellDialogSpell = {
   visibility: 'workspace',
 };
 
-/** Comparison's assigned categories: two the jar carries, and Healing, which it does not. */
 const ASSIGNED = namedCategories('Protection', 'Clarity', 'Healing').map(({ id }) => id);
 
 const answerSteps = (steps: SpellBuilderStep[]) =>
@@ -55,13 +51,11 @@ const answerSteps = (steps: SpellBuilderStep[]) =>
     spell: { id: variables.id, steps },
   }));
 
-/** The spell as a save answers it: the title typed, at the next revision. */
 const savedAnswer = (variables: Record<string, unknown>) => {
   const { title } = variables.input as { title: string | null };
   return { ...SAVED, title, revision: SAVED.revision + 1, status: 'draft', steps: [] };
 };
 
-/** What every state answers: the categories, and an empty list should the Steps box be focused. */
 const BASE: readonly RequestHandler[] = [
   answerQuery(CategoriesDocument, () => CATEGORIES_ANSWER),
   answerQuery(SpellIngredientSuggestionsDocument, () => ({ ingredientSuggestions: { edges: [] } })),
@@ -78,7 +72,6 @@ const HANDLERS = {
       refusal({ message: 'The steps could not be read', code: 'INTERNAL' }),
     ),
   ],
-  // A new spell's first save, refused. A refusal stops at once, where a server fault is retried.
   refused: [
     ...BASE,
     answerOperations(({ operationName }) =>
@@ -94,8 +87,6 @@ const HANDLERS = {
       operationName === 'UpdateSpell' ? { updateSpell: savedAnswer(variables) } : undefined,
     ),
   ],
-  // The save names revision 3 and the row is at 4, saved from somewhere else meanwhile. Reload
-  // Latest reads that version.
   conflict: [
     ...BASE,
     answerSteps([]),
@@ -128,7 +119,6 @@ const HANDLERS = {
 const MIRROR = mirrorKey({ entity: 'spell', id: SAVED.id, userId: USER });
 const NEW_MIRROR = mirrorKey({ entity: 'spell', id: null, userId: USER });
 
-/** This browser's copy of the saved spell, kept ten minutes ago, its title retyped and never saved. */
 const restoredCopy = (): { value: SpellBuilderValues; at: string } => ({
   value: {
     title: 'Fixture Working, Retyped',
@@ -150,33 +140,23 @@ const removeMirrors = () => {
   try {
     window.localStorage.removeItem(MIRROR);
     window.localStorage.removeItem(NEW_MIRROR);
-  } catch {
-    // No storage: nothing was kept.
-  }
+  } catch {}
 };
 
-/**
- * Starts each state from no browser copy, or from Restored Draft's. Written while rendering, so
- * it is in place before the builder reads it as it mounts; removed as the state unmounts.
- */
+// Written while rendering, so it is in place before the builder reads it as it mounts.
 function useMirror(restored: boolean): void {
   useState(() => {
     removeMirrors();
     if (restored) {
       try {
         window.localStorage.setItem(MIRROR, JSON.stringify(restoredCopy()));
-      } catch {
-        // No storage: the state shows no recovery notice.
-      }
+      } catch {}
     }
     return null;
   });
   useEffect(() => removeMirrors, []);
 }
 
-// In its wide dialog over the grimoire, as the Grimoire's tabs open it under `?new=spell-<slug>` or
-// `?edit=<id>` (src/components/SpellBuilder/spell-dialog.tsx), so the workshop shows
-// what the app shows. Close closes it, with Open Again to look once more.
 const Page = ({
   steps = [],
   spell,
@@ -220,7 +200,6 @@ const typeTitle = () => {
 const save = () => submitForm('form.form');
 const openAll = () => press('Open All');
 
-// Turning the footer's Shared switch on. On a complete private spell it asks before it shares.
 const pickCoven = () =>
   document.querySelector<HTMLInputElement>('input[name="visibility"][value="workspace"]')?.click();
 
@@ -228,43 +207,26 @@ const PRIVATE: SpellDialogSpell = { ...SAVED, visibility: 'private' };
 const COMPLETE_PRIVATE: SpellDialogSpell = { ...PRIVATE, status: 'complete' };
 
 const BUILDER_STATES: Record<string, ReactNode> = {
-  // The usual visit: every field empty, nothing to save until one holds something.
   Empty: <Page />,
   'Title Typed': <Page steps={[typeTitle]} />,
-  // A saved spell, as its Edit opens it: its values, its sections shut, nothing to save yet. A
-  // shared draft, so the footer's Shared switch is on and still open. Its moon phase is one of
-  // the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} handlers={HANDLERS.noSteps} />,
-  // A private draft: its author alone sees it, so the Shared switch is off.
   'Private Spell': <Page spell={PRIVATE} handlers={HANDLERS.noSteps} />,
-  // A complete private spell, its Shared switch turned on: the question before it shares for good.
   'Share Question': (
     <Page spell={COMPLETE_PRIVATE} handlers={HANDLERS.noSteps} steps={[pickCoven]} />
   ),
-  // A moon phase saved before the list existed: its words, with no icon.
   'Phase Outside the List': (
     <Page spell={{ ...SAVED, moonPhase: 'Dark' }} handlers={HANDLERS.noSteps} steps={[openAll]} />
   ),
-  // Each kind of step: ingredient forms with their icons, a toxic one, an instruction and a one-off
-  // with its badge. No category is assigned, so Category Match asks for one.
   'With Steps': <Page spell={SAVED} handlers={HANDLERS.steps} steps={[openAll]} />,
-  // The same jar against three assigned categories: two carried, Healing missing, and nine
-  // extras, the ninth folded away.
   Comparison: (
     <Page spell={{ ...SAVED, categoryIds: ASSIGNED }} handlers={HANDLERS.steps} steps={[openAll]} />
   ),
-  // The saved spell's steps still on their way: the jar draws its loading line, and nothing saves.
   'Steps Loading': <Page spell={SAVED} handlers={HANDLERS.stepsLoading} steps={[openAll]} />,
-  // The steps could not be read: the Jar section opens by itself to say so.
   'Steps Failed': <Page spell={SAVED} handlers={HANDLERS.stepsFailed} />,
-  // A complete shared spell: Duplicate where a draft has Mark Complete, and the Shared switch shut
-  // with the reason, since it cannot be made private again.
   'Complete Spell': (
     <Page spell={{ ...SAVED, status: 'complete' }} handlers={HANDLERS.noSteps} steps={[openAll]} />
   ),
-  // This browser kept a copy the server never saved: the notice under the title offers it back.
   'Restored Draft': <Page spell={SAVED} handlers={HANDLERS.noSteps} restored />,
-  // The bin in the footer, pressed: Delete's question over the form.
   'Delete Question': (
     <Page
       spell={SAVED}
@@ -272,16 +234,11 @@ const BUILDER_STATES: Record<string, ReactNode> = {
       steps={[() => press('Delete Spell Fixture Working')]}
     />
   ),
-  // Mark Complete on a shared draft: the question naming the spell, before it stays shared for good.
   'Complete Question': (
     <Page spell={SAVED} handlers={HANDLERS.noSteps} steps={[() => press('Mark Complete')]} />
   ),
-  // A save that landed: the status reads Saved.
   Saved: <Page spell={SAVED} handlers={HANDLERS.saved} steps={[openAll, typeTitle, save]} />,
-  // A save that found the spell changed elsewhere: the notice under the title offers Reload Latest
-  // and Keep My Version.
   Conflict: <Page spell={SAVED} handlers={HANDLERS.conflict} steps={[openAll, typeTitle, save]} />,
-  // A new spell's first save, refused: the status reads "Could not save." with Retry.
   'Refused After Saving': <Page handlers={HANDLERS.refused} steps={[typeTitle, save]} />,
 };
 

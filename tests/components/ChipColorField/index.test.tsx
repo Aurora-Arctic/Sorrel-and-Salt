@@ -5,9 +5,6 @@ import ChipColorField from '@/components/ChipColorField';
 import type { ChipColorFieldProps } from '@/components/ChipColorField/types';
 import { pairedColor } from '@/lib/group-colors';
 
-// One of a category group's two chip colours: Ark's picker and the hex it writes, kept in step; the channels of a format the keeper chooses;
-// a veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a sample chip with its ratio; and a warning when another group's colour in the theme stands too close.
-
 function Controlled({
   initial = '#5d8ab1',
   onChange,
@@ -37,7 +34,6 @@ const hex = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const channel = (name: string) =>
   screen.getByRole('spinbutton', { name: `Dark Theme Colour ${name}` });
 const formatButton = () => screen.getByRole('button', { name: /^Dark Theme Colour Format:/ });
-/** Presses the format toggle until it shows `name`, as Chrome's cycles. */
 const showFormat = (name: 'HSB' | 'HSL' | 'RGB') => {
   for (let press = 0; press < 3; press += 1) {
     if (formatButton().getAttribute('aria-label')?.includes(`Format: ${name}.`)) return;
@@ -85,7 +81,6 @@ describe('ChipColorField', () => {
       expect(await screen.findByRole('tooltip')).toBeVisible();
     });
 
-    // Chrome's toggle: each press shows the next format, round again after the last.
     it('starts in HSB and cycles HSL, RGB and back, each with its own channels', () => {
       render(<Controlled />);
 
@@ -136,7 +131,40 @@ describe('ChipColorField', () => {
     await waitFor(() => expect(channel('red')).toHaveValue(0x35));
   });
 
-  // The pair's rule on demand, from the other colour.
+  it('shows a hex typed loosely as # and six lower-case digits when it is left', () => {
+    const onBlur = vi.fn();
+    render(<Controlled initial="" onBlur={onBlur} />);
+
+    for (const [typed, shown] of [
+      [' 4E8BC2', '#4e8bc2'],
+      ['abc', '#aabbcc'],
+      ['#4E8BC2 ', '#4e8bc2'],
+    ]) {
+      fireEvent.change(hex(), { target: { value: typed } });
+      // Only the # is laid out while it is being typed; the digits wait for the blur.
+      expect(hex()).toHaveValue(typed.includes('#') ? typed.trim() : `#${typed.trim()}`);
+      fireEvent.blur(hex());
+      expect(hex()).toHaveValue(shown);
+    }
+    expect(onBlur).toHaveBeenCalledTimes(3);
+  });
+
+  it('leaves a hex it cannot read as typed when it is left', () => {
+    render(<Controlled initial="" />);
+
+    fireEvent.change(hex(), { target: { value: '#4e8b' } });
+    fireEvent.blur(hex());
+
+    expect(hex()).toHaveValue('#4e8b');
+  });
+
+  it('takes no spell-check or capital letters on the hex', () => {
+    render(<Controlled />);
+
+    expect(hex()).toHaveAttribute('spellcheck', 'false');
+    expect(hex()).toHaveAttribute('autocapitalize', 'none');
+  });
+
   describe('Match', () => {
     it('sets the colour from its partner, fitted to this ground', () => {
       const onChange = vi.fn();
@@ -201,7 +229,6 @@ describe('ChipColorField', () => {
     });
   });
 
-  // A refusal in the error notice, as the warning is in its own.
   it('shows a refusal passed in, describing the box by it ahead of the ratio', () => {
     render(
       <Controlled
@@ -215,5 +242,35 @@ describe('ChipColorField', () => {
     expect(hex()).toHaveAccessibleDescription(expect.stringContaining('135° apart in hue'));
     expect(hex().getAttribute('aria-describedby')).toMatch(/^dark-error /);
     expect(hex()).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  describe('typing in the hex box', () => {
+    const typeInto = (text: string, caret = text.length) => {
+      const box = hex() as HTMLInputElement;
+      fireEvent.input(box, {
+        target: { value: text, selectionStart: caret, selectionEnd: caret },
+        inputType: 'insertText',
+      });
+      return box;
+    };
+
+    it('adds the # as digits arrive and keeps the caret after the digit just typed', () => {
+      render(<Controlled initial="" />);
+      const box = typeInto('4');
+      expect(box).toHaveValue('#4');
+      expect(box.selectionStart).toBe(2);
+    });
+    it('shows a pasted hex with a single #', () => {
+      render(<Controlled initial="" />);
+      expect(typeInto('##4e8bc2')).toHaveValue('#4e8bc2');
+    });
+    it('keeps a character that is not a hex digit on screen', () => {
+      render(<Controlled initial="" />);
+      expect(typeInto('4g')).toHaveValue('#4g');
+    });
+    it('clears the box when the last digit is deleted, not leaving a lone #', () => {
+      render(<Controlled initial="#4" />);
+      expect(typeInto('#', 1)).toHaveValue('');
+    });
   });
 });

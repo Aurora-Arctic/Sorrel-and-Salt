@@ -28,10 +28,7 @@ import { retentionDueStep as findRetentionDue } from '@/modules/support/jobs/sup
 import { retentionBatchStep as runRetentionBatch } from '@/modules/support/jobs/support-retention-batch-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-
-// What starts the daily support-retention job, what its stage reads and its batches do, called as its steps call them; and how
-// every reader treats a resolved request whose seven days have passed before the job has closed it: as closed, as of its seventh
-// day. The coordinator and batch runs themselves are tests/workflows/support-retention.test.ts.
+import { ORIGIN } from '../../../support/constants';
 
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
@@ -45,7 +42,6 @@ vi.mock('@/modules/support/jobs/support-retention-pages', async (importOriginal)
   RETENTION_PAGE_SIZE: 3,
 }));
 
-// The closing-soon notice goes through the transport itself; this stands in for it, and can be told to refuse a message.
 const { delivered, refuse, MailNotSent } = vi.hoisted(() => {
   class MailNotSent extends Error {}
   return {
@@ -85,7 +81,6 @@ beforeEach(async () => {
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The Testwort jar sticks', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
@@ -95,7 +90,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 type RetentionStage = Parameters<typeof findRetentionDue>[0];
 
 const send = () => sendSupportRequest(asUser(C), INPUT, mail);
-/** A request C sent, resolved by staff `daysAgo` days ago. */
 async function resolved(daysAgo: number) {
   const request = await send();
   await resolveSupportRequest(asUser(E), request.id, mail);
@@ -109,7 +103,6 @@ const statusOf = async (id: string) =>
 const rowOf = async (id: string) =>
   (await sql`select * from support_requests where id = ${id}`)[0]!;
 
-/** `count` requests from C, resolved `daysAgo` days ago, inserted in one statement; their ids. */
 async function resolvedRows(count: number, daysAgo: number): Promise<string[]> {
   const rows = await sql`
     insert into support_requests (about, subject, message, path, status, resolved_by, resolved_at, created_by, updated_by)
@@ -121,7 +114,6 @@ async function resolvedRows(count: number, daysAgo: number): Promise<string[]> {
   return rows.map((row) => row.id as string);
 }
 
-/** `count` requests from C, closed `monthsAgo` months ago, inserted in one statement; their ids. */
 async function closedRows(count: number, monthsAgo: number): Promise<string[]> {
   const rows = await sql`
     insert into support_requests
@@ -135,7 +127,6 @@ async function closedRows(count: number, monthsAgo: number): Promise<string[]> {
   return rows.map((row) => row.id as string);
 }
 
-/** Every page due for `stage` as of `now`, read as the coordinator reads them. */
 async function allPages(stage: RetentionStage, now: number): Promise<string[][]> {
   const pages: string[][] = [];
   let after: string | null = null;
@@ -148,7 +139,6 @@ async function allPages(stage: RetentionStage, now: number): Promise<string[][]>
   }
 }
 
-/** One day's work as of `now`, done as the coordinator and its batches do it, one after another; how many each stage changed. */
 async function runDay(now: number = Date.now()): Promise<Record<RetentionStage, number>> {
   const changed: Record<RetentionStage, number> = { notice: 0, close: 0, anonymise: 0 };
   for (const kind of RETENTION_STAGES) {
@@ -217,22 +207,18 @@ describe('one day’s run', () => {
 
     expect(await runDay()).toEqual({ notice: 1, close: 1, anonymise: 1 });
 
-    // The notice: sent to the sender and stamped, the request still resolved.
     expect(delivered.map((message) => message.to)).toEqual([C.email]);
     expect(delivered[0]!.text).toContain(`/account/support?request=${noticeDue}`);
     expect(await rowOf(noticeDue!)).toMatchObject({ status: 'resolved' });
     expect((await rowOf(noticeDue!)).closing_notice_sent_at).toBeInstanceOf(Date);
-    // Before day 5: nothing.
     expect(await rowOf(tooEarly!)).toMatchObject({
       status: 'resolved',
       closing_notice_sent_at: null,
     });
-    // Past day 7: closed as of its seventh day, with no notice, since it has already lapsed.
     const closed = await rowOf(lapsed!);
     expect(closed.status).toBe('closed');
     expect((closed.closed_at as Date).getTime()).toBe(lapsedAt.getTime() + 7 * DAY_MS);
     expect(closed.closing_notice_sent_at).toBeNull();
-    // Closed thirteen months ago: anonymised; eleven months ago: kept.
     expect(await rowOf(old!)).toMatchObject({
       subject: 'Anonymised support request.',
       message: '',

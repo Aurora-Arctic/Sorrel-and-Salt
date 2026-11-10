@@ -1,69 +1,17 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { isAtPath } from '../../lib/at-path';
-import { PendingLink } from '../../lib/navigation';
-import { siteLinkTarget } from '../AppShell/site-target';
-import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
-import IconTip from '../IconTip';
+import { type ReactElement, useId, useRef, useState } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { ChevronIcon } from '../IconTip/icons';
-import SupportLink from '../SupportLink';
-import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import SignOutButton from './sign-out-button';
+import { countText } from './counts';
 import { initialsOf } from './initials';
+import Panel from './panel';
 import type { AccountMenuProps } from './types';
 import './index.scss';
 
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
-// when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
+// when there are any, Help, Support and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
-
-// The account page: its sections beside the jump menu.
-const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
-
-// The most a menu count shows; a larger one reads "99+".
-const COUNT_CAP = 99;
-
-const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
-
-function countText(count: number, what: string): string {
-  return count > COUNT_CAP
-    ? `more than ${COUNT_CAP} requests ${what}`
-    : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
-}
-
-// The count as a circle shows it, and its tip: "3 Support Requests Assigned to You".
-function supportTip(count: number, tipWhat: string): { shown: number | string; tip: string } {
-  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
-  return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
-}
-
-// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
-function MenuCount({
-  count,
-  what,
-  tipWhat,
-}: {
-  count: number;
-  what: string;
-  /** The tip's words after the count, in title case: "Assigned to You". */
-  tipWhat: string;
-}): ReactElement {
-  const { shown, tip } = supportTip(count, tipWhat);
-  return (
-    <>
-      <span className="account-menu__badge-tip">
-        <IconTip tip={tip} placement="below">
-          <span className="account-menu__badge" aria-hidden="true">
-            {shown}
-          </span>
-        </IconTip>
-      </span>
-      <span className="visually-hidden">, {countText(count, what)}</span>
-    </>
-  );
-}
 
 const AccountMenu = ({
   name,
@@ -89,34 +37,26 @@ const AccountMenu = ({
     senderCount > 0 ? countText(senderCount, 'waiting on you') : null,
   ].filter((note) => note !== null);
   const fullName = notes.length > 0 ? `${name}, ${notes.join(', ')}` : undefined;
-  const pathname = usePathname();
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
 
-  // A link press leaves the page; the panel should not outlive it.
   const close = (): void => setOpen(false);
 
   // Open only: a closed menu listens for nothing. Escape is heard on the window so
   // it works wherever the focus is and hears one after a failed Sign Out's callout,
   // which takes its own Escape (`defaultPrevented`) and leaves the menu open.
-  useEffect(() => {
-    if (!open) return;
-    const closeOnOutsidePress = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
-      setOpen(false);
+  useDismiss({
+    active: open,
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: close,
+    onEscape: (event) => {
+      if (event.defaultPrevented) return;
+      close();
       button.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    window.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePress);
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [open]);
+    },
+    escapeOn: 'window',
+  });
 
   return (
     <div ref={root} className="account-menu">
@@ -141,112 +81,14 @@ const AccountMenu = ({
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
       <ul id={panelId} className="account-menu__panel" hidden={!open}>
-        {verified && (
-          <li className="account-menu__account">
-            <PendingLink
-              href={ACCOUNT_PATH}
-              navigationTarget={ACCOUNT_TARGET}
-              className={
-                pending ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
-              }
-              onClick={close}
-            >
-              Your Account
-            </PendingLink>
-            {/* A link of its own beside Your Account, not inside it: a press on the count
-                opens the invitations, a press on the rest of the row the account page. */}
-            {pending && (
-              <span className="account-menu__count">
-                <IconTip tip={`You Have ${invitations}`} placement="below">
-                  <PendingLink
-                    href={ACCOUNT_INVITATIONS_PATH}
-                    navigationTarget={ACCOUNT_TARGET}
-                    className="account-menu__count-mark"
-                    onClick={close}
-                  >
-                    <span aria-hidden="true">{pendingInvitations}</span>
-                    <span className="visually-hidden">{invitations}</span>
-                  </PendingLink>
-                </IconTip>
-              </span>
-            )}
-          </li>
-        )}
-        {verified &&
-          links.map(({ label, href, base }) => {
-            const counted = base === '/keepers' && staffCount > 0;
-            const { shown, tip } = supportTip(staffCount, 'Assigned to You');
-            return (
-              <li
-                key={label}
-                className={
-                  counted ? 'account-menu__link account-menu__link--counted' : 'account-menu__link'
-                }
-              >
-                <PendingLink
-                  href={href}
-                  navigationTarget={siteLinkTarget(base, href)}
-                  className={
-                    counted
-                      ? 'account-menu__item account-menu__item--counted'
-                      : 'account-menu__item'
-                  }
-                  onClick={close}
-                  aria-current={isAtPath(pathname, base) ? 'page' : undefined}
-                >
-                  {label}
-                </PendingLink>
-                {/* A link of its own beside Keepers, as the invitations count is beside Your Account:
-                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /keepers. */}
-                {counted && (
-                  <span className="account-menu__count">
-                    <IconTip tip={tip} placement="below">
-                      <PendingLink
-                        href={ADMIN_ASSIGNED_PATH as typeof href}
-                        navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
-                        className="account-menu__count-mark"
-                        onClick={close}
-                      >
-                        <span aria-hidden="true">{shown}</span>
-                        <span className="visually-hidden">
-                          {countText(staffCount, 'assigned to you')}
-                        </span>
-                      </PendingLink>
-                    </IconTip>
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        {verified && (
-          <li
-            className={
-              senderCount > 0
-                ? 'account-menu__link account-menu__link--counted'
-                : 'account-menu__link'
-            }
-          >
-            {senderCount > 0 ? (
-              // Waiting requests: the row leads to the list that shows which, not to a blank form.
-              <PendingLink
-                href={SUPPORT_LIST_PATH}
-                navigationTarget={ACCOUNT_TARGET}
-                className="account-menu__item"
-                onClick={close}
-              >
-                Support
-                <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
-              </PendingLink>
-            ) : (
-              <SupportLink className="account-menu__item" onClick={close}>
-                Support
-              </SupportLink>
-            )}
-          </li>
-        )}
-        <li className="account-menu__signout">
-          <SignOutButton />
-        </li>
+        <Panel
+          verified={verified}
+          links={links}
+          pendingInvitations={pendingInvitations}
+          assignedSupport={assignedSupport}
+          waitingSupport={waitingSupport}
+          close={close}
+        />
       </ul>
     </div>
   );

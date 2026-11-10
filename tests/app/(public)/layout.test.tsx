@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
@@ -15,7 +15,12 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
-vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
+vi.mock('@/lib/auth-client', () => ({
+  signOut: vi.fn(),
+  signIn: { social: vi.fn() },
+  getLastUsedLoginMethod: () => null,
+}));
+vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => ['google'] }));
 
 const { default: PublicLayout } = await import('@/app/(public)/layout');
 
@@ -44,7 +49,13 @@ describe('the (public) layout', () => {
 
     await layout();
 
-    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
+    // The bar's Sign In carries the page the visitor is on, so signing in comes back to it.
+    const signIn = new URL(
+      screen.getByRole('link', { name: 'Sign In' }).getAttribute('href')!,
+      'http://localhost',
+    );
+    expect(signIn.pathname).toBe('/sign-in');
+    expect(signIn.searchParams.get('next')).toBe('/compendium');
     expect(screen.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute('href', '#main');
     expect(screen.getByRole('navigation', { name: 'Site' })).toBeInTheDocument();
     expect(document.getElementById('main')!.nextElementSibling).toContainElement(
@@ -52,6 +63,20 @@ describe('the (public) layout', () => {
     );
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('heading', { name: 'The compendium' }),
+    );
+  });
+
+  it('hands the sign-in dialog in the bar the providers the server holds credentials for', async () => {
+    viewerIfSignedIn.mockResolvedValue(null);
+    await layout();
+
+    await act(async () => fireEvent.click(screen.getByRole('link', { name: 'Sign In' })));
+
+    const dialog = screen.getByRole('dialog', { name: 'Sign In' });
+    expect(within(dialog).getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Continue with Discord' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
     );
   });
 

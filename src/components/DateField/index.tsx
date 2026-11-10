@@ -1,8 +1,6 @@
 'use client';
 
 import { type ReactElement, useCallback, useId, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { enGB } from 'react-day-picker/locale';
 import {
   CALENDAR_CLASS_NAMES,
   CalendarChevron,
@@ -12,18 +10,16 @@ import {
   parseDay as parse,
   useCalendarPopover,
 } from './calendar';
+import { dayPickerModule } from '../DateField/lazy-day-picker';
 import { dayWords, isoDay, today } from './day';
+import { preloadOnIntent, useLazyModule, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import type { DateFieldProps } from './types';
 import './index.scss';
 
-// A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
-// input, whose look and highlight differ by browser. The calendar is a popover in the top layer, so it
-// floats over the fields below and no scrolling ancestor clips it; where the browser has no popover
-// (an older one) it opens in flow beneath the button instead (claude-docs/components/date-field.md).
+// A day field: a button showing the day in words, opening a calendar in a top-layer popover; where the browser has no
+// popover it opens in flow beneath the button instead (claude-docs/components/date-field.md).
 
-// With no `max` the year list still needs an end: it runs to the end of this many years after the current one.
 const YEARS_AHEAD = 1;
-// The earliest year the calendar lists.
 const FIRST_YEAR = 1900;
 
 // Every month name, every day number and every year from 1900 to 2999 the button can show. The button
@@ -70,6 +66,8 @@ export default function DateField({
   const [floating] = useState(hasPopover);
   const close = useCallback(() => setOpen(false), []);
   useCalendarPopover({ open, floating, fieldId: id, panel, close });
+  usePreloadWhenIdle(dayPickerModule);
+  const picker = useLazyModule(dayPickerModule, open);
   const selected = parse(value);
   const last = max ? parse(max) : undefined;
   const first = min ? parse(min) : undefined;
@@ -87,6 +85,7 @@ export default function DateField({
         aria-controls={open ? panelId : undefined}
         disabled={disabled}
         {...aria}
+        {...preloadOnIntent(dayPickerModule)}
         onClick={() => setOpen(!open)}
       >
         <Sizer />
@@ -104,34 +103,36 @@ export default function DateField({
           className={floating ? 'calendar-panel calendar-panel--floating' : 'calendar-panel'}
           popover={floating ? 'manual' : undefined}
         >
-          <DayPicker
-            mode="single"
-            required
-            // Focus moves into the calendar on open so the arrow keys work at once.
-            // oxlint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            locale={enGB}
-            weekStartsOn={1}
-            selected={selected}
-            defaultMonth={
-              selected ?? last ?? (first && isoDay(first) > today() ? first : undefined)
-            }
-            captionLayout="dropdown"
-            components={{ Dropdown: CaptionDropdown, Chevron: CalendarChevron }}
-            startMonth={
-              first
-                ? new Date(Math.min(first.getFullYear(), (selected ?? first).getFullYear()), 0)
-                : new Date(Math.min(FIRST_YEAR, (selected ?? last ?? now).getFullYear()), 0)
-            }
-            endMonth={last ?? new Date(now.getFullYear() + YEARS_AHEAD, 11)}
-            disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
-            onSelect={(day) => {
-              onChange(isoDay(day));
-              setOpen(false);
-              document.getElementById(id)?.focus();
-            }}
-            classNames={CALENDAR_CLASS_NAMES}
-          />
+          {picker && (
+            <picker.DayPicker
+              mode="single"
+              required
+              // Focus moves into the calendar on open so the arrow keys work at once.
+              // oxlint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              locale={picker.enGB}
+              weekStartsOn={1}
+              selected={selected}
+              defaultMonth={
+                selected ?? last ?? (first && isoDay(first) > today() ? first : undefined)
+              }
+              captionLayout="dropdown"
+              components={{ Dropdown: CaptionDropdown, Chevron: CalendarChevron }}
+              startMonth={
+                first
+                  ? new Date(Math.min(first.getFullYear(), (selected ?? first).getFullYear()), 0)
+                  : new Date(Math.min(FIRST_YEAR, (selected ?? last ?? now).getFullYear()), 0)
+              }
+              endMonth={last ?? new Date(now.getFullYear() + YEARS_AHEAD, 11)}
+              disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
+              onSelect={(day) => {
+                onChange(isoDay(day));
+                setOpen(false);
+                document.getElementById(id)?.focus();
+              }}
+              classNames={CALENDAR_CLASS_NAMES}
+            />
+          )}
           {/* Hidden when max is before today or min after it, so a refused day is never offered. */}
           {(!last || isoDay(last) >= today()) && (!first || isoDay(first) <= today()) && (
             <div className="calendar-panel__footer">

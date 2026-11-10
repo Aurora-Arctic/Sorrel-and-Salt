@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import TermsAgreement from '../../../../components/TermsAgreement';
 import { documentsChangedSince } from '../../../../lib/agreement-version';
 import { requireSession, sessionAgreedVersion } from '../../../../lib/request-session';
@@ -6,17 +7,14 @@ import { signedInLanding } from '../../../../lib/landing';
 import { safeReturnPath } from '../../../../lib/sign-in';
 import { agreementVersionInForce, readDocument } from '@/modules/documents';
 import type { TermsPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 // Out of search results and unfollowed: the public Terms of Use link here, and a signed-out crawler
 // is sent on to sign-in.
-export const metadata: Metadata = {
-  title: 'Terms of Use',
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = noIndexMetadata('Terms of Use', false);
 
 // Where an account that has not agreed to the current terms lands from every other protected page. It is exempt from the
 // terms check itself (`requireSession`), and an account that has already agreed is let through, so a stale tab does no harm.
-/** The stored agreement of an account that never agreed, which has every published document still to read. */
 const NEVER_AGREED = { terms: null, disclaimer: null, ethics: null };
 
 export default async function TermsAcceptancePage({ searchParams }: TermsPageProps) {
@@ -30,7 +28,7 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
   const destination = safeReturnPath(params.next) ?? (await signedInLanding(session));
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <TermsAgreement
           version={version}
@@ -39,6 +37,6 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
           destination={destination}
         />
       </div>
-    </main>
+    </PageFrame>
   );
 }

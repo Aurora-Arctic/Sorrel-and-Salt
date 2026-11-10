@@ -1,10 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The range button is a `.input` box with the calendar mark at its end and, while it holds a day,
-// a clear drawn inside the box before the mark; the calendar's own look is the day field's
-// (`DateField/calendar.scss`).
-
 .date-range-field {
   position: relative;
   min-inline-size: 0;
@@ -15,7 +11,6 @@
   align-items: center;
   gap: space(2);
   inline-size: 100%;
-  // Room for the clear, which sits over the box's end.
   padding-inline-end: calc(#{space(3)} + #{$glyph-size} + #{space(2)} + #{$glyph-size});
   text-align: start;
   white-space: nowrap;
@@ -60,7 +55,6 @@
   }
 }
 
-// The quick picks stand beside the months, and wrap into a row above them on a narrow window.
 .date-range-field__body {
   display: flex;
   flex-wrap: wrap;
@@ -73,7 +67,7 @@
   align-content: start;
   gap: space(1);
 
-  @media (min-width: 48rem) {
+  @include width-from(48rem) {
     flex-flow: column nowrap;
     min-inline-size: 8rem;
   }
@@ -95,7 +89,6 @@
     @include focus-ring;
   }
 
-  // Told by its fill and weight, not colour alone.
   &[aria-pressed='true'] {
     background-color: $fill-quiet;
     font-weight: 600;

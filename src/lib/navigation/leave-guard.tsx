@@ -6,10 +6,8 @@ import type { LeaveGuard, LeaveGuardOptions, LeaveGuardSlot } from './types';
 // A form's unsaved changes, kept from leaving the page: closing the tab or reloading raises the browser's own question, and an in-app navigation waits on the
 // form's own. Back and Forward are held through the Navigation API where the browser has it (claude-docs/components/modal.md, "Unsaved changes").
 
-/** The provider's slot. Null outside it, where nothing holds a navigation. */
 export const LeaveGuardContext = createContext<LeaveGuardSlot | null>(null);
 
-/** A slot for the provider to own: the mounted guards, in the order they came. */
 export function leaveGuardSlot(): LeaveGuardSlot {
   const guards = new Set<LeaveGuard>();
   return {
@@ -37,12 +35,7 @@ export function leaveGuardSlot(): LeaveGuardSlot {
 /** Marks the traversal a guard let go, so the hold does not ask about it again. */
 const RELEASED = 'leave-guard-released';
 
-/**
- * Holds the browser's Back and Forward while a guard has changes, where the Navigation API can
- * cancel them; returns the removal. A traversal is cancelable only inside the top-level document,
- * and one from the browser's own buttons only after the person has used the page (the HTML
- * standard's "history-action activation"), so `event.cancelable` is read and anything else goes through. An enhancement: a browser without the API keeps today's behaviour.
- */
+/** An enhancement: a browser without the Navigation API keeps today's behaviour. Reads `event.cancelable` and lets anything else through. */
 export function holdTraversals(slot: LeaveGuardSlot): () => void {
   const nav = 'navigation' in window ? window.navigation : undefined;
   if (!nav) return () => {};
@@ -60,11 +53,6 @@ export function holdTraversals(slot: LeaveGuardSlot): () => void {
   return () => nav.removeEventListener('navigate', onNavigate);
 }
 
-/**
- * Guards leaving the page while `dirty`. Closing the tab or reloading asks the
- * browser's question; an in-app navigation calls `ask` with the navigation,
- * held until `ask` calls it. `onHide` is called as the page is hidden.
- */
 export function useLeaveGuard(
   dirty: boolean,
   ask: (proceed: () => void) => void,

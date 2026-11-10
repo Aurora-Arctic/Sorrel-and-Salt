@@ -1,13 +1,12 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField } from '../Field';
+import { SearchField } from '../Field/search-field';
 import FilterForm from '../FilterForm';
 import { ARRIVALS_PATH, arrivalsHref } from './href';
 import type { ArrivalsFilterProps } from './types';
 
-// The Sign-Ups tab's filter, on the shared FilterForm: one box, sent by the magnifier or Enter from the first page.
-// Before hydration the form submits natively (`query=`).
+// Before hydration the form submits natively (query=).
 const ArrivalsFilterForm = ({ filter }: ArrivalsFilterProps): ReactElement => {
   const [query, setQuery] = useState(filter.query);
 

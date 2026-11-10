@@ -6,10 +6,10 @@ import TwoFactorSettings, {
   STALE_SESSION,
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
-import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { makeQueryClient } from '@/lib/graphql-client';
 
-// Story 75's switch on the account page. Better Auth's client is mocked at the three calls it makes;
+// The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;
 // tests/db/two-factor.test.ts proves what the server does with each.
 const enable = vi.fn();
 const disable = vi.fn();
@@ -31,7 +31,6 @@ const SECRET = 'JBSWY3DPEHPK3PXP';
 const TOTP_URI = `otpauth://totp/Sorrel%20%26%20Salt:someone%40two-factor.test?secret=${SECRET}&issuer=Sorrel%20%26%20Salt&digits=6&period=30`;
 const BACKUP_CODES = ['aaaaa-11111', 'bbbbb-22222', 'ccccc-33333'];
 
-// The account page wraps the switch in its own section and heading; this is that frame.
 function renderSection(twoFactorEnabled: boolean) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -54,7 +53,6 @@ const field = (label: string) =>
 const type = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 const button = (name: string) => within(twoFactorRegion()).getByRole('button', { name });
-// Which way the switch stands, read from the one action it offers.
 const isOn = () =>
   within(twoFactorRegion()).queryByRole('button', { name: 'Turn Off Two-Factor' }) !== null;
 const isOff = () =>
@@ -80,6 +78,20 @@ describe('TwoFactorSettings', () => {
     expect(button('Turn On Two-Factor')).toBeDisabled();
     type('Confirm Your Password', PASSWORD);
     expect(button('Turn On Two-Factor')).toBeEnabled();
+  });
+
+  it('confirms with the current password, then takes the app’s code as a one-time code', async () => {
+    enable.mockResolvedValue({
+      data: { totpURI: TOTP_URI, backupCodes: BACKUP_CODES },
+      error: null,
+    });
+    renderSection(false);
+    expect(field('Confirm Your Password')).toHaveAttribute('autocomplete', 'current-password');
+
+    type('Confirm Your Password', PASSWORD);
+    await press(button('Turn On Two-Factor'));
+
+    expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
   });
 
   it('shows the QR code, the key and the backup codes, and is not on until a code is confirmed', async () => {
@@ -225,6 +237,20 @@ describe('TwoFactorSettings', () => {
       expect(click).toHaveBeenCalledOnce();
       expect(blobs).toHaveLength(1);
       expect(await blobs[0].text()).toBe(EXPECTED);
+      click.mockRestore();
+    });
+
+    it('keeps the download link alive after the click so the browser can read it', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:codes');
+      const revoke = vi.fn();
+      URL.revokeObjectURL = revoke;
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      await startEnrolment();
+
+      await press(button('Download'));
+
+      expect(click).toHaveBeenCalledOnce();
+      expect(revoke).not.toHaveBeenCalled();
       click.mockRestore();
     });
 

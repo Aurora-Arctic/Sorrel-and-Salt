@@ -4,21 +4,18 @@ import { ChevronIcon } from '../IconTip/icons';
 import type { AccessCardsProps, AccessMark } from './types';
 import './index.scss';
 
-// Who may see each kind of data, as one card per kind: its summary line carries a mark per role,
-// and opening it shows every role's full wording. A row of role labels over the cards shares the
-// cards' columns and pins under the bar while they scroll past, each label tipped with its role's
-// full name. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).
+// Who may see each kind of data: one card per kind, a mark per role on its summary line, and a role row over the
+// cards that pins under the bar. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).
 
 const MARK_WORD: Record<AccessMark, string> = { yes: 'Yes', part: 'In Part', no: 'No' };
 
-// The mark's drawing is CSS; the hidden text, where given, is what a screen reader gets in its place.
 const Mark = ({ mark, spoken }: { mark: AccessMark; spoken?: string }): ReactElement => (
   <span className={`access-cards__mark access-cards__mark--${mark}`}>
     {spoken && <span className="access-cards__spoken">{spoken}</span>}
   </span>
 );
 
-// Each card is named by its kind of data alone, not by the marks' hidden text on the same line.
+// Each card is named by its kind of data alone, not by the marks' hidden text.
 const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
   const id = useId();
   return (

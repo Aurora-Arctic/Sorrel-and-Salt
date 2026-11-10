@@ -1,7 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import { editHeading } from '@/components/CompendiumList/heading';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -9,6 +10,11 @@ import { ViewerIdProvider } from '@/lib/viewer-id';
 import { textbox, waitFor } from '../../../../support/ingredient-form';
 import { press, type } from '../../../../support/interact';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../../../support/msw/ingredient-lookups';
+
+// The form loads on first use; loading it once up front keeps each test off a cold import.
+beforeAll(async () => {
+  await loadCompendiumEntryForm();
+});
 
 const navigation = vi.hoisted(() => ({ navigate: vi.fn(), refresh: vi.fn() }));
 vi.mock('@/lib/navigation', async (original) => ({
@@ -24,7 +30,7 @@ const { default: CompendiumDialog } =
   await import('../../../../../src/app/(shell)/curator/compendium/compendium-dialog');
 
 // The admin compendium's edit dialog after the form has saved itself: the heading and the address follow
-// the name the autosave filed, without waiting for Save (claude-docs/components/autosave.md).
+// the name the autosave filed, without waiting for Save (claude-docs/autosave.md).
 
 const NAMED = (name: string) => ({
   ...EMPTY_VALUES,

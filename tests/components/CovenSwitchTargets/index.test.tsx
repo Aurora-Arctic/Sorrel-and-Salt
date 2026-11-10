@@ -6,9 +6,6 @@ import {
   useCovenSwitchRegistration,
 } from '@/components/CovenSwitchTargets/context';
 
-// What a page tells the layout's switcher about the covens it opens in: held while
-// the page is shown, gone when it is not.
-
 function Reader() {
   const registration = useCovenSwitchRegistration();
   return (

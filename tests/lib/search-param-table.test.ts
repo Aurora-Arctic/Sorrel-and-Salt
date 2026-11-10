@@ -10,15 +10,11 @@ import {
   textParam,
 } from '@/lib/search-param-table';
 
-// The typed table of a search's parameters: each entry is the name in the address, how it is
-// read, how it is written and the GraphQL variable it becomes. Read, href and variables go
-// through every entry alike, so a new filter is one new entry and no change to a caller.
 const KINDS = ['earth', 'fire'] as const;
 
 const base = {
   query: textParam('query', 'query'),
   kind: choiceParam('kind', ['a', 'b'] as const, 'kind'),
-  // Written bare, `?only`, and read by its presence.
   only: searchParam({
     name: 'only',
     variable: 'only',
@@ -26,7 +22,6 @@ const base = {
     write: (on: boolean) => on,
     toVariable: (on) => on || undefined,
   }),
-  // The address holds one value; the read takes a list.
   form: searchParam({
     name: 'form',
     variable: 'forms',
@@ -107,11 +102,9 @@ describe('the parameter table', () => {
     const changed = search.changed(place, { elements: ['earth'] });
     expect(changed).toEqual({ query: 'wort', elements: ['earth'] });
     expect(search.href('/x', changed)).not.toMatch(/after|before/);
-    // Kept where the filter is not changed: the pager and a modal's way back.
     expect(search.href('/x', place, { after: 'c1' })).toContain('after=c1');
   });
 
-  // The criterion: a filter is one new entry, and no caller changes.
   it('takes one more entry without a change to read, href, variables or changed', () => {
     const wider = defineSearchParams({
       ...base,
@@ -129,8 +122,6 @@ describe('the parameter table', () => {
   });
 });
 
-// A list of slugs in the address, turned into ids against a lookup the page reads once: the
-// address stays readable, and a slug no live row holds is dropped rather than refused.
 describe('a slug list entry', () => {
   const slugs = defineSearchParams({
     query: textParam('query', 'query'),

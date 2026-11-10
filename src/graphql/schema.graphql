@@ -324,7 +324,7 @@ type DeitySuggestion {
   id: ID
 
   """
-  The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.
+  The other name the query matched, which the deity's own name does not show; null when its name matched, or it was found another way.
   """
   matchedName: String
   tradition: String
@@ -490,6 +490,115 @@ enum GrimoireOrder {
   UPDATED_DESC
 }
 
+"""A help row: an FAQ entry, an article or a glossary term."""
+type HelpArticle {
+  audience: HelpAudience!
+  body: String!
+
+  """The live children the reader’s audience reaches, in position order."""
+  children: [HelpArticle!]!
+  id: ID!
+  kind: HelpArticleKind!
+  parentId: ID
+  position: Int
+
+  """Whether readers see the row; a hidden parent hides its children too."""
+  shown: Boolean!
+  slug: String!
+  summary: String
+  title: String!
+}
+
+input HelpArticleInput {
+  audience: HelpAudience
+  body: String!
+
+  """
+  The sub pages a guide holds, in order, each placed by its place in the list.
+  """
+  childIds: [ID!]
+  kind: HelpArticleKind!
+  parentId: ID
+
+  """A whole number, 0 or more."""
+  position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
+  summary: String
+  title: String!
+}
+
+"""
+A question and answer, a page (`article`), a top-level page holding sub pages (`guide`), or a glossary term.
+"""
+enum HelpArticleKind {
+  article
+  faq
+  guide
+  term
+}
+
+"""
+Fields to change; one left out stays. A null `summary`, `searchTerms`, `position` or `parentId` clears it. A new title moves the slug, which is always derived from the title. A `childIds` list sets the children in its order and releases a child it leaves out to the top level.
+"""
+input HelpArticlePatch {
+  audience: HelpAudience
+  body: String
+  childIds: [ID!]
+
+  """
+  A top-level article becomes a guide, and a guide holding no sub page an article; any other change is refused.
+  """
+  kind: HelpArticleKind
+  parentId: ID
+
+  """A whole number, 0 or more."""
+  position: Int
+
+  """
+  Words that make the row findable by a reader’s own word; the search reads them as it reads the summary.
+  """
+  searchTerms: String
+  summary: String
+  title: String
+}
+
+"""
+Who reads a help row: everyone (`public`), curators and keepers (`staff`), or keepers alone (`keeper`).
+"""
+enum HelpAudience {
+  keeper
+  public
+  staff
+}
+
+"""
+Which rows the keeper’s list holds: the shown ones, the hidden ones, or both.
+"""
+enum HelpListing {
+  all
+  hidden
+  shown
+}
+
+"""
+What a title change would leave pointing at a help row’s old address; nothing redirects one.
+"""
+type HelpRenameEffects {
+  """
+  Every other live row whose body holds the old address or, for a term, marks the old title.
+  """
+  articles: [HelpArticle!]!
+  newPath: String!
+  oldPath: String!
+
+  """The help front page’s quick link titles that read the old slug."""
+  quickLinks: [String!]!
+}
+
 """
 A curated deity or category, by id, and how many entries it would list.
 """
@@ -534,7 +643,7 @@ type Ingredient {
   references: [ReferenceLink!]!
 
   """
-  A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
+  A compendium entry the curators have retired, read by a coven whose cupboard still names it.
   """
   retired: Boolean!
 
@@ -836,11 +945,12 @@ enum InvitableRole {
 }
 
 """
-A site role an invitation may grant: never `user`, which every account holds.
+What a site invitation grants: `user` turns on coven creation alone and changes no role; `curator` or `admin` grants that role.
 """
 enum InvitableSiteRole {
   admin
   curator
+  user
 }
 
 """
@@ -888,6 +998,9 @@ type InvitationCard {
 
   """The mint that made it, shared by the whole batch."""
   batchId: ID!
+
+  """Whether its batch was minted for beta testers."""
+  beta: Boolean!
   expiresAt: DateTime!
   id: ID!
 
@@ -933,6 +1046,11 @@ type InvitationCardBatch {
   """How many of its cards were accepted."""
   accepted: Int!
   batchId: ID!
+
+  """
+  Whether the batch was minted for beta testers; set at minting and never changed.
+  """
+  beta: Boolean!
 
   """How many cards the batch holds."""
   cards: Int!
@@ -1050,7 +1168,7 @@ type Mutation {
   convertCompendiumEntryToLocal(ingredientId: ID!, workspaceId: ID!): ConvertedCompendium!
 
   """
-  Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
+  Invites an address to become a curator or an admin, or, as `user`, to create covens with no role change, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, or for `user` already able to create a coven, and while admin changes are paused, but to the primary admin.
   """
   createAdminInvitation(email: String!, note: String, siteRole: InvitableSiteRole!): Invitation!
   createCategory(input: CategoryInput!): Category!
@@ -1058,13 +1176,14 @@ type Mutation {
   createCelestialBody(input: CelestialBodyInput!): CelestialBody!
   createCompendiumIngredient(
     """
-    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    Confirms ending another entry's redirect from the address this write takes.
     """
     endRedirect: Boolean
     input: CompendiumIngredientInput!
   ): Ingredient!
   createDeity(input: DeityInput!): Deity!
   createDeityTradition(input: DeityTraditionInput!): DeityTradition!
+  createHelpArticle(input: HelpArticleInput!): HelpArticle!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
 
@@ -1074,9 +1193,13 @@ type Mutation {
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
 
   """
-  Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.
+  Mints `sheets` sheets of ten cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 50 sheets.
   """
   createInvitationCards(
+    """
+    Whether the batch is for beta testers; every card of it carries the flag.
+    """
+    beta: Boolean!
     expiresAt: DateTime!
 
     """
@@ -1131,6 +1254,11 @@ type Mutation {
   A soft delete; the live deities under it move to `moveTo` first, re-slugged there, which they need when there are any.
   """
   deleteDeityTradition(id: ID!, moveTo: ID): ID!
+
+  """
+  A soft delete, answering the id; refused while the row holds live children.
+  """
+  deleteHelpArticle(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
 
   """
@@ -1197,6 +1325,16 @@ type Mutation {
   liftUserAccessPause(userId: ID!): UserAccessPause!
 
   """
+  Places every live FAQ entry, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpFaq(ids: [ID!]!): [HelpArticle!]!
+
+  """
+  Places every live top-level guide, hidden ones included, in the order given; refused unless the ids are exactly that set.
+  """
+  orderHelpGuides(ids: [ID!]!): [HelpArticle!]!
+
+  """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
@@ -1253,6 +1391,11 @@ type Mutation {
   removeMember(userId: ID!, workspaceId: ID!): Boolean!
 
   """
+  Renames a coven, and moves its address to follow the name; the latest old address still reaches it for its members, until another coven takes that address. Owners only; refused for the demo coven.
+  """
+  renameWorkspace(name: String!, workspaceId: ID!): Workspace!
+
+  """
   Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
   """
   replyToSupportRequest(
@@ -1264,6 +1407,11 @@ type Mutation {
     """
     waitingOnSender: Boolean
   ): SupportReply!
+
+  """
+  A signed-out sender replies from the link in a mail about their request. The token alone finds the request; a wrong, older or claimed one is not found. Open to anyone; counts toward the signed-out send limits.
+  """
+  replyToSupportRequestByViewToken(body: String!, token: String!, website: String): Boolean!
 
   """
   The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
@@ -1332,6 +1480,11 @@ type Mutation {
   """
   setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
+
+  """
+  Shows or hides a row; a hidden row reaches no reader, and a hidden parent hides its children.
+  """
+  setHelpArticleShown(id: ID!, shown: Boolean!): HelpArticle!
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!
 
@@ -1347,6 +1500,19 @@ type Mutation {
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
+
+  """
+  Bars the sender of a signed-out request, who has no account, from sending support requests from the address they wrote from, until `until` or with no end when it is left out. The address is kept only as a key. Site admins only.
+  """
+  timeOutSignedOutSender(
+    """
+    Kept with the time-out; nothing is mailed to an address that was never confirmed.
+    """
+    message: String!
+    note: String!
+    requestId: ID!
+    until: DateTime
+  ): SupportTimeout!
 
   """
   Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
@@ -1377,7 +1543,7 @@ type Mutation {
   """Replaces the entry; the slug follows the name."""
   updateCompendiumIngredient(
     """
-    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    Confirms ending another entry's redirect from the address this write takes.
     """
     endRedirect: Boolean
 
@@ -1399,6 +1565,7 @@ type Mutation {
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
   updateDocument(id: ID!, input: DocumentInput!): Document!
+  updateHelpArticle(id: ID!, input: HelpArticlePatch!): HelpArticle!
   updateIngredient(
     """
     The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
@@ -1732,6 +1899,30 @@ type Query {
   A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given, matching `query` when given and ranked best match first.
   """
   grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, query: String, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
+
+  """A public row by slug; not found for any other audience."""
+  helpArticle(slug: String!): HelpArticle!
+
+  """
+  The public top-level pages, guides and articles together, in position order.
+  """
+  helpArticles(after: String, before: String, first: Int, last: Int): QueryHelpArticlesConnection!
+
+  """The public FAQ entries, in position order."""
+  helpFaq(after: String, before: String, first: Int, last: Int): QueryHelpFaqConnection!
+
+  """The public glossary terms, A to Z."""
+  helpGlossary(after: String, before: String, first: Int, last: Int): QueryHelpGlossaryConnection!
+
+  """
+  What saving `title` on the row would leave pointing at its old address, read before the save.
+  """
+  helpRenameEffects(id: ID!, title: String!): HelpRenameEffects!
+
+  """
+  The rows the reader’s audience reaches that `query` finds, best first; a blank query finds none.
+  """
+  helpSearch(after: String, before: String, first: Int, last: Int, query: String!): QueryHelpSearchConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """
@@ -1788,6 +1979,11 @@ type Query {
     mintedTo: LocalDate
     status: InvitationCardBatchStatus
   ): QueryInvitationCardBatchesConnection!
+
+  """
+  Every live row of every kind and audience, shown and hidden, that the filters admit, A to Z: the keeper’s list.
+  """
+  keeperHelpArticles(after: String, audience: HelpAudience, before: String, first: Int, kind: HelpArticleKind, last: Int, listing: HelpListing, query: String): QueryKeeperHelpArticlesConnection!
   me: User!
 
   """One of the signed-in account’s own support requests."""
@@ -1820,6 +2016,12 @@ type Query {
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
 
+  """A row by slug among the audiences a curator or keeper reaches."""
+  staffHelpArticle(slug: String!): HelpArticle!
+
+  """Every live row of every kind the reader’s audience reaches, A to Z."""
+  staffHelpArticles(after: String, before: String, first: Int, last: Int): QueryStaffHelpArticlesConnection!
+
   """
   Open to a signed-out caller. The answer is about the caller alone, read under their own session.
   """
@@ -1827,6 +2029,11 @@ type Query {
 
   """One support request the viewer may read."""
   supportRequest(id: ID!): SupportRequest!
+
+  """
+  A signed-out sender opens their request from the token in a mail link. The token alone finds it; a wrong, older, expired or claimed one is NotFound. Open to anyone; counts toward a per-client read limit.
+  """
+  supportRequestByViewToken(token: String!): SupportRequestView!
 
   """
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
@@ -2133,6 +2340,46 @@ type QueryGrimoireConnectionEdge {
   node: Spell!
 }
 
+type QueryHelpArticlesConnection {
+  edges: [QueryHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpFaqConnection {
+  edges: [QueryHelpFaqConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpFaqConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpGlossaryConnection {
+  edges: [QueryHelpGlossaryConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpGlossaryConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
+type QueryHelpSearchConnection {
+  edges: [QueryHelpSearchConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryHelpSearchConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
 type QueryIngredientFormGroupsConnection {
   edges: [QueryIngredientFormGroupsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -2195,6 +2442,16 @@ type QueryInvitationCardBatchesConnectionEdge {
   node: InvitationCardBatch!
 }
 
+type QueryKeeperHelpArticlesConnection {
+  edges: [QueryKeeperHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryKeeperHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
+}
+
 type QueryMySupportRequestsConnection {
   edges: [QueryMySupportRequestsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -2238,6 +2495,16 @@ type QueryReferenceSuggestionsConnection {
 type QueryReferenceSuggestionsConnectionEdge {
   cursor: String!
   node: Reference!
+}
+
+type QueryStaffHelpArticlesConnection {
+  edges: [QueryStaffHelpArticlesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryStaffHelpArticlesConnectionEdge {
+  cursor: String!
+  node: HelpArticle!
 }
 
 type QuerySupportRequestsConnection {
@@ -2413,7 +2680,7 @@ input ReferenceLinkInput {
   supports: [String!]
 }
 
-"""A Reviewed setting, and how many entries it would list (M14.8)."""
+"""A Reviewed setting, and how many entries it would list."""
 type ReviewFacetCount {
   """
   How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
@@ -2519,7 +2786,7 @@ type Spell {
   note: String
 
   """
-  Raised by one on every save; a save names the revision it was written against (M13.15).
+  Raised by one on every save; a save names the revision it was written against.
   """
   revision: Int!
   sealWaxColor: String
@@ -2529,7 +2796,7 @@ type Spell {
   steps: [SpellStep!]!
 
   """
-  Null on a draft not yet named: only a complete spell must carry a title (M13.15).
+  Null on a draft not yet named: only a complete spell must carry a title.
   """
   title: String
   visibility: SpellVisibility!
@@ -2821,7 +3088,7 @@ type SupportRequest {
   subject: String!
 
   """
-  The sender’s time-outs, past and active, newest first. Site admins only.
+  The sender’s time-outs, past and active, newest first; for a signed-out request, those on its address. Site admins only.
   """
   timeouts: [SupportTimeout!]!
 }
@@ -2847,6 +3114,19 @@ input SupportRequestInput {
   subject: String!
 }
 
+"""
+What the mailed-link page shows of a signed-out sender’s request: its public thread, and no address, token or staff field.
+"""
+type SupportRequestView {
+  about: SupportAbout!
+  id: ID!
+  message: String!
+  replies: [SupportViewReply!]!
+  sentAt: DateTime!
+  status: SupportStatus!
+  subject: String!
+}
+
 """Derived from the invitation the sender accepted; never stored."""
 enum SupportSenderTier {
   beta_tester
@@ -2869,7 +3149,17 @@ type SupportTimeout {
   liftedAt: DateTime
   note: String!
   until: DateTime
-  userId: ID!
+  userId: ID
+}
+
+"""
+A message in the thread of a signed-out sender’s request, as the mailed-link page shows it.
+"""
+type SupportViewReply {
+  authorRole: SupportReplyAuthorRole!
+  body: String!
+  id: ID!
+  sentAt: DateTime!
 }
 
 """A toxic setting other than any, and how many entries it would list."""

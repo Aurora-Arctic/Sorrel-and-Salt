@@ -8,27 +8,25 @@ import { get, post, pwnedRange } from '../support/password';
 import { totpCode, wrongTotpCode } from '../support/two-factor';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { PASSWORD } from '../support/constants';
 
-// Story 75 through Better Auth's real endpoints: an authenticator-app step after a right password, and the
-// versioned secrets its stored secret is encrypted under (DESIGN.md §8; claude-docs/auth/two-factor.md).
-
+// Through Better Auth's real endpoints (DESIGN.md §8; claude-docs/auth/two-factor.md).
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
-// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
+// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset;
+// its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@two-factor.test';
 const OWNER = `owner${DOMAIN}`;
-const PASSWORD = 'Testwort crowns the eastern hedge';
 const OLD_SECRET = 'testwort-old-secret-0123456789abcdef0123456789';
 const NEW_SECRET = 'testwort-new-secret-0123456789abcdef0123456789';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer(pwnedRange([], []));
@@ -66,7 +64,6 @@ async function sessionCount(): Promise<number> {
   return (row as { n: number }).n;
 }
 
-/** A verified password account, signed in; returns its session cookie. */
 async function signedInAccount(on: AuthInstance = auth): Promise<string> {
   const signUp = await post(on, '/sign-up/email', {
     name: 'Fixture Person',
@@ -80,7 +77,6 @@ async function signedInAccount(on: AuthInstance = auth): Promise<string> {
   return cookieHeader(signIn);
 }
 
-/** Two-factor turned on for a signed-in account, as the account page does it; returns what the page shows once. */
 async function enrolled(cookie: string, on: AuthInstance = auth) {
   const enable = await post(on, '/two-factor/enable', { password: PASSWORD }, cookie);
   expect(enable.status, await enable.clone().text()).toBe(200);
@@ -96,7 +92,6 @@ async function enrolled(cookie: string, on: AuthInstance = auth) {
   return { ...shown, cookie: cookieHeader(verify) || cookie };
 }
 
-/** A right password on a device holding `device` cookies; returns the answer and the challenge cookie. */
 async function passwordStep(on: AuthInstance = auth, device = '') {
   const response = await post(on, '/sign-in/email', { email: OWNER, password: PASSWORD }, device);
   expect(response.status, await response.clone().text()).toBe(200);
@@ -144,7 +139,6 @@ describe('Story 75: turning two-factor on and off', () => {
     };
     expect(new URL(totpURI).searchParams.get('issuer')).toBe('Sorrel & Salt');
     expect(backupCodes).toHaveLength(10);
-    // Started, not on: a wrong code leaves it off.
     expect(await twoFactorEnabled()).toBe(false);
     const wrong = await post(
       auth,
@@ -219,7 +213,6 @@ describe('Story 72: a wrong password at a two-factor endpoint counts as a failed
     return row as { count: number; locked_until: Date | null } | undefined;
   }
 
-  /** A signed-in account with the state each path needs before it reads the password; returns its cookie. */
   async function readyFor(path: string): Promise<string> {
     const cookie = await signedInAccount();
     if (path === '/two-factor/enable') return cookie;
@@ -405,7 +398,6 @@ describe('the secret the two-factor rows are encrypted under', () => {
     expect(verify.status, await verify.clone().text()).toBe(200);
     expect(await signedInAs(cookieHeader(verify), rotated)).toBe(OWNER);
 
-    // A new enrolment is written under the new version.
     const disable = await post(
       rotated,
       '/two-factor/disable',
@@ -443,7 +435,6 @@ describe('the secret the two-factor rows are encrypted under', () => {
   });
 });
 
-/** The trust-device cookie a verification set, as a request header. */
 function trustCookieOf(response: Response): string {
   const cookie = cookieHeader(response)
     .split('; ')

@@ -1,16 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A document reads as prose: every running line keeps to the measure, a table may run wider in
-// its own scrolling frame, and each section's heading sits a step above its text.
-// The page is `.page-with-nav` with its column widened from the narrow column to the reading
-// measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
-// rule names both classes, as the primitives are emitted under `body` and one class alone loses to
-// them.
-// The menu's column is half as wide again as `.page-with-nav`'s (`$document-menu-column`): in the narrower
-// column most section headings broke into three lines. From a tablet up the menu and the measure
-// still fit side by side inside the frame's gutters.
-
 // The page colour easing out from an edge of the scrolling menu, opaque at the edge so no entry shows
 // cut off there; several stops rather than a straight ramp, so no line shows where it ends.
 $scroll-fade:
@@ -19,24 +9,31 @@ $scroll-fade:
   color-mix(in srgb, $surface-page 50%, transparent) 55%,
   color-mix(in srgb, $surface-page 15%, transparent) 80%,
   transparent;
-// The paused notice's tallest shape from a tablet up: the aside's top padding, the notice's padding
-// and three lines of its small text at the prose line height, then the error notice's bottom margin.
+// The paused notice's tallest shape from a tablet up: the aside's top padding, the notice's
+// padding and three lines of small text at the prose line height, then the error notice's margin.
 $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')} * 1.65 * 3 + 1rem);
 
+// The rule names both classes, as the primitives are emitted under `body`.
+// The menu column is half again as wide, or headings broke into three lines.
 .document-page.page-with-nav {
   @include page-with-nav-grid($document-menu-column, $measure);
+
+  &:not(:has(> .page-nav)) {
+    @include page-with-nav-grid(null, $measure);
+  }
 
   // A menu of long entries: each entry takes a step more air above and below, so the gap between
   // two entries is plainly wider than the gap between one entry's own lines, and its lines are set
   // a touch looser than the font's own so a two-line entry reads as one thing.
-  > .page-nav a {
+  // The skeleton's pending entries take the same, or its menu is shorter and its bars sit higher than the entries that replace them.
+  > .page-nav :is(a, .page-nav__pending) {
     padding-block: space(2);
     line-height: 1.3;
   }
 
   // On a phone the folded menu sits one stack step above the text, so the first heading's own top
   // margin, which would add four steps more, is dropped.
-  @media (max-width: #{$shell-phone-width}) {
+  @include phone-down {
     > .page-nav + .document-page__body > :first-child {
       margin-block-start: 0;
     }
@@ -45,7 +42,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // The menu scrolls inside itself, capped at the room under its unstuck top (the bar plus the
   // frame's padding), and starts on the head's row: placed lower, its box overran the window before
   // it stuck. The focus ring is inset because the scrolling edge clips one drawn outside.
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     > .page-nav {
       grid-row: 1 / span 3;
       max-height: calc(100dvh - #{$shell-bar-height} - #{space(6)} - #{space(4)});
@@ -76,15 +73,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
       height: space(8);
       pointer-events: none;
       opacity: 0;
-      @include theme-transition(opacity);
-
-      @include reduced-motion {
-        transition: none;
-      }
     }
 
     > .page-nav::before {
-      // Above the entries, which are positioned for the current entry's bar and come later in the order.
+      // Above the entries, which are positioned for the current entry's bar and come later in the
+      // order.
       z-index: 1;
       inset-block-start: 0;
       margin-block-end: calc(-1 * #{space(8)});
@@ -118,6 +111,11 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   font-size: type-size('small');
 }
 
+// The skeleton's bar in that line is as tall as the line, so the head below it keeps its place.
+.document-page__updated .skeleton__shapes .skeleton__line {
+  height: 1lh;
+}
+
 .document-page__body {
   margin-block-start: space(6);
 
@@ -140,7 +138,59 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 1.65;
   }
 
-  // A source list reads as a bibliography: each entry hangs its second line under the first.
+  // A `>` paragraph is a pull-quote: larger type with a hanging opening mark in the accent, and a short accent rule
+  // closing it. The mark is drawn by CSS, so the file holds only the quoted words.
+  blockquote {
+    position: relative;
+    max-width: $measure;
+    margin-block: space(5) space(6);
+    margin-inline: 0;
+    padding: space(5) 0 space(5) space(7);
+    font-size: type-size('quote');
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: $text-primary;
+
+    // A decorative mark, 3.25 times the quote, off the type scale.
+    &::before {
+      content: '\201C';
+      position: absolute;
+      inset-block-start: space(4);
+      inset-inline-start: 0;
+      font-family: $font-heading;
+      font-weight: 700;
+      font-size: 3.25em;
+      line-height: 1;
+      color: $accent;
+    }
+
+    &::after {
+      content: '';
+      display: block;
+      inline-size: space(7);
+      block-size: $rule-heavy;
+      margin-block-start: space(4);
+      border-radius: radius('pill');
+      background: $accent;
+    }
+
+    p {
+      margin: 0;
+      font-size: inherit;
+      line-height: inherit;
+    }
+
+    // On a phone the mark sits above the words instead of beside them.
+    @include phone-down {
+      padding-inline-start: 0;
+      padding-block-start: calc(#{space(7)} + #{space(1)});
+
+      &::before {
+        inset-block-start: space(1);
+      }
+    }
+  }
+
   .document-page__sources li {
     padding-inline-start: 1.5rem;
     text-indent: -1.5rem;
@@ -154,18 +204,15 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     line-height: 0;
   }
 
-  // Each number is its own link to hit, set apart by spacing alone.
   .document-page__marks a {
     padding-inline: space(1);
   }
 
-  // A source number, an entry's link and its return arrow rest in the body ink and fade to
-  // `$accent-hover` when pointed at or focused, as an ingredient entry's note numbers do.
   .document-page__marks a,
   .document-page__sources a {
     color: $text-primary;
     @include faded-underline;
-    @include theme-transition(color);
+    @include state-fade(color);
 
     &:hover,
     &:focus-visible {
@@ -191,7 +238,6 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
     white-space: nowrap;
   }
 
-  // The number a jump lands on, and the entry it lands on, stand out and clear the top inset.
   .document-page__marks a:target,
   .document-page__source:target {
     background-color: $fill-quiet;
@@ -209,5 +255,27 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // A cell is prose too, so it keeps the paragraph's loose line.
   .data-table td {
     line-height: 1.5;
+  }
+}
+
+// The skeleton's lede holds the three lines every document's takes on a phone, so the menu below it
+// stands where it will.
+.document-page__head .lede .skeleton {
+  min-height: 3lh;
+}
+
+// The About Us page's own typography: only the page that asks for the variant takes it, so the other documents draw as before.
+.document-page--about {
+  // A larger lede, since it says what the page is and a visitor may read nothing else.
+  .document-page__head .lede {
+    font-size: type-size('title');
+    line-height: 1.5;
+  }
+
+  // Each section opens under a hairline, with more air above it, so the page reads as parts rather than a run of text.
+  .document-page__body h2 {
+    margin-block-start: space(8);
+    padding-block-start: calc(#{space(8)} * 0.666);
+    border-block-start: 1px solid $hairline;
   }
 }

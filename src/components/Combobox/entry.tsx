@@ -1,45 +1,22 @@
 'use client';
 
-import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useId, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { GripIcon, LinkIcon } from './icons';
+import { LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
+import GripHandle from '../GripHandle';
 import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
-import type { ComboboxEntryProps, EntryHandleProps } from './types';
+import type { ComboboxEntryProps } from './types';
 
 // An entry a list holds, inside the control: its text and the x that takes it out, with the whole text in a tooltip when cut off or when it has a detail
 // (claude-docs/components/combobox.md, "An entry"; "A sortable list"; "A linked entry's summary").
 
-/** A sortable entry's handle: a real button, so it is in the tab order with its focus ring, holding the grip and the text. */
-function EntryHandle({
-  value,
-  sortable,
-  describedBy,
-  onFocus,
-  onBlur,
-  children,
-}: EntryHandleProps): ReactElement {
-  const { setActivatorNodeRef, listeners, attributes } = sortable;
-  const { role: _role, 'aria-describedby': instructions, ...rest } = attributes;
-  return (
-    <button
-      type="button"
-      ref={setActivatorNodeRef}
-      className="combobox__entry-handle"
-      {...rest}
-      {...listeners}
-      aria-label={`Move ${value}`}
-      aria-describedby={[describedBy, instructions].filter(Boolean).join(' ')}
-      onFocus={onFocus}
-      onBlur={onBlur}
-    >
-      <GripIcon />
-      {children}
-    </button>
-  );
-}
+/** dnd-kit's own translate string, written here so the chip does not pull in @dnd-kit/utilities. */
+const translateOf = (transform: { x: number; y: number } | null): string | undefined =>
+  transform
+    ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
+    : undefined;
 
 export function ComboboxEntry({
   value,
@@ -64,7 +41,6 @@ export function ComboboxEntry({
   // A sortable entry's text is its handle, so it opens nothing.
   const summary = sortable ? undefined : summarised;
   const opens = useEntrySummary();
-  // Asked as the tooltip opens: an open summary keeps it shut, saying more.
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
     const element = text.current;
     return (
@@ -75,7 +51,7 @@ export function ComboboxEntry({
     );
   }, 'top-start');
 
-  // The tooltip runs as wide as its words, past the chip and the control; only being cut off is wrong. `useTip` keeps it on screen.
+  // The tooltip runs as wide as its words, past chip and control; `useTip` keeps it on screen.
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}
@@ -95,7 +71,6 @@ export function ComboboxEntry({
       {icon}
     </span>
   ) : null;
-  // What the x reads after its name, and the handle before how it moves: the error, the qualifier, then the detail.
   const describedBy =
     [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
 
@@ -105,7 +80,6 @@ export function ComboboxEntry({
       className={[
         'combobox__entry',
         colors && 'is-coloured',
-        // A group's fill is its own: outlined chips are the neutral ones.
         outlined && !colors && 'is-outlined',
         errorId && 'is-invalid',
         sortable?.isDragging && 'is-dragging',
@@ -116,7 +90,7 @@ export function ComboboxEntry({
       style={{
         ...(colors && chipColors(colors)),
         ...(sortable && {
-          transform: CSS.Translate.toString(sortable.transform),
+          transform: translateOf(sortable.transform),
           transition: sortable.transition,
         }),
       }}
@@ -130,8 +104,6 @@ export function ComboboxEntry({
       >
         {iconMark}
         {summary ? (
-          // Named by its text, as the x is, and read as the x is; it says
-          // it opens a dialog, and whether that is open.
           <button
             type="button"
             className="combobox__entry-open"
@@ -151,16 +123,16 @@ export function ComboboxEntry({
             {textSpan}
           </button>
         ) : sortable ? (
-          // Named as the x is, for its entry, and read as the x is.
-          <EntryHandle
-            value={value}
+          <GripHandle
             sortable={sortable}
+            name={value}
+            className="combobox__entry-handle"
             describedBy={describedBy}
             onFocus={show}
             onBlur={hide}
           >
             {textSpan}
-          </EntryHandle>
+          </GripHandle>
         ) : (
           textSpan
         )}

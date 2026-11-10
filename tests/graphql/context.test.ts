@@ -6,7 +6,6 @@ import type { Session, SessionState } from '@/lib/session';
 const sessionStateFromHeaders = vi.fn<(headers: Headers) => Promise<SessionState>>();
 vi.mock('@/lib/request-session', () => ({ sessionStateFromHeaders }));
 
-/** The state Better Auth's reading would give for `session`. */
 const stateOf = (
   session: Session | null,
   accessPause?: SessionState['accessPause'],

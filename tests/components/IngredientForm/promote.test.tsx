@@ -17,13 +17,9 @@ import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// Promoting a folk name: the control on a saved folk name's chip, the question it always asks, and what the form is left holding, tried on the compendium's edit.
-// The coven tier is tried on the question and its hook; the control on a coven's edit is coven-edit.test.tsx's.
-
 const HEDGE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c01';
 const BANE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c02';
 
-/** Testwort with two saved folk names. */
 const TESTWORT: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -34,14 +30,12 @@ const TESTWORT: IngredientFormValues = {
   ],
 };
 
-/** The calls the mutations were sent, in the order they arrived. */
 interface Sent {
   order: string[];
   promotes: PromoteFolkNameMutationVariables[];
   saves: UpdateCompendiumIngredientMutationVariables[];
 }
 
-/** The swap as the server does it: the new name in, the old one in the list. */
 function acceptPromote(oldName = 'Testwort'): Sent {
   const sent: Sent = { order: [], promotes: [], saves: [] };
   mockGraphQLMutation<
@@ -155,7 +149,6 @@ describe('promoting a folk name in the compendium form', () => {
   });
 
   describe('on a clean form', () => {
-    // Its Cancel is the question's own case, below.
     it('asks first, sending nothing until it is answered', async () => {
       const sent = acceptPromote();
       renderForm();
@@ -180,7 +173,6 @@ describe('promoting a folk name in the compendium form', () => {
       await waitFor(() => expect(textbox('Name')).toHaveValue('Hedge Fixture'));
       expect(sent.promotes).toEqual([{ workspaceId: null, id: ENTRY_ID, folkNameId: HEDGE_ID }]);
       expect(sent.saves).toHaveLength(0);
-      // The old display name is a folk name now, and the promoted one no longer is.
       expect(chip('Testwort')).toBeInTheDocument();
       expect(chip('Hedge Fixture')).not.toBeInTheDocument();
       expect(chip('Fixture Bane')).toBeInTheDocument();
@@ -298,7 +290,6 @@ describe('promoting a folk name in the compendium form', () => {
 });
 
 describe('the promotion question on its own, for either tier', () => {
-  /** The question and the hook it runs on, for a tier, asking about one saved folk name. */
   function Harness({
     workspaceId,
     dirty = false,

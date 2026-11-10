@@ -1,20 +1,17 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { NotFound } from '@/lib/errors';
 import { getMe } from '@/modules/identity';
 import { A, B, asUser } from '../../../support/as-user';
+import { useTestDatabase } from '../../../support/db/database';
 
 // `me` has one reader: the session's own user. No id is taken, so there is no
 // other user's row for a caller to name.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 describe('getMe', () => {

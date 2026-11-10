@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement, Ref } from 'react';
+import type { PreloadHandlers } from '../../lib/types';
 import MenuButton from '../MenuButton';
 import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
@@ -12,21 +13,19 @@ import {
   MysticEyeIcon,
   PencilIcon,
   PreviewIcon,
+  ReorderIcon,
 } from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
 // (claude-docs/components/icon-tip.md).
 
-/** The bin: a Delete or a Remove, in the wax a remove control wears, as a lone choice of the More. */
 export const BinButton = ({
   verb,
   name,
   onClick,
   ref,
 }: {
-  /** "Delete Ingredient" on a coven's own entry, "Remove" on a compendium entry it holds. */
   verb: string;
-  /** The entry, read after the verb. */
   name: string;
   onClick: () => void;
   ref?: Ref<HTMLButtonElement>;
@@ -49,7 +48,6 @@ export const EditButton = ({
   ref,
 }: {
   name: string;
-  /** The text ink in place of the accent green. */
   plain?: boolean;
   onClick: () => void;
   ref?: Ref<HTMLButtonElement>;
@@ -67,7 +65,32 @@ export const EditButton = ({
   </IconTip>
 );
 
-/** Annotate as a button, where a press asks which coven first; the one coven's is `AnnotateLink`. */
+/** Toggles a list's Reorder Mode: named and tipped Reorder alone, since the list is the one beside it; pressed while the mode is on. */
+export const ReorderButton = ({
+  onClick,
+  pressed,
+  className,
+  ref,
+}: {
+  onClick: () => void;
+  pressed: boolean;
+  className?: string;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Reorder">
+    <button
+      ref={ref}
+      type="button"
+      className={className ? `icon-tip__edit ${className}` : 'icon-tip__edit'}
+      aria-pressed={pressed}
+      onClick={onClick}
+    >
+      <ReorderIcon />
+      <span className="visually-hidden">Reorder</span>
+    </button>
+  </IconTip>
+);
+
 export const AnnotateButton = ({
   name,
   onClick,
@@ -94,7 +117,6 @@ export const QuickLookButton = ({
 }: {
   name: string;
   onClick: () => void;
-  /** `small`: the eye at 1rem in a 24px box, for a row already full (a spell's steps). */
   size?: 'small';
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
@@ -111,7 +133,6 @@ export const QuickLookButton = ({
   </IconTip>
 );
 
-/** Preview as a button: a spell's pane for following it as it is worked, in the text colour, named "Preview Spell" and the spell. */
 export const PreviewButton = ({
   name,
   onClick,
@@ -134,31 +155,33 @@ export const PreviewButton = ({
   </IconTip>
 );
 
-/** Record a Working as a button: a spell's cauldron, tipped "Record a Working" and named "Record a Working of" and the spell, opening the dialog that records one, in the accent green. */
 export const RecordButton = ({
   name,
   onClick,
+  preload,
   ref,
 }: {
   name: string;
   onClick: () => void;
+  /** Starts the dialog's late-loading parts when the pointer, focus or a press reaches the button. */
+  preload?: PreloadHandlers;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Record a Working">
-    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick} {...preload}>
       <CauldronIcon />
       <span className="visually-hidden">Record a Working of {name}</span>
     </button>
   </IconTip>
 );
 
-/** The three dots: a menu of further choices, in the page's ink, as flat items or in labelled sections (an entry's Compendium and Coven); a lone Delete or Remove is the bin instead. */
 export const MoreMenu = ({
   name,
   ref,
+  preload,
   ...choices
 }: MenuButtonChoices &
-  Pick<MenuButtonProps, 'busy' | 'busyLabel'> & {
+  Pick<MenuButtonProps, 'busy' | 'busyLabel' | 'preload'> & {
     name: string;
     ref?: Ref<HTMLButtonElement>;
   }): ReactElement => (
@@ -168,6 +191,7 @@ export const MoreMenu = ({
       label={`More for ${name}`}
       className="icon-tip__edit icon-tip__more"
       icon={<DotsIcon />}
+      preload={preload}
       {...choices}
     />
   </IconTip>

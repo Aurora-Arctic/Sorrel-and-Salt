@@ -1,0 +1,1 @@
+Destructive DDL acknowledged: `invitations_site_role_invitable` is dropped and added again in the same migration with `user` in its allowed set, so it only widens. No column, row or index is lost, and every row the old check admitted, the new one admits.

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import IngredientCardList from '../IngredientCardList';
 import SpellCard, { SpellCardFilters } from '../SpellCard';
@@ -8,10 +9,9 @@ import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
 import './index.scss';
 
-// One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager,
-// on the coven Ingredients' list shell (CovenCards), the list named after its tab. Render-only
-// (claude-docs/components/grimoire-list.md). The wrapper's `data-density` draws the loading skeleton
-// compact, as the cards are.
+// One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager, on CovenCards'
+// list shell. Render-only (claude-docs/components/grimoire-list.md). The wrapper's `data-density` draws the loading
+// skeleton compact, as the cards are.
 
 const GrimoireList = ({
   path,
@@ -31,8 +31,13 @@ const GrimoireList = ({
 }: GrimoireListProps): ReactElement => (
   <div data-density="compact">
     <IngredientSearch
-      shape="cards"
-      card="spell"
+      skeleton={
+        <ListBodySkeleton
+          label={status === 'draft' ? 'Drafts' : 'Spells'}
+          card="spell"
+          density="compact"
+        />
+      }
       search={
         <GrimoireFilter
           path={path}
@@ -50,7 +55,7 @@ const GrimoireList = ({
       position={position}
     >
       {spells.length === 0 ? (
-        <EmptyGrimoire status={status} filter={filter} canCreate={canCreate} />
+        <EmptyGrimoire status={status} filter={filter} canCreate={canCreate} path={path} />
       ) : (
         <>
           <SpellCardFilters />

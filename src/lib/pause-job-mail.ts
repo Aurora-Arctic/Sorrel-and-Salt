@@ -7,7 +7,6 @@ import type { Message } from './types';
 // coven name or a message. Every link opens the support page, which a paused account can still reach. Only templates are
 // imported, as the step bundle takes in everything this file reaches.
 
-/** The support time-out mail to `to`, linked from `origin`. */
 export function supportTimeoutNotice(
   origin: string,
   to: string,
@@ -16,7 +15,6 @@ export function supportTimeoutNotice(
   return supportTimedOutMessage({ to, url: `${origin}/support`, ...timeout });
 }
 
-/** The site access pause mail to `to`, linked from `origin`. */
 export function accessPauseNotice(
   origin: string,
   to: string,
@@ -25,7 +23,6 @@ export function accessPauseNotice(
   return accessPausedMessage({ to, url: `${origin}/support`, ...pause });
 }
 
-/** The coven access pause mail to `to`, naming `covenName` and linked from `origin`. */
 export function memberPauseNotice(
   origin: string,
   to: string,

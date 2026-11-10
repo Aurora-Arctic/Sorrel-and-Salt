@@ -1,5 +1,6 @@
 'use client';
 
+import { prefersReducedMotion } from '@/lib/motion';
 import {
   type ReactElement,
   type ReactNode,
@@ -27,9 +28,6 @@ import {
 import type { SearchSentenceProps } from './types';
 import './index.scss';
 
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
-
-/** The count at the start of the lead ("12", or "No") a little heavier than the words round it. */
 function leadNode(lead: string): ReactNode {
   const count = /^(?:\d+|No(?= |$))/.exec(lead)?.[0];
   if (!count) return lead;
@@ -41,10 +39,8 @@ function leadNode(lead: string): ReactNode {
   );
 }
 
-/** The class of a value: its box shows only once the value is whole, and fades in as it becomes so. */
 const valueClass = (whole: boolean): string => `search-sentence__value${whole ? ' is-boxed' : ''}`;
 
-/** " matching rue" as far as typed, the term in a hairline box once it is all there (`full`). */
 function termNode(text: string, full: string): ReactNode {
   if (!text.startsWith(MATCHING)) return text;
   const term = text.slice(MATCHING.length);
@@ -87,7 +83,7 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
 /**
  * The sentence above a list saying what it searches for: one closed line, opening to its clauses, typed out while a search is in flight;
  * a status region announces the finished sentence once (claude-docs/components/search-sentence.md).
- * (claude-docs/components/search-sentence.md, "The sentence and its loading animation").
+ * (claude-docs/components/search-sentence.md, "Contracts").
  */
 export default function SearchSentence({
   sentence,
@@ -108,9 +104,7 @@ export default function SearchSentence({
   });
   const [phase, setPhase] = useState<'idle' | 'working' | 'holding'>('idle');
   const [returned, setReturned] = useState(false);
-  // True when the results came back mid-typing: the clauses then finish at a faster pace.
   const [rush, setRush] = useState(false);
-  // Set while the old line is being backspaced; says whether the term is kept.
   const [wipe, setWipe] = useState<{ keepTerm: boolean } | null>(null);
   const slide = useSlide('search-sentence__tail');
   const lineRef = useRef(line);
@@ -159,9 +153,6 @@ export default function SearchSentence({
     }
   });
 
-  // The editing: a character a tick, the old line in about WIPE_MS. Reduced motion jumps to
-  // the goal. The count and the term are always typed at that pace; clauses still to type
-  // when the results landed (a fast return) go RUSH_STEP characters a tick.
   useEffect(() => {
     if (phase !== 'working') return undefined;
     const goalNow = (): Goal =>
@@ -172,7 +163,7 @@ export default function SearchSentence({
             term: parts.term,
             clauses: fullClauses,
           };
-    const reduced = window.matchMedia(REDUCED_QUERY).matches;
+    const reduced = prefersReducedMotion();
     let step = 1;
     if (reduced) step = editsLeft(lineRef.current, goalNow()) || 1;
     else if (wipe) {
@@ -197,7 +188,6 @@ export default function SearchSentence({
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- the goal is read at every tick.
   }, [phase, wipe, returned, rush, parts.lead, parts.term, fullClauses]);
 
-  // Held for a moment, then the tail closes and the line is settled.
   useEffect(() => {
     if (phase !== 'holding') return undefined;
     const timer = window.setTimeout(() => {
@@ -209,7 +199,6 @@ export default function SearchSentence({
   }, [phase]);
 
   const searching = phase !== 'idle';
-  // The settled sentence is drawn from the props whole; only a search types it.
   const view: Line = searching
     ? line
     : { lead: parts.lead, term: parts.term, clauses: fullClauses, caret: 'clauses' };
@@ -232,8 +221,6 @@ export default function SearchSentence({
     </>
   );
   const rootClass = `search-sentence${className ? ` ${className}` : ''}`;
-  // The sentence is given to assistive technology once per search: not while it is typed, and
-  // from the moment the search has returned.
   const announced = !searching || returned;
   const statusRegion = (
     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role

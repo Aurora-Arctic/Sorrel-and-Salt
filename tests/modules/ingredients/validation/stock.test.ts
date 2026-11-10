@@ -25,7 +25,7 @@ describe('StockInput', () => {
   });
 
   // `0` is out of stock and null is "we have this, unweighed"
-  // (claude-docs/db/stock.md, "Nullability"); both are values, and neither is
+  // (claude-docs/db/stock.md, "Nullability, and why zero is not the same as nothing"); both are values, and neither is
   // refused.
   it('takes zero, and takes nothing at all', () => {
     expect(StockInput.safeParse({ quantityOnHand: 0, lowStockThreshold: 0 }).success).toBe(true);
@@ -50,7 +50,12 @@ describe('StockInput', () => {
     }
   });
 
-  // The units module's list, so the one list is what is accepted.
+  it('refuses more than three decimal places, at its field', () => {
+    expect(StockInput.safeParse({ quantityOnHand: 0.125 }).success).toBe(true);
+    expect(failedPaths({ quantityOnHand: 0.1234 })).toEqual([['quantityOnHand']]);
+    expect(failedPaths({ lowStockThreshold: 2.0005 })).toEqual([['lowStockThreshold']]);
+  });
+
   it('takes a unit the units module names, and refuses one it does not', () => {
     for (const unit of ['fl_oz_uk', 'fl_oz_us']) {
       expect(StockInput.safeParse({ unit }).success, unit).toBe(true);

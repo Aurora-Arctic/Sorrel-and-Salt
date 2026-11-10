@@ -12,9 +12,7 @@ import type {
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The invitations addressed to the signed-in account, on the account page
-// : one row each, with its own Accept and Decline
-// (claude-docs/components/received-invitations.md).
+// claude-docs/components/received-invitations.md
 
 const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -95,7 +93,6 @@ describe('ReceivedInvitations', () => {
     expect(calls).toEqual([{ id: 'i-2' }]);
     expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).toHaveAttribute('aria-busy', 'true');
-    // Only the row that was clicked is sent.
     expect(acceptFor('Fixture Coven')).not.toHaveAttribute('aria-disabled');
     // The coven it opens is the news; the status region says nothing.
     expect(announced()).toBe('');
@@ -182,7 +179,6 @@ describe('ReceivedInvitations', () => {
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ id: 'i-2' }]);
-    // Declining leaves the page where it is: no coven is opened.
     expect(router.push).not.toHaveBeenCalled();
     expect(announced()).toContain('Testwort Circle');
   });

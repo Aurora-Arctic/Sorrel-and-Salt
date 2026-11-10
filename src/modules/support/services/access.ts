@@ -25,7 +25,6 @@ export function readerOf(session: Session, reason: string): SupportReader {
   return { role: 'curator', proof: assertCurator(session, reason) };
 }
 
-/** The viewer a reply batch is read for. */
 export function viewerOf(session: Session): SupportViewer {
   return { userId: session.userId, role: session.role };
 }

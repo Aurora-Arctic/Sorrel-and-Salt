@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import DocumentPage from '.';
 
-// Render-only; behaviour is asserted in tests/components/DocumentPage.
 const meta = { title: 'Pages / Document Page', component: DocumentPage } satisfies Meta<
   typeof DocumentPage
 >;

@@ -7,23 +7,26 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
+import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
-// An address invitation's mail, end to end in the SDK's local world, against a stand-in Mailpit that can be told to fail. The
-// run holds the invitation's id and the origin; each attempt of its step gives the invitation a fresh token and mails that,
-// so a link from an attempt the transport refused names nothing. A printed card never goes this way.
+// Each attempt of the step gives the invitation a fresh token and mails that, so a link from a refused attempt names nothing. A printed card never goes this way.
 
 const DOMAIN = '@invitation-run.test';
-const ORIGIN = 'http://localhost:8000';
-const MAILPIT_URL = 'http://mailpit.test';
 // The token each row is inserted with, made unique per row as the column is.
 const staleToken = (n: number) => `fixture-token-${n}-dddddddddddddddddddddddddddddddd`;
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: { to: string; text: string }[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
 
-// Answers fetch itself rather than listening on a port: the local world finds its queue by this process's port.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -49,7 +52,6 @@ let inviterId: string;
 let covenId: string;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -73,7 +75,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(() => {
@@ -130,7 +131,6 @@ describe('the invitation mail run', () => {
     expect(attempts).toHaveLength(3);
     const tokens = attempts.map(({ text }) => tokenIn(text));
     expect(tokens.every(Boolean)).toBe(true);
-    // Each attempt minted its own token.
     expect(new Set(tokens).size).toBe(3);
     expect(received).toHaveLength(1);
     expect(received[0]!.to).toBe(invitation.email);

@@ -2,14 +2,13 @@
 
 import type { ReactElement } from 'react';
 import { ModalButton } from '../Modal';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { RenameFields } from './rename-fields';
 import { passkeyAdded, passkeyLabel } from './label';
-import { GENERIC } from './refusal';
+import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import type { PasskeyRowProps } from './types';
 
-// One passkey: its name and the day it was added, then Rename (a dialog) and Remove, which asks first. A refused removal
-// is a callout under Remove, as a sign-in method's is (claude-docs/components/passkeys.md).
+// A refused removal is a callout under Remove (claude-docs/components/passkeys.md).
 export function PasskeyRow({ passkey, onRename, onRemove }: PasskeyRowProps): ReactElement {
   const label = passkeyLabel(passkey.name);
 
@@ -40,7 +39,7 @@ export function PasskeyRow({ passkey, onRename, onRemove }: PasskeyRowProps): Re
         confirmClass="btn btn--destructive"
         send={onRemove}
         onSent={() => undefined}
-        refusal={(error) => (error instanceof Error ? error.message : GENERIC)}
+        refusal={(error) => (error instanceof Error ? error.message : GENERIC_FAILURE)}
       />
     </li>
   );

@@ -17,9 +17,6 @@ import { type IngredientFixture, type Overrides, makeIngredient } from '../../..
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
-// DESIGN.md §5, "The two readers are scoped differently": a member's autofill for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then uncurated values in use in the compendium and the caller's own workspace.
-// The vocabularies are the seed's, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value a result could carry is one this file wrote.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
@@ -31,7 +28,6 @@ beforeEach(async () => {
   await sql`update zodiac_signs set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/** A row of this file's: no formal name, so `none`; what matters is its celestial body or sign. */
 function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature: 'none', ...entry }), A.id);
 }
@@ -61,7 +57,6 @@ function pageOf(
   return resolvePage(args, (request) => suggest(session, workspaceId, query, request));
 }
 
-/** Every suggestion in one page — the lists here are far shorter than the maximum. */
 async function all(
   suggest: Suggest,
   session: Session,
@@ -75,7 +70,6 @@ async function all(
 
 const valuesOf = (suggestions: VocabularySuggestion[]) => suggestions.map((s) => s.value);
 
-/** The seed's celestial body names in the order the list carries them: case-folded, alphabetical. */
 const CURATED_CELESTIAL_BODIES = CELESTIAL_BODIES.map((celestialBody) => celestialBody.name).sort(
   (a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1),
 );
@@ -156,7 +150,6 @@ describe('suggestCelestialBodies', () => {
       const suggestions = await all(suggestCelestialBodies, asUser(B), 'moon');
 
       expect(suggestions.filter((s) => s.value.toLowerCase() === 'moon')).toEqual([
-        // The spelling most entries use, trimmed.
         { value: 'Moon', description: null, curated: false },
       ]);
     });
@@ -192,7 +185,6 @@ describe('suggestCelestialBodies', () => {
 
       expect(uncurated).toEqual([
         { value: 'Eris', description: null, curated: false },
-        // The spelling most entries use.
         { value: 'Sedna', description: null, curated: false },
       ]);
     });

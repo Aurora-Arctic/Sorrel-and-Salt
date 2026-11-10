@@ -1,0 +1,371 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Two panes from a tablet up: the outline of guides, then the chosen one. Below it the outline gives way to the
+// Guide select (claude-docs/components/help-outline.md). Tokens only, before the section's design review.
+.help-outline {
+  display: grid;
+  gap: space(5) space(7);
+  align-items: start;
+  margin-block-start: space(5);
+
+  @include above-tablet {
+    grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+  }
+}
+
+// The left pane, drawn as the site's side menu draws its entries (PageNav): muted links, the current one in body ink
+// with the accent bar on the edge toward the pane.
+.help-outline__side {
+  @include above-tablet {
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+}
+
+.help-outline__nav {
+  --help-outline-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
+
+  display: none;
+
+  @include above-tablet {
+    display: block;
+  }
+
+  ul {
+    @include list-reset;
+    margin-block-end: space(5);
+  }
+
+  a {
+    display: flex;
+    gap: space(3);
+    align-items: baseline;
+    justify-content: space-between;
+    padding: space(1) space(4) space(1) space(3);
+    color: $text-muted;
+    text-decoration: none;
+    box-shadow: inset (-$rule-heavy) 0 0 0 transparent;
+    @include state-fade(background-color, color);
+
+    &:hover {
+      background: $fill-quiet;
+      color: $text-primary;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-current='page'] {
+      color: $text-primary;
+      box-shadow: inset (-$rule-heavy) 0 0 0 var(--help-outline-bar);
+    }
+
+    @include forced-colors {
+      border-inline-end: $rule-heavy solid Canvas;
+      padding-inline-end: calc(#{space(4)} - #{$rule-heavy});
+
+      &[aria-current='page'] {
+        border-inline-end-color: CanvasText;
+      }
+    }
+  }
+
+  .badge {
+    margin-inline-start: space(1);
+  }
+}
+
+.help-outline__group {
+  margin-block: 0 space(1);
+  padding-inline-start: space(3);
+  color: $text-primary;
+  font-size: type-size('overline');
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+// An audience's run sits under a quieter heading than "Guides".
+.help-outline__group--sub {
+  color: $text-muted;
+  font-weight: 400;
+}
+
+.help-outline__heading {
+  display: flex;
+  gap: space(3);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: space(2);
+  padding-block-end: space(2);
+  border-block-end: 1px solid $hairline;
+
+  .help-outline__group {
+    margin-block-end: 0;
+  }
+}
+
+// A row's marks, the Hidden eye then the sub page count badge, sit at its far end.
+.help-outline__marks {
+  display: inline-flex;
+  flex: none;
+  gap: space(2);
+  align-items: center;
+  margin-inline-start: auto;
+
+  .badge {
+    margin-inline-start: 0;
+  }
+}
+
+.help-outline__eye {
+  display: inline-flex;
+  color: $text-muted;
+
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+}
+
+// Reorder Mode: every live guide in one flat list, each row a grip, its place, its title and its marks.
+.help-outline__nav ul.help-outline__reorder {
+  margin-block-end: space(3);
+
+  &[aria-busy='true'] {
+    @include busy-faded;
+  }
+}
+
+.help-outline__reorder-row {
+  display: flex;
+  gap: space(2);
+  align-items: center;
+  padding: space(1) space(3);
+  background: $surface-card;
+
+  &.is-dragging {
+    position: relative;
+    z-index: 1;
+    box-shadow: $shadow-lifted;
+  }
+
+  .help-outline__label.is-hidden {
+    color: $text-muted;
+  }
+}
+
+.help-outline__place {
+  flex: none;
+  min-width: 2ch;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
+
+  // The saving spinner is 1em of the row's text, which reads large beside a digit.
+  .spinner {
+    font-size: type-size('small');
+  }
+}
+
+// A grip, unboxed as the spell steps' handle is, with its hit area grown to the control floor; `touch-action` is
+// dnd-kit's ask, so a drag by touch moves the row rather than the page.
+.help-outline__grip {
+  @include button-reset(grab);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: radius('sharp');
+  color: $text-muted;
+  touch-action: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: -14px;
+    inset-inline: -8px;
+  }
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  .is-dragging & {
+    cursor: grabbing;
+  }
+}
+
+.help-outline__mode .notice {
+  margin-block-end: space(3);
+}
+
+// Below two panes the Guide select stands for the bar, with its own Reorder beside it; there Reorder Mode opens the
+// bar as a sheet over the page's foot.
+.help-outline__select {
+  display: flex;
+  gap: space(3);
+  align-items: end;
+
+  > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @include above-tablet {
+    display: none;
+  }
+}
+
+.help-outline__reorder-open--phone {
+  flex: none;
+}
+
+@include tablet-down {
+  .help-outline__side.is-reordering .help-outline__nav {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: layer('dialog');
+    display: block;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-block: space(4);
+    border-start-start-radius: radius('surface');
+    border-start-end-radius: radius('surface');
+    background: $surface-card;
+    box-shadow: $shadow-elevated;
+  }
+}
+
+.help-outline__pane {
+  min-width: 0;
+}
+
+.help-outline__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3) space(5);
+  align-items: center;
+  justify-content: space-between;
+
+  // The title takes the room left of the actions and wraps within it; when the room would hold fewer than 14
+  // characters of the title a line (about three lines for a long title), the actions wrap to a line below.
+  h2 {
+    flex: 1 1 14ch;
+    margin: 0;
+  }
+}
+
+.help-outline__head-actions {
+  margin-inline-start: auto;
+  display: inline-flex;
+  gap: space(4);
+  align-items: center;
+}
+
+.help-outline__facts {
+  @include dotted-row('*');
+  // A paragraph is capped at the reading measure (_typography.scss); a row of facts runs the pane's width.
+  max-inline-size: none;
+  margin-block: space(2) space(5);
+  color: $text-muted;
+
+  // Each fact stays whole, the address link not breaking at its hyphens, so the row wraps only between facts. Only
+  // where the column is narrower than one address (phone width) may it break within itself, as a last resort.
+  > * {
+    white-space: nowrap;
+  }
+
+  @include tablet-down {
+    > * {
+      max-inline-size: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+// A hidden row's muted title, beside its shut eye and, in a table, the lidded eye of its switch.
+.help-outline__title.is-hidden,
+.help-outline__nav a.is-hidden {
+  color: $text-muted;
+}
+
+.help-outline__in {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.help-outline__number {
+  font-variant-numeric: tabular-nums;
+}
+
+// A sortable table's dragged row, lifted over its neighbours.
+.help-outline__order-row.is-dragging {
+  position: relative;
+  z-index: 1;
+  background: $surface-card;
+  box-shadow: $shadow-lifted;
+}
+
+// The grip and the title stay top-aligned with matching padding, so the grip sits on the title's first line
+// while the row reads centred.
+.help-outline__order-table > tbody > .help-outline__order-row > :is(td, th) {
+  vertical-align: middle;
+}
+
+// Above the stacking width only: a card sets its cells' padding to nothing and stacks them.
+@container data-table (width > #{$table-stack-width}) {
+  .help-outline__order-table
+    > tbody
+    > .help-outline__order-row
+    > :is(.help-outline__grip-cell, [scope='row']) {
+    padding-block: calc(#{space(2)} + max(0px, (#{$icon-size-large} - 1lh) / 2));
+    vertical-align: top;
+  }
+}
+
+.help-outline__order-row .help-outline__grip {
+  block-size: 1lh;
+}
+
+// The corner's two controls, the grip and the position take only the room they need, rather than a share of the
+// table; above the stacking width only, as a card is full width.
+@container data-table (width > #{$table-stack-width}) {
+  .help-outline .help-outline__corner,
+  .help-outline .help-outline__grip-cell,
+  .help-outline .help-outline__number {
+    width: 1%;
+    white-space: nowrap;
+  }
+}
+
+.help-outline__corner {
+  white-space: nowrap;
+
+  .shown-switch {
+    margin-inline-start: space(2);
+    position: relative;
+    inset-block-start: 2px;
+  }
+}
+
+.help-outline__add {
+  margin-block-start: space(5);
+}
+
+.help-outline__count {
+  font-variant-numeric: tabular-nums;
+}

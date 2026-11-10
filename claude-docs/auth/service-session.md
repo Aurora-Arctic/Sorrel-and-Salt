@@ -1,4 +1,4 @@
-## The service-level session, and the three errors (M1.26, MB.43)
+## The service-level session, and the three errors
 
 `src/lib/session.ts` defines the `Session` every service takes:
 
@@ -28,7 +28,7 @@ shape ahead of it so authorization tests could be written first, and
   mutation as a second, independent check on top of the service's own, and a
   schema-layer scope reads the context rather than running a query.
 - **`canCreateWorkspace` is deliberately not.** Accepting an invitation flips
-  the flag mid-session (M7.5), and a snapshot taken before that would deny a
+  the flag mid-session, and a snapshot taken before that would deny a
   user something they had just earned. The service that gates on it reads the
   row.
 - **Nothing else belongs on it.** The workspace is in the URL, not the
@@ -53,7 +53,7 @@ input field in the shape of the operation's input, such as `['canonicalName']`
 or `['folkNames', 2]`, and is empty for a rule that belongs to no one field.
 The type carries issues but does not produce them, so `errors.ts` depends on
 no schema library, and a seed or a script can throw one. The adapter that turns
-a failed Zod parse into issues is `src/lib/validation.ts` (M4.5). A refusal
+a failed Zod parse into issues is `src/lib/validation.ts`. A refusal
 that is not about a value, such as the last-owner guard, stays a `Forbidden`
 with an explaining message.
 
@@ -69,7 +69,7 @@ page, since everyone already knows that path exists (CLAUDE.md's domain
 invariants). None of the three carries a status code or a GraphQL error code:
 the transport renders a refusal, and a service called from a script has no use
 for one. Over GraphQL, the code is attached on the way out by
-`src/graphql/errors.ts`, the route's `maskedErrors` mapping (MB.43). Each type
+`src/graphql/errors.ts`, the route's `maskedErrors` mapping. Each type
 leaves as `VALIDATION` (with `fieldErrors`), `FORBIDDEN`, `NOT_FOUND` or
 `STALE_WRITE` (with `currentRevision`; M13.16), with
 the service's message verbatim, and anything else leaves masked

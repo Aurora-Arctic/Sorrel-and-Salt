@@ -5,9 +5,7 @@ import { slugify } from '@/lib/slugify';
 import { membershipBySlug } from '@/modules/coven';
 import { A, C, D, asUser } from '../../../support/as-user';
 
-// The address names a workspace by a guess at its slug, so a stranger and a
-// wrong slug must earn the same bare refusal: whether a coven exists is
-// private (CLAUDE.md's domain invariants).
+// A stranger and a wrong slug must earn the same bare refusal: whether a coven exists is private (CLAUDE.md, domain invariants).
 
 const W_SLUG = slugify('Whitethorn Coven');
 
@@ -21,8 +19,7 @@ describe('membershipBySlug', () => {
   });
 
   it('refuses a non-member of a workspace that exists', async () => {
-    // Why D could have been admitted: the slug names a live workspace, and A's
-    // own call finds it.
+    // Why D could have been admitted: the slug names a live workspace, and A's own call finds it.
     await expect(membershipBySlug(asUser(A), W_SLUG)).resolves.toBeDefined();
 
     await expect(membershipBySlug(asUser(D), W_SLUG)).rejects.toThrow(Forbidden);

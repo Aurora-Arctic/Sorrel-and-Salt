@@ -9,9 +9,6 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `Workspace.members` and `WorkspaceMember.user`: a member's name comes through `usersById`, one read per coven listed however many members it holds, and the refusal reaches the wire as `FORBIDDEN`.
-// Who may list a coven's members is the service's, in tests/modules/coven/services/members.test.ts.
-
 const repository = vi.hoisted(() => ({
   findCoMemberNamesIncludingSoftDeleted: vi.fn(),
   findMemberEmails: vi.fn(),
@@ -69,7 +66,6 @@ type Rolls = {
 let covenY: string;
 
 beforeAll(async () => {
-  // A second coven A owns, holding D, who shares nothing with A in W.
   const [row] = await sql`
     insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name: 'Fixture Second Coven' })), created_by: A.id, updated_by: A.id })}
     returning id`;
@@ -108,9 +104,7 @@ describe('Workspace.members', () => {
         { id: D.id, name: D.name },
       ]),
     );
-    // Five members across two covens, and a read of the names per coven, never
-    // per member: each coven's page resolves on its own tick, so the loader
-    // batches one page's members, not two covens' (no N+1).
+    // A read of names per coven, never per member: each coven's page resolves on its own tick, so the loader batches one page's members (no N+1).
     expect(repository.findCoMemberNamesIncludingSoftDeleted).toHaveBeenCalledTimes(2);
   });
 
@@ -228,8 +222,6 @@ describe('WorkspaceMember.user', () => {
   });
 });
 
-// The owner-only address is its own field rather than a widened `CoMember`, which every member reads. Who may read it is the service's (tests/modules/coven/services/members.test.ts);
-// here, a refusal reaches the wire as FORBIDDEN, and there is one read per page of members.
 describe('WorkspaceMember.email', () => {
   const EMAILS = /* GraphQL */ `
     query {
@@ -287,13 +279,11 @@ describe('WorkspaceMember.email', () => {
       ]),
     );
     expect(emails[covenY]).toEqual(expect.arrayContaining([{ id: D.id, email: D.email }]));
-    // Five members across two covens, and a read per coven, never per member.
     expect(repository.findMemberEmails).toHaveBeenCalledTimes(2);
   });
 
   it('answers FORBIDDEN, and no address, to a member who is listed the roll', async () => {
-    // B in W, and D in X and the second coven, are each a member, which reads
-    // the roll: the field is all that is refused. D has no path to W's roll.
+    // B and D are members, so they read the roll; only the field is refused. D has no path to W's roll.
     for (const [caller, inW] of [
       [B, true],
       [D, false],
@@ -341,8 +331,7 @@ describe('WorkspaceMember.email', () => {
         }
       }
     `;
-    // Why this could have reached the roll: a keeper reads anyone's covens
-    // , so E is handed A's W.
+    // Why this could have reached the roll: a keeper reads anyone's covens, so E is handed A's W.
     const covens = await run<{
       users: { edges: { node: { memberships: { workspace: { id: string } }[] } }[] };
     }>(

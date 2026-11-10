@@ -3,16 +3,12 @@ import type { ReactNode } from 'react';
 import ResetPasswordForm from '.';
 import type { ResetPasswordFormProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/ResetPasswordForm. Nothing is mocked: a submit
-// fails into the alert region.
 const meta = {
   title: 'Sign In / Reset Password Form',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
 
-// Inside the page's own frame and panel (src/app/reset-password/page.tsx), so the workshop shows what the
-// page shows.
 const Page = (props: ResetPasswordFormProps) => (
   <main className="page-frame page-frame--narrow">
     <div className="panel">
@@ -26,9 +22,7 @@ const Page = (props: ResetPasswordFormProps) => (
 );
 
 const STATES_STATES: Record<string, ReactNode> = {
-  // The mailed link followed in time: a token to spend.
   Default: <Page token="example" />,
-  // A link spent or past its 15 minutes: no form, an offer of a new link.
   'Spent Link': <Page />,
 };
 

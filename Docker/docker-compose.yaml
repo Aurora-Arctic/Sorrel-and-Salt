@@ -276,7 +276,7 @@ services:
     # `ws://playwright-server:4444/`; only .devcontainer/docker-compose.yml
     # sets PLAYWRIGHT_WS_ENDPOINT, so `make docker-e2e` and CI launch locally.
     # On the `e2e` profile so `docker-down` reaches it, but raised on its own
-    # by `make playwright-server-up`; see claude-docs/debugging.md. `image:`
+    # by `make playwright-server-up`; see claude-docs/testing/debugging.md. `image:`
     # must differ from `e2e`'s: one tag across two stages is a silent
     # last-build-wins.
     profiles: ['e2e']

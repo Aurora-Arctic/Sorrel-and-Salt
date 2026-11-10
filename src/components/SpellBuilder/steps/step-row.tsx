@@ -4,10 +4,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { GripIcon } from '../../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
+import { formatQuantity } from '@/lib/formats';
+import { QUANTITY_HINT } from '@/lib/quantity-rule';
 import { SelectField, TextField } from '../../Field';
+import GripHandle from '../../GripHandle';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import OneOffBadge from '../../StepRow/one-off-badge';
@@ -21,43 +23,13 @@ import { isInstruction, safetyOf, stepNameOf } from './values';
 // for a one-off, form (claude-docs/components/spell-builder.md, "Steps").
 
 export interface BuilderStepRowProps {
-  /** The row's field-array key, its place in the sortable list. */
   id: string;
   index: number;
   step: SpellStepValue;
-  /** Whether the fields are shown. A unit that is refused opens its row whatever this says. */
   open: boolean;
   onToggle: () => void;
   onRemove: () => void;
-  /** The coven for the Quick Look eye of an ingredient step; left out, the row has none. */
   look?: QuickLookCoven;
-}
-
-/**
- * The button a step is moved by: dnd-kit's attributes give it a button's
- * role, which it has already, and the instructions as its description.
- */
-function StepHandle({
-  name,
-  sortable,
-}: {
-  name: string;
-  sortable: ReturnType<typeof useSortable>;
-}): ReactElement {
-  const { setActivatorNodeRef, listeners, attributes } = sortable;
-  const { role: _role, ...rest } = attributes;
-  return (
-    <button
-      type="button"
-      ref={setActivatorNodeRef}
-      className="spell-step__handle"
-      {...rest}
-      {...listeners}
-      aria-label={`Move ${name}`}
-    >
-      <GripIcon />
-    </button>
-  );
 }
 
 export function BuilderStepRow({
@@ -74,13 +46,10 @@ export function BuilderStepRow({
     formState: { errors },
   } = useFormContext<SpellStepsValues>();
   const fieldsId = useId();
-  // Where the Unit's error is drawn: the full width beneath the inputs (the second design review).
   const [errorNode, setErrorNode] = useState<HTMLElement | null>(null);
   const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
   const unit = `steps.${index}.unit` as const;
-  // The one name the handle, the pencil and Remove all give the row, as the drag messages say it:
-  // an ingredient with its form, an instruction by its opening words.
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
   const safety = safetyOf(step);
@@ -96,8 +65,6 @@ export function BuilderStepRow({
     (isInstruction(step) && errors.steps?.[index]?.body !== undefined) ||
     errors.steps?.[index]?.name !== undefined;
   const oneOff = !instruction && step.ingredientId === null;
-  // One muted line under a closed ingredient row, as a closed section's summary: the amount
-  // then the instruction, joined by " · " (the instruction left out when blank).
   const amountLine = [quantity, unitChosen].filter(Boolean).join(' ');
   const bodyLine = (bodyTyped ?? '').trim();
   // Opening by the pencil takes the focus to the first field, as a variant card's Edit does.
@@ -111,13 +78,14 @@ export function BuilderStepRow({
       )
       ?.focus();
   }, [open]);
-  const handle = <StepHandle name={name} sortable={sortable} />;
+  const handle = <GripHandle sortable={sortable} name={name} className="spell-step__handle" />;
   const body = (
     <TextField<SpellStepsValues>
       name={`steps.${index}.body`}
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
       placeholder="Add an instruction"
+      spellCheck
       multiline
       rows={2}
     />
@@ -140,8 +108,6 @@ export function BuilderStepRow({
       ]
         .filter(Boolean)
         .join(' ')}
-      // Where a move has carried the row so far, translated only: a row keeps
-      // its own height wherever it goes.
       style={{
         transform: CSS.Translate.toString(sortable.transform),
         transition: sortable.transition,
@@ -155,10 +121,8 @@ export function BuilderStepRow({
       // saving it, open or closed: open, the note below adds its words. A one-off has none to
       // show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
-      // The eye comes after every badge, with Edit and Remove in one tight group.
       look={
         look && !instruction && step.ingredientId !== null ? (
-          // A click inside the modal bubbles through React to the row, which would toggle it.
           // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- this only stops a click reaching the row; it is not a control
           <span onClick={(event) => event.stopPropagation()}>
             <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
@@ -166,7 +130,6 @@ export function BuilderStepRow({
         ) : null
       }
       note={safety && <SafetyNote level={5} compact {...safety} />}
-      // The One-Off badge with its tip, the one the recipe page draws too (one-off-badge.tsx).
       badge={oneOff ? <OneOffBadge /> : null}
       summary={
         instruction ? (
@@ -210,6 +173,8 @@ export function BuilderStepRow({
             required
             placeholder="Add a name"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -219,8 +184,10 @@ export function BuilderStepRow({
             name={`steps.${index}.form`}
             label="Form"
             labelSuffix={step.name ?? undefined}
-            placeholder="Add a form"
+            hint="Pick a form, or write your own"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -232,9 +199,12 @@ export function BuilderStepRow({
           name={`steps.${index}.quantity`}
           label="Quantity"
           labelSuffix={name}
-          type="number"
-          placeholder="Amount"
+          inputMode="decimal"
+          format={formatQuantity}
+          hint={QUANTITY_HINT}
           autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="next"
         />
       }
       unitField={

@@ -7,9 +7,6 @@ import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '../../lib/sign-in
 import SignInPanel from '.';
 import type { SignInPanelProps } from './types';
 
-// Behaviour is asserted in tests/components/SignInPanel. Real
-// sign-in requires a browser round trip through a real provider, so every
-// story here fixes `configured` by hand rather than reading env.
 const meta = {
   title: 'Sign In / Panel',
 } satisfies Meta;
@@ -18,15 +15,13 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ALL_PROVIDERS = ['discord', 'google', 'facebook', 'microsoft'] as const;
 
-// The panel reads the last-used mark from the workshop's own cookie, which
-// outlives the story that wrote it, so every story sets or clears it first.
+// The panel reads the last-used mark from a cookie that outlives the story that wrote it, so
+// every story sets or clears it first.
 function lastUsed(provider: (typeof ALL_PROVIDERS)[number] | 'email' | null): void {
   if (provider) document.cookie = `${LAST_USED_PROVIDER_COOKIE}=${provider}; path=/`;
   else authClient.clearLastUsedLoginMethod();
 }
 
-// Inside the page's own frame (src/app/sign-in/page.tsx), so the workshop
-// shows what the page shows.
 const Page = (props: SignInPanelProps) => (
   <main className="page-frame page-frame--narrow">
     <SignInPanel {...props} />
@@ -39,15 +34,14 @@ const DefaultView = () => {
 };
 const defaultNode = <DefaultView />;
 
-// A browser that last signed in with Discord: its button carries the mark.
 const LastUsedView = () => {
   lastUsed('discord');
   return <Page next="/" configured={ALL_PROVIDERS} />;
 };
 const lastUsedNode = <LastUsedView />;
 
-// The second view, opened as a link to `?method=email` does: the workshop's router reads the query
-// from `parameters.nextjs.navigation`, as pushState does not reach it.
+// The workshop's router reads the query from `parameters.nextjs.navigation`, as pushState does
+// not reach it.
 const EMAIL_VIEW_PARAMETERS = { nextjs: { navigation: { query: { method: 'email' } } } };
 
 export const EmailView: Story = {
@@ -58,7 +52,6 @@ export const EmailView: Story = {
   },
 };
 
-// A browser that last signed in with a password: the email view's heading carries the mark.
 export const PasswordLastUsed: Story = {
   parameters: EMAIL_VIEW_PARAMETERS,
   render: () => {
@@ -67,25 +60,24 @@ export const PasswordLastUsed: Story = {
   },
 };
 
-// `error` reads the real mapping rather than a copied string, so this story
-// cannot go stale the way a hardcoded copy of the sentence did.
+const CreateAnAccountView = () => {
+  lastUsed(null);
+  return <Page next="/" configured={ALL_PROVIDERS} mode="sign-up" />;
+};
+const createAnAccountNode = <CreateAnAccountView />;
+
 const WithErrorView = () => {
   lastUsed(null);
   return <Page next="/" error={signInErrorMessage('email_not_found')} configured={ALL_PROVIDERS} />;
 };
 const withErrorNode = <WithErrorView />;
 
-// The shape most local dev actually sees: one registered pair in .env.local,
-// the rest greyed out until their credentials are added.
 const SomeUnavailableView = () => {
   lastUsed(null);
   return <Page next="/" configured={['google']} />;
 };
 const someUnavailableNode = <SomeUnavailableView />;
 
-// Continue with Google pressed, as a person would, with the sign-in request
-// left unanswered: that button reads "Signing In" and the others are disabled,
-// as while the browser is on its way to the provider.
 export const Pending: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
@@ -95,9 +87,6 @@ export const Pending: Story = {
   },
 };
 
-// Continue with Google pressed, as a person would: the fake API refuses
-// /api/auth, so the sign-in fails before any redirect, into its callout under
-// that button, with the badge on it (claude-docs/components/click-feedback.md).
 export const Failed: Story = {
   tags: ['expects-failed-request'],
   beforeEach: ({ msw }) => msw.use(refuseAuth()),
@@ -111,6 +100,7 @@ export const Failed: Story = {
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Last Used': lastUsedNode,
+  'Create an Account': createAnAccountNode,
   'With Error': withErrorNode,
   'Some Unavailable': someUnavailableNode,
 };

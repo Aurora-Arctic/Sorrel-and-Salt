@@ -20,7 +20,7 @@ import {
 } from '../../../support/fixtures';
 
 // An ingredient's save names the revision it read: a save over a newer one is refused with `StaleWrite` and writes nothing, `null`
-// writes whatever the row holds, and a refusal for who is asking comes before any revision is read (claude-docs/components/autosave.md, "The server's half").
+// writes whatever the row holds, and a refusal for who is asking comes before any revision is read (claude-docs/autosave.md, "The server's half").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

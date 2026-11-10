@@ -1,26 +1,22 @@
 import { createYoga } from 'graphql-yoga';
 import type { GraphQLObjectType } from 'graphql';
 import { beforeAll } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { A, B, C, asUser } from './as-user';
+import { useTestDatabase } from './db/database';
 import { insertIngredient } from './db/insert-ingredient';
 import { insertCupboardEntry } from './db/insert-cupboard-entry';
+import { insertWorkspace } from './db/insert-workspace';
 import { insertReference } from './db/insert-reference';
 import { insertSpell } from './db/insert-spell';
 import { insertStock } from './db/insert-stock';
 import { variantIdOf } from './db/read-variants';
 import { noPauseNotifier, noSender, noSupportNotifier } from './email-verification';
-import {
-  makeIngredient,
-  makeSpell,
-  makeVariant,
-  makeWorkspace,
-  workspaceColumns,
-} from './fixtures';
+import { makeIngredient, makeSpell, makeVariant } from './fixtures';
 import type { Context } from '@/graphql/types';
 import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from '../db/types';
@@ -36,6 +32,8 @@ let promotableId: string;
 let folkNameId: string;
 // A coven of its own for the delete probe's admitted call, which would take W down.
 let deletableWorkspaceId: string;
+// A coven of its own for the rename probe's admitted call, so W keeps its name and address.
+let renamableWorkspaceId: string;
 // Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
 let removableWorkspaceId: string;
 let leavableWorkspaceId: string;
@@ -71,10 +69,14 @@ let updatableWorkingId: string;
 let completableWorkingId: string;
 let deletableWorkingId: string;
 
-/** Seeds every row the probes name, once, before the first test of the file that calls it. */
 export function useProbeRows(): void {
+  let sql: postgres.Sql;
+
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
   beforeAll(async () => {
-    const sql = postgres(process.env.DATABASE_URL as string);
     ingredientId = await insertIngredient(
       sql,
       makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' }),
@@ -147,21 +149,16 @@ export function useProbeRows(): void {
       { workspaceId: WORKSPACE_W_ID, ingredientId: ownableEntryId },
       A.id,
     );
-    const insertCoven = async (name: string) => {
-      const [coven] = await sql`
-      insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-      returning id`;
-      const id = coven.id as string;
-      await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${id}, ${A.id}, 'owner', ${A.id}, ${A.id}), (${id}, ${B.id}, 'member', ${A.id}, ${A.id})`;
-      return id;
-    };
-    deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
-    removableWorkspaceId = await insertCoven('Fixture Removable Coven');
-    leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
-    pausableWorkspaceId = await insertCoven('Fixture Pausable Coven');
-    liftableWorkspaceId = await insertCoven('Fixture Liftable Coven');
+    const covenSeats = [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ] as const;
+    deletableWorkspaceId = await insertWorkspace(sql, 'Fixture Deletable Coven', covenSeats);
+    renamableWorkspaceId = await insertWorkspace(sql, 'Fixture Renamable Coven', covenSeats);
+    removableWorkspaceId = await insertWorkspace(sql, 'Fixture Removable Coven', covenSeats);
+    leavableWorkspaceId = await insertWorkspace(sql, 'Fixture Leavable Coven', covenSeats);
+    pausableWorkspaceId = await insertWorkspace(sql, 'Fixture Pausable Coven', covenSeats);
+    liftableWorkspaceId = await insertWorkspace(sql, 'Fixture Liftable Coven', covenSeats);
     await sql`
     insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
     values (${liftableWorkspaceId}, ${B.id}, ${A.id}, ${A.id})`;
@@ -200,7 +197,6 @@ export function useProbeRows(): void {
     updatableWorkingId = await insertWorking();
     completableWorkingId = await insertWorking();
     deletableWorkingId = await insertWorking();
-    await sql.end();
   });
 }
 
@@ -376,6 +372,13 @@ export const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     admittedTo: () => leavableWorkspaceId,
   },
+  renameWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      renameWorkspace(workspaceId: $workspaceId, name: "Fixture Probe Renamed") { id }
+    }`,
+    asOwner: true,
+    admittedTo: () => renamableWorkspaceId,
+  },
   deleteWorkspace: {
     source: `mutation ($workspaceId: ID!) {
       deleteWorkspace(workspaceId: $workspaceId)
@@ -490,7 +493,7 @@ const mailsNothing: InvitationSender = {
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
-/** The probe as B, a member of W (or A, its owner, when the probe says), so only the id can refuse; `as` names another caller. */
+// Run as B, a member of W (or A, its owner, when the probe says), so only the id can refuse.
 export async function runProbe(
   probe: WorkspaceIdProbe,
   workspaceId: string,
@@ -519,7 +522,6 @@ export async function runProbe(
   return (await response.json()) as Answer;
 }
 
-/** Every Query and Mutation field declaring a `workspaceId` argument. */
 export function fieldsTakingWorkspaceId(): string[] {
   const roots = [schema.getQueryType(), schema.getMutationType()] as GraphQLObjectType[];
   return roots

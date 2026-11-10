@@ -2,17 +2,17 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
+import { useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CompendiumIngredientInput,
   CompendiumIngredientUpdateInput,
   IngredientUpdateInput,
 } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage, placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
@@ -53,6 +53,7 @@ import { EntryHrefContext } from './substitute-summary';
 import {
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   SelectField,
   TextField,
@@ -103,6 +104,7 @@ import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
 import ReviewRow from '../IngredientEntry/review-row';
 import ShownToggle from '../IngredientEntry/shown-toggle';
+import { reportLeaving } from '../../lib/navigation';
 
 // Every property of an ingredient, validated by the shared schema before the mutation is sent and by
 // the service after; an error lands beside the field its path names, or above them all. A coven's
@@ -126,8 +128,6 @@ const CreateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// A coven's own entry saved over. The update takes every field and reads back what the create does
-// but the jars.
 const UpdateWorkspaceIngredientDocument = graphql(`
   mutation UpdateWorkspaceIngredient(
     $workspaceId: ID!
@@ -149,7 +149,6 @@ const UpdateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// A match's +: the compendium entry goes into the cupboard, no jar with it.
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntryFromForm(
     $workspaceId: ID!
@@ -200,19 +199,16 @@ const DeleteCompendiumIngredientDocument = graphql(`
   }
 `);
 
-// A coven's own entry is deleted from its edit dialog too: from this coven alone, a spell holding
-// it still reaching it.
+// A coven's own entry is deleted from this coven alone: a spell holding it still reaches it.
 const DeleteWorkspaceIngredientDocument = graphql(`
   mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {
     deleteIngredient(id: $id, workspaceId: $workspaceId)
   }
 `);
 
-/** Keys pressed inside a reference panel are its own history's. */
 const inReferencePanel = (target: HTMLElement): boolean =>
   target.closest('.ingredient-form__panel') !== null;
 
-/** A panel opening or closing is interface state among the values, not an edit to undo. */
 const isPanelState = (name: string): boolean => /(^|\.)referencePanelOpen$/.test(name);
 
 /** The error path of the refusal when a write would end another entry's redirect. */
@@ -220,14 +216,12 @@ const END_REDIRECT = 'endRedirect';
 
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
 
-/** What the autosave throws when the form is not yet fit to save: the fields say why. */
 const fieldsRefused = (): GraphQLClientError =>
   new GraphQLClientError({
     status: 400,
     errors: [{ message: FIX_FIELDS, extensions: { code: 'VALIDATION' } }],
   });
 
-/** What the autosave sends and the mirror keeps: the form's values and the review switch. */
 interface AutosaveValue {
   fields: IngredientFormValues;
   reviewed: boolean;
@@ -250,9 +244,6 @@ const IngredientForm = ({
   onAutosaved,
   onReload,
 }: IngredientFormProps): ReactElement => {
-  // A null coven is the compendium: the classification answered, the
-  // vocabulary boxes picked from the curated rows, and every lookup asking
-  // about the compendium alone.
   const compendium = workspaceId === null;
   const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
     defaultValues: entry ? openingValues(entry.values) : EMPTY_VALUES,
@@ -280,45 +271,33 @@ const IngredientForm = ({
   const { edited, clear: clearEdited } = useEditedFields(methods.subscribe);
   const shown = (path: string) => errorShown({ isSubmitted, touchedFields, edited }, path);
   const form = useRef<HTMLFormElement>(null);
-  // The ingredient this form writes to: the one it opened with, or the one its first save made. The
-  // ref is what a save reads as it starts; the state redraws what hangs on the id.
+  // The ref is what a save reads as it starts; the state redraws what hangs on the id.
   const [createdId, setCreatedId] = useState<string | null>(null);
   const savedId = createdId ?? entry?.id ?? null;
   const savedIdRef = useRef<string | null>(entry?.id ?? null);
-  // The revision the server last answered with, which the next save is written against.
   const revisionRef = useRef<number | null>(entry?.revision ?? null);
   const createAnyway = useRef<HTMLButtonElement>(null);
   const duplicates = useDuplicateWarning(
     workspaceId,
     useWatch({ control, name: 'name' }),
     savedId ?? undefined,
-    // The name the form holds as saved: an edit's, and a save's reset moves it on.
     methods.formState.defaultValues?.name,
   );
   const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });
-  // An edit saves over the entry, and opens nothing new; a new entry offers
-  // both saves.
   const editing = entry !== undefined;
 
-  // Which of the six sections are open, each by its own heading: a new entry opens with every one
-  // open, an edit with every one closed, read at a glance from the summary lines.
   const [open, setOpen] = useState<ReadonlySet<SectionKey>>(
     () => new Set(editing ? [] : SECTION_KEYS),
   );
-  // Each variant's own sections, which fold the same way: one added
-  // here opens with every one open, one an edit opened with, every one closed.
   const variantFolds = useVariantFolds();
-  // Standing still through a press, as the fields' errors do.
   const erring = useSettledWhilePressed(sectionsWithErrors(errors, shown));
-  // A save held on the duplicate warning is the name's to answer.
   if (blocking) erring.add('identity');
   // A save that finds an error in a closed section opens it, every such
   // section, flagged, so the focus on the first field marked invalid (below)
   // can reach it.
   useOnEachSubmit(submitCount, () => {
     if ([...erring].some((key) => !open.has(key))) setOpen(new Set([...open, ...erring]));
-    // A variant's too, inside it: the Variants section opens the card.
     variantFolds.openErring(variantsWithErrors(errors, shown));
     // The card of the first variant holding any error opens, unless the one
     // open errs too, so the focus on the first field marked invalid can reach it.
@@ -339,9 +318,6 @@ const IngredientForm = ({
         return next;
       }),
   });
-  // The first field marked invalid, in page order, takes the focus once a
-  // save's errors are all drawn.
-  useFocusFirstInvalid(form, submitCount);
   // A save held on the duplicate warning focuses its button rather than the
   // name it marks, which needs no change, only an answer. After the effect
   // above, so it wins when both run, and again on each held save.
@@ -351,7 +327,7 @@ const IngredientForm = ({
 
   // Save & Add Another empties every field and list once the save has landed, and the name takes
   // the focus. It runs in an effect, counted here, not read off `isSubmitSuccessful`
-  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
+  // (claude-docs/components/ingredient-form.md, "After a save").
   const [saves, setSaves] = useState(0);
   // What the last save wrote, said above the fields where a refusal would be,
   // so the cleared form is not the only sign it landed. A new save drops it.
@@ -361,22 +337,16 @@ const IngredientForm = ({
   const next = useRef<AfterSave>('open');
   const [pressed, setPressed] = useState<AfterSave>('open');
   const busy = (button: AfterSave): boolean => isSubmitting && pressed === button;
-  // The end-redirect question while it waits for an answer: the save is kept, and End
-  // Redirect & Save sends it again, confirmed.
   const [question, setQuestion] = useState<RedirectQuestion | null>(null);
-  // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
   const [refusal, setRefusal] = useState<string>();
-  // The folk name whose promotion is being asked about, if any.
   const [promoting, setPromoting] = useState<PromotedName | null>(null);
-  // Whether the last save sent through `handleSubmit(save)` landed: Save and
-  // Promote promotes only if it did.
   const landed = useRef(false);
   // A reference panel's own edits, which `isDirty` never sees: the promotion question counts them as
   // changes to save or discard first.
   const panels = usePanelChanges();
-  // The Reviewed switch lives beside react-hook-form's values, not in the entry's input, and is
-  // saved on its own once the entry is. A flip still counts as a change: Save enables, and closing saves it.
+  // The Reviewed switch lives beside the form's values and is saved on its own once the entry is.
+  // A flip still counts as a change: Save enables, and closing saves it.
   const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
   const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
   const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
@@ -399,7 +369,7 @@ const IngredientForm = ({
 
   // Open All / Close All: Close All while any section is open, and it reaches every variant's
   // sections too. Off while the form asks a question over itself, as Undo and Redo are then
-  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
+  // (claude-docs/components/ingredient-form.md, "After a save").
   const anyOpen = open.size > 0;
   const headerNote = useModalHeaderNote();
   const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
@@ -428,15 +398,12 @@ const IngredientForm = ({
       const list = diffs.find((diff) => diff.name === 'variants');
       let returned = -1;
       if (list) {
-        // The folds are keyed to the list as it stood: the step's other side.
         const [from, to] =
           direction === 'undo' ? [list.after, list.before] : [list.before, list.after];
         returned = variantFolds.reconcile(from as RestoredVariant[], to as RestoredVariant[]);
       }
       for (const [index, inside] of variants) variantFolds.reveal(index, inside);
       if (names.includes('nomenclature')) return 'nomenclature';
-      // A variant brought back is where the eye should go; with one only taken
-      // out, the New Form box that adds one.
       if (list && returned !== -1) return `variants.${returned}.form`;
       if (list && (list.before as unknown[]).length !== (list.after as unknown[]).length)
         return 'drafts.variants';
@@ -455,7 +422,6 @@ const IngredientForm = ({
     form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
   }, [saves, reset, clearHistory, clearEdited]);
 
-  /** Writes to the saved ingredient, or creates it, against the revision last answered. */
   const send = async ({
     input,
     endRedirect,
@@ -553,15 +519,14 @@ const IngredientForm = ({
   });
 
   const remove = useMutation({
-    // Each tier answers with its own field, and nothing reads the answer: a
-    // refusal throws, and success is the entry gone.
+    // Each tier answers with its own field and nothing reads it: a refusal throws, success is
+    // the entry gone.
     mutationFn: async (id: string): Promise<void> => {
       if (workspaceId === null) await graphqlRequest(DeleteCompendiumIngredientDocument, { id });
       else await graphqlRequest(DeleteWorkspaceIngredientDocument, { id, workspaceId });
     },
   });
 
-  /** Sends the input, and says what came of it: saved, asked about, or refused beside its fields. */
   const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<boolean> => {
     try {
       const row = await mutation.mutateAsync({
@@ -578,7 +543,7 @@ const IngredientForm = ({
           await graphqlRequest(SetCompendiumEntryReviewedDocument, { id: row.id, reviewed });
           setReviewedSaved(reviewed);
         } catch (error) {
-          reviewRefusal = `Saved, but the review mark was not: ${readGraphqlFailure(error).alert}`;
+          reviewRefusal = `Saved, but the review mark was not: ${failureMessage(error)}`;
         }
       }
       if (mirror) clearMirror(mirror);
@@ -589,7 +554,6 @@ const IngredientForm = ({
       // and keeps its values; Save & Add Another clears for the next one. An
       // edit keeps what it saved, now nothing to save until it changes again.
       if (next.current === 'another') {
-        // The next entry is a new row, with no id or revision yet.
         savedIdRef.current = null;
         revisionRef.current = null;
         setCreatedId(null);
@@ -598,7 +562,6 @@ const IngredientForm = ({
         setReviewedSaved(review?.reviewed ?? false);
         setShownChoice(undefined);
         setShownSaved(review?.shown ?? true);
-        // The next entry is a new one, so every section opens, as for this one.
         setOpen(new Set(SECTION_KEYS));
         variantFolds.setAll(true, 0);
       } else if (savedIdRef.current !== null) {
@@ -608,7 +571,6 @@ const IngredientForm = ({
       }
       return true;
     } catch (error) {
-      // Another save got in first: the autosave holds the value and offers the choice.
       if (error instanceof StaleWriteError) {
         await autosave.flush().catch(() => undefined);
         return false;
@@ -628,7 +590,7 @@ const IngredientForm = ({
   /**
    * A compendium match's +: the entry goes in under its own name, and what else was typed rides as
    * the coven's overrides. The form stays open with what was typed; answers whether it went in
-   * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+   * (claude-docs/components/ingredient-form.md, "The duplicate warning").
    */
   const useEntry = async (match: Duplicate): Promise<boolean> => {
     if (workspaceId === null) return false;
@@ -645,7 +607,6 @@ const IngredientForm = ({
       zodiacSigns: listed(values.zodiacSigns),
       colors: listed(values.colors),
     };
-    // A refusal or a save said before is not about this add.
     setSaved(null);
     methods.clearErrors('root');
     try {
@@ -672,7 +633,6 @@ const IngredientForm = ({
     landed.current = await deliver(input, false);
   };
 
-  // Promoting a folk name. Only a saved entry has folk names with ids.
   const promotion = usePromoteFolkName(workspaceId, savedId ?? '');
   const promoteOffered = mayPromote && savedId !== null;
 
@@ -693,7 +653,6 @@ const IngredientForm = ({
     return landed.current;
   };
 
-  /** The swap was made: the form holds what the server answered, with nothing left to save. */
   const promoted = (ingredient: PromotedIngredient): void => {
     reset({
       ...getValues(),
@@ -710,12 +669,9 @@ const IngredientForm = ({
       { id: ingredient.id, name: ingredient.name, slug: ingredient.slug } as SavedIngredient,
       'open',
     );
-    // The chip that was pressed has gone with the reset; the name it became is
-    // where the eye should go.
     form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
   };
 
-  // Delete is on its way or done: the entry is going, so nothing more is saved to it.
   const removed = deleting || remove.isPending || remove.isSuccess;
   const values = useWatch({ control }) as IngredientFormValues;
   const userId = useViewerId();
@@ -765,7 +721,7 @@ const IngredientForm = ({
         });
         setReviewedSaved(sent.reviewed);
       } catch (error) {
-        setRefusal('Saved, but the review mark was not: ' + readGraphqlFailure(error).alert);
+        setRefusal('Saved, but the review mark was not: ' + failureMessage(error));
       }
     }
     if (shownField) setShownSaved(sent.shown);
@@ -798,7 +754,6 @@ const IngredientForm = ({
     root: form,
   });
 
-  /** Saves for Close, answering whether Close may go on; a refusal keeps the dialog open. */
   const saveForClose = async (): Promise<boolean> => {
     closing.current = true;
     try {
@@ -861,12 +816,14 @@ const IngredientForm = ({
     />
   );
 
-  /** Reload after a stale save: the page fetches the server's copy, which replaces the form. */
   const reload = async (): Promise<void> => {
     await autosave.resolveConflict('reload');
     if (mirror) clearMirror(mirror);
     if (onReload) onReload();
-    else window.location.reload();
+    else {
+      reportLeaving();
+      window.location.reload();
+    }
   };
 
   const endRedirect = async (): Promise<void> => {
@@ -924,6 +881,8 @@ const IngredientForm = ({
               >
                 {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
                 {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+                {/* Not while a near-match warning holds the save: its answer is Create Anyway, which takes the focus. */}
+                {!blocking && <FormErrorSummary />}
                 {refusal && <Notice kind="error">{refusal}</Notice>}
                 {/* The sections flush, between hairlines. The one control that opens or closes them
               all sits beside the modal's title; outside a modal, at the end of the line above the
@@ -972,7 +931,9 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add a formal name"
+                      placeholder="Add a name"
+                      spellCheck={false}
+                      autoComplete="off"
                       note={
                         kind === NAMELESS_KIND
                           ? 'A "none" entry records no formal name.'
@@ -1003,7 +964,7 @@ const IngredientForm = ({
                       }}
                       legend="Folk Names"
                       entry="Folk Name"
-                      placeholder="Add a folk name"
+                      placeholder="Add a name"
                     />
                   </CollapsibleSection>
                   <CollapsibleSection
@@ -1014,15 +975,13 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="description"
                       label="Description"
-                      placeholder="What it is, where it comes from and how it is used"
                       multiline
-                      // Seven lines, as each variant's Description.
                       rows={7}
                     />
                     <TextField<IngredientFormValues>
                       name="safetyNotes"
                       label="Safety Notes"
-                      placeholder="Add safety notes"
+                      placeholder="Add notes"
                       multiline
                     />
                     {/* Its own flag: a toxic form says so on its own. */}
@@ -1037,13 +996,13 @@ const IngredientForm = ({
             the answer "none", so there is no None to choose. */}
                     <MultiSelectField
                       name="elements"
-                      label="Element"
+                      label="Elements"
                       placeholder="Add an element"
                       options={ELEMENT_OPTIONS}
                     />
                     {/* Each list but the colours suggests, from the curated vocabularies where
             there are some and from this coven and the compendium otherwise
-            (claude-docs/components/ingredient-form.md, "Suggestion lists and fields"). */}
+            (claude-docs/components/ingredient-form.md, "Suggestion lists"). */}
                     <LookupListField
                       workspaceId={workspaceId}
                       useSuggestions={useCelestialBodySuggestions}
@@ -1217,8 +1176,6 @@ const IngredientForm = ({
                   />
                 )}
                 {question ? (
-                  // The address this save takes is another entry's redirect. Asked before anything
-                  // else is pressed; Cancel leaves the entry as typed, unsaved.
                   <ConfirmQuestion
                     key="redirect"
                     question={question.message}

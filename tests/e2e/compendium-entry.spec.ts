@@ -8,14 +8,10 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The public compendium entry page as a signed-out visitor sees it, for what no story walks: the 308 for a moved
-// slug and the page at a phone's width.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** A user to stamp the rows with, signed in on a page that is closed again at once. */
 async function authorOf(
   browser: import('@playwright/test').Browser,
   baseURL: string | undefined,
@@ -122,4 +118,48 @@ test('a visitor reads an entry with its details and each form on a phone, a long
   );
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+// Needs Review is the warning ochre, not the red the attention badge draws, read from the page's own tokens.
+test('an entry no curator has reviewed wears Needs Review in the theme warning colour, not the attention red', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const author = await authorOf(browser, baseURL, 'author@compendium-entry-review-mark.test');
+  const name = 'Fixture Unreviewed Yarrow';
+  await withSql(async (sql) => {
+    await insertIngredient(
+      sql,
+      makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
+      author,
+    );
+  });
+
+  // Dark, where the palette's ink is the theme's warning itself; light darkens it for its edge.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto(`/compendium/ingredients/${slugify(name)}`);
+  const badge = page.locator('.badge', { hasText: 'Needs Review' }).first();
+  await expect(badge).toBeVisible();
+
+  const { ink, warning, attention } = await badge.evaluate((element) => {
+    const resolve = (value: string): string => {
+      const probe = document.createElement('span');
+      probe.style.color = value;
+      document.body.append(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    return {
+      ink: getComputedStyle(element).color,
+      warning: resolve(getComputedStyle(document.documentElement).getPropertyValue('--warning')),
+      attention: resolve(
+        getComputedStyle(document.documentElement).getPropertyValue('--badge-attention-fill'),
+      ),
+    };
+  });
+
+  expect(ink).toBe(warning);
+  expect(ink).not.toBe(attention);
 });

@@ -7,10 +7,6 @@ import type { GroupMove, MovedRows } from '../types';
 // What a group's rename or delete does to the rows filed under it when their slug carries the group's name (a form's and a deity's): each moves to the slug
 // its name and the group's new name give it, and a move onto another live row's address is refused, naming both. Called by `updateGroup` and `deleteGroup`; internal to the module.
 
-/**
- * How a write refuses a moved row's collision: on which field, and the words
- * that lead into the address — the rename's, or the delete's.
- */
 export function refusal(rows: MovedRows, path: string[], lead: (row: GroupMove['row']) => string) {
   return (row: GroupMove['row'], slug: string, holder: string | undefined): never => {
     const held = holder

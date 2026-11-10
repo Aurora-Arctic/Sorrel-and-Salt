@@ -1,7 +1,9 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import ReferencePanel from '@/components/IngredientForm/reference-panel';
 import type { CreateReferenceMutation, CreateReferenceMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -22,8 +24,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
-// The new reference panel on its own: `ReferencePanel`, the citation sub-form beneath the References field, saving through MSW as /api/graphql answers.
-// How the field opens it, lists what it saves and is held while it is open is references.test.tsx's; what the schema refuses and how each field is tidied is tests/modules/ingredients/validation/'s (claude-docs/components/ingredient-form.md, "Testing").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
 /** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. Rendered here rather than by `renderWithClient`, because a summons re-renders the panel under the client it opened with. */
 function renderPanel() {
@@ -50,7 +51,6 @@ const notInPanel = (label: string) =>
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
 const saveReference = () => press(within(panel()).getByRole('button', { name: 'Save Reference' }));
 
-/** Every label a panel field may carry, across the five kinds. */
 const ALL_LABELS = [
   'Title',
   'Chapter Title',
@@ -79,7 +79,6 @@ const ALL_LABELS = [
 ];
 const TAIL = ['Read Through', 'Address', 'Last Modified', 'Accessed', 'Note'];
 
-/** Each kind: its choice's label, its fields in order, and the ones it requires. */
 const KINDS = [
   {
     kind: 'book',
@@ -166,6 +165,11 @@ const KINDS = [
   },
 ] as const;
 
+beforeAll(async () => {
+  await dayPickerModule.load();
+});
+afterEach(() => vi.useRealTimers());
+
 describe('ReferencePanel', () => {
   it('opens with Kind focused and no other field until one is chosen', () => {
     renderPanel();
@@ -174,8 +178,6 @@ describe('ReferencePanel', () => {
     for (const label of ALL_LABELS) notInPanel(label);
   });
 
-  // Asking again for a panel already open takes you
-  // back to it, rather than doing nothing.
   it('takes you back to Kind when asked again while open, keeping what was typed', () => {
     const { summon } = renderPanel();
     chooseKind('Book');
@@ -198,6 +200,8 @@ describe('ReferencePanel', () => {
       const controls = fields.map((field) => inPanel(field));
       for (const [index, control] of controls.entries()) {
         const marked = (required as readonly string[]).includes(fields[index]);
+        // A day is a button, which takes no aria-required; its star is the label's.
+        if (control.tagName === 'BUTTON') continue;
         if (marked) expect(control).toHaveAttribute('aria-required', 'true');
         else expect(control).not.toHaveAttribute('aria-required');
       }
@@ -209,8 +213,6 @@ describe('ReferencePanel', () => {
     },
   );
 
-  // One tip for how to cite, read once on entering the panel, in place of a
-  // hint beside each field.
   it('describes the panel by one How to Cite tip, and no field by a hint of its own', () => {
     renderPanel();
 
@@ -224,8 +226,6 @@ describe('ReferencePanel', () => {
     for (const label of KINDS[0].fields) expect(inPanel(label)).not.toHaveAccessibleDescription();
   });
 
-  // One rule to a line, a list a screen reader can step through,
-  // rather than one run-on paragraph.
   it('gives How to Cite one list item per rule', () => {
     renderPanel();
 
@@ -238,8 +238,6 @@ describe('ReferencePanel', () => {
     expect(within(list).getAllByRole('listitem', { hidden: true }).length).toBeGreaterThan(1);
   });
 
-  // What the schema refuses is validation/reference.test.ts's; here, that the
-  // panel runs it, and where a refusal and a server's land.
   it('puts a resolver error beside its field, focused and sending nothing, and a server field error through the same element', async () => {
     const calls = acceptReference();
     renderPanel();
@@ -248,7 +246,7 @@ describe('ReferencePanel', () => {
     typeIn(inPanel('Published'), '1901');
     saveReference();
     await waitFor(() => expect(inPanel('Title')).toBeInvalid());
-    expect(inPanel('Title')).toHaveFocus();
+    expectSummaryLinksTo(inPanel('Title'));
     expect(calls).toHaveLength(0);
     const resolverError = inPanel('Title').getAttribute('aria-describedby');
 
@@ -291,7 +289,6 @@ describe('ReferencePanel', () => {
       id: NEW_REFERENCE_ID,
       citation: 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.',
       isGlobal: false,
-      // What its row's short form is made of.
       kind: 'book',
       authors: 'Mock, Cyril',
       title: 'A Fixture Grimoire',
@@ -319,7 +316,6 @@ describe('ReferencePanel', () => {
     typeIn(inPanel('Site'), 'Fixture Wiki');
     chooseKind('Book');
     typeIn(inPanel('Published'), '1999');
-    // What was typed is kept for its own kind.
     expect(inPanel('Title')).toHaveValue('Mockleaf');
     saveReference();
 
@@ -343,8 +339,7 @@ describe('ReferencePanel', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
   });
 
-  // Each field is tidied as it is left, as the server will store it, so what is seen is what is saved.
-  // Each format is FORMAT_OF's (validation/reference-format.test.ts); here, the panel applies its field's.
+  // Each format is FORMAT_OF's (validation/reference-format.test.ts); the panel applies its field's.
   it('tidies each field by its own format as it is left', () => {
     renderPanel();
     chooseKind('Book');
@@ -361,7 +356,6 @@ describe('ReferencePanel', () => {
     }
   });
 
-  // As the ingredient's saves are held: busy, and saying so.
   it('holds Save Reference down while it is in flight, busy and saying so, and Cancel with it', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => {
@@ -416,8 +410,6 @@ describe('ReferencePanel', () => {
     expect(calls).toHaveLength(0);
   });
 
-  // The edit saves through the same handling, so a refusal of the
-  // edited source lands beside its field as a new one's does.
   it('puts a server field error on an edited source beside its field', async () => {
     offerReference({
       id: NEW_REFERENCE_ID,
@@ -472,5 +464,54 @@ describe('ReferencePanel', () => {
 
     await waitFor(() => expect(published).toBeInvalid());
     expect(published).toHaveAccessibleDescription(/\S/);
+  });
+
+  describe('days and the address', () => {
+    const calendar = () => within(screen.getByRole('dialog', { name: 'Choose a Day' }));
+
+    it('offers no day after tomorrow for Accessed or Last Modified, and keeps the day it sends', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-03-10T12:00:00Z'));
+      const calls = acceptReference();
+      renderPanel();
+      chooseKind('Web Page');
+
+      for (const label of ['Accessed', 'Last Modified']) {
+        fireEvent.click(inPanel(label));
+        expect(calendar().getByRole('button', { name: /11 March 2026/ })).toBeEnabled();
+        expect(calendar().getByRole('button', { name: /12 March 2026/ })).toBeDisabled();
+        fireEvent.click(calendar().getByRole('button', { name: /\b9 March 2026/ }));
+      }
+      typeIn(inPanel('Page Title'), 'Mockleaf');
+      typeIn(inPanel('Address'), 'https://example.com/mockleaf');
+      vi.useRealTimers();
+      saveReference();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input).toMatchObject({ accessed: '2026-03-09', modified: '2026-03-09' });
+    });
+
+    it('lets an optional day be cleared again, and not a required one', () => {
+      renderPanel();
+      chooseKind('Web Page');
+      const within_ = within(panel());
+
+      expect(within_.queryByRole('button', { name: 'Clear Accessed' })).toBeNull();
+      fireEvent.click(inPanel('Last Modified'));
+      fireEvent.click(calendar().getByRole('button', { name: 'Today' }));
+      fireEvent.click(within_.getByRole('button', { name: 'Clear Last Modified' }));
+
+      expect(within_.queryByRole('button', { name: 'Clear Last Modified' })).toBeNull();
+      expect(inPanel('Last Modified')).toHaveAccessibleName(/Choose a day/);
+    });
+
+    it('takes the address as an unchecked, lower-case web address', () => {
+      renderPanel();
+      chooseKind('Web Page');
+
+      expect(inPanel('Address')).toHaveAttribute('inputmode', 'url');
+      expect(inPanel('Address')).toHaveAttribute('spellcheck', 'false');
+      expect(inPanel('Address')).toHaveAttribute('autocapitalize', 'none');
+    });
   });
 });

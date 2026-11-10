@@ -3,15 +3,15 @@
 A user story is proved by a flow a user could walk in the browser: sign in,
 click, read the page. It is never proved by calling a service or a GraphQL
 query (DESIGN.md §11, "Acceptance tests — story traceability";
-`claude-docs/design-decisions/m9.1-stories-are-browser-flows.md`).
+`claude-docs/design-decisions/ci.md`, "Stories are browser flows").
 
 `npm run test:stories` (or `make test-stories`) runs only this directory, with
-`playwright.stories.config.ts`, and prints a checklist of the 73 v1 stories.
+`playwright.stories.config.ts`, and prints a checklist of the 75 v1 stories.
 A story with no test reads "no test yet". CI runs it as the `stories` job of
 `.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
 never on the merge path.
 `npm run e2e` (the gate suite) skips this directory.
-`npm run test:stories:audit` runs the same stories in WebKit, Firefox and as a phone (claude-docs/testing/e2e.md, "The audit"); a story passes only if it passes in all.
+`npm run test:stories:audit` runs the same stories in WebKit, Firefox and as a phone (claude-docs/testing/e2e.md, "The audit runs the suite in WebKit, Firefox and as a phone, on demand"); a story passes only if it passes in all.
 
 ## Naming a story
 
@@ -73,12 +73,14 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `89-support-request.spec.ts`              | 89           | M15.29                                    |
 | `90-admin-support.spec.ts`                | 90           | M15.30                                    |
 | `91-sender-thread.spec.ts`                | 91           | M15.43                                    |
+| `92-help.spec.ts`                         | 92           | M17.16                                    |
+| `96-coven-rename.spec.ts`                 | 96           | M17.23                                    |
 
 In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
 
 Which old acceptance test each file replaces, and which gate e2e tests it made
 obsolete, is tabled in the decision record's "Mapping" section
-(`claude-docs/design-decisions/m9.1-stories-are-browser-flows.md`).
+(`claude-docs/design-decisions/ci.md`, "Stories are browser flows").
 
 Story 19 (a keeper has no access to a coven's ingredients or grimoire) is
 walked here by URL, as far as the pages exist. The per-entity sweep of the

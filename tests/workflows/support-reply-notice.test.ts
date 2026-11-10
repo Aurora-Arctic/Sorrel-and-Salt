@@ -4,21 +4,22 @@ import { start } from 'workflow/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
-
-// The run that tells a sender of a staff reply, end to end in the SDK's local world, against a stand-in Mailpit that can be told
-// to fail. The run carries the reply's id and the origin alone, and its step reads the rest from the rows when it sends.
+import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 const DOMAIN = '@support-reply-notice-run.test';
-const ORIGIN = 'http://localhost:3000';
-const MAILPIT_URL = 'http://mailpit.test';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
 
-// The stand-in answers fetch itself rather than listening on a port: the local world finds its own queue by the port this process
-// listens on, so a second listener would take its deliveries.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -38,7 +39,6 @@ async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Re
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -48,7 +48,6 @@ beforeAll(() => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(async () => {
@@ -59,7 +58,6 @@ beforeEach(async () => {
 });
 
 let made = 0;
-/** A verified account to send requests from. */
 async function sender(): Promise<{ id: string; email: string }> {
   made += 1;
   const email = `sender${made}${DOMAIN}`;
@@ -71,7 +69,6 @@ async function sender(): Promise<{ id: string; email: string }> {
   return { id: id as string, email };
 }
 
-/** An open request, from the account `by` or, with `senderEmail`, a signed-out visitor, with one public staff reply. */
 async function replied(
   by: string,
   senderEmail: string | null = null,
@@ -123,14 +120,13 @@ describe('the reply notice run', () => {
     const run = await start(supportReplyNotice, [replyId, ORIGIN]);
 
     await expect(run.returnValue).resolves.toBe(false);
-    // The first try and the SDK's three retries.
     expect(attempts).toHaveLength(4);
     expect(received).toEqual([]);
     expect(await markerOf(replyId)).toBeNull();
     errors.mockRestore();
   });
 
-  it('mails a signed-out sender the reply in full, linked to the support page', async () => {
+  it('tells a signed-out sender a reply is waiting, without its text, linked to the request’s mailed link', async () => {
     const { replyId } = await replied(SIGNED_OUT_SENDER_ID, `visitor${DOMAIN}`);
 
     const run = await start(supportReplyNotice, [replyId, ORIGIN]);
@@ -138,8 +134,10 @@ describe('the reply notice run', () => {
     await expect(run.returnValue).resolves.toBe(true);
     expect(received).toHaveLength(1);
     expect(received[0]!.to).toBe(`visitor${DOMAIN}`);
-    expect(received[0]!.text).toContain('Try the Testwort lever.');
-    expect(received[0]!.text).toContain(`${ORIGIN}/support`);
+    expect(received[0]!.text).not.toContain('Testwort lever');
+    expect(received[0]!.text).toMatch(
+      new RegExp(`${ORIGIN}/support/request#[A-Za-z0-9_-]{32,}`.replace(/[.]/g, '\\.')),
+    );
     expect(received[0]!.text).not.toContain('/account');
     expect(await markerOf(replyId)).toBeInstanceOf(Date);
   });

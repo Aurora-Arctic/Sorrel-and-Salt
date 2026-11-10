@@ -1,14 +1,19 @@
 import { Fragment, createElement as h } from 'react';
-import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
+import {
+  Action,
+  EmailLayout,
+  LinkOnlyNote,
+  Paragraph,
+  actionVerb,
+  defineMessage,
+} from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportClosingSoonProps } from './types';
 
-// Sent to a request's sender before a resolved request closes, on its fifth day or as soon after as the job runs. It names the
-// request, says how long is left and carries none of the thread.
+// Names the request and carries none of the thread.
 
 const HOUR_MS = 60 * 60 * 1000;
 
-/** How long is left, in words: hours under a day, whole days from one up, each to the nearest. */
 export function timeLeft(ms: number): string {
   const hours = Math.round(ms / HOUR_MS);
   if (hours < 1) return 'less than an hour';
@@ -26,6 +31,7 @@ export function SupportClosingSoon({
   part,
   requestSubject,
   signedOut = false,
+  viewLink = false,
   timeLeftMs,
 }: SupportClosingSoonProps) {
   const title = titleOf(requestSubject);
@@ -33,31 +39,42 @@ export function SupportClosingSoon({
   return h(
     EmailLayout,
     { preview: 'Your support request closes soon.', heading: title, origin },
-    signedOut
+    signedOut && viewLink
       ? h(
           Fragment,
           null,
           h(
             Paragraph,
             null,
-            `It closes in ${left}. If you still need help, ${actionVerb(part)} to write to us again.`,
+            `Your request closes in ${left}. A reply from you before then keeps it open. To reply, ${actionVerb(part)}.`,
           ),
-          h(Action, { href: url, label: 'Write to Us Again', part }),
+          h(Action, { href: url, label: 'Open Your Support Request', part }),
+          h(LinkOnlyNote),
         )
-      : h(
-          Fragment,
-          null,
-          h(
-            Paragraph,
+      : signedOut
+        ? h(
+            Fragment,
             null,
-            `It closes in ${left}, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`,
+            h(
+              Paragraph,
+              null,
+              `It closes in ${left}. If you still need help, ${actionVerb(part)} to write to us again.`,
+            ),
+            h(Action, { href: url, label: 'Write to Us Again', part }),
+          )
+        : h(
+            Fragment,
+            null,
+            h(
+              Paragraph,
+              null,
+              `It closes in ${left}, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`,
+            ),
+            h(Action, { href: url, label: 'Open the Request', part }),
           ),
-          h(Action, { href: url, label: 'Open the Request', part }),
-        ),
   );
 }
 
-/** The closing-soon notice for `to`, rendered to the html and plain text `send` takes. */
 export const supportClosingSoonMessage = defineMessage<SupportClosingSoonProps>(
   ({ requestSubject }) => titleOf(requestSubject),
   SupportClosingSoon,

@@ -9,7 +9,6 @@ import { createLoaders } from './loaders';
 import { isSupportOperation, type OperationParams } from './paused-operations';
 import type { Context } from './types';
 
-/** Yoga's `context` option, called once per request. */
 export async function createContext({
   request,
   params,

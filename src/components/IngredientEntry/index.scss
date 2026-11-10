@@ -9,8 +9,6 @@
 $jump-link-size: $nav-link-size;
 $jump-link-line: 1.25;
 
-// The article fills the frame's wide column, not `.page-with-nav`'s narrow
-// one: an entry is read, not filled in, and its sections hold a side column.
 .ingredient-entry {
   box-sizing: border-box;
   @include stack(6);
@@ -27,7 +25,7 @@ $jump-link-line: 1.25;
 .ingredient-entry--with-nav {
   @include entry-nav-grid;
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     > .page-nav {
       // The menu's first link ("Details") level with the Details h2: the menu drops by half of what
       // the h2's line has over the link's. (claude-docs/components/ingredient-entry.md, "Styling")
@@ -74,8 +72,6 @@ $jump-link-line: 1.25;
   margin-block-end: space(3);
 }
 
-// New or Updated, then the safety badge, at the row's right end, each as far right as it can go:
-// `auto` on the first of them, whichever is there.
 .ingredient-entry__bar > .recency-mark,
 .ingredient-entry__bar > .badge:first-child,
 .back-link + .badge {
@@ -172,7 +168,7 @@ $formal-line: $icon-size;
 
 // Beside a jump menu the shelf hangs out into the menu's column so the name keeps its line with the
 // text beneath it. (claude-docs/components/ingredient-entry.md, "Styling")
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+@include above-phone {
   .ingredient-entry--with-nav .page-header__title {
     position: relative;
   }
@@ -193,7 +189,7 @@ $formal-line: $icon-size;
 
 // Without the menu column the shelf stands on a line of its own above the name, 30% larger (the
 // drawing's own size, not a transform). (claude-docs/components/ingredient-entry.md, "Styling")
-@media (max-width: #{$shell-phone-width}) {
+@include phone-down {
   .ingredient-entry__head .page-header__title {
     flex-direction: column;
     align-items: flex-start;
@@ -210,16 +206,10 @@ $formal-line: $icon-size;
   }
 }
 
-// Stock, Details, the side column, Forms and References. Past a tablet's width the
-// side column stands beside Stock and Details (a grid); the forms then start
-// below (`entry-body`, `_mixins.scss`).
 .ingredient-entry__body {
   @include entry-body('#details', '.ingredient-entry__side');
 }
 
-// A section: its heading, its text (description and caution), then its side
-// column (the correspondences and lists), one under the other on a phone. Details
-// and Stock lay out as the body's two columns, a form as a grid of its own.
 .ingredient-entry__body > .ingredient-entry__section {
   @include entry-column-section;
 }
@@ -229,8 +219,6 @@ $formal-line: $icon-size;
 }
 
 .ingredient-entry__section {
-  // A jump from the menu lands clear of the top inset, and of the shell's
-  // sticky bar where there is one, as `.page-frame__section` does.
   scroll-margin-top: #{space(4)};
 }
 
@@ -238,14 +226,11 @@ $formal-line: $icon-size;
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
-// Details' h2, or a form's h3.
 .ingredient-entry__section > h2,
 .ingredient-entry__section > h3 {
   margin: 0;
 }
 
-// Every section's h2 stands over a rule (`entry-heading-rule`): Details' here, Stock's on its
-// head's h2 below, the forms' and the references' beside theirs.
 .ingredient-entry__section > h2 {
   @include entry-heading-rule;
 }
@@ -277,7 +262,7 @@ $formal-line: $icon-size;
   }
 }
 
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   // The head keeps to the text column, so Edit ends where the text does.
   // (claude-docs/components/ingredient-entry.md, "Styling")
   .ingredient-entry__head {
@@ -299,7 +284,6 @@ $formal-line: $icon-size;
   justify-content: space-between;
   gap: space(2);
 
-  // The rule runs under the heading's text alone; the button stays at the row's end.
   > h2 {
     @include entry-heading-rule;
 
@@ -365,8 +349,6 @@ $formal-line: $icon-size;
   }
 }
 
-// A block's heading: an h3 under Details, an h4 under a form; either
-// way the stack's gap is the space to its list, not the heading's own.
 .ingredient-entry__block {
   @include stack(2);
 
@@ -378,7 +360,6 @@ $formal-line: $icon-size;
 
 .ingredient-entry__description {
   margin: 0;
-  // Typed in a textarea, with its line breaks.
   white-space: pre-line;
 }
 
@@ -400,7 +381,6 @@ $formal-line: $icon-size;
     margin: 0;
   }
 
-  // Spacing alone sets the numbers apart, each its own link to hit.
   sup a {
     padding-inline: space(1);
   }
@@ -420,9 +400,7 @@ $formal-line: $icon-size;
   }
 }
 
-// Past a tablet's width References keeps to the text column, as Stock and Details do; the forms
-// above it span both columns.
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .ingredient-entry__body > .ingredient-entry__references {
     grid-column: 1;
   }
@@ -432,8 +410,6 @@ $formal-line: $icon-size;
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
-// Bibliography entries run to two or three lines, so they stand a clear step
-// apart where the page's short lists (folk names, substitutes) sit close.
 .ingredient-entry__references .ingredient-entry__list {
   gap: space(4);
 }
@@ -459,8 +435,6 @@ $formal-line: $icon-size;
   white-space: nowrap;
 }
 
-.ingredient-entry__marks a:target,
-.ingredient-entry__note:target,
 // A citation prints its url as plain text, so `anywhere` lets it break at any character;
 // `break-word` would still let the url set the list's min-content width.
 // (claude-docs/components/ingredient-entry.md, "Styling")
@@ -468,11 +442,18 @@ $formal-line: $icon-size;
   overflow-wrap: anywhere;
 }
 
+.ingredient-entry__marks a:target,
+.ingredient-entry__note:target,
 .ingredient-entry__reference:target {
   background-color: $fill-quiet;
+
+  // The fill is dropped, so an outline marks the target.
+  @include forced-colors {
+    outline: 1px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
-// A jump to a note or an entry lands clear of the top inset, as a section does.
 .ingredient-entry__marks a,
 .ingredient-entry__note,
 .ingredient-entry__reference {
@@ -530,7 +511,6 @@ $replaces-gap: space(5);
   }
 }
 
-// The links under it are the entry page's links to the compendium.
 .ingredient-entry__replaced a {
   @include icon-link;
 }
@@ -551,7 +531,7 @@ $replaces-gap: space(5);
 // Beside the text the icons of a block stand in one column ending under the heading's ⓘ; titles are
 // sized by `contain: inline-size` so they wrap to the heading's width.
 // (claude-docs/components/ingredient-entry.md, "Styling")
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+@include above-tablet {
   .ingredient-entry__replaces {
     inline-size: fit-content;
     max-inline-size: 100%;
@@ -612,7 +592,7 @@ $replaces-gap: space(5);
 .ingredient-summary__covens a {
   color: $text-primary;
   @include faded-underline;
-  @include theme-transition(color);
+  @include state-fade(color);
 
   &:hover,
   &:focus-visible {
@@ -646,16 +626,110 @@ $replaces-gap: space(5);
   align-items: center;
   gap: space(2);
 
-  // Icons stay on one line, a row of at most four, wherever it stands.
   &--icons {
     flex-wrap: nowrap;
   }
 }
 
-// The sourcing score ends the References section, which spaces it from the list above; the panel's
-// own bottom divider and margin are dropped, as nothing follows it.
 .ingredient-entry__references .sourcing-score {
   margin-block: 0;
   padding-block-end: 0;
   border-block-end: 0;
+}
+
+// The skeleton's eyebrow and action: a skeleton has no width of its own, so each bar stands in a box
+// of the size the real one takes (IngredientEntry/skeleton.tsx).
+.ingredient-entry__pending-formal {
+  display: flex;
+  align-items: center;
+  min-block-size: $formal-line;
+}
+
+.ingredient-entry__pending-eyebrow {
+  display: block;
+  block-size: 1lh;
+  inline-size: 12rem;
+  max-inline-size: 100%;
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__pending-action {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc((#{$formal-line} - #{$action-icon-size}) / 2);
+  inline-size: $action-icon-size;
+  block-size: $action-icon-size;
+
+  @each $count in 2, 3 {
+    &[data-icons='#{$count}'] {
+      inline-size: calc(#{$count} * #{$action-icon-size} + #{$count - 1} * #{space(2)});
+    }
+  }
+
+  .skeleton,
+  .skeleton__shapes,
+  .skeleton__box {
+    block-size: 100%;
+    inline-size: 100%;
+  }
+}
+
+.ingredient-entry__pending-badge {
+  display: flex;
+  align-items: center;
+  min-block-size: 1.5rem;
+  inline-size: 8rem;
+}
+
+// A pending name is one line of the heading's own size, as the name's first line is.
+.ingredient-entry__head h1 .skeleton__line {
+  height: 1lh;
+}
+
+// `list-reset` also clears the `ul li::before` ✦ that `list-style: none` leaves.
+.ingredient-entry__pending-shelf {
+  @include list-reset;
+}
+
+// A pending cupboard shelf before the name: out of the line past a phone, as the real mark hangs into
+// the menu's column, and a line of its own above the name on a phone.
+.ingredient-entry__pending-held {
+  display: block;
+  font-size: heading-size(1);
+  inline-size: calc(#{$inline-mark-size} * 1.3);
+  block-size: calc(#{$inline-mark-size} * 1.3);
+
+  @include above-phone {
+    position: absolute;
+    inline-size: $inline-mark-size;
+    block-size: $inline-mark-size;
+  }
+}
+
+.ingredient-entry__pending-shelf > li {
+  inline-size: 5.6875rem;
+  block-size: 6.5625rem;
+  margin: 0;
+
+  @include phone-down {
+    inline-size: 5.375rem;
+  }
+}
+
+// A pending name has no width of its own, so the box holding it takes the row.
+.ingredient-entry__head .page-header__title:has(> h1 > .skeleton) {
+  flex: 1 1 10rem;
+
+  @include phone-down {
+    > h1 {
+      flex: none;
+      align-self: stretch;
+    }
+  }
+}
+
+// On a phone the real menu also holds a group label and two rules, which bars alone do not.
+@include phone-down {
+  .ingredient-entry--pending > .page-nav {
+    margin-block-end: 1.0625rem;
+  }
 }

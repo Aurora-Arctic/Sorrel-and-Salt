@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SITE_NAME } from '../../lib/site';
@@ -9,13 +8,15 @@ import SupportSenderReplyBox from './reply-box';
 import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
 import '../SupportRequests/index.scss';
+import { PendingLink } from '../../lib/navigation';
 
-// The body of the sender's dialog over `/account/support` (claude-docs/components/support-sender-request.md): the facts
-// and the thread of the staff dialog, with the sender's own messages named and tagged "You" and every staff reply named
-// for the site and tagged "Staff", never the staff member's name. Beneath it sits the reply box, or on a closed request
-// the link to its follow-up.
+// Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).
 
-const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElement => (
+const SupportSenderRequest = ({
+  request,
+  reply,
+  headingLevel,
+}: SupportSenderRequestProps): ReactElement => (
   <div className="support-detail support-detail--single">
     <div className="support-detail__main">
       <SupportFacts
@@ -24,6 +25,7 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
         errorCode={request.errorCode}
       />
       <SupportThread
+        headingLevel={headingLevel}
         entries={[
           {
             id: request.id,
@@ -41,18 +43,19 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
           })),
         ]}
       />
-      {(request.status === 'open' || request.status === 'waiting_on_sender') && (
-        <SupportSenderResolveButton requestId={request.id} />
-      )}
+      {reply === undefined &&
+        (request.status === 'open' || request.status === 'waiting_on_sender') && (
+          <SupportSenderResolveButton requestId={request.id} />
+        )}
       {request.status !== 'closed' ? (
-        <SupportSenderReplyBox requestId={request.id} timedOut={request.timedOut} />
+        (reply ?? <SupportSenderReplyBox requestId={request.id} timedOut={request.timedOut} />)
       ) : (
         <p className="support-sender-request__closed">
           This request is closed.{' '}
           {request.followUpId ? (
-            <Link href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
+            <PendingLink href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
               Open Your Follow-Up
-            </Link>
+            </PendingLink>
           ) : (
             'Write a new request from Support to follow it up.'
           )}

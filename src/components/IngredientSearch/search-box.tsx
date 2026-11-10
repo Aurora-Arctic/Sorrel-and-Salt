@@ -1,15 +1,14 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
-import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
-import { graphql } from '../../gql';
+import { type ReactElement, useDeferredValue, useId, useMemo, useRef, useState } from 'react';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/query-length';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { UNTITLED_SPELL } from '../SpellCard/untitled';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -20,9 +19,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// The search row's first control: a type-ahead over the compendium's ranked search, with the
-// magnifier as the form's one submit. The debounced text asks `compendium(query:, first: 25)`
-// for the dropdown; the list changes only on Enter, the clear, a pick or the last row.
+// The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one
+// submit. The list changes only on Enter, the clear, a pick or the last row.
 
 const IngredientSearchMatchesDocument = graphql(`
   query IngredientSearchMatches($query: String, $first: Int) {
@@ -68,8 +66,6 @@ const IngredientSearchCupboardMatchesDocument = graphql(`
   }
 `);
 
-// The same type-ahead over one coven's grimoire: its spells of the tab's status, searched by
-// title and intent and ranked best match first.
 const GrimoireSearchMatchesDocument = graphql(`
   query GrimoireSearchMatches(
     $workspaceId: ID!
@@ -92,7 +88,7 @@ const GrimoireSearchMatchesDocument = graphql(`
 `);
 
 /** The words the box uses for what it searches: an ingredient's name, or a spell's title. */
-const WORDING = {
+export const WORDING = {
   ingredient: {
     label: 'Name',
     placeholder: 'Search',
@@ -104,11 +100,11 @@ const WORDING = {
 /** The dropdown's rows: the first page of the ranked search, never a second. */
 const MATCH_ROWS = 25;
 
-/** Whether `text` is long enough to search, counted in composed code points as the service counts it. */
+/** Whether `text` is long enough to search, counted in composed code points as the
+ * service counts it. */
 const searchable = (text: string): boolean =>
   Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
 
-/** An ingredient's dropdown row, labelled with its formal name where it has one. */
 const ingredientRow = ({
   id,
   slug,
@@ -174,9 +170,8 @@ const IngredientSearchBox = ({
     throwOnError: false,
   });
   const isFetching = { compendium, cupboard, grimoire }[source.kind].isFetching;
-  // Every answer becomes the same rows. The coven's label stands in for an ingredient's name; a
-  // spell's match holds its id as both `id` and `slug` (it has no slug), for the recipe page a
-  // pick opens, and an untitled one stands for the text typed.
+  // A spell's match holds its id as both `id` and `slug` (it has no slug), for the recipe page a
+  // pick opens; the coven's label stands in for an ingredient's name.
   const answer = useMemo((): { hasNextPage: boolean; rows: IngredientSearchOption[] } | null => {
     if (source.kind === 'grimoire') {
       const page = grimoire.data?.grimoire;
@@ -224,6 +219,9 @@ const IngredientSearchBox = ({
     (): IngredientSearchOption[] => (searchesNow && !belowFloor && answer ? answer.rows : []),
     [answer, searchesNow, belowFloor],
   );
+  // The box takes each keystroke at once; the dropdown's rows follow at low priority, so a long
+  // list of matches never holds a key press back on a slow device.
+  const shownOptions = useDeferredValue(options);
   const hasMore = searchesNow && !belowFloor && answer?.hasNextPage === true;
   const seeAllHref = searchHref(query);
 
@@ -232,18 +230,13 @@ const IngredientSearchBox = ({
   // shows the dialog at once while its page loads.
   function pick(_value: string, option: IngredientSearchOption | null) {
     if (!option) return;
-    // A row with nothing to open, or a box given nowhere to open it, applies its text as the
-    // search.
     if (!pickHref || !option.match) {
       apply(searchHref(option.value.trim()));
       return;
     }
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match), pickPlace);
-    else {
-      const target = ingredientLinkTarget(href);
-      navigate(href, target ? { target } : {});
-    }
+    else navigate(href);
   }
 
   return (
@@ -257,11 +250,10 @@ const IngredientSearchBox = ({
       onChange={onText}
       onFocus={() => setActive(true)}
       onPick={pick}
-      // Enter with the dropdown open and no row highlighted applies the text, as a closed box does.
       onCommit={(value) => apply(searchHref(value.trim()))}
       suggestions={{
-        options,
-        pending: !belowFloor && (text.trim() !== query || isFetching),
+        options: shownOptions,
+        pending: !belowFloor && (text.trim() !== query || isFetching || shownOptions !== options),
       }}
       empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
       // The last row of the listbox, reached by the arrows like a result, in italics so it reads
@@ -282,8 +274,6 @@ const IngredientSearchBox = ({
         },
         empty: text === '',
       }}
-      // No chevron: a free-text search opens as you type, and the magnifier submits,
-      // as a search field's does.
       toggle={false}
       leading={
         // The form's one submit, as SearchField's was, at the start of the box:

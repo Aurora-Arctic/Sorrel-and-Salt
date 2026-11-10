@@ -13,6 +13,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { UNMAILED_DOCUMENT_KEYS } from '../../lib/unversioned-documents';
 import { documentMailingItems } from '../../modules/documents/schema/document-mailing-items';
 import { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
 import { documentMailings } from '../../modules/documents/schema/document-mailings';
@@ -139,6 +140,7 @@ export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]>
       notSoftDeleted(documentVersions),
       eq(documentVersions.status, 'published'),
       gt(documentVersions.number, 1),
+      notInArray(documents.key, [...UNMAILED_DOCUMENT_KEYS]),
       not(
         existsIn(
           newerVersion,
@@ -202,7 +204,6 @@ export function findDocumentMailingItems(
   );
 }
 
-/** One page of the accounts of a mailing that its mail has not yet reached (CLAUDE.md rule 8). */
 export function findUnsentDocumentMailingRecipientPage(
   mailingId: string,
   page: PageRequest,
@@ -219,7 +220,6 @@ export function findUnsentDocumentMailingRecipientPage(
   );
 }
 
-/** What a mailing reads of an account. */
 export type MailingAccount = Pick<typeof users.$inferSelect, 'id' | 'email' | 'name'>;
 
 // The seeded accounts that stand in for no one: they hold no mailbox.
@@ -233,7 +233,6 @@ const mailable = and(
   notInArray(users.id, STAND_INS),
 );
 
-/** How many accounts a mailing would reach. */
 export async function countDocumentMailingAccounts(): Promise<number> {
   const [row] = await selectFrom(users, mailable, {
     aggregate: { count: sql<number>`count(*)::int` },
@@ -242,14 +241,12 @@ export async function countDocumentMailingAccounts(): Promise<number> {
   return row.count;
 }
 
-/** One page of the accounts a mailing reaches, by id (CLAUDE.md rule 8). */
 export function findDocumentMailingAccountPage(
   page: PageRequest,
 ): Promise<PageEntry<MailingAccount>[]> {
   return findPage(users, [users.id], page, mailable);
 }
 
-/** The named live accounts, for the mail's address and greeting. */
 export function findDocumentMailingRecipientUsers(
   userIds: readonly string[],
 ): Promise<MailingAccount[]> {
@@ -270,7 +267,6 @@ export async function countDocumentMailsSentToday(): Promise<number> {
   return row.count;
 }
 
-/** How many accounts of a mailing its mail has reached. */
 export async function countDocumentMailingReached(mailingId: string): Promise<number> {
   const [row] = await selectFrom(
     documentMailingRecipients,
@@ -284,7 +280,6 @@ export async function countDocumentMailingReached(mailingId: string): Promise<nu
   return row.count;
 }
 
-/** A live mailing by id, or `undefined`. */
 export function findDocumentMailingById(
   mailingId: string,
 ): Promise<DocumentMailingRow | undefined> {
@@ -328,7 +323,6 @@ export async function findOldestSendingDocumentMailing(): Promise<DocumentMailin
   return oldest?.node;
 }
 
-/** The documents' named writes, beside their finders. `writerFor` spreads them into the writer. */
 export function documentWrites({
   tx,
   session,

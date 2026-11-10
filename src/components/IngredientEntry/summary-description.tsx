@@ -9,13 +9,11 @@ import { ChevronIcon } from '../IconTip/icons';
 
 const LINES = 6;
 
-/** One line of the paragraph, in pixels: the computed `line-height`, or a guess from its size. */
 function lineHeightOf(element: HTMLElement): number {
   const style = getComputedStyle(element);
   return parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.65 || 0;
 }
 
-/** Whether the element moves on a transition: not under reduced motion, which sets none. */
 function transitions(element: HTMLElement): boolean {
   return parseFloat(getComputedStyle(element).transitionDuration) > 0;
 }

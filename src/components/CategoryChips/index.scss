@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Chip text one step under the caption it takes elsewhere, in a card or a table cell alike.
 .category-chips .chip {
   font-size: type-size('overline');
 }
@@ -28,6 +27,18 @@
   &:focus-visible {
     @include focus-ring;
   }
+
+  @include forced-colors {
+    &:hover {
+      border-color: Highlight;
+    }
+
+    &[aria-expanded='true'] {
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
 }
 
 // The panel is fixed and placed by Floating UI (category-more.tsx), so no table frame's
@@ -35,8 +46,7 @@
 // inline; this is its look and its fade.
 .category-more__panel {
   @include modal-surface($shadow-floating);
-  // Above the rows beneath and their Edit pencils; inside a card it meets only the card's
-  // own context, which the lift below raises over its neighbours.
+  // Above the rows beneath and their Edit pencils; in a card the lift below raises it.
   z-index: layer('floating');
   display: flex;
   flex-wrap: wrap;
@@ -44,6 +54,12 @@
   box-sizing: border-box;
   max-inline-size: calc(100vw - #{space(4)});
   padding: space(3);
+
+  // The shadow that was its edge is dropped, so a border draws it.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   opacity: 0;
   visibility: hidden;
   // Visibility waits for the fade-out, so the panel is gone from the page once it is clear.

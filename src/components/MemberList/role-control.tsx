@@ -2,10 +2,10 @@
 
 import { type ReactElement, useState } from 'react';
 import type { WorkspaceRole } from '@/modules/coven';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { RadioGroupField } from '../Field';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { RoleControlProps } from './types';
@@ -25,7 +25,6 @@ const UpdateMemberRoleDocument = graphql(`
   }
 `);
 
-// Observer, practitioner, steward: the order the choices are drawn in.
 const ROLES: readonly WorkspaceRole[] = ['viewer', 'member', 'owner'];
 
 const RoleControl = ({
@@ -41,8 +40,6 @@ const RoleControl = ({
   // The role is read again after a change, and the options with it: a pick
   // the new options no longer hold falls back to the first.
   const chosen = options.includes(picked) ? picked : options[0];
-  // Up the ladder is a promotion, down it a demotion; the modal's confirm says
-  // which, green for one and red for the other, as the choice is made.
   const promoting = ROLES.indexOf(chosen) > ROLES.indexOf(currentRole);
   const label = 'Change Role';
   return (

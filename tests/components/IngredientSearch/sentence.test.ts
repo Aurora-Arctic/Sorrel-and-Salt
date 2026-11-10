@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import type { SearchSentenceFilter } from '@/components/IngredientSearch/types';
 
-// The one named exception to the copy rule: this file asserts the
-// sentence's strings, because the strings are what the function makes.
+// The one named exception to the copy rule: the strings are what the function makes.
 
 const empty: SearchSentenceFilter = {};
 
@@ -129,7 +128,6 @@ describe('buildSearchSentence', () => {
       elements: { fire: 'Fire' },
     };
     const filter: SearchSentenceFilter = {
-      // Given out of order on purpose.
       toxic: 'not_toxic',
       elements: ['fire'],
       celestialBodies: ['sun', 'mars'],

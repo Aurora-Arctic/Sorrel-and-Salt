@@ -4,7 +4,6 @@
 // A choice chip (ChoiceChip): "Match: All" and a caret opening a menu of radios. A `<details>`,
 // so it opens before the script runs; once run, the menu fades and stays until the fade ends.
 .facet-chip__bar {
-  // The chip and its icon: what a chip's tip is placed against.
   display: flex;
   align-items: center;
   gap: space(1);
@@ -14,13 +13,19 @@
   margin: 0;
 }
 
+// Refused by a save: the face takes the invalid edge every field box does.
+.facet-chip__group[aria-invalid='true'] .facet-chip__summary {
+  border-color: $secondary;
+  box-shadow: inset 0 0 0 1px $secondary;
+}
+
 // The spacer stands where a neighbour's label does, so a chip beside a field starts level
 // with its box. Stacked (below the tablet width) there is no neighbour, so it is only
 // an empty line and a gap above the chip.
 .facet-chip__spacer {
   display: none;
 
-  @media (min-width: $shell-tablet-width) {
+  @include width-from($shell-tablet-width) {
     display: block;
   }
 }
@@ -42,7 +47,7 @@
   white-space: nowrap;
   cursor: pointer;
   list-style: none;
-  @include theme-transition(background-color);
+  @include state-fade(background-color);
 
   &::-webkit-details-marker {
     display: none;
@@ -65,10 +70,32 @@
     color: $text-muted;
     cursor: default;
   }
+
+  @include forced-colors {
+    &:hover {
+      border-color: Highlight;
+    }
+
+    &:disabled {
+      color: GrayText;
+      border-color: GrayText;
+    }
+  }
 }
 
 .facet-chip__details[open] > .facet-chip__summary {
   border-color: $accent;
+
+  // The fills are dropped, so an open chip takes the Highlight fill.
+  @include forced-colors {
+    border-color: Highlight;
+    background-color: Highlight;
+    color: HighlightText;
+
+    * {
+      color: inherit;
+    }
+  }
 }
 
 // The name is the quieter half of the chip: the caption size the counts use, in the muted ink,
@@ -82,7 +109,6 @@
   font-weight: 500;
 }
 
-// An option's icon, a glyph wide, ahead of its label on the chip and in the menu.
 .facet-chip__icon {
   display: inline-flex;
   margin-inline-end: space(1);
@@ -95,7 +121,6 @@
 }
 
 .facet-chip__caret {
-  // A chevron five eighths of a glyph wide and three eighths high.
   inline-size: calc(#{$glyph-size} * 0.625);
   block-size: calc(#{$glyph-size} * 0.375);
   color: $text-muted;
@@ -115,7 +140,7 @@
 
 // A chip at the end of a row opens its menu leftward, from its right edge, so the slide's clip does
 // not cut it; choice-chip.tsx measures on open and adds this class
-// (claude-docs/components/facet-panel.md, "Menus and tips inside the panel").
+// (claude-docs/components/facet-panel.md, "Layout and controls").
 .facet-chip__menu--end {
   inset-inline: auto 0;
 }

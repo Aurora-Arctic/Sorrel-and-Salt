@@ -205,7 +205,6 @@ describe('the slug', () => {
       select ingredient_id, workspace_id, slug, retired_at, expires_at, created_by
       from retired_ingredient_slugs order by retired_at, slug`;
 
-  /** An issue list, or the test fails because the write went through. */
   async function issuesOf(attempt: Promise<unknown>) {
     const error = await attempt.then(
       () => expect.fail('the write was not refused'),

@@ -6,7 +6,7 @@ import {
   auditWsEndpoint,
   browserUrl,
 } from './tests/e2e/slots';
-import { allServers } from './tests/e2e/servers';
+import { startupServer } from './tests/e2e/servers';
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
@@ -22,6 +22,9 @@ const STORIES_SPECS = /[\\/]stories[\\/]/;
 // workshop server alone: playwright.workshop.config.ts runs them, `npm run
 // e2e` never does.
 const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;
+
+// The help screenshots write files into public/: playwright.help-screenshots.config.ts runs them on demand.
+const HELP_SCREENSHOT_SPECS = /[\\/]help-screenshots[\\/]/;
 
 // The audit: the suite in WebKit, Firefox and as a phone, on demand and never on CI. The three projects exist only under `E2E_AUDIT=1` (`npm run e2e:audit`),
 // dial the `playwright-audit` compose service through an endpoint of their own, and name no base URL, so each worker gets its own slot's server
@@ -63,11 +66,17 @@ export default defineConfig({
       ? [['dot'], ['html', HTML_REPORT]]
       : [['html', HTML_REPORT]],
   // Production build, against the e2e databases rather than the dev one.
-  webServer: allServers,
+  webServer: startupServer(),
   projects: [
     {
       name: 'chromium',
-      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS, WORKSHOP_SPECS],
+      testIgnore: [
+        CONFIGURED_PROVIDERS_SPEC,
+        COMPENDIUM_CACHE_SPEC,
+        STORIES_SPECS,
+        WORKSHOP_SPECS,
+        HELP_SCREENSHOT_SPECS,
+      ],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -91,6 +100,7 @@ export default defineConfig({
       COMPENDIUM_CACHE_SPEC,
       STORIES_SPECS,
       WORKSHOP_SPECS,
+      HELP_SCREENSHOT_SPECS,
     ]),
   ],
 });

@@ -23,6 +23,7 @@ import {
   FormHistoryContext,
   TextField,
   useFormHistory,
+  FormErrorSummary,
 } from '../Field';
 import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
@@ -33,7 +34,7 @@ import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories } from './categories-field';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
@@ -63,10 +64,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// The spell builder: a spell's title, intent, jar and note in four folding sections, inside the
-// dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and Close saves first
-// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "The builder's sections and
-// autosave")
+// The spell builder: four folding sections inside the dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and
+// Close saves first (./save-on-close.ts) (claude-docs/components/spell-builder.md, "The builder's sections and autosave").
 
 /** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
 const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
@@ -81,14 +80,8 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** A value the form holds, which a section folds. */
 type SectionField = keyof SpellBuilderValues;
 
-/**
- * The builder's sections, in order, and the values each folds: what flags a
- * section holding an error, and what its shut line reads. Later fields join
- * these.
- */
 const SECTIONS = {
   Purpose: ['title', 'intent', 'categoryIds'],
   Jar: ['jarDescription', 'sealWaxColor', 'steps'],
@@ -98,15 +91,15 @@ const SECTIONS = {
 
 type SectionName = keyof typeof SECTIONS;
 
-const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
+/** Why Save is off as the form opens, before anything is changed. */
+export const NOTHING_TO_SAVE = 'Nothing to save yet';
 
-/** A value as one line: a multi-line intent or note reads on a shut section's line. */
+export const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
+
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
 /**
- * A value as its shut section's line reads it, blank for none: the
- * categories by name, as the picker's chips read (`named`), each once the
- * categories are read, so the line never shows an id; the steps as a count
+ * A value as its shut section's line reads it, blank for none: categories by name, never an id; the steps as a count
  * of the ingredients laid.
  */
 function lineOfField(
@@ -118,7 +111,6 @@ function lineOfField(
     case 'categoryIds':
       return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
     case 'steps': {
-      // The steps that lay something: an instruction step has no name.
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
       if (laid === 0) return '';
       return laid === 1 ? '1 ingredient' : `${laid} ingredients`;
@@ -131,7 +123,6 @@ function lineOfField(
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
-/** The form's values for a spell: none for a new one, and blank for a field it has not set. */
 function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
   return {
     ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
@@ -142,7 +133,6 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     // A new spell starts private: the autosave would otherwise share it seconds after the first
     // keystroke.
     visibility: spell?.visibility ?? 'private',
-    // A new spell is a draft.
     status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],
   };
@@ -160,9 +150,8 @@ const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
 >;
 
 /**
- * The schema's reading of the steps as a save sends them, and the unit
- * rule, which needs the coven's jars and so is not the schema's: a refused
- * unit is said beside it, under the step's `unit`, as the service says it.
+ * The unit rule needs the coven's jars, so it is not the schema's: a refused unit is said under
+ * `unit`.
  */
 const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async (
   values,
@@ -207,10 +196,8 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
 const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
 
-/** Said on the form when Reload Latest could not read the spell: the conflict stays, to try again. */
 const RELOAD_FAILED = 'The latest version could not be loaded. Try again.';
 
-/** Said on the form when a save is tried while a field holds an error the form shows. */
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
 
 /** The error a save throws for a form the browser's own check refused: a refusal, so the hook does not retry it. */
@@ -230,9 +217,8 @@ const SpellBuilder = ({
   deletedHrefOf,
   copiedHrefOf,
 }: SpellBuilderProps): ReactElement => {
-  // The spell this builder opened on. The dialog hands the builder a different
-  // `spell` once the builder's own first save has moved the address to it; the
-  // builder keeps what it opened with and carries the id its save returned.
+  // The dialog hands over a different `spell` once the first save moves the address to it;
+  // the builder keeps what it opened with and carries the id its save returned.
   const look = covenSlug === undefined ? undefined : { workspaceId, covenSlug };
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -246,6 +232,7 @@ const SpellBuilder = ({
     // A field is checked when it is first left, and on every change after,
     // as the ingredient form's are.
     mode: 'onTouched',
+    shouldFocusError: false,
     reValidateMode: 'onChange',
   });
   const {
@@ -260,8 +247,6 @@ const SpellBuilder = ({
     formState: { errors, defaultValues },
   } = methods;
 
-  // Something to save: a field that reads differently from the last save (blank and spaces reading
-  // as none, as the schema does), a changed visibility or status, category pick or step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
@@ -288,8 +273,6 @@ const SpellBuilder = ({
   // autosave waits.
   const blankSaved = steps.some(isBlankSavedInstruction);
 
-  // A new spell opens every section, to be filled in order; a saved one opens
-  // them shut, each line saying what it holds, as Add Ingredient's do.
   const [open, setOpen] = useState<ReadonlySet<SectionName>>(
     () => new Set(spell ? [] : SECTION_NAMES),
   );
@@ -311,14 +294,12 @@ const SpellBuilder = ({
     );
     if (erred.length > 0) setOpen((was) => new Set([...was, ...erred]));
   };
-  /** A section, folding its fields, flagged while one of them holds an error. */
   const section = (name: SectionName, children: ReactNode): ReactElement => (
     <CollapsibleSection
       title={name}
       summary={lineOf(name)}
       fold={{
         open: open.has(name),
-        // A failed read of a saved spell's steps is the jar's error too.
         invalid:
           SECTIONS[name].some((field) => errors[field] !== undefined) ||
           (name === 'Jar' && stepsRead === 'failed'),
@@ -360,15 +341,12 @@ const SpellBuilder = ({
   // whole recipe and one sent now would remove the rest.
   const [jarReady, setJarReady] = useState(stepsRead === undefined);
 
-  /** Places a refused save's issues beside their fields, or above them all. */
   const placeIssues = (error: unknown) => {
     placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
-      // A refused pick is pathed to its index, as the ids were sent.
       if (field === 'categoryIds') {
         return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
       }
       if (rest.length === 0 && isField(field)) return field;
-      // A step's amount, beside it; anything else of a step above the form.
       const [index, part] = rest;
       if (
         field === 'steps' &&
@@ -382,10 +360,8 @@ const SpellBuilder = ({
   };
 
   /**
-   * What a save answered is the form's new start: Save goes off until the next
-   * change. The values stay as they are, so what was typed while the save was
-   * in flight is not lost and reads as the next change. A step this save
-   * created takes its new id, or the next save would create it again.
+   * What a save answered is the form's new start: Save goes off until the next change. The values stay, so what was typed
+   * mid-save reads as the next change; a step this save created takes its new id.
    */
   const rebase = (answer: SpellBuilderSpell, sent: SpellBuilderValues) => {
     reset(
@@ -423,10 +399,8 @@ const SpellBuilder = ({
   };
 
   /**
-   * The one save every way in goes through (the autosave's, Save's, Close's,
-   * Mark Complete's and Share's): checked as the schema reads the form, then
-   * sent to the spell this builder holds, or created. A refusal lands beside
-   * its field, or above them all, and is thrown for the autosave to report.
+   * The one save every way in goes through (autosave, Save, Close, Mark Complete, Share): checked as the schema reads the
+   * form, then sent or created. A refusal lands beside its field and is thrown for the autosave to report.
    */
   const persist = async (sent: SpellBuilderValues, context: SaveContext): Promise<SaveResult> => {
     // The checks run on the form as it is now; the values sent are the ones the autosave handed
@@ -473,7 +447,7 @@ const SpellBuilder = ({
   const [deleting, setDeleting] = useState(false);
   const spellId = createdId ?? opened?.id ?? null;
   const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
-  // The shared Delete Spell write; `removed` holds the autosave and the save on close once it is sent.
+  // `removed` holds the autosave and the save on close once the delete is sent.
   const { remove, pending: removed } = useDeleteSpell({
     workspaceId,
     spellId: spellId ?? '',
@@ -496,17 +470,12 @@ const SpellBuilder = ({
   });
   const { flush } = autosave;
 
-  /**
-   * Marks the form submitted, so every error it holds is drawn: a save the
-   * person asked for (Save, Enter, Close) shows what is wrong, where the
-   * autosave stays quiet on a field not yet visited.
-   */
+  /** Draws every error: a save the person asked for shows what is wrong, autosave stays quiet. */
   const markSubmitted = () =>
     handleSubmit(
       () => undefined,
       () => undefined,
     )();
-  /** Saves now, for Save and Enter; a refusal is shown by the status beside Save. */
   const saveNow = async () => {
     asked.current = true;
     try {
@@ -519,13 +488,12 @@ const SpellBuilder = ({
     }
   };
 
-  // A Close pressed while the steps are on their way saves once they land.
   const jarWaiters = useRef<(() => void)[]>([]);
   useEffect(() => {
     if (!jarReady) return;
     for (const resume of jarWaiters.current.splice(0)) resume();
   }, [jarReady]);
-  /** Saves for Close, answering whether the server has everything; a refusal keeps the dialog open. */
+  /** Answers whether the server has everything; a refusal keeps the dialog open. */
   const saveForClose = async (): Promise<boolean> => {
     closing.current = true;
     try {
@@ -564,7 +532,7 @@ const SpellBuilder = ({
         : !jarReady
           ? 'Waiting for the jar to load'
           : !dirty && autosave.status === 'idle'
-            ? 'Nothing to save yet'
+            ? NOTHING_TO_SAVE
             : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   useSaveOnClose(dirty && stepsRead !== 'failed' && !removed, saveForClose);
@@ -574,8 +542,8 @@ const SpellBuilder = ({
   const stepsLanded = stepsRead === undefined;
   useEffect(() => {
     if (!stepsLanded || jarReady || !spell) return;
-    // A reset, then what was typed meanwhile put back: `resetField` skips a field
-    // nothing has registered, and the jar's list registers the steps only once drawn.
+    // `resetField` skips a field nothing has registered, and the jar's list registers the steps
+    // only once drawn, so what was typed meanwhile is put back after the reset.
     const typedMeanwhile = getValues();
     reset(valuesOf(spell));
     for (const name of [...FIELDS, 'visibility', 'categoryIds'] as const) {
@@ -597,7 +565,6 @@ const SpellBuilder = ({
     if (!mirror) return;
     const entry = readMirror<SpellBuilderValues>(mirror);
     if (!entry) return;
-    // A copy no newer than the saved row is what the row already holds.
     const savedAt = opened?.updatedAt ? new Date(opened.updatedAt) : null;
     if (
       (savedAt && entry.at.getTime() <= savedAt.getTime()) ||
@@ -667,6 +634,7 @@ const SpellBuilder = ({
         >
           {recovery && (headerNote ? createPortal(recovery, headerNote) : recovery)}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
+          <FormErrorSummary />
           <div className="collapsible-sections">
             <FoldAll
               anyOpen={open.size > 0}
@@ -681,11 +649,14 @@ const SpellBuilder = ({
                   label="Title"
                   placeholder="Add a title"
                   autoComplete="off"
+                  spellCheck
+                  enterKeyHint="next"
                 />
                 <TextField<SpellBuilderValues>
                   name="intent"
                   label="Intent"
                   placeholder="Add an intent"
+                  spellCheck
                   multiline
                   rows={3}
                 />
@@ -702,14 +673,18 @@ const SpellBuilder = ({
                       label="Jar Description"
                       placeholder="Add a description"
                       autoComplete="off"
+                      spellCheck
+                      enterKeyHint="next"
                     />
                   }
                   waxField={
                     <TextField<SpellBuilderValues>
                       name="sealWaxColor"
                       label="Seal Wax"
-                      placeholder="Add a colour"
+                      hint="Any colour, in your own words"
                       autoComplete="off"
+                      spellCheck={false}
+                      enterKeyHint="next"
                     />
                   }
                 />
@@ -733,6 +708,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="moonPhase"
                   label="Moon Phase"
+                  hint="Pick one, or write your own"
                   placeholder="Add a phase"
                   options={MOON_PHASES}
                   icon={moonPhaseIcon}
@@ -740,6 +716,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="dayOfWeek"
                   label="Day"
+                  hint="Pick one, or write your own"
                   placeholder="Add a day"
                   options={DAYS_OF_THE_WEEK}
                 />
@@ -752,10 +729,18 @@ const SpellBuilder = ({
                   name="note"
                   label="Note"
                   placeholder="Add a note"
+                  spellCheck
                   multiline
                 />
               </>,
             )}
+          </div>
+          <div className="spell-builder__share">
+            <SpellVisibilityField
+              name={name}
+              created={opened !== undefined || createdId !== null}
+              flush={flush}
+            />
           </div>
           <FormActions
             noun="Spell"
@@ -763,18 +748,6 @@ const SpellBuilder = ({
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
             saveReason={saveReason ?? undefined}
-            aside={
-              deletedHrefOf && spellId ? (
-                <BinButton
-                  verb="Delete Spell"
-                  name={name}
-                  onClick={() => {
-                    clearErrors('root');
-                    setDeleting(true);
-                  }}
-                />
-              ) : undefined
-            }
           >
             <SpellStatusField
               name={name}
@@ -782,11 +755,6 @@ const SpellBuilder = ({
               workspaceId={workspaceId}
               spellId={spellId}
               copiedHrefOf={copiedHrefOf}
-            />
-            <SpellVisibilityField
-              name={name}
-              created={opened !== undefined || createdId !== null}
-              flush={flush}
             />
             <SaveStatus
               status={autosave.status}
@@ -798,6 +766,18 @@ const SpellBuilder = ({
               onReload={() => void reloadLatest()}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
+            {deletedHrefOf && spellId && (
+              <div className="form__aside spell-builder__delete">
+                <BinButton
+                  verb="Delete Spell"
+                  name={name}
+                  onClick={() => {
+                    clearErrors('root');
+                    setDeleting(true);
+                  }}
+                />
+              </div>
+            )}
           </FormActions>
           <ConfirmQuestion
             asked={deleting}

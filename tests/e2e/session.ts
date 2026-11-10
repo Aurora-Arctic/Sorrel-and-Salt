@@ -1,15 +1,14 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { Page } from '@playwright/test';
-import postgres from 'postgres';
+import type { Locator, Page } from '@playwright/test';
 import type { UserRole } from '@/lib/session';
 import { agreedInForceSql } from '../support/db/agreement-in-force';
-import { e2eDatabaseUrl } from './database';
+import { withE2eSql } from './database';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { browserUrl } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make: the rows a Discord sign-in
 // would leave go straight to this worker's slot database, with a session cookie signed by the build's
-// secret (claude-docs/testing/e2e.md, "E2E").
+// secret (claude-docs/testing/e2e.md, "E2E — Playwright").
 
 /**
  * The address every e2e server gets as ADMIN_BOOTSTRAP_EMAIL, on the reserved `.invalid` domain: set by
@@ -35,11 +34,7 @@ async function holdSession(page: Page, value: string): Promise<void> {
   ]);
 }
 
-/**
- * Makes `page` a browser signed in to a new user with one account per provider named and the site role given.
- * The user is verified, and has agreed to the terms in force, unless `emailVerified` or `termsAgreed` says otherwise; rows go to this worker's slot database unless
- * `database` names the server's own. How the cookie arrives is `holdSession`'s.
- */
+/** The user is verified and has agreed to the terms in force unless `emailVerified` or `termsAgreed` says otherwise. */
 export async function signInAs(
   page: Page,
   email: string,
@@ -55,10 +50,9 @@ export async function signInAs(
   if (!secret)
     throw new Error('BETTER_AUTH_SECRET must be set for the runner and the server alike');
 
-  const sql = postgres(e2eDatabaseUrl(database), { onnotice: () => {} });
   const userId = randomUUID();
   const token = randomBytes(24).toString('base64url');
-  try {
+  await withE2eSql(async (sql) => {
     await sql.begin(async (tx) => {
       // Made by hand, so it declares the route a `psql` fix declares: the
       // privilege trigger refuses an undeclared change to `role` or
@@ -84,18 +78,12 @@ export async function signInAs(
         values (${token}, ${userId}, now() + interval '1 day', now())
       `;
     });
-  } finally {
-    await sql.end();
-  }
+  }, database);
 
   await holdSession(page, signed(token, secret));
   return { userId };
 }
 
-/**
- * Makes `page` a browser signed in again to a user `signInAs` already made, on a new session: the email
- * index is unique, so `signInAs` cannot make the same address twice.
- */
 export async function signInAgainAs(
   page: Page,
   userId: string,
@@ -105,16 +93,20 @@ export async function signInAgainAs(
   if (!secret)
     throw new Error('BETTER_AUTH_SECRET must be set for the runner and the server alike');
 
-  const sql = postgres(e2eDatabaseUrl(database), { onnotice: () => {} });
   const token = randomBytes(24).toString('base64url');
-  try {
+  await withE2eSql(async (sql) => {
     await sql`
       insert into sessions (token, user_id, expires_at, updated_at)
       values (${token}, ${userId}, now() + interval '1 day', now())
     `;
-  } finally {
-    await sql.end();
-  }
+  }, database);
 
   await holdSession(page, signed(token, secret));
 }
+
+/** A password that passes the policy and is in no breach list, for specs that sign in with one. */
+export const PASSWORD = 'lantern moss under the north window';
+
+/** An input found by the start of its label, inside the page or the region given. */
+export const field = (scope: Page | Locator, label: string): Locator =>
+  scope.getByLabel(new RegExp(`^${label}`));

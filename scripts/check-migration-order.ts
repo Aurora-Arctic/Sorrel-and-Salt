@@ -1,20 +1,8 @@
 #!/usr/bin/env node
-// Refuses a migration journal drizzle's migrator would apply out of order.
-// `migrate` applies only the entries whose `when` is later than the newest
-// `created_at` it has recorded, comparing no name or hash, and each `when` is
-// stamped when its author runs `generate`: so an entry merged older than one
-// already applied is skipped on staging and production without a word, while a
-// test database, which starts empty, runs it. The incident and the regenerate
-// step are claude-docs/db/migrations-and-scripts.md, "Migration order".
-//
-// The branch's journal is the working tree's, so a just-generated migration
-// counts; the base's is the base ref's committed one. The base resolves as
-// check:destructive-ddl's does. CI fetches it and passes `--base`, since its
-// checkout is a detached merge commit no prefix can be read off.
-//
-// Usage:
-//   npm run check:migration-order                        # against this branch's Gitflow base
-//   npm run check:migration-order -- --base origin/main  # against another base
+// Refuses a migration journal that drizzle's migrator would apply out of order
+// (claude-docs/db/migrations-and-scripts.md, "Migration order").
+// Usage: npm run check:migration-order [-- --base <ref>]
+// (claude-docs/commands.md, "Migration order check")
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -31,11 +19,10 @@ export function parseJournal(text: string): JournalEntry[] {
   return entries.map(({ idx, tag, when }) => ({ idx, tag, when }));
 }
 
-/** The journal `base` has committed — never the working tree's. */
 export function readBaseJournal(base: string, cwd: string = REPO_ROOT): JournalEntry[] {
   let text: string;
   try {
-    // CI runs as root over a checkout another user owns (claude-docs/ci/container-jobs.md).
+    // CI runs as root over a checkout another user owns (claude-docs/ci/reusable-checks.md).
     text = execFileSync('git', ['-c', 'safe.directory=*', 'show', `${base}:${JOURNAL_PATH}`], {
       cwd,
       encoding: 'utf8',
@@ -92,7 +79,6 @@ export function orderProblems(
   return problems;
 }
 
-/** Prints the outcome; the exit code. */
 export function report(
   problems: string[],
   baseName: string,

@@ -2,19 +2,17 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
-import { covenTarget } from '../../lib/coven-path';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
-import Modal from '../Modal';
+import ConfirmDialog from '../ConfirmDialog';
 import type { DeleteSpellActionProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
 // Delete Spell: the question naming the spell, asked in a dialog before `deleteSpell` runs. Confirmed,
 // the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
-// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "Delete Spell").
+// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "The actions row").
 
 export const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {
@@ -40,22 +38,15 @@ export function useDeleteSpell({
   const { navigate } = usePendingNavigation();
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    // The target is read off the path alone: the query carries what was deleted, not where.
-    onSuccess: () =>
-      navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
+    onSuccess: () => navigate(deletedHref, { replace: true }),
     onError: (error) => {
       onClosed();
-      onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+      onRefused(failureMessage(error));
     },
   });
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
-/**
- * The question naming the spell in bold, then one sentence on what deleting it does: a shared
- * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
- * page's More menu and the builder's bin.
- */
 export function DeleteSpellWords({
   name,
   visibility,
@@ -69,43 +60,6 @@ export function DeleteSpellWords({
       {visibility === 'workspace'
         ? 'It leaves the grimoire for every member of the coven, and nothing in stock changes.'
         : 'It is gone for good, and nothing in stock changes.'}
-    </>
-  );
-}
-
-/** The question naming the spell and its two answers. */
-function DeleteSpellQuestion({
-  name,
-  visibility,
-  pending,
-  onConfirm,
-  close,
-}: {
-  name: string;
-  visibility?: SpellVisibility;
-  pending: boolean;
-  onConfirm: () => void;
-  close: () => void;
-}): ReactElement {
-  return (
-    <>
-      <p>
-        <DeleteSpellWords name={name} visibility={visibility} />
-      </p>
-      <div className="modal__actions">
-        <BusyButton
-          className="btn btn--destructive"
-          busy={pending}
-          busyLabel="Deleting"
-          disabled={pending}
-          onClick={onConfirm}
-        >
-          Delete
-        </BusyButton>
-        <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
-          Cancel
-        </button>
-      </div>
     </>
   );
 }
@@ -127,16 +81,15 @@ export function DeleteSpellDialog({
   returnTo: () => HTMLElement | null;
 }): ReactElement {
   return (
-    <Modal title="Delete Spell" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
-        <DeleteSpellQuestion
-          name={name}
-          visibility={visibility}
-          pending={pending}
-          onConfirm={onConfirm}
-          close={close}
-        />
-      )}
-    </Modal>
+    <ConfirmDialog
+      title="Delete Spell"
+      question={<DeleteSpellWords name={name} visibility={visibility} />}
+      confirmLabel="Delete"
+      busyLabel="Deleting"
+      busy={pending}
+      onConfirm={onConfirm}
+      onClose={onClose}
+      returnTo={returnTo}
+    />
   );
 }

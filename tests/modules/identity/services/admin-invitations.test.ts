@@ -16,10 +16,11 @@ import {
   revokeAdminInvitation,
 } from '@/modules/identity';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
+import { ORIGIN } from '../../../support/constants';
 
 // A keeper invites an address to become a keeper. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
 // Creating and revoking are a site admin's alone and paused with the rest of the keeper changes for every keeper but the primary one (claude-docs/auth/admin-users.md, "Inviting a keeper").
@@ -38,12 +39,10 @@ const INVITED = `invited${DOMAIN}`;
 const PRIMARY = '00000000-0000-0000-0000-0000000000b1';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
-const ORIGIN = 'http://localhost:8000';
 
 /** More than the list's page, so every row is read in one. */
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-/** The pending invitations a keeper is listed, in the list's order, on one page. */
 const pending = async (filter: Parameters<typeof listPendingAdminInvitations>[1] = {}) =>
   (await listPendingAdminInvitations(asUser(E), filter, PAGE)).map(({ node }) => node);
 
@@ -105,7 +104,7 @@ describe('createAdminInvitation', () => {
     expect(message.to).toBe(INVITED);
     // 32 random bytes in base64url: unguessable, and safe in a path.
     expect(token).toHaveLength(43);
-    expect(message.html).toContain(`href="${ORIGIN}/invite/${token}"`);
+    expect(message.html).toContain(`href="${ORIGIN}/invite/${token}?for=site"`);
     expect(await invitations()).toEqual([
       expect.objectContaining({
         id: row.id,
@@ -189,6 +188,25 @@ describe('createAdminInvitation', () => {
     expect((await invitations())[0].note).toBeNull();
   });
 
+  it('keeps a reason of 500 characters and refuses one of 501, writing and mailing nothing', async () => {
+    await createAdminInvitation(asUser(E), INVITED, 'admin', 'r'.repeat(500), sender());
+    expect((await invitations())[0].note).toHaveLength(500);
+
+    send.mockClear();
+    const refused = await createAdminInvitation(
+      asUser(E),
+      `other${DOMAIN}`,
+      'admin',
+      'r'.repeat(501),
+      sender(),
+    ).catch((error: unknown) => error);
+
+    expect(refused).toBeInstanceOf(ValidationError);
+    expect((refused as ValidationError).issues[0]?.path).toEqual(['note']);
+    expect(await invitations()).toHaveLength(1);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   // The address rules are email.ts's (tests/modules/identity/services/email.test.ts);
   // one row proves this service parses its input before writing or mailing.
   it('refuses a malformed address as a ValidationError on the email, writing and mailing nothing', async () => {
@@ -220,7 +238,6 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
-  // The site role is the keeper's pick, and the row records it.
   it('invites to the curator role, recording it on the row', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
 
@@ -228,6 +245,91 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([
       expect.objectContaining({ workspace_id: null, role: null, site_role: 'curator' }),
     ]);
+  });
+
+  // A `user` invitation grants coven creation and no site role (claude-docs/auth/admin-users.md, "Inviting a keeper").
+  describe('to create a coven', () => {
+    const HOLDER = '00000000-0000-0000-0000-0000000000d1';
+    const PLAIN = '00000000-0000-0000-0000-0000000000d2';
+    const HOLDER_EMAIL = `holder${DOMAIN}`;
+    const PLAIN_EMAIL = `plain${DOMAIN}`;
+
+    beforeEach(async () => {
+      await asManualFix(sql, async (tx) => {
+        await tx`
+          insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+          values (${HOLDER}, 'Fixture Holder', ${HOLDER_EMAIL}, true, 'user', true, ${HOLDER}, ${HOLDER}),
+            (${PLAIN}, 'Fixture Plain', ${PLAIN_EMAIL}, true, 'user', false, ${PLAIN}, ${PLAIN})
+        `;
+      });
+    });
+
+    it('writes a pending site-tier invitation naming the user role, storing only the hash of the token it mails', async () => {
+      const row = await createAdminInvitation(
+        asUser(E),
+        INVITED,
+        'user',
+        'Starting a coven',
+        sender(),
+      );
+
+      const { token, message } = mailedToken();
+      expect(message.to).toBe(INVITED);
+      expect(await invitations()).toEqual([
+        expect.objectContaining({
+          id: row.id,
+          workspace_id: null,
+          role: null,
+          site_role: 'user',
+          token_hash: sha256(token),
+          created_by: E.id,
+        }),
+      ]);
+      expect(JSON.stringify(row)).not.toContain(token);
+    });
+
+    it('invites a user who may not create a coven yet', async () => {
+      await createAdminInvitation(asUser(E), PLAIN_EMAIL, 'user', undefined, sender());
+
+      expect(await invitations()).toEqual([
+        expect.objectContaining({ email: PLAIN_EMAIL, site_role: 'user' }),
+      ]);
+    });
+
+    it.each([
+      ['a user who may already create one', HOLDER_EMAIL],
+      ['a keeper', PRIMARY_EMAIL],
+    ])(
+      'refuses %s, who has nothing to accept, writing and mailing nothing',
+      async (_who, email) => {
+        const refusal = createAdminInvitation(asUser(E), email, 'user', undefined, sender());
+
+        await expect(refusal).rejects.toThrow(ValidationError);
+        await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
+        expect(await invitations()).toEqual([]);
+        expect(send).not.toHaveBeenCalled();
+      },
+    );
+
+    // Called directly, as a forged request would call it. Each caller is shown to hold a role other than
+    // keeper, and the same call then succeeds for a keeper, so only the service's own guard refuses.
+    it.each([
+      ['a curator', F],
+      ['a user', B],
+    ])('refuses %s as Forbidden, and the same call succeeds for a keeper', async (_who, caller) => {
+      expect(caller.role).not.toBe('admin');
+      expect(E.role).toBe('admin');
+
+      await expect(
+        createAdminInvitation(asUser(caller), INVITED, 'user', undefined, sender()),
+      ).rejects.toThrow(Forbidden);
+      expect(await invitations()).toEqual([]);
+      expect(send).not.toHaveBeenCalled();
+
+      await expect(
+        createAdminInvitation(asUser(E), INVITED, 'user', undefined, sender()),
+      ).resolves.toMatchObject({ email: INVITED, siteRole: 'user' });
+    });
   });
 
   // Accepting never lowers a role, so an invitation that could only stamp the
@@ -323,7 +425,6 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
-  // The list's two filters, each in the finder's SQL.
   const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
     (await pending(filter)).map(({ email }) => email).sort();
 

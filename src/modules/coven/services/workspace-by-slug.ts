@@ -1,36 +1,40 @@
 import 'server-only';
-import { findOneBySlug, findWorkspaceSeat } from '../../../db/repository';
-import { Forbidden } from '../../../lib/errors';
+import { findOneBySlug, findWorkspaceHoldingSlug, findWorkspaceSeat } from '../../../db/repository';
+import { CovenMoved, Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { workspaces } from '../schema/workspaces';
 import type { CovenMembership, PausedCoven } from '../types';
 import { assertMembership } from './membership';
 
 /**
- * The workspace a `/coven/[slug]` address names, and the caller's proof of
- * membership in it. The slug is the only input: a workspace is named
- * by the address alone, never by session state.
- *
- * Asks for `workspace: read`, which every role holds, so any member is
- * admitted; a page that does more asks `assertMembership` for that itself.
- *
- * @throws {Forbidden} bare, alike for a slug no live workspace holds and for
- * one the caller is not a member of — a slug is a guess at someone's private
- * data, so the answer must not say which miss it was.
+ * @throws {Forbidden} bare, alike for an unknown slug, a deleted coven and a non-member, so the answer does not say which miss it was.
+ * @throws {CovenMoved} the slug is an old address of a coven the caller belongs to: only a member learns where it went.
  */
 export async function membershipBySlug(session: Session, slug: string): Promise<CovenMembership> {
   const workspace = await findOneBySlug(workspaces, slug);
-  if (!workspace) throw new Forbidden();
+  if (!workspace) {
+    const held = await findWorkspaceHoldingSlug(slug);
+    if (!held) throw new Forbidden();
+    await assertMembership(session, held.workspace.id, {
+      workspace: ['read'],
+    });
+    throw new CovenMoved(held.workspace.slug);
+  }
   const membership = await assertMembership(session, workspace.id, { workspace: ['read'] });
   return { workspace, membership };
 }
 
+/** Whether a live coven other than `exceptWorkspaceId` has the address as its current one. */
+export async function slugHeldByAnotherCoven(
+  slug: string,
+  exceptWorkspaceId?: string,
+): Promise<boolean> {
+  const current = await findOneBySlug(workspaces, slug);
+  return Boolean(current && current.id !== exceptWorkspaceId);
+}
+
 /**
- * The coven a `/coven/[slug]` address names and the pause standing on the caller's seat in it, for the paused page; `null` when
- * the caller holds a seat that no pause stands on, so the page can send them back in.
- *
- * @throws {Forbidden} bare, as `membershipBySlug` throws it, for a slug no live workspace holds and for one the caller holds no
- * seat in: only a member learns the coven is there.
+ * @throws {Forbidden} bare, as `membershipBySlug` throws it: only a member learns the coven is there.
  */
 export async function pausedCovenBySlug(
   session: Session,

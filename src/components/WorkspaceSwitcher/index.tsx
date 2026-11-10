@@ -2,11 +2,11 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
+import { NEW_COVEN_PATH, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
 import { covenPausedPath, pausedCovenSlugOf } from '../../lib/access-paused';
+import { repeatedCovenNames } from '../../lib/coven-names';
 import { pauseNote } from '../../lib/pause-note';
-import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
@@ -17,14 +17,6 @@ import './index.scss';
 // the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
-
-// The create page and a paused coven's page are each one panel in the narrow column.
-const NARROW_PANEL: NavigationTarget = { region: 'main', shape: 'form', frame: 'narrow' };
-
-function targetOf(path: string): NavigationTarget {
-  if (path === NEW_COVEN_PATH || pausedCovenSlugOf(path) !== undefined) return NARROW_PANEL;
-  return { ...covenTarget(path), coven: covenSlugOf(path) ?? undefined };
-}
 
 // Set when a switch starts and read once by the next switcher to mount, so focus survives the
 // `[slug]` layout's remount; a module variable survives it and, unlike `sessionStorage`, dies with
@@ -41,12 +33,16 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which says the same.
-  const choices = workspaces.map(({ slug, name, paused }) => ({
-    value: slug,
-    label: name,
-    ...(paused && { note: pauseNote(paused) }),
-  }));
+  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which
+  // says the same.
+  // Names are not unique, so a name two covens share shows each one's address beside it.
+  const repeated = repeatedCovenNames(workspaces);
+  const choices = workspaces.map(({ slug, name, paused }) => {
+    const note = [repeated.has(name) ? slug : undefined, paused ? pauseNote(paused) : undefined]
+      .filter(Boolean)
+      .join(' · ');
+    return { value: slug, label: name, ...(note && { note }) };
+  });
 
   useEffect(() => {
     if (focusAfterSwitch === undefined) return;
@@ -95,7 +91,7 @@ export default function WorkspaceSwitcher({
                   });
           setPicked(value);
           focusAfterSwitch = value === CREATE.value ? undefined : value;
-          navigate(href, { target: targetOf(href) });
+          navigate(href);
         }}
         choices={canCreate ? [...choices, CREATE] : choices}
         placeholder="Choose a coven"

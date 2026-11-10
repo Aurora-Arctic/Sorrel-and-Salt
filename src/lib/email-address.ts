@@ -1,11 +1,10 @@
+import type { FieldFormat } from './formats';
 import type { ValidationIssue } from './types';
 
-// The one rule for what an email address looks like, in a file with no
-// server-only import so the invite dialog checks an address before it sends
-// and the services check it again: the same words either way. Lives here so the client can use it; the
-// identity module's email service re-exports it.
+// The one rule for what an email address looks like, with no server-only import so the client and the
+// services share it; the identity module's email service re-exports it. The zod schema is in email-address-schema.ts, so a
+// client file drawn at first load can import this one without the schema library.
 
-/** Trimmed and lower-cased, as the column stores it. */
 export function normaliseEmail(input: string): string {
   return input.trim().toLowerCase();
 }
@@ -14,15 +13,23 @@ export function normaliseEmail(input: string): string {
 // the inbox refuses addresses that work. Replacing this function is the whole
 // of the v2 swap for a real validator (claude-docs/backlog.md).
 const SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_LENGTH = 254;
+export const EMAIL_MAX_LENGTH = 254;
+export const EMAIL_FORMAT_MESSAGE =
+  'Enter an email address in the correct format, like name@example.com';
 
-/** The one rule a normalised address broke, pathed to the field, or `null`. */
 export function validateEmailAddress(email: string): ValidationIssue | null {
   const path = ['email'];
   if (email.length === 0) return { path, message: 'Enter an email address' };
-  if (email.length > MAX_LENGTH || !SHAPE.test(email)) {
-    return { path, message: "That doesn't look like an email address" };
+  if (email.length > EMAIL_MAX_LENGTH || !SHAPE.test(email)) {
+    return { path, message: EMAIL_FORMAT_MESSAGE };
   }
   if (email.endsWith('.invalid')) return { path, message: "That email address can't receive mail" };
   return null;
 }
+
+/** The blur tidy: the server's own rule, so the box shows the address as it will be saved. */
+export const emailFormat: FieldFormat = normaliseEmail;
+
+/** The rule as a field's `check`: the message for a bad address, or undefined. */
+export const emailAddressProblem = (email: string): string | undefined =>
+  validateEmailAddress(email)?.message;

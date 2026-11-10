@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import postgres from 'postgres';
 import { buildLoaders, createLoaders } from '@/graphql/loaders';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
@@ -6,6 +6,7 @@ import { ingredientsById } from '@/modules/ingredients';
 import { A, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The query count, observed at the repository: the batch's one read, wrapped
 // so the test counts calls without changing what it answers.
@@ -18,10 +19,9 @@ vi.mock('@/db/repository', async (importOriginal) => {
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
-afterAll(() => sql.end());
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;

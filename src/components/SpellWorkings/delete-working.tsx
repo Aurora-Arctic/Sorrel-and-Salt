@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { DeleteWorkingProps } from './types';
@@ -25,7 +25,6 @@ export function useDeleteWorking({ workspaceId, workingId }: DeleteWorkingProps)
   });
 }
 
-/** The question naming the working by its day, asked in the Edit dialog. */
 export function DeleteWorkingQuestion({ name }: { name: string }): ReactElement {
   return (
     <>

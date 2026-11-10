@@ -2,9 +2,6 @@ import { createElement, type ReactElement } from 'react';
 import { SHAPES } from '../JarShelf/shapes';
 import type { ChevronIconProps } from './types';
 
-// The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
-
-/** An X: close the pane it sits in. */
 export function CloseIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -19,7 +16,6 @@ export function CloseIcon(): ReactElement {
   );
 }
 
-/** A pencil: open this to change it. */
 export function PencilIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -35,7 +31,22 @@ export function PencilIcon(): ReactElement {
   );
 }
 
-/** A plus: add one. The shared Add shows it alone at a phone's width. */
+/** Up and down arrows: a list's Reorder. */
+export function ReorderIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M5 13V3M2.5 5.5L5 3l2.5 2.5M11 3v10M8.5 10.5L11 13l2.5-2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PlusIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -51,7 +62,6 @@ export function PlusIcon(): ReactElement {
   );
 }
 
-/** A cross: clear this, or no. Smaller than `CloseIcon`'s, to sit inside a field or a table cell. */
 export function CrossIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -60,7 +70,6 @@ export function CrossIcon(): ReactElement {
   );
 }
 
-/** A chevron pointing down: this opens a list or a panel below it. */
 export function ChevronIcon({
   className = 'chevron-icon',
   textSized = false,
@@ -86,7 +95,6 @@ export function ChevronIcon({
   );
 }
 
-/** A tick: this is already held, as a compendium card's In Every Cupboard shows. */
 export function CheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -129,7 +137,6 @@ export function MysticEyeIcon(): ReactElement {
   );
 }
 
-/** Two chain links: this name goes to its own page. Drawn at the text's size by whoever places it. */
 export function LinkIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -147,7 +154,6 @@ export function LinkIcon(): ReactElement {
 
 // Undo and redo, mirror images on the same 16-unit box, sized by attribute since a bare svg in a `.btn` has no size of its own.
 
-/** An arrow curving back: undo. */
 export function UndoIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
@@ -163,7 +169,6 @@ export function UndoIcon(): ReactElement {
   );
 }
 
-/** An arrow curving forward: redo. */
 export function RedoIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
@@ -179,7 +184,6 @@ export function RedoIcon(): ReactElement {
   );
 }
 
-/** An arrow down into a tray: save what is shown as a file; the backup codes wear it. */
 export function DownloadIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -195,7 +199,6 @@ export function DownloadIcon(): ReactElement {
   );
 }
 
-/** Two overlapping sheets: copy what another holds into this; Restore Original and Copy From Ingredient wear it. */
 export function CopyIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -237,7 +240,6 @@ export function AnnotateIcon(): ReactElement {
   );
 }
 
-/** Three dots stacked, ⋮: more choices, in a menu; a More drawn with words keeps its chevron. */
 export function DotsIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -248,7 +250,6 @@ export function DotsIcon(): ReactElement {
   );
 }
 
-/** A bin: delete or remove this, a list card's lone Delete or Remove. */
 export function BinIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -264,7 +265,6 @@ export function BinIcon(): ReactElement {
   );
 }
 
-/** A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's stock of an ingredient, worn by Edit Stock in place of the pencil. */
 export function StockIcon(): ReactElement {
   return (
     <svg className="stock-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -272,7 +272,7 @@ export function StockIcon(): ReactElement {
         d="M4.5 6V5.125Q4.5 4.125 5.5 4.125h5Q11.5 4.125 11.5 5.125V6M4.25 6h7.5M4.5 6L3.5 8.5M11.5 6l1 2.5M3.5 8.5q1.125.75 2.25 0t2.25 0 2.25 0 2.25 0M4 9.25v3a1.75 1.75 0 0 0 1.75 1.75h4.5A1.75 1.75 0 0 0 12 12.25v-3"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.2" // thinner than the pencil's 1.5, as the jar is drawn larger
+        strokeWidth="1.25" // thinner than the pencil's 1.5, as the jar is drawn larger
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -280,7 +280,6 @@ export function StockIcon(): ReactElement {
   );
 }
 
-/** Four corner brackets pointing outward: Preview, which opens a spell full screen. */
 export function PreviewIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -296,7 +295,6 @@ export function PreviewIcon(): ReactElement {
   );
 }
 
-/** A cauldron with two leaves tumbling in: Record a Working. */
 export function CauldronIcon(): ReactElement {
   return (
     <svg
@@ -325,7 +323,6 @@ export function CauldronIcon(): ReactElement {
   );
 }
 
-/** The jar shelf's round flask with a tick on its bulb: Complete Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
 export function CompleteIcon(): ReactElement {
   const { lid, body } = SHAPES.flask;
   return (
@@ -349,7 +346,6 @@ export function CompleteIcon(): ReactElement {
   );
 }
 
-/** A printer: print this page; the recipe page's Print and the backup codes wear it. */
 export function PrintIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -365,7 +361,6 @@ export function PrintIcon(): ReactElement {
   );
 }
 
-/** A solid speech bubble with a question mark cut out of it: report a problem or ask for help. The cut-out takes the colour in `--icon-ground`, the surface the bubble sits on. */
 export function SupportIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -385,7 +380,6 @@ export function SupportIcon(): ReactElement {
   );
 }
 
-/** A clock with an arrow curving back round it: what came before. */
 export function HistoryIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
@@ -401,7 +395,6 @@ export function HistoryIcon(): ReactElement {
   );
 }
 
-/** A sprout: a sender who joined by a printed card, a beta tester, as the admin Support page marks one. */
 export function SproutIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -417,7 +410,6 @@ export function SproutIcon(): ReactElement {
   );
 }
 
-/** A tick in a circle: a support request that is resolved, as the admin Support page marks one. */
 export function CircleCheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -443,7 +435,6 @@ export function CircleCheckIcon(): ReactElement {
   );
 }
 
-/** A speech bubble with lines: the sender wrote last, as the admin Support page marks a request. */
 export function BubbleLinesIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -467,7 +458,6 @@ export function BubbleLinesIcon(): ReactElement {
   );
 }
 
-/** A person with a tick: the sender resolved the request themselves, as the admin Support page marks one. */
 export function PersonCheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -501,7 +491,6 @@ export function PersonCheckIcon(): ReactElement {
   );
 }
 
-/** A person with a clock: a support request waiting on the sender, as the admin Support page marks one. */
 export function PersonClockIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -545,7 +534,6 @@ export function PersonClockIcon(): ReactElement {
   );
 }
 
-/** A flag: a support request that is open, as the admin Support page marks one. */
 export function FlagIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -561,7 +549,6 @@ export function FlagIcon(): ReactElement {
   );
 }
 
-/** An archive box: a support request that is closed, as the admin Support page marks one. */
 export function ArchiveBoxIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -597,9 +584,6 @@ export function ArchiveBoxIcon(): ReactElement {
   );
 }
 
-// The document editor's toolbar marks, on the same 16-unit box and `currentColor` stroke; each button around them carries the name.
-
-/** The letter H with a small 2: a second-level heading. */
 export function Heading2Icon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -622,7 +606,6 @@ export function Heading2Icon(): ReactElement {
   );
 }
 
-/** The letter H with a small 3: a third-level heading. */
 export function Heading3Icon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -645,7 +628,21 @@ export function Heading3Icon(): ReactElement {
   );
 }
 
-/** A bold B: strong text. */
+export function PullQuoteIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 3v10M6 4.5h7.5M6 8h7.5M6 11.5h4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function BoldIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -661,7 +658,6 @@ export function BoldIcon(): ReactElement {
   );
 }
 
-/** A slanted I: emphasised text. */
 export function ItalicIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -677,7 +673,6 @@ export function ItalicIcon(): ReactElement {
   );
 }
 
-/** Three lines, each led by a dot: a bulleted list. */
 export function BulletListIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -695,7 +690,6 @@ export function BulletListIcon(): ReactElement {
   );
 }
 
-/** Three lines, each led by a small number: a numbered list. */
 export function NumberListIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -718,7 +712,6 @@ export function NumberListIcon(): ReactElement {
   );
 }
 
-/** A grid with a header row: a table. */
 export function TableIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -734,7 +727,6 @@ export function TableIcon(): ReactElement {
   );
 }
 
-/** Lines of text with a small raised numeral beside them: a footnote. */
 export function FootnoteIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -753,6 +745,80 @@ export function FootnoteIcon(): ReactElement {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/** An open book with a line of text on each page: the Compendium. Stroke 1.25, as the Sigil and the Key, so the About pillar icons match. */
+export function BookIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M8 4.5C6.5 3.5 4.5 3 1.5 3v9.5c3 0 5 .5 6.5 1.5 1.5-1 3.5-1.5 6.5-1.5V3c-3 0-5 .5-6.5 1.5M8 4.5V14M3.75 6.5h2.5M3.75 9h2.5M9.75 6.5h2.5M9.75 9h2.5" />
+    </svg>
+  );
+}
+
+/** Three overlapping rings, each crossing the other two: the Coven, a group you practise with. Stroke 1.25, as the other About icons. */
+export function CovenIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="8" cy="5.9" r="3.9" />
+      <circle cx="5.3" cy="10.3" r="3.9" />
+      <circle cx="10.7" cy="10.3" r="3.9" />
+    </svg>
+  );
+}
+
+export function SigilIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 4.5l.9 2.6 2.6.9-2.6.9L8 11.5l-.9-2.6-2.6-.9 2.6-.9z" />
+    </svg>
+  );
+}
+
+export function KeyIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="5.5" cy="6" r="3" />
+      <path d="M7.6 8.1l6 6M11.5 12l1.5-1.5M13.3 13.8l1.5-1.5" />
     </svg>
   );
 }

@@ -1,4 +1,4 @@
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import type { SpellBuilderInput, SpellBuilderSpell } from './types';
 
@@ -184,7 +184,6 @@ const SpellBuilderReloadDocument = graphql(`
   }
 `);
 
-/** Where a save goes: a spell not made yet, or the saved spell at the revision last read. */
 export type SpellSaveTarget =
   { kind: 'new' } | { kind: 'spell'; id: string; revision: number | null };
 
@@ -209,10 +208,6 @@ export async function saveSpell(
   return updateSpell;
 }
 
-/**
- * Reads the spell as the server has it now, for Reload Latest: the
- * fields, the categories as the ids the form picks, and the whole recipe.
- */
 export async function readLatestSpell(workspaceId: string, id: string): Promise<SpellBuilderSpell> {
   const { spell } = await graphqlRequest(SpellBuilderReloadDocument, { workspaceId, id });
   const { categories, ...rest } = spell;

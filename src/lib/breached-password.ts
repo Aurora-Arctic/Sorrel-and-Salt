@@ -7,27 +7,21 @@ import { APIError, type BetterAuthPlugin } from 'better-auth';
 // five characters of the password's SHA-1 hash (claude-docs/auth/passwords.md). Better Auth's own
 // `haveIBeenPwned` plugin waits on the service for as long as it takes, so this one bounds the wait.
 
-/** How long a check waits for the range API before refusing the password as unchecked. */
 export const BREACHED_CHECK_TIMEOUT_MS = 3_000;
 
 const RANGE = 'https://api.pwnedpasswords.com/range/';
 
-/** Every route that hashes a password a person chose. */
 export const BREACHED_CHECK_PATHS = ['/sign-up/email', '/change-password', '/reset-password'];
 
 const checkedCall = new AsyncLocalStorage<true>();
 
-/**
- * Runs `call` with every password it hashes checked, for an endpoint with no route, such as `setPassword`:
- * Better Auth gives such an endpoint's handler no path or name to match against `BREACHED_CHECK_PATHS`.
- */
+/** Better Auth gives an endpoint with no route, such as `setPassword`, no path or name to match against `BREACHED_CHECK_PATHS`. */
 export function withBreachedCheck<T>(call: () => Promise<T>): Promise<T> {
   return checkedCall.run(true, call);
 }
 
 const UNCHECKED_MESSAGE = "We couldn't check your password just now. Please try again later.";
 
-/** How many breaches list the password, or an INTERNAL_SERVER_ERROR when the service cannot say. */
 async function breachCount(password: string): Promise<number> {
   const hash = createHash('sha1').update(password, 'utf8').digest('hex').toUpperCase();
   const suffix = `${hash.slice(5)}:`;
@@ -53,11 +47,7 @@ async function breachCount(password: string): Promise<number> {
   return 0;
 }
 
-/**
- * Checks each password Better Auth hashes on one of `BREACHED_CHECK_PATHS`, or inside `withBreachedCheck`, refusing a breached one with
- * `message` and the code PASSWORD_COMPROMISED. Wrapping the hash, rather than hooking each endpoint's body,
- * reaches every call of those endpoints, from the browser or from `auth.api` alike.
- */
+/** Wrapping the hash, rather than hooking each endpoint's body, reaches every call of those endpoints, from the browser or from `auth.api` alike. */
 export const breachedPasswordCheck = ({ message }: { message: string }) =>
   ({
     id: 'breached-password',

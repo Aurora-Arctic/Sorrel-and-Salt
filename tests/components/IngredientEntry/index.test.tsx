@@ -4,7 +4,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import type { ReactElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import type { Route } from 'next';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
 import { detailsHeading } from '@/components/IngredientEntry/details';
 import type { IngredientEntryProps } from '@/components/IngredientEntry/types';
@@ -19,12 +19,15 @@ import type {
   IngredientVariantRow,
   VariantDetail,
 } from '@/modules/ingredients';
+import { stockFormModule } from '@/components/StockDialog/lazy-form';
+import {
+  compendiumEntryFormModule,
+  ingredientFormModule,
+} from '@/components/IngredientEntry/lazy-forms';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The form is its own tests': a stand-in that reports what the dialog hands
-// it, with a button for each way out it can take.
 vi.mock('@/components/IngredientForm', () => ({
   default: ({
     entry,
@@ -61,8 +64,7 @@ vi.mock('@/components/IngredientForm', () => ({
   ),
 }));
 
-// The page body both entry routes render (claude-docs/components/ingredient-entry.md). Every name and value below is the test's own data, so finding one proves what rendered, never what the copy says.
-// The formal-name line is asserted by its structure (a labelled value, italic or not), not by its sentences.
+// claude-docs/components/ingredient-entry.md
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -75,14 +77,12 @@ const STAMPS = {
 
 const COVEN = '00000000-0000-4000-8000-0000000000c1';
 
-/** The status badges that say where an entry lives, Compendium; not the curators' review mark (Needs Review or Reviewed By Curator), which every compendium entry wears and the review-mark tests below own. */
 const provenanceMarks = (): (string | null)[] =>
   screen
     .queryAllByRole('status')
     .map((mark) => mark.textContent)
     .filter((text) => !/Review/.test(text ?? ''));
 
-// Ids only need to differ, so each fixture row takes the next one.
 let serial = 0;
 const nextId = (): string => `00000000-0000-4000-8000-${(++serial).toString().padStart(12, '0')}`;
 
@@ -137,7 +137,6 @@ function variantRow(form: string, overrides: Partial<IngredientVariantRow> = {})
   };
 }
 
-/** A web page or book as the loader returns it: invented title, optional locator and url. */
 function cited(
   title: string,
   locator: string | null = null,
@@ -229,7 +228,6 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   };
 }
 
-/** The Caution badge in the page's head, apart from the Caution notes in the text. */
 const headCaution = () =>
   within(screen.getByRole('heading', { level: 1 }).closest('header')!).queryByText('Caution', {
     exact: true,
@@ -241,7 +239,6 @@ const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
 const renderEntry = (props: Partial<IngredientEntryProps> = {}) =>
   render(<IngredientEntry detail={detail()} hrefOf={hrefOf} {...props} />);
 
-/** The formal-name line's value: the definition its term labels. */
 function formalValue(): HTMLElement {
   const term = screen.getAllByRole('term')[0]!;
   const definition = term.nextElementSibling as HTMLElement;
@@ -249,7 +246,6 @@ function formalValue(): HTMLElement {
   return definition;
 }
 
-/** The innermost element holding every one of these: the column they share. */
 function sharedColumn(elements: HTMLElement[]): HTMLElement {
   let column = elements[0]!.parentElement!;
   while (!elements.every((el) => column.contains(el))) column = column.parentElement!;
@@ -258,6 +254,13 @@ function sharedColumn(elements: HTMLElement[]): HTMLElement {
 
 const precedes = (a: Node, b: Node): boolean =>
   (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
+// The dialogs' forms load apart from their openers; they have arrived by the time a person opens one.
+beforeAll(async () => {
+  await stockFormModule.load();
+  await ingredientFormModule.load();
+  await compendiumEntryFormModule.load();
+});
 
 describe('IngredientEntry', () => {
   it('draws the latest edit when given one, and none when not', () => {
@@ -294,8 +297,6 @@ describe('IngredientEntry', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
   });
 
-  // One row for each of the two paths; which kinds are binomials is
-  // tests/modules/ingredients/schema/ingredient-enums.test.ts's.
   it.each([
     ['botanical', 'Fixtura testalis', true],
     ['mineral', 'Fixture spar', false],
@@ -412,7 +413,6 @@ describe('IngredientEntry', () => {
   it('names its folk names, categories and substitutes lists, one item each', () => {
     renderEntry();
     const details = screen.getByRole('region', { name: 'Details' });
-    // Details' side column stands after its section in the body, level with the first section.
     const body = details.parentElement!;
 
     expect(within(body).getAllByRole('list', { name: 'Folk Names' })).toHaveLength(1);
@@ -437,7 +437,6 @@ describe('IngredientEntry', () => {
       }),
     });
     const details = screen.getByRole('region', { name: 'Details' });
-    // Details' side column stands after its section in the body, level with the first section.
     const body = details.parentElement!;
 
     expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
@@ -506,7 +505,6 @@ describe('IngredientEntry', () => {
 
     const details = screen.getByRole('region', { name: 'Details' });
     expect(details.compareDocumentPosition(root) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // The forms stand beneath one wrapper, which References follows.
     expect(document.getElementById('forms')).toContainElement(oil as HTMLElement);
   });
 
@@ -538,7 +536,6 @@ describe('IngredientEntry', () => {
     expect(within(oil).getByRole('definition')).toHaveTextContent('Fixture Sign');
     expect(within(oil).getAllByRole('list')).toHaveLength(1);
     expect(within(within(oil).getByRole('list')).getAllByRole('listitem')).toHaveLength(1);
-    // The form's rows and list share a column apart from its heading.
     const side = sharedColumn([
       within(oil).getByRole('heading', { name: 'Correspondences', level: 4 }),
       within(oil).getByRole('list'),
@@ -556,7 +553,6 @@ describe('IngredientEntry', () => {
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
     ).toEqual(['#details', '#form-testroot', '#form-testoil', '#references']);
-    // The forms are grouped apart from the ingredient's own Details.
     const forms = within(nav).getByRole('list', { name: 'Forms' });
     expect(
       within(forms)
@@ -603,7 +599,6 @@ describe('IngredientEntry', () => {
       expect(
         precedes(block()!, screen.getAllByRole('heading', { name: 'Correspondences' })[0]!),
       ).toBe(true);
-      // It is a block of the side column, not a section of the jump menu.
       expect(screen.queryByRole('link', { name: 'In the Compendium' })).not.toBeInTheDocument();
     });
 
@@ -619,7 +614,6 @@ describe('IngredientEntry', () => {
     it('describes the list by the ⓘ’s text, and opens that text when the ⓘ takes focus', () => {
       renderEntry({ replaces: replacing(1) });
       const list = screen.getByRole('list', { name: 'In the Compendium' });
-      // The text is in the page while closed, so the list is described without opening it.
       expect(list).toHaveAccessibleDescription(/\S/);
       expect(screen.queryByRole('tooltip', { name: /\S/ })).not.toBeInTheDocument();
       const before = screen.queryAllByRole('tooltip').length;
@@ -641,7 +635,6 @@ describe('IngredientEntry', () => {
 
       expect(links()).toHaveLength(3);
       expect(seeAll()).toHaveAttribute('href', ALL);
-      // It is the way on to the rest, not a fourth entry: it stands outside the list.
       expect(screen.getByRole('list', { name: 'In the Compendium' })).not.toContainElement(
         seeAll(),
       );
@@ -696,7 +689,6 @@ describe('IngredientEntry', () => {
       expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
       expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
-      // A display only: no radio to choose an entry, no button to link to one.
       expect(screen.queryByRole('radio')).toBeNull();
       expect(within(list()).queryByRole('button')).toBeNull();
       expect(screen.queryByRole('button', { name: /link to/i })).toBeNull();
@@ -734,7 +726,6 @@ describe('IngredientEntry back link', () => {
   });
 
   describe('with the page before it in the history', () => {
-    /** A Navigation API whose history is `previous`, if any, then this entry's page. */
     const history = (previous?: string) => {
       const urls = [
         ...(previous ? [`${window.location.origin}${previous}`] : []),
@@ -748,7 +739,6 @@ describe('IngredientEntry back link', () => {
         }),
       });
     };
-    // As the public entry page passes it: the compendium list, and the admin's list of it under its own label.
     // A variable rather than a literal, so the admin list reaches the link however the prop is typed.
     const compendiumBack = {
       href: '/compendium' as Route,
@@ -809,7 +799,6 @@ describe('IngredientEntry references', () => {
   const bibliography = () => screen.getByRole('list', { name: 'Bibliography' });
   const notes = () => screen.getByRole('list', { name: 'Notes' });
 
-  /** The whole sample: two sources on the ingredient, one on the oil form, none on the root form. */
   function sample() {
     const herbal = cited('A Herbal of Testing', 'p. 12');
     const zeta = cited('Zeta Fixtures', null, 'https://fixtures.example/zeta');
@@ -1028,7 +1017,6 @@ describe('IngredientEntry references', () => {
         .map((link) => link.getAttribute('href')),
     ).toEqual(['#notes', '#bibliography']);
     expect(links.slice(-2)).toEqual(within(group).getAllByRole('link'));
-    // The group has the two blocks to jump to, and no link of its own.
     expect(within(nav).queryByRole('link', { name: 'References' })).not.toBeInTheDocument();
     expect(document.getElementById('notes')).toContainElement(
       screen.getByRole('heading', { name: 'Notes' }),
@@ -1074,9 +1062,6 @@ describe('IngredientEntry edit', () => {
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
-    // A curator in no coven: the compendium's edit is the head's one choice, the pencil named
-    // Edit in Compendium and the entry, and no labelled Edit link
-    // is left under the name.
     renderEntry({ edit: edit() });
     expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toHaveAttribute(
       'href',
@@ -1157,7 +1142,6 @@ describe('IngredientEntry edit', () => {
     expect(router.replace).toHaveBeenCalledWith('/compendium', { scroll: false });
   });
 
-  // A coven's own entry: the same dialog, writing to the coven.
   describe("on a coven's own entry", () => {
     const OWN = '/coven/fixture-coven/ingredients/00000000-0000-4000-8000-000000000001';
     const own = () => detail({ entry: entryRow({ workspaceId: COVEN }) });
@@ -1179,11 +1163,9 @@ describe('IngredientEntry edit', () => {
       });
     const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
     const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
-    // The page's Edit menu writes through the query client (`own-actions.tsx`).
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
-    // The pencil, then the three dots holding Delete Ingredient: no bin beside them.
     it("draws the page's Edit as the pencil beside the name, named for the entry, then the three dots and no bin", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
@@ -1236,8 +1218,6 @@ describe('IngredientEntry edit', () => {
   });
 });
 
-// The three kinds of entry on a coven's page: the coven's own, the
-// compendium's held in its cupboard, and the compendium's not held.
 describe("IngredientEntry's review mark", () => {
   it('says a compendium entry needs review, to a visitor with no account', () => {
     renderEntry();
@@ -1274,7 +1254,6 @@ describe('IngredientEntry on a coven page', () => {
       ...overrides,
     }) as NonNullable<IngredientDetail['cupboardEntry']>;
 
-  /** What a correspondence row lists: the definition beside its term. */
   const rowOf = (term: string): string =>
     screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
 
@@ -1289,19 +1268,13 @@ describe('IngredientEntry on a coven page', () => {
       }),
     });
 
-    // A set label heads the page; the compendium's name is not repeated
-    // beneath it, as In the Compendium links the entry by it.
     expect(screen.getByRole('heading', { level: 1, name: 'Hedgewort' })).toBeInTheDocument();
     expect(screen.queryByText('Testwort', { exact: true })).not.toBeInTheDocument();
-    // A null description falls back to the compendium's.
     expect(screen.getByText('A fixture herb.')).toBeInTheDocument();
-    // A set list stands over the compendium's; an empty one shows as cleared.
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Celestial Bodies')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated stands in place of Compendium; a
-    // compendium entry is never Local. The next test is the precondition: held and
-    // unannotated, it shows Compendium.
+    // Annotated stands in place of Compendium; the next test is the precondition (held and unannotated shows Compendium).
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
     expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
     expect(provenanceMarks()).toEqual([]);
@@ -1344,13 +1317,10 @@ describe('IngredientEntry on a coven page', () => {
   });
 });
 
-// The public page's shelf: a compendium entry any of the viewer's covens holds carries
-// In Your Cupboard before its name, as it does on the coven's own page.
 describe('IngredientEntry on the public page, held in a coven', () => {
   const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
-  // A press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
-  // so it shows on touch. A click here focuses nothing, so the press alone opens it.
+  // A click here focuses nothing, so the press alone opens the shelf's tip.
   it('opens the In Your Cupboard tip when the shelf is pressed', () => {
     renderEntry({ heldInCovens: true });
     const mark = shelf()!;
@@ -1391,7 +1361,6 @@ describe('IngredientEntry recency', () => {
 });
 
 describe('IngredientEntry stock', () => {
-  // The fixture's two forms, by id, so a jar can name one.
   const variants = [variantRow('testroot'), variantRow('testoil')];
   const [root, oil] = variants.map(({ variant }) => variant.id) as [string, string];
   const forms = [
@@ -1416,7 +1385,6 @@ describe('IngredientEntry stock', () => {
     });
 
   const section = () => screen.getByRole('region', { name: 'Stock' });
-  // The heading's button, by the dialog's own name; a jar's is that name and then its form.
   const HEADING_BUTTON = 'Edit Stock, Testwort, Fixtura testalis';
   const headingButton = () => within(section()).getByRole('button', { name: HEADING_BUTTON });
   const jarButton = (form: string) =>
@@ -1466,12 +1434,10 @@ describe('IngredientEntry stock', () => {
       .map((item) => (item.textContent!.trim().startsWith('Testroot') ? 'Testroot' : 'Testoil'));
 
   it('shelves a form with no jar after every form with one, and a jar holding 0 keeps its place', () => {
-    // The forms' order is Testroot, Testoil. Only Testoil is held, so it goes first.
     const { unmount } = renderStock([jar(oil, 250)]);
     expect(shelfOrder()).toEqual(['Testoil', 'Testroot']);
     unmount();
 
-    // Testroot is out (0 held) and Testoil has none: Testroot is still a jar, so it stays first.
     renderStock([jar(root, 0, 50)]);
     expect(shelfOrder()).toEqual(['Testroot', 'Testoil']);
   });
@@ -1483,7 +1449,6 @@ describe('IngredientEntry stock', () => {
   });
 
   it('gives a low jar a Low Stock button on its amount, an empty one an Out of Stock button, and a full or unmeasured one neither', () => {
-    // A jar for each state needs four forms.
     const four = [...variants, variantRow('testleaf'), variantRow('testbark')];
     const [, , leaf, bark] = four.map(({ variant }) => variant.id) as string[];
     renderEntry({
@@ -1553,7 +1518,7 @@ describe('IngredientEntry stock', () => {
       'aria-current',
       'true',
     );
-    expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
+    expect(open.getByRole('textbox', { name: 'Quantity, Testoil' })).toHaveValue('');
     // The new row is a place to fill, not a change, so Save is off.
     expect(open.getByRole('button', { name: 'Save Stock' })).toBeDisabled();
   });

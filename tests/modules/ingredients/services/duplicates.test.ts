@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
@@ -7,14 +7,15 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // DESIGN.md §5, "Fuzzy duplicate warning": near-misses on the display name, the formal name or any folk name, from the compendium and the caller's own workspace, each carrying its formal name.
 // The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {
@@ -35,7 +36,6 @@ async function similarity(a: string, b: string): Promise<number> {
 /** Room for every row a test here writes, so one page is the whole answer. */
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
-/** The rows of the lookup's first page; a null workspace is the compendium form's. */
 const duplicatesOf = async (
   user: typeof A | typeof E,
   name: string,

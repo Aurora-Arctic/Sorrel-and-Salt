@@ -1,0 +1,41 @@
+@use '../../scss/variables' as *;
+
+// The page size: the sentence and the one thing to do centred in the list's place, larger than body copy
+// and set down from the filter row, so it reads as a start rather than a failed load.
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  color: $text-muted;
+
+  p {
+    margin: 0;
+  }
+}
+
+.empty-state--page {
+  align-items: center;
+  gap: space(5);
+  margin-block-start: space(7);
+  text-align: center;
+
+  .empty-state__text {
+    font-size: heading-size(4);
+  }
+
+  .btn {
+    padding: space(3) space(6);
+    font-size: type-size('body');
+  }
+}
+
+// The compact size: a table or a card section's line, at body size and left-aligned.
+.empty-state--compact {
+  align-items: flex-start;
+}
+
+.empty-state__action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+}

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
-import { latestMessageTo } from '../mailpit';
+import { VERIFY_LINK, latestMessageTo } from '../mailpit';
+import { PASSWORD, field } from '../session';
 import { BREACHED_PASSWORD } from '../pwned-range.mjs';
 import { withSql } from './coven-ingredients';
 import { DEMO_COVEN_NAME } from '@/db/seed/demo-coven';
@@ -14,13 +14,6 @@ import { slugify } from '@/lib/slugify';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
-const PASSWORD = 'lantern moss under the north window';
-
-/** A field in the password form by the start of its label, which ends in the required mark. */
-const field = (page: Page, label: string) =>
-  page.getByRole('main').getByLabel(new RegExp(`^${label}`));
 
 test(
   'a visitor signs up with an email address and a password, is signed in, and confirms the address by the mailed link',
@@ -34,30 +27,26 @@ test(
     await expect(page).toHaveURL(/method=email/);
     await page.getByRole('button', { name: 'Create an Account' }).click();
     await expect(page.getByRole('heading', { name: 'Create an Account' })).toBeVisible();
-    await field(page, 'Name').fill('Testwort Holder');
-    await field(page, 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Name').fill('Testwort Holder');
+    await field(page.getByRole('main'), 'Email Address').fill(email);
 
-    // A password on the breached list is refused on its field, and no account is made.
-    await field(page, 'Password').fill(BREACHED_PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(BREACHED_PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(field(page, 'Password')).toHaveAttribute('aria-invalid', 'true');
+    await expect(field(page.getByRole('main'), 'Password')).toHaveAttribute('aria-invalid', 'true');
     const none = await withSql((sql) => sql`select 1 from users where email = ${email}`);
     expect(none).toHaveLength(0);
 
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
-    // The new account is signed in, and unproved it reaches only the email page, which keeps where it was going.
     await expect(page).toHaveURL('/account/email?next=%2Fcoven');
     await assertNoAccessibilityViolations(page);
 
-    // The account exists, unproved, and earns nothing beyond it.
     const [made] = await withSql(
       (sql) => sql<{ email_verified: boolean; can_create_workspace: boolean }[]>`
         select email_verified, can_create_workspace from users where email = ${email}`,
     );
     expect(made).toEqual({ email_verified: false, can_create_workspace: false });
 
-    // The mailed link, followed from this session, proves the address and goes on.
     const message = await latestMessageTo(email);
     expect(message.to).toEqual([email]);
     const link = new URL(message.text.match(VERIFY_LINK)![0]);
@@ -67,7 +56,6 @@ test(
     // A new account has not agreed to the terms, so the page it asked for sends it to the acceptance page first.
     await expect(page).toHaveURL('/account/terms?next=%2Fcoven');
     await page.getByRole('button', { name: 'Agree & Continue' }).click();
-    // /coven sends a member into their first coven, which for a new account is the demo coven.
     await expect(page).toHaveURL(`/coven/${slugify(DEMO_COVEN_NAME)}`);
 
     const [proved] = await withSql(
@@ -101,7 +89,7 @@ test(
     await expect(page).toHaveURL('/forgot-password');
     await assertNoAccessibilityViolations(page);
 
-    await field(page, 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Email Address').fill(email);
     await page.getByRole('button', { name: 'Send Reset Link' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(email);
 
@@ -116,27 +104,25 @@ test(
     expect(landing.pathname).toBe('/reset-password');
     expect(landing.searchParams.get('token')).toBeTruthy();
     await page.goto(`${landing.pathname}${landing.search}`);
-    await expect(field(page, 'New Password')).toBeVisible();
+    await expect(field(page.getByRole('main'), 'New Password')).toBeVisible();
     await assertNoAccessibilityViolations(page);
 
-    await field(page, 'New Password').fill(NEW_PASSWORD);
+    await field(page.getByRole('main'), 'New Password').fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Set New Password' }).click();
     await expect(page.getByRole('main').getByRole('status')).toBeVisible();
 
-    // From the notice to sign-in. The old password no longer signs in, and the new one does.
     await page.getByRole('link', { name: 'Sign In', exact: true }).click();
     await expect(page).toHaveURL('/sign-in');
     await page.getByRole('button', { name: 'Continue with Email' }).click();
-    await field(page, 'Email Address').fill(email);
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
 
-    await field(page, 'Password').fill(NEW_PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await expect(page).not.toHaveURL(/\/sign-in/);
 
-    // The link works once: a second follow is sent to the page with Better Auth's error and no token.
     const again = await page.request.get(`${link.pathname}${link.search}`, { maxRedirects: 0 });
     const spent = new URL(again.headers().location!);
     expect(spent.searchParams.get('error')).toBe('INVALID_TOKEN');
@@ -165,15 +151,14 @@ test(
     );
 
     await page.goto('/sign-in?method=email');
-    await field(page, 'Email Address').fill(email);
-    await field(page, 'Password').fill('not the password at all, sadly');
+    await field(page.getByRole('main'), 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Password').fill('not the password at all, sadly');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     const alert = page.getByRole('main').getByRole('alert');
     await expect(alert).toBeVisible();
     const wrongPassword = await alert.textContent();
 
-    // Locked: the right password is refused with the same words a wrong one gets.
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     const refused = page.waitForResponse('**/api/auth/sign-in/email');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     expect((await refused).status()).toBe(401);

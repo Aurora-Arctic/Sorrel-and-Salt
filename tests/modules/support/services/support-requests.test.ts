@@ -35,10 +35,8 @@ import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
-// The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
-// same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
+// Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/support.md, "A support form, reviewed by keepers").
 
-// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));
@@ -335,7 +333,9 @@ describe('supportRequests', () => {
     await sql`delete from support_send_counts`;
     await sendSignedOutSupportRequest(
       { about: 'account', email: address, subject: 'No code', message: 'It never comes.' },
-      { clientIp: '203.0.113.7', notifier: notifier() },
+      { clientIp: '203.0.113.7', notifier: notifier() } as Parameters<
+        typeof sendSignedOutSupportRequest
+      >[1],
     );
     const [sent] = await sql`select id from support_requests where sender_email = ${address}`;
     await setSupportRequestCuratorVisible(asUser(E), sent.id, true);
@@ -625,7 +625,7 @@ describe('admin-only changes', () => {
     const refusal = await failureOf(
       timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501), noPauseNotifier, PAUSE_MESSAGE),
     );
-    expect((refusal as Error).message).toBe('Keep the note to 500 characters');
+    expect((refusal as Error).message).toBe('Keep this to 500 characters or fewer');
   });
 
   it.each([

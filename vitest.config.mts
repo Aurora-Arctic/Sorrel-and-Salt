@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { workflow } from '@workflow/vitest';
 import { defineConfig } from 'vitest/config';
+import { clientReferences } from './tests/support/client-references.mts';
 import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
 
 const require = createRequire(import.meta.url);
@@ -27,8 +28,10 @@ export const DB_FREE = [
   'tests/db/seed/compendium-files.test.ts',
   'tests/db/seed/compendium/**',
   'tests/db/seed/documents-files.test.ts',
+  'tests/db/seed/help-list.test.ts',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
   'tests/modules/documents/mailing-pace.test.ts',
+  'tests/modules/help/schema/help-articles-schema.test.ts',
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',
   'tests/modules/identity/services/workshop-access.test.ts',
@@ -51,10 +54,11 @@ const DB_FILES = globSync(DB_INCLUDE, { cwd: ROOT, exclude: DB_FREE });
 // What a file does that outlives it once a worker keeps its module registry
 // from one file to the next: a module mock or a hoisted value for one, a stub
 // of a global or of the environment, a reset of the registry itself, or a fake
-// clock (MB.238). A mention in a comment counts too, which errs toward
+// clock (MB.238), or an msw server, which patches every socket's `connect`
+// while it listens. A mention in a comment counts too, which errs toward
 // isolation.
 const LEAKS_PAST_ITS_FILE =
-  /\bvi\.(mock|doMock|unmock|hoisted|stubGlobal|stubEnv|resetModules|useFakeTimers)\(/;
+  /\bvi\.(mock|doMock|unmock|hoisted|stubGlobal|stubEnv|resetModules|useFakeTimers)\(|\bsetupServer\(/;
 
 // The tests/support helpers that do one of those for their caller, so that a
 // file calling one counts as doing it: auth-module.ts's `importAuth` resets the
@@ -276,6 +280,8 @@ export default defineConfig({
         // build's pass-through and a server render cannot be started at all.
         // `db` cannot carry the condition: under it `react-dom/server` throws
         // on import, and three of its files reach that through `lib/auth`.
+        // A 'use client' module is a client reference there, as Next's bundler makes it.
+        plugins: [clientReferences()],
         ssr: { resolve: { conditions: ['react-server'], externalConditions: ['react-server'] } },
         test: {
           name: 'rsc',

@@ -3,18 +3,27 @@ import PageHeader from '../PageHeader';
 import type { ErrorPageProps } from './types';
 import './index.scss';
 
-// The 404 and 500 screens' shared body: a heading, a reason and the way onward. It takes a reason, never an `Error`
-// (claude-docs/components/error-page.md), and sets its own `<title>` (React hoists it), which a 404 and global-error lack.
+// Takes a reason, never an `Error` (claude-docs/components/error-page.md), and sets its own `<title>`, which a 404 and
+// global-error lack.
 
-const ErrorPage = ({ title, reason, reference, children }: ErrorPageProps): ReactElement => (
-  <main className="page-frame">
-    <title>{title}</title>
-    <div className="error-page">
-      <PageHeader title={title} lede={reason} />
-      {reference && <p className="error-page__reference">Reference: {reference}</p>}
-      <p className="error-page__way-on">{children}</p>
-    </div>
-  </main>
-);
+const ErrorPage = ({
+  title,
+  reason,
+  reference,
+  withinMain = false,
+  children,
+}: ErrorPageProps): ReactElement => {
+  const Frame = withinMain ? 'div' : 'main';
+  return (
+    <Frame className={withinMain ? 'page-frame page-frame--in-column' : 'page-frame'}>
+      <title>{title}</title>
+      <div className="error-page">
+        <PageHeader title={title} lede={reason} />
+        <p className="error-page__way-on">{children}</p>
+        {reference && <p className="error-page__reference">Reference {reference}</p>}
+      </div>
+    </Frame>
+  );
+};
 
 export default ErrorPage;

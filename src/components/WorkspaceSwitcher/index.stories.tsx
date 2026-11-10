@@ -3,8 +3,6 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import WorkspaceSwitcher from '.';
 
-// Render-only; behaviour is asserted in tests/components/WorkspaceSwitcher.
-// The workshop's router goes nowhere, so a choice only closes the list.
 const meta = {
   title: 'Coven / Coven Switcher',
 } satisfies Meta;
@@ -35,8 +33,6 @@ const WORKSPACES = [
   },
 ];
 
-// In a workspace: its name is the value. Outside any workspace, on the account page: nothing chosen
-// yet. Can Create: a viewer holding creation rights, so the list ends with Create Coven.
 export const States: Story = {
   render: () => (
     <StatesGrid

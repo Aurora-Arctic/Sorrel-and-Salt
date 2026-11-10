@@ -15,12 +15,11 @@ import { acceptInvitation, acceptInvitationById } from '@/modules/identity';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
+import { ORIGIN } from '../../../support/constants';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
-// An owner invites an address into a coven as a viewer or a member. The token is `crypto.randomBytes` output that only the mail carries, and the row holds its hash.
-// The transport is a test double: the real sender builds the link and hands it to a mocked `send`; the failing transport is the real `send` over a failing `fetch`
-// (claude-docs/db/invitations.md, "Inviting into a coven").
+// The transport is a test double; the failing transport is the real `send` over a failing `fetch` (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 const mail = vi.hoisted(() => ({ real: false }));
@@ -36,14 +35,11 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@coven-invitations.test';
 const INVITED = `invited${DOMAIN}`;
-const ORIGIN = 'http://localhost:8000';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-/** The sender the page's mutation uses, bound to the browser's own request. */
 const sender = () => invitationSender(new Request(`${ORIGIN}/api/graphql`, { method: 'POST' }));
 
-/** The token in the link mailed to `to`, and the mail it came in. */
 function mailedTo(to: string): { token: string; message: Message } {
   const message = send.mock.calls.map(([sent]) => sent).find((sent) => sent.to === to);
   const token = message?.text.match(/\/invite\/([A-Za-z0-9_-]+)/)?.[1];
@@ -56,22 +52,6 @@ const invitations = () => sql<CovenInvitationStateRow[]>`
     created_by, updated_by
   from invitations order by created_at
 `;
-
-/** A coven with these members, through the raw client. */
-async function insertCoven(
-  name: string,
-  members: [string, 'owner' | 'member' | 'viewer'][],
-): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
 
 beforeEach(async () => {
   send.mockClear();
@@ -107,7 +87,6 @@ describe('createInvitation', () => {
       accepted_at: null,
       revoked_at: null,
       created_by: A.id,
-      // The mail's step swapped in the mailed token, as the System account.
       updated_by: SYSTEM_ACTOR_ID,
     });
     expect(stored.expires_at.getTime()).toBeGreaterThan(Date.now());
@@ -159,7 +138,7 @@ describe('createInvitation', () => {
   });
 
   it('refuses a member and a viewer, who do belong to the coven, writing and mailing nothing', async () => {
-    const covenId = await insertCoven('Fixture Invite Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Invite Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -181,7 +160,7 @@ describe('createInvitation', () => {
 
   it("refuses an owner of another coven, by this coven's id", async () => {
     // Why the refusal is the coven's: D owns a coven of their own.
-    const owned = await insertCoven('Fixture Other Owner Coven', [[D.id, 'owner']]);
+    const owned = await insertWorkspace(sql, 'Fixture Other Owner Coven', [[D.id, 'owner']]);
     expect(owned).not.toBe(WORKSPACE_X_ID);
 
     await expect(
@@ -203,11 +182,9 @@ describe('createInvitation', () => {
       });
     });
 
-    /** Invites `email` into `workspaceId`, as owner A, and answers the row. */
     const invite = (email: string, role: 'viewer' | 'member', workspaceId = WORKSPACE_W_ID) =>
       createInvitation(asUser(A), workspaceId, { email, role }, sender());
 
-    /** The rows of an address that are still pending. */
     const pendingFor = async (email: string) =>
       (await invitations()).filter(
         (row) => row.email === email && row.revoked_at === null && row.accepted_at === null,
@@ -250,7 +227,7 @@ describe('createInvitation', () => {
     });
 
     it("leaves another coven's pending invitation to the address alone", async () => {
-      const other = await insertCoven(OTHER_COVEN, [[A.id, 'owner']]);
+      const other = await insertWorkspace(sql, OTHER_COVEN, [[A.id, 'owner']]);
       // Why it could have been replaced: the same address, pending, and A owns both.
       await invite(INVITED, 'viewer', other);
 
@@ -325,7 +302,7 @@ describe('createInvitation', () => {
   });
 
   it("invites an address whose membership was removed, which is no member's", async () => {
-    const covenId = await insertCoven('Fixture Removed Member Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Removed Member Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -365,7 +342,6 @@ describe('createInvitation', () => {
 describe('createInvitation mail limit', () => {
   const LIMIT = INVITATION_MAIL_LIMIT;
 
-  /** `count` invitations A sent `ageMinutes` ago, through the raw client. */
   async function sentBy(userId: string, count: number, ageMinutes: number) {
     for (let i = 0; i < count; i += 1) {
       await sql`
@@ -390,7 +366,6 @@ describe('createInvitation mail limit', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  // A resend is a repeat invitation to an address that already has one pending.
   it('refuses a resend at the limit too', async () => {
     await invite(A, INVITED);
     await sentBy(A.id, LIMIT - 1, 10);
@@ -414,7 +389,7 @@ describe('createInvitation mail limit', () => {
       ),
     ).rejects.toBeInstanceOf(ValidationError);
 
-    const otherCoven = await insertCoven('Mail Limit Other', [[D.id, 'owner']]);
+    const otherCoven = await insertWorkspace(sql, 'Mail Limit Other', [[D.id, 'owner']]);
     await expect(
       createInvitation(
         asUser(D),

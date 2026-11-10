@@ -14,9 +14,6 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AppShell } = await import('@/components/AppShell');
 
-// The shell around every signed-in page: who sees which links, where
-// the brand goes, and what an unverified account is left with.
-
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,
@@ -61,12 +58,12 @@ beforeEach(() => {
 });
 
 describe('AppShell', () => {
-  it('hands the viewer’s pending invitations to the account menu, which links to them', () => {
+  it('hands the viewer’s pending invitations to the account menu, which links to them', async () => {
     shell({ ...MEMBER, pendingInvitations: 2 });
 
     fireEvent.click(screen.getByRole('button', { name: /^Fixture Member/ }));
 
-    expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
       'href',
       '/account#account-invitations',
     );

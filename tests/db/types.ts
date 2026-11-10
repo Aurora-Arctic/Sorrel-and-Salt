@@ -1,6 +1,5 @@
 import type { updateCompendiumEntry } from '@/modules/ingredients';
 
-/** A `users` row, as far as an address change reads it. */
 export interface UserRow {
   id: string;
   email: string;
@@ -11,10 +10,12 @@ export interface UserRow {
   verification_sent_at: Date | null;
 }
 
-/** What a null session gets: an answer, a refusal at the field, or, for a null sent where the SDL requires an id, a refusal before any resolver runs. */
-export type Outcome = 'answers' | 'nulls' | 'refuses' | 'invalid';
+/**
+ * What a null session gets: an answer, a refusal at the field, a NotFound from a resolver that takes no session but found
+ * nothing for the probe's argument, or, for a null sent where the SDL requires an id, a refusal before any resolver runs.
+ */
+export type Outcome = 'answers' | 'nulls' | 'refuses' | 'not-found' | 'invalid';
 
-/** A `Query` or `Mutation` field's probe, and what it gives a null session. */
 export interface ScopeProbe {
   source: string;
   variables?: Record<string, unknown>;
@@ -37,7 +38,8 @@ export type Governed =
   | 'workspace creation'
   | 'site role'
   | 'site access'
-  | 'documents';
+  | 'documents'
+  | 'help';
 
 /** A `Mutation` field only a site admin's scope admits. `probe` replaces the null-session probe where that one does not ask for the keeper's tier. */
 export interface AdminWrite {
@@ -45,26 +47,21 @@ export interface AdminWrite {
   probe?: ScopeProbe;
 }
 
-/** A field taking a `workspaceId`. `variables` is a thunk because the ids exist only after `beforeAll`. */
 export interface WorkspaceIdProbe {
   source: string;
   variables?: () => Record<string, unknown>;
-  /** Runs as W's owner, A, for a field only an owner is admitted to; B otherwise. */
   asOwner?: boolean;
   /** The workspace the admitted call names instead of W, for a field that destroys what it is given: a coven of its own, so W stands for the rest. */
   admittedTo?: () => string;
 }
 
-/** A GraphQL response body, as far as a probe reads it. */
 export interface Answer {
   data?: Record<string, unknown> | null;
   errors?: { path?: (string | number)[]; extensions?: { code?: string } }[];
 }
 
-/** What the compendium writes take, which the module keeps to itself. */
 export type CompendiumWrite = Parameters<typeof updateCompendiumEntry>[2];
 
-/** A row as the raw client writes and returns it. */
 export type Row = Record<string, unknown>;
 
 /** How the partial-unique sweep builds a row inside one index's predicate: `row` makes a fresh live row each call; `clash` names the columns a second row copies to collide on this index alone. */
@@ -75,14 +72,12 @@ export interface PartialIndexRow {
   hardDeleted?: true;
 }
 
-/** A partial unique index as the catalogue reports it: every column it reads, predicate included. */
 export interface PartialUniqueIndex {
   index: string;
   table: string;
   columns: string[];
 }
 
-/** One `user_privilege_changes` row as the trigger tests read it, the enums cast to text. */
 export interface PrivilegeLedgerRow {
   user_id: string;
   privilege: string;

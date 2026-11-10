@@ -12,7 +12,7 @@ import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
-import { containsText, notSoftDeleted } from './predicates';
+import { containsText, newestFirst, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
 import { timeoutStands } from './support';
 import { pauseStands } from './user-access-pauses';
@@ -37,10 +37,9 @@ export async function findUserByEmail(
   return row;
 }
 
-/** The user list's order, by name and then id. */
 const USER_ORDER: readonly SortPart[] = [users.name];
 
-/** The users the list holds under `filter`: all but the three system users, narrowed by its arms. */
+/** The users the list holds under `filter`: all but the three system users. */
 function listedUsers(filter: UserFilter): SQL | undefined {
   return and(
     ne(users.id, BOOTSTRAP_USER_ID),
@@ -130,9 +129,7 @@ export async function findCoMemberNamesIncludingSoftDeleted(
  * The ledger's order, newest first: the key is ascending, so the descending part is negated (`types.ts`, `SortPart`), as
  * `numeric` to keep a `Date`'s dropped microseconds. Rows of one instant (a role grant and its flag) follow by id.
  */
-const LEDGER_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${userPrivilegeChanges.createdAt})`, type: 'numeric' },
-];
+const LEDGER_ORDER: readonly SortPart[] = [newestFirst(userPrivilegeChanges.createdAt)];
 
 /**
  * One page of the privilege ledger under `filter`, newest first:
@@ -165,7 +162,6 @@ export function findPrivilegeChangeCount(
   );
 }
 
-/** The ledger filter's arms, each `undefined` when its part is absent. */
 function privilegeChangeArms({
   userId,
   privilege,
@@ -182,7 +178,6 @@ function privilegeChangeArms({
   ];
 }
 
-/** The filter's arms, each `undefined` when its part is absent. */
 function userArms({
   query,
   awaitingApproval,
@@ -204,7 +199,6 @@ function userArms({
   ];
 }
 
-/** A user's name or address holds `query`: the user list's match, and the ledger's by subject. */
 function nameOrEmailHolds(query: string): SQL | undefined {
   return or(containsText(users.name, query), containsText(users.email, query));
 }
@@ -222,7 +216,6 @@ export async function findOwnProviderIds(userId: string): Promise<string[]> {
   return rows.map(({ providerId }) => providerId);
 }
 
-/** Whether this user holds a passkey, for the lockout mail. Only the answer leaves. */
 export async function findHoldsPasskey(userId: string): Promise<boolean> {
   // Neither `passkeys` nor `verifications` carries `deleted_at`, so the filter adds nothing today.
   const rows = await selectFrom(

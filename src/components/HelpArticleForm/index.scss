@@ -1,0 +1,118 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use '../IngredientEntry/switch-size' as *;
+
+// The text on the left at the measure, the details card on the right, sticky as the body scrolls. The card is before
+// the Save row in the page's order, so the grid places the row back under the text (claude-docs/components/help-article-form.md).
+// Tokens only, before the section's design review.
+$-details-width: 22rem;
+
+// The page is centred as one column the form's own width, so the back link and the heading start at the text's edge, as
+// the documents' editor column does. Its width is the two tracks and the gap between them, in the form's own font.
+.help-article-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(#{$measure} + #{space(7)} + #{$-details-width});
+  margin-inline: auto;
+}
+
+// Doubled to outweigh the shared `.form` column, which compiles as `body .form`.
+// The back link raised into the page top, as on an ingredient page, so the eyebrow below it has room.
+.help-article-form__bar {
+  position: relative;
+  top: calc(-1 * #{space(4)});
+  margin-block-end: space(3);
+}
+
+.form.help-article-form {
+  display: grid;
+  margin-block-start: space(5);
+  grid-template-areas: 'main' 'details' 'actions';
+  gap: space(6);
+  align-items: start;
+
+  @include above-tablet {
+    grid-template:
+      'main details' auto
+      'actions details' 1fr / minmax(0, $measure) minmax(16rem, $-details-width);
+    column-gap: space(7);
+  }
+}
+
+.help-article-form__main {
+  @include stack(5);
+
+  grid-area: main;
+  min-width: 0;
+
+  // The editor borrows the document body, whose top margin would part it from its label.
+  .rich-text-editor {
+    margin-block-start: 0;
+  }
+}
+
+.help-article-form__details {
+  @include stack(5);
+
+  grid-area: details;
+  padding: space(5);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  // The stack's gap alone spaces the fields, not a radio group's own margins (named, to outweigh `body .fieldset.radio-group`).
+  > .fieldset.radio-group {
+    margin-block: 0;
+  }
+
+  @include above-tablet {
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+}
+
+.help-article-form__details-heading {
+  margin: 0;
+  font-size: type-size('overline');
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.help-article-form__actions {
+  grid-area: actions;
+}
+
+.help-article-form__address code {
+  overflow-wrap: anywhere;
+}
+
+.help-article-form__fact {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.help-article-form__warning {
+  color: $text-primary;
+}
+
+.help-article-form__effects {
+  margin-block: space(3) 0;
+}
+
+// The skeleton's stand-in for the Shown switch, the track's own size so the hint beneath stands where the real one will.
+.help-article-form__pending-switch {
+  @include skeleton-shape;
+
+  inline-size: $track-width;
+  height: $track-height;
+  border-radius: radius('pill');
+}
+
+// The edit page's pending title: a bar as tall as the title's own line, so the form stands where it will.
+.help-article-form__pending-head h1 .skeleton__line {
+  // The borders add to the height, so the whole bar is one line.
+  block-size: 0.7lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
+}

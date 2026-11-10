@@ -1,17 +1,19 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { PendingLink } from '../../lib/navigation';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
+import { LiddedEyeIcon } from './lidded-eye';
 import type { EditLinkProps } from './types';
 
-/** A list row's icon link into a dialog, named by its verb and the row's name in hidden text; a press opens the row's modal at once under `heading`, and the link still works as an address. */
 const IconLink = ({
   href,
   name,
   heading,
   ref,
+  preload,
   verb,
   icon,
   place,
@@ -23,19 +25,18 @@ const IconLink = ({
   className?: string;
 }): ReactElement => {
   const onClick = useOpenModalClick(href, heading, place);
+  // A page of its own scrolls to its top, as any page does; a modal leaves the list where it is.
+  const Link = heading ? ModalLink : PendingLink;
   return (
     <IconTip tip={verb}>
-      <ModalLink ref={ref} className={className} href={href} onClick={onClick}>
+      <Link ref={ref} className={className} href={href} onClick={onClick} {...preload}>
         {icon}
-        <span className="visually-hidden">
-          {verb} {name}
-        </span>
-      </ModalLink>
+        <span className="visually-hidden">{name ? `${verb} ${name}` : verb}</span>
+      </Link>
     </IconTip>
   );
 };
 
-/** A row's Edit: the pencil. `className` replaces the default green look (the coven card's plain one). */
 export const EditLink = ({
   className,
   ...props
@@ -59,7 +60,14 @@ export const AnnotateLink = ({
   <IconLink {...props} className={className} verb="Annotate" icon={<AnnotateIcon />} />
 );
 
-/** An entry's Quick Look in a list: the eye beside its name, opening the details in the modal place `place` names, in its own class as it sits in the name's line. */
 export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
   <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
+);
+
+/** A reader page of the row being edited, named and tipped View alone: the page is the one the editor is about. */
+export const ViewLink = ({
+  className = 'icon-tip__look',
+  ...props
+}: Omit<EditLinkProps, 'name'> & { className?: string }): ReactElement => (
+  <IconLink {...props} name="" className={className} verb="View" icon={<LiddedEyeIcon open />} />
 );

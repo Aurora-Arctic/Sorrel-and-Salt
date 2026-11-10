@@ -9,10 +9,9 @@ import { db } from '../connection';
 export type PasskeyRemoval = 'removed' | 'last-way-in' | 'not-held';
 
 /**
- * Removes the account's passkey unless it is the account's last way to sign in: no other passkey, no account for a
- * provider in `providerIds`, no password. Outside `withAudit`, as the plugin's own passkey writes are: the table has
- * no audit columns. The check and the delete hold the account row locked, so two removals racing each other run one
- * after the other, and the second sees the first's delete rather than leaving the account with no way in.
+ * Removes the passkey unless it is the account's last way to sign in; outside `withAudit` (no audit columns),
+ * and the account row stays locked so racing removals run in turn (claude-docs/db/write-path.md, "Removing a
+ * passkey").
  */
 export async function removePasskeyKeepingAWayIn(
   userId: string,

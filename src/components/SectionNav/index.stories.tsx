@@ -5,18 +5,12 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
 
-// Render-only; behaviour is asserted in tests/components/SectionNav. The workshop's
-// `usePathname` stub answers whatever the wrapping provider says. The window's
-// width chooses the shape, so narrow stories set `meta.width`, not a frame's.
 const meta = {
   title: 'Navigation / Section Nav',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// A stand-in for the context row the layouts put the nav in: a hairline-edged
-// row of the row's height, the nav stretched along it. On a phone the nav
-// leaves it for the foot of the window, and the page clears the bar.
 const Row = ({ path, children }: { path: string; children: ReactNode }): ReactElement => (
   <WorkshopPathname.Provider value={path}>
     <div
@@ -46,8 +40,6 @@ const admin = (path: string, managesPeople = true) => (
   </Row>
 );
 
-// Wide: the tabs a practitioner sees, then an observer's (no Members), then the keeper's
-// six tabs with a hairline between Astrology and People.
 const SECTION_STATES: Record<string, ReactNode> = {
   'Coven Overview Current': coven('/coven/fixture-coven', true),
   'Coven Ingredients Current': coven('/coven/fixture-coven/ingredients', true),
@@ -68,15 +60,11 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// Tablet, on a page that is behind More: More names it and carries the mark. The
-// width stays pinned (700px) because this state exists only at tablet width: wider
-// shows every link, narrower moves the nav to the bottom bar.
 export const AdminOnAHiddenPage: Story = {
   render: () => admin('/keepers/users'),
   globals: { viewport: { value: 'w700', isRotated: false } },
 };
 
-// Tablet with More pressed: the links behind it in a sheet.
 const MoreOpen = ({ path }: { path: string }): ReactElement => {
   usePressOnMount('More');
   return admin(path);
@@ -87,7 +75,6 @@ export const TabletMoreOpen: Story = {
   globals: { viewport: { value: 'w700', isRotated: false } },
 };
 
-// A phone: the nav leaves the row for the bar at the foot of the window.
 export const PhoneBottomBar: Story = {
   render: () => coven('/coven/fixture-coven', true),
   globals: { viewport: { value: 'w375', isRotated: false } },

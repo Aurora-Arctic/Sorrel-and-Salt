@@ -11,12 +11,12 @@ import type { AdminInvitationProps } from './types';
 
 // The one place a keeper invitation's link exists outside the reader's inbox: only
 // its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting a keeper").
-// The subject names the site role it grants, curator or keeper.
 
-/** The role as the mail names it, with its article: "an admin". */
-const ROLE: Record<AdminInvitationProps['siteRole'], { title: string; prose: string }> = {
-  curator: { title: 'a Curator', prose: 'a curator' },
-  admin: { title: 'a Keeper', prose: 'a keeper' },
+// `offer` follows "invited this email address to" and "Accept within seven days to".
+const ROLE: Record<AdminInvitationProps['siteRole'], { subject: string; offer: string }> = {
+  user: { subject: 'You Are Invited to Start a Coven', offer: 'start a coven of your own' },
+  curator: { subject: 'You Are Invited to Be a Curator', offer: 'become a curator' },
+  admin: { subject: 'You Are Invited to Be a Keeper', offer: 'become a keeper' },
 };
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.
@@ -32,14 +32,14 @@ export function AdminInvitation({
   return h(
     EmailLayout,
     {
-      preview: `Accept within ${LIFETIME} to become ${ROLE[siteRole].prose}.`,
+      preview: `Accept within ${LIFETIME} to ${ROLE[siteRole].offer}.`,
       heading: 'You Are Invited',
       origin,
     },
     h(
       Paragraph,
       null,
-      `${inviterName}, a keeper of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`,
+      `${inviterName}, a keeper of Sorrel & Salt, has invited this email address to ${ROLE[siteRole].offer}.`,
     ),
     h(
       Paragraph,
@@ -51,8 +51,7 @@ export function AdminInvitation({
   );
 }
 
-/** The admin invitation mail for `to`, rendered to the html and plain text `send` takes. */
 export const adminInvitationMessage = defineMessage<AdminInvitationProps>(
-  ({ siteRole }) => `You Are Invited to Be ${ROLE[siteRole].title}`,
+  ({ siteRole }) => ROLE[siteRole].subject,
   AdminInvitation,
 );

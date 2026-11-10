@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { suggestCommonNames } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The statement suggestCommonNames actually sends, planned, as duplicates-plan.test.ts plans findPossibleDuplicates': its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence.
 // Unlike the vocabularies, both tables here grow with use, so the plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
@@ -22,21 +23,19 @@ vi.mock('@/db/connection', async () => {
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(() => {
   logged.length = 0;
 });
 
-/** Every statement the service sent, in order, from one call. */
 async function statementsFor(query: string): Promise<Logged[]> {
   await suggestCommonNames(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
   return [...logged];
 }
 
-/** The one statement reading the folk names, which is the match itself. */
 function match(statements: Logged[]): Logged {
   const reads = statements.filter(({ query }) => /from "ingredient_folk_names"/.test(query));
   expect(reads).toHaveLength(1);

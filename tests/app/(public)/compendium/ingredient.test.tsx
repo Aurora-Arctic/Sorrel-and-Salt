@@ -4,16 +4,12 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public entry page, with the cached read and the viewer mocked. It proves which outcome of the read becomes which response, who is offered Edit,
-// and that the edit dialog's values are read only for a curator and only with `?edit`.
-
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
 const permanentRedirect = vi.fn((_to: string) => {
   throw new Error('redirected');
 });
-// The edit dialog is a client part, which asks for the router.
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ notFound, permanentRedirect, useRouter: () => router }));
 
@@ -21,9 +17,7 @@ const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendiumEntry = vi.fn();
-// The review switch's read, per viewer, made for a curator or keeper only.
 const readCompendiumReview = vi.fn();
-// The row itself, for the form's shown switch.
 const getIngredient = vi.fn();
 // The sourcing score's read, for a curator or keeper; its tests are slug-page.test.tsx's.
 const readSourcingScore = vi.fn();
@@ -37,7 +31,6 @@ const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
-// The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
   default: ({ review }: { review?: { reviewed: boolean } }) => (
     <form aria-label="Fixture Form">

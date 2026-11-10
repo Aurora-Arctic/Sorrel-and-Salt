@@ -4,19 +4,16 @@ import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
-// The Jar section's details, above its step list, in one column: the Seal Wax field with the jar
-// drawn at its left, level with the label and the input together, then the Jar Description on its
-// own line. The jar fills as steps are added. claude-docs/components/spell-builder.md, "The jar
-// details".
+// The Jar section's details above its step list: the Seal Wax field with the jar drawn beside it, then the Jar
+// Description (claude-docs/components/spell-builder.md, "The jar details").
 
 /**
- * The colour of a layer: the group colour of the step's first category in its listed order
- * (the ingredient's before its form's), skipping any not in a known group. A step with none
- * has none, and its layer stays the muted ink.
+ * First category in listed order (the ingredient's before its form's) in a known group; else
+ * muted.
  */
 function groupOf(
   categories: readonly { id: string }[],
@@ -57,9 +54,7 @@ export function JarDetails({
   waxField,
   descriptionField,
 }: {
-  /** The Seal Wax field, on the first line with the jar drawn at its left. */
   waxField: ReactNode;
-  /** The Jar Description field, on its own full-width line beneath. */
   descriptionField: ReactNode;
 }): ReactElement {
   return (

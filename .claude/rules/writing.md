@@ -24,16 +24,12 @@ Everything written here is read by developers with very different amounts of exp
 - **Give an example where a mechanism is abstract.** One concrete case, with real values, often does more than another sentence of explanation.
 - **Keep the sentences short and the structure visible.** One idea per sentence. Steps as a numbered list, options as bullets, several facts of the same shape as a table.
 - **Use the Oxford comma.** In a list of three or more, a comma goes before the last "and" or "or": "the compendium, the ingredients, and the grimoire". This holds for docs, replies, PR bodies, comments, commit messages, and text on screens. It is wording, so no test checks it; code that joins a list for a screen uses `joinList` (`src/lib/join-list.ts`) or `Intl.ListFormat` in `en-US`, since `en-GB` leaves the comma out. Existing text gains it when that passage is next edited.
+- **Write "%", not "per cent".** A number and its percent sign, as in "about 4%".
 - **Read it back as a developer six months into their career.** Anything that would make that reader open a search engine gets a clause of explanation or a plainer word.
 
 ## Code comments
 
-A comment is read in the editor, by someone with the code and nothing else open, so these rules apply there most of all. The rule for what a comment may say is in claude-docs/README.md, "Comments in code"; this is how it is worded.
-
-- **Say what the thing is first, in everyday words**, then the one clause of why if the obvious alternative would be wrong. `Rows the viewer may see, filtered in SQL so a private spell never reaches the resolver.`
-- **Present tense, no actors, no time.** Not "X was added so that", "the owner chose", "until Y lands" or a date; the code is, and the comment says what it is.
-- **One idea per line, one line per field or prop.** A second sentence is allowed when the first cannot carry the fact. A third is the limit; past it the explanation belongs in a doc section, cited by path and heading.
-- **A doc pointer is a citation, not a summary.** `(claude-docs/db/keyset-pages.md, "Keyset pages")` after the clause it supports; never a paragraph restating the section.
+A comment is read in the editor, by someone with the code and nothing else open. What it may say, how long it may be, and how it is worded are in claude-docs/README.md, "Comments in code".
 
 ## Where precision still wins
 
@@ -43,6 +39,10 @@ A comment is read in the editor, by someone with the code and nothing else open,
 - **Code, identifiers, commands and error text** are quoted exactly, in code formatting, because a reader has to find or type them.
 - **A schema name, a Postgres term in a migration note, a GraphQL type** keeps its proper name, with a plain clause beside it the first time.
 - **A test's `describe` and `it` strings** name the behaviour; they follow the Testing rules, not this one.
+
+## Audits
+
+An audit's finding says what it found and how sure that is. Its "why it matters" says what the copies are and how they differ. A consequence for users, such as a crash, a 404 or a wrong figure, goes in only when the code or a test shows it.
 
 ## What this does not change
 

@@ -1,6 +1,6 @@
+import { orMissing } from '@/lib/or-not-found';
 import { cache } from 'react';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
-import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
   getMySupportFollowUpId,
@@ -15,13 +15,8 @@ import {
 /** The request with its replies, or `undefined` where the sender has none with this id. */
 export const readOpenedRequest = cache(
   async (session: Session, id: string): Promise<SupportSenderRequestEntry | undefined> => {
-    let row;
-    try {
-      row = await getMySupportRequest(session, id);
-    } catch (error) {
-      if (error instanceof NotFound) return undefined;
-      throw error;
-    }
+    const row = await orMissing(() => getMySupportRequest(session, id));
+    if (!row) return undefined;
     const [[replies], followUpId, timedOut] = await Promise.all([
       repliesForRequests(session, [row.id]),
       row.status === 'closed' ? getMySupportFollowUpId(session, row.id) : null,

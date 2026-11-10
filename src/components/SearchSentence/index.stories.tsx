@@ -4,9 +4,6 @@ import type { ReactNode } from 'react';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
 
-// Render-only; behaviour is asserted in tests/components/SearchSentence. Invented
-// values. The search buttons stand in for a list's navigation: `pending` is
-// true until the "results" come back.
 const meta = {
   title: 'Ingredients / Search Sentence',
 } satisfies Meta;
@@ -71,10 +68,6 @@ function Searching({ wait, filtered = true }: { wait: number; filtered?: boolean
   );
 }
 
-// One control chooses the state; each starts its own search on load and the control
-// remounts it (claude-docs/workshop.md, rule 5). Settled: one closed line. Slow
-// Search: results return after four seconds. Fast Search: before the clauses finish
-// typing. Nothing To Open: a search term and no filter, so a plain line.
 const STATES: Record<string, ReactNode> = {
   Settled: <Searching wait={600} />,
   'Slow Search': <Searching wait={4000} />,

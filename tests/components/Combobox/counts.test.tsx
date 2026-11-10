@@ -4,10 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect } from '@/components/Combobox';
 import type { ComboboxChoice, ComboboxOption } from '@/components/Combobox/types';
 
-// The multi-select's counts and disabled rows, and the chip's icon, count and
-// loading mark: what a faceted filter draws, with the box unchanged
-// for a caller that passes none of them.
-
 const ELEMENTS: ComboboxChoice[] = [
   { value: 'earth', label: 'Earth', count: 4 },
   { value: 'air', label: 'Air', count: 0 },

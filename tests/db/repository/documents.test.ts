@@ -30,7 +30,6 @@ useTestDatabase((client) => (sql = client));
 
 const admin = () => assertSiteAdmin(asUser(E));
 
-/** A fresh document under an invented key, its id. */
 async function aDocument(key = `testdoc-${crypto.randomUUID().slice(0, 8)}`): Promise<string> {
   const [row] = await sql`
     insert into documents (key, title, lede, created_by, updated_by)
@@ -40,7 +39,6 @@ async function aDocument(key = `testdoc-${crypto.randomUUID().slice(0, 8)}`): Pr
   return row.id;
 }
 
-/** A version, published `daysAgo` days back unless it is a draft; its id. */
 async function aVersion(
   documentId: string,
   number: number,
@@ -60,7 +58,6 @@ async function aVersion(
   return row.id;
 }
 
-/** A mailing of the versions, each item summarised as the version's own id, so a test can tell the items apart. */
 async function aMailing(
   versionIds: string | readonly string[],
   status: 'sending' | 'sent' | 'replaced' | 'paused' = 'sending',
@@ -680,6 +677,21 @@ describe('findPendingDocumentVersions', () => {
         versionNumber: 3,
       },
     ]);
+  });
+
+  // About is not an agreed document, so a keeper edit to it is never mailed with the agreement wording.
+  it('leaves out the about document’s newer version and keeps another document’s', async () => {
+    const aboutId = await aDocument('about');
+    await aVersion(aboutId, 1, 'published');
+    await aVersion(aboutId, 2, 'published');
+    const terms = await aVersion(await aDocument('terms'), 2, 'published');
+
+    // Precondition: about does have a published version 2 past its first, so only its key leaves it out.
+    const [{ count }] = await sql`
+      select count(*)::int as count from document_versions where document_id = ${aboutId} and number = 2 and status = 'published'
+    `;
+    expect(count).toBe(1);
+    expect(await pendingIds()).toEqual([terms]);
   });
 
   it('leaves out a document whose only published version is the first', async () => {

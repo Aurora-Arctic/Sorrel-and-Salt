@@ -1,0 +1,6 @@
+kind: web_page
+title: Exodus 30
+container: Sefaria
+url: https://www.sefaria.org/Exodus.30.34?lang=bi
+accessed: '2026-11-06'
+note: "English from The JPS Tanakh: Gender-Sensitive Edition, as Sefaria names the version. The reader page loads its text by script, so verses 34 to 38 were read through Sefaria's text API (api/v3/texts/Exodus.30.34-38)."

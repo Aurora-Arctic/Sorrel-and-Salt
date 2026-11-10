@@ -2,10 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useRef, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingSetupQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import { dayPickerModule } from '../DateField/lazy-day-picker';
+import { preloadOnIntent, usePreloadWhenIdle } from '../../lib/use-lazy-module';
 import { RecordButton } from '../IconTip';
 import Modal from '../Modal';
 import Notice from '../Notice';
@@ -16,7 +18,7 @@ import type { SpellCardRecordWorkingProps } from './types';
 
 // Record a Working on a card: the dialog reads the spell's steps when it opens, as a list draws
 // many cards and most are never recorded from
-// (claude-docs/components/spell-card.md, "Record a Working, Edit and the More menu").
+// (claude-docs/components/spell-card.md, "Contracts").
 
 const RecordWorkingSetupDocument = graphql(`
   query RecordWorkingSetup($workspaceId: ID!, $spellId: ID!) {
@@ -40,13 +42,11 @@ const RecordWorkingSetupDocument = graphql(`
 /** What the recipe page calls a linked ingredient it cannot read. */
 const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
-/** The spell's ingredient steps as the completion preview reads them; an instruction-only step has none. */
 function workingStepsOf(steps: RecordWorkingSetupQuery['spell']['steps']): WorkingStep[] {
   return steps.flatMap((step): WorkingStep[] => {
     const linked = step.ingredient != null || step.variant != null;
     if (!linked && step.name == null) return [];
     const name = step.name ?? UNAVAILABLE_INGREDIENT;
-    // The form as stored, which picks the jar's shape; the preview raises it where it shows it.
     const form = step.form;
     return [{ id: step.id, name, form, seed: step.ingredient?.id ?? name, oneOff: !linked }];
   });
@@ -82,7 +82,7 @@ function CardRecordWorkingDialog({
         ) : setup.isError ? (
           <Notice kind="error">{GENERIC_FAILURE}</Notice>
         ) : (
-          <Skeleton shape="form" />
+          <Skeleton shape="block" count={4} />
         )
       }
     </Modal>
@@ -95,9 +95,15 @@ export default function CardRecordWorking({
 }: SpellCardRecordWorkingProps): ReactElement {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  usePreloadWhenIdle(dayPickerModule);
   return (
     <>
-      <RecordButton name={spellName} ref={trigger} onClick={() => setOpen(true)} />
+      <RecordButton
+        name={spellName}
+        ref={trigger}
+        preload={preloadOnIntent(dayPickerModule)}
+        onClick={() => setOpen(true)}
+      />
       {open && (
         <CardRecordWorkingDialog
           {...props}

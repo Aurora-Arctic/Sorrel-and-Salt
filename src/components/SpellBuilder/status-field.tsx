@@ -8,11 +8,8 @@ import { ConfirmQuestion } from '../Modal';
 import { useDuplicateSpell } from '../SpellRecipe/duplicate-spell';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
 
-// A spell is a draft until Mark Complete saves it as complete; a complete spell has Duplicate
-// where a draft has Mark Complete, which makes a private draft copy and opens it. A complete spell
-// is not reopened here, and the service refuses complete -> draft too. A shared draft asks first,
-// since completing it keeps it shared for good, as sharing a complete spell asks.
-// claude-docs/components/spell-builder.md, "Draft and complete".
+// A spell is a draft until Mark Complete saves it; a complete spell is not reopened here, and the service refuses
+// complete -> draft too (claude-docs/components/spell-builder.md, "Draft and complete").
 
 const DRAFT_SAYS = 'A draft: not yet finished.';
 
@@ -28,7 +25,6 @@ export function SpellStatusField({
   const { defaultValues } = useFormState({ control });
   const [busy, setBusy] = useState(false);
   const saysId = useId();
-  // The saved spell's status is the last save's, which the form starts from.
   const complete = defaultValues?.status === 'complete';
   // The visibility the form holds, saved or not, is the one completing would lock.
   const shared = useWatch({ control, name: 'visibility' }) === 'workspace';
@@ -48,7 +44,6 @@ export function SpellStatusField({
       await flush();
       duplicate(spellId!);
     } catch {
-      // The refusal is shown beside Save.
     } finally {
       setCopying(false);
     }
@@ -72,7 +67,6 @@ export function SpellStatusField({
         },
       )();
     } catch {
-      // The refusal is shown beside Save and on its field.
       setValue('status', before);
     } finally {
       setBusy(false);
@@ -80,7 +74,6 @@ export function SpellStatusField({
     }
   };
 
-  // A complete spell has no sentence here: its state is carried by the locked Visibility switch.
   if (complete) {
     if (!copiedHrefOf || !spellId) return null;
     const busy = copying || duplicating;
@@ -98,7 +91,6 @@ export function SpellStatusField({
     );
   }
 
-  // The state line is read, not drawn: a button row has no room for a sentence.
   return (
     <>
       <span id={saysId} className="visually-hidden">

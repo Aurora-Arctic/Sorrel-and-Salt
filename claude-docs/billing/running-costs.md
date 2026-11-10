@@ -1,0 +1,513 @@
+# Running Costs
+
+**Status:** research, no decision made · **Date:** 2026-11-06 · **Task:** M17.1
+
+This page prices what it costs to run Sorrel & Salt at 100, 1,000, 10,000 and 100,000 **paying seats**, in US dollars a month. A paying seat is one activated account that holds a seat in a paying coven. Every other account is overhead derived from the paying seats (see "Overhead on Top of Paying Seats"). It does not choose a billing model; [subscription-models.md](subscription-models.md) does that comparison and uses these figures as its cost side.
+
+**Nothing here needs you to act yet.** The last section lists what I could not confirm and what I need you to decide. Prices were fetched on 2026-11-06 and move; see the [README](README.md).
+
+Every figure is labelled. `measured` was counted in this repository. `sourced` comes from a numbered source at the bottom. `derived` is calculated from named inputs. `assumption` is a guess, given with a range you can change. The owner withdrew the free tier on 2026-11-06 (see "What Is Free"). The totals are computed by `scripts/billing-model.mjs` from the Inputs table, so changing an assumption changes every total (see "How to Re-Run the Numbers").
+
+## Inputs
+
+### Ratios
+
+| Input                                 | Value                        | Label      | Source or range                                                                                                                |
+| ------------------------------------- | ---------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Members per coven                     | 5.5                          | sourced    | Tabletop groups average 5.5 [S45]; family covens run 3 to 20+; a coven needs at least 3 [S44] (URLs in subscription-models.md) |
+| Coven memberships per account         | 1.2                          | assumption | Range 1.0 to 2.0. No comparable publishes groups per member                                                                    |
+| Monthly active share of accounts      | 25%                          | assumption | Range 15% to 30%. Not found                                                                                                    |
+| Sessions per active account per month | 8                            | assumption | Range 4 to 16                                                                                                                  |
+| Function invocations per session      | 40                           | derived    | 480,000 invocations ÷ 12,000 sessions, [17]                                                                                    |
+| Middleware invocations per session    | 9                            | derived    | 40 invocations ÷ 4.5 page loads per session                                                                                    |
+| Active CPU per invocation             | 30 ms                        | sourced    | [17]                                                                                                                           |
+| Edge requests per session             | 30                           | assumption | Range 9 to 100                                                                                                                 |
+| Data out per session                  | 1.5 MB                       | assumption | Range 0.5 to 5                                                                                                                 |
+| Provisioned memory                    | 2 GB, 2x the Active CPU time | assumption | Range 1x to 5x                                                                                                                 |
+| Mails per account per month           | 0.5                          | assumption | Range 0.25 to 1; the 18 mail templates are sign-in, invitation and support mails                                               |
+| Document mailings per year            | 2                            | assumption | The document-updated mail goes to every account each time                                                                      |
+| Monthly churn of paying units         | 6.1%                         | sourced    | ChartMogul, average revenue per account under $25 [34]. Recurly gives 3.6% but does not state the period                       |
+
+### What Is Free
+
+The owner's decision, 2026-11-06: **there is no free tier.** The only free things are a trial period on a new coven (one month as standard; keepers may set a longer one for promotions and beta testers), each site curator's free coven, keeper exemptions, the demo coven's observer seat, and the public compendium. Everything else pays.
+
+### Overhead on Top of Paying Seats (Inputs)
+
+The size steps count paying seats. These inputs turn them into accounts. The overhead research (sources [G1] to [G14] below) supplies the shares.
+
+| Input                               | Value                                                                             | Label             | Source or range                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Demo-only share of all accounts     | 62.5%                                                                             | derived           | 100% − 37.5% B2B activation, 62 companies [G1]. Range 57.4% (CRM & Sales, [G1]) to 70% (SaaS median 30%, [G2]). Probably high for an invite-gated site; no source says by how much                                                                                                                                                                                                                                                                               |
+| Monthly growth of paying seats      | 2.84% up to 10,000 seats; 1.53% at 100,000                                        | derived           | (1.40)^(1/12) − 1 for the under-$1M band median of 40%, and (1.20)^(1/12) − 1 for 20%, [G4]. 100,000 seats at the model prices earn about $2.1M to $4.0M a year (derived from the net revenue table), which is the $1M–$3M band (25%, 1.88%) for models (c), (g) and (h) at $2.27 and the $3M–$5M band (20%) for (b) and (h) at $3; every band from $3M up has a median of 19% to 22%, so I use 20% (the 25% case would give 79.8% trial seats instead of 76.3%) |
+| Trial length                        | 1 month                                                                           | owner, 2026-11-06 | Keepers may set longer per coven                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Trial-to-paid conversion, no card   | 10%                                                                               | sourced           | ChartMogul, 200 products: no card, "great" 10% to 15%, "good" 4% to 6% [G7]. Owner: the trial needs no card, so the no-card benchmark applies                                                                                                                                                                                                                                                                                                                    |
+| Trial seats per paying seat         | (growth + churn) ÷ conversion × trial months                                      | derived           | A trial must replace churned seats as well as growth: (2.84% + 6.1%) ÷ 10% = 89.4%; (1.53% + 6.1%) ÷ 10% = 76.3% (overhead research, Section 2). Churn is the 6.1% above                                                                                                                                                                                                                                                                                         |
+| Curator covens                      | one curator per 1,000 paying seats, minimum 2; 7 seats each, the curator included | owner, 2026-11-06 | Free seats 2 to 15 per coven is the range in comparable products [G10] to [G12]                                                                                                                                                                                                                                                                                                                                                                                  |
+| Exempt seats, share of paying seats | 5% at 100, 3% at 1,000, 1.5% at 10,000, 0.5% at 100,000                           | assumption        | Owner, 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family." Each exemption has a timeline set by the keeper. No benchmark exists: the overhead research found none ([G13] and [G14] show comparable practice only, and its own 1% was more cautious). **Owner to confirm**                                                                                         |
+| Demo-only accounts                  | activated accounts × d ÷ (1 − d)                                                  | derived           | d = 62.5%. Activated accounts are paying + trial + curator + exempt seats                                                                                                                                                                                                                                                                                                                                                                                        |
+
+A Sorrel & Salt trial starts when a steward creates a coven, which is already past activation, so the no-card benchmark probably overstates the trial share, and counting it beside the demo-only share counts some people twice (overhead research, Section 2 caveat). The owner asked for the no-card benchmark and I used it. No source gives the effect of trial length on conversion; a longer trial multiplies the trial seats by its months.
+
+**Measured on this repository.** One coven list page load costs one function invocation and one edge request. [17] expects 4 to 5 invocations per page, so I use [17]'s 40 per session rather than the measurement; it is the higher figure. Real Active CPU per render was not measured.
+
+### Storage (measured)
+
+| Input                                                                         | Value                                                                                       | Label                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------- |
+| Fixed global data (compendium 13.0 MB, vocabularies 1.6 MB, documents 0.2 MB) | 14.8 MB                                                                                     | measured                         |
+| One account (minimum 1,376 B, typical OAuth sign-in 3,766 B)                  | 3,766 B                                                                                     | measured                         |
+| One coven (demo level 32,682 B, W level 203,327 B)                            | 117,998 B, the midpoint                                                                     | derived                          |
+| Mailing ledger row per recipient                                              | 225 B                                                                                       | measured (200 to 250 B)          |
+| Neon storage, plus restore history and snapshots                              | $0.35 + $0.20 + $0.09 per GB-month, history and snapshots each assumed the size of the data | sourced [6] [7], size assumption |
+
+Real spells and ingredients per coven are unknown. The two coven sizes above are measured fixtures, not observed usage, so database size is the least certain row.
+
+### Prices
+
+| Input                                                                                    | Value                                                                                                                        | Label      | Source                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vercel Pro                                                                               | $20 a month, includes $20 of usage credit                                                                                    | sourced    | [2]                                                                                                                                                                                                                                                                                                                                                              |
+| Function invocations over the allowance                                                  | $0.60 per million                                                                                                            | sourced    | [1]                                                                                                                                                                                                                                                                                                                                                              |
+| Active CPU                                                                               | $0.128 per hour                                                                                                              | sourced    | [1]                                                                                                                                                                                                                                                                                                                                                              |
+| Provisioned memory                                                                       | $0.0106 per GB-hour                                                                                                          | sourced    | [1]                                                                                                                                                                                                                                                                                                                                                              |
+| Fast Data Transfer                                                                       | 1 TB included, then $0.15 per GB                                                                                             | sourced    | [1]                                                                                                                                                                                                                                                                                                                                                              |
+| Edge requests                                                                            | $2 per million over the allowance (see open item 1)                                                                          | sourced    | [1]                                                                                                                                                                                                                                                                                                                                                              |
+| Vercel Workflows events                                                                  | $20 per million; 3 events per step, 1 more per retry                                                                         | sourced    | [4]                                                                                                                                                                                                                                                                                                                                                              |
+| Workflow events from daily jobs                                                          | 270 a month                                                                                                                  | assumption | 3 jobs a day, 3 events each                                                                                                                                                                                                                                                                                                                                      |
+| Vercel Observability Plus                                                                | $1.20 per million events                                                                                                     | sourced    | [5]                                                                                                                                                                                                                                                                                                                                                              |
+| Neon Launch                                                                              | $0.106 per CU-hour                                                                                                           | sourced    | [6]                                                                                                                                                                                                                                                                                                                                                              |
+| Neon Scale                                                                               | $0.222 per CU-hour                                                                                                           | sourced    | [6]                                                                                                                                                                                                                                                                                                                                                              |
+| Neon average compute                                                                     | 0.25 CU at 100 and 1,000; 0.5 CU at 10,000; 2 CU at 100,000                                                                  | assumption | Range half to double                                                                                                                                                                                                                                                                                                                                             |
+| Neon hours awake a month                                                                 | 360, 540, 720, 720                                                                                                           | assumption | Autosuspend while idle                                                                                                                                                                                                                                                                                                                                           |
+| Resend                                                                                   | Free 3,000 a month (100 a day); Pro 50K $20; Pro 100K $35                                                                    | sourced    | [8]                                                                                                                                                                                                                                                                                                                                                              |
+| Domain, `.com`                                                                           | $11.81 a year                                                                                                                | sourced    | [9] (Porkbun; Vercel's price not found)                                                                                                                                                                                                                                                                                                                          |
+| Claude Ultra                                                                             | $200 a month                                                                                                                 | sourced    | [10]                                                                                                                                                                                                                                                                                                                                                             |
+| GitHub Team, private repository                                                          | $4 per user; Secret Protection $19 and Code Security $30 per active committer; 3,000 Actions minutes; $0.006 a minute beyond | sourced    | [11]                                                                                                                                                                                                                                                                                                                                                             |
+| Operations stack                                                                         | $12.07 / $27.44 / $36.12 / $163.90                                                                                           | derived    | Error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack")                                                                                                                                                                                                                                                                |
+| Fixed labour hours a month (low / median / high)                                         | 24.8 / 44.4 / 70.4                                                                                                           | derived    | Maintenance, incident response and recurring chores that do not grow with users                                                                                                                                                                                                                                                                                  |
+| Variable labour hours per 1,000 paying seats (low / median / high)                       | 6.08 / 26.6 / 100.3 (6.95 / 30.3 / 113.0 before AI assistance)                                                               | derived    | Support, disputes, privacy requests, abuse reports; the AI factor on support minutes applied (below)                                                                                                                                                                                                                                                             |
+| AI assistance factor on support minutes per contact (low / median / high)                | 0.735 / **0.87 used** / 1.00                                                                                                 | sourced    | Brynjolfsson, Li and Raymond, QJE 2025 [38]. On by default (owner, 2026-11-06). Deflects no contact                                                                                                                                                                                                                                                              |
+| Claude Team seat per support agent                                                       | $25 a month, 2-seat minimum                                                                                                  | sourced    | [38]. Agents use Team, never Pro; the training terms are under the AI heading in Labour [40]                                                                                                                                                                                                                                                                     |
+| Support wage (customer-service work: support, disputes, privacy requests, abuse reports) | $41.47 an hour, derived                                                                                                      | derived    | Owner decisions, 2026-11-06. (48.00 + 56.43 + 30.60) ÷ 3 = $45.01, the MIT living wage [36][37], minus the average MIT medical line (9,588 ÷ 2,080 = 4.61; 9,477 ÷ 2,080 = 4.56; 3,032 ÷ 2,080 = 1.46; average 3.54) = **$41.47**. The site provides health cover as a benefit, so the wage is adjusted down by that line. Pay scales with the worker's location |
+| Loaded support cost                                                                      | **$53.80 an hour** ($50.92 low load, $56.68 high load)                                                                       | derived    | The $41.47 wage plus employer payroll taxes and benefits (see "Labour")                                                                                                                                                                                                                                                                                          |
+| Market-rate support sensitivity                                                          | $24.20 median / $29.49 75th percentile, loaded $32.27                                                                        | sourced    | BLS OEWS, Washington customer-service representatives [39]. Not the base: the Code of Ethics sets a living wage as the floor for anyone the site pays                                                                                                                                                                                                            |
+| Engineering wage and loaded cost (fixed hours: maintenance, incidents, filing)           | $80.07 BLS developer median, loaded **$100.88** ($94.56 to $107.20); $122.50 contractor sensitivity                          | sourced    | [39], loaded as for support; the $122.50 is the contractor figure, unloaded because a contractor bills all-in [29]                                                                                                                                                                                                                                               |
+| Washington retailing B&O                                                                 | 0.471%, less a credit of up to $55 a month                                                                                   | sourced    | [26]                                                                                                                                                                                                                                                                                                                                                             |
+| Stripe card fee                                                                          | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                                                                                     | sourced    | [30] [31]                                                                                                                                                                                                                                                                                                                                                        |
+| Managed Payments                                                                         | +3.5% per charge, tax included                                                                                               | sourced    | [32]                                                                                                                                                                                                                                                                                                                                                             |
+
+B&O means business and occupation tax, Washington's tax on gross receipts rather than profit. CU-hour means one compute unit running for one hour (a compute unit is Neon's measure of CPU and memory).
+
+## Overhead on Top of Paying Seats
+
+| Quantity                                             |   100 |  1000 |    10000 |    100000 |
+| ---------------------------------------------------- | ----: | ----: | -------: | --------: |
+| Paying seats                                         |   100 | 1,000 |   10,000 |   100,000 |
+| Monthly growth of paying seats                       | 2.84% | 2.84% |    2.84% |     1.53% |
+| Trial seats (one-month trial, no card)               |  89.4 |   894 |    8,940 |    76,300 |
+| Trial seats as a share of paying seats (%)           |  89.4 |  89.4 |     89.4 |      76.3 |
+| Curators (one per 1,000 paying seats, minimum 2)     |     2 |     2 |       10 |       100 |
+| Curator-coven seats (7 each)                         |    14 |    14 |       70 |       700 |
+| Exempt seats (5% / 3% / 1.5% / 0.5% of paying seats) |     5 |    30 |      150 |       500 |
+| Activated accounts (all of the above)                | 208.4 | 1,938 |   19,160 |   177,500 |
+| Demo-only accounts                                   | 347.3 | 3,230 | 31,933.3 | 295,833.3 |
+| Total accounts                                       | 555.7 | 5,168 | 51,093.3 | 473,333.3 |
+| Active accounts (total accounts x 25%, range 15-30%) |   139 | 1,292 |   12,773 |   118,333 |
+| Total accounts per paying seat                       |  5.56 |  5.17 |     5.11 |      4.73 |
+
+Active accounts are total accounts × the 25% monthly active share, an assumption (range 15% to 30%, no source found). They set the session count that drives function, bandwidth and tracing costs.
+
+Worked example, 100 paying seats: trial seats = 100 × (2.84% + 6.1%) ÷ 10% = 89.4. Curators = max(2, floor(100 ÷ 1,000)) = 2, so 14 seats. Exempt = 100 × 5% = 5. Activated = 100 + 89.4 + 14 + 5 = 208.4. Total accounts = 208.4 ÷ (1 − 0.625) = 555.7, so 347.3 are demo-only.
+
+**Sensitivity of total accounts** to the two widest ranges:
+
+| Quantity                        | 100 |  1000 |  10000 |  100000 |
+| ------------------------------- | --: | ----: | -----: | ------: |
+| Demo-only share 57.40%          | 489 | 4,549 | 44,977 | 416,667 |
+| Demo-only share 62.50%          | 556 | 5,168 | 51,093 | 473,333 |
+| Demo-only share 70.00%          | 695 | 6,460 | 63,867 | 591,667 |
+| No-card trial conversion 5.00%  | 794 | 7,552 | 74,933 | 676,800 |
+| No-card trial conversion 10.00% | 556 | 5,168 | 51,093 | 473,333 |
+| No-card trial conversion 15.00% | 476 | 4,373 | 43,147 | 405,511 |
+
+The 5% trial-conversion row is the "good" no-card case; the 15% row the top of "great" [G7]. Demo-only accounts cost storage (3,766 B each, measured) and a few mails, so the demo-only range moves cost very little; the trial share moves it most. These ranges move the usage rows below (accounts drive sessions, mails and storage) but not the paying-seat counts the break-even uses.
+
+## Scale Assumptions
+
+| Quantity                                            |    100 |    1000 |     10000 |     100000 |
+| --------------------------------------------------- | -----: | ------: | --------: | ---------: |
+| Accounts (paying and overhead)                      |    556 |   5,168 |    51,093 |    473,333 |
+| Covens                                              |     45 |     423 |     4,180 |     38,727 |
+| Sessions a month                                    |  1,111 |  10,336 |   102,187 |    946,667 |
+| Function invocations a month                        | 44,459 | 413,440 | 4,087,467 | 37,866,667 |
+| Active CPU hours                                    |    0.4 |     3.4 |      34.1 |      315.6 |
+| Provisioned memory GB-h                             |    1.5 |    13.8 |     136.2 |    1,262.2 |
+| Data transfer GB                                    |      2 |      16 |       153 |      1,420 |
+| Edge requests a month                               | 33,344 | 310,080 | 3,065,600 | 28,400,000 |
+| Mails a month                                       |    370 |   3,445 |    34,062 |    315,556 |
+| Workflow events a month                             |  1,381 |  10,606 |   102,457 |    946,937 |
+| Database size (MB)                                  |   23.2 |    87.2 |     724.2 |    6,581.1 |
+| Days to mail one document to everyone (at 60 a day) |     10 |      87 |       852 |      7,889 |
+
+An account here is a person with a login. A coven is a workspace. Activated accounts become covens by dividing memberships by 5.5 members; demo-only accounts sit in the demo coven only. Active share, sessions and mails apply to all accounts, which overstates the demo-only accounts' use and so errs towards a higher bill. Paying units are covens or accounts, depending on the model, derived from paying seats.
+
+## Platform
+
+### Vercel
+
+Vercel hosts the site and runs its functions. **Hobby ($0) is a reference row only.** It forbids commercial use, and taking payment from visitors counts as commercial use [3], so it ends the day subscriptions start. It also caps usage at 1,000,000 invocations and 4 CPU-hours a month [17], which the model nears at 1,000 paying seats (3.4 CPU-hours of 4) and passes by 10,000 (4.1 million invocations, 34.1 CPU-hours).
+
+**Pro is $20 a month from 100 paying seats.** It includes $20 of usage credit [2]. Every meter I priced stays under that credit up to 10,000 paying seats (metered usage $14.44), so the bill is the $20 plan fee. At 100,000 paying seats metered usage reaches $213.23, so overage is $193.23. Extra deploying seats cost $20 each; viewer seats are free [2]. Vercel Workflows (the durable jobs that send mail) bill per event and are in the metered line.
+
+Vercel Observability Plus (logs and metrics, on by default for new Pro teams since 3 April 2026 [5]) is priced separately in the table below.
+
+### Neon
+
+Neon hosts the Postgres database. **Launch ($0.106 per CU-hour) is the plan I model**: restore history is 7 days, set up by default at 1 day [7]. **Scale ($0.222) is shown as an alternative**: it keeps history for 30 days and carries a 99.95% uptime agreement [14], at about twice the compute price. Neon Launch has no IP allow-list (Scale only, and it needs the $100-a-month Static IPs add-on).
+
+### Resend
+
+Resend sends the mail. Free allows 3,000 mails a month and 100 a day; Pro 50K is $20; Pro 100K is $35; Scale tiers run from $90 for 100K to $650 for 1M [8].
+
+**The document-mailing cap is a job-design problem, not a billing one.** The document-updated mail goes to every account, and the mailing job is limited to 60 mails a day. Mailing everyone takes ceil(accounts ÷ 60) days, counting demo-only accounts: **10 days at 100 paying seats, 87 at 1,000, 852 at 10,000 and 7,889 at 100,000.** At 10,000 paying seats a policy change would take more than two years to reach everyone. I need you to decide whether that is acceptable or whether the job should mail in larger batches on a paid tier; that is a job-design question for you, not part of the subscription decision. Resend's price tier is set by monthly volume, not by this cap.
+
+### Domain
+
+A `.com` is $11.81 a year at Porkbun [9], or $0.98 a month. Vercel's `.com` price was not found; Cloudflare sells at cost but I found no figure.
+
+| Line                                                |     100 |    1000 |   10000 |     100000 |
+| --------------------------------------------------- | ------: | ------: | ------: | ---------: |
+| Vercel metered usage (before credit)                |   $0.12 |   $1.05 |  $14.44 |    $213.23 |
+| Vercel Pro (plan + overage after the $20 credit)    |  $20.00 |  $20.00 |  $20.00 |    $213.23 |
+| Vercel Observability Plus                           |   $0.11 |   $0.98 |   $9.69 |     $89.74 |
+| Neon Launch (compute + storage, history, snapshots) |   $9.55 |  $14.36 |  $38.59 |    $156.56 |
+| Neon Scale, same usage (alternative)                |  $19.99 |  $30.02 |  $80.35 |    $323.60 |
+| Resend tier                                         |    Free | Pro 50K | Pro 50K | Scale 500K |
+| Resend                                              |   $0.00 |  $20.00 |  $20.00 |    $350.00 |
+| Domain (.com, Porkbun)                              |   $0.98 |   $0.98 |   $0.98 |      $0.98 |
+| Operations stack                                    |  $12.07 |  $27.44 |  $36.12 |    $163.90 |
+| of which server-side tracing (10% sampled)          |   $0.04 |   $0.41 |   $4.09 |     $37.87 |
+| Platform and operations total                       |  $42.72 |  $83.77 | $125.38 |    $974.42 |
+| Claude Ultra                                        | $200.00 | $200.00 | $200.00 |    $200.00 |
+| GitHub Team, private repository                     |  $67.39 |  $67.39 |  $67.39 |     $67.39 |
+| Cash costs                                          | $310.11 | $351.16 | $392.77 |  $1,241.80 |
+
+## CI
+
+The repository is going private (owner decision, 2026-11-06), so GitHub's Free plan no longer fits. It needs the Team plan: Free offers repository rules and protected branches on public repositories only, and Team includes them for private ones [11, fetched 2026-11-06]. The cost is in the totals as the "GitHub Team, private repository" row, at **$67.39 a month** at every size:
+
+- Team seat: $4 a month for one user [11]. One committer at every size, because the owner is the only committer, and the labour section hires support and engineering hours but not a second committer.
+- Secret Protection: $19 a month per active committer [11]. One committer.
+- Code Security: $30 a month per active committer [11]. One committer.
+- Actions minutes: Team includes 3,000 a month, Free 2,000 [11, 12]. One full gate run was measured at at about 15.7 to 18.5 runner-minutes, and about 290 full runs a month, which is about 4,550 to 5,370 minutes plus about 28 for runs stopped early. The model uses the top of the range, 5,398 minutes, so 2,398 minutes are billed at the Linux 2-core rate of $0.006 a minute [13]: $14.39.
+
+Total: $4 + $19 + $30 + $14.39 = $67.39. If the repository stayed public, Actions would be free and the plan would cost $0, which is what the totals held before this decision.
+
+## Development Tooling
+
+Claude Ultra is **$200 a month** [10], 10x the usage of Pro, and it is the largest cash line at every size. GitHub Team for the private repository is $67.39 a month, a cash line of its own (see CI). Whether the pricing page includes cloud review coverage is not stated there; I could not confirm it, so the review tooling may need a different plan.
+
+## Operations Stack
+
+This covers error tracking, uptime checks, log storage and paging. Eight further gaps are below. The base stack assumes 5 error events and 1 MB of logs per account per month, 8 monitors, and 1 responder (2 from 10,000).
+
+| Category                     | Recommended                                          |    100 |  1,000 | 10,000 | 100,000 |
+| ---------------------------- | ---------------------------------------------------- | -----: | -----: | -----: | ------: |
+| Error tracking               | GlitchTip hosted [19]                                |     $0 |    $15 |    $15 |     $50 |
+| Uptime checks                | UptimeRobot Solo [20] [H4]                           |    $12 |    $12 |    $12 |     $12 |
+| Logs                         | Vercel drain fee [21], stored in Axiom Personal [22] |     $0 |     $0 |     $5 |     $50 |
+| On-call paging               | PagerDuty Free [23]                                  |     $0 |     $0 |     $0 |      $0 |
+| Dependency and secret checks | GitHub built-ins and Socket Free [24]                |     $0 |     $0 |     $0 |      $0 |
+| Restore test                 | a scheduled restore, Neon storage                    |  $0.03 |  $0.03 |  $0.03 |   $0.03 |
+| Email deliverability         | Postmark DMARC digests [H3]                          |     $0 |     $0 |     $0 |     $14 |
+| Server-side tracing          | Vercel tracing at 10% sampling [H6]                  |  $0.04 |  $0.41 |  $4.09 |  $37.87 |
+| Total                        |                                                      | $12.07 | $27.44 | $36.12 | $163.90 |
+
+Vercel Pro and Observability Plus are left out of this table because they are priced above. Alternatives: Sentry Team at $29 a month, Bugsink, and Better Stack on-call at $29 per responder on an annual plan.
+
+**The built-ins-only floor** is Vercel Pro, Observability Plus and Neon Launch, which cost nothing extra. It has no outside uptime checks, no error grouping, no phone paging and no status page.
+
+**Service level.** None of seven comparables publishes uptime or response times on self-serve plans. I therefore price on-call as **best effort in working hours**. If you want a promised response, the alternative is a paid on-call arrangement: the incident.io figure is $540 a week, **$2,340 a month** [25], shown as its own row in the totals.
+
+**Open items for you:**
+
+- GlitchTip uses the Sentry SDK with its client file deleted. That is to be proved in a proof of concept, and its hosted privacy terms were not found.
+- Each adopted vendor must be added to the privacy policy's list of processors. PagerDuty's data processing agreement was not fetched.
+- UptimeRobot Free has no heartbeat monitors ([H4]), so Solo at $12 a month (billed annually; $13 monthly) is priced from 100 paying seats.
+- The availability of GitHub's dependency-review action on public repositories is in conflict between two pages.
+- **Bot Protection.** Vercel's Bot Protection challenge mode serves a JavaScript challenge to non-browser traffic. I need you to decide whether the Code of Ethics allows that. Log mode runs no script.
+
+### Operations Gaps
+
+Eight things sit outside the base stack. Only tracing depends on volume. The research assumed 300 requests per account a month, which this model does not use: the request count here is the model's own, sessions times 40 invocations per session. Sessions are total accounts × 25% active × 8 sessions each, which is 2 sessions and about 80 requests per account a month, about 445 per paying seat, against the research's 300 per paying seat. The model's count is the higher one, which is why its tracing line exceeds the research's. Spans per request (20) and sampling (10%) are the research's assumptions and are kept. Tracing is $0.04 / $0.41 / $4.09 / $37.87. The research's own figures, at 300 requests per paying seat, were $0.03 / $0.30 / $3.00 / $30.00. Every other pick has a flat price. Each vendor named here must be added to the privacy policy's list of processors in the same change.
+
+**1. Spend alerts and caps.** Included: Vercel Spend Management on Pro at no extra cost, with a budget, notices at 50%, 75% and 100%, and a signed webhook [H1]; Neon spending notifications on Launch and Scale, which alert but do not stop usage, and Neon consumption limits, which are hard caps [H1]. Pick: a Vercel budget with a webhook, Neon notifications and a Neon `compute_time_seconds` quota, with Resend pay-as-you-go left off. Price: $0 / $0 / $0 / $0. Reason: every piece is free and already sits with an existing processor. Vercel's "Pause Production Deployments" setting should stay off, because a 503 for every paying account is worse than a bill; this is an owner decision.
+
+**2. Database health.** Included: the Neon console monitoring page and the `pg_stat_statements` extension [H2]. Pick: those, a weekly look at Query performance, and a daily cron that reads `pg_stat_activity` and database size and calls the alert webhook past a threshold. Price: $0 at every size. Reason: pganalyze costs $149 a month, more than the whole base stack, and gets less on Neon [H2]. Reconsider it only at 100,000 on Neon Scale.
+
+**3. Email deliverability.** Included: Resend webhooks for bounces, complaints and failures, and automatic suppression after a hard bounce or complaint [H3]. Pick: route those events to the alert route, make DMARC required with `rua=` pointing at Postmark's free weekly digest, and register the domain in Google Postmaster Tools. Price: $0 / $0 / $0 / $14 (Postmark paid digests, 60 days of history, from 100,000). Reason: every step is free at the current volume. Leave open and click tracking off, because they need tracking pixels. Postmark and Google become processors, but they receive aggregate reports only.
+
+**4. Certificate and DNS expiry.** Included: Vercel renews certificates automatically and notifies on failure, and a domain bought through Vercel auto-renews [H4]. Pick: UptimeRobot Solo, which monitors certificate and domain expiry and, unlike Free, includes heartbeat monitors [H4]. Price: $12 at every size. Reason: Solo is needed for the three cron heartbeats anyway, so expiry monitoring costs nothing extra. UptimeRobot is already a processor.
+
+**5. Payment-side monitoring.** Included: Stripe Radar Lite, free with payment processing from 22 January 2027, fraud alerts, dispute notices, and Smart Retries inside Billing's 0.7% [H5]. Pick: Radar Lite, with `charge.dispute.created` and `radar.early_fraud_warning.created` sent to the paging route, and the last `invoice.payment_failed` retry sent to the daily digest. Price: $0 a month; a dispute costs $15, plus $15 to counter it, refunded if won [H5]. Reason: a dispute has a deadline of 7 to 21 days, and Lite with webhooks covers one operator. Stripe advises loading Stripe.js on every page for better risk signals, which conflicts with the no-browser-script rule. The owner decided on 2026-11-06 to host the checkout page on the site and load Stripe.js on that page only, where the fraud signals matter most; the scoped exception to the Privacy Policy and Code of Ethics is edited in the N · Wave 04 task that adds Stripe. How much accuracy is still lost against loading it everywhere was not found.
+
+**6. Server-side tracing.** Included: Vercel tracing on every plan, $0.50 per 1M span units on Pro, 14 days of traces, set up with `@vercel/otel` [H6]. Pick: native tracing at 10% sampling. Price: see the table above. Reason: it is the cheapest option fetched at every size and adds no processor. Span attributes must not carry email addresses or request bodies.
+
+**7. Secrets rotation and vulnerability disclosure.** Included: Vercel Secret variables, Better Auth's versioned secrets, Stripe's 7-day key overlap, Neon's immediate password reset (no overlap, so rotate through a second role), GitHub private vulnerability reporting, and `/.well-known/security.txt` under RFC 9116 [H7]. Pick: all of them, one rotation runbook in `claude-docs/` with a section per vendor, a yearly rotation, a `SECURITY.md`, and a `security.txt` that the yearly rotation renews. Price: $0 / $0 / $0 / $0. Reason: every step is free and native. Serving `security.txt` needs CLAUDE.md rule 1's `/.well-known/*.json` exception widened to name it, or a static file under `public/.well-known/`; this is an owner decision.
+
+**8. Incident communication and runbooks.** Included: UptimeRobot Solo's public status page on its own domain, without subscribers, and Resend's mail path to every account [H8]. Pick: the Solo status page on a `status.` subdomain, a Resend mail to the accounts an incident affects, and a one-page runbook in `claude-docs/ops/` using PagerDuty's structure and Google's postmortem headings. Price: $0 beyond Solo. Reason: no subscriber addresses go to a new processor. Statuspage, Instatus and UptimeRobot Team each hold subscriber addresses; Team adds $27 a month.
+
+## Labour
+
+Hours a month = fixed hours + variable hours × (paying seats ÷ 1,000). The fixed hours are maintenance, incident response and filings; the variable hours are the work that grows with users: support, payment disputes, privacy requests and abuse reports.
+
+| Case            | Fixed hours | Variable hours per 1,000 seats | Hours at 100 | Hours at 1000 | Hours at 10000 | Hours at 100000 | One-person ceiling (seats) |
+| --------------- | ----------: | -----------------------------: | -----------: | ------------: | -------------: | --------------: | -------------------------: |
+| low (primary)   |        24.8 |                           6.08 |         25.4 |          30.9 |           85.6 |           632.7 |                     22,241 |
+| median (stress) |        44.4 |                           26.6 |         47.1 |          71.0 |          310.7 |          2707.4 |                      4,341 |
+| high            |        70.4 |                          100.3 |         80.4 |         170.7 |         1073.5 |         10100.9 |                        893 |
+
+Variable hours include the AI factor of 0.87 on the support part. Without AI assistance they are 6.95 / 30.3 / 113.0 per 1,000 seats and the ceilings are 19,453 / 3,819 / 793. Disputes take 0.25 / 2.0 / 5.0 hours each. The per-1,000-seat hours use their own conversions (1.3 active users and 5.2 accounts per paying seat) rather than the overhead ratios used elsewhere in the model; the difference is within 7%, and it is kept as is. **Contacts are counted on 25% of all accounts, demo-only accounts included. That overstates the contacts of an invite-gated site, and is kept as the conservative choice.**
+
+**AI assistance for support agents (on by default).** The factor on minutes per support contact is 0.87 in the primary case (0.735 and 1.00 as sensitivities): Brynjolfsson, Li and Raymond (QJE 2025) found resolutions per hour up 15.2% and handle time down 8.5% on average. It deflects no contact, so contacts are unchanged. Each support agent beyond the owner (whose own Claude Ultra is already counted) has a **Claude Team seat at $25 a month**, with a 2-seat minimum so the first agent costs $50, one agent per further 160 hours a month, rounded up. The seats are added inside every labour row of the Totals tables: low row 0 / 0 / 0 / 3 and median row 0 / 0 / 2 / 16 at the four sizes. **Privacy condition:** agents use Team, never Pro. Pro's consumer terms train on inputs unless a person opts out, and customer messages must not train a model; Anthropic's privacy centre states "By default, we will not use your inputs or outputs from our commercial products (e.g. Claude for Work, Anthropic API, Claude Gov, etc.) to train our models", with exceptions for thumbs-up/down feedback and data a user chooses to share, which a Team or Enterprise plan's Owner can disable through the Rate chats setting ([40], updated 2026-08-18, fetched 2026-11-06). The page names Team only as "Claude for Work"; the help-centre collection tying that name to the Team plan was seen in a search result only and is unverified. **Owner to confirm** that Team is Claude for Work, and to turn off Rate chats for support agents. This is consistent with the Code of Ethics line that the site sells no data.
+
+**Which rate prices which hour.** The fixed hours are engineering work (maintenance, incident response, the Washington excise filing), priced at the BLS Washington developer median of $80.07 an hour. The variable hours are customer-service work (support, disputes, privacy requests, abuse reports), priced at the support wage below. Pricing support work at an engineering rate would overstate labour. The low contact-rate row is the primary case and the median the stress case.
+
+**The support wage: $41.47 an hour, derived.** Owner decisions, 2026-11-06: "Do the average between the top 3. We will scale wage based on location." and "provide benefits but adjust the wage to living without them paying it themselves." The three rows are from the MIT Living Wage Calculator (page updated 2026-02-15, fetched 2026-11-06): Washington, 1 adult and 1 child, $48.00 an hour [36]; King County, 1 adult and 1 child, $56.43; King County, 1 adult and no children, $30.60 [37]. Their average is $45.01. Each row's budget includes a medical line the worker would pay themselves: $9,588, $9,477 and $3,032 a year, which on 2,080 hours is $4.61, $4.56 and $1.46 an hour, an average of $3.54. The site provides health cover as a benefit, so the wage is $45.01 − $3.54 = **$41.47**. MIT's medical line is an after-tax budget subtracted from a pre-tax wage, so this is a small understatement of the wage needed. Support staff are employees, not contractors. The BLS Washington customer-service median of $24.20 ($29.49 at the 75th percentile) stays as a "market rate" sensitivity, loaded in the model; it is not the base because the Code of Ethics sets a living wage as the floor for anyone the site pays.
+
+**Loading a wage into an hourly cost.** Each wage × 2,080 hours is loaded with employer payroll taxes and benefits, by the same rules applied to the $250,000 salary, and the base rate is the midpoint of the low and high loads. For the $41.47 wage ($86,255 a year): low load, taxes $7,664 (Social Security 6.2%, Medicare 1.45%, FUTA $42, Washington unemployment 1.0% and EAF 0.02% on $78,200, no employer PFML share, L&I at the class 5302 rate) plus benefits $12,002 (health $7,344 plus retirement 5.40% of wage) gives $105,921 ÷ 2,080 = **$50.92**. High load, taxes $11,888 (unemployment 6.0%, EAF 0.03%, employer PFML 1.13% × 28.57%, L&I at the class 4904 rate, the higher one) plus benefits $19,752 (22.90% of wage, BLS ECEC) gives $117,895 ÷ 2,080 = **$56.68**. The midpoint is **$53.80 an hour**. The benefits load includes health cover, and the wage already has the medical line taken out, so health cover is not counted twice. The same method on the engineering wage gives $94.56 to $107.20, base **$100.88**, and on the market-rate $24.20 gives $31.26 to $33.27, base $32.27. Engineering hours above one person's 160, if hired, would be loaded the same way; the fixed hours never reach 160, so none arise.
+
+- **Labour line (ii):** cash + fixed hours at the loaded $100.88 + variable hours at the loaded $53.80 + Claude Team seats.
+- **Salary line (iii):** cash + structure A's monthly cost with the structure benefits ($23,952 a month with low benefits, $26,986 with high; a $250,000 gross salary as a standard employee would see it before their own deductions, plus the employer's payroll taxes, plus benefits) + hired help for every hour above 160 a month, bought at the loaded $53.80 (the variable hours are the ones that grow) + Claude Team seats. One full-time person is 160 hours a month. The line uses A so that it reads as a normal employee's cost. Structure C (a cheaper tax structure, recommended as a tax structure pending the accountant) is a sensitivity row: $22,817 a month low and $25,850 high, married filing jointly ($22,524 and $25,557 for a single filer).
+- **One-person ceiling:** the paying-seat count where the hours reach 160 a month: **22,241** (low row), **4,341** (median row), **893** (high row). The hourly rates do not change it; the AI factor does (19,453 / 3,819 / 793 at 1.00).
+- **Variable labour per paying seat:** low row 6.08 h ÷ 1,000 × $53.80 = **$0.33 a month** ($0.20 at the loaded market rate); median row 26.6 h ÷ 1,000 × $53.80 = **$1.43** ($0.86 at the market rate). Net revenue per paying seat after fees at 10,000 seats is $1.76 to $3.31 (model (c) is lowest), so in the low row every model breaks even on labour at some size, and in the median row model (c) keeps only $0.33 a seat (see subscription-models.md). Fixed labour is $2,502 a month in the low row and $4,479 in the median row at the loaded $100.88 ($3,038 and $5,439 at the unloaded $122.50).
+- **Primary case:** the low row. Kanka, Pinboard and Plausible fit only the low row, and it holds only if self-service help ships before billing (the Low-Support Scenario in subscription-models.md). The median is the stress case and is shown beside it everywhere.
+
+**Who does the hours (salary line (iii)).** The owner takes every hour up to 160 a month, engineering and support alike, and the site hires only the hours above 160. The "cash" line is the owner doing the same hours unpaid. At 100, 1,000 and 10,000 paying seats in the low row the owner does every hour and nothing is hired; hiring starts at 10,000 seats in the median row (311 hours) and at 100,000 in both rows. The first hired role is support, at the loaded living wage of $53.80 an hour, because the owner keeps engineering. A hired hour is priced at that rate, plus the Claude Team seats for support agents.
+
+| Paying seats | Row    | Total hours | Owner's hours (min of total and 160) | Hired hours (total less 160, not below 0) | Cost of hired hours a month |
+| -----------: | ------ | ----------: | -----------------------------------: | ----------------------------------------: | --------------------------: |
+|          100 | low    |        25.4 |                                 25.4 |                                         0 |                          $0 |
+|          100 | median |        47.1 |                                 47.1 |                                         0 |                          $0 |
+|        1,000 | low    |        30.9 |                                 30.9 |                                         0 |                          $0 |
+|        1,000 | median |        71.0 |                                 71.0 |                                         0 |                          $0 |
+|       10,000 | low    |        85.6 |                                 85.6 |                                         0 |                          $0 |
+|       10,000 | median |       310.7 |                                  160 |                                     150.7 |                      $8,158 |
+|      100,000 | low    |       632.7 |                                  160 |                                     472.7 |                     $25,508 |
+|      100,000 | median |     2,707.4 |                                  160 |                                   2,547.4 |                    $137,455 |
+
+The cost of hired hours is the hired hours at $53.80 plus the Claude Team seats ($25 each; 0, 2, 3 and 16 seats in the four rows that hire). It is the salary line's total less cash costs and the $23,952 job.
+
+**What you earn before the salary is affordable (model (i), final inputs).** Until the site can pay the structure A job, the owner does every hour up to 160 a month (engineering first) and is paid for them from what is left of net revenue. The hours are valued at the loaded rates the labour line uses: support $53.80 and engineering $100.88 an hour. The draw is the smaller of that value and net revenue less cash costs and less any hired help, and never below zero. The hourly figure is the draw divided by the owner's hours. All figures are a month.
+
+| Paying seats | Row    | Owner's hours | Value of those hours | Left after cash costs (and hired help) | Draw a month | Draw an hour |
+| ------------ | ------ | ------------: | -------------------: | -------------------------------------: | -----------: | -----------: |
+| 100          | low    |          25.4 |               $2,535 |                                   -$58 |           $0 |        $0.00 |
+| 100          | median |          47.1 |               $4,622 |                                   -$58 |           $0 |        $0.00 |
+| 1,000        | low    |          30.9 |               $2,829 |                                 $2,169 |       $2,169 |       $70.24 |
+| 1,000        | median |          71.0 |               $5,912 |                                 $2,169 |       $2,169 |       $30.54 |
+| 10,000       | low    |          85.6 |               $5,772 |                                $24,730 |       $5,772 |       $67.44 |
+| 10,000       | median |         160.0 |              $10,699 |                                $16,572 |      $10,699 |       $66.87 |
+| 100,000      | low    |         160.0 |               $9,776 |                               $223,983 |       $9,776 |       $61.10 |
+| 100,000      | median |         160.0 |              $10,699 |                               $112,035 |      $10,699 |       $66.87 |
+
+At 100 seats the site does not cover its cash costs, so the draw is nothing: the site is $58 short of its cash costs. The salary line becomes affordable at (i)'s cash + job break-even: 9,690 paying seats in the low row and 16,958 in the median row. From 10,000 seats the draw is the full value of the owner's hours. At 100,000 seats hired help is bought first and the owner still does 160 hours.
+
+billing-model: the sizes count paying seats (activated accounts in paying covens); every other account is overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts. Support wage is the average of three MIT Living Wage rows (Washington 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43, King County 1 adult no children 30.60) minus the MIT Medical line (9,588 / 9,477 / 3,032 a year over 2,080 h); the BLS Washington customer-service median is the market-rate sensitivity.
+
+billing-model payroll loading: Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% low or 6.0% high on 78,200; WA EAF 0.02% / 0.03% on 78,200; PFML employer share 0 low or 1.13% x 28.57% high; L&I 5302 low or 4904 high per worker-hour; benefits method A (health 7,344 a year + retirement 5.40% of wages) low, method B (ECEC insurance + retirement + supplemental, 22.90% of wages) high; the base rate is the midpoint of the loaded hourly figures.
+
+## Payment Processing and Taxes
+
+These are rates, not costs: they scale with revenue and are subtracted in subscription-models.md.
+
+| Option                                                       | Fee                                                                                                       | Who is the seller                             |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 1. Stripe Billing plus Stripe Tax, site-hosted checkout page | 2.9% + 30¢, plus 0.7% Billing, plus 0.5% Tax Basic by the no-code route (50¢ per charge by API) [30] [31] | The site (the owner)                          |
+| 2. Stripe Managed Payments                                   | 2.9% + 30¢, plus 0.7% Billing, plus 3.5%; tax is included in the 3.5% [30] [32]                           | Link, Stripe's service, as merchant of record |
+
+A merchant of record is the company legally selling to the customer, which collects and pays the sales tax. Under option 1 the owner is the seller and **owes sales tax registration and filing** (Stripe Tax calculates the tax; it does not file it, and Tax Complete, which files, starts at $90 a month on a one-year contract [31]). Under option 2 Link collects and remits it. Other processors (Paddle, Lemon Squeezy, Polar) charge 5% + 50¢ and act as merchant of record [33]; they are covered in subscription-models.md.
+
+**Washington taxes.** Retailing B&O is 0.471% of gross receipts [26], with a credit of up to $55 a month, which means no B&O is owed below about $11,677 of Washington revenue a month. State sales tax is 6.5%, and combined rates run from 7.6% to 10.7% depending on the location [27] [28]. Sales tax is passed through to the customer, so it is not a cost. **Whether a merchant of record's resale of software counts as a marketplace facilitator sale is unresolved**; an accountant must confirm.
+
+## Salary Structures
+
+The question: what must the business earn for the owner to keep the take-home of a $250,000 salary under four ways of paying oneself? The owner's goals: "the cheapest tax option with the maximum benefits", "while maintaining what I would get at a $250k salary". A is all-salary. B and B* are an S corporation paying a wage of $184,500 or $190,000 with the rest as distributions. C is a single-member LLC taxed as a sole proprietor, with no S election. The owner files married filing jointly, with the spouse's income taken as zero (accountant item 37 still asks), so the table holds equal A's joint take-home: **$194,529** after all tax (income tax $37,468, employee payroll taxes $18,003, no additional Medicare, taxable income $217,800).
+
+`scripts/billing-model.mjs` also prints the earlier single-filer assumption as a second table, for comparison; this page carries only the joint figures.
+
+**Joint figures and sources.** Rev. Proc. 2025-32 (https://www.irs.gov/pub/irs-drop/rp-25-32.pdf) gives the 2026 joint brackets (10% to $24,800; 12% to $100,800; 22% to $211,400; 24% to $403,550; 32% to $512,450; 35% to $768,700; 37% above), the joint standard deduction ($32,200) and the joint qualified business income (QBI) threshold ($403,500, with the phase-in ending at $553,500, a range of $150,000). The additional Medicare threshold for joint filers ($250,000) is from IRS Topic 560 (https://www.irs.gov/taxtopics/tc560), not the Rev. Proc. All joint figures were found. Taxable income is far below $403,500 in every structure, so whether the business is a specified service trade or business (SSTB) makes no difference to the joint results (derived).
+
+**What each figure includes.** A's business earnings of $266,575 are the $250,000 wage + employer taxes ($15,106) + $1,469 of payroll and return-preparation admin, and **no benefits**. Unemployment insurance, the Employment Administration Fund and L&I lines are zero, because a 100% owner-officer cannot draw unemployment and officers are exempt from L&I by default. Adding the low benefits ($20,848) gives $287,423, the loaded figure below.
+
+**Like for like.** Every row below adds the same benefits, because health and retirement cost the same in every structure: $20,848 (method A, low) to $57,251 (method B, high).
+
+| Structure                                                                                   | Business earnings a year | a month | Saving against A | Loaded a year, low benefits | Loaded a year, high benefits |
+| ------------------------------------------------------------------------------------------- | -----------------------: | ------: | ---------------: | --------------------------: | ---------------------------: |
+| A all-salary ($250,000 gross salary)                                                        |                 $266,575 | $22,215 |               $0 |                    $287,423 |                     $323,826 |
+| B S corporation ($184,500 wage, distributions)                                              |                 $260,359 | $21,697 |           $6,216 |                    $281,207 |                     $317,610 |
+| B* S corporation ($190,000 wage, distributions; the owner's choice, pending the accountant) |                 $260,868 | $21,739 |           $5,707 |                    $281,716 |                     $318,119 |
+| C sole proprietor or single-member LLC (the model's cheapest)                               |                 $252,950 | $21,079 |          $13,625 |                    $273,798 |                     $310,201 |
+
+Joint detail: in C the self-employment tax is about $29,647, the QBI deduction about $41,148, WA Cares about $1,466 and income tax about $25,635. In B the distribution is about $60,233, the QBI deduction about $12,047 and income tax about $33,531; in B* the distribution is about $55,163, the QBI deduction about $11,033 and income tax about $33,849. At the same business earnings of $266,575, A costs $70,577 in total tax and C $61,047.
+
+What each structure gives up against A: B and B* keep every benefit, and carry a reasonable-compensation audit risk. C keeps the Social Security record and Medicare, makes Paid Family and Medical Leave opt-in (employee share only, three-year minimum), loses unemployment cover (a 100% owner could not draw it in A either), keeps WA Cares only if the owner first self-employed within three years, and has retirement room of about $71,400 against $72,000 (about $600 less). The salary line is A: the owner wants the line to read as a normal employee's cost. C is the sensitivity row. C is still the cheapest of the structures because Social Security is capped at the same $184,500 in every structure, so an S corporation saves only Medicare on the distribution, while a sole proprietor's whole profit counts for the qualified business income (QBI) deduction.
+
+_*The owner chose B*, pending the accountant: an S corporation paying a $190,000 wage, the rest as distributions._* The salary line stays A. C remains the model's cheapest structure, and B* is its second. The owner chose B* knowing C is cheaper in the model; the accountant decides whether B* holds. The result now rests on the Rev. Proc. 2025-32 figures for the QBI thresholds and on the assumption that the spouse has no income. For a single filer, if the business is a specified service trade or business (SSTB), B's saving falls to about $6,800 (derived) and C is unchanged; for joint filing the SSTB status makes no difference. The checklist for the accountant is items 21 to 33 under "What the Repository Doesn't Say".
+
+## Totals
+
+All rows are dollars a month. Cash costs are the Platform total plus Claude Ultra plus GitHub Team. The labour rows use the low and median cases of the Labour section, so they grow with paying seats. The full-time rows are structure A (a $250,000 gross salary plus the employer's payroll taxes) with the structure benefits, $287,423 a year (low) or $323,826 (high), divided by 12, plus hired help for hours above 160 a month. The sensitivity row is structure C (married filing jointly) with low benefits, $273,798 a year. The on-call row is a separate best-effort-versus-promised comparison.
+
+**Low contact-rate row (primary):**
+
+| Row                                                                        |     100 |    1000 |   10000 |  100000 |
+| -------------------------------------------------------------------------- | ------: | ------: | ------: | ------: |
+| Cash costs                                                                 |    $310 |    $351 |    $393 |  $1,242 |
+| Labour hours a month                                                       |    25.4 |    30.9 |    85.6 |   632.7 |
+| Claude Team seats for support agents (inside every labour row below)       |       0 |       0 |       0 |       3 |
+| Labour alone (loaded $100.88 engineering, $53.80 support)                  |  $2,535 |  $2,829 |  $5,772 | $35,283 |
+| Cash + labour at base rates                                                |  $2,845 |  $3,180 |  $6,165 | $36,525 |
+| Cash + labour at the loaded BLS market support rate ($32.27)               |  $2,832 |  $3,049 |  $4,856 | $23,435 |
+| Cash + labour with contractor engineering ($122.50)                        |  $3,381 |  $3,716 |  $6,701 | $37,061 |
+| Cash + structure A job ($250,000 gross salary; low benefits) + hired hours | $24,262 | $24,303 | $24,345 | $50,701 |
+| Cash + structure A job (high benefits) + hired hours                       | $27,296 | $27,337 | $27,378 | $53,734 |
+| Sensitivity: cash + structure C job (low benefits) + hired hours           | $23,127 | $23,168 | $23,209 | $49,565 |
+| Cash + labour + promised on-call                                           |  $5,185 |  $5,520 |  $8,505 | $38,865 |
+
+**Median contact-rate row (stress case):**
+
+| Row                                                                        |     100 |    1000 |   10000 |   100000 |
+| -------------------------------------------------------------------------- | ------: | ------: | ------: | -------: |
+| Cash costs                                                                 |    $310 |    $351 |    $393 |   $1,242 |
+| Labour hours a month                                                       |    47.1 |    71.0 |   310.7 |   2707.4 |
+| Claude Team seats for support agents (inside every labour row below)       |       0 |       0 |       2 |       16 |
+| Labour alone (loaded $100.88 engineering, $53.80 support)                  |  $4,622 |  $5,912 | $18,857 | $148,154 |
+| Cash + labour at base rates                                                |  $4,932 |  $6,263 | $19,249 | $149,396 |
+| Cash + labour at the loaded BLS market support rate ($32.27)               |  $4,875 |  $5,690 | $13,515 |  $92,052 |
+| Cash + labour with contractor engineering ($122.50)                        |  $5,892 |  $7,223 | $20,209 | $150,355 |
+| Cash + structure A job ($250,000 gross salary; low benefits) + hired hours | $24,262 | $24,303 | $32,503 | $162,649 |
+| Cash + structure A job (high benefits) + hired hours                       | $27,296 | $27,337 | $35,536 | $165,682 |
+| Sensitivity: cash + structure C job (low benefits) + hired hours           | $23,127 | $23,168 | $31,367 | $161,513 |
+| Cash + labour + promised on-call                                           |  $7,272 |  $8,603 | $21,589 | $151,736 |
+
+Reading the table: **Claude Ultra is 64% of the cash cost at 100 paying seats.** Cash costs reach about $1,242 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size in both rows; in the low row at 1,000 paying seats it is about 10 times the cash costs.
+
+## Enterprise Thresholds
+
+No usage forces an enterprise plan at 100,000 paying seats. Features do.
+
+- **Vercel:** Enterprise is forced only by features, not by usage [15]. Enterprise prices were not found.
+- **Neon:** Scale at $0.222 per CU-hour covers the 99.95% uptime agreement [14]. Enterprise terms were not found [16].
+- **Resend:** Scale tiers run to at least 2.5M mails a month at $1,150 [8]; above that is not listed.
+- **GitHub:** Enterprise is $21 per user [11]; nothing forces it. Team is required once the repository is private (see CI).
+- **Claude:** No Ultra threshold applies; Max is $100 and Pro $20 [10].
+
+## What the Repository Doesn't Say
+
+**I need you to confirm or decide each of these.**
+
+1. **Vercel edge-request allowance.** The pricing page says 10 million on Pro; the plan page says 1 million [1] [2]. The model uses 1 million (higher bills).
+2. **Function invocations.** I measured 1 invocation per page load; [17] says 4 to 5. The model uses [17]'s 40 per session.
+3. **Assumptions with no source** (**owner to confirm** each): monthly active share of accounts (25%), coven memberships per account (1.2), sessions per active account (8), edge requests per session (30), data out per session (1.5 MB), provisioned memory (2x the Active CPU time), mails per account per month (0.5), document mailings per year (2), workflow events from daily jobs (270 a month), the size of restore history and snapshots (each assumed the size of the data), spells and ingredients per coven (so database size), Neon average compute and hours awake, and the keeper-exemption schedule (5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000).
+4. **Neon compute-hours at each size** have no source; they are assumptions.
+5. **Churn period.** Recurly's 3.6% has no stated period. The model uses ChartMogul's 6.1% monthly.
+6. **Labour hours** are derived from build hours, published ratios and support-contact benchmarks, not from this project's history. The support contact rate decides the one-person ceiling (the owner kept the modelled contact rates on 2026-11-06; design-decisions/ingredients.md, "The Earlier Decisions").
+7. **Merchant of record treatment** of resold software for Washington B&O: not found, accountant to confirm.
+8. **Accountant items:** unemployment and L&I cover for officers, S-corporation salary, Paid Family and Medical Leave opt-in, L&I risk class, and SB 6346 credit changes from 2029.
+9. **Vercel's `.com` price, Vercel and Neon enterprise terms:** not found.
+10. **Claude cloud review coverage:** not on the pricing page.
+11. **GlitchTip hosted privacy terms, PagerDuty DPA, UptimeRobot heartbeats, the dependency-review action:** unverified (see Operations Stack).
+12. **Bot Protection:** your decision (see Operations Stack).
+13. **Document-mailing cap:** your decision (see Resend).
+14. **Unverified figures I did not use:** Discord boost price, Sanctuary and World Anvil prices, FireHydrant's incident benchmark, the 51% Pagan Census figure.
+15. **Overhead shares.** The demo-only share and the trial share come from benchmarks measured on mostly self-signup populations, not invite-gated sites. No source gives the split, a trial-length effect, customer-count growth (only revenue growth) or the share of accounts given away free.
+16. **Incident count against users:** not found. **Owner to confirm.**
+17. **Time to prepare a Washington excise tax return, and time per refund:** not found. **Owner to confirm** with the accountant.
+18. **Minutes per abuse report for a moderator, and solo-founder hours against users:** not found. **Owner to confirm.**
+19. **Curation ratio** (compendium edits per user): not found. **Owner to confirm.**
+20. **Not measured:** real Active CPU per render, and real spells and ingredients per coven.
+21. **Accountant, salary structure (item 1):** Is $184,500 or $190,000 reasonable compensation for this owner (developer plus manager), given BLS Washington pay ($166,540 median, $211,860 75th percentile; IT managers $209,370 median)? **Owner to confirm** with the accountant.
+22. **Accountant, salary structure (item 2):** Confirm the 2026 QBI threshold ($403,500 joint, $201,750 single) and phase-in range ($150,000 joint, $75,000 single) from Rev. Proc. 2025-32, and whether a SaaS business is a specified service trade or business (SSTB). **Owner to confirm** with the accountant.
+23. **Accountant, salary structure (item 3):** Confirm the C-versus-S result for the owner's real other income, and whether an S election still pays at all. The model assumes married filing jointly with the spouse's income at zero (item 37). **Owner to confirm** with the accountant.
+24. **Accountant, salary structure (item 4):** For a solo 401(k), is an S-corporation owner's "compensation" W-2 wages only, and is a sole proprietor's employer share effectively 20%? **Owner to confirm** with the accountant.
+25. **Accountant, salary structure (item 5):** Are the owner's health premiums and retirement contributions handled the same way in each structure, and how do they reduce QBI? **Owner to confirm** with the accountant.
+26. **Accountant, salary structure (item 6):** Form 2553 deadline and effective date; late-election relief. **Owner to confirm** with the accountant.
+27. **Accountant, salary structure (item 7):** Confirm a 100% owner-officer should not elect unemployment insurance coverage (exempt, and ineligible for benefits as a 10%+ owner). **Owner to confirm** with the accountant.
+28. **Claude Team training terms.** Confirm Team = Claude for Work, and turn off Rate chats for support agents (see the AI heading in Labour).
+29. **Labour conversion basis.** Confirm that the labour hours' 1.3 active users and 5.2 accounts per paying seat stay, instead of the overhead ratios (the difference is stated under Labour hours).
+30. **Accountant, salary structure (item 8):** Confirm the L&I officer exemption and whether to elect it for injury cover. **Owner to confirm** with the accountant.
+31. **Accountant, salary structure (item 9):** PFML: officer reported as an employee in B; for C, the elective-coverage rate, base and three-year term. **Owner to confirm** with the accountant.
+32. **Accountant, salary structure (item 10):** WA Cares: whether the owner is inside the self-employed opt-in window under C. **Owner to confirm** with the accountant.
+33. **Accountant, salary structure (item 11):** Confirm B&O is unchanged by the structure. **Owner to confirm** with the accountant.
+34. **Accountant, salary structure (item 12):** Confirm distributions are not self-employment income, and that the Medicare premium income test is unaffected by the split. **Owner to confirm** with the accountant.
+35. **Accountant, salary structure (item 13):** Current payroll and return-preparation fees (the survey figures date from 2016-17). **Owner to confirm** with the accountant.
+36. **Model (i)'s payer share and personal plan** (design-decisions/ingredients.md, "The Earlier Decisions"). The owner estimated on 2026-11-06 that 66.66% of covens are each-member-pays (range 0% to 100%, no source) and that 20% of members are observers (range 15% to 50%, no source). The model also assumes that 20% of paying seats buy a solo coven alone, and that the $3.50 personal plan holds even though a two-person each-member-pays coven gets a solo coven for the seat price. The model also counts one Stripe subscription per paying person, so a $0 later seat adds no 30¢ fee.
+37. **Accountant, spouse's income and joint filing.** The owner files married filing jointly (2026-11-06). The owner confirmed on 2026-11-06 that the spouse's income is zero, which every joint figure assumes; the structure table changes if the spouse earns anything. Confirm with the accountant that joint filing gives the results above.
+
+## How to Re-Run the Numbers
+
+`node scripts/billing-model.mjs` prints every table above, from paying seats through overhead accounts to totals. Its constants are the Inputs tables. Change a value in the `I` object and run it again.
+
+## Sources
+
+All fetched 2026-11-06.
+
+1. Vercel pricing: https://vercel.com/pricing
+2. Vercel Pro plan: https://vercel.com/docs/plans/pro-plan
+3. Vercel Hobby plan: https://vercel.com/docs/plans/hobby
+4. Vercel Workflows pricing: https://vercel.com/docs/workflows/pricing
+5. Vercel Observability Plus: https://vercel.com/docs/observability/observability-plus
+6. Neon pricing: https://neon.com/pricing
+7. Neon plans: https://neon.com/docs/introduction/plans
+8. Resend pricing: https://resend.com/pricing
+9. Porkbun `.com`: https://porkbun.com/tld/com
+10. Claude pricing: https://claude.com/pricing
+11. GitHub pricing (fetched 2026-11-06; Team $4 per user a month, 3,000 Actions minutes against Free's 2,000, repository rules and protected branches on public repositories only for Free; Secret Protection $19 and Code Security $30 per active committer a month): https://github.com/pricing and https://github.com/security/plans
+12. GitHub Actions billing: https://docs.github.com/en/billing/concepts/product-billing/github-actions
+13. Runner pricing: https://docs.github.com/en/billing/reference/actions-runner-pricing
+14. Neon SLA: https://neon.com/sla
+15. Vercel Enterprise: https://vercel.com/enterprise
+16. Neon Enterprise: https://neon.com/enterprise
+17. DESIGN.md §4, capacity estimate (this repository, `claude-docs/DESIGN.md`)
+18. GlitchTip pricing: https://glitchtip.com/pricing
+19. UptimeRobot pricing: https://uptimerobot.com/pricing/
+20. Vercel drains: https://vercel.com/docs/drains
+21. Axiom pricing: https://axiom.co/pricing
+22. PagerDuty pricing: https://www.pagerduty.com/pricing/incident-management/
+23. Socket pricing: https://socket.dev/pricing
+24. incident.io on-call: https://incident.io/blog/uncovering-the-mysteries-of-on-call
+25. WA B&O classifications: https://dor.wa.gov/taxes-rates/business-occupation-tax/business-occupation-tax-classifications
+26. WA digital products: https://dor.wa.gov/digitalproducts
+27. WA local sales tax rates: https://dor.wa.gov/sites/default/files/2026-05/Q326_LSU-flyer-by-county.pdf
+28. BLS employer costs: https://www.bls.gov/news.release/ecec.nr0.htm and https://www.index.dev/blog/freelance-developer-rates
+29. Stripe pricing: https://stripe.com/pricing
+30. Stripe Tax pricing: https://stripe.com/tax/pricing
+31. Stripe Managed Payments: https://docs.stripe.com/payments/managed-payments
+32. Paddle pricing: https://www.paddle.com/pricing
+33. ChartMogul churn: https://chartmogul.com/blog/good-customer-churn-rate/
+34. MIT Living Wage Calculator, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $48.00 an hour, medical $9,588 a year): https://livingwage.mit.edu/states/53
+35. MIT Living Wage Calculator, King County, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $56.43, medical $9,477; 1 adult no children $30.60, medical $3,032): https://livingwage.mit.edu/counties/53033
+36. AI assistance for support agents: Brynjolfsson, Li and Raymond, "Generative AI at Work", Quarterly Journal of Economics 2025 (resolutions per hour +15.2%, handle time −8.5%); Claude Team seat $25 a month, 2-seat minimum, and the Pro consumer-terms training default, as collected in the support-tool research.
+37. US Bureau of Labor Statistics, Occupational Employment and Wage Statistics, Washington, May 2025 (customer-service representatives $24.20 median, $29.49 75th percentile; software developers $80.07 median), fetched 2026-11-06: https://www.bls.gov/oes/
+38. Anthropic privacy centre, "Is my data used for model training?" (updated 2026-08-18, fetched 2026-11-06): https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training
+
+- [G1] Userpilot, "SaaS Product Metrics": https://userpilot.com/saas-product-metrics/
+- [G2] Rachitsky and Timen, "What is a good activation rate": https://www.lennysnewsletter.com/p/what-is-a-good-activation-rate
+- [G4] SaaS Capital, Research Brief 34: https://www.saas-capital.com/wp-content/uploads/2026/07/RB34WS1-2026-B2B-Benchmarking-Private-SaaS-Company-Growth-Rates.pdf
+- [G7] ChartMogul, "The SaaS Conversion Report": https://chartmogul.com/reports/saas-conversion-report/
+- [G10] Discourse pricing: https://www.discourse.org/pricing
+- [G12] Mighty Networks pricing: https://www.mightynetworks.com/pricing
+- [G13] Ghost, complimentary plans: https://ghost.org/help/complimentary-plans
+- [G14] GitHub Copilot Pro free access: https://docs.github.com/en/copilot/how-tos/manage-your-account/get-free-access-to-copilot-pro
+- [G15] First Page Sage, "SaaS Free Trial Conversion Rate Benchmarks" (published 2025-09-05, fetched 2026-11-06): https://firstpagesage.com/seo-blog/saas-free-trial-conversion-rate-benchmarks/
+
+- [H1] Spend: https://vercel.com/docs/spend-management ; https://neon.com/docs/introduction/plans ; https://neon.com/docs/guides/consumption-limits ; https://resend.com/pricing (fetched 2026-11-06)
+- [H2] Database health: https://neon.com/docs/introduction/monitoring-page ; https://neon.com/docs/extensions/pg_stat_statements ; https://pganalyze.com/pricing (fetched 2026-11-06)
+- [H3] Deliverability: https://resend.com/docs/dashboard/webhooks/event-types ; https://resend.com/docs/dashboard/emails/email-suppressions ; https://dmarc.postmarkapp.com/ ; https://support.google.com/a/answer/9981691 (fetched 2026-11-06)
+- [H4] Expiry and heartbeats: https://vercel.com/docs/domains/working-with-ssl ; https://vercel.com/docs/domains/renew-a-domain ; https://uptimerobot.com/pricing/ ; https://uptimerobot.com/pricing.md (fetched 2026-11-06)
+- [H5] Payments: https://docs.stripe.com/radar/how-radar-works ; https://support.stripe.com/questions/updates-to-radar-pricing-(january-2027) ; https://docs.stripe.com/disputes/responding ; https://stripe.com/pricing ; https://docs.stripe.com/billing/revenue-recovery/smart-retries ; https://docs.stripe.com/radar/optimize-risk-factors (fetched 2026-11-06)
+- [H6] Tracing: https://vercel.com/docs/tracing ; https://vercel.com/docs/tracing/configure-tracing ; https://vercel.com/docs/tracing/instrumentation (fetched 2026-11-06)
+- [H7] Secrets and disclosure: https://vercel.com/docs/environment-variables/rotating-secrets ; https://better-auth.com/docs/1.6/reference/security ; https://neon.com/docs/manage/roles ; https://docs.stripe.com/keys ; https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability ; https://www.rfc-editor.org/rfc/rfc9116 (fetched 2026-11-06)
+- [H8] Incident communication: https://uptimerobot.com/pricing/ ; https://www.atlassian.com/software/statuspage/pricing ; https://instatus.com/pricing ; https://response.pagerduty.com/ ; https://sre.google/sre-book/example-postmortem/ (fetched 2026-11-06)

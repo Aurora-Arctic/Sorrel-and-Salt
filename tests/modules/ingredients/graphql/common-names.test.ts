@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
@@ -7,14 +7,15 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CommonNameConnection } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The transport half of the common-name lookup: one bucket, each name with its claimants, a page at a time, and the compendium-only mode.
 // Who is refused is services/common-name-suggestions.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

@@ -10,11 +10,7 @@ import { memberPauseStep } from '@/modules/coven/jobs/member-pause-mail-steps';
 import { A, B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
-
-// The mail a coven access pause sends the member. Setting one starts a run holding the pause's id, the kind and the origin alone;
-// the run's step reads the member, the coven and the pause when it sends, and sends nothing once the pause is lifted or gone.
-// The note is for the coven's owners and reaches no mail; the message to the member does. What the template says is
-// tests/emails/pause-notices.test.tsx.
+import { ORIGIN } from '../../../support/constants';
 
 type Mail = { to: string; subject: string; text: string; html: string };
 const { sent, startJob, send } = vi.hoisted(() => {
@@ -41,7 +37,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const UNTIL = new Date('2099-03-14T12:00:00Z');
 const NOTE = "Owners only: edits other members' spells.";
 const MESSAGE = 'Taking a short break from the coven while we talk.';
@@ -59,13 +54,11 @@ const pausesOf = async (userId: string) =>
     select id, message from workspace_member_pauses
      where workspace_id = ${covenId} and user_id = ${userId} order by created_at`;
 
-/** The coven pause mail runs started so far, each run's one argument. */
 const pauseRuns = () =>
   startJob.mock.calls
     .filter(([job]) => job === memberPauseMail)
     .map(([, args]) => (args as [MemberPauseMail])[0]);
 
-/** Runs each started run's step, as the job would, and returns the mails the transport took. */
 async function sendPauseRuns() {
   sent.length = 0;
   for (const run of pauseRuns()) await memberPauseStep(run);

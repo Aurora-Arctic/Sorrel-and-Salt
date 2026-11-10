@@ -11,8 +11,8 @@ import {
 import { MailNotSent, deliver } from '../../../lib/mail-transport';
 import { supportClosingNoticeMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
-import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
+import { supportRecipientFor } from './recipient';
 import { RETENTION_PAGE_SIZE } from '../jobs/support-retention-pages';
 import type { Message } from '../../../lib/types';
 import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types';
@@ -23,9 +23,7 @@ import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types
 // ids due for each stage a page at a time and hands each page to a batch, and each batch reads its rows' status and dates again
 // before it writes, so a batch run twice, two runs at once, or a batch that follows a reopen, changes nothing.
 
-/** The day after resolving from which the closing-soon notice is due. */
 export const NOTICE_AFTER_DAYS = 5;
-/** How many months a closed request keeps its sender's text. */
 export const ANONYMISE_AFTER_MONTHS = 12;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,15 +45,15 @@ async function closingNoticeFor(
   closeAt: number,
   now: Date,
 ): Promise<Message | null> {
-  const signedOut = row.senderEmail !== null;
-  const to = row.senderEmail ?? (await findOneById(users, row.createdBy))?.email;
-  if (!to) return null;
+  const recipient = await supportRecipientFor(row);
+  if (!recipient) return null;
   return supportClosingNoticeMessage(
     origin,
-    to,
+    recipient.to,
     row.subject,
-    signedOut ? null : row.id,
+    recipient.signedOut ? null : row.id,
     closeAt - now.getTime(),
+    recipient.viewToken,
   );
 }
 
@@ -105,7 +103,6 @@ export function findRetentionDue(
   }
 }
 
-/** The latest resolution a closing-soon notice is due for as of `now` (milliseconds). */
 function noticeDueBy(now: number): Date {
   return new Date(now - NOTICE_AFTER_DAYS * DAY_MS);
 }

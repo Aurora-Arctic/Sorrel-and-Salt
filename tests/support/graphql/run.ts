@@ -19,14 +19,9 @@ import type { Answer, ContextOverrides } from './types';
 // refusal is read as the browser reads it, by `extensions.code` (claude-docs/testing/layer-ownership.md,
 // "The owning layer"). The context is built by hand, as the route's `createContext` reads a cookie.
 
-/** A runner over `target` behind the route's `maskedErrors`; `run` below is the one built. */
 function runnerOn(target: GraphQLSchema) {
   const yoga = createYoga<Context>({ schema: target, maskedErrors, logging: false });
 
-  /**
-   * Runs one operation as `session`, with fresh loaders and a sender that sends nothing. A test hands in
-   * `context` for loaders it watches or a sender that records what it was asked to mail.
-   */
   return async function run<T = Record<string, unknown>>(
     session: Session | null,
     query: string,
@@ -56,5 +51,4 @@ function runnerOn(target: GraphQLSchema) {
   };
 }
 
-/** Runs one operation against the route's schema; `runnerOn` says what `context` is for. */
 export const run = runnerOn(schema);

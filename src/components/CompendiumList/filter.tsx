@@ -12,6 +12,7 @@ import { useApplyFilter } from '../FilterForm';
 import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
 import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
+import { facetChoices, vocabulariesOf } from './facets';
 import { useLiveFacets } from './live-facets';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
@@ -23,7 +24,7 @@ import {
   covenIngredientsPath,
 } from './href';
 import { COMPENDIUM_PARAMS } from './params';
-import type { CompendiumListFilterProps } from './types';
+import type { CompendiumFacetCounts, CompendiumListFilterProps } from './types';
 
 // The compendium's filter row: the name search, the Filters button with its panel of facets and the
 // search sentence. The panel holds its changes until it shuts; a coven's list is the same row on
@@ -31,7 +32,9 @@ import type { CompendiumListFilterProps } from './types';
 
 type Held = CompendiumListFilterProps['filter'];
 
-/** Where a list lives: its path, and the coven's slug for a coven's list. */
+/** The row's props, with the counts already drawn into choices once. */
+type RowProps = Omit<CompendiumListFilterProps, 'counts'> & { facets: CompendiumFacetCounts };
+
 interface Where {
   path: Route;
   covenSlug?: string;
@@ -47,10 +50,6 @@ const whereOf = ({
   return { path: audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH };
 };
 
-/**
- * The facets of a filter, the part the panel shows; a coven's adds its three choices, and the
- * admin's its Reviewed strip.
- */
 const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: filter.covens ?? [],
   covensNot: filter.covensNot ?? false,
@@ -72,7 +71,6 @@ const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter
   }),
 });
 
-/** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
 const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: [],
   covensNot: false,
@@ -90,7 +88,6 @@ const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   ...(coven && { source: '', inStock: false, lowStockOnly: false }),
 });
 
-/** The panel's facets as filter values. */
 const changeOf = (panel: FacetPanelFilter) => ({
   covens: [...(panel.covens ?? [])],
   covensNot: panel.covensNot ?? false,
@@ -109,7 +106,6 @@ const changeOf = (panel: FacetPanelFilter) => ({
   categoryMode: panel.categories.length >= 2 ? panel.categoryMode : ('all' as const),
 });
 
-/** The address of the list under the filter shown, the panel's facets and the name typed set over it. */
 const hrefFor = (filter: Held, panel: FacetPanelFilter, query: string, where: Where) => {
   if (where.covenSlug !== undefined) {
     return covenIngredientsHref(
@@ -165,7 +161,7 @@ const PanelFacets = ({
   covens,
   panel,
   onPanel,
-}: CompendiumListFilterProps & {
+}: RowProps & {
   panel: FacetPanelFilter;
   onPanel: (next: FacetPanelFilter) => void;
 }): ReactElement => {
@@ -193,8 +189,6 @@ const PanelFacets = ({
       clearHref={where.path}
       covens={covens}
       onChange={(patch) => onPanel({ ...panel, ...patch })}
-      // Shut any other way than Apply Filters, whose submit applies the name as well: the
-      // facets held, under the name the page shows, and nothing at all when none changed.
       onApply={() => {
         if (changed) apply(hrefFor(filter, panel, filter.query, where));
       }}
@@ -216,7 +210,7 @@ const CompendiumListFilterRow = ({
   workspaceId,
   covens,
   cursor,
-}: CompendiumListFilterProps): ReactElement => {
+}: RowProps): ReactElement => {
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
   // The panel as held: the filter shown until something in it is changed, and the filter
@@ -240,8 +234,6 @@ const CompendiumListFilterRow = ({
       className="compendium-list__row"
       searchHref={(query) => hrefFor(filter, panel, query, where)}
       source={coven && workspaceId ? { kind: 'cupboard', workspaceId } : undefined}
-      // The entry's Quick Look over the list as shown, its page kept and the typed text not
-      // applied, keyed as the list's eye keys it: the keeper's by slug, the other two by id.
       pickHref={(match) => {
         const place = { ...filter, ...cursor };
         if (where.covenSlug !== undefined) {
@@ -274,15 +266,13 @@ const CompendiumListFilterRow = ({
   );
 };
 
-/** What each chosen value is called in the sentence: a deity by its name, a category by its name. */
 function labelsOf({
   facets,
   categories,
   covens = [],
-}: Pick<CompendiumListFilterProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
+}: Pick<RowProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
   const named = (rows: readonly { value: string; label: string }[]) =>
     Object.fromEntries(rows.map(({ value, label }) => [value, label]));
-  // Two gods of one name are told apart by their tradition, as the panel's groups do.
   const sameName = (name: string) =>
     facets.deities.filter(({ label }) => label === name).length > 1;
   return {
@@ -294,16 +284,10 @@ function labelsOf({
       ]),
     ),
     elements: named(facets.elements),
-    // Only the viewer's own covens have a name here, so only they are named.
     covens: Object.fromEntries(covens.map(({ id, name }) => [id, name])),
   };
 }
 
-/**
- * The filter an address holds, read as the page reads it from the same parameter table: the
- * term and every facet, a parameter the address lacks being no filter. `shown` supplies what
- * the table does not carry.
- */
 function filterOf(href: string, shown: Held, coven: boolean): Held {
   const params: Record<string, string[]> = {};
   const { searchParams } = new URL(href, 'http://localhost');
@@ -313,7 +297,7 @@ function filterOf(href: string, shown: Held, coven: boolean): Held {
 
 const CompendiumListFilterWithSentence = ({
   filter,
-  facets,
+  counts,
   categories,
   vocabulary,
   audience = 'admin',
@@ -323,9 +307,13 @@ const CompendiumListFilterWithSentence = ({
   cursor,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
-  // Only a filter's navigation retypes the sentence: a pager press changes the page, not the
-  // search.
   const { searching, target } = useListNavigation();
+  // The choices, named from the vocabularies here rather than sent named: each category and deity
+  // then reaches the browser once.
+  const facets = useMemo(
+    () => facetChoices(counts, vocabulariesOf(categories, vocabulary)),
+    [counts, categories, vocabulary],
+  );
   // The page still shows the previous search while the new one is read, so the sentence names the
   // term and the facets of the address the navigation is opening, not those of `filter`.
   const searched =
@@ -364,7 +352,10 @@ const CompendiumListFilterWithSentence = ({
         covens={covens}
         cursor={cursor}
       />
-      <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      {/* An empty list with no filter says so itself, so the count line stays out. */}
+      {(total > 0 || sentence.hasFilter) && (
+        <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      )}
     </>
   );
 };

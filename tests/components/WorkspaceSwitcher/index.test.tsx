@@ -15,10 +15,6 @@ const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitc
 const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
 const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
-// The viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other, and
-// the way to the create page, offered only to a viewer holding the right.
-
 const WORKSPACES = [
   {
     slug: 'fixture-coven',
@@ -53,6 +49,44 @@ describe('WorkspaceSwitcher', () => {
       'Fixture Coven',
       'Testwort Circle',
     ]);
+  });
+
+  it("shows each coven's address beside a name two of the member's covens share, and none beside a unique one", () => {
+    const workspaces = [
+      WORKSPACES[0]!,
+      { ...WORKSPACES[0]!, slug: 'fixture-coven-2' },
+      WORKSPACES[1]!,
+    ];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    fireEvent.click(box());
+
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(3);
+    expect(options[0]).toHaveAccessibleName(/^Fixture Coven\b.*fixture-coven(?!-)/);
+    expect(options[1]).toHaveAccessibleName(/^Fixture Coven\b.*fixture-coven-2/);
+    expect(options[2]).toHaveAccessibleName('Testwort Circle');
+  });
+
+  it('shows no address when every name is unique', () => {
+    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
+
+    fireEvent.click(box());
+
+    expect(screen.getByRole('option', { name: /Fixture Coven/ })).toHaveAccessibleName(
+      'Fixture Coven',
+    );
+    expect(screen.queryByRole('option', { name: /fixture-coven/ })).toBeNull();
+  });
+
+  it('goes to the coven chosen by address, of two with one name', () => {
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[0]!, slug: 'fixture-coven-2' }];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole('option', { name: /fixture-coven-2/ }));
+
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2/ingredients');
   });
 
   it('marks a coven whose access is paused, with when the pause ends', () => {
@@ -158,12 +192,12 @@ describe('WorkspaceSwitcher', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
   });
 
-  it('goes from another coven straight to a paused coven’s paused page, drawing that page’s narrow panel while it loads', async () => {
+  it('goes from another coven straight to a paused coven’s paused page, naming that page while it loads', async () => {
     let target: unknown;
     function Probe() {
       const state = useNavigationState();
       useEffect(() => {
-        target = state.target;
+        target = state.href;
       });
       return null;
     }
@@ -184,7 +218,7 @@ describe('WorkspaceSwitcher', () => {
 
     expect(push).toHaveBeenCalledTimes(1);
     expect(push.mock.calls[0]?.[0]).toBe('/coven-paused/testwort-circle');
-    expect(target).toEqual({ region: 'main', shape: 'form', frame: 'narrow' });
+    expect(target).toBe('/coven-paused/testwort-circle');
   });
 
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {
@@ -259,7 +293,6 @@ describe('WorkspaceSwitcher', () => {
       expect(box()).toHaveAttribute('aria-busy', 'true');
       expect(box()).toHaveTextContent('Testwort Circle');
 
-      // The new coven renders: the address is its, and the wait is over.
       pathname.mockReturnValue('/coven/testwort-circle/ingredients');
       await act(async () => arrive());
 

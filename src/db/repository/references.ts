@@ -23,10 +23,8 @@ import type {
   ReferenceRow,
 } from './types';
 
-// A reference and the links that cite it (claude-docs/db/references.md).
-// Two tiers, as ingredients are: every read is the compendium's and the
-// proofs' covens', and a link reads only where the tier rule lets its row's
-// readers look, so a link written past the service's rule shows nothing.
+// A reference and the links that cite it (claude-docs/db/references.md): a link written past the service's
+// tier rule shows nothing.
 
 /**
  * The live links of these rows of the sourced table `key` names, each beside the

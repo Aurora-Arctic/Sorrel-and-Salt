@@ -6,9 +6,9 @@ import { categories } from '../../modules/vocabulary/schema/categories';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInReadableSpells, findPageInReadableSpells } from './finders';
-import { pointsLive } from './ingredients';
-import { notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { categoryArms as categoryArmsFor } from './category-arms';
+import { newestFirst, notSoftDeleted, scopedTo } from './predicates';
+import { selectFrom } from './select';
 import { readableSpells, visibilityIn, visibilityText } from './spells';
 import type {
   FacetCount,
@@ -21,17 +21,7 @@ import type {
 import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
-// The grimoire list's read, with its search and category filter.
-// In a file of its own rather than in `spells.ts`, because
-// `finders.ts` imports `readableSpells` from there and this pages through
-// `finders.ts`: the two in one file would import each other.
-
-/** An instant, newest first: a page's key is ascending, so it is negated. */
-const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt): SortPart => ({
-  // `numeric` keeps the microseconds a `Date` would drop from a cursor.
-  expression: sql`-extract(epoch from ${column})`,
-  type: 'numeric',
-});
+// The grimoire list's read, apart from `spells.ts` so `finders.ts` and this file do not import each other.
 
 /**
  * The grimoire's orders, each a cursor key the page's id follows. Every part is NOT NULL, as the cursor compares the key as one
@@ -102,32 +92,22 @@ function orderOf(query: GrimoireQuery, match: WeightedSearch | undefined): ListO
   };
 }
 
-/**
- * The spell is assigned the chosen categories: all of them for `all`, one for `any`. The link table is hard-deleted but a
- * category is soft-deleted, so the category and its group must be live, as the ingredient filter asks through `pointsLive`.
- */
-function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery): SQL[] {
-  if (categoryIds.length === 0) return [];
-  const carries = (category: SQL) =>
-    existsIn(
-      spellCategories,
-      and(
-        eq(spellCategories.spellId, spells.id),
-        category,
-        pointsLive(categories, spellCategories.categoryId),
-      ),
-    );
-  return categoryMode === 'any'
-    ? [carries(inArray(spellCategories.categoryId, [...categoryIds]))]
-    : categoryIds.map((categoryId) => carries(eq(spellCategories.categoryId, categoryId)));
-}
+const categoryArms = ({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery): SQL[] =>
+  categoryArmsFor(
+    {
+      table: spellCategories,
+      owner: spellCategories.spellId,
+      category: spellCategories.categoryId,
+      outer: spells.id,
+    },
+    categoryIds,
+    categoryMode,
+  );
 
 type TextColumn = typeof spells.moonPhase | typeof spells.dayOfWeek;
 
-/** A free-text column as the facets compare it: trimmed, case set aside. */
 const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
 
-/** The spell's text column is any of `values`, compared `folded`; a blank value matches nothing. */
 function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
   if (!values || values.length === 0) return [];
   return [
@@ -217,7 +197,7 @@ export function findGrimoireCategoryCounts(
 /**
  * The counts behind the four grimoire facets, under the list's visibility rule, so
  * another member's private spell is never counted. Each facet leaves its own picks
- * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts (M13.22)")
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

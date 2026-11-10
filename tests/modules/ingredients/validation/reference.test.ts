@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 
 // DESIGN.md §5, "References": a reference's fields as the form sends them, held to the table's CHECKs with each refusal pathed to its field per kind,
-// plus the form's own rule that a book needs a date (claude-docs/design-decisions/mb.151-references.md).
+// plus the form's own rule that a book needs a date (claude-docs/design-decisions/ingredients.md, "A reference is one source, kept once, rendered in Chicago form").
 
 /** The paths a failed parse reported: which field each refusal lands beside. */
 function failedPaths(input: unknown) {

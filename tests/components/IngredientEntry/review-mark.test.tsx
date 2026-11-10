@@ -13,8 +13,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The keeper's review mark on a compendium entry's details: the switch that marks or
-// clears it, in the details' head; the badge is the entry's own mark (claude-docs/components/ingredient-entry.md).
+// claude-docs/components/ingredient-entry.md
 
 const ID = '00000000-0000-4000-8000-000000000002';
 const AT = '2026-10-01T09:30:00.000Z';
@@ -109,8 +108,7 @@ describe('ReviewMark', () => {
   });
 });
 
-// The Control row of claude-docs/loading.md: the switch answers at once, carries aria-busy and a
-// spinner from the flip until the page's new answer arrives, and is never disabled.
+// The Control row of claude-docs/loading.md.
 describe('ReviewMark, while a flip is pending', () => {
   it('is busy with a spinner until the new answer arrives, and not disabled', async () => {
     acceptReview();
@@ -150,7 +148,6 @@ describe('ReviewMark, while a flip is pending', () => {
   });
 });
 
-// A flip, once answered, must not latch the switch: the curator can flip it back.
 describe('ReviewMark, flipped twice', () => {
   it('sends the second flip too, and shows it', async () => {
     const calls = acceptReview();
