@@ -2,17 +2,16 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { FormActions, PlainTextField } from '../Field';
+import { useNameField } from '../Field/use-name-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { RenameFieldsProps } from './types';
 
 export function RenameFields({ name, onRename, close }: RenameFieldsProps): ReactElement {
-  const [value, setValue] = useState(name);
+  const { value, setValue, typed, changed, alert, setAlert } = useNameField(name);
   const [saving, setSaving] = useState(false);
-  const [alert, setAlert] = useState<string>();
-  const typed = value.trim();
-  // Outer whitespace is no change, and an empty name is none: the plugin trims and refuses it.
-  const dirty = typed !== '' && typed !== name;
+  // An empty name is no change: the plugin trims and refuses it.
+  const dirty = typed !== '' && changed;
   const discard = useDiscardGuard(value !== name);
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
