@@ -77,7 +77,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-63  | Trim, then empty to undefined or null, written inline in eight services                                                                                      | medium   | Server        |     11 |     2 | Fixed in part                                   |
 | D-64  | Value-to-label lookups with a fallback, written eleven times                                                                                                 | medium   | Components    |     11 |     2 | Moved to MC.7                                   |
 | D-65  | "No such compendium entry" and the curator / uuid guard / NotFound sequence repeated                                                                         | medium   | Server        |     10 |     2 | Fixed                                           |
-| D-66  | Readable-spell parent check repeated in `spells.ts` and `workings.ts`; `grimoire.ts` ANDs `notSoftDeleted(spells)` after `readableSpells`                    | medium   | Server        |     10 |   1.5 | Fixed in part                                   |
+| D-66  | Readable-spell parent check repeated in `spells.ts` and `workings.ts`; `grimoire.ts` ANDs `notSoftDeleted(spells)` after `readableSpells`                    | medium   | Server        |     10 |   1.5 | Fixed                                           |
 | D-67  | Vocabulary admin services repeat the create and delete sequences                                                                                             | medium   | Server        |      9 |   4.5 | Fixed                                           |
 | D-68  | Four hand-built hover-tip wrappers on `useTip` in UserList                                                                                                   | medium   | Components    |      9 |     4 | Moved to MC.6                                   |
 | D-69  | AdminCards and AdminInvitations small duplicates and hard-coded constants                                                                                    | medium   | Components    |      8 |   3.5 | Moved to MC.8                                   |
@@ -2037,7 +2037,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** `tests/db/repository/spells*.test.ts`, `workings*.test.ts`, `grimoire*.test.ts`, and the authorisation tests in `tests/modules/grimoire/**` that assert a direct id is refused.
 
 - **Estimate:** 1.5 hours
-- **Status:** Fixed in part. `inReadableSpell` in `src/db/repository/spells.ts` states the readable-spell check once. The three readable-working checks in `src/db/repository/workings.ts` stay inline, because `tests/guards/soft-delete-finder-guard.test.ts` reads each finder's own body for `readableWorkings(`.
+- **Status:** Fixed. `inReadableSpell` in `src/db/repository/spells.ts` and `inReadableWorking` in `src/db/repository/workings.ts` state the readable-parent check once. `tests/guards/soft-delete-finder-guard.test.ts` admits a finder through `inReadableWorking` only while the helper's own body calls `readableWorkings(`.
 
 ### D-67: Vocabulary admin services repeat the create and delete sequences
 
