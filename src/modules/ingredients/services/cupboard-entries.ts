@@ -14,11 +14,12 @@ import {
   findWorkspaceIngredientByName,
   withAudit,
 } from '../../../db/repository';
-import { answerOf, Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { answerOf, fieldRefusal, Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
+import { fold, trimmedOrUndefined } from '../../../lib/text';
 import { isRowId, parseInput } from '../../../lib/validation';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
@@ -47,7 +48,6 @@ import {
   variantsOf,
 } from './ingredient-children';
 import {
-  foldForm,
   ingredientColumns,
   refuseCollision,
   resolvePicks,
@@ -145,7 +145,7 @@ export async function findCompendiumMatches(
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, {}>[]> {
   await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  const trimmed = name.trim();
+  const trimmed = trimmedOrUndefined(name);
   if (!trimmed) return [];
   return findCompendiumMatchPage(trimmed, page);
 }
@@ -170,15 +170,11 @@ async function refuseLabelTaken(
   if (label == null) return;
   const own = await findWorkspaceIngredientByName(membership, label);
   if (own) {
-    throw new ValidationError([
-      { path: ['label'], message: `This coven already has an ingredient called "${label}"` },
-    ]);
+    throw fieldRefusal('label', `This coven already has an ingredient called "${label}"`);
   }
   const other = await findCupboardEntryByLabel(membership, label);
   if (other && other.id !== exceptId) {
-    throw new ValidationError([
-      { path: ['label'], message: `This coven already calls another entry "${label}"` },
-    ]);
+    throw fieldRefusal('label', `This coven already calls another entry "${label}"`);
   }
 }
 
@@ -190,20 +186,16 @@ export async function refuseCupboardLabelAsName(
   name: string,
 ): Promise<void> {
   if (await findCupboardEntryByLabel(membership, name)) {
-    throw new ValidationError([
-      { path: ['name'], message: `This coven already calls a compendium entry "${name}"` },
-    ]);
+    throw fieldRefusal('name', `This coven already calls a compendium entry "${name}"`);
   }
 }
 
 function refuseRace(error: unknown): never {
   switch (violatedUniqueIndex(error)) {
     case ENTRY_INDEX:
-      throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
+      throw fieldRefusal('ingredientId', HELD);
     case LABEL_INDEX:
-      throw new ValidationError([
-        { path: ['label'], message: 'This coven already uses that label for another entry' },
-      ]);
+      throw fieldRefusal('label', 'This coven already uses that label for another entry');
   }
   throw error;
 }
@@ -226,7 +218,7 @@ export async function addCupboardEntry(
   const entry = await findOneIngredient([], ingredientId);
   if (!entry) throw new NotFound(NO_COMPENDIUM_ENTRY);
   if (await findCupboardEntry(membership, ingredientId)) {
-    throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
+    throw fieldRefusal('ingredientId', HELD);
   }
   await refuseLabelTaken(membership, parsed.label);
 
@@ -303,12 +295,10 @@ export async function removeCupboardEntry(
     const row = held.cupboardEntry;
     const jars = await findStockOfIngredients(membership, [ingredientId]);
     if (jars.length > 0) {
-      throw new ValidationError([
-        {
-          path: ['ingredientId'],
-          message: `This coven holds ${jars.length} ${jars.length === 1 ? 'jar' : 'jars'} of this entry — empty its jars first`,
-        },
-      ]);
+      throw fieldRefusal(
+        'ingredientId',
+        `This coven holds ${jars.length} ${jars.length === 1 ? 'jar' : 'jars'} of this entry — empty its jars first`,
+      );
     }
     const [removed] = await write.softDeleteByIdInWorkspace(
       membership,
@@ -442,8 +432,7 @@ async function ownValuesOf(
       const curated = form.formId === null ? undefined : curatedForms.get(form.formId);
       return {
         form: form.form,
-        formId:
-          curated !== undefined && foldForm(curated) === foldForm(form.form) ? form.formId! : '',
+        formId: curated !== undefined && fold(curated) === fold(form.form) ? form.formId! : '',
         description: form.description ?? '',
         safetyNotes: form.safetyNotes ?? '',
         toxic: form.toxic,
@@ -502,7 +491,7 @@ export async function convertCompendiumEntryToLocal(
       const forms = await write.lockLiveVariants(membership, own.id);
       const copyOf = new Map(
         entryForms.flatMap((form) => {
-          const copy = forms.find((candidate) => foldForm(candidate.form) === foldForm(form.form));
+          const copy = forms.find((candidate) => fold(candidate.form) === fold(form.form));
           return copy ? [[form.id, copy.id] as const] : [];
         }),
       );

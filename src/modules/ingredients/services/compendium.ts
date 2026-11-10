@@ -13,7 +13,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { fieldRefusal, NotFound, ValidationError } from '../../../lib/errors';
 import { NO_COMPENDIUM_ENTRY, NO_INGREDIENT, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
@@ -540,7 +540,7 @@ async function refuseCollision(
   id: string | undefined,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
-    throw new ValidationError([{ path: [path], message }]);
+    throw fieldRefusal(path, message);
   };
   const identity = (holder: IngredientRow | undefined) =>
     refuse(

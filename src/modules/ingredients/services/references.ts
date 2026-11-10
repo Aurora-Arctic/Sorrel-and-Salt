@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { fieldRefusal, NotFound } from '../../../lib/errors';
 import { NO_SOURCE, assertRowId } from './messages';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
@@ -48,9 +48,7 @@ const NOTHING = {
  */
 function refuseScholarlyInCoven(values: { scholarly: boolean }): void {
   if (values.scholarly) {
-    throw new ValidationError([
-      { path: ['scholarly'], message: 'Only a compendium source is marked scholarly' },
-    ]);
+    throw fieldRefusal('scholarly', 'Only a compendium source is marked scholarly');
   }
 }
 
