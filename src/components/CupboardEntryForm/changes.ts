@@ -21,7 +21,7 @@ export const LIST_FIELDS: readonly ListFieldName[] = [
 ];
 export const FIELDS: readonly CupboardField[] = [...TEXT_FIELDS, ...LIST_FIELDS];
 
-const isText = (field: CupboardField): field is TextField =>
+export const isTextField = (field: CupboardField): field is TextField =>
   (TEXT_FIELDS as readonly string[]).includes(field);
 
 const sameList = (a: readonly string[], b: readonly string[]): boolean =>
@@ -60,7 +60,7 @@ export function openingValues(
 }
 
 export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
-  if (isText(field)) return a[field].trim() !== b[field].trim();
+  if (isTextField(field)) return a[field].trim() !== b[field].trim();
   return !sameList(a[field], b[field]);
 }
 
@@ -73,7 +73,7 @@ export function isOwn(
 ): boolean {
   if (handedBack.has(field)) return false;
   if (overrides[field] !== null) return true;
-  if (isText(field) && values[field].trim() === '') return false;
+  if (isTextField(field) && values[field].trim() === '') return false;
   return differs(field, values, baseline);
 }
 
@@ -95,7 +95,7 @@ export function changesOf(
       if (held !== null) changes[field] = null;
       continue;
     }
-    if (isText(field)) {
+    if (isTextField(field)) {
       const text = values[field].trim();
       const heldText = held as string | null;
       if (held === null) {

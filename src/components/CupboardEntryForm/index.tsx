@@ -8,7 +8,7 @@ import { useAutosave, type SaveContext, type SaveResult } from '../../lib/autosa
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 import {
   FormActions,
   FormErrorSummary,
@@ -29,7 +29,15 @@ import { useModalHeaderNote } from '../Modal';
 import SaveStatus from '../SaveStatus';
 import { useSaveOnClose } from '../SpellBuilder/save-on-close';
 import Notice from '../Notice';
-import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
+import {
+  FIELDS,
+  differs,
+  isTextField,
+  baselineOf,
+  changesOf,
+  isOwn,
+  openingValues,
+} from './changes';
 import { fromForm, toForm, type CupboardFormValues } from './form-values';
 import type {
   CupboardChanges,
@@ -97,7 +105,6 @@ const placeOf = (
 const hasDrafts = (drafts: Record<string, string>): boolean =>
   Object.values(drafts).some((text) => text.trim() !== '');
 
-const TEXT_FIELD_NAMES: readonly CupboardField[] = ['label', 'description', 'safetyNotes'];
 const LIST_BOX = ['celestialBodies', 'zodiacSigns', 'colors'] as const;
 
 const CupboardEntryForm = ({
@@ -148,22 +155,18 @@ const CupboardEntryForm = ({
   });
 
   const placeRefusal = (error: unknown): void => {
-    const unplaced: string[] = [];
-    let placed = 0;
-    for (const { path, message } of readGraphqlIssues(error)) {
-      const where = placeOf(path);
-      if (!where) {
-        unplaced.push(message);
-        continue;
-      }
-      placed += 1;
-      const { field, at } = where;
-      if (field === 'elements' || TEXT_FIELD_NAMES.includes(field)) setError(field, { message });
-      else if (at !== undefined) setError(`${field}.${at}.value` as never, { message });
-      else setError(`drafts.${field}` as never, { message });
-    }
-    if (unplaced.length > 0) setAlert(unplaced.join(' '));
-    else if (placed === 0) setAlert("That didn't work. Please try again.");
+    const placed = placeServerIssues(
+      error,
+      (name, issue) => (name === 'root' ? setAlert(issue.message) : setError(name as never, issue)),
+      ({ path }) => {
+        const where = placeOf(path);
+        if (!where) return undefined;
+        const { field, at } = where;
+        if (field === 'elements' || isTextField(field)) return field;
+        return at !== undefined ? `${field}.${at}.value` : `drafts.${field}`;
+      },
+    );
+    if (!placed) setAlert("That didn't work. Please try again.");
   };
 
   /**
