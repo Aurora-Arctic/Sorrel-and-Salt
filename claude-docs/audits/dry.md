@@ -238,6 +238,13 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-224 | QR ink colour duplicates SCSS `$chalk`                                                                                                                       | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-225 | `.page-frame--in-column` margin restates `.page-column` padding                                                                                              | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-226 | PageNav skeleton width cycle written as six `nth-child` rules                                                                                                | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
+| S-1   | `vitest.yml`'s three part jobs (dom, node, db) are one job written three times                                                                               | medium   | Scripts       |      3 |   2.5 | Moved to MC.1                                   |
+| S-2   | The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`                                       | medium   | Scripts       |      2 |   1.5 | Moved to MC.1                                   |
+| S-3   | `setOutput` is written in four `.mjs` scripts                                                                                                                | low      | Scripts       |      4 |   0.5 | Moved to MC.1                                   |
+| S-4   | The "flaky" suffix text is written in two files                                                                                                              | low      | Scripts       |      2 |  0.25 | Moved to MC.1                                   |
+| S-5   | `postSingle` repeats `upsertComment`, and four `pr-comment.cjs` exports have no importer                                                                     | low      | Scripts       |      2 |   0.5 | Moved to MC.9                                   |
+| S-6   | `DEFAULT_PROJECT` is exported twice and imported nowhere, and the default-project lookup is written three times                                              | low      | Scripts       |      3 |   0.5 | Moved to MC.9                                   |
+| S-7   | `scripts/task-board.mjs` repeats its GraphQL argument arrays, item selection and status and estimate writes; `tally.mjs` rebuilds the branch-id regex        | low      | Scripts       |      5 |   2.5 | Moved to MC.9                                   |
 
 ## Findings
 
@@ -5142,6 +5149,111 @@ These ideas were looked at and not recorded as findings, because the code shows 
 
 - Error and not-found boundaries copied across route groups: Next.js needs one file per route segment, so the files cannot be shared; each is a few lines.
 - Email templates repeating support-title and pause-end copy-building: each template is the text of one email, and the shared parts are already one line each.
+
+## Staging Script Code
+
+These findings are in the CI comment and task-board scripts that staging added after the main audit.
+
+### S-1: `vitest.yml`'s three part jobs (dom, node, db) are one job written three times
+
+- **Severity:** medium
+- **Why it matters:** A change to the Vitest run flags, the upload or the PR comment has to be made in three jobs.
+- **Where:**
+  - `.github/workflows/vitest.yml`: `vitest-dom` (:51-121), `vitest-node` (:122-192), `vitest-db` (:193-283), about 70 lines each.
+  - Identical in all three: the `container:` block with `--user root`, `defaults.run`, `env.DATABASE_URL`, checkout, the `--coverage --reporter=blob ... --coverage.thresholds.*=0` flags, the blob upload, the summarize step and the PR comment step.
+  - They differ only in the `--project` list, the blob and section names, and `vitest-db`'s `services: postgres:` block (:210-228).
+- **Shared piece:** a composite action `.github/actions/vitest-part` (inputs `name`, `projects`, `pr-number`, `merge-queue`) holding the run, upload, summarize and comment steps. A `strategy.matrix` cannot replace the jobs because only `db` has a service.
+- **Guard:** none practical.
+- **Fix:** each job keeps its `container`/`services` header and one `uses:`; the threshold-zero flags live in the action only.
+
+- **Estimate:** 2.5 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### S-2: The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`
+
+- **Severity:** medium
+- **Why it matters:** A change to the failing-list format has to be made in both files, and the two already differ on ANSI stripping.
+- **Where:**
+  - `.github/scripts/lib/playwright-failures.mjs`: `MAX_DETAILS = 15` (:4), `stripAnsi` (:6-9), `formatFailures` (:36-58).
+  - `.github/scripts/summarize-vitest.mjs`: `MAX_DETAILS = 15` (:22), failure collection (:80-93), `stripAnsi` (:96-99, the same code), and the `<details>` block (:123-138) with the same line shape and the same "...and N more" line.
+  - The copies differ: the Playwright helper strips ANSI from the failure message (`playwright-failures.mjs:24`); the Vitest copy does not (`summarize-vitest.mjs:86`, `:91`).
+- **Shared piece:** one lib file exporting `stripAnsi` and a heading-taking `formatFailures` over `{file, title, message}` with optional tags and flaky mark (extend `lib/playwright-failures.mjs` or add `lib/failure-list.mjs`).
+- **Guard:** none practical.
+- **Fix:** both scripts import the shared pieces, and the Vitest message goes through `stripAnsi` too.
+
+- **Estimate:** 1.5 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### S-3: `setOutput` is written in four `.mjs` scripts
+
+- **Severity:** low
+- **Why it matters:** A fix to the multiline output delimiter has to be made in four files.
+- **Where:**
+  - `.github/scripts/summarize-playwright.mjs:9-12`, `summarize-stories.mjs:12-15`, `summarize-vitest.mjs:26-29`, `merge-playwright-coverage.mjs:23-26`; identical today.
+  - The shell scripts `summarize-format.sh:20`, `summarize-lint.sh:23` and `summarize-typecheck.sh:21` hold the same delimiter pattern in shell and stay as they are.
+- **Shared piece:** `.github/scripts/lib/github-output.mjs` exporting `setOutput`.
+- **Guard:** none practical.
+- **Fix:** the four scripts import it.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### S-4: The "flaky" suffix text is written in two files
+
+- **Severity:** low
+- **Why it matters:** A wording change has to be made in both places.
+- **Where:**
+  - `.github/scripts/lib/playwright-failures.mjs:48` and `.github/scripts/summarize-stories.mjs:70` both write the same flaky note; identical today.
+- **Shared piece:** one exported `FLAKY_NOTE` constant in `lib/playwright-failures.mjs`.
+- **Guard:** none practical.
+- **Fix:** both files use the constant.
+
+- **Estimate:** 0.25 hours
+- **Status:** Not fixed: moved to MC.1.
+
+### S-5: `postSingle` repeats `upsertComment`, and four `pr-comment.cjs` exports have no importer
+
+- **Severity:** low
+- **Why it matters:** A change to how the marked comment is found or written has to be made in each copy, and the four exports are dead surface.
+- **Where:**
+  - `.github/scripts/lib/pr-comment.cjs:320-326` (`upsertComment`) and `postSingle` (:381-389) both update the oldest marked comment or create one. `postSectioned` (:429-434) does the same but also needs the created id.
+  - `LAYOUTS`, `STATUSES`, `planSectionWrite` and `sectionLanded` (:498-507) are exported and imported nowhere in the repo; each is used inside the file. No test file imports the module.
+- **Shared piece:** `postSingle` calls `upsertComment` after its unminimize step.
+- **Guard:** none practical.
+- **Fix:** call `upsertComment` from `postSingle` and drop the four names from `module.exports`.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.9.
+
+### S-6: `DEFAULT_PROJECT` is exported twice and imported nowhere, and the default-project lookup is written three times
+
+- **Severity:** low
+- **Why it matters:** The constant is dead, and a change to what "default project" means has to be made at three sites.
+- **Where:**
+  - `scripts/task-projects.mjs:36` exports `DEFAULT_PROJECT`; the only importer is `scripts/tasks-md.mjs:5`, which only re-exports it (:44). Nothing else reads it.
+  - `projects.find((project) => project.default)` at `task-projects.mjs:55`, `:69` and `tasks-md.mjs:31`. Each takes a `projects` parameter, so the constant cannot stand in.
+- **Shared piece:** `defaultOf(projects = PROJECTS)` in `task-projects.mjs`.
+- **Guard:** none practical.
+- **Fix:** use it at the three sites and delete `DEFAULT_PROJECT` and the re-export.
+
+- **Estimate:** 0.5 hours
+- **Status:** Not fixed: moved to MC.9.
+
+### S-7: `scripts/task-board.mjs` repeats its GraphQL argument arrays, item selection and status and estimate writes; `tally.mjs` rebuilds the branch-id regex
+
+- **Severity:** low
+- **Why it matters:** A change to the item fields, the id pattern or the way Status and Estimate are written has to be made in each copy, and the copies already differ.
+- **Where:**
+  - The item selection (`id`, project, status and estimate field values) is in `ITEM_QUERY` (`task-board.mjs:99-124`) and, aliased, in `readItemsOf` (:668-690). They already differ: `ITEM_QUERY` also selects the Project's `fields(first: 30)`, which `projectMetaQuery` (:630-649) selects a third time.
+  - `gh api graphql -f query=... -f var=...` arrays are built by hand in `reorderMutationArgs` (:435-447), `addItemArgs` (:714-723), `deleteItemArgs` (:725-734), `readProjects` and `readItemsOf`.
+  - `setStatus` (:205-228) and `setEstimate` (:230-244) look up the field and option and call `editItem`; `applyPlacements` (:787-801) repeats both with different error text ("Project N's Status has no ..." against "The Status field has no ..."), and it does not apply the backwards-move check `setStatus` makes.
+  - `.claude/skills/project-progress/tally.mjs:144-147` builds the branch-id regex inline; `scripts/task-ids.mjs:7-10` (`BRANCH`) holds the same id pattern. `tally.mjs:171` (`ofProject`) repeats the `projectOf.get(id) ?? projectOfId(id)` of the `--task` branch (:162-163).
+- **Shared piece:** a `graphqlArgs(query, variables)` helper, one item selection fragment, `writeStatus` and `writeEstimate` used by `setStatus`, `setEstimate` and `applyPlacements`, and an id fragment exported from `task-ids.mjs`.
+- **Guard:** none practical.
+- **Fix:** add the helper and the shared writers, export the id fragment, and move `ofProject` above its first use in `tally.mjs`.
+
+- **Estimate:** 2.5 hours
+- **Status:** Not fixed: moved to MC.9.
 
 ## Rules from this audit
 
