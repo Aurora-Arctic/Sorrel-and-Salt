@@ -33,7 +33,7 @@ const BusinessCards = (): ReactElement => {
     shouldFocusError: false,
     resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
   });
-  const { isDirty, isValid } = methods.formState;
+  const { isDirty } = methods.formState;
   const discard = useDiscardGuard(isDirty);
 
   useEffect(() => {
@@ -81,12 +81,13 @@ const BusinessCards = (): ReactElement => {
           </Notice>
         )}
         <FormErrorSummary />
-        <TextField<BusinessCardValues> name="name" label="Name" required />
+        <TextField<BusinessCardValues> name="name" label="Name" required placeholder="Add a name" />
         <TextField<BusinessCardValues>
           name="email"
           label="Email"
           type="email"
           required
+          placeholder="Add an email"
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
@@ -99,6 +100,7 @@ const BusinessCards = (): ReactElement => {
           autoComplete="tel"
           mask={phoneMask}
           required
+          placeholder="Add a phone"
         />
         <SwitchField
           label="Include Backs"
@@ -120,7 +122,7 @@ const BusinessCards = (): ReactElement => {
           noun="Business Cards"
           label="Generate"
           busyLabel="Generating"
-          dirty={isValid && assets !== null}
+          dirty={assets !== null}
           submitting={building}
         />
         {discard.asking && <DiscardQuestion guard={discard} />}

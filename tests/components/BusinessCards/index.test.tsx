@@ -48,61 +48,59 @@ describe('BusinessCards', () => {
     expect(screen.getByRole('textbox', { name: 'Phone' })).toHaveAttribute('autocomplete', 'tel');
   });
 
-  it('refuses a number that is not one, with an example, and keeps Generate off', async () => {
+  it('refuses a number that is not one, with an example, and builds nothing on Generate', async () => {
     render(<BusinessCards />);
     await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
     fillAll();
-    await waitFor(() => expect(generate()).toBeEnabled());
-
     fill('Phone', '555-0123');
 
-    await waitFor(() => expect(generate()).toBeDisabled());
     const phone = screen.getByRole('textbox', { name: 'Phone' });
-    expect(phone).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(phone).toHaveAttribute('aria-invalid', 'true'));
     expect(
       await screen.findAllByText('Enter a phone number, like (202) 555-0123'),
     ).not.toHaveLength(0);
+    expect(generate()).toBeEnabled();
+    fireEvent.click(generate());
+
+    expect(await screen.findByRole('group', { name: 'There Is a Problem' })).toBeInTheDocument();
+    expect(renderBusinessCards).not.toHaveBeenCalled();
   });
 
-  it('tidies the email on blur and keeps Generate off for an address with no domain dot', async () => {
+  it('tidies the email on blur, and Generate refuses an address with no domain dot', async () => {
     render(<BusinessCards />);
     await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
 
     fillAll('  Testwort@Example.TEST ');
-    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('testwort@example.test');
-    await waitFor(() => expect(generate()).toBeEnabled());
+    const email = screen.getByRole('textbox', { name: 'Email' });
+    expect(email).toHaveValue('testwort@example.test');
 
     fill('Email', 'testwort@example');
-    await waitFor(() => expect(generate()).toBeDisabled());
+    fireEvent.click(generate());
+
+    await waitFor(() => expect(email).toHaveAttribute('aria-invalid', 'true'));
+    expect(renderBusinessCards).not.toHaveBeenCalled();
   });
 
-  it('starts with Generate off and Include Backs off', async () => {
+  it('starts with Generate usable and Include Backs off', async () => {
     render(<BusinessCards />);
 
-    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
-    expect(generate()).toBeDisabled();
+    await waitFor(() => expect(generate()).toBeEnabled());
     expect(screen.getByRole('switch', { name: 'Include Backs' })).not.toBeChecked();
   });
 
-  it('keeps Generate off until the name, an email address and the phone are filled in', async () => {
+  it('flags every empty field on Generate, with the summary taking the focus, and builds nothing', async () => {
     render(<BusinessCards />);
-
-    fill('Name', 'Testwort Hollin');
-    fill('Phone', '202-555-0199');
-    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
-    expect(generate()).toBeDisabled();
-
-    fill('Email', 'testwort at example');
-    await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveAttribute(
-        'aria-invalid',
-        'true',
-      ),
-    );
-    expect(generate()).toBeDisabled();
-
-    fill('Email', 'testwort@example.test');
     await waitFor(() => expect(generate()).toBeEnabled());
+    for (const name of ['Name', 'Email', 'Phone'])
+      expect(screen.getByRole('textbox', { name })).not.toHaveAttribute('aria-invalid');
+
+    fireEvent.click(generate());
+
+    const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
+    await waitFor(() => expect(summary).toHaveFocus());
+    for (const name of ['Name', 'Email', 'Phone'])
+      expect(screen.getByRole('textbox', { name })).toHaveAttribute('aria-invalid', 'true');
+    expect(renderBusinessCards).not.toHaveBeenCalled();
   });
 
   it('keeps Generate off until the fonts and pictures have arrived', async () => {

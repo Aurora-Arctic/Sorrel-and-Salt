@@ -8,7 +8,7 @@ Nothing, once the page is open. The form fetches the card fonts and pictures fro
 
 ## The form
 
-Name, Email and Phone are all required, and Email must be an email address (`schema.ts`). Phone must be a valid phone number (`isPhoneNumber`, `libphonenumber-js`), and the message is "Enter a phone number, like (202) 555-0123". The field is masked as the keeper types, through Field's `mask` ([Field](field.md), "Masks"): US formatting by default, `(202) 555-0123`, and a number starting with `+` is formatted for its own country. The saved value is the formatted text. Include Backs is a switch, off to start. Generate stays off until the fields are valid and the fonts and pictures have arrived.
+Name, Email and Phone are all required, and Email must be an email address (`schema.ts`). Phone must be a valid phone number (`isPhoneNumber`, `libphonenumber-js`), and the message is "Enter a phone number, like (202) 555-0123". The field is masked as the keeper types, through Field's `mask` ([Field](field.md), "Masks"): US formatting by default, `(202) 555-0123`, and a number starting with `+` is formatted for its own country. The saved value is the formatted text. Include Backs is a switch, off to start. Generate is off only until the fonts and pictures have arrived. It is never off for a missing or wrong field: a press then marks each wrong field, shows the error summary, which takes the focus, and builds nothing.
 
 ## The sheet
 
