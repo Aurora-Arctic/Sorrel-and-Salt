@@ -6,11 +6,11 @@ import { settled, type AuthFailure } from '../../lib/auth-call';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS, rateLimited } from '../../lib/auth-messages';
 import { newPasswordRefusal } from '../../lib/password-refusals';
-import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import BusyButton from '../BusyButton';
-import { PlainTextField } from '../Field';
+import { EmailField, PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import ModeSwitch from './mode-switch';
@@ -185,14 +185,8 @@ const PasswordForm = ({
             onChange={setName}
           />
         )}
-        <PlainTextField
-          label="Email Address"
-          required
-          type="email"
+        <EmailField
           autoComplete={signingUp ? 'email' : 'username'}
-          placeholder="name@example.com"
-          format={emailFormat}
-          check={emailAddressProblem}
           value={email}
           onChange={onEmailChange}
           error={problem.email}

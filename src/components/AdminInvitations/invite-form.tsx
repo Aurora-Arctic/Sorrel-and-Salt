@@ -3,11 +3,10 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { EmailAddress } from '../../lib/email-address-schema';
+import { emailFailure } from '../../lib/email-failure';
 import { useFormSend } from '../../lib/use-form-send';
 import { reasonProblem } from '../../modules/identity/validation/reason';
-import { FormActions, RadioGroupField, ReasonField } from '../Field';
-import InviteEmailField from '../InviteDialog/email-field';
+import { EmailField, FormActions, RadioGroupField, ReasonField } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
@@ -59,12 +58,8 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     event.preventDefault();
     const noteProblem = reasonProblem(note);
     setNoteError(noteProblem);
-    const parsed = EmailAddress.safeParse(email);
-    if (!parsed.success) {
-      return setFailure({
-        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
-      });
-    }
+    const refused = emailFailure(email);
+    if (refused) return setFailure(refused);
     if (noteProblem) return;
     const address = email.trim();
     const sent = await send(() =>
@@ -86,10 +81,14 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         address can accept it.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <InviteEmailField
+      <EmailField
+        name="email"
         value={email}
         error={failure.field?.message}
         disabled={sending}
+        // The address is someone else's, so the browser must not offer the signed-in person's own.
+        autoComplete="off"
+        ignorePasswordManagers
         onChange={(next) => {
           setEmail(next);
           if (failure.field) setFailure({ ...failure, field: undefined });

@@ -4,12 +4,12 @@ import { EMAIL_TITLE } from './head';
 import type { Route } from 'next';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useState } from 'react';
-import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
+import { validateEmailAddress } from '../../lib/email-address';
 import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { fold } from '../../lib/text';
-import { FormActions, PlainTextField } from '../Field';
+import { EmailField, FormActions } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
@@ -162,16 +162,10 @@ const EmailForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <PlainTextField
-          label="Email Address"
-          type="email"
+        <EmailField
           // A new address: "email" would fill in the one the account has now.
           autoComplete="off"
           ignorePasswordManagers
-          required
-          placeholder="name@example.com"
-          format={emailFormat}
-          check={emailAddressProblem}
           value={value}
           onChange={(next) => {
             setValue(next);

@@ -3,15 +3,14 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { EmailAddress } from '../../lib/email-address-schema';
+import { emailFailure } from '../../lib/email-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
-import { FormActions, RadioGroupField } from '../Field';
+import { EmailField, FormActions, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import InviteEmailField from './email-field';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
 // A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
@@ -51,12 +50,8 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsed = EmailAddress.safeParse(email);
-    if (!parsed.success) {
-      return setFailure({
-        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
-      });
-    }
+    const refused = emailFailure(email);
+    if (refused) return setFailure(refused);
     const address = email.trim();
 
     const sent = await send(() =>
@@ -87,10 +82,14 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <InviteEmailField
+      <EmailField
+        name="email"
         value={email}
         error={failure.field?.message}
         disabled={sending}
+        // The address is someone else's, so the browser must not offer the signed-in person's own.
+        autoComplete="off"
+        ignorePasswordManagers
         onChange={(next) => {
           setEmail(next);
           if (failure.field) setFailure({});

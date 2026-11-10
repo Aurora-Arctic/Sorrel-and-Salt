@@ -5,13 +5,14 @@ import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { emailAddressProblem, emailFormat, normaliseEmail } from '../../lib/email-address';
+import { emailAddressProblem, normaliseEmail } from '../../lib/email-address';
 import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { ABOUT_REQUIRED, MESSAGE_REQUIRED, SUBJECT_REQUIRED } from '../../lib/support-messages';
 import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
 import type { Failure } from '../../lib/types';
+import { EmailField } from '../Field/email-field';
 import { PlainTextField } from '../Field/plain-text-field';
 import { FormActions } from '../Field/form-actions';
 import { RadioGroupField } from '../Field/radio-group-field';
@@ -149,18 +150,12 @@ const SignedOutSupportForm = ({
           edited('about');
         }}
       />
-      <PlainTextField
+      <EmailField
         name="email"
         label="Email"
-        required
         note="We reply to this address"
-        type="email"
         autoComplete="email"
-        autoCapitalize="none"
-        spellCheck={false}
         placeholder="Add an email"
-        format={emailFormat}
-        check={emailAddressProblem}
         disabled={sending}
         value={email}
         error={shown.email}
