@@ -84,6 +84,10 @@ describe('formatQuantity', () => {
     expect(formatQuantity('abc')).toBe('abc');
     expect(formatQuantity('1.2.3')).toBe('1.2.3');
   });
+  it('never rounds away a decimal past the third, which the rule refuses', () => {
+    expect(formatQuantity('1.2345')).toBe('1.2345');
+    expect(formatQuantity(' 1000.0001 ')).toBe('1000.0001');
+  });
   it('empties blank text', () => {
     expect(formatQuantity('  ')).toBe('');
   });

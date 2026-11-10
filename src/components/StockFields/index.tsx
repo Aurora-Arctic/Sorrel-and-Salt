@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 import { formatQuantity } from '@/lib/formats';
+import { QUANTITY_HINT } from '@/lib/quantity-rule';
 import { SelectField, TextField } from '../Field';
 import type { StockFieldsProps, StockFormValues } from './types';
 import { UNIT_OPTIONS } from './units';
@@ -25,7 +26,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         disabled={disabled}
         inputMode="decimal"
         format={formatQuantity}
-        hint="A number, like 2.5"
+        hint={QUANTITY_HINT}
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="next"

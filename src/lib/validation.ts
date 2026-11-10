@@ -1,7 +1,7 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
 import { type FieldFormat, parseQuantity, tidy, trimEnds } from './formats';
-import { MAX_QUANTITY, QUANTITY_SCALE } from '../modules/ingredients/schema/quantities';
+import { QUANTITY_FORMAT_MESSAGE, amountProblem } from './quantity-rule';
 import type { ValidationIssue } from './types';
 
 // Apart from errors.ts so that stays schema-library-free (claude-docs/validation.md).
@@ -31,18 +31,14 @@ export const optionalText = (format: FieldFormat = tidy) =>
 
 /**
  * A stock or recipe amount: a number from 0 to what the columns hold with up to three decimals. Not a CHECK for the
- * negative case, which has something to say. `label` names the field in the messages that need it.
+ * negative case, which has something to say. `label` names the field in the messages that need it. The rule is
+ * `amountProblem` (quantity-rule.ts), which a client field checks with too.
  */
 export const quantity = (label: string) =>
-  z
-    .number({ error: 'Enter an amount as a number, like 2.5' })
-    .nonnegative({ error: `${label} cannot be negative` })
-    .max(MAX_QUANTITY, {
-      error: `${label} is too large — the most it can be is ${MAX_QUANTITY.toLocaleString('en', { maximumFractionDigits: QUANTITY_SCALE })}`,
-    })
-    .refine((amount) => Number(amount.toFixed(QUANTITY_SCALE)) === amount, {
-      error: `${label} can have up to three decimal places`,
-    });
+  z.number({ error: QUANTITY_FORMAT_MESSAGE }).check((context) => {
+    const problem = amountProblem(context.value, label);
+    if (problem) context.issues.push({ code: 'custom', message: problem, input: context.value });
+  });
 
 /** `quantity` for the text a form holds: blank is no amount, digits with at most one point, commas dropped as thousands separators. */
 export const quantityText = (label: string) =>

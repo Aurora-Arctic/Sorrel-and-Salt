@@ -38,11 +38,15 @@ export const showQuantity = (amount: number): string =>
     ? String(amount)
     : amount.toLocaleString('en-GB', { maximumFractionDigits: QUANTITY_SCALE });
 
-/** An amount shown with thousands separators ("1000" becomes "1,000"); what it cannot read stays as typed. */
+/** An amount shown with thousands separators ("1000" becomes "1,000"); what it cannot read, or could show only rounded, stays as typed. */
 export const formatQuantity: FieldFormat = (text) => {
   const amount = parseQuantity(text);
   if (amount === null) return '';
-  return Number.isNaN(amount) || String(amount).includes('e') ? text.trim() : showQuantity(amount);
+  const exact =
+    !Number.isNaN(amount) &&
+    !String(amount).includes('e') &&
+    Number(amount.toFixed(QUANTITY_SCALE)) === amount;
+  return exact ? showQuantity(amount) : text.trim();
 };
 
 /**

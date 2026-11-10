@@ -6,6 +6,7 @@ import { UNITS } from '@/modules/ingredients/schema/units';
 import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
 import { unitLabel } from '@/components/StockFields/units';
 import type { Unit } from '@/modules/ingredients/schema/units';
+import { QUANTITY_FORMAT_MESSAGE, QUANTITY_HINT, quantityProblem } from '@/lib/quantity-rule';
 import { choose } from '../../support/interact';
 
 // The help pages' converter: the answer is the app's own `unitConvert`, so a cross-dimension or count pair shows
@@ -27,6 +28,8 @@ function drawn(element: HTMLElement): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+const amountBox = () => screen.getByRole('textbox', { name: 'Amount' });
 
 function convert(amount: string, from: Unit, to: Unit): HTMLElement {
   render(<UnitConverter />);
@@ -95,7 +98,7 @@ describe('UnitConverter', () => {
     });
     const negative = screen.getByRole('status', { name: 'Result' });
     expect(spoken(negative)).not.toMatch(/\d/);
-    expect(drawn(negative)).toBe('-1 g = —');
+    expect(drawn(negative)).toBe('— g = —');
   });
 
   it('reads an amount with thousands separators and refuses letters', () => {
@@ -108,6 +111,50 @@ describe('UnitConverter', () => {
     const letters = screen.getByRole('status', { name: 'Result' });
     expect(spoken(letters)).not.toMatch(/\d/);
     expect(letters).not.toHaveTextContent('NaN');
+  });
+
+  it('gives the amount the stock box’s hint', () => {
+    render(<UnitConverter />);
+
+    expect(amountBox()).toHaveAccessibleDescription(expect.stringContaining(QUANTITY_HINT));
+  });
+
+  it('flags letters when the amount is left, linked to the field, and draws a dash for it', () => {
+    const result = convert('abc', 'g', 'kg');
+    fireEvent.blur(amountBox());
+
+    expect(amountBox()).toHaveAttribute('aria-invalid', 'true');
+    expect(amountBox()).toHaveAccessibleDescription(
+      expect.stringContaining(QUANTITY_FORMAT_MESSAGE),
+    );
+    expect(drawn(result)).toBe('— g = —');
+    expect(spoken(result)).not.toMatch(/\d|NaN/);
+    const lettersSentence = spoken(result);
+    fireEvent.change(amountBox(), { target: { value: '' } });
+    expect(lettersSentence).not.toBe(spoken(result));
+  });
+
+  it.each(['-2', '1.2345'])(
+    'flags %j with the quantity rule’s message when left, and converts none of it',
+    (text) => {
+      const problem = quantityProblem(text, 'Amount');
+      expect(problem).toBeTruthy();
+      const result = convert(text, 'g', 'kg');
+      fireEvent.blur(amountBox());
+
+      expect(amountBox()).toHaveAttribute('aria-invalid', 'true');
+      expect(amountBox()).toHaveAccessibleDescription(expect.stringContaining(problem!));
+      expect(drawn(result)).toBe('— g = —');
+    },
+  );
+
+  it('converts a usable amount and flags nothing when it is left', () => {
+    const result = convert('2.5', 'kg', 'g');
+    fireEvent.blur(amountBox());
+
+    expect(amountBox()).not.toHaveAttribute('aria-invalid', 'true');
+    const expected = unitConvert(2.5, 'kg', 'g');
+    expect(spoken(result)).toBe(`2.5 kg is ${expected.ok && expected.value} g.`);
   });
 
   it('offers every unit the app knows on both sides', () => {

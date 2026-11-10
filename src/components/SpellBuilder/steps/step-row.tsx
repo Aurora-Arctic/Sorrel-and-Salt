@@ -8,6 +8,7 @@ import { GripIcon } from '../../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { formatQuantity } from '@/lib/formats';
+import { QUANTITY_HINT } from '@/lib/quantity-rule';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
@@ -227,7 +228,7 @@ export function BuilderStepRow({
           labelSuffix={name}
           inputMode="decimal"
           format={formatQuantity}
-          hint="A number, like 2.5"
+          hint={QUANTITY_HINT}
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="next"
