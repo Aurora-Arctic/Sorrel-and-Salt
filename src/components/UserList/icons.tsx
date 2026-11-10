@@ -38,7 +38,7 @@ export function EmailPasswordIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
-        d="M12.5 7.5V5a1 1 0 0 0-1-1h-9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h5.25M2.5 5.25 7 8.5l4.5-3.25M10.25 11.5v-1a1.75 1.75 0 0 1 3.5 0v1M9.5 11.5h5v3h-5z"
+        d="M12.5 6.5V5a1 1 0 0 0-1-1h-9a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h4.75M2.5 5.25 7 8.5l4.5-3.25M9.75 11v-1a2.25 2.25 0 0 1 4.5 0v1M9 11h6v4h-6z"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
