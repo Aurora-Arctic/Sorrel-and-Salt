@@ -1,7 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
 import { compendiumFacetsHeldIn } from '../services/compendium-held-in';
-import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
   CompendiumListingEnum,
@@ -64,34 +63,39 @@ export const categoryArgs = builder.args((t) => ({
   }),
 }));
 
+/** The eight arguments the compendium's list and its facet counts share. */
+const compendiumFilterArgs = builder.args((t) => ({
+  query: t.string({ required: false }),
+  ...categoryArgs,
+  ...facetArgs,
+  // The admin's to-do list: live entries citing no live reference.
+  withoutReferences: t.boolean({ required: false }),
+  // The admin's other to-do list: live entries with no live form.
+  withoutForms: t.boolean({ required: false }),
+  // The formal names still to look up are the `unknown` entries.
+  nomenclature: t.field({ type: NomenclatureEnum, required: false }),
+  // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
+  listing: t.field({ type: CompendiumListingEnum, required: false }),
+  reviewed: t.boolean({
+    required: false,
+    description:
+      'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
+  }),
+}));
+
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
-      query: t.arg.string({ required: false }),
-      ...categoryArgs,
-      ...facetArgs,
-      // The admin's to-do list: live entries citing no live reference.
-      withoutReferences: t.arg.boolean({ required: false }),
-      // The admin's other to-do list: live entries with no live form.
-      withoutForms: t.arg.boolean({ required: false }),
-      // The formal names still to look up are the `unknown` entries.
-      nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
-      listing: t.arg({ type: CompendiumListingEnum, required: false }),
-      reviewed: t.arg.boolean({
-        required: false,
-        description:
-          'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
-      }),
+      ...compendiumFilterArgs,
       // The column to sort on; the sourcing score is FORBIDDEN to anyone but a curator, as the score is.
       sort: t.arg({ type: CompendiumSortEnum, required: false }),
       order: t.arg({ type: CompendiumOrderEnum, required: false }),
     },
     // The session reaches the read for a curator's settings alone: Reviewed, the hidden listing and the sourcing sort.
-    resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
+    resolve: (_root, args, page, { session }) => listCompendium(args, page, session),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
-    count: (_root, args, start, { session }) => countCompendium(filterOf(args), start, session),
+    count: (_root, args, start, { session }) => countCompendium(args, start, session),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,
@@ -109,19 +113,7 @@ builder.queryField('compendiumFacets', (t) =>
     description:
       'How many compendium entries each search filter value would list under the rest of the filter.',
     args: {
-      query: t.arg.string({ required: false }),
-      ...categoryArgs,
-      ...facetArgs,
-      withoutReferences: t.arg.boolean({ required: false }),
-      withoutForms: t.arg.boolean({ required: false }),
-      nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
-      listing: t.arg({ type: CompendiumListingEnum, required: false }),
-      reviewed: t.arg.boolean({
-        required: false,
-        description:
-          'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
-      }),
+      ...compendiumFilterArgs,
       // The In My Covens filter, the viewer's own; signed out, or naming a coven
       // they are not in, it filters nothing and the counts are the cached public ones.
       covenIds: t.arg.idList({
@@ -139,7 +131,7 @@ builder.queryField('compendiumFacets', (t) =>
       compendiumFacetsHeldIn(
         session,
         { covenIds: covenIds ?? [], covensNot: covensNot ?? undefined },
-        filterOf(args),
+        args,
       ),
   }),
 );
@@ -156,41 +148,3 @@ builder.queryField('ingredient', (t) =>
     resolve: (_root, { id, workspaceId }, { session }) => getIngredient(session, id, workspaceId),
   }),
 );
-
-function filterOf({
-  query,
-  categoryIds,
-  categoryMode,
-  forms,
-  deityIds,
-  zodiacSigns,
-  celestialBodies,
-  elements,
-  toxic,
-  withoutReferences,
-  withoutForms,
-  nomenclature,
-  reviewed,
-  listing,
-  sort,
-  order,
-}: CompendiumFilterInput): CompendiumFilterInput {
-  return {
-    query,
-    categoryIds,
-    categoryMode,
-    forms,
-    deityIds,
-    zodiacSigns,
-    celestialBodies,
-    elements,
-    toxic,
-    withoutReferences,
-    withoutForms,
-    nomenclature,
-    reviewed,
-    listing,
-    sort,
-    order,
-  };
-}
