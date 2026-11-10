@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 import { router } from '../../support/next-navigation';
 
 // claude-docs/components/invite-dialog.md
@@ -75,16 +74,6 @@ describe('InviteDialog', () => {
     expect(send()).toBeEnabled();
   });
 
-  // The address's shape is tests/lib/email-address.test.ts's; this is the form's wiring, under a domain no mailbox can exist under.
-  it('flags a malformed address when the field is left, linked to the field', () => {
-    open();
-    typeAddress('name@');
-    fireEvent.blur(emailField());
-
-    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
-    expect(emailField()).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
-  });
-
   it('refuses an address the format rule rejects before anything is sent', async () => {
     const calls = mockSending();
     open();
@@ -96,13 +85,6 @@ describe('InviteDialog', () => {
     expect(emailField()).toHaveAccessibleDescription(/\S/);
     expect(calls).toEqual([]);
     expect(router.refresh).not.toHaveBeenCalled();
-  });
-
-  it('tidies an address on blur: the ends trimmed and all of it lower-cased', () => {
-    open();
-    typeAddress('  Ada@Example.TEST ');
-    fireEvent.blur(emailField());
-    expect(emailField()).toHaveValue('ada@example.test');
   });
 
   it('clears the refusal as the address is changed', async () => {

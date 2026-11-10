@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { renderWithQuery } from '../../support/render-with-query';
 import { router } from '../../support/next-navigation';
 import type { CreateWorkspaceMutation, CreateWorkspaceMutationVariables } from '@/gql/graphql';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
 import { limitMessage } from '@/lib/formats';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -111,7 +112,7 @@ describe('CreateWorkspaceForm', () => {
     });
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(COVEN_NAME_LIMIT + 1) } });
     submit();
 
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
@@ -129,7 +130,7 @@ describe('CreateWorkspaceForm', () => {
     });
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(COVEN_NAME_LIMIT + 1) } });
     submit();
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
 
@@ -142,10 +143,10 @@ describe('CreateWorkspaceForm', () => {
     const calls = acceptCreate();
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(COVEN_NAME_LIMIT + 1) } });
     submit();
 
-    expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
+    expect(await screen.findByText(limitMessage(COVEN_NAME_LIMIT))).toBeInTheDocument();
     expect(calls).toHaveLength(0);
     expect(router.push).not.toHaveBeenCalled();
   });

@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { RenameWorkspaceMutation, RenameWorkspaceMutationVariables } from '@/gql/graphql';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
 import { limitMessage } from '@/lib/formats';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { router } from '../../support/next-navigation';
@@ -101,7 +102,7 @@ describe('RenameWorkspaceForm', () => {
     });
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'F'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'F'.repeat(COVEN_NAME_LIMIT + 1) } });
     submitForm();
 
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
@@ -117,7 +118,7 @@ describe('RenameWorkspaceForm', () => {
     });
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(COVEN_NAME_LIMIT + 1) } });
     submitForm();
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
 
@@ -129,10 +130,10 @@ describe('RenameWorkspaceForm', () => {
   it('refuses a name past the limit on Save with the shared wording, without asking the server', async () => {
     renderForm();
 
-    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(COVEN_NAME_LIMIT + 1) } });
     submitForm();
 
-    expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
+    expect(await screen.findByText(limitMessage(COVEN_NAME_LIMIT))).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
   });
 
