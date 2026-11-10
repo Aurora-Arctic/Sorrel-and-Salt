@@ -14,6 +14,7 @@ import {
 } from '../../../db/repository';
 import { NO_SUCH_SPELL } from './spell-not-found';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { trimmedOrUndefined } from '../../../lib/text';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { summarizeSpellCategories } from '../validation/categories/summarize';
@@ -31,7 +32,7 @@ import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
 /** As the compendium counts it: one character is no search. */
 function searchable(query: GrimoireQuery): GrimoireQuery {
-  const text = query.query?.trim();
+  const text = trimmedOrUndefined(query.query);
   const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
   return { ...query, query: long ? text : undefined };
 }

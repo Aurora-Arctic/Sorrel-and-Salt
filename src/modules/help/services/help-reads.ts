@@ -17,6 +17,7 @@ import { cachedHelpRead } from '@/lib/help-cache';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import type { PageEntry, PageRequest } from '@/lib/types';
+import { trimmedOrUndefined } from '@/lib/text';
 import { isRowId } from '@/lib/validation';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
@@ -151,8 +152,8 @@ export async function searchHelp(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<HelpArticle, { score: number }>[]> {
-  const text = query.trim();
-  if (text === '') return [];
+  const text = trimmedOrUndefined(query);
+  if (text === undefined) return [];
   const reach = reachOf(session);
   const entries = await findHelpArticleSearchPage(reach, text, page);
   const nodes = await toHelpArticles(
