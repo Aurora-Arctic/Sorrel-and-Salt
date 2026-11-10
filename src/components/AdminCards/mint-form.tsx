@@ -1,7 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -14,6 +13,7 @@ import {
   PlainTextField,
   SwitchField,
   fieldDescription,
+  usePlainProblems,
 } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -88,6 +88,8 @@ const totalOf = (text: string): string | undefined => {
   return `${sheets * CARDS_PER_SHEET} cards`;
 };
 
+const FIELDS = ['sheets', 'expiresAt', 'note'] as const;
+
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
   const [sheets, setSheets] = useState('');
@@ -97,18 +99,14 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [note, setNote] = useState('');
   const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  const { sending: minting, failure, send } = useFormSend(['sheets', 'expiresAt', 'note']);
+  const { sending: minting, failure, setFailure, send } = useFormSend(FIELDS);
   const [minted, setMinted] = useState<MintedBatch>();
-  const [pressed, setPressed] = useState(false);
-  const sheetsRef = useRef<HTMLInputElement>(null);
+  const { formRef, shown, edited, refuse } = usePlainProblems(['sheets'], failure);
   const [totalRow, setTotalRow] = useState<HTMLDivElement | null>(null);
   const sheetsField = fieldDescription({
     id: sheetsId,
     hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
-    error:
-      sheetsRefusal(sheets) ??
-      (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
-      fieldMessage(failure, 'sheets'),
+    error: sheetsRefusal(sheets) ?? shown.sheets,
   });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
 
@@ -121,11 +119,9 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     event.preventDefault();
     const wanted = sheetsOf(sheets);
     if (wanted === undefined || sheetsRefusal(sheets)) {
-      flushSync(() => {
-        setPressed(true);
-        setSheets(wholeSheets(sheets));
-      });
-      sheetsRef.current?.focus();
+      setSheets(wholeSheets(sheets));
+      refuse({ sheets: SHEETS_REQUIRED });
+      setFailure({});
       return;
     }
     await send(async () => {
@@ -152,7 +148,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form ref={formRef} className="form" noValidate onSubmit={(event) => void submit(event)}>
       <p>
         Each card admits one signed-in account, once. After minting, the only copy of the cards is
         the PDF you download; it cannot be made again.
@@ -189,8 +185,10 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...sheetsAria}
             value={sheets}
             disabled={minting}
-            ref={sheetsRef}
-            onChange={(event) => setSheets(event.target.value)}
+            onChange={(event) => {
+              setSheets(event.target.value);
+              edited('sheets');
+            }}
             onBlur={() => setSheets(wholeSheets)}
           />
         </FieldShell>
