@@ -1,7 +1,7 @@
-import type { ADMIN_PAGES } from '../../../components/AdminNav/sections';
+import type { ADMIN_PAGES } from '@/components/AdminNav/sections';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
-import type { ModalHeading } from '../../../components/Modal/types';
+import type { ModalHeading } from '@/components/Modal/types';
 
 export interface AdminLayoutProps {
   children: ReactNode;
