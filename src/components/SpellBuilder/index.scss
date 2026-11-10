@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/jar-motion' as *;
 @use './panels';
 
 // The Shared switch on its own line above the footer row, as one left-aligned column: the label,
@@ -406,9 +407,5 @@
     overflow: visible;
   }
 
-  .jar-shelf__glass,
-  .jar-shelf__lid,
-  .jar-shelf__facet {
-    stroke: $text-muted;
-  }
+  @include jar-muted-stroke;
 }

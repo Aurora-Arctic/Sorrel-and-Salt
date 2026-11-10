@@ -247,10 +247,11 @@ $-bracket: 7px;
 }
 
 .jar-shelf__jar--empty {
+  @include jar-muted-stroke;
+
   .jar-shelf__glass,
   .jar-shelf__lid,
   .jar-shelf__facet {
-    stroke: $text-muted;
     stroke-dasharray: 3 3;
   }
 
