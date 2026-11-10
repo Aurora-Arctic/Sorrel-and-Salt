@@ -245,7 +245,7 @@
 
     // The placeholder lines cycle through six widths down the list, so the rows do not read as one block.
     @each $step, $width in (1: 60%, 2: 80%, 3: 45%, 4: 70%, 5: 55%, 6: 75%) {
-      li:nth-child(6n + #{$step % 6}) > .page-nav__pending .skeleton__line {
+      li:nth-child(#{if($step == 6, "6n", "6n + #{$step}")}) > .page-nav__pending .skeleton__line {
         width: $width;
       }
     }

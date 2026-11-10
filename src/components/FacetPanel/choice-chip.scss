@@ -129,6 +129,7 @@
 .facet-chip__menu {
   @include floating-panel;
 
+  box-sizing: content-box;
   position: absolute;
   inset-block-start: calc(100% + #{space(1)});
   inset-inline-start: 0;
@@ -168,6 +169,7 @@
 }
 
 .facet-chip__option {
+  box-sizing: content-box;
   align-items: center;
   min-block-size: space(6);
   padding-block: space(1);

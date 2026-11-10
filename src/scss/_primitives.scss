@@ -1198,6 +1198,7 @@
     --notice-bar: #{$accent};
     --notice-icon: currentColor;
 
+    box-sizing: content-box;
     display: block;
     max-width: $measure;
     margin: 0;
