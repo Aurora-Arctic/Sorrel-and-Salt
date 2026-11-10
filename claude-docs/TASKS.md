@@ -114,7 +114,7 @@ The `## M… —` sections that followed the execution order live in [`tasks/`](
 | [`tasks/v1/m17.md`](tasks/v1/m17.md) | M17 — Fast follow · _27 live tasks · 193.5 hours · 1 retired (M17.5)_                                         |
 | [`tasks/v1/m7a.md`](tasks/v1/m7a.md) | M7.A — PR gates · _1 task · 1 hour · unscheduled by design_                                                   |
 | [`tasks/v1/mb.md`](tasks/v1/mb.md)   | MB — Bugfixes and gap tasks                                                                                   |
-| [`tasks/v1/mc.md`](tasks/v1/mc.md)   | MC — Cleanup · _9 tasks · 79.5 hours_                                                                         |
+| [`tasks/v1/mc.md`](tasks/v1/mc.md)   | MC — Cleanup · _9 tasks · 87.75 hours_                                                                        |
 | [`tasks/v1/mw.md`](tasks/v1/mw.md)   | MW — Wave close-out · _2 done, 12 retired, 1 live: MW.15 at 3 hours_                                          |
 
 #### Sorrel & Salt V1.Next (`v1-next`)
