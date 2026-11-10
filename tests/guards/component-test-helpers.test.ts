@@ -1,6 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { describe, expect, inject, it } from 'vitest';
+import { existsSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
 import { fromRoot } from '../support/paths';
+import { readSource, sourceFiles } from '../support/repo-scan';
 
 // How a component test presses Save, types into a field and fills one (change, then blur) is written once, in
 // tests/support/interact.tsx. A local copy drifts from it, and a change to how a form is filled then has to be
@@ -15,8 +16,7 @@ const LOCAL = new RegExp(
   'm',
 );
 
-const files = inject('repoFiles').filter((file) => /^tests\/components\/.*\.tsx?$/.test(file));
-const source = (file: string) => readFileSync(fromRoot(file), 'utf8');
+const files = sourceFiles({ under: 'tests/components/' });
 
 describe('form helpers component tests share', () => {
   it('tells a local copy from an import of the shared one', () => {
@@ -29,7 +29,7 @@ describe('form helpers component tests share', () => {
   });
 
   it('exports save, submitForm, type and fill from the shared module', () => {
-    const text = existsSync(fromRoot(HOME)) ? source(HOME) : '';
+    const text = existsSync(fromRoot(HOME)) ? readSource(HOME) : '';
     const exported = [...text.matchAll(/^export\s+(?:const|function)\s+(\w+)/gm)].map(
       ([, name]) => name,
     );
@@ -41,6 +41,6 @@ describe('form helpers component tests share', () => {
     // Precondition: the scan reached the component tests, so an empty list is not a scan of nothing.
     expect(files.length).toBeGreaterThan(100);
 
-    expect(files.filter((file) => LOCAL.test(source(file)))).toEqual([]);
+    expect(files.filter((file) => LOCAL.test(readSource(file)))).toEqual([]);
   });
 });

@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { describe, expect, inject, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as shared from '../support/constants';
-import { fromRoot } from '../support/paths';
+import { filesMatching, readSource, sourceFiles } from '../support/repo-scan';
 
 // A value many tests share lives once in tests/support/constants.ts. A copy in a test file drifts: the origin was
 // `http://localhost:3000` in thirteen files and `http://localhost:8000` in the rest, and a changed port had to be edited in each.
@@ -17,8 +16,7 @@ const OWN_ORIGIN: Record<string, string> = {
   'tests/emails/parts/layout.test.tsx': 'the staging address the footer links to',
 };
 
-const files = inject('repoFiles').filter((file) => /^tests\/.*\.tsx?$/.test(file) && file !== HOME);
-const source = (file: string) => readFileSync(fromRoot(file), 'utf8');
+const files = sourceFiles({ under: 'tests/' }).filter((file) => file !== HOME);
 const declared = (name: string, text: string) =>
   new RegExp(`^\\s*(?:export )?const ${name}\\b`, 'm').test(text);
 
@@ -27,11 +25,11 @@ describe('values tests share', () => {
     // Precondition: the scan found the exceptions, so each is still a real file with a local declaration.
     for (const [file] of Object.entries(OWN_ORIGIN)) {
       expect(files).toContain(file);
-      expect(declared('ORIGIN', source(file))).toBe(true);
+      expect(declared('ORIGIN', readSource(file))).toBe(true);
     }
 
     const copies = files.filter(
-      (file) => !(file in OWN_ORIGIN) && declared('ORIGIN', source(file)),
+      (file) => !(file in OWN_ORIGIN) && declared('ORIGIN', readSource(file)),
     );
 
     expect(copies).toEqual([]);
@@ -42,10 +40,13 @@ describe('values tests share', () => {
     const INLINE = /http:\/\/localhost:(?:3000|8000)\b/;
     // This file is left out, as its opening comment names both. Precondition: the pattern finds the shared value.
     const SELF = 'tests/guards/test-constants.test.ts';
-    expect(INLINE.test(source(HOME))).toBe(true);
+    expect(INLINE.test(readSource(HOME))).toBe(true);
     expect(files).toContain(SELF);
 
-    const copies = files.filter((file) => file !== SELF && INLINE.test(source(file)));
+    const copies = filesMatching(
+      files.filter((file) => file !== SELF),
+      INLINE,
+    );
 
     expect(copies).toEqual([]);
   });
@@ -60,7 +61,7 @@ describe('values tests share', () => {
     ]);
 
     const copies = files.flatMap((file) => {
-      const text = source(file);
+      const text = readSource(file);
       return Object.entries(shared)
         .filter(([name, value]) => text.includes(`const ${name} = '${value}'`))
         .map(([name]) => `${file}: ${name}`);

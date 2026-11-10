@@ -1,6 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { describe, expect, inject, it } from 'vitest';
+import { existsSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
 import { fromRoot } from '../support/paths';
+import { readSource, sourceFiles } from '../support/repo-scan';
 
 // Four stand-ins nearly every component and service test needs are written once under tests/support/ and mocked in
 // by import, as `next/cache` is from tests/support/next-data-cache.ts. A copy in a test file drifts from the module
@@ -8,13 +9,12 @@ import { fromRoot } from '../support/paths';
 
 // This file is left out: its samples are copies.
 const SELF = 'tests/guards/shared-test-mocks.test.ts';
-const files = inject('repoFiles').filter((file) => /^tests\/.*\.tsx?$/.test(file) && file !== SELF);
-const source = (file: string) => readFileSync(fromRoot(file), 'utf8');
+const files = sourceFiles({ under: 'tests/' }).filter((file) => file !== SELF);
 
 /** The names a module exports, read from its source so a missing module reads as no names rather than a load error. */
 const exportsOf = (file: string): string[] => {
   if (!existsSync(fromRoot(file))) return [];
-  const text = source(file);
+  const text = readSource(file);
   const declared = [
     ...text.matchAll(/^export\s+(?:async\s+)?(?:const|let|function)\s+(\w+)/gm),
   ].map(([, name]) => name!);
@@ -106,7 +106,7 @@ describe('stand-ins every test shares', () => {
       // Precondition: the scan reached the test files, so an empty list is not a scan of nothing.
       expect(files.length).toBeGreaterThan(100);
 
-      const copies = files.filter((file) => file !== mock.home && mock.copies(source(file)));
+      const copies = files.filter((file) => file !== mock.home && mock.copies(readSource(file)));
 
       expect(copies).toEqual([]);
     });
