@@ -7,7 +7,7 @@ export interface GrimoireTabParams {
 
 export interface GrimoireTabProps extends GrimoireTabParams {
   status: SpellStatus;
-  beneath: '' | '/drafts';
+  beneath: '' | 'drafts';
 }
 
 export interface NewSpellActionProps {

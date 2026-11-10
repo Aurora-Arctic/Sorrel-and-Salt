@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
@@ -7,6 +6,7 @@ import { rolePermits } from '@/modules/coven';
 import type { CovenLayoutProps } from '../../types';
 import NewSpellAction from './new-spell-action';
 import { GrimoirePanelSkeleton } from './skeleton';
+import { covenPath } from '@/lib/coven-path';
 
 // The coven's Grimoire as two tabs, Spells and Drafts, each its own address
 // (claude-docs/components/grimoire-list.md). Each page runs its own guard, as a layout does not
@@ -16,12 +16,12 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
   const { membership, workspace } = await requireCovenMembership(slug);
   const tabs: PageTab[] = [
     {
-      href: `/coven/${slug}/grimoire` as Route,
+      href: covenPath(slug, 'grimoire'),
       label: 'Spells',
       skeleton: <GrimoirePanelSkeleton />,
     },
     {
-      href: `/coven/${slug}/grimoire/drafts` as Route,
+      href: covenPath(slug, 'grimoire', 'drafts'),
       label: 'Drafts',
       skeleton: <GrimoirePanelSkeleton drafts />,
     },

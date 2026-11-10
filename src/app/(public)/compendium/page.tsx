@@ -1,4 +1,5 @@
-import type { Metadata, Route } from 'next';
+import { compendiumEntryPath } from '@/lib/compendium-path';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
@@ -87,7 +88,7 @@ const isListAddress = (params: PublicCompendiumSearchParams) =>
 async function canonicalPath(params: PublicCompendiumSearchParams): Promise<string> {
   const entryId = single(params.entry);
   const shown = entryId ? await readCompendiumDetails(entryId) : undefined;
-  if (shown) return `/compendium/ingredients/${shown.entry.slug}`;
+  if (shown) return compendiumEntryPath(shown.entry.slug);
   if (isFiltered(params)) return PUBLIC_COMPENDIUM_PATH;
   const { after, before } = readPageCursors(params);
   const cursor = after ? ['after', after] : before ? ['before', before] : undefined;
@@ -207,7 +208,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     ? cardPlacesOf(
         cardCovens,
         (id) => holding.some((coven) => coven.id === id),
-        `/compendium/ingredients/${detailed.slug}`,
+        compendiumEntryPath(detailed.slug),
         stockIn(detailed.id),
       )
     : [];
@@ -236,7 +237,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       places: cardPlacesOf(
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,
-        `/compendium/ingredients/${node.slug}`,
+        compendiumEntryPath(node.slug),
         stockIn(node.id),
       ),
       ...(canEdit && {
@@ -291,7 +292,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           detailed && {
             heading: detailsHeading(detailed),
             marks: detailsMarks(shown),
-            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            pageHref: compendiumEntryPath(detailed.slug),
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             ...(detailsReview && {
               reviewLine: (

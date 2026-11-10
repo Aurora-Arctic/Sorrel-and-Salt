@@ -1,6 +1,5 @@
 'use client';
 
-import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import ListFrame from '@/components/ListFrame';
 import { SoleStewardNotice } from './sole-steward-notice';
@@ -10,6 +9,7 @@ import { ButtonFace } from '@/components/ActionFace';
 import { MemberListBodySkeleton } from '@/components/MemberList/skeleton';
 import { PendingInvitationsBodySkeleton } from '@/components/PendingInvitations/skeleton';
 import { useCovenSlug } from '@/lib/use-coven-slug';
+import { covenPath } from '@/lib/coven-path';
 
 /** The Members tab's list: the table's headings over placeholder rows. */
 export const MembersPanelSkeleton = (): ReactElement => (
@@ -34,12 +34,12 @@ const PeopleSkeleton = ({
   const slug = useCovenSlug();
   const tabs: PageTab[] = [
     {
-      href: `/coven/${slug}/members` as Route,
+      href: covenPath(slug, 'members'),
       label: 'Members',
       skeleton: <MembersPanelSkeleton />,
     },
     {
-      href: `/coven/${slug}/invitations` as Route,
+      href: covenPath(slug, 'invitations'),
       label: 'Invitations',
       skeleton: <InvitationsPanelSkeleton />,
     },
@@ -49,7 +49,7 @@ const PeopleSkeleton = ({
       as="div"
       title="Members"
       tabs={tabs}
-      open={`/coven/${slug}/${open}`}
+      open={covenPath(slug, open)}
       action={<ButtonFace>Invite</ButtonFace>}
     >
       {children}

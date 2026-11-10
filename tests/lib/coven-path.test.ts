@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import type { Route } from 'next';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   NEW_COVEN_PATH,
+  covenPath,
   covenSlugOf,
   isReservedCovenSlug,
   movedCovenPath,
@@ -110,4 +112,38 @@ describe('movedCovenPath', () => {
       expect(movedCovenPath(path, 'whitethorn')).toBe('/coven/whitethorn');
     },
   );
+});
+
+describe('covenPath', () => {
+  it.each([
+    [['fixture-coven'], '/coven/fixture-coven'],
+    [['fixture-coven', 'ingredients'], '/coven/fixture-coven/ingredients'],
+    [['fixture-coven', 'grimoire', 'drafts'], '/coven/fixture-coven/grimoire/drafts'],
+    [['fixture-coven', 'ingredients', 'some-id'], '/coven/fixture-coven/ingredients/some-id'],
+  ] as const)('builds %j as %s', (args, expected) => {
+    const [slug, ...segments] = args;
+    expect(covenPath(slug, ...segments)).toBe(expected);
+  });
+
+  it('leaves out a segment a condition turned off, so a drafts tab is one call either way', () => {
+    const drafts = false as boolean;
+    expect(covenPath('fixture-coven', 'grimoire', drafts && 'drafts')).toBe(
+      '/coven/fixture-coven/grimoire',
+    );
+    expect(covenPath('fixture-coven', 'grimoire', undefined)).toBe('/coven/fixture-coven/grimoire');
+  });
+
+  it('encodes the slug and each segment, so no value can add a segment or a query of its own', () => {
+    expect(covenPath('fixture coven', 'ingredients', 'a/b?c')).toBe(
+      '/coven/fixture%20coven/ingredients/a%2Fb%3Fc',
+    );
+  });
+
+  it('builds an address covenSlugOf reads its coven back from', () => {
+    expect(covenSlugOf(covenPath('fixture-coven', 'members'))).toBe('fixture-coven');
+  });
+
+  it('answers a typed route, so no caller casts', () => {
+    expectTypeOf(covenPath('fixture-coven', 'grimoire')).toEqualTypeOf<Route>();
+  });
 });

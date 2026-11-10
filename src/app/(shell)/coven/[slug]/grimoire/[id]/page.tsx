@@ -32,6 +32,7 @@ import { readWorkingsOf } from './workings-read';
 import { readRecipeAsideOf } from './recipe-aside';
 import { workingStepsOf } from './recipe-steps';
 import type { SpellRecipeParams } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger, another coven's
 // spell and another member's private spell all read as the same 404. Per request, never cached (rule 6).
@@ -55,7 +56,7 @@ export async function generateMetadata({ params }: SpellRecipeParams): Promise<M
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
   const { slug, id } = await params;
   const { workspace, membership, session, spell } = await spellOf(slug, id);
-  const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
+  const recipePath = covenPath(workspace.slug, 'grimoire', spell.id);
   const recipe = await readRecipeOf(session, spell, recipePath);
   const aside = await readRecipeAsideOf(
     session,
@@ -96,8 +97,8 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
       steps={ingredientSteps}
     />
   );
-  const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
-  const deletedHref = deletedHrefOf(listPath as Route, spell.title);
+  const listPath = covenPath(workspace.slug, 'grimoire', spell.status === 'draft' && 'drafts');
+  const deletedHref = deletedHrefOf(listPath, spell.title);
   const query = await searchParams;
   const edit = query.edit;
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
@@ -194,7 +195,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
               />
             </div>
           }
-          back={{ href: `/coven/${workspace.slug}/grimoire` as Route, label: 'Grimoire' }}
+          back={{ href: covenPath(workspace.slug, 'grimoire'), label: 'Grimoire' }}
         />
         <SpellDialog
           workspaceId={workspace.id}
@@ -204,7 +205,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           opened={saved && { spell: saved }}
           canCreate={false}
           canDelete={canDelete}
-          deletedFromHref={listPath as Route}
+          deletedFromHref={listPath}
           canDuplicate={canDuplicate}
           userId={membership.userId}
         />

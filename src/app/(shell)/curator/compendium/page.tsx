@@ -1,4 +1,5 @@
-import type { Metadata, Route } from 'next';
+import { compendiumEntryPath } from '@/lib/compendium-path';
+import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
@@ -31,13 +32,13 @@ import {
 } from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
+  readCardCategories,
   readCategories,
   readCompendium,
   readDeities,
   readFacets,
   readFormIcons,
 } from '../../../compendium-reads';
-import { readCardCategories } from '../../../compendium-reads';
 import AddAction from '@/app/(shell)/_admin/add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { orMissing } from '../../../../lib/or-not-found';
@@ -160,7 +161,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           detailed && {
             heading: detailsHeading(detailed),
             marks: summary && detailsMarks(summary),
-            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            pageHref: compendiumEntryPath(detailed.slug),
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {

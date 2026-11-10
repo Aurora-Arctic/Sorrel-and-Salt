@@ -6,6 +6,7 @@ import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
 import { CATEGORY_VOCABULARY, ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 import { route } from '../../../.storybook/route';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 const meta = {
   title: 'Ingredients / Ingredient Card List',
@@ -25,7 +26,7 @@ const CompendiumCards = () => (
     {ENTRIES.map((e) => (
       <IngredientCard
         key={e.slug}
-        href={route(`/compendium/ingredients/${e.slug}`)}
+        href={compendiumEntryPath(e.slug)}
         label={e.label}
         formalName={e.formalName}
         nomenclature={e.nomenclature}

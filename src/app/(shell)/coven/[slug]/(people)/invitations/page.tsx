@@ -1,3 +1,4 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { notFound } from 'next/navigation';
@@ -46,7 +47,7 @@ export default async function InvitationsPage({
         declinedAt,
       }))}
       position={page.position}
-      {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/invitations`, cursor))}
+      {...pagerHrefs(page.pageInfo, (cursor) => listHref(covenPath(slug, 'invitations'), cursor))}
     />
   );
 }

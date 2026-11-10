@@ -1,4 +1,4 @@
-import type { Route } from 'next';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 import { PendingLink } from '../../lib/navigation';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
@@ -87,10 +87,7 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
     cell: (entry) => (
       <>
         <DetailsLink opens={entry.details} name={nameOf(entry)} />{' '}
-        <PendingLink
-          className="compendium-list__name"
-          href={`/compendium/ingredients/${entry.slug}` as Route}
-        >
+        <PendingLink className="compendium-list__name" href={compendiumEntryPath(entry.slug)}>
           {entry.name}
           <LinkIconHint />
         </PendingLink>

@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import TabbedPage from '../../../../../components/TabbedPage';
 import type { PageTab } from '../../../../../components/TabbedPage/types';
@@ -6,6 +5,7 @@ import { requireCovenMembership } from '../../../../../lib/request-session';
 import { rolePermits } from '@/modules/coven';
 import type { CovenLayoutProps } from '../types';
 import { InvitationsPanelSkeleton, MembersPanelSkeleton } from './skeleton';
+import { covenPath } from '@/lib/coven-path';
 
 // The coven's people as a tabbed page (claude-docs/components/tabbed-page.md). Not admin's
 // `tabbedLayout`, as the tabs depend on the role and slug; the role is decided by the permission
@@ -20,14 +20,14 @@ export default async function PeopleLayout({
   const canInvite = rolePermits(membership.role, { member: ['invite'] });
   const tabs: PageTab[] = [
     {
-      href: `/coven/${slug}/members` as Route,
+      href: covenPath(slug, 'members'),
       label: 'Members',
       skeleton: <MembersPanelSkeleton />,
     },
     ...(canInvite
       ? [
           {
-            href: `/coven/${slug}/invitations` as Route,
+            href: covenPath(slug, 'invitations'),
             label: 'Invitations',
             skeleton: <InvitationsPanelSkeleton />,
           },
