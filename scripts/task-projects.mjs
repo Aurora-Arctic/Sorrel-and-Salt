@@ -33,9 +33,10 @@ export const PROJECTS = [
 /** Milestones that say nothing about a Project: a retired task stays on the Project it was retired from. */
 export const NEUTRAL_MILESTONES = ['Retired — not done'];
 
-export const DEFAULT_PROJECT = PROJECTS.find((project) => project.default);
-
 export class ProjectConfigError extends Error {}
+
+/** The Project that holds every task a lookup cannot place. */
+export const defaultOf = (projects = PROJECTS) => projects.find((project) => project.default);
 
 export function projectByNumber(number, projects = PROJECTS) {
   const project = projects.find((candidate) => String(candidate.number) === String(number));
@@ -52,7 +53,7 @@ export function projectBySlug(slug, projects = PROJECTS) {
 
 const byPrefix = (projects, test) => {
   const listed = projects.filter((project) => project.milestonePrefix && test(project));
-  return listed[0] ?? projects.find((project) => project.default);
+  return listed[0] ?? defaultOf(projects);
 };
 
 /** The Project a milestone's issues sit on; null for no milestone or a neutral one. */
@@ -64,10 +65,7 @@ export function projectOfMilestone(title, projects = PROJECTS) {
 /** The Project a task id belongs to, by its first letter. */
 export function projectOfId(id, projects = PROJECTS) {
   const letter = id.slice(0, 1).toUpperCase();
-  return (
-    projects.find((project) => project.prefix === letter) ??
-    projects.find((project) => project.default)
-  );
+  return projects.find((project) => project.prefix === letter) ?? defaultOf(projects);
 }
 
 /** The Project of a wave row in TASKS.md: `**7 — …**` is the default's, `**N · 01 — …**` the Project whose prefix is N. */

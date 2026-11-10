@@ -383,10 +383,8 @@ async function postSingle({ github, where, marker, title, inputs, run, readFile 
     } catch {
       // It was not hidden.
     }
-    await github.rest.issues.updateComment({ ...where, comment_id: existing.id, body });
-  } else {
-    await github.rest.issues.createComment({ ...where, body });
   }
+  await upsertComment(github, where, marker, body);
   return 'written';
 }
 
@@ -496,11 +494,7 @@ async function postComment({
 }
 
 module.exports = {
-  LAYOUTS,
-  STATUSES,
   renderComment,
-  planSectionWrite,
-  sectionLanded,
   inputsFromEnv,
   runOf,
   upsertComment,
