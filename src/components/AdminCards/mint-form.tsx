@@ -1,18 +1,24 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
-import type { Failure } from '../../lib/types';
+import { useFormSend } from '../../lib/use-form-send';
 import { expiryOfDay } from '../../lib/utc';
-import DateField from '../DateField';
-import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription } from '../Field';
+import {
+  FieldShell,
+  FormActions,
+  PlainDateField,
+  PlainTextField,
+  SwitchField,
+  fieldDescription,
+  usePlainProblems,
+} from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
+import { fieldMessage } from '../../lib/graphql-failure';
 import type { MintedBatch } from './minted';
 import {
   CARDS_PER_SHEET,
@@ -82,9 +88,10 @@ const totalOf = (text: string): string | undefined => {
   return `${sheets * CARDS_PER_SHEET} cards`;
 };
 
+const FIELDS = ['sheets', 'expiresAt', 'note'] as const;
+
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
-  const dayId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
@@ -92,26 +99,16 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [note, setNote] = useState('');
   const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-  const [minting, setMinting] = useState(false);
-  const [failure, setFailure] = useState<Failure>({});
+  const { sending: minting, failure, setFailure, send } = useFormSend(FIELDS);
   const [minted, setMinted] = useState<MintedBatch>();
-  const [pressed, setPressed] = useState(false);
-  const sheetsRef = useRef<HTMLInputElement>(null);
+  const { formRef, shown, edited, refuse } = usePlainProblems(['sheets'], failure);
   const [totalRow, setTotalRow] = useState<HTMLDivElement | null>(null);
   const sheetsField = fieldDescription({
     id: sheetsId,
     hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
-    error:
-      sheetsRefusal(sheets) ??
-      (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
-      (failure.field?.name === 'sheets' ? failure.field.message : undefined),
-  });
-  const dayField = fieldDescription({
-    id: dayId,
-    error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
+    error: sheetsRefusal(sheets) ?? shown.sheets,
   });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
-  const { aria: dayAria, ...dayShell } = dayField;
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
   const discard = useDiscardGuard(
@@ -122,28 +119,20 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     event.preventDefault();
     const wanted = sheetsOf(sheets);
     if (wanted === undefined || sheetsRefusal(sheets)) {
-      flushSync(() => {
-        setPressed(true);
-        setSheets(wholeSheets(sheets));
-      });
-      sheetsRef.current?.focus();
+      setSheets(wholeSheets(sheets));
+      refuse({ sheets: SHEETS_REQUIRED });
+      setFailure({});
       return;
     }
-    setMinting(true);
-    setFailure({});
-    try {
+    await send(async () => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
         beta,
         note: note.trim() || undefined,
       });
-      setMinting(false);
       setMinted(answer.createInvitationCards);
-    } catch (error) {
-      setMinting(false);
-      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt', 'note']));
-    }
+    });
   }
 
   if (minted) {
@@ -159,7 +148,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form ref={formRef} className="form" noValidate onSubmit={(event) => void submit(event)}>
       <p>
         Each card admits one signed-in account, once. After minting, the only copy of the cards is
         the PDF you download; it cannot be made again.
@@ -196,22 +185,22 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...sheetsAria}
             value={sheets}
             disabled={minting}
-            ref={sheetsRef}
-            onChange={(event) => setSheets(event.target.value)}
+            onChange={(event) => {
+              setSheets(event.target.value);
+              edited('sheets');
+            }}
             onBlur={() => setSheets(wholeSheets)}
           />
         </FieldShell>
-        <FieldShell label="Expires On" required {...dayShell}>
-          <DateField
-            id={dayShell.controlId}
-            labelledBy={dayShell.labelId}
-            value={day}
-            min={earliestDay()}
-            disabled={minting}
-            onChange={setDay}
-            {...dayAria}
-          />
-        </FieldShell>
+        <PlainDateField
+          label="Expires On"
+          required
+          value={day}
+          min={earliestDay()}
+          disabled={minting}
+          onChange={setDay}
+          error={fieldMessage(failure, 'expiresAt')}
+        />
       </div>
       <PlainTextField
         name="note"
@@ -223,7 +212,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         limit={MAX_NOTE_LENGTH}
         value={note}
         disabled={minting}
-        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        error={fieldMessage(failure, 'note')}
         onChange={setNote}
       />
       <div className="admin-cards__switches">

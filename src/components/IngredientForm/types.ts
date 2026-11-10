@@ -18,12 +18,7 @@ import type {
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
-import type {
-  ComboboxQualifier,
-  ComboboxOption,
-  EntryAction,
-  Suggestions,
-} from '../Combobox/types';
+import type { ComboboxOption, EntryAction, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
@@ -290,21 +285,6 @@ export interface MultiSelectFieldProps extends FieldProps {
   placeholder?: string;
   options: readonly SelectOption[];
   action?: ReactNode;
-}
-
-export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
-  name: TextFieldName;
-  placeholder?: string;
-  suggestions: Suggestions<O>;
-  onActivate: () => void;
-  onPick?: (option: O | null) => void;
-  onEdit?: (text: string) => void;
-  qualifier?: ComboboxQualifier;
-  icon?: ReactNode;
-  /** Whether the typed row is offered: false for a box whose text must be a pick. */
-  offerTyped?: boolean;
-  typedIcon?: ReactNode;
-  after?: ReactNode;
 }
 
 export interface ListFieldProps {

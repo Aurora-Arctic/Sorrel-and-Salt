@@ -1,9 +1,9 @@
 'use client';
 
-import { type ReactElement, useMemo, useState } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { FilterSelectField } from '../Field/filter-select-field';
-import { SearchField } from '../Field/search-field';
-import FilterForm, { useApplyFilter } from '../FilterForm';
+import { useApplyFilter } from '../FilterForm';
+import NameFilter from '../FilterForm/name-filter';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
 import type { GroupedValueListFilterProps } from './types';
@@ -18,42 +18,34 @@ const GroupedValueListFilter = ({
   groups,
 }: GroupedValueListFilterProps): ReactElement => {
   const { path, title, group } = KINDS[kind];
-  const [draftQuery, setDraftQuery] = useState(filter.query);
   const apply = useApplyFilter();
   const choices = useMemo(
     () => groups.map((each) => ({ value: each.slug, label: each.name })),
     [groups],
   );
 
-  const hrefWith = (chosen: string) =>
-    groupedValuesHref(kind, { query: draftQuery.trim(), group: chosen });
-
   return (
-    <FilterForm
+    <NameFilter
       label={`Filter ${title}`}
       action={path}
-      searchHref={() => hrefWith(filter.group)}
-      shown={[filter.query, filter.group]}
+      query={filter.query}
+      searchHref={(query) => groupedValuesHref(kind, { query, group: filter.group })}
+      shown={[filter.group]}
     >
-      <SearchField
-        label="Name"
-        name="query"
-        placeholder="Search names"
-        value={draftQuery}
-        onChange={setDraftQuery}
-      />
-      {group && (
-        <FilterSelectField
-          label={group.label}
-          name={group.param}
-          all={`All ${group.plural}`}
-          options={choices}
-          defaultValue={filter.group}
-          onChange={(chosen) => apply(hrefWith(chosen))}
-          typeahead
-        />
-      )}
-    </FilterForm>
+      {(query) =>
+        group && (
+          <FilterSelectField
+            label={group.label}
+            name={group.param}
+            all={`All ${group.plural}`}
+            options={choices}
+            defaultValue={filter.group}
+            onChange={(chosen) => apply(groupedValuesHref(kind, { query, group: chosen }))}
+            typeahead
+          />
+        )
+      }
+    </NameFilter>
   );
 };
 

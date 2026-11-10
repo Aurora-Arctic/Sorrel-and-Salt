@@ -268,7 +268,8 @@ The substitute summary and Quick Look both make one read of the `ingredient` que
 
 ### Suggestion lists
 
-`SuggestField`, `ToggleField`, `MultiSelectField` and `ListField` live in this form, not `../Field`; `CupboardEntryForm` imports `ListField` and `MultiSelectField`. Lookups are in "The lookups"; ordering in "The fields and their sections".
+`CorrespondenceFields` (`IngredientForm/correspondence-fields.tsx`) draws the multi-select and list fields that ingredient, variant and cupboard-entry forms share, labelled from `FIELD_NOUNS`.
+`ToggleField`, `MultiSelectField` and `ListField` live in this form, not `../Field` (`SuggestField` is in the Field set); `CupboardEntryForm` imports `ListField` and `MultiSelectField`. Lookups are in "The lookups"; ordering in "The fields and their sections".
 
 ### Variant fields and their folds
 

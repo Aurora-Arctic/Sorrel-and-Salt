@@ -1,10 +1,9 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-
+import { typedResolver } from '../../lib/typed-resolver';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useState } from 'react';
-import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
@@ -191,7 +190,7 @@ function defineKind<Input extends object>({
     ...copy,
     // The form's values always carry `groupId`, `''` for a flat kind, whose
     // schema parses them without it; the resolver is typed for the values.
-    resolver: zodResolver(schema) as unknown as Resolver<GroupedValueValues>,
+    resolver: typedResolver<GroupedValueValues>(schema),
     save: (values, id) => send(toInput(values), id),
     remove: async (id) => {
       await graphqlRequest(remove, { id });

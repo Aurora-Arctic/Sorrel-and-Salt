@@ -2,6 +2,7 @@
 
 import { type ReactElement, useEffect, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
   ACCOUNT_PASSKEYS_PATH,
@@ -93,9 +94,7 @@ const SignInMethods = ({
     setPending(account.id);
     // A refusal answers `error` with a code; a dropped connection throws, and takes the generic
     // sentence.
-    const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
-      error: { code: undefined },
-    }));
+    const result = await settled(unlinkAccount({ accountId: account.id }));
     setPending(undefined);
     // The row survives a refusal, so the sentence goes under its Remove.
     if (result?.error) return unlinkErrorMessage(result.error.code);
@@ -111,7 +110,7 @@ const SignInMethods = ({
     setSigningOut(true);
     setAlert(undefined);
     signInAgain.report(undefined);
-    const { error: failure } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
+    const { error: failure } = await settled(signOut());
     if (failure) {
       setSigningOut(false);
       signInAgain.report(GENERIC_FAILURE);

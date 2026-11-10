@@ -178,6 +178,15 @@ export type ListDialogParams = { new: boolean; edit: string | undefined };
 
 export type PagerCursor = { after: string } | { before: string };
 
+/** What tells one curated vocabulary's list from another: its address, title and the nouns it uses for its rows. */
+export interface ListKind<Href extends string = string> {
+  path: Href;
+  title: string;
+  label: string;
+  noun: string;
+  plural: string;
+}
+
 /** Generic over the href's type, so a page's builder keeps Next's typed `Route` while this file imports nothing. */
 export interface PagerHrefs<Href extends string = string> {
   previousHref: Href | undefined;

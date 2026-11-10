@@ -1,8 +1,8 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { typedResolver } from '../../lib/typed-resolver';
 import { type ReactElement, useEffect, useState } from 'react';
-import { FormProvider, type Resolver, useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { emailFormat } from '../../lib/email-address';
 import { renderBusinessCards } from '../../lib/business-cards/pdf';
 import { phoneMask } from '../../lib/phone-number';
@@ -31,7 +31,7 @@ const BusinessCards = (): ReactElement => {
     defaultValues: EMPTY,
     mode: 'onTouched',
     shouldFocusError: false,
-    resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
+    resolver: typedResolver<BusinessCardValues>(BusinessCardSchema),
   });
   const { isDirty } = methods.formState;
   const discard = useDiscardGuard(isDirty);

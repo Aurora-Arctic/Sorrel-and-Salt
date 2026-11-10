@@ -8,7 +8,7 @@ import { useAutosave, type SaveContext, type SaveResult } from '../../lib/autosa
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 import {
   FormActions,
   FormErrorSummary,
@@ -17,19 +17,22 @@ import {
   TextField as FormTextField,
   useFormHistory,
 } from '../Field';
-import { ListField, MultiSelectField } from '../IngredientForm/fields';
-import {
-  LookupListField,
-  useCelestialBodySuggestions,
-  useZodiacSuggestions,
-} from '../IngredientForm/suggestions';
-import { ELEMENT_OPTIONS } from '../IngredientForm/options';
+import CorrespondenceFields from '../IngredientForm/correspondence-fields';
+import { FIELD_NOUNS } from '../IngredientForm/values';
 import IconTip, { UndoIcon } from '../IconTip';
 import { useModalHeaderNote } from '../Modal';
 import SaveStatus from '../SaveStatus';
 import { useSaveOnClose } from '../SpellBuilder/save-on-close';
 import Notice from '../Notice';
-import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
+import {
+  FIELDS,
+  differs,
+  isTextField,
+  baselineOf,
+  changesOf,
+  isOwn,
+  openingValues,
+} from './changes';
 import { fromForm, toForm, type CupboardFormValues } from './form-values';
 import type {
   CupboardChanges,
@@ -97,7 +100,6 @@ const placeOf = (
 const hasDrafts = (drafts: Record<string, string>): boolean =>
   Object.values(drafts).some((text) => text.trim() !== '');
 
-const TEXT_FIELD_NAMES: readonly CupboardField[] = ['label', 'description', 'safetyNotes'];
 const LIST_BOX = ['celestialBodies', 'zodiacSigns', 'colors'] as const;
 
 const CupboardEntryForm = ({
@@ -148,22 +150,18 @@ const CupboardEntryForm = ({
   });
 
   const placeRefusal = (error: unknown): void => {
-    const unplaced: string[] = [];
-    let placed = 0;
-    for (const { path, message } of readGraphqlIssues(error)) {
-      const where = placeOf(path);
-      if (!where) {
-        unplaced.push(message);
-        continue;
-      }
-      placed += 1;
-      const { field, at } = where;
-      if (field === 'elements' || TEXT_FIELD_NAMES.includes(field)) setError(field, { message });
-      else if (at !== undefined) setError(`${field}.${at}.value` as never, { message });
-      else setError(`drafts.${field}` as never, { message });
-    }
-    if (unplaced.length > 0) setAlert(unplaced.join(' '));
-    else if (placed === 0) setAlert("That didn't work. Please try again.");
+    const placed = placeServerIssues(
+      error,
+      (name, issue) => (name === 'root' ? setAlert(issue.message) : setError(name as never, issue)),
+      ({ path }) => {
+        const where = placeOf(path);
+        if (!where) return undefined;
+        const { field, at } = where;
+        if (field === 'elements' || isTextField(field)) return field;
+        return at !== undefined ? `${field}.${at}.value` : `drafts.${field}`;
+      },
+    );
+    if (!placed) setAlert("That didn't work. Please try again.");
   };
 
   /**
@@ -248,7 +246,7 @@ const CupboardEntryForm = ({
 
   const handBack = (field: CupboardField): void => {
     setValue(field, toForm(baseline)[field] as never, { shouldDirty: true });
-    if (field !== 'label' && field !== 'description' && field !== 'safetyNotes') {
+    if (!isTextField(field)) {
       if (field !== 'elements') setValue(`drafts.${field}`, '');
     }
     setHandedBack((current) => new Set(current).add(field));
@@ -295,8 +293,6 @@ const CupboardEntryForm = ({
     );
   };
 
-  const handBackAction = (field: CupboardField, label: string) => () => useCompendium(field, label);
-
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
@@ -315,44 +311,15 @@ const CupboardEntryForm = ({
           {textField('label', false)}
           {textField('description', true)}
           {textField('safetyNotes', true)}
-          <MultiSelectField
-            name="elements"
-            label="Elements"
-            hint={listHint('elements')}
-            placeholder="Add an element"
-            options={ELEMENT_OPTIONS}
-            action={useCompendium('elements', 'Elements')}
-          />
-          <LookupListField
+          <CorrespondenceFields
             workspaceId={workspaceId}
-            useSuggestions={useCelestialBodySuggestions}
-            name="celestialBodies"
-            ordered
-            legend="Celestial Bodies"
-            entry="Celestial Body"
-            hint={listHint('heavenly bodies')}
-            placeholder="Add a body"
-            action={handBackAction('celestialBodies', 'Celestial Bodies')}
-          />
-          <LookupListField
-            workspaceId={workspaceId}
-            useSuggestions={useZodiacSuggestions}
-            name="zodiacSigns"
-            ordered
-            legend="Zodiac Signs"
-            entry="Zodiac Sign"
-            hint={listHint('signs')}
-            placeholder="Add a sign"
-            action={handBackAction('zodiacSigns', 'Zodiac Signs')}
-          />
-          <ListField
-            name="colors"
-            ordered
-            legend="Colours"
-            entry="Colour"
-            hint={listHint('colours', ' in a working, not the colour it is')}
-            placeholder="Add a colour"
-            action={handBackAction('colors', 'Colours')}
+            hints={{
+              elements: listHint('elements'),
+              celestialBodies: listHint('heavenly bodies'),
+              zodiacSigns: listHint('signs'),
+              colors: listHint('colours', ' in a working, not the colour it is'),
+            }}
+            action={(field) => useCompendium(field, FIELD_NOUNS[field].label)}
           />
           <FormActions
             noun="Annotation"

@@ -33,6 +33,22 @@ export function RadioGroupField<T extends string>({
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const cards = layout === 'cards';
+  const radio = (
+    option: RadioGroupFieldProps<T>['options'][number],
+    describedBy?: string,
+  ): ReactElement => (
+    <input
+      type="radio"
+      name={name}
+      aria-required={required || undefined}
+      value={option.value}
+      checked={value === option.value}
+      disabled={option.disabled}
+      aria-describedby={describedBy}
+      onChange={() => onChange(option.value)}
+      {...pressFeedback}
+    />
+  );
   return (
     <fieldset
       id={groupId}
@@ -67,16 +83,7 @@ export function RadioGroupField<T extends string>({
             {options.map((option) => (
               <IconTip key={option.value} tip={option.label} placement="above">
                 <label className="radio radio--segment" {...pressFeedback}>
-                  <input
-                    type="radio"
-                    name={name}
-                    aria-required={required || undefined}
-                    value={option.value}
-                    checked={value === option.value}
-                    disabled={option.disabled}
-                    onChange={() => onChange(option.value)}
-                    {...pressFeedback}
-                  />
+                  {radio(option)}
                   <span className="radio__segment-icon" aria-hidden="true">
                     {option.icon}
                   </span>
@@ -99,16 +106,7 @@ export function RadioGroupField<T extends string>({
               className="radio radio--segment radio--text"
               {...pressFeedback}
             >
-              <input
-                type="radio"
-                name={name}
-                aria-required={required || undefined}
-                value={option.value}
-                checked={value === option.value}
-                disabled={option.disabled}
-                onChange={() => onChange(option.value)}
-                {...pressFeedback}
-              />
+              {radio(option)}
               {option.label}
               {/* The space is a text node of the label's own: an accessible
                   name drops the one a span begins with. */}
@@ -132,22 +130,13 @@ export function RadioGroupField<T extends string>({
                 className={cards ? 'radio radio--card' : 'radio'}
                 {...pressFeedback}
               >
-                <input
-                  type="radio"
-                  name={name}
-                  aria-required={required || undefined}
-                  value={option.value}
-                  checked={value === option.value}
-                  disabled={option.disabled}
-                  // A card names the error itself: `aria-invalid` is not allowed on a radio.
-                  aria-describedby={
-                    [option.description && descriptionId, cards && error && errorId]
-                      .filter(Boolean)
-                      .join(' ') || undefined
-                  }
-                  onChange={() => onChange(option.value)}
-                  {...pressFeedback}
-                />
+                {/* A card names the error itself: `aria-invalid` is not allowed on a radio. */}
+                {radio(
+                  option,
+                  [option.description && descriptionId, cards && error && errorId]
+                    .filter(Boolean)
+                    .join(' ') || undefined,
+                )}
                 <span className="radio__text">
                   <span className="radio__label">
                     {option.icon}

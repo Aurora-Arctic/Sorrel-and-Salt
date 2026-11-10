@@ -2,6 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import { signOut } from '../../lib/auth-client';
+import { settled } from '../../lib/auth-call';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
@@ -23,7 +24,7 @@ const SignOutButton = (): ReactElement => {
     setPending(true);
     report(undefined);
     // A refusal answers error; a dropped connection throws. Either says so.
-    const { error } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
+    const { error } = await settled(signOut());
     if (error) {
       setPending(false);
       report(GENERIC_FAILURE);
