@@ -545,6 +545,15 @@ $type-sizes: (
   'tab': 0.6875rem,
 );
 
+// The tracking of running text (paragraphs, links, definitions) and of the pull-quote beside it.
+$body-tracking: 0.02em;
+
+// The line height of a document's pull-quote and lede: looser than a heading, tighter than a paragraph.
+$document-line-height: 1.5;
+
+// The pull-quote's opening mark, a decorative size off the type scale: this many times the quote.
+$quote-mark-size: 3.25em;
+
 @function type-size($role) {
   @if not map.has-key($type-sizes, $role) {
     @error 'Unknown type size "#{$role}". The sizes are: #{map.keys($type-sizes)}.';
