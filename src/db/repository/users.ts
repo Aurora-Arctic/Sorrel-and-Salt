@@ -89,16 +89,13 @@ export async function findPasskeyHoldersAmong(
   _admin: SiteAdmin,
   userIds: readonly string[],
 ): Promise<string[]> {
-  if (userIds.length === 0) return [];
   // `passkeys` carries no `deleted_at`, so the filter adds nothing today.
-  const rows = await selectFrom(
-    passkeys,
-    and(notSoftDeleted(passkeys), inArray(passkeys.userId, [...userIds])),
-    {
+  const rows = await whenIds(userIds, () =>
+    selectFrom(passkeys, and(notSoftDeleted(passkeys), inArray(passkeys.userId, [...userIds])), {
       aggregate: { userId: sql<string>`${passkeys.userId}` },
       over: {},
       groupBy: [passkeys.userId],
-    },
+    }),
   );
   return rows.map((row) => row.userId);
 }
