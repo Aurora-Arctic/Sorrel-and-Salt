@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { ACCOUNT_NAV } from './nav';
 import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
@@ -39,14 +40,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   return (
     <PageWithNav as="div" headless>
-      <PageNav
-        label="On This Page"
-        entries={[
-          { href: '#account-name', label: 'Name' },
-          { href: '#account-email', label: 'Email' },
-          { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
-        ]}
-      />
+      <PageNav label="On This Page" entries={ACCOUNT_NAV} />
       <PanelSection id="account-name" title="Name" lede="The name Sorrel & Salt shows for you.">
         <NameForm name={me.name} />
       </PanelSection>

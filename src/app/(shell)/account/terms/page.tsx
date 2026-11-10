@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { TERMS_TITLE } from '@/components/TermsAgreement/head';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import TermsAgreement from '@/components/TermsAgreement';
 import { documentsChangedSince } from '@/lib/agreement-version';
@@ -11,7 +12,7 @@ import PageFrame from '@/components/PageFrame';
 
 // Out of search results and unfollowed: the public Terms of Use link here, and a signed-out crawler
 // is sent on to sign-in.
-export const metadata: Metadata = noIndexMetadata('Terms of Use', false);
+export const metadata: Metadata = noIndexMetadata(TERMS_TITLE, false);
 
 // Where an account that has not agreed to the current terms lands from every other protected page. It is exempt from the
 // terms check itself (`requireSession`), and an account that has already agreed is let through, so a stale tab does no harm.
