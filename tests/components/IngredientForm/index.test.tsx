@@ -65,7 +65,7 @@ const chooseEach = (name: string, ...labels: string[]) => {
   for (const label of labels) fireEvent.click(within(list).getByRole('option', { name: label }));
   fireEvent.keyDown(select(name), { key: 'Escape' });
 };
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 const saveAnother = () => press('Save & Add Another');
 const addEntry = (entry: string, value: string) => {
   type(entry, value);
@@ -150,7 +150,7 @@ describe('IngredientForm', () => {
       const onSaved = renderForm();
 
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
@@ -189,7 +189,7 @@ describe('IngredientForm', () => {
       addEntry('Colour', 'Silver-green');
       type('Safety Notes', 'None known.');
       fireEvent.click(screen.getByRole('switch', { name: 'Toxic' }));
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input).toEqual({
@@ -220,7 +220,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       addEntry('Celestial Body', 'Mercury');
-      save();
+      saveIngredient();
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
@@ -301,7 +301,7 @@ describe('IngredientForm', () => {
 
       // A save refused by the resolver is a new answer, and the old one goes: something entered, since a cleared form offers no save, but no name.
       type('Description', 'An entry with no name.');
-      save();
+      saveIngredient();
       await waitFor(() => expect(statusesSaying('Testwort')).toHaveLength(0));
     });
   });
@@ -312,7 +312,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Description', 'An entry with no name.');
-      save();
+      saveIngredient();
 
       const name = textbox('Name');
       await waitFor(() => expectErrorOn(name));
@@ -325,7 +325,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Description', 'An entry with no name.');
-      save();
+      saveIngredient();
       await waitFor(() => expect(textbox('Name')).toBeInvalid());
       type('Name', 'Testwort');
 
@@ -413,7 +413,7 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
-      save();
+      saveIngredient();
 
       const formal = textbox('Formal Name');
       await waitFor(() => expectErrorOn(formal));
@@ -433,7 +433,7 @@ describe('IngredientForm', () => {
       addEntry('Folk Name', 'Fixture Bane');
       addEntry('Folk Name', 'Fixture Wort');
       addEntry('Folk Name', 'Hedge Fixture');
-      save();
+      saveIngredient();
 
       await waitFor(() => expectErrorOn(box('Folk Name')));
       expectSummaryLinksTo(box('Folk Name'));
@@ -452,7 +452,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       chooseEach('Elements', 'Earth', 'Air');
-      save();
+      saveIngredient();
 
       const element = select('Elements');
       await waitFor(() => expectErrorOn(element));
@@ -470,7 +470,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
 
       const alert = await screen.findByRole('alert');
       expect(
@@ -490,7 +490,7 @@ describe('IngredientForm', () => {
         renderForm({ categories: CATEGORIES });
 
         type('Name', 'Testwort');
-        save();
+        saveIngredient();
 
         expect(await screen.findByRole('alert')).toBeVisible();
       },
@@ -505,7 +505,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       addEntry('Celestial Body', 'Mercury');
-      save();
+      saveIngredient();
 
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'Observers cannot add ingredients',
@@ -519,7 +519,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
 
       expect(await screen.findByRole('alert')).toBeVisible();
     });
@@ -532,10 +532,10 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
       await screen.findByRole('alert');
       acceptCreate();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     });
@@ -553,7 +553,7 @@ describe('IngredientForm', () => {
       await pickCategory('Trialcraft');
       await pickCategory('Testward');
       expect(removeButton('Trialcraft')).toBeInTheDocument();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input.categoryIds).toEqual([trialcraft.id, testward.id]);
@@ -577,7 +577,7 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       await pickCategory('Testward');
       await pickCategory('Fixture Shield');
-      save();
+      saveIngredient();
 
       await waitFor(() => expectErrorOn(box('Category')));
       expectSummaryLinksTo(box('Category'));
@@ -603,7 +603,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() => expect(describers(box('Category'))).toBeGreaterThan(quiet));
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input.categoryIds).toEqual([]);
     });
@@ -616,7 +616,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       choose('Classification', 'Botanical');
-      save();
+      saveIngredient();
 
       await waitFor(() => expectErrorOn(textbox('Formal Name')));
       expect(calls).toHaveLength(0);
@@ -637,7 +637,7 @@ describe('IngredientForm', () => {
       expect(formal).toBeDisabled();
       expect(formal).toHaveValue('');
       expect(describers(formal)).toBeGreaterThan(quiet);
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input).toMatchObject({ nomenclature: 'none', canonicalName: '' });
@@ -659,7 +659,7 @@ describe('IngredientForm', () => {
       expect(formal).toHaveValue('Fixtura testalis');
       expect(formal).not.toBeRequired();
       expect(describers(formal)).toBe(quiet);
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input).toMatchObject({
@@ -686,7 +686,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       type('Formal Name', 'Fixtura testalis');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(select('Classification')).not.toBeInvalid();
@@ -706,7 +706,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       choose('Classification', 'Botanical');
-      save();
+      saveIngredient();
       await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
       choose('Classification', 'Unknown');
 
@@ -714,7 +714,7 @@ describe('IngredientForm', () => {
       expect(textbox('Formal Name')).toBeEnabled();
 
       choose('Classification', 'Botanical');
-      save();
+      saveIngredient();
       await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
       choose('Classification', 'None');
 
@@ -886,20 +886,20 @@ describe('IngredientForm', () => {
       const calls = offerDuplicates([TOMENTOSA]);
 
       type('Name', "Cat's Claw ");
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(createAnyway()).toHaveFocus());
       expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
       expect(textbox('Name')).toBeInvalid();
       expect(saves).toHaveLength(0);
-      save();
+      saveIngredient();
       await waitFor(() => expect(createAnyway()).toHaveFocus());
       expect(saves).toHaveLength(0);
 
       fireEvent.click(createAnyway() as HTMLElement);
       await emptied();
       expect(textbox('Name')).toHaveFocus();
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves).toHaveLength(1);
     });
@@ -923,7 +923,7 @@ describe('IngredientForm', () => {
       const submit = screen.getByRole('button', { name: 'Save Ingredient' });
 
       type('Name', 'Fixture Nothingalike');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(submit).toHaveAttribute('aria-busy', 'true'));
       expect(saves).toHaveLength(0);
@@ -942,7 +942,7 @@ describe('IngredientForm', () => {
       choose('Classification', 'Botanical');
       act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
       await within(warning()).findByRole('link');
-      save();
+      saveIngredient();
 
       await waitFor(() => expectSummaryLinksTo(textbox('Formal Name')));
       expect(createAnyway()).not.toHaveFocus();
@@ -998,7 +998,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Porch Claw');
       type('Description', 'Dried from the porch.');
-      save();
+      saveIngredient();
       fireEvent.click(await screen.findByRole('button', { name: /^Add to My Ingredients: / }));
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -1031,7 +1031,7 @@ describe('IngredientForm', () => {
       offerCompendiumMatches([CLAW]);
 
       type('Name', 'Porch Claw');
-      save();
+      saveIngredient();
       const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
       offerDuplicates([{ ...CLAW, inCupboard: true }]);
       offerCompendiumMatches([{ ...CLAW, inCupboard: true }]);
@@ -1212,7 +1212,7 @@ describe('IngredientForm', () => {
         expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, query: '', first: 10 });
       }
       type('Name', 'Testwort');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves[0].input).toMatchObject({
@@ -1243,7 +1243,7 @@ describe('IngredientForm', () => {
     const onSaved = renderForm();
 
     type('Name', 'Testwort');
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(onSaved.mock.calls[0]![0].stock).toEqual([

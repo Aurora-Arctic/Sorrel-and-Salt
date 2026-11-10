@@ -9,9 +9,10 @@ import { WORKSPACE_ID, offerDeities } from '../../support/msw/ingredient-lookups
 
 // claude-docs/components/ingredient-form.md, "Stories and tests"
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <QueryClientProvider client={makeQueryClient()}>{children}</QueryClientProvider>
-);
+const wrapper = ({ children }: { children: ReactNode }) => {
+  const fresh = makeQueryClient();
+  return <QueryClientProvider client={fresh}>{children}</QueryClientProvider>;
+};
 
 describe('a lookup that a caller switches on before the typing settles', () => {
   it('asks for the settled text only, never for the text it has not yet caught up with', async () => {

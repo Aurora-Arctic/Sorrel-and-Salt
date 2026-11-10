@@ -1,14 +1,11 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { RenameWorkspaceMutation, RenameWorkspaceMutationVariables } from '@/gql/graphql';
 import { limitMessage } from '@/lib/formats';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-
-const push = vi.fn();
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: RenameWorkspaceForm } = await import('@/components/RenameWorkspaceForm');
 
@@ -17,17 +14,11 @@ const { default: RenameWorkspaceForm } = await import('@/components/RenameWorksp
 // rules (tests/components/Field/form-actions.test.tsx); what counts as a change is this form's.
 
 function renderForm(name = 'Fixture Coven') {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <RenameWorkspaceForm workspaceId="w1" name={name} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<RenameWorkspaceForm workspaceId="w1" name={name} />);
 }
 
 const nameField = () => screen.getByRole('textbox', { name: 'Name' });
-const save = () => screen.getByRole('button', { name: /^Sav/ });
 const cancel = () => screen.queryByRole('button', { name: 'Cancel' });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
 function acceptRename(slug = 'fixture-renamed') {
   const calls: RenameWorkspaceMutationVariables[] = [];
@@ -44,8 +35,8 @@ function acceptRename(slug = 'fixture-renamed') {
 }
 
 beforeEach(() => {
-  push.mockClear();
-  refresh.mockClear();
+  router.push.mockClear();
+  router.refresh.mockClear();
 });
 
 describe('RenameWorkspaceForm', () => {
@@ -93,12 +84,14 @@ describe('RenameWorkspaceForm', () => {
     renderForm();
 
     fireEvent.change(nameField(), { target: { value: ' Fixture Renamed ' } });
-    submit();
+    submitForm();
 
-    await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-renamed'));
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-renamed'),
+    );
     expect(calls).toEqual([{ workspaceId: 'w1', name: ' Fixture Renamed ' }]);
-    // The shell's switcher lists covens from a layout the push does not re-run.
-    expect(refresh).toHaveBeenCalled();
+    // The shell's switcher lists covens from a layout the router.push does not re-run.
+    expect(router.refresh).toHaveBeenCalled();
   });
 
   it('puts a refusal on `name` beside the field, and goes nowhere', async () => {
@@ -109,12 +102,12 @@ describe('RenameWorkspaceForm', () => {
     renderForm();
 
     fireEvent.change(nameField(), { target: { value: 'F'.repeat(81) } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
     expect(nameField()).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('clears a refusal on the name as soon as the person edits it', async () => {
@@ -125,7 +118,7 @@ describe('RenameWorkspaceForm', () => {
     renderForm();
 
     fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
-    submit();
+    submitForm();
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
 
     fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
@@ -137,10 +130,10 @@ describe('RenameWorkspaceForm', () => {
     renderForm();
 
     fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
-    submit();
+    submitForm();
 
     expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('puts any other refusal in the alert region, in the server’s words, and goes nowhere', async () => {
@@ -151,9 +144,9 @@ describe('RenameWorkspaceForm', () => {
     renderForm();
 
     fireEvent.change(nameField(), { target: { value: 'Fixture Renamed' } });
-    submit();
+    submitForm();
 
     expect(await screen.findByRole('alert')).toHaveTextContent("The demo coven can't be renamed.");
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 });

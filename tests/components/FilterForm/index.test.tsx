@@ -1,9 +1,7 @@
 import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import FilterForm from '@/components/FilterForm';
 import ListFrame from '@/components/ListFrame';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 // A named <form> inside a <search> is two landmarks for one control, so the <search> carries the name (claude-docs/components/filter-form.md).
 

@@ -9,12 +9,12 @@ import type {
   RecordCardAttemptMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/invitation-acceptance.md
 
-const router = { push: vi.fn() };
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   useSearchParams: () => new URLSearchParams(),
 }));
 

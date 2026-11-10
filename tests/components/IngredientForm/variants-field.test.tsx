@@ -23,13 +23,13 @@ import {
   sectionOf,
   sent,
   twoForms,
-  type,
+  typeInScope,
   variant,
 } from './variants-harness';
 
 // claude-docs/components/ingredient-form.md, "The variants"
 
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 
 describe('VariantsField', () => {
   beforeEach(() => {
@@ -46,9 +46,9 @@ describe('VariantsField', () => {
     const oil = variant('Oil');
     expect(control(oil, 'Form')).toHaveValue('Oil');
     expect(newForm()).toHaveValue('');
-    type(oil, 'Safety Notes', 'Dilute before use.');
+    typeInScope(oil, 'Safety Notes', 'Dilute before use.');
     fireEvent.click(within(oil).getByRole('switch', { name: 'Toxic' }));
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.toxic).toBe(false);
@@ -75,7 +75,7 @@ describe('VariantsField', () => {
 
     addVariant('Oil');
     const form = control(variant('Oil'), 'Form');
-    type(variant('Oil'), 'Form', '  Infused   oil ');
+    typeInScope(variant('Oil'), 'Form', '  Infused   oil ');
     await act(async () => {
       fireEvent.blur(form);
     });
@@ -87,7 +87,7 @@ describe('VariantsField', () => {
   it('refuses text the compendium’s New Form box has not picked, at Enter, adding nothing', () => {
     renderVariants({ workspaceId: null });
 
-    type(document.body, 'New Form', 'Oyl');
+    typeInScope(document.body, 'New Form', 'Oyl');
     fireEvent.keyDown(newForm(), { key: 'Enter' });
 
     expect(newForm()).toBeInvalid();
@@ -109,7 +109,7 @@ describe('VariantsField', () => {
     expect(variant('Herb')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(newForm()).toHaveFocus();
-    save();
+    saveIngredient();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.map(({ form }) => form)).toEqual(['Herb']);
   });
@@ -167,7 +167,7 @@ describe('VariantsField', () => {
 
       const oil = openVariant('Oil');
       openSectionsIn(oil, 'Details & Care');
-      type(oil, 'Safety Notes', 'Dilute before use.');
+      typeInScope(oil, 'Safety Notes', 'Dilute before use.');
       fireEvent.click(within(oil).getByRole('button', { name: 'Done with Oil' }));
 
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
@@ -311,8 +311,8 @@ describe('VariantsField', () => {
       expect(choice(card, 'Use "Beeswax"')).toBeInTheDocument();
       expect(choice(card, 'Keep "Wax"')).toBeInTheDocument();
 
-      type(card, 'Description', 'Poured from the fixture.');
-      save();
+      typeInScope(card, 'Description', 'Poured from the fixture.');
+      saveIngredient();
 
       await waitFor(() => expect(control(card, 'Form')).toBeInvalid());
       expect(control(card, 'Form')).toHaveAccessibleDescription(/Beeswax/);
@@ -327,7 +327,7 @@ describe('VariantsField', () => {
 
       expect(control(card, 'Form')).toHaveValue('Beeswax');
       expect(within(card).queryByRole('button', { name: 'Keep "Wax"' })).toBeNull();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(sent(onSubmit)?.variants).toEqual([
@@ -343,7 +343,7 @@ describe('VariantsField', () => {
 
       expect(control(card, 'Form')).toHaveValue('Wax');
       expect(within(card).queryByRole('button', { name: 'Use "Beeswax"' })).toBeNull();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(sent(onSubmit)?.variants).toEqual([
@@ -355,14 +355,14 @@ describe('VariantsField', () => {
       const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID, values: renamed });
 
       const card = openWax();
-      type(card, 'Description', 'Poured from the fixture.');
-      save();
+      typeInScope(card, 'Description', 'Poured from the fixture.');
+      saveIngredient();
       await waitFor(() => expect(control(card, 'Form')).toBeInvalid());
 
       fireEvent.click(choice(card, 'Keep "Wax"'));
 
       expect(control(card, 'Form')).toBeValid();
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     });
   });

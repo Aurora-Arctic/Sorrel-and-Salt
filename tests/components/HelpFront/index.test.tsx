@@ -1,13 +1,13 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { HELP_LEDE } from '@/lib/help-pages';
 import { Navigating } from '../../support/navigating';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The address the help layout is showing, set by each test before it renders.
 const here = vi.hoisted(() => ({ pathname: '/help', search: '' }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => here.pathname,
   useSearchParams: () => new URLSearchParams(here.search),
 }));

@@ -10,9 +10,9 @@ import type { ShellContext } from '@/lib/types';
 
 const viewerIfSignedIn = vi.fn<() => Promise<ShellContext | null>>();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/compendium',
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/lib/auth-client', () => ({

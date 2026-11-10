@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../../support/printed-text';
 import { Forbidden } from '@/lib/errors';
+import { requireSession } from '../../../support/request-session';
 
 // `/coven-paused/[slug]`, where a member whose access to one coven is paused is sent from its pages. It reads the pause itself
 // through the service, by the slug alone: a stranger gets the 404 the coven pages give, and a member with no pause standing is
 // sent back in. The service is proved against Postgres in tests/modules/coven/services/member-pause.test.ts.
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({}),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },
@@ -19,8 +20,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/coven-paused/fixture-coven',
   useSearchParams: () => new URLSearchParams(),
 }));
-const requireSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const pausedCovenBySlug = vi.fn();
 vi.mock('@/modules/coven', () => ({ pausedCovenBySlug }));
 // The Leave button's confirmation and its leave are its own (tests/components/LeaveWorkspaceButton/index.test.tsx); here

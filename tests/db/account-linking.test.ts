@@ -11,16 +11,16 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
 import { ORIGIN } from '../support/constants';
+import { send } from '../support/mail';
 
 // A second provider is added with /link-social, then signs in by its account id
 // (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 
 const DOMAIN = '@account-linking.test';
 const OWNER = `owner${DOMAIN}`;

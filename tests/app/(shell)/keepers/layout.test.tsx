@@ -1,18 +1,21 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { hrefs } from '../../../support/links';
+import { requireCuratorSession } from '../../../support/request-session';
 
 // The `/keepers` layout and its index page each run the guard themselves: a layout does not re-run on client-side navigation, so a page that trusted it would render for whoever reached it that way (claude-docs/auth/admin-guard.md).
 // The guard is mocked (tests/lib/request-session.test.ts's), to prove each route awaits it before rendering. It is the curation guard, which a curator passes too, since a curator reaches the index and Support; the people and invitation pages beneath call the admin one.
 
-const requireCuratorSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const countSupportViews = vi.fn();
 vi.mock('@/modules/support', () => ({ countSupportViews }));
 // The nav marks the page you are on from the address, which Next reads from
 // the App Router's state; a test mounts no router, so the address is given,
 // and the route-modal provider's router is a stand-in that goes nowhere.
-vi.mock('next/navigation', () => ({ usePathname: () => '/keepers', useRouter: () => ({}) }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  usePathname: () => '/keepers',
+}));
 
 const { default: KeepersLayout } = await import('@/app/(shell)/keepers/layout');
 const { default: KeepersPage } = await import('@/app/(shell)/keepers/page');

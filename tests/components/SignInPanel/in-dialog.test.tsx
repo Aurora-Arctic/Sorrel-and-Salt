@@ -18,7 +18,7 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
 }));
 
 vi.mock('next/navigation', async () => ({
-  useRouter: () => ({}),
+  ...(await import('../../support/next-navigation')),
   useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 
@@ -32,7 +32,7 @@ const press = (element: Element) =>
 const field = (label: string) =>
   screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
 
-const type = (label: string, value: string) =>
+const typeInField = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 
 describe('SignInPanel in a dialog', () => {
@@ -79,7 +79,7 @@ describe('SignInPanel in a dialog', () => {
     expect(field('Email Address')).toBeInTheDocument();
     expect(history.push).not.toHaveBeenCalled();
     expect(history.replace).not.toHaveBeenCalled();
-    type('Email Address', 'someone@in-dialog.test');
+    typeInField('Email Address', 'someone@in-dialog.test');
 
     await act(async () => reported()[1]());
 
@@ -129,9 +129,9 @@ describe('SignInPanel in a dialog', () => {
       />,
     );
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
-    type('Name', 'Testwort Hedge');
-    type('Email Address', 'someone@in-dialog.test');
-    type('Password', PASSWORD);
+    typeInField('Name', 'Testwort Hedge');
+    typeInField('Email Address', 'someone@in-dialog.test');
+    typeInField('Password', PASSWORD);
 
     await press(screen.getByRole('button', { name: 'Create Account' }));
 
@@ -145,8 +145,8 @@ describe('SignInPanel in a dialog', () => {
     signInEmail.mockResolvedValue({ data: {}, error: null });
     render(<SignInPanel next="/invite/abc" configured={['google']} inDialog signUpLandsOnNext />);
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
-    type('Email Address', 'someone@in-dialog.test');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'someone@in-dialog.test');
+    typeInField('Password', PASSWORD);
 
     await press(screen.getByRole('button', { name: 'Sign In' }));
 

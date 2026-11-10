@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import type {
   HelpOutlineAudience,
   HelpOutlineGuide,
@@ -16,9 +17,8 @@ import { moveByKeyboard } from '../../support/sortable';
 // Mode, where every live guide is a row to move among its own audience's and each move saves as it happens
 // (claude-docs/components/help-outline.md).
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/help',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -72,7 +72,6 @@ function layOutBarRows() {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  refresh.mockClear();
 });
 
 const bar = (guides = GUIDES, order = ORDER) =>
@@ -292,7 +291,7 @@ describe('HelpGuidesBar in Reorder Mode', () => {
     await moveByKeyboard(grips()[0], 'ArrowDown');
 
     await waitFor(() => expect(sent).toEqual([['g2', 'g1', 'g3', 'g4']]));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(gripNames()[1]).toBe('Move Testwort Basics');
     expect(nav().getByRole('button', { name: 'Reorder' })).toHaveAttribute('aria-pressed', 'true');
   });

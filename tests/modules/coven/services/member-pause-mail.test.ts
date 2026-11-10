@@ -11,20 +11,18 @@ import { A, B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 type Mail = { to: string; subject: string; text: string; html: string };
-const { sent, startJob, send } = vi.hoisted(() => {
+const { sent, startJob } = vi.hoisted(() => {
   const sent = [] as { to: string; subject: string; text: string; html: string }[];
   return {
     sent,
     startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
-    send: vi.fn(async (message: (typeof sent)[number]) => {
-      sent.push(message);
-    }),
   };
 });
 vi.mock('@/lib/jobs', () => ({ startJob }));
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: Mail) => {
     sent.push(message);
@@ -67,7 +65,10 @@ async function sendPauseRuns() {
 
 beforeEach(async () => {
   startJob.mockClear();
-  send.mockClear();
+  send.mockReset();
+  send.mockImplementation(async (message: Mail) => {
+    sent.push(message);
+  });
   sent.length = 0;
   // Set, so a pause starts its job rather than trying the mail once here.
   vi.stubEnv('MAIL_TRANSPORT', 'smtp');

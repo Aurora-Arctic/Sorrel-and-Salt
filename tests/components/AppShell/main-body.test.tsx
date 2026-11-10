@@ -1,12 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { Navigating } from '../../support/navigating';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The address the shell is showing, set by each test before it renders.
 const here = vi.hoisted(() => ({ pathname: '/compendium' }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => here.pathname,
 }));
 vi.mock('@/app/skeletons', async () => ({
@@ -57,10 +57,6 @@ function expectNoWait() {
   expect(screen.queryAllByRole('region')).toEqual([]);
   expect(screen.queryByRole('status')).toBeNull();
 }
-
-beforeEach(() => {
-  for (const call of Object.values(router)) call.mockReset();
-});
 
 afterEach(async () => {
   await act(async () => arrive());

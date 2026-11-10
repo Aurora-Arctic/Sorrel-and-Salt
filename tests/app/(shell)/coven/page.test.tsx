@@ -1,12 +1,10 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
+import { requireCovenMembership, requireSession } from '../../../support/request-session';
+import { renderWithQuery } from '../../../support/render-with-query';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
-const requireCovenMembership = vi.fn();
-const requireSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 const memberRoster = vi.fn();
 vi.mock('@/modules/identity', () => ({
   displayNamesOf: async (_session: unknown, ids: string[]) => ids.map((id) => `Name of ${id}`),
@@ -21,7 +19,6 @@ vi.mock('@/modules/coven', async () => ({
 }));
 
 const { default: CovenPage } = await import('@/app/(shell)/coven/[slug]/page');
-const { makeQueryClient } = await import('@/lib/graphql-client');
 
 const params = (slug: string) => Promise.resolve({ slug });
 
@@ -30,11 +27,7 @@ async function renderAs(role: WorkspaceRole, demo = false) {
     workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven', demo },
     membership: { workspaceId: 'w', userId: 'u', role },
   });
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      {await CovenPage({ params: params('fixture-coven') })}
-    </QueryClientProvider>,
-  );
+  renderWithQuery(await CovenPage({ params: params('fixture-coven') }));
 }
 
 beforeEach(() => {

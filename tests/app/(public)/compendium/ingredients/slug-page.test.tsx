@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
+import { getSession } from '../../../../support/request-session';
 
 // The public entry page's reach: the cached sessionless read first, and a session asked for only when it finds
 // nothing. A curator or keeper then gets a hidden entry from the uncached read; anyone else gets the 404. What the
@@ -9,10 +10,10 @@ import { NotFound } from '@/lib/errors';
 const notFound = vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
   notFound,
   permanentRedirect: vi.fn(),
-  useRouter: () => ({ refresh: vi.fn() }),
 }));
 
 const readCompendiumEntry = vi.fn();
@@ -26,8 +27,7 @@ vi.mock('@/modules/ingredients', () => ({
   getIngredient: async () => ({ shown: false }),
 }));
 
-const getSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 const viewerIfSignedIn = vi.fn(async () => null);
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 vi.mock('@/app/entry-values', () => ({ entryValues: async () => ({}) }));

@@ -1,13 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render as draw, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { Navigating } from '../../support/navigating';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsDialog } = await import('@/components/IngredientEntry/details-dialog');
@@ -306,9 +304,10 @@ describe('DetailsDialog plus', () => {
   const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
   const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };
 
-  const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) =>
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
+  const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) => {
+    const fresh = makeQueryClient();
+    return render(
+      <QueryClientProvider client={fresh}>
         <Navigating push={router.push}>
           <RouteModalProvider>
             <DetailsDialog
@@ -324,6 +323,7 @@ describe('DetailsDialog plus', () => {
         </Navigating>
       </QueryClientProvider>,
     );
+  };
   const before = (first: Node, second: Node) =>
     Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 
@@ -400,20 +400,23 @@ describe('DetailsDialog coven card controls', () => {
   const CARD_NAME = 'Testwort, Fixtura testalis';
   const entry = { id: ID, label: ENTRY.name, canonicalName: ENTRY.canonicalName };
 
-  const view = (opened: boolean, extra: object) => (
-    <QueryClientProvider client={makeQueryClient()}>
-      <Navigating push={router.push}>
-        <RouteModalProvider>
-          <DetailsDialog
-            closeHref={COVEN_LIST}
-            opened={
-              opened ? { heading: detailsHeading(ENTRY), pageHref: PAGE, ...extra } : undefined
-            }
-          />
-        </RouteModalProvider>
-      </Navigating>
-    </QueryClientProvider>
-  );
+  const view = (opened: boolean, extra: object) => {
+    const fresh = makeQueryClient();
+    return (
+      <QueryClientProvider client={fresh}>
+        <Navigating push={router.push}>
+          <RouteModalProvider>
+            <DetailsDialog
+              closeHref={COVEN_LIST}
+              opened={
+                opened ? { heading: detailsHeading(ENTRY), pageHref: PAGE, ...extra } : undefined
+              }
+            />
+          </RouteModalProvider>
+        </Navigating>
+      </QueryClientProvider>
+    );
+  };
   const actions = (fields: object) =>
     covenCardActions({ ...entry, ...fields }, WORKSPACE_ID, 'fixture-coven', COVEN_LIST);
 

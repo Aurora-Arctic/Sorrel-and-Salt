@@ -4,6 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { hrefs } from '../../../../support/links';
+import {
+  getSession,
+  requireAdminSession,
+  requireCuratorSession,
+  requireSession,
+  sessionIsVerified,
+} from '../../../../support/request-session';
 
 // The staff help pages sit in the shell and each runs the curation guard itself, which a curator and a keeper pass
 // and which renders the styled not-authorized page (forbidden()) for anyone else. They read the staff finders with
@@ -17,27 +24,16 @@ const notFound = vi.fn(() => {
 const permanentRedirect = vi.fn((to: string) => {
   throw new Error(`NEXT_REDIRECT 308 ${to}`);
 });
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
   notFound,
   permanentRedirect,
   redirect: vi.fn(),
   usePathname: () => '/help/staff',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const requireCuratorSession = vi.fn<() => Promise<Session>>();
-const requireAdminSession = vi.fn();
-const requireSession = vi.fn();
-const getSession = vi.fn<() => Promise<Session | null>>();
-const sessionIsVerified = vi.fn(async () => true);
-vi.mock('@/lib/request-session', () => ({
-  requireCuratorSession,
-  requireAdminSession,
-  requireSession,
-  getSession,
-  sessionIsVerified,
-}));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 
 const listStaffHelpArticles = vi.fn();
 const readStaffHelpArticle = vi.fn();
@@ -129,6 +125,7 @@ beforeEach(() => {
   requireCuratorSession.mockResolvedValue(CURATOR);
   readHelpGlossary.mockResolvedValue([]);
   getSession.mockResolvedValue(CURATOR);
+  sessionIsVerified.mockResolvedValue(true);
   requireAdminSession.mockRejectedValue(new Error('not the curation guard'));
   requireSession.mockRejectedValue(new Error('not the curation guard'));
 });

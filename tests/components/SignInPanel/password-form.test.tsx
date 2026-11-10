@@ -21,7 +21,7 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
 }));
 
 vi.mock('next/navigation', async () => ({
-  useRouter: () => ({}),
+  ...(await import('../../support/next-navigation')),
   useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 
@@ -36,19 +36,19 @@ const press = (element: Element) =>
 const field = (label: string) =>
   screen.getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
 
-const type = (label: string, value: string) =>
+const typeInField = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 
 const submit = (name: string) => screen.getByRole('button', { name });
 
 function fillSignIn(email = 'someone@password-form.test') {
-  type('Email Address', email);
-  type('Password', PASSWORD);
+  typeInField('Email Address', email);
+  typeInField('Password', PASSWORD);
 }
 
 async function openSignUp() {
   await press(screen.getByRole('button', { name: 'Create an Account' }));
-  type('Name', 'Testwort Hedge');
+  typeInField('Name', 'Testwort Hedge');
   fillSignIn();
 }
 
@@ -74,14 +74,14 @@ describe('SignInPanel, email and password', () => {
   });
 
   it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
-    type('Email Address', '  Name@EXAMPLE.COM  ');
+    typeInField('Email Address', '  Name@EXAMPLE.COM  ');
     fireEvent.blur(field('Email Address'));
 
     expect(field('Email Address')).toHaveValue('name@example.com');
   });
 
   it('flags a malformed address when the field is left, linked to the field', () => {
-    type('Email Address', 'name@');
+    typeInField('Email Address', 'name@');
     fireEvent.blur(field('Email Address'));
 
     expect(field('Email Address')).toHaveAttribute('aria-invalid', 'true');
@@ -91,8 +91,8 @@ describe('SignInPanel, email and password', () => {
   });
 
   it('refuses a malformed address with the shared message, without asking the server', async () => {
-    type('Email Address', 'name@');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'name@');
+    typeInField('Password', PASSWORD);
 
     await press(submit('Sign In'));
 
@@ -102,16 +102,16 @@ describe('SignInPanel, email and password', () => {
 
   it('keeps Sign In disabled until both fields hold something', () => {
     expect(submit('Sign In')).toBeDisabled();
-    type('Email Address', 'someone@password-form.test');
+    typeInField('Email Address', 'someone@password-form.test');
     expect(submit('Sign In')).toBeDisabled();
-    type('Password', PASSWORD);
+    typeInField('Password', PASSWORD);
     expect(submit('Sign In')).toBeEnabled();
   });
 
   it('signs in with the trimmed address and the password as typed, then loads the sign-in page carrying next', async () => {
     signInEmail.mockResolvedValue({ data: {}, error: null });
     fillSignIn('  someone@password-form.test ');
-    type('Password', ` ${PASSWORD} `);
+    typeInField('Password', ` ${PASSWORD} `);
 
     await press(submit('Sign In'));
 
@@ -162,10 +162,10 @@ describe('SignInPanel, email and password', () => {
     await press(screen.getByRole('button', { name: 'Create an Account' }));
 
     expect(field('Password')).toHaveAttribute('autocomplete', 'new-password');
-    type('Email Address', 'someone@password-form.test');
-    type('Password', PASSWORD);
+    typeInField('Email Address', 'someone@password-form.test');
+    typeInField('Password', PASSWORD);
     expect(submit('Create Account')).toBeDisabled();
-    type('Name', 'Testwort Hedge');
+    typeInField('Name', 'Testwort Hedge');
     expect(submit('Create Account')).toBeEnabled();
   });
 
@@ -302,7 +302,7 @@ describe('SignInPanel, email and password', () => {
   it('holds the buttons and the email form as two views, each its own history entry, and keeps the typed address between them', async () => {
     expect(screen.getByRole('heading', { name: /Sign In with Email/ })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();
-    type('Email Address', 'someone@password-form.test');
+    typeInField('Email Address', 'someone@password-form.test');
 
     await press(screen.getByRole('button', { name: 'Back to Sign-In Options' }));
     expect(history.back).toHaveBeenCalledTimes(1);

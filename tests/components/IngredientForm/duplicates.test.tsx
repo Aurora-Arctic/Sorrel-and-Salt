@@ -21,9 +21,7 @@ import {
   offerDuplicates,
 } from '../../support/msw/ingredient-lookups';
 import type { DuplicateNode } from './types';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/ingredient-form.md, "Stories and tests"
 
@@ -123,8 +121,8 @@ const quickLookOf = (match: { slug: string; name: string }) => ({
 const ADD = /^Add to My Ingredients: /;
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
-const type = (value: string) => typeIn(name(), value);
-const save = () => press('Save Ingredient');
+const typeName = (value: string) => typeIn(name(), value);
+const saveIngredient = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 const emptied = async () => {
@@ -146,8 +144,8 @@ describe('NameField, with useDuplicateWarning', () => {
     renderName();
     const calls = offerDuplicates([]);
 
-    type('C');
-    type('Cats Claw ');
+    typeName('C');
+    typeName('Cats Claw ');
     act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
     expect(calls).toHaveLength(0);
 
@@ -166,7 +164,7 @@ describe('NameField, with useDuplicateWarning', () => {
     server.use(graphqlLink.query('PossibleDuplicates', () => answered));
     expect(name()).not.toHaveAttribute('aria-busy');
 
-    type('Cats Claw');
+    typeName('Cats Claw');
     settle();
     await waitFor(() => expect(name()).toHaveAttribute('aria-busy', 'true'));
 
@@ -178,11 +176,11 @@ describe('NameField, with useDuplicateWarning', () => {
   it('asks nothing for a blank name, and drops the warning the last name had', async () => {
     renderName();
     const calls = offerDuplicates([TOMENTOSA]);
-    type('Cats Claw');
+    typeName('Cats Claw');
     settle();
     await within(warning()).findByRole('link');
 
-    type('   ');
+    typeName('   ');
     settle();
 
     await emptied();
@@ -193,13 +191,13 @@ describe('NameField, with useDuplicateWarning', () => {
   it('asks nothing for a single letter, and asks once a second is typed', async () => {
     renderName();
     const calls = offerDuplicates([TOMENTOSA]);
-    type('C');
+    typeName('C');
     settle();
     await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
     expect(calls).toHaveLength(0);
     await emptied();
 
-    type('Ca');
+    typeName('Ca');
     settle();
     await within(warning()).findByRole('link');
     expect(calls).toHaveLength(1);
@@ -212,7 +210,7 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName("Cat's Claw");
 
     settle();
-    save();
+    saveIngredient();
     await settleSave();
 
     expect(calls).toHaveLength(0);
@@ -224,7 +222,7 @@ describe('NameField, with useDuplicateWarning', () => {
     const calls = offerDuplicates([TOMENTOSA]);
     renderName('Mockleaf');
 
-    type('Cats Claw');
+    typeName('Cats Claw');
     settle();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -235,8 +233,8 @@ describe('NameField, with useDuplicateWarning', () => {
     const calls = offerDuplicates([TOMENTOSA]);
     renderName("Cat's Claw");
 
-    type("Cat's Cla");
-    type("Cat's Claw");
+    typeName("Cat's Cla");
+    typeName("Cat's Claw");
     settle();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -248,7 +246,7 @@ describe('NameField, with useDuplicateWarning', () => {
     renderName();
     offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
 
-    type('Cats Claw');
+    typeName('Cats Claw');
     settle();
 
     const tomentosa = await within(warning()).findByRole('link', {
@@ -272,13 +270,13 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName();
     const calls = offerDuplicates([]);
 
-    type('Fixture Nothingalike');
+    typeName('Fixture Nothingalike');
     settle();
     await waitFor(() => expect(calls).toHaveLength(1));
 
     await emptied();
     expect(createAnyway()).not.toBeInTheDocument();
-    save();
+    saveIngredient();
     await waitFor(() => expect(sent).toHaveBeenCalledWith('Fixture Nothingalike'));
   });
 
@@ -286,10 +284,10 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName();
     offerDuplicates([TOMENTOSA]);
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(warning()).findByRole('link');
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(name()).toBeInvalid());
     expect(name().getAttribute('aria-describedby')).toContain(warning().id);
@@ -298,7 +296,7 @@ describe('NameField, with useDuplicateWarning', () => {
     );
     expect(sent).not.toHaveBeenCalled();
 
-    save();
+    saveIngredient();
     await settleSave();
     expect(sent).not.toHaveBeenCalled();
   });
@@ -307,13 +305,13 @@ describe('NameField, with useDuplicateWarning', () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(warning()).findByRole('link');
     expect(within(warning()).getByText('Did you mean one of these?')).toBeInTheDocument();
     expect(within(warning()).queryByText(/on hold/)).not.toBeInTheDocument();
 
-    save();
+    saveIngredient();
     await waitFor(() => expect(name()).toBeInvalid());
 
     expect(within(warning()).queryByText('Did you mean one of these?')).not.toBeInTheDocument();
@@ -332,12 +330,12 @@ describe('NameField, with useDuplicateWarning', () => {
       ...screen.queryAllByRole('status'),
     ];
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(region).findByRole('link');
     expect(announcers()).toEqual([region]);
 
-    save();
+    saveIngredient();
     await waitFor(() => expect(name()).toBeInvalid());
     expect(within(region).getByText(/save is on hold/)).toBeInTheDocument();
     expect(announcers()).toEqual([region]);
@@ -347,8 +345,8 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName();
     const calls = offerDuplicates([TOMENTOSA]);
 
-    type("Cat's Claw ");
-    save();
+    typeName("Cat's Claw ");
+    saveIngredient();
 
     // No wait for the debounce: the save asks about the name it is sending.
     await waitFor(() => expect(name()).toBeInvalid());
@@ -362,14 +360,14 @@ describe('NameField, with useDuplicateWarning', () => {
   it('lifts the hold when the name changes, a new match only warning', async () => {
     const sent = renderName();
     offerDuplicates([TOMENTOSA]);
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(warning()).findByRole('link');
-    save();
+    saveIngredient();
     await waitFor(() => expect(name()).toBeInvalid());
 
     offerDuplicates([TOMENTOSA, FELIS]);
-    type("Cat's Claws");
+    typeName("Cat's Claws");
     settle();
     await within(warning()).findByRole('link', {
       name: /^Cat's Claw \(Felis catus\)/,
@@ -383,17 +381,17 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName();
     offerDuplicates([TOMENTOSA]);
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(warning()).findByRole('link');
-    save();
+    saveIngredient();
     await waitFor(() => expect(name()).toBeInvalid());
     fireEvent.click(createAnyway() as HTMLElement);
 
     await emptied();
     expect(name()).toHaveFocus();
     expect(name()).not.toBeInvalid();
-    save();
+    saveIngredient();
     await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
   });
 
@@ -401,19 +399,19 @@ describe('NameField, with useDuplicateWarning', () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
     await within(warning()).findByRole('link');
     fireEvent.click(createAnyway() as HTMLElement);
 
     const again = offerDuplicates([TOMENTOSA]);
-    type("Cat's Claws");
+    typeName("Cat's Claws");
     settle();
     await waitFor(() => expect(again).toHaveLength(1));
     await emptied();
 
     offerDuplicates([TOMENTOSA, FELIS]);
-    type("Cat's Clawe");
+    typeName("Cat's Clawe");
     settle();
     const felis = await within(warning()).findByRole('link', {
       name: /^Cat's Claw \(Felis catus\)/,
@@ -426,9 +424,9 @@ describe('NameField, with useDuplicateWarning', () => {
     const sent = renderName();
     mockGraphQLError('PossibleDuplicates', { code: 'FORBIDDEN' });
 
-    type("Cat's Claw");
+    typeName("Cat's Claw");
     settle();
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
     await emptied();
@@ -442,8 +440,8 @@ describe('NameField, with useDuplicateWarning', () => {
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
 
-      type("Cat's Claw");
-      save();
+      typeName("Cat's Claw");
+      saveIngredient();
 
       const row = await within(warning()).findByRole('listitem');
       expect(within(row).getByRole('link')).toHaveAttribute('href', duplicateHref(CLAW));
@@ -459,8 +457,8 @@ describe('NameField, with useDuplicateWarning', () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
-      type("Cat's Claw");
-      save();
+      typeName("Cat's Claw");
+      saveIngredient();
 
       const plus = await screen.findByRole('button', { name: ADD });
       press(plus);
@@ -475,11 +473,11 @@ describe('NameField, with useDuplicateWarning', () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
-      type("Cat's Claw");
-      save();
+      typeName("Cat's Claw");
+      saveIngredient();
       press(await screen.findByRole('button', { name: 'Create Anyway' }));
 
-      save();
+      saveIngredient();
       await settleSave();
 
       expect(sent).toHaveBeenCalledWith("Cat's Claw");
@@ -490,8 +488,8 @@ describe('NameField, with useDuplicateWarning', () => {
       const held = { ...CLAW, inCupboard: true };
       offerDuplicates([held]);
       offerCompendiumMatches([held]);
-      type("Cat's Claw");
-      save();
+      typeName("Cat's Claw");
+      saveIngredient();
 
       expect(
         await screen.findByRole('button', { name: "Quick Look Cat's Claw, Uncaria tomentosa" }),
@@ -504,7 +502,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([]);
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
 
       const row = await within(warning()).findByRole('listitem');
@@ -520,7 +518,7 @@ describe('NameField, with useDuplicateWarning', () => {
     it("offers no + beside a coven's own entry", async () => {
       renderName();
       offerDuplicates([MOCKLEAF]);
-      type('Mockleaff');
+      typeName('Mockleaff');
       settle();
 
       await screen.findByRole('link', { name: /Mockleaf/ });
@@ -541,7 +539,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName();
       offerDuplicates([UNUSED, MOCKLEAF, USED]);
 
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       await within(warning()).findAllByRole('listitem');
 
@@ -566,7 +564,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName();
       offerDuplicates([UNUSED]);
 
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       await within(warning()).findByRole('listitem');
 
@@ -580,8 +578,8 @@ describe('NameField, with useDuplicateWarning', () => {
       offerDuplicates([UNUSED, USED]);
       offerCompendiumMatches([UNUSED, USED]);
 
-      type("Cat's Claw");
-      save();
+      typeName("Cat's Claw");
+      saveIngredient();
       await within(warning()).findByText(/already has entries/);
 
       expect(titlesIn(group('In This Coven')!)).toEqual(["Cat's Claw (Felis catus)"]);
@@ -592,7 +590,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName(undefined, { cupboard: false });
       offerDuplicates([UNUSED, USED]);
 
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       await within(warning()).findAllByRole('listitem');
 
@@ -604,7 +602,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName(undefined, { cupboard: false, look: true });
       offerDuplicates([UNUSED, USED]);
 
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       const rows = await within(warning()).findAllByRole('listitem');
 
@@ -632,7 +630,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName(undefined, { cupboard: false, look: true, inModal: true, routed: true });
       offerDuplicates([UNUSED]);
 
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       const eye = await within(warning()).findByRole('link', {
         name: "Quick Look Cat's Claw, Uncaria tomentosa",
@@ -662,7 +660,7 @@ describe('NameField, with useDuplicateWarning', () => {
     const addClaw = async () => {
       renderName().used.mockResolvedValue(true);
       offerDuplicates([UNUSED]);
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       const plus = await screen.findByRole('button', { name: ADD });
       offerDuplicates([{ ...UNUSED, inCupboard: true }]);
@@ -808,7 +806,7 @@ describe('NameField, with useDuplicateWarning', () => {
     const look = () => screen.getByRole('dialog', { name: "Cat's Claw" });
     const warned = async () => {
       offerDuplicates([UNUSED, MOCKLEAF, USED]);
-      type('Cats Claw');
+      typeName('Cats Claw');
       settle();
       await within(warning()).findAllByRole('listitem');
     };

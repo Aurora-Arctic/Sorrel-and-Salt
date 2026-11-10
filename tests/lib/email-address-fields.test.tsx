@@ -1,19 +1,14 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import AdminInvitations from '@/components/AdminInvitations';
 import EmailForm from '@/components/EmailForm';
 import ForgotPasswordForm from '@/components/ForgotPasswordForm';
 import InviteDialog from '@/components/InviteDialog';
 import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithQuery } from '../support/render-with-query';
 
 // What an address field does when it is left, written once for every form that asks for one. The address's own shape
 // is tests/lib/email-address.test.ts's; this is each form's wiring of it. Each form's test keeps its submit behaviour.
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
-}));
 
 interface AddressForm {
   render: () => void;
@@ -25,12 +20,7 @@ const inDialog = () =>
 
 const FORMS: Record<string, AddressForm> = {
   EmailForm: {
-    render: () =>
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <EmailForm email="" verified={false} landing="/coven" />
-        </QueryClientProvider>,
-      ),
+    render: () => renderWithQuery(<EmailForm email="" verified={false} landing="/coven" />),
     field: () => screen.getByRole('textbox', { name: /^Email Address/ }),
   },
   ForgotPasswordForm: {

@@ -12,7 +12,7 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
-import type { Message, ProviderId } from '@/lib/types';
+import type { ProviderId } from '@/lib/types';
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
@@ -23,8 +23,9 @@ import { ORIGIN } from '../support/constants';
 // link, and following it verifies the address only from a session holding
 // that account (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
+// Imported after `importAuth` resets the module registry, so it is the instance `@/lib/auth` sends through.
+let send: (typeof import('../support/mail'))['send'];
 // A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
 vi.stubEnv('MAIL_TRANSPORT', '');
 
@@ -47,6 +48,7 @@ let auth: AuthInstance;
 
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
+  ({ send } = await import('../support/mail'));
 });
 
 beforeEach(async () => {

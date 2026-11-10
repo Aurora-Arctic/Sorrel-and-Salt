@@ -12,9 +12,7 @@ import { filterForm } from '../../support/filter-form';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
-
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/ingredient-search.md, "Testing"
 

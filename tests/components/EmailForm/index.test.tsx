@@ -1,8 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { HttpResponse } from 'msw/http';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
 import EmailForm, {
   CHANGE_STATUS,
   NO_EMAIL_STATUS,
@@ -11,14 +11,13 @@ import EmailForm, {
 } from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
 import { EMAIL_FORMAT_MESSAGE, validateEmailAddress } from '@/lib/email-address';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
 // MSW answers the mutation in /api/graphql's shape (tests/support/msw/graphql.ts), so the component reads the route's own error mapping (claude-docs/components/email-form.md).
 
-function renderForm(ui: ReactNode) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+function renderForm(ui: ReactElement) {
+  return renderWithQuery(ui);
 }
 
 const emailField = () => screen.getByRole('textbox', { name: 'Email Address' });

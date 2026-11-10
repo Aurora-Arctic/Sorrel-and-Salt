@@ -21,15 +21,12 @@ import { C, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 // Only the newest mailed link works (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply"); the last describe holds every GraphQL answer to carrying neither token nor hash.
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
-vi.mock('@/lib/mail', () => ({
-  send: async (message: (typeof sent)[number]) => {
-    sent.push(message);
-  },
-}));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: (typeof sent)[number]) => {
     sent.push(message);
@@ -58,6 +55,10 @@ beforeEach(async () => {
   vi.stubEnv('MAIL_TRANSPORT', 'smtp');
   startJob.mockClear();
   sent.length = 0;
+  send.mockReset();
+  send.mockImplementation(async (message: (typeof sent)[number]) => {
+    sent.push(message);
+  });
   await sql`truncate support_replies, support_timeouts, support_requests, support_send_counts cascade`;
 });
 

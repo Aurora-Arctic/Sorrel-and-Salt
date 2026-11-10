@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { verifyEmailMessage } from '@/emails/verify-email';
+import { ORIGIN } from '../support/constants';
 
-const URL_WITH_QUERY =
-  'http://localhost:8000/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven';
+const URL_WITH_QUERY = `${ORIGIN}/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven`;
 
 describe('verifyEmailMessage', () => {
   it('addresses the mail and carries the link, once in the text and twice in the HTML', async () => {

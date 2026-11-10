@@ -2,13 +2,13 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
 const pathname = vi.fn<() => string>();
 const query = vi.hoisted(() => ({ current: '' }));
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => router,
   useSearchParams: () => new URLSearchParams(query.current),
 }));
 

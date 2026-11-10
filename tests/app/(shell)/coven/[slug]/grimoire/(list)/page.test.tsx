@@ -1,13 +1,14 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { press } from '../../../../../../support/interact';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
+import { router } from '../../../../../../support/next-navigation';
+import { renderWithQuery } from '../../../../../../support/render-with-query';
+import { requireCovenMembership, requireSession } from '../../../../../../support/request-session';
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -16,19 +17,14 @@ const COVEN = {
 };
 const session = { user: { id: 'fixture-user' } };
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const address = vi.hoisted(() => ({ path: '/coven/fixture-coven/grimoire', search: '' }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../../../support/next-navigation')),
   usePathname: () => address.path,
   useSearchParams: () => new URLSearchParams(address.search),
 }));
 
-const requireCovenMembership = vi.fn();
-vi.mock('@/lib/request-session', () => ({
-  requireCovenMembership,
-  requireSession: async () => session,
-}));
+vi.mock('@/lib/request-session', () => import('../../../../../../support/request-session'));
 
 const GROUP = { id: 'g1', name: 'Fixture Group', colorDark: '#a0c4ff', colorLight: '#1d3557' };
 const CATEGORY = {
@@ -117,7 +113,7 @@ async function renderTab(Page: PageFn, search: Record<string, string | string[]>
     params: Promise.resolve({ slug: COVEN.slug }),
     searchParams: Promise.resolve(search),
   });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 beforeEach(() => {
@@ -132,6 +128,7 @@ beforeEach(() => {
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
   }));
+  requireSession.mockResolvedValue(session);
   requireCovenMembership.mockResolvedValue({
     workspace: COVEN,
     membership: { workspaceId: COVEN.id, userId: 'fixture-user', role: 'viewer' },

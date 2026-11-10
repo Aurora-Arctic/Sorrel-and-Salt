@@ -7,10 +7,10 @@ import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 // frame (claude-docs/components/modal.md, "Add Ingredient").
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(window.location.search),
-  useRouter: () => ({ push: vi.fn() }),
 }));
 // The form is tested on its own: a stand-in with a first field to take the focus.
 vi.mock('@/components/IngredientForm', () => ({

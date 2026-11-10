@@ -2,6 +2,7 @@ import { describe, expect, it, afterEach, vi } from 'vitest';
 import type { BetterAuthOptions } from 'better-auth';
 import { getAuthTables } from '@better-auth/core/db';
 import { warmImport } from '../support/warm-import';
+import { ORIGIN } from '../support/constants';
 
 warmImport(() => import('@/lib/auth'));
 
@@ -146,7 +147,7 @@ describe('baseURL', () => {
     vi.unstubAllEnvs();
   });
 
-  it('is a fixed http://localhost:8000 outside production', async () => {
+  it('is the fixed development origin outside production', async () => {
     // `next dev --hostname 0.0.0.0` computes the origin from its bind address,
     // not the Host header, so the default would send every local redirect_uri
     // to 0.0.0.0:8000.
@@ -155,7 +156,7 @@ describe('baseURL', () => {
 
     const { auth } = await import('@/lib/auth');
 
-    expect(auth.options.baseURL).toBe('http://localhost:8000');
+    expect(auth.options.baseURL).toBe(ORIGIN);
   });
 
   it('follows the port the server was given outside production', async () => {

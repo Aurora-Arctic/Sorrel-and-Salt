@@ -1,14 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/invite-dialog.md
-
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const WORKSPACE = '00000000-0000-0000-0000-000000000001';
 
@@ -32,7 +30,7 @@ function unload(): boolean {
   return event.defaultPrevented;
 }
 
-function type(address: string) {
+function typeAddress(address: string) {
   fireEvent.change(emailField(), { target: { value: address } });
 }
 
@@ -72,7 +70,7 @@ describe('InviteDialog', () => {
     open();
     expect(send()).toBeDisabled();
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
 
     expect(send()).toBeEnabled();
   });
@@ -80,7 +78,7 @@ describe('InviteDialog', () => {
   // The address's shape is tests/lib/email-address.test.ts's; this is the form's wiring, under a domain no mailbox can exist under.
   it('flags a malformed address when the field is left, linked to the field', () => {
     open();
-    type('name@');
+    typeAddress('name@');
     fireEvent.blur(emailField());
 
     expect(emailField()).toHaveAttribute('aria-invalid', 'true');
@@ -91,7 +89,7 @@ describe('InviteDialog', () => {
     const calls = mockSending();
     open();
 
-    type('ada@example.invalid');
+    typeAddress('ada@example.invalid');
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
@@ -102,7 +100,7 @@ describe('InviteDialog', () => {
 
   it('tidies an address on blur: the ends trimmed and all of it lower-cased', () => {
     open();
-    type('  Ada@Example.TEST ');
+    typeAddress('  Ada@Example.TEST ');
     fireEvent.blur(emailField());
     expect(emailField()).toHaveValue('ada@example.test');
   });
@@ -110,11 +108,11 @@ describe('InviteDialog', () => {
   it('clears the refusal as the address is changed', async () => {
     mockSending();
     open();
-    type('ada.example.test');
+    typeAddress('ada.example.test');
     fireEvent.click(send());
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
 
     expect(emailField()).not.toHaveAttribute('aria-invalid', 'true');
   });
@@ -134,7 +132,7 @@ describe('InviteDialog', () => {
     const calls = mockSending();
     open();
 
-    type('  ada@example.test ');
+    typeAddress('  ada@example.test ');
     fireEvent.click(within(dialog()).getByRole('radio', { name: /Practitioner/ }));
     fireEvent.click(send());
 
@@ -152,7 +150,7 @@ describe('InviteDialog', () => {
     open();
     expectNothingToCopy();
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     expectNothingToCopy();
     fireEvent.click(send());
     expectNothingToCopy();
@@ -165,7 +163,7 @@ describe('InviteDialog', () => {
     mockGraphQLError('CreateInvitation', { code: 'FORBIDDEN', message: 'Forbidden' });
     open();
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     fireEvent.click(send());
 
     await screen.findByRole('alert');
@@ -175,7 +173,7 @@ describe('InviteDialog', () => {
   it('closes from Done and gives the focus back to Invite', async () => {
     mockSending();
     open();
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     fireEvent.click(send());
     await screen.findByRole('status');
 
@@ -189,7 +187,7 @@ describe('InviteDialog', () => {
   it('asks before Cancel, Escape or a tab close discards what was typed, and closes on Discard Changes', async () => {
     open();
     expect(unload()).toBe(false);
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     expect(unload()).toBe(true);
     const discard = () => screen.queryByRole('button', { name: 'Discard Changes' });
 
@@ -212,7 +210,7 @@ describe('InviteDialog', () => {
   it('opens blank again after an invitation was sent', async () => {
     mockSending();
     open();
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     fireEvent.click(send());
     await screen.findByRole('status');
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' }));
@@ -231,7 +229,7 @@ describe('InviteDialog', () => {
     });
     open();
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
@@ -244,7 +242,7 @@ describe('InviteDialog', () => {
     mockGraphQLError('CreateInvitation', { code: 'FORBIDDEN', message: 'Forbidden' });
     open();
 
-    type('ada@example.test');
+    typeAddress('ada@example.test');
     fireEvent.click(send());
 
     await screen.findByRole('alert');

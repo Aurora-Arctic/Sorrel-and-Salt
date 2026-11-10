@@ -6,9 +6,9 @@ import { currentHrefs, hrefs } from '../../../../support/links';
 // (claude-docs/components/admin-nav.md). The tabs come from the Keepers nav's own list, so the nav and the row agree.
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const { default: InvitationsLayout } = await import('@/app/(shell)/keepers/(invitations)/layout');

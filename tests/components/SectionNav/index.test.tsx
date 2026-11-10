@@ -5,9 +5,9 @@ import type { SectionNavItem } from '@/components/SectionNav/types';
 import { currentHrefs, hrefs } from '../../support/links';
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const { default: SectionNav } = await import('@/components/SectionNav');

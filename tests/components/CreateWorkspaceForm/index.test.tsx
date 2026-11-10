@@ -1,23 +1,19 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { describe, expect, it } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
+import { router } from '../../support/next-navigation';
 import type { CreateWorkspaceMutation, CreateWorkspaceMutationVariables } from '@/gql/graphql';
 import { limitMessage } from '@/lib/formats';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-
-const push = vi.fn();
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // MSW answers the mutation in /api/graphql's shape, so a refusal is read through the route's own error mapping.
 
-function renderForm(ui: ReactNode = <CreateWorkspaceForm />) {
-  return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+function renderForm(ui: ReactElement = <CreateWorkspaceForm />) {
+  return renderWithQuery(ui);
 }
 
 const nameField = () => screen.getByRole('textbox', { name: 'Name' });
@@ -35,11 +31,6 @@ function acceptCreate(slug = 'fixture-coven') {
   );
   return calls;
 }
-
-beforeEach(() => {
-  push.mockClear();
-  refresh.mockClear();
-});
 
 describe('CreateWorkspaceForm', () => {
   it('tidies the name when the field is left, so the person sees what is sent', () => {
@@ -89,10 +80,12 @@ describe('CreateWorkspaceForm', () => {
     fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
     submit();
 
-    await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'));
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'),
+    );
     expect(calls).toEqual([{ name: 'Fixture Coven' }]);
     // The shell's switcher lists covens from a layout the push does not re-run.
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(router.refresh).toHaveBeenCalledOnce();
   });
 
   it('stays busy from the press until the new page takes over', async () => {
@@ -105,7 +98,7 @@ describe('CreateWorkspaceForm', () => {
 
     expect(busy).toHaveAttribute('aria-busy', 'true');
     expect(busy).toBeDisabled();
-    await waitFor(() => expect(push).toHaveBeenCalled());
+    await waitFor(() => expect(router.push).toHaveBeenCalled());
     // Still held: a second press would make a second coven.
     expect(busy).toHaveAttribute('aria-busy', 'true');
     expect(busy).toBeDisabled();
@@ -124,8 +117,8 @@ describe('CreateWorkspaceForm', () => {
     await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
     expect(nameField()).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
     expect(create()).toBeEnabled();
   });
 
@@ -154,7 +147,7 @@ describe('CreateWorkspaceForm', () => {
 
     expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
     expect(calls).toHaveLength(0);
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('puts any other refusal in the alert region, in the server’s words', async () => {
@@ -170,7 +163,7 @@ describe('CreateWorkspaceForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Creating a coven needs an invitation',
     );
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   describe('guarding a typed name', () => {
@@ -210,7 +203,7 @@ describe('CreateWorkspaceForm', () => {
       fireEvent.click(link());
 
       expect(asking()).toBeInTheDocument();
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
     });
 
     it('lands in the new coven without asking', async () => {
@@ -220,7 +213,9 @@ describe('CreateWorkspaceForm', () => {
       fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
       submit();
 
-      await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'));
+      await waitFor(() =>
+        expect(router.push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'),
+      );
       expect(asking()).toBeNull();
     });
   });

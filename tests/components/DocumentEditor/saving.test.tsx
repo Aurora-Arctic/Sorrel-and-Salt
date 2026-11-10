@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import type {
   PublishDocumentDraftMutation,
   PublishDocumentDraftMutationVariables,
@@ -11,9 +12,8 @@ import { graphqlLink, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { warmImport } from '../../support/warm-import';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/documents/disclaimer',
 }));
 
@@ -140,8 +140,8 @@ describe('leaving with unsaved changes', () => {
     // Precondition: the change is held before it is saved.
     expect(unload()).toBe(true);
 
-    const save = screen.getByRole('button', { name: 'Save Draft' });
-    fireEvent.click(save);
+    const saveDraft = screen.getByRole('button', { name: 'Save Draft' });
+    fireEvent.click(saveDraft);
     await waitFor(() => expect(saved).toHaveLength(1));
     // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());

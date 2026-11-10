@@ -1,11 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
+import { getSession, getShellSession, requireSignedIn } from '../support/request-session';
 
 // The services are mocked (tests/modules/); here, only how their answers are put together.
 
-const requireSignedIn = vi.fn();
-const getSession = vi.fn();
-const getShellSession = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
@@ -14,7 +12,7 @@ const getMySupportCounts = vi.fn();
 const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
   statement?.member?.includes('invite') ? role === 'owner' : role !== 'viewer',
 );
-vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession, getShellSession }));
+vi.mock('@/lib/request-session', () => import('../support/request-session'));
 vi.mock('@/modules/support', () => ({ getMySupportCounts }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 const byCovenName = (a: { name: string; demo?: boolean }, b: { name: string; demo?: boolean }) =>

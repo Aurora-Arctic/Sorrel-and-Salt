@@ -1,6 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
 import CupboardEntryForm from '@/components/CupboardEntryForm';
 import type {
   CompendiumValues,
@@ -11,13 +11,9 @@ import type {
   AnnotateCupboardEntryMutation,
   AnnotateCupboardEntryMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { leavingAtEachLoad, stubLocationReload } from '../../support/location';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The save machinery is tests/lib/autosave/use-autosave.test.tsx's.
 
@@ -44,18 +40,16 @@ const NONE: CupboardOverrides = {
 
 function renderForm(props: Partial<CupboardEntryFormProps> = {}) {
   const onDone = vi.fn();
-  const view = render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CupboardEntryForm
-        workspaceId="00000000-0000-4000-8000-000000000001"
-        ingredientId="00000000-0000-4000-8000-000000000002"
-        compendium={COMPENDIUM}
-        overrides={NONE}
-        revision={3}
-        onDone={onDone}
-        {...props}
-      />
-    </QueryClientProvider>,
+  const view = renderWithQuery(
+    <CupboardEntryForm
+      workspaceId="00000000-0000-4000-8000-000000000001"
+      ingredientId="00000000-0000-4000-8000-000000000002"
+      compendium={COMPENDIUM}
+      overrides={NONE}
+      revision={3}
+      onDone={onDone}
+      {...props}
+    />,
   );
   return { onDone, ...view };
 }

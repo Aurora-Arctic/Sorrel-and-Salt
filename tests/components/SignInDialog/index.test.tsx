@@ -2,14 +2,13 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import SignInDialog from '@/components/SignInDialog';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
+import { router } from '../../support/next-navigation';
 
 // Sign In opened over the page it is on: a plain press opens the dialog, and the link's own
 // address, the sign-in page, is what a press for a new tab, or a browser without the script, gets.
 
-const push = vi.fn();
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, replace: vi.fn(), refresh, prefetch: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/compendium',
 }));
@@ -33,7 +32,7 @@ const press = (element: Element, init?: MouseEventInit) =>
   });
 
 afterEach(() => {
-  push.mockReset();
+  router.push.mockReset();
   social.mockReset();
   window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
@@ -85,7 +84,7 @@ describe('SignInDialog', () => {
     expect(
       within(dialog()).getByRole('button', { name: 'Continue with Google' }),
     ).toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
     expect(window.location.pathname + window.location.search).toBe('/compendium?q=rose');
   });
 
@@ -145,7 +144,7 @@ describe('SignInDialog', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
     expect(window.location.pathname + window.location.search).toBe('/compendium');
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('opens again on the buttons, in the mode it was asked for', async () => {
@@ -281,18 +280,18 @@ describe('SignInDialog', () => {
         '/account/email?next=%2Fcompendium%3Fq%3Drose',
       );
       expect(assign).not.toHaveBeenCalled();
-      expect(push).not.toHaveBeenCalled();
+      expect(router.push).not.toHaveBeenCalled();
     });
 
     it('closes onto the same page, refreshed so it shows the account signed in', async () => {
       vi.stubGlobal('location', { assign: vi.fn() });
-      refresh.mockClear();
+      router.refresh.mockClear();
       const inbox = await createAccount();
 
       await press(within(inbox).getByRole('button', { name: 'Close' }));
 
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(router.refresh).toHaveBeenCalledTimes(1);
     });
 
     // The sign-in that was here before: a held address earns no session, so there is no inbox of its own to check.

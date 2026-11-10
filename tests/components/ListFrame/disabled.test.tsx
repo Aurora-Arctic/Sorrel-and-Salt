@@ -1,9 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import FilterForm from '@/components/FilterForm';
 import ListFrame from '@/components/ListFrame';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const list = (disabled?: boolean) => (
   <ListFrame disabled={disabled}>

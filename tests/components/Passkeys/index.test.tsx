@@ -6,8 +6,6 @@ import Passkeys, { ADD_FAILED } from '@/components/Passkeys';
 import { LAST_WAY_IN } from '@/components/Passkeys/refusal';
 import type { AccountPasskey } from '@/lib/types';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 const addMock = vi.fn();
 const listMock = vi.fn();
 const updateMock = vi.fn();
@@ -100,12 +98,12 @@ describe('Passkeys', () => {
 
     await press(screen.getByRole('button', { name: 'Rename Laptop' }));
     const dialog = await screen.findByRole('dialog', { name: 'Rename Passkey' });
-    const save = within(dialog).getByRole('button', { name: 'Save Name' });
-    expect(save).toBeDisabled();
+    const saveName = within(dialog).getByRole('button', { name: 'Save Name' });
+    expect(saveName).toBeDisabled();
     fireEvent.change(within(dialog).getByRole('textbox', { name: /Name/ }), {
       target: { value: '  Work Laptop ' },
     });
-    await press(save);
+    await press(saveName);
 
     await waitFor(() => expect(listed()).toEqual(['Work Laptop']));
     expect(updateMock).toHaveBeenCalledWith({ id: 'pk-laptop', name: 'Work Laptop' });

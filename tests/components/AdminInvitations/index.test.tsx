@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import AdminInvitations, { InviteAdmin } from '@/components/AdminInvitations';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '@/lib/primary-admin';
 import type {
@@ -12,6 +12,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { expectGuardedWaysOut } from '../../support/discard-guard';
 import { FILTER_ROWS } from '../../support/filter-form';
+import { router } from '../../support/next-navigation';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
@@ -20,9 +21,6 @@ import { limitMessage } from '@/lib/formats';
 import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 
 // claude-docs/components/admin-invitations.md
-
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
 
@@ -49,12 +47,6 @@ const INVITATIONS = [
     expiresAt: new Date('2026-10-15T09:00:00Z'),
   },
 ];
-
-beforeEach(() => {
-  router.push.mockClear();
-  router.replace.mockClear();
-  router.refresh.mockClear();
-});
 
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });

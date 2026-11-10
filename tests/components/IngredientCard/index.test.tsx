@@ -9,13 +9,16 @@ import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { categoryRefs } from '@/components/IngredientCard/category-refs';
 import { CardCategoryVocabulary } from '@/components/IngredientCard/category-vocabulary';
 import { StockBadge } from '@/components/StockBadge';
+import { router } from '../../support/next-navigation';
 
 // (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
 // Marks are found by their exact text and asserted by presence or absence, never by what the words say.
 
 // The name link navigates through the shared hook, so the App Router is mocked.
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => '/here',
+}));
 
 const HREF = '/compendium/ingredients/testwort-testalis' as Route;
 const LEAF = {

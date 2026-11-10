@@ -1,8 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import SpellCard from '@/components/SpellCard';
 import type {
@@ -15,9 +13,12 @@ import type {
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithQuery } from '../../support/render-with-query';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/here',
 }));
 
@@ -125,8 +126,9 @@ describe('SpellCard', () => {
     };
     const { rerender } = render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
+    const queryClient = makeQueryClient();
     rerender(
-      <QueryClientProvider client={makeQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <SpellCard {...BASE} recordWorking={recordWorking} />
       </QueryClientProvider>,
     );
@@ -147,18 +149,16 @@ describe('SpellCard', () => {
   });
 
   it('draws the foot in the order Record a Working, Edit, then the More menu', () => {
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <SpellCard
-          {...BASE}
-          editHref={'/here?edit=spell-1' as Route}
-          recordWorking={{
-            workspaceId: 'workspace-1',
-            recorder: { userId: 'u1', name: 'Testa Owner' },
-          }}
-          more={MORE}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <SpellCard
+        {...BASE}
+        editHref={'/here?edit=spell-1' as Route}
+        recordWorking={{
+          workspaceId: 'workspace-1',
+          recorder: { userId: 'u1', name: 'Testa Owner' },
+        }}
+        more={MORE}
+      />,
     );
     const names = within(screen.getByRole('article'))
       .getAllByRole('button')
@@ -173,8 +173,9 @@ describe('SpellCard', () => {
   it('draws a More menu holding Duplicate and Delete Spell, and no Print, and Delete asks in a dialog naming the spell', async () => {
     const { rerender } = render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^More for / })).not.toBeInTheDocument();
+    const queryClient = makeQueryClient();
     rerender(
-      <QueryClientProvider client={makeQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <SpellCard {...BASE} more={MORE} />
       </QueryClientProvider>,
     );
@@ -192,17 +193,16 @@ describe('SpellCard', () => {
   });
 
   it('offers only what the role may do in the menu, and draws no menu when it may do neither', async () => {
-    const { rerender } = render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <SpellCard {...BASE} more={{ ...MORE, canDelete: false }} />
-      </QueryClientProvider>,
+    const { rerender } = renderWithQuery(
+      <SpellCard {...BASE} more={{ ...MORE, canDelete: false }} />,
     );
     press(screen.getByRole('button', { name: 'More for Fixture Working' }));
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
     ]);
+    const queryClient = makeQueryClient();
     rerender(
-      <QueryClientProvider client={makeQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <SpellCard {...BASE} more={{ ...MORE, canDuplicate: false, canDelete: false }} />
       </QueryClientProvider>,
     );
@@ -210,18 +210,16 @@ describe('SpellCard', () => {
   });
 
   it('keeps the buttons out of the title link', () => {
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <SpellCard
-          {...BASE}
-          href={'/coven/x/grimoire/spell-1' as Route}
-          recordWorking={{
-            workspaceId: 'workspace-1',
-            recorder: { userId: 'u1', name: 'Testa Owner' },
-          }}
-          more={MORE}
-        />
-      </QueryClientProvider>,
+    renderWithQuery(
+      <SpellCard
+        {...BASE}
+        href={'/coven/x/grimoire/spell-1' as Route}
+        recordWorking={{
+          workspaceId: 'workspace-1',
+          recorder: { userId: 'u1', name: 'Testa Owner' },
+        }}
+        more={MORE}
+      />,
     );
     const title = screen.getByRole('link', { name: /^Fixture Working/ });
     expect(title.contains(screen.getByRole('button', { name: /^Record a Working of / }))).toBe(

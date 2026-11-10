@@ -4,17 +4,13 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import ShownSwitch from '@/components/ShownSwitch';
 import type { ShownSwitchProps } from '@/components/ShownSwitch/types';
 import { announced } from '../../support/click-feedback';
+import { router } from '../../support/next-navigation';
 
 // The lidded-eye switch that shows or hides a row to readers. With `save` it stores each press as it lands, the last
 // press winning; with `onChange` it only reports the press, as a form field does.
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh }),
-}));
-
 beforeEach(() => {
-  refresh.mockClear();
+  router.refresh.mockClear();
 });
 
 function renderSwitch(props: Partial<ShownSwitchProps> = {}) {
@@ -35,7 +31,7 @@ function renderSwitch(props: Partial<ShownSwitchProps> = {}) {
 function heldSave() {
   const sent: boolean[] = [];
   const settles: (() => void)[] = [];
-  const save = vi.fn(
+  const saveCallback = vi.fn(
     (shown: boolean) =>
       new Promise<void>((resolve) => {
         sent.push(shown);
@@ -46,24 +42,24 @@ function heldSave() {
     act(async () => {
       settles.shift()?.();
     });
-  return { save, sent, settleNext };
+  return { save: saveCallback, sent, settleNext };
 }
 
 describe('ShownSwitch, saving each press', () => {
   it('saves a press, announces it and refreshes the page', async () => {
-    const save = vi.fn(async () => undefined);
-    const control = renderSwitch({ save });
+    const saveCallback = vi.fn(async () => undefined);
+    const control = renderSwitch({ save: saveCallback });
 
     // Precondition: nothing is saved before the press.
     expect(control).toBeChecked();
-    expect(save).not.toHaveBeenCalled();
+    expect(saveCallback).not.toHaveBeenCalled();
 
     fireEvent.click(control);
 
     expect(control).not.toBeChecked();
     await waitFor(() => expect(announced()).toBe('Testwort hidden'));
-    expect(save).toHaveBeenCalledExactlyOnceWith(false);
-    expect(refresh).toHaveBeenCalled();
+    expect(saveCallback).toHaveBeenCalledExactlyOnceWith(false);
+    expect(router.refresh).toHaveBeenCalled();
   });
 
   it('saves a press made during a save once that save lands, one save at a time', async () => {
@@ -99,24 +95,24 @@ describe('ShownSwitch, saving each press', () => {
   });
 
   it('puts the switch back and says why when the save is refused', async () => {
-    const save = vi.fn(async () => {
+    const saveCallback = vi.fn(async () => {
       throw new Error('refused');
     });
-    const control = renderSwitch({ save });
+    const control = renderSwitch({ save: saveCallback });
 
     fireEvent.click(control);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/\S/);
     expect(control).toBeChecked();
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   it('follows a new `shown` from the page', () => {
-    const save = vi.fn(async () => undefined);
+    const saveCallback = vi.fn(async () => undefined);
     const { rerender } = render(
       <ShownSwitch
         shown
-        save={save}
+        save={saveCallback}
         tip={() => 'Tip'}
         announcement={() => 'Said'}
         accessibleName="Show Testwort"
@@ -127,7 +123,7 @@ describe('ShownSwitch, saving each press', () => {
     rerender(
       <ShownSwitch
         shown={false}
-        save={save}
+        save={saveCallback}
         tip={() => 'Tip'}
         announcement={() => 'Said'}
         accessibleName="Show Testwort"
@@ -135,21 +131,21 @@ describe('ShownSwitch, saving each press', () => {
     );
 
     expect(screen.getByRole('switch', { name: 'Show Testwort' })).not.toBeChecked();
-    expect(save).not.toHaveBeenCalled();
+    expect(saveCallback).not.toHaveBeenCalled();
   });
 });
 
 describe('ShownSwitch, as a form field', () => {
   it('reports a press to `onChange` and saves nothing', () => {
-    const save = vi.fn(async () => undefined);
+    const saveCallback = vi.fn(async () => undefined);
     const onChange = vi.fn();
-    const control = renderSwitch({ save, onChange });
+    const control = renderSwitch({ save: saveCallback, onChange });
 
     fireEvent.click(control);
 
     expect(onChange).toHaveBeenCalledExactlyOnceWith(false);
-    expect(save).not.toHaveBeenCalled();
-    expect(refresh).not.toHaveBeenCalled();
+    expect(saveCallback).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   it('is named by its visible label when it has one', () => {

@@ -5,7 +5,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Session } from '@/lib/session';
-import type { Message, PageRequest } from '@/lib/types';
+import type { PageRequest } from '@/lib/types';
 import {
   createInvitation,
   countPendingWorkspaceInvitations,
@@ -36,13 +36,13 @@ import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 // A curator curates the compendium and reaches nothing on the people page. Each row is called by direct id, as a forged request would call it, so the menu hiding People is not what refuses.
 // Each refusal is proven against the same call succeeding for the caller it is meant for, and F is proven to pass the curation check, so a row stays green only while the people page's own guard refuses a curator
 // (claude-docs/design-decisions/auth.md, "A third site role, `curator`").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

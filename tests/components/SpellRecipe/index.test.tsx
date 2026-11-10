@@ -8,8 +8,8 @@ import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellRecipeSummary from '@/components/SpellRecipe/summary';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/here',
 }));
 

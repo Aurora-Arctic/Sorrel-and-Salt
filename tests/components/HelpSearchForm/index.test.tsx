@@ -2,10 +2,13 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import HelpSearchForm from '@/components/HelpSearchForm';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 const at = vi.hoisted(() => ({ pathname: '/help' }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => at.pathname }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => at.pathname,
+}));
 
 // The help search box: a plain GET form to /help/search, so it searches with no script, and nothing is asked while
 // a reader types (DESIGN.md §10, "Help and FAQ articles"; support.md, "Audiences, staff routes and search").

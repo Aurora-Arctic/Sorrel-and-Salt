@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
-import type { Message } from '@/lib/types';
 import { PROVIDER_CREDENTIALS, cookieHeader, signIn as signInThrough } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
 import { asTouch } from '../support/db/touch-row';
@@ -15,8 +14,7 @@ import { ORIGIN } from '../support/constants';
 // Passkey sign-in (@story-73) through Better Auth's real endpoints: a key enrolled on an account
 // signs that account in, and nothing else (claude-docs/auth/plugins.md, "Plugins").
 
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 
 const DOMAIN = '@passkey-sign-in.test';
 const OWNER = `owner${DOMAIN}`;

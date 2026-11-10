@@ -117,7 +117,7 @@ const add = ({ entry, pickOnly }: Omit<Variant, 'variant'>, value: string) => {
   if (pickOnly) fireEvent.click(screen.getByRole('option', { name: value.trim() }));
   else fireEvent.click(addButton(entry));
 };
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 const settle = () => act(async () => {});
 
 function expectErrorOn(control: HTMLElement) {
@@ -212,7 +212,7 @@ describe('ListField', () => {
       });
       expect(entries(legend)).toEqual(['Remove First Fixture', 'Remove first fixture']);
 
-      save();
+      saveIngredient();
 
       await waitFor(() => expectErrorOn(box(entry)));
       expect(removeButton('first fixture')).toHaveAccessibleDescription(/\S/);
@@ -257,7 +257,7 @@ describe('ListField', () => {
 
       add(PLAIN, 'First Fixture');
       type(entry, 'Second Fixture');
-      save();
+      saveIngredient();
 
       await waitFor(() => expectErrorOn(box(entry)));
       expect(box(entry)).toHaveFocus();
@@ -266,12 +266,12 @@ describe('ListField', () => {
       fireEvent.click(addButton(entry));
       await waitFor(() => expect(box(entry)).not.toBeInvalid());
       type(entry, 'Stray Fixture');
-      save();
+      saveIngredient();
       await waitFor(() => expect(box(entry)).toBeInvalid());
       type(entry, '');
 
       await waitFor(() => expect(box(entry)).not.toBeInvalid());
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(onSubmit.mock.calls[0][0].substitutes).toEqual([
         { name: 'First Fixture' },
@@ -552,7 +552,7 @@ describe('ListField', () => {
       ]);
       expect(announced()).toMatch(/Third Fixture\D+1\D+3/);
       expect(handle('Third Fixture')).toHaveFocus();
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(onSubmit.mock.calls[0][0].colors).toEqual([
@@ -571,7 +571,7 @@ describe('ListField', () => {
         },
       });
 
-      save();
+      saveIngredient();
       await waitFor(() => expect(removeButton('first fixture')).toHaveAccessibleDescription(/\S/));
       await moveByKeyboard(handle('Second Fixture'), 'ArrowRight');
 
@@ -593,7 +593,7 @@ describe('ListField', () => {
       for (const value of FIXTURES) add(list, value);
       expect(entries(list.legend)).toHaveLength(3);
       fireEvent.click(removeButton('Second Fixture'));
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(onSubmit.mock.calls[0][0][list.name]).toEqual(
@@ -612,7 +612,7 @@ describe('ListField', () => {
     const onSubmit = renderList(PICK_ONLY, { values: { deities: [greek, greek] } });
     expect(entries(PICK_ONLY.legend)).toEqual(['Remove Hecate (Greek)', 'Remove Hecate (Greek)']);
 
-    save();
+    saveIngredient();
 
     await waitFor(() => expectErrorOn(box(PICK_ONLY.entry)));
     expect(box(PICK_ONLY.entry)).toHaveAccessibleDescription(
@@ -636,7 +636,7 @@ describe('ListField', () => {
       values: { substitutes: [linked, { value: 'Zest Root' }, { ...linked, value: 'Mockleaf' }] },
     });
 
-    save();
+    saveIngredient();
 
     await waitFor(() => expectErrorOn(box(PLAIN.entry)));
     expect(box(PLAIN.entry)).toHaveAccessibleDescription(
@@ -695,7 +695,7 @@ describe('MultiSelectField, given its values', () => {
   it('shows a repeat the schema refuses on the Element control', async () => {
     const onSubmit = renderElements(['fire', 'fire']);
 
-    save();
+    saveIngredient();
 
     await waitFor(() => expectErrorOn(box('Element')));
     expect(onSubmit).not.toHaveBeenCalled();

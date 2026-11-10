@@ -1,15 +1,17 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { hrefs } from '../../../support/links';
+import { requireCuratorSession, requireAdminSession } from '../../../support/request-session';
 
 // The `/curator` layout and its index page each run the curation guard themselves, which a curator and a keeper
 // both pass: a layout does not re-run on client-side navigation (claude-docs/auth/admin-guard.md). The guard is
 // mocked (tests/lib/request-session.test.ts's), to prove each route awaits it before rendering.
 
-const requireCuratorSession = vi.fn();
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCuratorSession, requireAdminSession }));
-vi.mock('next/navigation', () => ({ usePathname: () => '/curator', useRouter: () => ({}) }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../../support/next-navigation')),
+  usePathname: () => '/curator',
+}));
 
 const { default: CuratorLayout } = await import('@/app/(shell)/curator/layout');
 const { default: CuratorPage } = await import('@/app/(shell)/curator/page');

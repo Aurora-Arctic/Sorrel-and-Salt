@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import OwnEntryActions from '@/components/IngredientEntry/own-actions';
 import type { IngredientEntryEdit } from '@/components/IngredientEntry/types';
 import type {
@@ -14,9 +14,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 import { stockFormModule } from '@/components/StockDialog/lazy-form';
 import { ingredientFormModule } from '@/components/IngredientEntry/lazy-forms';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/ingredient-entry.md
 

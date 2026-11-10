@@ -34,6 +34,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
+import { ORIGIN } from '../../../support/constants';
 
 // Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/support.md, "A support form, reviewed by keepers").
 
@@ -60,7 +61,7 @@ const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sti
 
 function notifier(): SupportNotifier {
   return {
-    origin: async () => 'http://localhost:3000',
+    origin: async () => ORIGIN,
   };
 }
 
@@ -68,7 +69,7 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 describe('sendSupportRequest', () => {
@@ -423,7 +424,7 @@ describe('replyToSupportRequest', () => {
       body: 'A secret answer.',
       createdBy: E.id,
     });
-    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(replyNotices()).toEqual([[reply.id, ORIGIN]]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {

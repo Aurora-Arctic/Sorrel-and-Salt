@@ -29,7 +29,7 @@ function Form() {
   );
 }
 
-const save = () => act(async () => screen.getByRole('button', { name: 'Save' }).click());
+const clickSave = () => act(async () => screen.getByRole('button', { name: 'Save' }).click());
 const summary = () => screen.queryByRole('group', { name: /problem/i });
 
 beforeEach(() => {
@@ -50,7 +50,7 @@ describe('FormErrorSummary', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Note' }), {
       target: { value: 'too long' },
     });
-    await save();
+    await clickSave();
     const box = summary();
     expect(box).not.toBeNull();
     expect(box).toHaveFocus();
@@ -63,18 +63,18 @@ describe('FormErrorSummary', () => {
   });
   it('moves focus to the field when its link is followed', async () => {
     render(<Form />);
-    await save();
+    await clickSave();
     await act(async () => screen.getByRole('link', { name: 'Enter a name' }).click());
     expect(screen.getByRole('textbox', { name: /Name/ })).toHaveFocus();
   });
   it('prefixes the document title with Error while errors are listed', async () => {
     render(<Form />);
-    await save();
+    await clickSave();
     expect(document.title).toBe('Error: New Thing');
   });
   it('drops an error from the list once it is fixed, and the title once all are', async () => {
     render(<Form />);
-    await save();
+    await clickSave();
     await act(async () => {
       fireEvent.change(screen.getByRole('textbox', { name: /Name/ }), {
         target: { value: 'Sage' },

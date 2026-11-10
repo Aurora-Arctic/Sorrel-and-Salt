@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { QueryClientProvider } from '@tanstack/react-query';
 import GrimoireList from '@/components/GrimoireList';
 import type { GrimoireListProps } from '@/components/GrimoireList/types';
@@ -15,8 +16,6 @@ import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/grimoire-list.md
 
