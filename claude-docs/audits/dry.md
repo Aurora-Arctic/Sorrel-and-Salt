@@ -238,13 +238,13 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-224 | QR ink colour duplicates SCSS `$chalk`                                                                                                                       | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-225 | `.page-frame--in-column` margin restates `.page-column` padding                                                                                              | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
 | D-226 | PageNav skeleton width cycle written as six `nth-child` rules                                                                                                | low      | Components    |      1 |   0.5 | Moved to MC.9                                   |
-| S-1   | `vitest.yml`'s three part jobs (dom, node, db) are one job written three times                                                                               | medium   | Scripts       |      3 |   2.5 | Moved to MC.1                                   |
-| S-2   | The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`                                       | medium   | Scripts       |      2 |   1.5 | Moved to MC.1                                   |
+| S-1   | `vitest.yml`'s three part jobs (dom, node, db) are one job written three times                                                                               | medium   | Scripts       |      3 |     3 | Moved to MC.1                                   |
+| S-2   | The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`                                       | medium   | Scripts       |      2 |     2 | Moved to MC.1                                   |
 | S-3   | `setOutput` is written in four `.mjs` scripts                                                                                                                | low      | Scripts       |      4 |   0.5 | Moved to MC.1                                   |
 | S-4   | The "flaky" suffix text is written in two files                                                                                                              | low      | Scripts       |      2 |  0.25 | Moved to MC.1                                   |
-| S-5   | `postSingle` repeats `upsertComment`, and four `pr-comment.cjs` exports have no importer                                                                     | low      | Scripts       |      2 |   0.5 | Moved to MC.9                                   |
+| S-5   | `postSingle` repeats `upsertComment`, and four `pr-comment.cjs` exports have no importer                                                                     | low      | Scripts       |      2 |  0.75 | Moved to MC.9                                   |
 | S-6   | `DEFAULT_PROJECT` is exported twice and imported nowhere, and the default-project lookup is written three times                                              | low      | Scripts       |      3 |   0.5 | Moved to MC.9                                   |
-| S-7   | `scripts/task-board.mjs` repeats its GraphQL argument arrays, item selection and status and estimate writes; `tally.mjs` rebuilds the branch-id regex        | low      | Scripts       |      5 |   2.5 | Moved to MC.9                                   |
+| S-7   | `scripts/task-board.mjs` repeats its GraphQL argument arrays, item selection and status and estimate writes; `tally.mjs` rebuilds the branch-id regex        | low      | Scripts       |      5 |     3 | Moved to MC.1                                   |
 
 ## Findings
 
@@ -5166,7 +5166,7 @@ These findings are in the CI comment and task-board scripts that staging added a
 - **Guard:** none practical.
 - **Fix:** each job keeps its `container`/`services` header and one `uses:`; the threshold-zero flags live in the action only.
 
-- **Estimate:** 2.5 hours
+- **Estimate:** 3 hours
 - **Status:** Not fixed: moved to MC.1.
 
 ### S-2: The failing-test list and `stripAnsi` are written in `summarize-vitest.mjs` and again in `lib/playwright-failures.mjs`
@@ -5181,7 +5181,7 @@ These findings are in the CI comment and task-board scripts that staging added a
 - **Guard:** none practical.
 - **Fix:** both scripts import the shared pieces, and the Vitest message goes through `stripAnsi` too.
 
-- **Estimate:** 1.5 hours
+- **Estimate:** 2 hours
 - **Status:** Not fixed: moved to MC.1.
 
 ### S-3: `setOutput` is written in four `.mjs` scripts
@@ -5222,7 +5222,7 @@ These findings are in the CI comment and task-board scripts that staging added a
 - **Guard:** none practical.
 - **Fix:** call `upsertComment` from `postSingle` and drop the four names from `module.exports`.
 
-- **Estimate:** 0.5 hours
+- **Estimate:** 0.75 hours
 - **Status:** Not fixed: moved to MC.9.
 
 ### S-6: `DEFAULT_PROJECT` is exported twice and imported nowhere, and the default-project lookup is written three times
@@ -5252,8 +5252,8 @@ These findings are in the CI comment and task-board scripts that staging added a
 - **Guard:** none practical.
 - **Fix:** add the helper and the shared writers, export the id fragment, and move `ofProject` above its first use in `tally.mjs`.
 
-- **Estimate:** 2.5 hours
-- **Status:** Not fixed: moved to MC.9.
+- **Estimate:** 3 hours
+- **Status:** Not fixed: moved to MC.1.
 
 ## Rules from this audit
 

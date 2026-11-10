@@ -2,11 +2,11 @@
 
 MC ids hold grouped clean-up work from the audits, the first being M17.8's duplicated-code audit ([`audits/dry.md`](../audits/dry.md)). They sit in the Z. Cleanup milestone and are numbered on their own, so the waves don't renumber.
 
-**MC.1 — Tidy the Test Support** · 10.25h
+**MC.1 — Tidy the Test Support and Scripts** · 14.25h
 
 _Story:_ As a developer, I want the test harness written once, so that a change to a mock, a wrapper or a helper is made in one place.
 
-Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tasks. Findings: D-39, D-40, D-42, D-62, D-74, D-101, D-121, D-175, D-193, D-59, D-95, D-100, D-148, D-166, S-1, S-2, S-3, S-4; each is in `claude-docs/audits/dry.md`. Test files repeat the router mock, the query-client render wrapper and the request-session and mail mocks dozens of times; e2e specs copy small helpers such as `authorOf`, `openFilters`, the invitation-flow steps, the page-side GraphQL `fetch`, the sign-up form fill and the sign-in provider assertions; and several guards each rebuild the same allowed-set check, probe test, exemption list and file walker. One shared piece each replaces the copies, and unused helpers in `tests/support/` are removed. The CI workflows and scripts staging added also repeat code: the three Vitest part jobs, the failing-test list and ANSI stripping, `setOutput` and the flaky note (S-1 to S-4).
+Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tasks. Findings: D-39, D-40, D-42, D-62, D-74, D-101, D-121, D-175, D-193, D-59, D-95, D-100, D-148, D-166, S-1, S-2, S-3, S-4, S-7; each is in `claude-docs/audits/dry.md`. Test files repeat the router mock, the query-client render wrapper and the request-session and mail mocks dozens of times; e2e specs copy small helpers such as `authorOf`, `openFilters`, the invitation-flow steps, the page-side GraphQL `fetch`, the sign-up form fill and the sign-in provider assertions; and several guards each rebuild the same allowed-set check, probe test, exemption list and file walker. One shared piece each replaces the copies, and unused helpers in `tests/support/` are removed. The CI workflows and scripts staging added also repeat code: the three Vitest part jobs, the failing-test list and ANSI stripping, `setOutput` and the flaky note (S-1 to S-4), and the task-board script repeats its GraphQL arguments, item selection and status and estimate writes, with the branch-id regex rebuilt in the progress tally (S-7).
 
 _Acceptance criteria:_
 
@@ -16,6 +16,7 @@ _Acceptance criteria:_
 - The `SignInPanel/in-dialog` test uses the shared password-form harness (D-95), and exports in `tests/support/` with no importer are removed (D-148)
 - The about 15 test files that still write `http://localhost:3000` or `http://localhost:8000` inline outside a `const ORIGIN` (for example the support service tests' `origin: async () => …` callbacks) use `ORIGIN` from `tests/support/constants.ts`, and `tests/guards/test-constants.test.ts` refuses a new inline one
 - The three Vitest part jobs share one composite action (S-1), the failing-test list and `stripAnsi` have one home that both summarisers import (S-2), and `setOutput` and the flaky note are each defined once (S-3, S-4)
+- The task-board GraphQL arguments, item selection and status and estimate writes, and the `tally.mjs` branch-id regex, are each written once (S-7), with tests added first for the writers that had none
 - The e2e specs touched pass, run with the placeholder secret on the command line
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
@@ -140,11 +141,11 @@ _Acceptance criteria:_
 - The component tests for the callers touched pass
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
 
-**MC.9 — Clean Up Styles and Unused Code** · 9.25h
+**MC.9 — Clean Up Styles and Unused Code** · 7h
 
 _Story:_ As a developer, I want repeated styles gone and unused code removed or exposed, so that a style change is made once and unused code stops accumulating.
 
-Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tasks. Findings: D-48, D-57, D-98, D-99, D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226, D-129, D-145, D-157, D-195, D-86, S-5, S-6, S-7; each is in `claude-docs/audits/dry.md`. The same flex row, hairline box, `box-sizing` declaration and muted-stroke override are repeated across style sheets, and several hard-coded values, dead rules and restated paddings remain. Production code is kept alive only by tests, exports are used only inside their own file, and some knip config entries are unused or wrong. The CI comment and task-board scripts staging added repeat the comment update, the default-project lookup, the GraphQL arguments and the status and estimate writes, and leave dead exports (S-5 to S-7). `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses; turning it off exposes them so each is un-exported or kept on purpose. `lint:unused` stays non-blocking, with no CI gate and no pre-commit step (owner's call).
+Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tasks. Findings: D-48, D-57, D-98, D-99, D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226, D-129, D-145, D-157, D-195, D-86, S-5, S-6; each is in `claude-docs/audits/dry.md`. The same flex row, hairline box, `box-sizing` declaration and muted-stroke override are repeated across style sheets, and several hard-coded values, dead rules and restated paddings remain. Production code is kept alive only by tests, exports are used only inside their own file, and some knip config entries are unused or wrong. The CI comment and task-board scripts staging added repeat the comment update and the default-project lookup, and leave dead exports (S-5, S-6). `ignoreExportsUsedInFile: true` hides about 313 exports that only their own file uses; turning it off exposes them so each is un-exported or kept on purpose. `lint:unused` stays non-blocking, with no CI gate and no pre-commit step (owner's call).
 
 _Acceptance criteria:_
 
@@ -154,5 +155,5 @@ _Acceptance criteria:_
 - The knip config entries and the false positive are corrected (D-157, D-195)
 - `ignoreExportsUsedInFile` is off in the knip config (D-86), and each newly reported export is un-exported or listed with a reason, with the codegen consts, email functions and Pothos Refs handled per class
 - `npm run lint:unused` is no worse than before and reports less than before for D-129 and D-145; it stays non-blocking, with no CI gate and no pre-commit step
-- `postSingle` reuses `upsertComment` and the four unused `pr-comment.cjs` exports are gone (S-5); `DEFAULT_PROJECT` is removed and one `defaultOf` helper serves the three lookups (S-6); the task-board GraphQL arguments, item selection and status and estimate writes, and the `tally.mjs` branch-id regex, are each written once (S-7)
+- `postSingle` reuses `upsertComment` and the four unused `pr-comment.cjs` exports are gone (S-5); `DEFAULT_PROJECT` is removed and one `defaultOf` helper serves the three lookups (S-6)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass
