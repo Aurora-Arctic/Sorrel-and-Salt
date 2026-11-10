@@ -137,13 +137,13 @@
 
 // Beside the badges and icons only where the row has room; at phone width the shared rule gives the title the row and
 // they wrap beneath its last line. The pending title takes the row there too, as PageHeader draws a pending one at 10rem.
-@container page-header (min-width: calc(#{$narrow-column} + 0.01rem)) {
+@include container-from(page-header, #{$narrow-column}) {
   .spell-recipe__head > .page-header > h1 {
     flex: 1 1 0;
   }
 }
 
-@container page-header (max-width: #{$narrow-column}) {
+@include container-to(page-header, #{$narrow-column}) {
   .spell-recipe--pending > .spell-recipe__head > .page-header > h1 {
     flex-basis: 100%;
   }
@@ -328,7 +328,7 @@
   gap: space(3) space(6);
   margin: 0;
 
-  @container (max-width: #{$narrow-column}) {
+  @include container-to(null, #{$narrow-column}) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -377,7 +377,6 @@
 @media screen {
   .spell-recipe > .spell-recipe__lead {
     @include above-tablet {
-      box-sizing: border-box;
       padding-inline-end: calc(#{space(8)} + #{$side-column});
     }
   }

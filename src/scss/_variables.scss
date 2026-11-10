@@ -545,6 +545,15 @@ $type-sizes: (
   'tab': 0.6875rem,
 );
 
+// The tracking of running text (paragraphs, links, definitions) and of the pull-quote beside it.
+$body-tracking: 0.02em;
+
+// The line height of a document's pull-quote and lede: looser than a heading, tighter than a paragraph.
+$document-line-height: 1.5;
+
+// The pull-quote's opening mark, a decorative size off the type scale: this many times the quote.
+$quote-mark-size: 3.25em;
+
 @function type-size($role) {
   @if not map.has-key($type-sizes, $role) {
     @error 'Unknown type size "#{$role}". The sizes are: #{map.keys($type-sizes)}.';
@@ -763,6 +772,8 @@ $motion-medium: 300ms;
 // shows, so a quick answer never flashes one; skeletons are not held back.
 $loading-delay: 100ms;
 $spin-duration: 0.8s;
+// The Spinner ring's border. Its size is the ring's inside edge (content-box), so a spinner fitted to a given outer size takes this off twice.
+$spinner-border: 2px;
 $shimmer-duration: 1.4s;
 $pulse-duration: 2s;
 $arrive-duration: 200ms;
@@ -848,6 +859,10 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The padding of a layout's `.page-column` and `.coven-layout`, which a frame inside the column takes back with a negative margin.
+$page-column-pad-block: space(6);
+$page-column-pad-inline: space(4);
 
 // Room for a row of two or three category chips and a correspondence's list of colours. Shared with the entry's wait (Skeleton).
 $side-column: calc(#{space(8)} * 5);

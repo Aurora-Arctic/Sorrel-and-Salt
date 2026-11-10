@@ -27,7 +27,6 @@
 }
 
 .site-footer__inner {
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: space(2);
@@ -38,11 +37,8 @@
 }
 
 .site-footer__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  @include wrap-row(space(2) space(4));
   justify-content: space-between;
-  gap: space(2) space(4);
 }
 
 .site-footer__brand {
@@ -59,10 +55,7 @@
 }
 
 .site-footer__nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(4);
+  @include wrap-row(space(4));
   color: $text-muted;
   font-size: type-size('small');
 }

@@ -30,6 +30,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   }
 
   .fd-swatch__bar {
+    box-sizing: content-box;
     height: 2.5rem;
     border-radius: radius('sharp');
     border: 1px solid $text-muted;
@@ -70,6 +71,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   }
 
   .fd-shadow {
+    box-sizing: content-box;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -171,6 +173,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   }
 
   .fd-radius {
+    box-sizing: content-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,10 +232,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   }
 
   .fd-group-row {
-    display: flex;
-    align-items: center;
-    gap: space(3);
-    flex-wrap: wrap;
+    @include wrap-row(space(3));
   }
 
   .fd-group-pair {
@@ -271,7 +271,6 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   // container query inside fires at any window size. The box's padding is
   // the admin layout's gutter, so its content is about as wide as on the phone.
   .fd-phone {
-    box-sizing: border-box;
     width: 100%;
     max-width: 375px;
     padding: space(4);
@@ -306,10 +305,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     list-style: none;
 
     li {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: space(2) space(3);
+      @include wrap-row(space(2) space(3));
       margin: 0;
     }
 

@@ -138,7 +138,6 @@
 // The paused viewer's notice above the page, in the wide column's edges so it lines up with the page beneath, and filling
 // that column as the demo coven's notice does, since `.notice`'s own measure would end it short of the page.
 .app-shell__pause {
-  box-sizing: border-box;
   max-width: $wide-column;
   margin-inline: auto;
   padding: space(4) space(4) 0;

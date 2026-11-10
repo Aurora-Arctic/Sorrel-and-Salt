@@ -59,10 +59,6 @@
   }
 }
 
-.help-widget__heading {
-  margin: space(3) 0 space(2);
-}
-
 // Each state name sits closer to its own sample than to the state above: space(2) beneath it, space(5) between states.
 .help-widget__states {
   display: grid;
@@ -79,12 +75,9 @@
 .help-widget__sample {
   display: flex;
   align-items: center;
-  box-sizing: border-box;
   min-block-size: $control-height;
   padding: space(2) space(3);
-  border: 1px solid $hairline;
-  border-radius: radius('control');
-  background-color: $surface-page;
+  @include surface-box($surface-page, radius('control'));
 
   // The sample is the line's one frame: a failed or conflicting line's notice keeps its icon and text, not its bar
   // and tint, which would draw a second box inside it.
@@ -141,10 +134,7 @@
 }
 
 .help-widget__action {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2) space(3);
-  align-items: center;
+  @include wrap-row(space(2) space(3));
   margin: space(4) 0 0;
 
   .help-widget__explained {

@@ -22,7 +22,6 @@
 // the tablet width up, `showModal()` below it. The slide is grid rows 0fr to 1fr on the clip
 // inside, and the dialog stays open until it ends.
 .facet-panel {
-  box-sizing: border-box;
   position: absolute;
   inset: auto;
   inset-block-start: 100%;
@@ -85,9 +84,7 @@
 .facet-panel__pad {
   @include stack(4);
   padding: space(4);
-  background-color: $surface-page;
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
+  @include surface-box($surface-page);
 }
 
 .facet-panel__head {
@@ -147,10 +144,7 @@
 }
 
 .facet-panel__foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(4);
-  align-items: center;
+  @include wrap-row(space(4));
 }
 
 @include width-from($shell-tablet-width) {

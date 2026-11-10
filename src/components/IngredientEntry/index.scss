@@ -10,11 +10,9 @@ $jump-link-size: $nav-link-size;
 $jump-link-line: 1.25;
 
 .ingredient-entry {
-  box-sizing: border-box;
   @include stack(6);
 
   > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 }
@@ -300,8 +298,6 @@ $formal-line: $icon-size;
 // (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__stock-panel {
   @include stack(4);
-
-  box-sizing: border-box;
 }
 
 .ingredient-entry__forms {
@@ -315,10 +311,7 @@ $formal-line: $icon-size;
 }
 
 .ingredient-entry__form-heading {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2);
-  align-items: center;
+  @include wrap-row(space(2));
 }
 
 // Each correspondence: the term above its value, so a long list of colours wraps under its
@@ -621,10 +614,7 @@ $replaces-gap: space(5);
 // a row that wraps on a phone. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__cupboard {
   margin-block-end: space(3);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
+  @include wrap-row(space(2));
 
   &--icons {
     flex-wrap: nowrap;

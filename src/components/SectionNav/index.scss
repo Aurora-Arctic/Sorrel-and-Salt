@@ -41,7 +41,6 @@
   display: flex;
   align-items: center;
   gap: space(2);
-  box-sizing: border-box;
   min-height: $control-height;
   padding-inline: space(4);
   color: $text-muted;
@@ -172,6 +171,7 @@
 // `hidden`, so the sheet fades out where it was rather than dropping into
 // the row's flow for the length of the fade.
 .section-nav .section-nav__sheet {
+  box-sizing: content-box;
   @include floating-panel;
 
   position: absolute;
@@ -232,7 +232,6 @@
     inset-inline: 0;
     bottom: 0;
     z-index: layer('shell');
-    box-sizing: border-box;
     height: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0);
     border-top: 1px solid $hairline;

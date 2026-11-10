@@ -233,6 +233,7 @@
 
 @include tablet-down {
   .help-outline__side.is-reordering .help-outline__nav {
+    box-sizing: content-box;
     position: fixed;
     inset-inline: 0;
     inset-block-end: 0;
@@ -253,10 +254,7 @@
 }
 
 .help-outline__head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3) space(5);
-  align-items: center;
+  @include wrap-row(space(3) space(5));
   justify-content: space-between;
 
   // The title takes the room left of the actions and wraps within it; when the room would hold fewer than 14
@@ -327,7 +325,7 @@
 }
 
 // Above the stacking width only: a card sets its cells' padding to nothing and stacks them.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .help-outline__order-table
     > tbody
     > .help-outline__order-row
@@ -343,7 +341,7 @@
 
 // The corner's two controls, the grip and the position take only the room they need, rather than a share of the
 // table; above the stacking width only, as a card is full width.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .help-outline .help-outline__corner,
   .help-outline .help-outline__grip-cell,
   .help-outline .help-outline__number {

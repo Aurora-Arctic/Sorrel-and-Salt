@@ -182,7 +182,7 @@
 
 // A narrow dialog (a phone): the list stacks above the fields.
 
-@container stock-dialog (max-width: 30rem) {
+@include container-to(stock-dialog, 30rem) {
   .stock-dialog__columns {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -28,6 +28,7 @@ $bar-height: 0.5rem;
 }
 
 .sourcing-score__bar {
+  box-sizing: content-box;
   display: flex;
   block-size: $bar-height;
   overflow: hidden;

@@ -147,9 +147,7 @@ $stuck-pad: space(4);
 }
 
 .access-cards__card {
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-card;
+  @include surface-box;
 
   &[open] > .access-cards__summary {
     border-bottom: 1px solid $hairline;

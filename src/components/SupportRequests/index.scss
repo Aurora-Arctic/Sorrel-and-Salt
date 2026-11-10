@@ -184,9 +184,7 @@
 .support-detail__entry {
   @include stack(2);
   padding: space(3) space(4);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-page;
+  @include surface-box($surface-page);
 
   p {
     margin: 0;
@@ -228,10 +226,7 @@
 }
 
 .support-detail__issue-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
+  @include wrap-row(space(2));
   overflow-wrap: anywhere;
 }
 
@@ -267,7 +262,7 @@
 // An anonymised request's Sender cell is empty: as a card, the cell goes, its label with it, rather than
 // a label over nothing.
 .data-table--stack > tbody > tr > .support-requests__sender-cell:empty {
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     display: none;
   }
 }

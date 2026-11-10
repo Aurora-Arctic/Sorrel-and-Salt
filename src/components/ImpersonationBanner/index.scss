@@ -11,10 +11,7 @@ $impersonation-banner-reach: space(4);
 // at the top, shown in full, and scrolls away with the page; its height, published by index.tsx, is the top inset there,
 // which only the page frames' heights read (the bars and scroll offsets stand at the window's top once it has gone).
 .impersonation-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2) space(4);
+  @include wrap-row(space(2) space(4));
   // More below than above: wrapped on a phone, Stop sits on the bottom row,
   // and the rule beneath it would otherwise crowd it.
   padding: space(2) space(5) space(3);

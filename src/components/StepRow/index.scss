@@ -2,10 +2,7 @@
 @use '../../scss/mixins' as *;
 
 .step-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  @include wrap-row(space(2));
 }
 
 // The dash standing for a missing quantity, faded so the unit reads first.
@@ -37,10 +34,7 @@
 }
 
 .step-row__marks {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.5rem;
+  @include wrap-row(space(1) space(2));
 
   .badge {
     @include badge-size('small');
@@ -75,9 +69,7 @@ $step-line: type-size('body') * 1.65;
   padding: space(2) space(2) space(2) space(3);
   // A hairline, not `$text-muted`: the card is a container, not a control, so
   // it needs no 3:1 edge, and the fields inside keep theirs.
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-card;
+  @include surface-box;
 
   .step-row__marks,
   .step-row__field,
@@ -364,7 +356,7 @@ $step-line: type-size('body') * 1.65;
   }
 }
 
-@container spell-steps (max-width: #{$narrow-column}) {
+@include container-to(spell-steps, #{$narrow-column}) {
   // The marks and badge take their own line under the name, so the name, Edit and Remove all fit
   // on the first line; beside the name they leave Remove no room. The opened fields stack:
   // Form whole, Quantity and Unit half each, Instruction whole.

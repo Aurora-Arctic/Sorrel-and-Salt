@@ -15,6 +15,7 @@
 }
 
 .rich-text-editor [role='textbox'] {
+  box-sizing: content-box;
   min-height: 24rem;
   padding: space(2) 1.125rem;
   font-size: type-size('body');
@@ -45,11 +46,8 @@
   border-start-start-radius: radius('control');
   border-start-end-radius: radius('control');
   background-color: $surface-card;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  @include wrap-row(space(2));
   justify-content: center;
-  gap: space(2);
 
   .btn--icon {
     width: 2.25rem;
@@ -79,6 +77,7 @@
 
 // The loading editor's text area, as tall as the real text box, its padding included.
 .rich-text-editor__skeleton-text {
+  box-sizing: content-box;
   min-height: 24rem;
   padding-block: space(2);
 }
