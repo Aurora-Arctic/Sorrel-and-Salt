@@ -21,7 +21,7 @@
 - A page that takes the class only for its narrow column and has no `.page-nav` child, such as the support pages and the account's Support Requests tab, keeps no room for a menu: its column stays centred at every width. The shell's paused notice follows the same choice. A page with a menu, from a tablet up to the width that fits a menu column each side, centres the menu and the column together.
 - A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above it, adds `.page-with-nav--headless`.
 - Its children are the head, the menu, then the sections.
-- From a tablet up the menu is a sticky column beside the sections; at a phone's width it sits above them.
+- From a tablet up the menu is a sticky column beside the sections, at most a third of the row (`page-with-nav-grid`), so the text keeps the rest as the window narrows; at a phone's width it sits above them.
 - A page has at most three sections beside the menu for it to stick against. The account page's fourth runs on below it.
 
 ## Styling

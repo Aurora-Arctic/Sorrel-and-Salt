@@ -121,9 +121,14 @@ $track-inset: calc(1px + 0.125rem);
 }
 
 @container page-header (min-width: calc(#{$tabbed-reflow-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
+  // The heading takes only its own width and the pills keep theirs, so they stand beside it rather than at the line's end.
   .tabbed-page > .page-header:has(.add-action) > h1 {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-width: 0;
+  }
+
+  .tabbed-page > .page-header:has(.add-action) > .tabbed-page__tabs.tabbed-page__tabs {
+    flex-shrink: 0;
   }
 }
 

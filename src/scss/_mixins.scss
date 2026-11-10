@@ -544,7 +544,8 @@
     place-content: start center;
 
     @if $menu {
-      grid-template-columns: $menu minmax(0, $column);
+      // The menu gives up width before the text is squeezed: it never takes more than a third of the row, so the text keeps the rest.
+      grid-template-columns: min(#{$menu}, 35%) minmax(0, $column);
     } @else {
       grid-template-columns: minmax(0, 1fr) minmax(0, $column) minmax(0, 1fr);
     }
