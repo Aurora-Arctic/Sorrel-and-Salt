@@ -8,7 +8,6 @@ export type GroupKind = 'category' | 'form' | 'tradition';
 
 export interface GroupFormKind {
   moved: string;
-  describe: string;
   resolver: Resolver<GroupValues>;
   save: (input: GroupValues, id: string | undefined) => Promise<void>;
   remove: (variables: GroupDeleteVariables) => Promise<void>;

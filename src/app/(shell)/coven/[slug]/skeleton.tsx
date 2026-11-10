@@ -7,9 +7,9 @@ import { useNavigationState } from '@/lib/navigation';
 import { EntrySkeleton } from '@/components/IngredientEntry/skeleton';
 import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSearch/skeleton';
 import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
+import ActionFace from '@/components/ActionFace';
 import PageHeader from '@/components/PageHeader';
-import PageNav from '@/components/PageNav';
-import Skeleton from '@/components/Skeleton';
+export { SpellRecipeSkeleton } from '@/components/SpellRecipe/skeleton';
 
 // The coven's home, drawn from the page's own words. Moving within the coven, its name and the viewer's
 // role are known, so the page is drawn whole; otherwise the title and lede are bars and the menu and
@@ -35,7 +35,7 @@ export const CovenHomeSkeleton = () => {
 // The coven's Ingredients: the page's head, then its filter row and compact cards.
 export const CovenIngredientsSkeleton = () => (
   <div>
-    <PageHeader title="Ingredients" />
+    <PageHeader title="Ingredients" action={<ActionFace>Add Ingredient</ActionFace>} />
     <div data-density="compact">
       <SearchListSkeleton
         row={
@@ -50,52 +50,3 @@ export const CovenIngredientsSkeleton = () => (
 
 // An ingredient's page: the entry's own frame, with a name not yet known.
 export const CovenEntrySkeleton = () => <EntrySkeleton coven />;
-
-// A spell's page: the recipe's own frame, with the back bar, the title, the lead, the menu and
-// the columns (the steps, and the side column's list) as bars.
-export const SpellRecipeSkeleton = () => (
-  <article className="spell-recipe spell-recipe--with-aside spell-recipe--with-nav spell-recipe--pending">
-    <header className="spell-recipe__head">
-      <div className="back-bar spell-recipe__bar">
-        <Skeleton shape="line" quiet />
-      </div>
-      <div className="meta last-edit">
-        <Skeleton shape="line" quiet />
-      </div>
-      <PageHeader
-        pendingTitle
-        action={
-          <span className="spell-recipe__pending-action">
-            <Skeleton shape="block" quiet />
-          </span>
-        }
-      />
-    </header>
-    <div className="spell-recipe__lead">
-      <p className="spell-recipe__intent">
-        <Skeleton shape="line" quiet />
-      </p>
-      <ul aria-label="Categories" className="spell-recipe__pending-chips">
-        <li>
-          <Skeleton shape="block" quiet />
-        </li>
-      </ul>
-    </div>
-    <PageNav label="On This Page" entries={[]} pending={3} />
-    <div className="spell-recipe__columns">
-      <div className="spell-recipe__main">
-        <div className="spell-recipe__rest">
-          <div className="spell-recipe__facts-box">
-            <Skeleton shape="block" quiet />
-          </div>
-          <p className="meta">
-            <Skeleton shape="line" quiet />
-          </p>
-        </div>
-        <aside className="spell-recipe__aside" aria-hidden>
-          <Skeleton shape="block" quiet />
-        </aside>
-      </div>
-    </div>
-  </article>
-);

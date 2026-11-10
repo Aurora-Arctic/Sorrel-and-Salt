@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { warmImport } from '../../support/warm-import';
+import { linkAddressProblem } from '@/lib/link-address';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -170,6 +171,55 @@ describe('the document editor’s toolbar', () => {
 
     expect(await saveDraft(saved)).toBe(
       '[Fixturewort](https://example.test/fixturewort) grows here.',
+    );
+  });
+
+  it('Link tidies a bare host to https:// on leaving the field, and links to it', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    const address = within(dialog).getByRole('textbox', { name: 'Address' });
+    fireEvent.change(address, { target: { value: ' example.test/fixturewort ' } });
+    fireEvent.blur(address);
+    await waitFor(() => expect(address).toHaveValue('https://example.test/fixturewort'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Link' })).toBeNull());
+
+    expect(await saveDraft(saved)).toBe(
+      '[Fixturewort](https://example.test/fixturewort) grows here.',
+    );
+  });
+
+  it('Link refuses an address the page would not open, and keeps the dialog', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Address' }), {
+      target: { value: 'javascript:alert(1)' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add Link' }));
+
+    expect(await within(dialog).findByRole('textbox', { name: 'Address' })).toBeInvalid();
+    expect(screen.getByRole('dialog', { name: 'Add Link' })).toBeInTheDocument();
+  });
+
+  it('Link flags an address the page would not open when the field is left, linked to the field', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+
+    await press('Link');
+    const dialog = await screen.findByRole('dialog', { name: 'Add Link' });
+    const address = within(dialog).getByRole('textbox', { name: 'Address' });
+    fireEvent.change(address, { target: { value: 'https://localhost' } });
+    fireEvent.blur(address);
+
+    expect(address).toHaveAttribute('aria-invalid', 'true');
+    expect(address).toHaveAccessibleDescription(
+      expect.stringContaining(linkAddressProblem('https://localhost') as string),
     );
   });
 

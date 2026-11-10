@@ -261,7 +261,22 @@ describe('Record a Working', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
     await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
-    expect(people).toHaveAccessibleDescription('Choose a member of this coven');
+    expect(people).toHaveAccessibleDescription('Error: Choose a member of this coven');
+  });
+
+  it('describes the Note by the service’s refusal of it', async () => {
+    mockGraphQLError('RecordWorking', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['note'], message: 'Keep the note shorter' }],
+    });
+    openButton();
+    const note = within(dialog()).getByRole('textbox', { name: 'Note' });
+    expect(note).not.toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() => expect(note).toHaveAttribute('aria-invalid', 'true'));
+    expect(note).toHaveAccessibleDescription('Error: Keep the note shorter');
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {

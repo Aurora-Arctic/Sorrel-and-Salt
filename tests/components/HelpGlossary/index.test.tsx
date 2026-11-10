@@ -12,17 +12,13 @@ const TERMS = [
 ];
 
 describe('HelpGlossary', () => {
-  it('heads the page with Help, then the search box, then Glossary beneath', () => {
+  it('draws no heading or search box of its own, which the help header holds above it', () => {
     render(<HelpGlossary terms={TERMS} />);
 
-    const h1 = screen.getByRole('heading', { level: 1, name: 'Help' });
-    const h2 = screen.getByRole('heading', { level: 2, name: 'Glossary' });
-    expect(h1.compareDocumentPosition(screen.getByRole('search'))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-    expect(screen.getByRole('search').compareDocumentPosition(h2)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    // Precondition: the page itself drew, under its own title.
+    expect(screen.getByRole('heading', { level: 2, name: 'Glossary' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('search')).toBeNull();
   });
 
   it('lists each term as a term, in the order handed, each anchored by its slug', () => {
@@ -64,12 +60,6 @@ describe('HelpGlossary', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getAllByRole('definition')).toHaveLength(1);
   });
-
-  it('carries the help search box', () => {
-    render(<HelpGlossary terms={TERMS} />);
-
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
-  });
 });
 
 describe('HelpGlossary marks', () => {
@@ -104,14 +94,11 @@ describe('HelpGlossary links to self', () => {
 });
 
 describe('HelpGlossary head', () => {
-  it('links back to Help between the search box and the Glossary title, for every reader', () => {
+  it('links back to Help above the Glossary title, for every reader', () => {
     render(<HelpGlossary terms={TERMS} />);
 
     const back = screen.getByRole('link', { name: 'Back to Help' });
     expect(back).toHaveAttribute('href', '/help');
-    expect(screen.getByRole('search').compareDocumentPosition(back)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
     expect(
       back.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'Glossary' })),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);

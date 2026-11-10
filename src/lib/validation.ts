@@ -1,5 +1,7 @@
 import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
+import { type FieldFormat, parseQuantity, tidy, trimEnds } from './formats';
+import { QUANTITY_FORMAT_MESSAGE, amountProblem } from './quantity-rule';
 import type { ValidationIssue } from './types';
 
 // Apart from errors.ts so that stays schema-library-free (claude-docs/validation.md).
@@ -12,11 +14,12 @@ export const requiredRowId = (message: string) => z.guid({ error: message });
 
 export const CalendarDay = z.iso.date({ error: 'Give the day as YYYY-MM-DD' });
 
-export const requiredText = (message: string) =>
-  z.string({ error: message }).trim().min(1, { error: message });
+/** Tidied as the single-line field is on blur; a multiline field passes `trimEnds`, which keeps its line breaks. */
+export const requiredText = (message: string, format: FieldFormat = tidy) =>
+  z.string({ error: message }).overwrite(format).min(1, { error: message });
 
 /** '' is what a form sends for an untouched field, so it becomes null, which a non-blank CHECK accepts. A caller wanting `undefined`, such as a filter, maps null itself. */
-export const optionalText = (format: (text: string) => string = (text) => text.trim()) =>
+export const optionalText = (format: FieldFormat = tidy) =>
   z
     .string()
     .nullish()
@@ -26,11 +29,26 @@ export const optionalText = (format: (text: string) => string = (text) => text.t
       return formatted === '' ? null : formatted;
     });
 
+/**
+ * A stock or recipe amount: a number from 0 to what the columns hold with up to three decimals. Not a CHECK for the
+ * negative case, which has something to say. `label` names the field in the messages that need it. The rule is
+ * `amountProblem` (quantity-rule.ts), which a client field checks with too.
+ */
+export const quantity = (label: string) =>
+  z.number({ error: QUANTITY_FORMAT_MESSAGE }).check((context) => {
+    const problem = amountProblem(context.value, label);
+    if (problem) context.issues.push({ code: 'custom', message: problem, input: context.value });
+  });
+
+/** `quantity` for the text a form holds: blank is no amount, digits with at most one point, commas dropped as thousands separators. */
+export const quantityText = (label: string) =>
+  z.string().transform(parseQuantity).pipe(quantity(label).nullable());
+
 /** No slug: it is derived by src/lib/slugify.ts, so one in the input is dropped. */
 export const curatedValueInput = (noun: string) =>
   z.object({
     name: requiredText(`Give the ${noun} a name`),
-    description: requiredText(`Describe the ${noun}`),
+    description: requiredText(`Describe the ${noun}`, trimEnds),
   });
 
 export function toValidationIssues(error: z.ZodError): ValidationIssue[] {

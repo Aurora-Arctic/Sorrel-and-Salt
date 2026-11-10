@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import HelpSearchResults from '@/components/HelpSearchResults';
 import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
@@ -15,6 +16,8 @@ export default async function Page({
 }) {
   const { q } = await searchParams;
   const query = (Array.isArray(q) ? q[0] : q)?.trim() ?? '';
+  // A box emptied and sent without script lands on the index, as it does with script.
+  if (q !== undefined && query === '') redirect('/help');
   const session = await getSession();
   const results =
     query === ''

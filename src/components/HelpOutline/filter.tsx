@@ -57,7 +57,7 @@ const HelpOutlineFilterRow = ({ filter }: { filter: HelpOutlineFilter }): ReactE
       <SearchField
         label="Search Help"
         name="q"
-        placeholder="Title or body"
+        placeholder="Search text"
         value={query}
         onChange={setQuery}
       />

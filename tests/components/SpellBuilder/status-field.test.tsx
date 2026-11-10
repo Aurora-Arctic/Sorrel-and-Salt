@@ -176,7 +176,7 @@ describe('SpellBuilder status', () => {
         within(completing('Untitled Spell')!).getByRole('button', { name: 'Mark Complete' }),
       );
 
-      expect(await screen.findByText(/title before marking it complete/i)).toBeVisible();
+      expect(await screen.findAllByText(/title before marking it complete/i)).toHaveLength(2);
       expect(completing('Untitled Spell')).toBeNull();
       expect(title()).toHaveFocus();
       expect(calls).toHaveLength(0);
@@ -199,7 +199,7 @@ describe('SpellBuilder status', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Mark Complete' }));
 
-    expect(await screen.findByText(/title before marking it complete/i)).toBeVisible();
+    expect(await screen.findAllByText(/title before marking it complete/i)).toHaveLength(2);
     expect(title()).toHaveFocus();
     expect(calls).toHaveLength(0);
   });

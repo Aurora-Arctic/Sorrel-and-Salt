@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 
 // claude-docs/components/invite-dialog.md
 
@@ -77,6 +78,15 @@ describe('InviteDialog', () => {
   });
 
   // The address's shape is tests/lib/email-address.test.ts's; this is the form's wiring, under a domain no mailbox can exist under.
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    open();
+    type('name@');
+    fireEvent.blur(emailField());
+
+    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
+    expect(emailField()).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
   it('refuses an address the format rule rejects before anything is sent', async () => {
     const calls = mockSending();
     open();
@@ -88,6 +98,13 @@ describe('InviteDialog', () => {
     expect(emailField()).toHaveAccessibleDescription(/\S/);
     expect(calls).toEqual([]);
     expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('tidies an address on blur: the ends trimmed and all of it lower-cased', () => {
+    open();
+    type('  Ada@Example.TEST ');
+    fireEvent.blur(emailField());
+    expect(emailField()).toHaveValue('ada@example.test');
   });
 
   it('clears the refusal as the address is changed', async () => {
@@ -218,7 +235,7 @@ describe('InviteDialog', () => {
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(emailField()).toHaveAccessibleDescription('That person is in this coven already');
+    expect(emailField()).toHaveAccessibleDescription('Error: That person is in this coven already');
     expect(send()).toBeEnabled();
     expect(router.refresh).not.toHaveBeenCalled();
   });

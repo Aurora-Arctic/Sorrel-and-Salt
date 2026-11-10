@@ -37,6 +37,7 @@ export default async function Page({ params }: Props) {
   const found = await topLevel(slug);
   return (
     <HelpArticleView
+      framed
       terms={await readGlossaryTerms()}
       title={found.title}
       body={found.body}

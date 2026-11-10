@@ -4,6 +4,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, onTestFinished,
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
+import { SHEETS_REQUIRED } from '@/components/AdminCards/mint-form';
 import AdminArrivals, { ArrivalsActions } from '@/components/AdminCards/arrivals';
 import type {
   CreateInvitationCardsMutation,
@@ -359,7 +360,7 @@ describe('AdminCards', () => {
     );
   });
 
-  it('keeps Mint Cards disabled until a sheet count is given, shows the total, then sends the sheets', async () => {
+  it('shows the total for the sheet count typed, then sends the sheets', async () => {
     const calls: CreateInvitationCardsMutationVariables[] = [];
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
@@ -376,7 +377,6 @@ describe('AdminCards', () => {
     );
     render(<AdminCards batches={[]} minting />);
 
-    expect(mint()).toBeDisabled();
     expect(
       within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }),
     ).toHaveAccessibleDescription('A Letter sheet holds 10 cards.');
@@ -385,7 +385,6 @@ describe('AdminCards', () => {
     });
     expect(within(dialog()).getByText('30 cards')).toBeInTheDocument();
     pickFirstOfFebruary();
-    expect(mint()).toBeEnabled();
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -422,15 +421,91 @@ describe('AdminCards', () => {
     fireEvent.change(sheets, { target: { value: '' } });
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
 
-    // jsdom does not move the focus; the browser does, from its own report of the invalid field.
-    const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
     fireEvent.change(sheets, { target: { value: '51' } });
     pickFirstOfFebruary();
-    expect(mint()).toBeEnabled();
     fireEvent.click(mint());
     expect(calls).toHaveLength(0);
-    expect(report).toHaveBeenCalled();
+    expect(sheets).toHaveFocus();
     expect(sheets).toHaveValue(51);
+  });
+
+  it('keeps Mint Cards usable on an untouched form, and an empty press flags Number of Sheets, focuses it and sends nothing', async () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        throw new Error('the form must refuse this itself');
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+    const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
+    expect(sheets).toHaveValue(null);
+    expect(sheets).not.toBeInvalid();
+    expect(mint()).toBeEnabled();
+
+    fireEvent.click(mint());
+
+    expect(sheets).toBeInvalid();
+    expect(sheets).toHaveAccessibleDescription(expect.stringContaining(SHEETS_REQUIRED));
+    expect(sheets).toHaveFocus();
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    expect(calls).toHaveLength(0);
+
+    fireEvent.change(sheets, { target: { value: '2' } });
+    expect(sheets).not.toBeInvalid();
+  });
+
+  it.each([
+    ['2.5', 3],
+    ['2.4', 2],
+  ])('rounds %s sheets to %i on leaving the field, with no refusal', (typed, whole) => {
+    render(<AdminCards batches={[]} minting />);
+    const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
+
+    fireEvent.change(sheets, { target: { value: typed } });
+    expect(sheets).not.toHaveAttribute('aria-invalid');
+    fireEvent.blur(sheets);
+
+    expect(sheets).toHaveValue(whole);
+    expect(sheets).not.toBeInvalid();
+  });
+
+  it('sends the rounded sheet count when Mint Cards is pressed straight after a decimal is typed', async () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        return {
+          createInvitationCards: {
+            batchId: 'b3333333-0000-4000-8000-000000000003',
+            expiresAt: variables.expiresAt,
+            tokens: ['t1'],
+          },
+        };
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
+      target: { value: '2.6' },
+    });
+
+    fireEvent.click(mint());
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.sheets).toBe(3);
+  });
+
+  it('still refuses a decimal that rounds out of range', () => {
+    render(<AdminCards batches={[]} minting />);
+    const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
+
+    fireEvent.change(sheets, { target: { value: '0.4' } });
+    fireEvent.blur(sheets);
+
+    expect(sheets).toHaveValue(0);
+    expect(sheets).toBeInvalid();
   });
 
   it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {

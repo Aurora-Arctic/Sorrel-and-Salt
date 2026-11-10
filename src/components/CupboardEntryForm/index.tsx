@@ -2,7 +2,7 @@
 
 import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
 import { useAutosave, type SaveContext, type SaveResult } from '../../lib/autosave';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -10,11 +10,11 @@ import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 import {
-  FieldShell,
   FormActions,
+  FormErrorSummary,
   FormHistoryButtons,
   FormHistoryContext,
-  fieldDescription,
+  TextField as FormTextField,
   useFormHistory,
 } from '../Field';
 import { ListField, MultiSelectField } from '../IngredientForm/fields';
@@ -77,7 +77,7 @@ const TEXT: Record<TextField, { label: string; hint?: string; placeholder: strin
   },
   safetyNotes: {
     label: 'Safety Notes',
-    placeholder: 'Add safety notes',
+    placeholder: 'Add notes',
   },
 };
 
@@ -109,7 +109,6 @@ const CupboardEntryForm = ({
   onDone,
   aside,
 }: CupboardEntryFormProps): ReactElement => {
-  const id = useId();
   const { refresh } = usePendingNavigation();
   const form = useRef<HTMLFormElement>(null);
   const baseline = baselineOf(compendium);
@@ -118,9 +117,10 @@ const CupboardEntryForm = ({
   const revisionRef = useRef<number | null>(revision);
   const methods = useForm<CupboardFormValues>({
     defaultValues: toForm(openingValues(baseline, opened)),
+    // The summary takes the focus on a failed Save, so the form's own focus must not take it back.
+    shouldFocusError: false,
   });
-  const { control, register, setValue, getValues, setError, clearErrors, formState } = methods;
-  const { errors } = formState;
+  const { control, setValue, getValues, setError, clearErrors } = methods;
   const [handedBack, setHandedBack] = useState<ReadonlySet<CupboardField>>(new Set());
   const [alert, setAlert] = useState<string>();
 
@@ -255,13 +255,14 @@ const CupboardEntryForm = ({
     clearErrors(field);
   };
 
-  const submit = async (): Promise<void> => {
+  // Through handleSubmit, which counts the Save for the error summary; a refusal is placed beside its field
+  // by persist, so the form stays open and the catch is empty.
+  const submit = methods.handleSubmit(async () => {
     try {
       await saveAll();
       onDone();
-      // Empty on purpose: the refusal is beside its field or in the alert, and the form stays open.
     } catch {}
-  };
+  });
 
   const useCompendium = (field: CupboardField, label: string): ReactElement | undefined =>
     isOwn(field, values, baseline, overrides, handed) ? (
@@ -279,31 +280,18 @@ const CupboardEntryForm = ({
 
   const textField = (field: TextField, multiline: boolean): ReactElement => {
     const { label, hint, placeholder } = TEXT[field];
-    const { aria, ...shell } = fieldDescription({
-      id: `${id}-${field}`,
-      hint,
-      error: errors[field]?.message,
-    });
-    const common = {
-      id: shell.controlId,
-      placeholder: field === 'label' ? compendium.name : placeholder,
-      ...aria,
-      ...register(field),
-    };
     return (
-      <FieldShell
+      <FormTextField<CupboardFormValues>
         key={field}
+        name={field}
         label={label}
         hint={hint}
-        {...shell}
+        placeholder={field === 'label' ? compendium.name : placeholder}
+        multiline={multiline}
+        rows={multiline ? (field === 'description' ? 7 : 3) : undefined}
+        autoComplete="off"
         action={useCompendium(field, label)}
-      >
-        {multiline ? (
-          <textarea className="textarea" rows={field === 'description' ? 7 : 3} {...common} />
-        ) : (
-          <input className="input" type="text" autoComplete="off" {...common} />
-        )}
-      </FieldShell>
+      />
     );
   };
 
@@ -321,6 +309,7 @@ const CupboardEntryForm = ({
           }}
           noValidate
         >
+          <FormErrorSummary />
           {alert && <Notice kind="error">{alert}</Notice>}
           <FormHistoryButtons />
           {textField('label', false)}

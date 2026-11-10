@@ -218,7 +218,7 @@ describe('Complete on a working', () => {
     expect(await screen.findByText(/short by 1 g/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Testwort, Leaf' }));
     const stock = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
-    typeIn(await within(stock).findByRole('spinbutton', { name: 'Quantity, Leaf' }), '12');
+    typeIn(await within(stock).findByRole('textbox', { name: 'Quantity, Leaf' }), '12');
     press(within(stock).getByRole('button', { name: 'Save Stock' }));
     await waitFor(() =>
       expect(screen.getByRole('list', { name: 'Deductions' })).toHaveTextContent(

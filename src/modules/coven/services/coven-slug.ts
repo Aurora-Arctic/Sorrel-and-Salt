@@ -1,19 +1,19 @@
 import 'server-only';
 import { z } from 'zod';
 import { isReservedCovenSlug } from '../../../lib/coven-path';
+import { limitMessage } from '../../../lib/formats';
 import { slugify } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { requiredText } from '../../../lib/validation';
+import { COVEN_NAME_LIMIT } from '../validation/workspace-name';
 import { slugHeldByAnotherCoven } from './workspace-by-slug';
 
 const FALLBACK_SLUG = 'coven';
 
-const NAME_LIMIT = 80;
-
 /** The name a coven is created or renamed with. */
 export const CovenNameInput = z.object({
-  name: requiredText('Give the coven a name').max(NAME_LIMIT, {
-    error: `Keep the name to ${NAME_LIMIT} characters`,
+  name: requiredText('Give the coven a name').max(COVEN_NAME_LIMIT, {
+    error: limitMessage(COVEN_NAME_LIMIT),
   }),
 });
 

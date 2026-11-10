@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -156,6 +156,16 @@ describe('SupportSenderRequest', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent).toEqual([{ requestId: 'r1', body: 'The red one.' }]);
+  });
+
+  it('keeps a reply past the limit, and holds the Reply button shut', () => {
+    render(<SupportSenderRequest request={request({ status: 'waiting_on_sender' })} />);
+    const box = screen.getByRole('textbox', { name: 'Your Reply' });
+    fireEvent.change(box, { target: { value: 'a'.repeat(4000) } });
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
+    fireEvent.change(box, { target: { value: 'a'.repeat(4001) } });
+    expect(box).toHaveValue('a'.repeat(4001));
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
   });
 
   it('shuts the box and the button while timed out, with the end time in a notice above them', () => {

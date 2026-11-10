@@ -28,6 +28,7 @@ import { readPageCursors } from '../../../../../lib/numbered-page';
 import { requireCovenMembership } from '../../../../../lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
 import { detailsHeading } from '../../../../../components/IngredientEntry/details';
+import AddIngredientAction from './add-ingredient-action';
 import { readCovenFacets, readCovenIngredients, readEditedEntry, readViewedEntry } from './reads';
 import { viewedDetailsOf } from './viewed-details';
 import type { CovenIngredientsParams } from './types';
@@ -70,6 +71,7 @@ export default async function CovenIngredientsPage({
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
   const mayStock = rolePermits(membership.role, { inventory: ['update'] });
+  const canAdd = rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] });
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
   const footOf = (
@@ -142,7 +144,10 @@ export default async function CovenIngredientsPage({
   return (
     <RouteModalProvider>
       <main>
-        <PageHeader title="Ingredients" />
+        <PageHeader
+          title="Ingredients"
+          action={canAdd ? <AddIngredientAction covenSlug={workspace.slug} /> : undefined}
+        />
         <CovenCards
           covenSlug={workspace.slug}
           workspaceId={workspace.id}
@@ -154,7 +159,7 @@ export default async function CovenIngredientsPage({
           position={page.position}
           total={page.totalCount}
           cursor={{ after, before }}
-          canAdd={rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] })}
+          canAdd={canAdd}
           {...pagerHrefs(page.pageInfo, (cursor) =>
             covenIngredientsHref(workspace.slug, { ...filter, ...cursor }),
           )}

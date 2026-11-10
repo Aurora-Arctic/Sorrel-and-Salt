@@ -6,6 +6,8 @@ import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
+import { formatQuantity } from '@/lib/formats';
+import { QUANTITY_HINT } from '@/lib/quantity-rule';
 import { SelectField, TextField } from '../../Field';
 import GripHandle from '../../GripHandle';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
@@ -83,6 +85,7 @@ export function BuilderStepRow({
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
       placeholder="Add an instruction"
+      spellCheck
       multiline
       rows={2}
     />
@@ -170,6 +173,8 @@ export function BuilderStepRow({
             required
             placeholder="Add a name"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -179,8 +184,10 @@ export function BuilderStepRow({
             name={`steps.${index}.form`}
             label="Form"
             labelSuffix={step.name ?? undefined}
-            placeholder="Add a form"
+            hint="Pick a form, or write your own"
             autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
           />
         ) : null
       }
@@ -192,9 +199,12 @@ export function BuilderStepRow({
           name={`steps.${index}.quantity`}
           label="Quantity"
           labelSuffix={name}
-          type="number"
-          placeholder="Amount"
+          inputMode="decimal"
+          format={formatQuantity}
+          hint={QUANTITY_HINT}
           autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="next"
         />
       }
       unitField={

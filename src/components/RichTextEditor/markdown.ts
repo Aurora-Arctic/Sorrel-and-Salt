@@ -1,6 +1,7 @@
 import { BaseBasicBlocksPlugin, BaseBasicMarksPlugin } from '@platejs/basic-nodes';
 import { BaseFootnoteDefinitionPlugin, BaseFootnoteReferencePlugin } from '@platejs/footnote';
 import { BaseLinkPlugin } from '@platejs/link';
+import { LINK_SCHEMES } from '../../lib/link-address';
 import { BaseListPlugin } from '@platejs/list';
 import { MarkdownPlugin } from '@platejs/markdown';
 import {
@@ -15,7 +16,7 @@ import remarkGfm from 'remark-gfm';
 export const markdownPlugins = [
   BaseBasicBlocksPlugin,
   BaseBasicMarksPlugin,
-  BaseLinkPlugin,
+  BaseLinkPlugin.configure({ options: { allowedSchemes: LINK_SCHEMES } }),
   BaseListPlugin,
   BaseTablePlugin,
   BaseTableRowPlugin,

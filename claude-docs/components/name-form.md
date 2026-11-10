@@ -14,9 +14,14 @@ and intro are the page's, not the component's.
 - The row is the shared `FormActions` ([`field.md`](field.md), "Form actions").
 - **The answer is the new baseline.** `setName` answers the renamed row, and
   the field and the comparison take its `name`, as stored, trimmed.
-- The typed value goes to the server untouched. Trimming and the length rule
-  are the service's, in `src/modules/identity/validation/name.ts`, shared with
-  the server so the two cannot drift.
+- **The field is required and counts to its limit.** It is marked required, and
+  `limit={NAME_MAX_LENGTH}` shows the count near the limit.
+- **Save runs the shared rule first.** `NameInput` in
+  `src/modules/identity/validation/name.ts` is the schema the service runs, so a
+  name cleared to nothing or to spaces is refused beneath the field in the
+  service's words ("Enter a name") with no request sent. Typing clears the error.
+- The typed value goes to the server untouched; the service trims it and runs
+  the same rule again.
 
 ## Two error surfaces
 

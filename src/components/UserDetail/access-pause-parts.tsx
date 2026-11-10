@@ -3,7 +3,8 @@
 import { type ReactElement, useId } from 'react';
 import DateField from '../DateField';
 import { today } from '../DateField/day';
-import { FieldShell, fieldDescription } from '../Field';
+import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
+import { FieldShell, PlainTextField, fieldDescription } from '../Field';
 import LocalTime from '../LocalTime';
 import { LocalDay } from '../SupportRequests/day-range';
 import type { AccessPauseEntry, PauseFieldsProps, PauseSpan } from './types';
@@ -34,7 +35,7 @@ export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'none', label: 'No End Date' },
 ];
 
-const MESSAGE_HINT = 'Emailed to them, up to 500 characters.';
+const MESSAGE_HINT = 'Emailed to them.';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -88,15 +89,8 @@ export const PauseFields = ({
 }: PauseFieldsProps): ReactElement => {
   const spanId = useId();
   const dayId = useId();
-  const noteId = useId();
   const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
   const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, hint: noteHint });
-  const messageId = useId();
-  const { aria: messageAria, ...messageField } = fieldDescription({
-    id: messageId,
-    hint: MESSAGE_HINT,
-  });
   return (
     <>
       <FieldShell label="For" {...spanField}>
@@ -126,39 +120,28 @@ export const PauseFields = ({
           />
         </FieldShell>
       )}
-      <FieldShell label="Note" hint={noteHint} required={noteRequired} {...noteField}>
-        <input
-          id={noteField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder={notePlaceholder}
-          maxLength={500}
-          aria-required={noteRequired || undefined}
-          {...noteAria}
-          value={note}
-          onChange={(event) => onNote(event.target.value)}
-        />
-      </FieldShell>
-      <FieldShell
+      <PlainTextField
+        name="note"
+        label="Note"
+        hint={noteHint}
+        required={noteRequired}
+        autoComplete="off"
+        placeholder={notePlaceholder}
+        limit={PAUSE_TEXT_MAX_LENGTH}
+        value={note}
+        onChange={onNote}
+      />
+      <PlainTextField
+        name="message"
         label={messageLabel}
         hint={MESSAGE_HINT}
         required={noteRequired}
-        {...messageField}
-      >
-        <input
-          id={messageField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder={messagePlaceholder}
-          maxLength={500}
-          aria-required={noteRequired || undefined}
-          {...messageAria}
-          value={message}
-          onChange={(event) => onMessage(event.target.value)}
-        />
-      </FieldShell>
+        autoComplete="off"
+        placeholder={messagePlaceholder}
+        limit={PAUSE_TEXT_MAX_LENGTH}
+        value={message}
+        onChange={onMessage}
+      />
     </>
   );
 };

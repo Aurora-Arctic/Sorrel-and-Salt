@@ -2,6 +2,8 @@
 
 `src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one. `warnings.ts` (`SKIP_REASON`, `skipSummary`) has no `'use client'`, so a server component can word a skip.
 
+The form's Note is a `PlainTextField` (multiline, trimmed on blur) and the day is checked with `CalendarDay`. The form holds plain state with no `FormProvider`, so it has no `FormErrorSummary`.
+
 ## Recording and editing
 
 `spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with the spell's name. The recipe page shows it to a role that may create a working (steward and practitioner) on a complete spell, and

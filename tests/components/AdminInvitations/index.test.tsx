@@ -15,6 +15,9 @@ import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
+import { limitMessage } from '@/lib/formats';
+import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 
 // claude-docs/components/admin-invitations.md
 
@@ -173,6 +176,39 @@ describe('AdminInvitations', () => {
       }),
     );
     expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false });
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    render(<AdminInvitations invitations={[]} inviting />);
+    const email = within(dialog()).getByRole('textbox', { name: 'Email Address' });
+    fireEvent.change(email, { target: { value: 'name@' } });
+    fireEvent.blur(email);
+
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
+  it('refuses a reason over its limit on Send Invitation, on the field, without sending', () => {
+    const calls: CreateAdminInvitationMutationVariables[] = [];
+    mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
+      'CreateAdminInvitation',
+      (variables) => {
+        calls.push(variables);
+        return { createAdminInvitation: { id: 'i3' } };
+      },
+    );
+    render(<AdminInvitations invitations={[]} inviting />);
+    const reason = within(dialog()).getByRole('textbox', { name: 'Reason' });
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
+      target: { value: 'cass@example.test' },
+    });
+    fireEvent.change(reason, { target: { value: 'x'.repeat(REASON_LIMIT + 1) } });
+
+    fireEvent.submit(send().closest('form') as HTMLFormElement);
+
+    expect(reason).toHaveAttribute('aria-invalid', 'true');
+    expect(reason).toHaveAccessibleDescription(expect.stringContaining(limitMessage(REASON_LIMIT)));
+    expect(calls).toEqual([]);
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {

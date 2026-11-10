@@ -301,7 +301,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Celestial Bodies"
             name="celestialBodies"
-            placeholder="Add a celestial body"
+            placeholder="Add a body"
             removeNoun="Celestial Body"
             loading={loading}
             choices={facets.celestialBodies}

@@ -13,6 +13,8 @@ export interface HelpArticleViewProps {
   title: string;
   /** The level-one heading: Help, or Staff Help on a staff page. */
   heading?: string;
+  /** Drawn under the public help layout's header, which holds the heading and the search box, so the page draws neither. */
+  framed?: boolean;
   /** Markdown, rendered with raw HTML as text. */
   body: string;
   subpages: HelpSubpageLink[];

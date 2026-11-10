@@ -26,20 +26,23 @@ const Step = ({ next = false }: { next?: boolean }) => (
   </span>
 );
 
-// An article with its text still to come, in the page's own frame: the heading, the search box, the way back (to the
+// An article with its text still to come: the heading and the search box (left to the help header when framed), the way back (to the
 // help index on a guide, to a guide still to come on a sub page), the title, paragraphs under a section heading, the In This Guide list a guide draws (a sub
 // page has none beneath it), and the guide's steps at the foot. Words still to come are bars of about their length.
 export const HelpArticleSkeleton = ({
   heading = 'Help',
   parent = false,
+  framed = false,
 }: {
   heading?: string;
   parent?: boolean;
+  /** A public article under the help header, drawn without the heading and box. */
+  framed?: boolean;
 }): ReactElement => (
   <article className="help-page help-article">
     <div className="help-article__head">
-      <PageHeader title={heading} />
-      <HelpSearchForm />
+      {!framed && <PageHeader title={heading} />}
+      {!framed && <HelpSearchForm />}
       <HelpBackLinkSkeleton>
         {parent ? <SkeletonWords count={3} /> : `Back to ${heading}`}
       </HelpBackLinkSkeleton>

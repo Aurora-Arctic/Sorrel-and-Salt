@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import type { Metadata } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
@@ -17,10 +17,13 @@ const notFound = vi.fn(() => {
 const permanentRedirect = vi.fn((to: string) => {
   throw new Error(`NEXT_REDIRECT 308 ${to}`);
 });
+const redirect = vi.fn((to: string) => {
+  throw new Error(`NEXT_REDIRECT 307 ${to}`);
+});
 vi.mock('next/navigation', () => ({
   notFound,
   permanentRedirect,
-  redirect: vi.fn(),
+  redirect,
   usePathname: () => '/help',
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
@@ -124,7 +127,7 @@ beforeEach(() => {
 describe('/help', () => {
   const load = async () => (await import('@/app/(public)/help/page')) as unknown as Mod;
 
-  it('draws the FAQ and the article index from the public finders, with the search box', async () => {
+  it('draws the FAQ and the article index from the public finders, below the help header the layout holds', async () => {
     const faq = [
       row('testwort-question-one', { kind: 'faq' }),
       row('testwort-question-two', { kind: 'faq' }),
@@ -148,7 +151,8 @@ describe('/help', () => {
     expect(linkHrefs()).toEqual(
       expect.arrayContaining(['/help/testwort-getting-started', '/help/testwort-your-coven']),
     );
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('search')).toBeNull();
     // A signed-out reader is offered no Staff Help link.
     expect(linkHrefs()).not.toContain('/help/staff');
   });
@@ -188,7 +192,7 @@ describe('/help', () => {
 describe('/help/glossary', () => {
   const load = async () => (await import('@/app/(public)/help/glossary/page')) as unknown as Mod;
 
-  it('draws every term the public finder returns, each anchored by its slug, with the search box', async () => {
+  it('draws every term the public finder returns, each anchored by its slug', async () => {
     const terms = [
       row('ashgrove', { kind: 'term' }),
       row('observer', { kind: 'term' }),
@@ -206,7 +210,7 @@ describe('/help/glossary', () => {
       'Steward',
     ]);
     for (const term of terms) expect(document.getElementById(term.slug), term.slug).not.toBeNull();
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(screen.queryByRole('search')).toBeNull();
   });
 
   // The glossary text is cached for every reader; who is asking is read beside it, per request, for the pencil alone.
@@ -252,7 +256,6 @@ describe('/help/[slug]', () => {
     render((await Page(article('testwort-guide'))) as React.ReactElement);
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-guide');
-    expect(screen.getByRole('heading', { level: 1, name: 'Help' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Testwort Guide' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'Testwort Section' })).toBeInTheDocument();
     expect(linkHrefs()).toEqual(
@@ -261,7 +264,9 @@ describe('/help/[slug]', () => {
         '/help/testwort-guide/testwort-demo-coven',
       ]),
     );
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    // The help layout above the page holds the heading and the search box.
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('search')).toBeNull();
     // A signed-out reader is offered no edit.
     expect(linkHrefs().filter((href) => href?.startsWith('/keepers/'))).toEqual([]);
   });
@@ -356,8 +361,8 @@ describe('/help/[slug]/[child]', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Testwort Signing In' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: 'Help' })).toBeInTheDocument();
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('search')).toBeNull();
   });
 
   it('is a 404 for a sub page asked for under another parent', async () => {
@@ -446,7 +451,6 @@ describe('/help/search', () => {
       '/help/testwort-ingredients',
     ];
     expect(linkHrefs().filter((href) => results.includes(href!))).toEqual(results);
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue('stock');
   });
 
   it("searches as the signed-in reader, so a curator's results carry staff rows at their staff address", async () => {
@@ -466,19 +470,25 @@ describe('/help/search', () => {
     expect(linkHrefs()).toContain('/help/staff/testwort-vocabularies');
   });
 
-  it.each([
-    ['no q at all', undefined],
-    ['an empty q', ''],
-    ['a q of spaces', '   '],
-  ])('shows no results for %s', async (_, q) => {
+  it('shows no results for no q at all', async () => {
     searchHelp.mockResolvedValue([]);
     const { default: Page } = await load();
 
-    render((await Page(search(q))) as React.ReactElement);
+    render((await Page(search())) as React.ReactElement);
 
-    // The service returns nothing for a blank query; the page draws no list either way.
+    expect(redirect).not.toHaveBeenCalled();
     expect(screen.queryByRole('list')).toBeNull();
-    expect(within(screen.getByRole('search')).getByRole('searchbox')).toBeInTheDocument();
+  });
+
+  // A blank search sent with no script reaches the help index, never an empty results page.
+  it.each([
+    ['an empty q', ''],
+    ['a q of spaces', '   '],
+  ])('sends %s back to the help index', async (_, q) => {
+    const { default: Page } = await load();
+
+    await expect(Page(search(q))).rejects.toThrow('NEXT_REDIRECT 307 /help');
+    expect(searchHelp).not.toHaveBeenCalled();
   });
 
   it('reads the first q when the address repeats it', async () => {

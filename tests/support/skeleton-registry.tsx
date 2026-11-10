@@ -14,4 +14,6 @@ export const testSkeletons = {
   '/curator/categories': { host: 'admin', Skeleton: named('Categories skeleton') },
   '/curator/forms': { host: 'admin', Skeleton: named('Forms skeleton') },
   '/keepers/users': { host: 'admin', Skeleton: named('Users skeleton') },
+  '/help': { host: 'help', Skeleton: named('Help index skeleton') },
+  '/help/search': { host: 'help', Skeleton: named('Help search skeleton') },
 } as const;

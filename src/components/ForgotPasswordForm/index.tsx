@@ -1,10 +1,11 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { requestPasswordReset } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import { TOO_MANY_ATTEMPTS, rateLimited } from '../../lib/auth-messages';
 import './index.scss';
@@ -14,10 +15,10 @@ import './index.scss';
 export const GENERIC_RESET_REQUEST_ERROR = "We couldn't send the link. Please try again.";
 
 const ForgotPasswordForm = (): ReactElement => {
-  const id = useId();
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
   const [alert, setAlert] = useState<string>();
+  const [emailError, setEmailError] = useState<string>();
   const [sentTo, setSentTo] = useState<string>();
 
   const ready = email.trim() !== '' && !pending;
@@ -42,6 +43,9 @@ const ForgotPasswordForm = (): ReactElement => {
     event.preventDefault();
     // A disabled submit stops a click, not Enter in the field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    setEmailError(invalid?.message);
+    if (invalid) return;
     void request(email.trim());
   };
 
@@ -51,8 +55,6 @@ const ForgotPasswordForm = (): ReactElement => {
     setEmail('');
     setRetyping(true);
   };
-
-  const field = fieldDescription({ id });
 
   if (sentTo) {
     return (
@@ -93,22 +95,23 @@ const ForgotPasswordForm = (): ReactElement => {
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={submit} noValidate>
-        <FieldShell label="Email Address" required {...field}>
-          <input
-            id={field.controlId}
-            ref={(element) => {
-              if (retyping) element?.focus();
-            }}
-            className="input"
-            type="email"
-            autoComplete="username"
-            placeholder="Add an email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            aria-required
-            {...field.aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Email Address"
+          required
+          type="email"
+          autoComplete="email"
+          placeholder="name@example.com"
+          // Typing a different address replaces the confirmation, so the field takes focus again.
+          autoFocus={retyping}
+          format={emailFormat}
+          check={emailAddressProblem}
+          value={email}
+          error={emailError}
+          onChange={(next) => {
+            setEmail(next);
+            setEmailError(undefined);
+          }}
+        />
         <div className="form__actions">
           <BusyButton
             type="submit"

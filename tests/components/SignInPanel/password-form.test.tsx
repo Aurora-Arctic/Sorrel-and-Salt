@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
+import { EMAIL_FORMAT_MESSAGE } from '@/lib/email-address';
 import { GENERIC_SIGN_UP_ERROR, SIGN_UP_UNAVAILABLE } from '@/components/SignInPanel/password-form';
 import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS } from '@/lib/auth-messages';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
@@ -72,6 +73,33 @@ describe('SignInPanel, email and password', () => {
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
   });
 
+  it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
+    type('Email Address', '  Name@EXAMPLE.COM  ');
+    fireEvent.blur(field('Email Address'));
+
+    expect(field('Email Address')).toHaveValue('name@example.com');
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    type('Email Address', 'name@');
+    fireEvent.blur(field('Email Address'));
+
+    expect(field('Email Address')).toHaveAttribute('aria-invalid', 'true');
+    expect(field('Email Address')).toHaveAccessibleDescription(
+      expect.stringContaining(EMAIL_FORMAT_MESSAGE),
+    );
+  });
+
+  it('refuses a malformed address with the shared message, without asking the server', async () => {
+    type('Email Address', 'name@');
+    type('Password', PASSWORD);
+
+    await press(submit('Sign In'));
+
+    expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
+    expect(signInEmail).not.toHaveBeenCalled();
+  });
+
   it('keeps Sign In disabled until both fields hold something', () => {
     expect(submit('Sign In')).toBeDisabled();
     type('Email Address', 'someone@password-form.test');
@@ -139,6 +167,16 @@ describe('SignInPanel, email and password', () => {
     expect(submit('Create Account')).toBeDisabled();
     type('Name', 'Testwort Hedge');
     expect(submit('Create Account')).toBeEnabled();
+  });
+
+  it('names the address as the username when signing in, and as the visitor’s own email and name when signing up', async () => {
+    expect(field('Email Address')).toHaveAttribute('autocomplete', 'username');
+    expect(field('Password')).toHaveAttribute('autocomplete', 'current-password');
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(field('Email Address')).toHaveAttribute('autocomplete', 'email');
+    expect(field('Name')).toHaveAttribute('autocomplete', 'name');
   });
 
   it('signs up with the destination as the link’s callback, then follows the new session to the sign-in page', async () => {

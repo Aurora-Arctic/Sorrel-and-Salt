@@ -469,7 +469,6 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.description`}
               label="Description"
-              placeholder="What sets this form apart"
               action={<CopyFromIngredient at={at} field="description" />}
               multiline
               rows={7}
@@ -477,7 +476,7 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.safetyNotes`}
               label="Safety Notes"
-              placeholder="Add safety notes"
+              placeholder="Add notes"
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />

@@ -96,6 +96,15 @@ describe('SignInPanel, the two-factor step', () => {
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: true });
   });
 
+  it('offers one-time-code autofill for the app’s code and none for a backup code', async () => {
+    await passPassword();
+    expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
+
+    await press(screen.getByRole('button', { name: 'Use a Backup Code' }));
+
+    expect(field('Backup Code')).toHaveAttribute('autocomplete', 'off');
+  });
+
   it('takes a backup code instead, as typed', async () => {
     verifyBackupCode.mockResolvedValue({ data: {}, error: null });
     await passPassword();
@@ -170,11 +179,5 @@ describe('SignInPanel, the two-factor step', () => {
     await press(screen.getByRole('button', { name: 'Start Again' }));
 
     expect(screen.getByRole('button', { name: 'Back to Sign-In Options' })).toBeInTheDocument();
-  });
-
-  it('offers the code field an action placeholder', async () => {
-    await passPassword();
-
-    expect(field('Code From Your App')).toHaveAttribute('placeholder', 'Add a code');
   });
 });

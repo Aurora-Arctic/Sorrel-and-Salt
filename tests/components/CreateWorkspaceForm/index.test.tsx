@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreateWorkspaceMutation, CreateWorkspaceMutationVariables } from '@/gql/graphql';
+import { limitMessage } from '@/lib/formats';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -41,6 +42,25 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
+  it('tidies the name when the field is left, so the person sees what is sent', () => {
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: '  Fixture    Coven ' } });
+    fireEvent.blur(nameField());
+
+    expect(nameField()).toHaveValue('Fixture Coven');
+  });
+
+  it('counts a name past the limit without cutting it', () => {
+    renderForm();
+    const long = 'x'.repeat(83);
+
+    fireEvent.change(nameField(), { target: { value: long } });
+
+    expect(nameField()).toHaveValue(long);
+    expect(nameField()).toHaveAccessibleDescription('3 characters over');
+  });
+
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
@@ -107,6 +127,34 @@ describe('CreateWorkspaceForm', () => {
     expect(push).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
     expect(create()).toBeEnabled();
+  });
+
+  it('clears a refusal on the name as soon as the person edits it', async () => {
+    mockGraphQLError('CreateWorkspace', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'Keep this to 80 characters or fewer' }],
+    });
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+    await waitFor(() => expect(nameField()).toHaveAttribute('aria-invalid', 'true'));
+
+    fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+
+    expect(nameField()).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('refuses a name past the limit on Save with the shared wording, without asking the server', async () => {
+    const calls = acceptCreate();
+    renderForm();
+
+    fireEvent.change(nameField(), { target: { value: 'x'.repeat(81) } });
+    submit();
+
+    expect(await screen.findByText(limitMessage(80))).toBeInTheDocument();
+    expect(calls).toHaveLength(0);
+    expect(push).not.toHaveBeenCalled();
   });
 
   it('puts any other refusal in the alert region, in the server’s words', async () => {

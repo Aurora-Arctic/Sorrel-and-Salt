@@ -106,9 +106,8 @@
     max-width: 100%;
   }
 
-  // The title's line is PageHeader's, as the head's own row: its icons hang from the title's
-  // first line at every width, where a page's head would bring them down to its letters or
-  // send them under a long title.
+  // The title's line is PageHeader's, as the head's own row: wider than a phone its badges and icons hang from the
+  // title's first line, where a page's head would bring them down to its letters or send them under a long title.
   > .page-header {
     flex: 0 0 100%;
     align-items: flex-start;
@@ -119,9 +118,11 @@
       top: 0;
     }
 
+    // A word breaks only when it is wider than the whole row: `break-word`, not `anywhere`, which would split words
+    // to keep the title beside the icons.
     > h1 {
-      flex: 1 1 0;
-      overflow-wrap: anywhere;
+      max-inline-size: 100%;
+      overflow-wrap: break-word;
     }
 
     // As tall as this row's icon buttons (`$icon-size-large`, not the larger action box) and centred in that height,
@@ -131,6 +132,20 @@
       min-block-size: $icon-size-large;
       margin-block-end: 0;
     }
+  }
+}
+
+// Beside the badges and icons only where the row has room; at phone width the shared rule gives the title the row and
+// they wrap beneath its last line. The pending title takes the row there too, as PageHeader draws a pending one at 10rem.
+@container page-header (min-width: calc(#{$narrow-column} + 0.01rem)) {
+  .spell-recipe__head > .page-header > h1 {
+    flex: 1 1 0;
+  }
+}
+
+@container page-header (max-width: #{$narrow-column}) {
+  .spell-recipe--pending > .spell-recipe__head > .page-header > h1 {
+    flex-basis: 100%;
   }
 }
 
@@ -426,7 +441,7 @@
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
-// The skeleton's action: a box as wide as the head's marks and buttons, hung from the title's top.
+// The skeleton's action: a box as wide as the head's marks and buttons, beside the title or, at phone width, beneath it.
 .spell-recipe__head .page-header > .spell-recipe__pending-action {
   position: relative;
   inline-size: 9.5rem;
@@ -440,43 +455,41 @@
 }
 
 .spell-recipe__pending-chips {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 
   > li {
     inline-size: 5.75rem;
     block-size: 1.5625rem;
-    margin: 0;
+
+    > .skeleton {
+      inline-size: 100%;
+      block-size: 100%;
+    }
   }
 }
 
-// The skeleton's bars stand as tall as what they stand for: the back link's line and the title's.
-.spell-recipe--pending {
-  .spell-recipe__bar {
-    min-block-size: 1.4375rem;
-  }
+// A spell with no jar, wax, moon or day has no facts strip, so the skeleton draws no hairline over it.
+.spell-recipe--pending .spell-recipe__facts-box {
+  border-top: 0;
+}
 
-  .spell-recipe__head h1 .skeleton__line {
-    block-size: 1lh;
-  }
+// The skeleton's title bar stands as tall as a line of the title.
+.spell-recipe--pending .spell-recipe__head h1 .skeleton__line {
+  block-size: 1lh;
+}
+
+// The back link's stand-in is a span, so it takes the spacing a link has globally, or it would stand short of the link.
+.spell-recipe--pending .back-link {
+  letter-spacing: 0.02em;
 }
 
 .spell-recipe--pending .spell-recipe__intent .skeleton__line {
   block-size: 1lh;
 }
 
-// A phone's title shares its line with the icons and wraps to a second line.
+// A phone's column wraps the purpose to a second line.
 @include phone-down {
-  .spell-recipe--pending .spell-recipe__head h1 .skeleton__line {
-    block-size: calc(2lh + 1.6875rem);
-  }
-}
-
-// The menu lists three entries on a phone and one past it (the side panels are in its stack only
-// there).
-@include above-phone {
-  .spell-recipe--pending > .page-nav .page-nav__pending:nth-child(n + 2) {
-    display: none;
+  .spell-recipe--pending .spell-recipe__intent .skeleton__line {
+    block-size: 2lh;
   }
 }

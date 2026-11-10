@@ -29,7 +29,7 @@ const LiftDocument = graphql(`
 `);
 
 const copyFor = (name: string): PausePanelCopy => ({
-  noteHint: 'Seen by staff only, up to 500 characters.',
+  noteHint: 'Seen by staff only.',
   notePlaceholder: 'Why, for staff',
   messageLabel: 'Message to User',
   messagePlaceholder: 'For them',

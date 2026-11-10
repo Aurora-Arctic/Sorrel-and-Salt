@@ -16,6 +16,7 @@ import { NotFound, ValidationError } from '@/lib/errors';
 import { jobTokenActive, startJob } from '@/lib/jobs';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
+import { trimEnds } from '@/lib/formats';
 import { parseInput, requiredText } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { z } from 'zod';
@@ -40,7 +41,7 @@ const RECIPIENT_CHUNK = 500;
 
 const SummariesInput = z.object({
   summaries: z.array(
-    z.object({ versionId: z.string(), summary: requiredText('Write what changed') }),
+    z.object({ versionId: z.string(), summary: requiredText('Write what changed', trimEnds) }),
   ),
 });
 

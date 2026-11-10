@@ -1,0 +1,58 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+$-wide: page-with-nav-wide($document-menu-column, $measure);
+
+.help-front__head {
+  // The Staff Help link ends the title row at every width: the h1 is one short word, so the site rule that drops a
+  // header action under a narrow title would leave the link on a line of its own.
+  > .page-header > h1 {
+    flex-basis: auto;
+  }
+
+  > .lede {
+    margin-block: 0 space(4);
+  }
+
+  > .help-search {
+    margin-block: 0;
+  }
+}
+
+// The page's first line stands a step below the box, as a title stood under each page's own box; the front page's
+// quick links sit closer, as ways into the search beside it.
+.help-front__body .help-page > :first-child {
+  margin-block-start: space(6);
+}
+
+.help-front__body .help-index > .help-index__quick:first-child {
+  margin-block-start: space(4);
+}
+
+// A page with a jump menu keeps its column the header's width and place, so the quick links and the text line up with
+// the box: the menu stands in the free track left of the column only where a menu column fits on each side, and above
+// the text otherwise, as on a phone.
+@include above-phone {
+  @include width-to(calc(#{$-wide} - 0.01rem)) {
+    .help-front__body .help-page.page-with-nav {
+      display: flex;
+      max-width: $measure;
+
+      > .page-nav {
+        position: static;
+      }
+    }
+  }
+}
+
+@include phone-down {
+  .help-front__body .help-page.page-with-nav {
+    max-width: $measure;
+  }
+}
+
+@include width-from($-wide) {
+  .help-front__body .help-page.page-with-nav {
+    grid-template-columns: minmax(0, 1fr) minmax(0, $measure) minmax(0, 1fr);
+  }
+}

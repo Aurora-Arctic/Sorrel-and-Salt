@@ -49,7 +49,7 @@
 
 `batch.ts` turns the rows into the `SaveStockInput` the mutation takes, `{ create, update, delete }`, and sends **only what changed**: a new row is a `create`; a staged removal is a `delete` of the jar's id, whatever was typed into it first; a held row whose amounts differ from how the dialog opened is an `update`; an untouched row is in no list, and a row added then removed was never a row. So no jar is in two lists, which the service refuses ("Each jar can be saved once").
 
-Save is off until something differs from how the dialog opened (`isDirty`), and off again if the change is undone. Amounts go as numbers, `null` for an emptied box (`stockAmountsOf`). A unit changed with the numbers left as typed is sent as it is: nothing converts.
+Save is off until something differs from how the dialog opened (`isDirty`), and off again if the change is undone. Amounts go as numbers, `null` for an emptied box (`stockAmountsOf`). A unit changed with the numbers left as typed is sent as it is: nothing converts. The dialog has a client resolver (`amountResolver` in `batch.ts`) that refuses an unreadable amount on the row it belongs to, and Save opens the form holding the first one.
 
 The service holds the guards and the atomicity: the whole batch is saved or none of it, in one audited transaction ([`../db/stock.md`](../db/stock.md)). Success closes the dialog through the modal's own close, then reads the page again (`usePendingNavigation().refresh()`), once however the button was pressed.
 

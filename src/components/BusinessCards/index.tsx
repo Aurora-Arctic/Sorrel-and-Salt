@@ -3,12 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactElement, useEffect, useState } from 'react';
 import { FormProvider, type Resolver, useForm } from 'react-hook-form';
+import { emailFormat } from '../../lib/email-address';
 import { renderBusinessCards } from '../../lib/business-cards/pdf';
+import { phoneMask } from '../../lib/phone-number';
 import { fetchCardAssets } from '../../lib/invitation-cards/assets';
 import type { CardAssets } from '../../lib/invitation-cards/types';
 import { slugify } from '../../lib/slugify';
 import { saveFile } from '../../lib/save-file';
-import { FormActions, SwitchField, TextField } from '../Field';
+import { FormActions, FormErrorSummary, SwitchField, TextField } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { BusinessCardSchema } from './schema';
@@ -28,9 +30,10 @@ const BusinessCards = (): ReactElement => {
   const methods = useForm<BusinessCardValues>({
     defaultValues: EMPTY,
     mode: 'onTouched',
+    shouldFocusError: false,
     resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
   });
-  const { isDirty, isValid } = methods.formState;
+  const { isDirty } = methods.formState;
   const discard = useDiscardGuard(isDirty);
 
   useEffect(() => {
@@ -77,9 +80,28 @@ const BusinessCards = (): ReactElement => {
             The card fonts and pictures could not be loaded. Reload the page.
           </Notice>
         )}
-        <TextField<BusinessCardValues> name="name" label="Name" required />
-        <TextField<BusinessCardValues> name="email" label="Email" required />
-        <TextField<BusinessCardValues> name="phone" label="Phone" required />
+        <FormErrorSummary />
+        <TextField<BusinessCardValues> name="name" label="Name" required placeholder="Add a name" />
+        <TextField<BusinessCardValues>
+          name="email"
+          label="Email"
+          type="email"
+          required
+          placeholder="Add an email"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          format={emailFormat}
+        />
+        <TextField<BusinessCardValues>
+          name="phone"
+          label="Phone"
+          type="tel"
+          autoComplete="tel"
+          mask={phoneMask}
+          required
+          placeholder="Add a phone"
+        />
         <SwitchField
           label="Include Backs"
           name="backs"
@@ -100,7 +122,7 @@ const BusinessCards = (): ReactElement => {
           noun="Business Cards"
           label="Generate"
           busyLabel="Generating"
-          dirty={isValid && assets !== null}
+          dirty={assets !== null}
           submitting={building}
         />
         {discard.asking && <DiscardQuestion guard={discard} />}

@@ -15,7 +15,11 @@ const COVEN = {
 const session = { user: { id: 'fixture-user' } };
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  usePathname: () => '/coven/fixture-coven/ingredients',
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const requireCovenMembership = vi.fn();
 vi.mock('@/lib/request-session', () => ({
@@ -238,11 +242,10 @@ describe('the coven Ingredients page', () => {
     });
     const emptyState = () => screen.getByRole('status', { name: 'No Ingredients' });
 
-    it('offers a member the first add', async () => {
+    it("offers a member the page header's add, and none inside the empty state", async () => {
       await renderPage();
-      expect(
-        within(emptyState()).getByRole('button', { name: 'Add Ingredient' }),
-      ).toBeInTheDocument();
+      expect(within(emptyState()).queryByRole('button')).toBeNull();
+      expect(screen.getByRole('link', { name: 'Add Ingredient' })).toBeInTheDocument();
     });
 
     it('offers a viewer, who may not add, no button', async () => {
@@ -252,6 +255,7 @@ describe('the coven Ingredients page', () => {
       });
       await renderPage();
       expect(within(emptyState()).queryByRole('button')).toBeNull();
+      expect(screen.queryByRole('link', { name: 'Add Ingredient' })).toBeNull();
     });
   });
 });

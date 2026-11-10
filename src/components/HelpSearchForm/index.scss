@@ -25,9 +25,6 @@
     position: absolute;
     inset-block-start: 0;
     inset-inline-start: space(3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     block-size: $control-height;
     padding: 0;
     border: 0;
@@ -35,9 +32,20 @@
     color: $text-muted;
     cursor: pointer;
 
-    svg {
+    // The magnifier and the ring stacked in one box, so the swap moves nothing; the magnifier hides once the ring appears.
+    display: grid;
+    place-items: center;
+
+    svg,
+    .spinner {
+      grid-area: 1 / 1;
       inline-size: 1.25rem;
       block-size: 1.25rem;
+      margin: 0;
+    }
+
+    &[aria-busy='true'] svg {
+      animation: loading-leave 0s linear $loading-delay forwards;
     }
 
     &:hover {

@@ -68,12 +68,6 @@
   }
 
   &.is-pending.link-icon-hint > svg {
-    animation: link-icon-out 0s linear $loading-delay forwards;
-  }
-}
-
-@keyframes link-icon-out {
-  to {
-    visibility: hidden;
+    animation: loading-leave 0s linear $loading-delay forwards;
   }
 }

@@ -1,14 +1,15 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS, rateLimited } from '../../lib/auth-messages';
 import { newPasswordRefusal } from '../../lib/password-refusals';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import ModeSwitch from './mode-switch';
@@ -75,8 +76,6 @@ const PasswordForm = ({
   onStart,
   onCodeStep,
 }: PasswordFormProps): ReactElement => {
-  const nameId = useId();
-  const emailId = useId();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
@@ -101,6 +100,11 @@ const PasswordForm = ({
     event.preventDefault();
     // A disabled submit stops a click, not Enter in a field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    if (invalid) {
+      setProblem({ email: invalid.message });
+      return;
+    }
     setPending(true);
     setProblem({});
     setSignedUp(undefined);
@@ -164,9 +168,6 @@ const PasswordForm = ({
     );
   }
 
-  const nameField = fieldDescription({ id: nameId });
-  const emailField = fieldDescription({ id: emailId, error: problem.email });
-
   return (
     <div className="sign-in-panel__password" ref={ref}>
       {problem.alert && (
@@ -182,33 +183,27 @@ const PasswordForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {signingUp && (
-          <FieldShell label="Name" required {...nameField}>
-            <input
-              id={nameField.controlId}
-              className="input"
-              type="text"
-              autoComplete="name"
-              placeholder="Add a name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              aria-required
-              {...nameField.aria}
-            />
-          </FieldShell>
-        )}
-        <FieldShell label="Email Address" required {...emailField}>
-          <input
-            id={emailField.controlId}
-            className="input"
-            type="email"
-            autoComplete={signingUp ? 'email' : 'username'}
-            placeholder="Add an email"
-            value={email}
-            onChange={(event) => onEmailChange(event.target.value)}
-            aria-required
-            {...emailField.aria}
+          <PlainTextField
+            label="Name"
+            required
+            autoComplete="name"
+            placeholder="Your name"
+            value={name}
+            onChange={setName}
           />
-        </FieldShell>
+        )}
+        <PlainTextField
+          label="Email Address"
+          required
+          type="email"
+          autoComplete={signingUp ? 'email' : 'username'}
+          placeholder="name@example.com"
+          format={emailFormat}
+          check={emailAddressProblem}
+          value={email}
+          onChange={onEmailChange}
+          error={problem.email}
+        />
         <PasswordField
           label="Password"
           purpose={signingUp ? 'new' : 'current'}

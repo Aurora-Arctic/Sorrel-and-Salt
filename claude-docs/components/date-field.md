@@ -22,7 +22,7 @@ The [date range field](#date-range-field) below picks two days in the same calen
 
 ## Used by
 
-The Record a Working form (its Save stays disabled for a date after today) and the Mint Cards form (`min` is tomorrow in UTC, because the service refuses an expiry at or before now).
+The Record a Working form (its Save stays disabled for a date after today) and the Mint Cards form (`min` is tomorrow in UTC, because the service refuses an expiry at or before now), and the reference panel's Last Modified and Accessed (`max` is `latestDay()`, tomorrow in UTC, the latest the service accepts).
 
 ## Styling
 

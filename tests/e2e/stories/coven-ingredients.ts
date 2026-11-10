@@ -390,9 +390,9 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
       const group = dialog.getByRole('group', { name: form, exact: true });
       return {
         group,
-        quantity: group.getByRole('spinbutton', { name: fieldName('Quantity', form) }),
+        quantity: group.getByRole('textbox', { name: fieldName('Quantity', form) }),
         unit: group.getByRole('combobox', { name: fieldName('Unit', form) }),
-        threshold: group.getByRole('spinbutton', { name: fieldName('Low Stock At', form) }),
+        threshold: group.getByRole('textbox', { name: fieldName('Low Stock At', form) }),
         remove: group.getByRole('button', { name: `Remove ${form}`, exact: true }),
         undo: group.getByRole('button', { name: `Undo Remove ${form}`, exact: true }),
         async pickUnit(label: string) {

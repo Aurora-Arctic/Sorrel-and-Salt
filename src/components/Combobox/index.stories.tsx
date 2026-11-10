@@ -163,7 +163,7 @@ const ListView = () => {
         <Combobox
           {...ids}
           label="Folk Name"
-          placeholder="Add a folk name"
+          placeholder="Add a name"
           value={value}
           onChange={setValue}
           onPick={add}
@@ -220,7 +220,7 @@ export const Sortable: Story = {
           <Combobox
             {...ids}
             label="Celestial Body"
-            placeholder="Add a celestial body"
+            placeholder="Add a body"
             value={value}
             onChange={setValue}
             onPick={add}

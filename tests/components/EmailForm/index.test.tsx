@@ -10,6 +10,7 @@ import EmailForm, {
   VERIFIED_STATUS,
 } from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
+import { EMAIL_FORMAT_MESSAGE, validateEmailAddress } from '@/lib/email-address';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
@@ -37,6 +38,18 @@ describe('EmailForm', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(emailField()).toHaveValue('ada@example.test');
+  });
+
+  it('keeps autofill off for a new address, which "email" would fill with the old one', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    expect(emailField()).toHaveAttribute('autocomplete', 'off');
+  });
+
+  it('tells password managers not to offer a saved login for the new address', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    expect(emailField()).toHaveAttribute('data-1p-ignore');
   });
 
   it('embedded, shows no heading of its own and never the confirmed view', () => {
@@ -110,6 +123,56 @@ describe('EmailForm', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(submit()).toBeEnabled();
+  });
+
+  it('tidies the address when the field is left: ends trimmed, lower-cased as it is saved', () => {
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.change(emailField(), { target: { value: '  Name@EXAMPLE.COM  ' } });
+    fireEvent.blur(emailField());
+
+    expect(emailField()).toHaveValue('name@example.com');
+  });
+
+  it('flags a malformed address when the field is left, linked to the field', () => {
+    renderForm(<EmailForm email="" verified={false} landing="/coven" />);
+    fireEvent.change(emailField(), { target: { value: 'name@' } });
+    fireEvent.blur(emailField());
+
+    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
+    expect(emailField()).toHaveAccessibleDescription(expect.stringContaining(EMAIL_FORMAT_MESSAGE));
+  });
+
+  it('refuses a malformed address with the shared message, without sending', () => {
+    const calls = acceptSetEmail();
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.change(emailField(), { target: { value: 'new@' } });
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    expect(screen.getByText(EMAIL_FORMAT_MESSAGE)).toBeInTheDocument();
+    expect(calls).toEqual([]);
+  });
+
+  it('marks the address as required', () => {
+    renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
+
+    expect(emailField()).toHaveAttribute('aria-required', 'true');
+  });
+
+  it('refuses a cleared address with the shared rule’s words, on the field, without sending', () => {
+    const calls = acceptSetEmail();
+    const refusal = validateEmailAddress('')?.message;
+    expect(refusal).toBeTruthy();
+    renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
+
+    fireEvent.change(emailField(), { target: { value: '' } });
+    expect(submit()).toBeEnabled();
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
+    expect(emailField()).toHaveAccessibleDescription(expect.stringContaining(refusal!));
+    expect(calls).toEqual([]);
   });
 
   it('sends the typed address and names it, normalised, in the confirmation', async () => {
@@ -255,18 +318,14 @@ describe('EmailForm', () => {
     expect(button).toBe(submit());
   });
 
-  // No browser bubble: the form is `noValidate`, so an empty field reaches the server.
-  it("sends an empty field to the server and shows its refusal beside the input, not the browser's", async () => {
-    mockGraphQLError('SetEmail', {
-      code: 'VALIDATION',
-      fieldErrors: [{ path: ['email'], message: 'Enter an email address' }],
-    });
+  // No browser bubble: the form is `noValidate`, so a required empty field reaches the form's own check.
+  it("refuses an empty required field beside the input, not in the browser's bubble", () => {
     renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
     expect(emailField().closest('form')).toHaveAttribute('novalidate');
-    expect(emailField()).not.toBeRequired();
+    expect(emailField()).toBeRequired();
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
-    await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
+    expect(emailField()).toHaveAttribute('aria-invalid', 'true');
   });
 });

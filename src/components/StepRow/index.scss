@@ -247,6 +247,11 @@ $step-line: type-size('body') * 1.65;
     gap: space(4) space(2);
   }
 
+  // As tall as a hint's ⓘ whether or not the field has one, so Quantity (which has a tip) and Unit (which has none) stand level.
+  .step-row__inputs .field__label-row {
+    min-height: $icon-size;
+  }
+
   .step-row__inputs-error:empty {
     display: none;
   }

@@ -14,8 +14,10 @@ import {
   FilterSelectField,
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   type FormHistory,
+  PlainTextField,
   ReasonField,
   SearchField,
   RadioGroupField,
@@ -638,5 +640,84 @@ export const FilterSelect: Story = {
         typeahead
       />
     </form>
+  ),
+};
+
+const PlainTextDemo = () => {
+  const [value, setValue] = useState('  Testwort   Fixture ');
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <PlainTextField label="Name" value={value} onChange={setValue} limit={20} />
+    </div>
+  );
+};
+
+/** No react-hook-form: leave the field and the spaces are tidied; the count shows from 75% of the limit. */
+export const PlainText: Story = { render: () => <PlainTextDemo /> };
+
+interface SummaryValues {
+  name: string;
+  email: string;
+}
+
+const Summarised = () => {
+  const methods = useForm<SummaryValues>({
+    defaultValues: { name: '', email: '' },
+    mode: 'onTouched',
+    shouldFocusError: false,
+    resolver: async (values) => ({
+      values: {},
+      errors: {
+        ...(values.name ? {} : { name: { type: 'required', message: 'Enter a name' } }),
+        ...(values.email.includes('@')
+          ? {}
+          : { email: { type: 'pattern', message: 'Enter an email address' } }),
+      },
+    }),
+  });
+  return (
+    <FormProvider {...methods}>
+      <form
+        className="form"
+        style={{ maxWidth: '32rem' }}
+        onSubmit={methods.handleSubmit(() => {})}
+        noValidate
+      >
+        <FormErrorSummary />
+        <TextField<SummaryValues> name="name" label="Name" required />
+        <TextField<SummaryValues> name="email" label="Email" type="email" required />
+        <button type="submit" className="btn">
+          Save
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+/** Press Save with the fields empty: the summary takes focus and links to each field. */
+export const ErrorSummary: Story = { render: () => <Summarised /> };
+
+/** Phone keyboards and browser help: each field below sets the attributes an identifier needs. */
+export const BrowserAttributes: Story = {
+  render: () => (
+    <Form>
+      <TextField<Values>
+        name="name"
+        label="Email"
+        type="email"
+        autoComplete="email"
+        enterKeyHint="next"
+      />
+      <TextField<Values> name="group" label="Phone" type="tel" autoComplete="tel" />
+    </Form>
+  ),
+};
+
+/** Typing past the limit is allowed; the count shows from 75% and Save refuses. */
+export const SoftLimit: Story = {
+  render: () => (
+    <Form>
+      <TextField<Values> name="name" label="Name" limit={10} />
+    </Form>
   ),
 };

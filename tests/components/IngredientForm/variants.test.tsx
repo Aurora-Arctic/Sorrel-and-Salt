@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
@@ -136,7 +137,7 @@ describe('IngredientForm’s variants', () => {
     save();
 
     await waitFor(() => expect(form).toBeInvalid());
-    expect(form).toHaveFocus();
+    expectSummaryLinksTo(form);
     expect(calls).toHaveLength(0);
   });
 
@@ -200,7 +201,7 @@ describe('IngredientForm’s variants', () => {
       const colour = control(oil, 'Colour');
       expect(colour).toBeVisible();
       expect(colour).toBeInvalid();
-      expect(colour).toHaveFocus();
+      expectSummaryLinksTo(colour);
       expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'false');
       expect(calls).toHaveLength(0);
     });
@@ -222,7 +223,7 @@ describe('IngredientForm’s variants', () => {
       expect(openIn(herb)).toEqual(['Identity']);
       const form = control(herb, 'Form');
       expect(form).toBeInvalid();
-      expect(form).toHaveFocus();
+      expectSummaryLinksTo(form);
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       openSectionsIn(openVariant('Oil'), 'Identity');
       expect(control(variant('Oil'), 'Form')).not.toBeInvalid();

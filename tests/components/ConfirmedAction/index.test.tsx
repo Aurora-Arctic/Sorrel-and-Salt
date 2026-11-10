@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ConfirmedAction from '@/components/ConfirmedAction';
 import type { ConfirmedActionProps } from '@/components/ConfirmedAction/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { limitMessage } from '@/lib/formats';
+import { REASON_LIMIT } from '@/modules/identity/validation/reason';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
@@ -78,6 +80,29 @@ describe('ConfirmedAction', () => {
     fireEvent.click(opener());
     fireEvent.click(confirmButton());
     expect(send).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it('keeps the confirm pressable over the reason’s limit, and a press says so on the field and sends nothing', () => {
+    const send = vi.fn().mockReturnValue(new Promise(() => {}));
+    render(<ConfirmedAction {...props({ send, withNote: true })} />);
+    fireEvent.click(opener());
+    const reason = () => within(asking()).getByRole('textbox', { name: 'Reason' });
+
+    fireEvent.change(reason(), { target: { value: 'x'.repeat(REASON_LIMIT + 1) } });
+    expect(confirmButton()).toBeEnabled();
+    fireEvent.click(confirmButton());
+
+    expect(send).not.toHaveBeenCalled();
+    expect(asking()).toBeInTheDocument();
+    expect(reason()).toHaveAttribute('aria-invalid', 'true');
+    expect(reason()).toHaveAccessibleDescription(
+      expect.stringContaining(limitMessage(REASON_LIMIT)),
+    );
+
+    fireEvent.change(reason(), { target: { value: 'x'.repeat(REASON_LIMIT) } });
+    expect(reason()).not.toHaveAttribute('aria-invalid', 'true');
+    fireEvent.click(confirmButton());
+    expect(send).toHaveBeenCalledWith('x'.repeat(REASON_LIMIT));
   });
 
   it('says its announcement once sent, and reads the page again, the modal still open and busy', async () => {

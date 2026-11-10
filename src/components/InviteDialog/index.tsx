@@ -3,6 +3,7 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { EmailAddress } from '../../lib/email-address-schema';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
@@ -11,7 +12,7 @@ import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import InviteEmailField, { checkInviteAddress } from './email-field';
+import InviteEmailField from './email-field';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
 // A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
@@ -52,9 +53,13 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const parsed = EmailAddress.safeParse(email);
+    if (!parsed.success) {
+      return setFailure({
+        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
+      });
+    }
     const address = email.trim();
-    const refusal = checkInviteAddress(address);
-    if (refusal) return setFailure(refusal);
 
     setSending(true);
     setFailure({});
@@ -93,8 +98,8 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
         value={email}
         error={failure.field?.message}
         disabled={sending}
-        onChange={(value) => {
-          setEmail(value);
+        onChange={(next) => {
+          setEmail(next);
           if (failure.field) setFailure({});
         }}
       />

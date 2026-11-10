@@ -82,6 +82,18 @@ describe('Passkeys', () => {
     expect(screen.queryByRole('list', { name: 'Passkeys' })).not.toBeInTheDocument();
   });
 
+  it('keeps autofill off for a passkey’s name', async () => {
+    renderOnPage(<Passkeys passkeys={[LAPTOP]} />);
+
+    await press(screen.getByRole('button', { name: 'Rename Laptop' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Rename Passkey' });
+
+    expect(within(dialog).getByRole('textbox', { name: /Name/ })).toHaveAttribute(
+      'autocomplete',
+      'off',
+    );
+  });
+
   it('renames a passkey through the dialog, and the list shows the new name', async () => {
     updateMock.mockResolvedValue({ data: { passkey: {} } });
     renderOnPage(<Passkeys passkeys={[LAPTOP]} />);

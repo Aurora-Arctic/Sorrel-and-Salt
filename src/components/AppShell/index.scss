@@ -151,14 +151,22 @@
 // Where :has() is missing the notice keeps the wide column.
 .app-shell__main:has(.page-with-nav) .app-shell__pause {
   column-gap: space(6);
-  @include page-with-nav-grid;
+  @include page-with-nav-grid(null);
 
   > * {
     grid-column: 2;
   }
 }
 
+.app-shell__main:has(.page-with-nav > .page-nav) .app-shell__pause {
+  @include page-with-nav-grid;
+}
+
 .app-shell__main:has(.document-page) .app-shell__pause {
+  @include page-with-nav-grid(null, $measure);
+}
+
+.app-shell__main:has(.document-page > .page-nav) .app-shell__pause {
   @include page-with-nav-grid($document-menu-column, $measure);
 }
 

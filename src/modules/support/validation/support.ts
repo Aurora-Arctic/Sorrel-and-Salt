@@ -7,16 +7,29 @@ import {
   isSitePage,
   normaliseIssueLink,
 } from '../../../lib/support-path';
+import { EMAIL_MAX_LENGTH } from '../../../lib/email-address';
+import { trimEnds } from '../../../lib/formats';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
-export const SUBJECT_MAX_LENGTH = 120;
-export const MESSAGE_MAX_LENGTH = 4000;
-export const PATH_MAX_LENGTH = 500;
-export { ERROR_REFERENCE_MAX_LENGTH, ISSUE_REPOSITORY };
+import {
+  HTTP_STATUS_MAX,
+  HTTP_STATUS_MIN,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from './limits';
+
+export {
+  ERROR_REFERENCE_MAX_LENGTH,
+  ISSUE_REPOSITORY,
+  MESSAGE_MAX_LENGTH,
+  PATH_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+};
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
-export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LENGTH, {
+export const SupportMessage = requiredText('Write a message', trimEnds).max(MESSAGE_MAX_LENGTH, {
   error: `Keep the message to ${MESSAGE_MAX_LENGTH} characters`,
 });
 
@@ -36,8 +49,8 @@ export const SupportRequestInput = z.object({
   errorCode: z
     .number()
     .int()
-    .min(100, { error: 'That is not an HTTP status' })
-    .max(599, { error: 'That is not an HTTP status' })
+    .min(HTTP_STATUS_MIN, { error: 'That is not an HTTP status' })
+    .max(HTTP_STATUS_MAX, { error: 'That is not an HTTP status' })
     .nullish(),
   errorReference: z
     .string()
@@ -72,7 +85,7 @@ export const SignedOutSupportRequestInput = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .max(254, { error: 'That address is too long' })
+    .max(EMAIL_MAX_LENGTH, { error: 'That address is too long' })
     .pipe(z.email({ error: 'Enter an email address' })),
   subject: SupportRequestInput.shape.subject,
   message: SupportMessage,

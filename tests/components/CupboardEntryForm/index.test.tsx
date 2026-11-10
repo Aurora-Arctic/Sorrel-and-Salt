@@ -176,4 +176,51 @@ describe('CupboardEntryForm', () => {
     expect(label()).toHaveAccessibleDescription(/another entry/i);
     expect(onDone).not.toHaveBeenCalled();
   });
+
+  it('lists a refused Save at the top, takes the focus there, and links to the field', async () => {
+    mockGraphQLError('AnnotateCupboardEntry', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['label'], message: 'Another entry in this coven has that label' }],
+    });
+    renderForm();
+
+    typeIn(label(), 'Fixture Wort');
+    await act(async () => fireEvent.click(save()));
+
+    const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
+    expect(summary).toHaveFocus();
+    expect(screen.getByRole('link', { name: /another entry/i })).toHaveAttribute(
+      'href',
+      `#${label().id}`,
+    );
+  });
+
+  it('tidies a label when it is left, and keeps a description’s line breaks', () => {
+    captureSaves();
+    renderForm();
+
+    typeIn(label(), '  Fixture   Wort ');
+    fireEvent.blur(label());
+    expect(label()).toHaveValue('Fixture Wort');
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One\n\nTwo');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One\n\nTwo');
+  });
+
+  it('trims the ends of a description and safety notes when they are left', () => {
+    captureSaves();
+    renderForm();
+
+    const description = screen.getByRole('textbox', { name: 'Description' });
+    typeIn(description, 'One  \n\nTwo   \n\n  ');
+    fireEvent.blur(description);
+    expect(description).toHaveValue('One  \n\nTwo');
+
+    const notes = screen.getByRole('textbox', { name: 'Safety Notes' });
+    typeIn(notes, '  Keep dry \n');
+    fireEvent.blur(notes);
+    expect(notes).toHaveValue('Keep dry');
+  });
 });

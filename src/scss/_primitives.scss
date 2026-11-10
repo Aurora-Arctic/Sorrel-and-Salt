@@ -527,6 +527,13 @@
     }
   }
 
+  // An icon giving its place to the ring that appears over it (`loading-appear`).
+  @keyframes loading-leave {
+    to {
+      visibility: hidden;
+    }
+  }
+
   @keyframes target-arrive {
     from {
       background-color: $fill-highlight-field;
@@ -746,6 +753,10 @@
   .page-with-nav {
     @include stack(6);
     @include page-with-nav-grid;
+  }
+
+  .page-with-nav:not(:has(> .page-nav)) {
+    @include page-with-nav-grid(null);
   }
 
   .page-with-nav > * {
@@ -1585,8 +1596,32 @@
     font-size: type-size('caption');
   }
 
+  // A count past its limit is in the error's colour.
+  .field__hint--over {
+    color: $secondary;
+  }
+
   .field__warning {
     color: $secondary;
+  }
+
+  .form-error-summary__heading {
+    margin: 0 0 space(1);
+    font-size: type-size('lead');
+  }
+
+  .form-error-summary ul {
+    margin: 0;
+    padding-inline-start: space(3);
+  }
+
+  .form-error-summary {
+    --list-marker-ink: #{$secondary};
+  }
+
+  // Out of flow while empty, so the always-drawn live region adds no gap to the field.
+  .field__error:empty {
+    position: absolute;
   }
 
   .field__error {
@@ -2113,6 +2148,12 @@
       font-size: type-size('small');
       color: $text-muted;
     }
+  }
+
+  // A card group with an error marks every card's border as an invalid input marks its own.
+  .radio-group--invalid .radio.radio--card {
+    border-color: $secondary;
+    box-shadow: inset 0 0 0 1px $secondary;
   }
 
   // The native radio stays, visually hidden, so arrow keys and the label work (WCAG 1.4.1).

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole } from '@/db/repository';
 import { Forbidden, ValidationError } from '@/lib/errors';
+import { limitMessage } from '@/lib/formats';
 import { slugify } from '@/lib/slugify';
 import {
   assertMembership,
@@ -192,6 +193,19 @@ describe('renameWorkspace', () => {
 
       expect(await stored(coven.id)).toEqual(before);
       expect(await addressesOf(coven.id)).toEqual([coven.slug]);
+    });
+
+    it('refuses a name past the limit in the shared limit wording', async () => {
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Limit Words ${token()}`,
+        undefined,
+        SEEDED,
+      );
+
+      await expect(
+        renameWorkspace(asUser(A), coven.id, { name: 'F'.repeat(81) }),
+      ).rejects.toMatchObject({ issues: [{ path: ['name'], message: limitMessage(80) }] });
     });
 
     it('admits a name of exactly 80 characters', async () => {

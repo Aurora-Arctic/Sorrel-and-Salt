@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -134,6 +135,13 @@ describe('IngredientForm', () => {
     for (const button of saves()) expect(button).toBeEnabled();
     type('Name', '');
     for (const button of saves()) expect(button).toBeDisabled();
+  });
+
+  it('turns spell-check off on the names, which are not prose, and leaves it on the description', () => {
+    renderForm();
+
+    expect(textbox('Formal Name')).toHaveAttribute('spellcheck', 'false');
+    expect(textbox('Description')).not.toHaveAttribute('spellcheck', 'false');
   });
 
   describe('saving a stub', () => {
@@ -308,7 +316,7 @@ describe('IngredientForm', () => {
 
       const name = textbox('Name');
       await waitFor(() => expectErrorOn(name));
-      expect(name).toHaveFocus();
+      expectSummaryLinksTo(name);
       expect(calls).toHaveLength(0);
     });
 
@@ -409,7 +417,7 @@ describe('IngredientForm', () => {
 
       const formal = textbox('Formal Name');
       await waitFor(() => expectErrorOn(formal));
-      expect(formal).toHaveFocus();
+      expectSummaryLinksTo(formal);
     });
 
     it('lands on the list entry its path names', async () => {
@@ -428,7 +436,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expectErrorOn(box('Folk Name')));
-      expect(box('Folk Name')).toHaveFocus();
+      expectSummaryLinksTo(box('Folk Name'));
       expect(removeButton('Hedge Fixture')).toHaveAccessibleDescription(/\S/);
       expect(removeButton('Fixture Bane')).not.toHaveAccessibleDescription();
     });
@@ -448,7 +456,7 @@ describe('IngredientForm', () => {
 
       const element = select('Elements');
       await waitFor(() => expectErrorOn(element));
-      expect(element).toHaveFocus();
+      expectSummaryLinksTo(element);
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
@@ -572,7 +580,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expectErrorOn(box('Category')));
-      expect(box('Category')).toHaveFocus();
+      expectSummaryLinksTo(box('Category'));
       expect(box('Category')).toHaveAccessibleDescription(
         expect.stringContaining('Fixture Shield'),
       );
@@ -936,7 +944,7 @@ describe('IngredientForm', () => {
       await within(warning()).findByRole('link');
       save();
 
-      await waitFor(() => expect(textbox('Formal Name')).toHaveFocus());
+      await waitFor(() => expectSummaryLinksTo(textbox('Formal Name')));
       expect(createAnyway()).not.toHaveFocus();
       expect(saves).toHaveLength(0);
     });

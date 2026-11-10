@@ -41,6 +41,18 @@
   align-self: center;
 }
 
+// The skeleton's stand-in for Duplicate or Mark Complete, about Duplicate's width; the block is a button's height.
+.spell-builder__pending-action {
+  inline-size: 7.5rem;
+}
+
+// Stacked on a phone-width form, it is as wide as the row, as Duplicate is.
+@container (max-width: #{$narrow-column}) {
+  .spell-builder__pending-action {
+    inline-size: auto;
+  }
+}
+
 // A step's handle: a button unboxed as the combobox's chip handle is. `touch-action` is dnd-kit's ask, so a drag by
 // touch moves the step rather than the page.
 .spell-step__handle {

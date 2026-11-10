@@ -2,12 +2,6 @@
 @use '../../scss/mixins' as *;
 
 .help-index {
-  // The Staff Help link ends the title row at every width: the h1 is one short word, so the site rule that drops a
-  // header action under a narrow title would leave the link on a line of its own.
-  > .page-header > h1 {
-    flex-basis: auto;
-  }
-
   h2 {
     margin-block: space(8) space(3);
   }
@@ -55,19 +49,6 @@
   // flex stack, so its heading's top margin would add to it.
   .help-article__parent + &__section > h2:first-child {
     margin-block-start: 0;
-  }
-
-  // The lede, the search box and the quick links, on the page itself.
-  &__band {
-    max-width: $measure;
-
-    .lede {
-      margin-block: 0 space(4);
-    }
-
-    .help-search {
-      margin-block: 0;
-    }
   }
 
   // Each quick link a pill on the guide cards' surface and hover pair, so the ways in above the guides look like the guides.

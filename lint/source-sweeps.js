@@ -1,6 +1,6 @@
 import { relative, sep } from 'node:path';
 
-// Seven rules that were Vitest guards reading source as text or syntax tree (claude-docs/testing/layer-ownership.md,
+// Rules that were Vitest guards reading source as text or syntax tree (claude-docs/testing/layer-ownership.md,
 // "What a test may assert"), now in the editor and `npm run lint`. `lint/sorrel-lint.js` spreads them into the `sorrel` plugin.
 
 /** The file being linted, repo-relative with forward slashes. */
@@ -243,6 +243,11 @@ export const rules = {
       if (['src/components/Modal/modal.tsx', 'src/components/Modal/route-modal.tsx'].includes(file))
         return {};
       const ALLOWED = {
+        'src/components/AdminCards/mint-form.tsx': {
+          calls: 1,
+          reason:
+            'not a return to the opener: a refused Mint Cards puts the focus on Number of Sheets, inside the modal that stays open, as a plain-state form does on Save',
+        },
         'src/components/FacetPanel/shell.tsx': {
           calls: 2,
           reason:
@@ -328,6 +333,8 @@ export const rules = {
           'a panel inside IngredientForm, which it tells of its changes (`useReportPanelChanges`) and whose guard holds them',
         'src/components/IngredientEntry/coven-choice.tsx':
           'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; nothing is submitted through it',
+        'src/components/SpellBuilder/skeleton.tsx':
+          'the Edit Spell form’s loading skeleton, inert and holding no input: nothing can be typed into it',
       };
       return {
         Program(program) {
@@ -617,6 +624,263 @@ export const rules = {
             node,
             message:
               'Call reportLeaving() first, in the same function, so the page bar stays up through the full page load',
+          });
+        },
+      };
+    },
+  },
+  // Every typed input is built on the Field set (TextField, TextAreaField, PlainTextField, DateField, Combobox), so its label,
+  // hint, error, limit and attributes are drawn once (.claude/rules/components.md, "Form inputs", R1). A raw text <input> or
+  // <textarea> belongs only in src/components/Field/ and the Combobox, bar the files below. A control no one types into
+  // (checkbox, radio, hidden, file, button) is not text, and neither is one carrying aria-hidden, which is a honeypot.
+  'inputs-use-field': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
+      if (
+        file.startsWith('src/components/Field/') ||
+        file.startsWith('src/components/Combobox/') ||
+        file.startsWith('src/components/PasswordField/')
+      )
+        return {};
+      const ALLOWED = {
+        'src/components/AdminCards/mint-form.tsx':
+          'Number of Sheets: its total line takes the error’s place, and Field has no slot for that',
+        'src/components/ChipColorField/index.tsx':
+          'the chip colour hex box needs the form’s own id and the contrast ratio’s description',
+        'src/components/IngredientForm/references.tsx':
+          'Locator: its row links to its own control id',
+        'src/components/HelpSearchForm/index.tsx': 'the help search is a plain GET form',
+      };
+      const NOT_TEXT = new Set([
+        'hidden',
+        'checkbox',
+        'radio',
+        'file',
+        'submit',
+        'button',
+        'reset',
+        'image',
+        'range',
+        'color',
+      ]);
+      let used = false;
+      return {
+        JSXOpeningElement(node) {
+          if (node.name.type !== 'JSXIdentifier' || !['input', 'textarea'].includes(node.name.name))
+            return;
+          const attribute = (name) =>
+            node.attributes.find((a) => a.type === 'JSXAttribute' && a.name.name === name);
+          if (attribute('aria-hidden')) return;
+          if (node.name.name === 'input') {
+            const type = attribute('type')?.value;
+            if (type?.type === 'Literal' && NOT_TEXT.has(type.value)) return;
+          }
+          used = true;
+          if (file in ALLOWED) return;
+          context.report({
+            node,
+            message:
+              'Build a typed input on the Field set (TextField, PlainTextField, DateField or Combobox), not a raw <' +
+              node.name.name +
+              '> (M17.24, R1)',
+          });
+        },
+        'Program:exit'(program) {
+          if (file in ALLOWED && !used) {
+            context.report({
+              node: program,
+              message:
+                'This file no longer holds a raw text input, so take it off the list in lint/source-sweeps.js (' +
+                ALLOWED[file] +
+                ')',
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // An amount is a text input with inputMode="decimal", never type="number", whose spinner, scroll wheel and locale handling
+  // change what was typed (R2). A bounded whole number may keep it, on the list below.
+  'no-number-input': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
+      const ALLOWED = {
+        'src/components/AdminCards/mint-form.tsx':
+          'Number of Sheets is a whole number from 1 to a maximum',
+      };
+      let used = false;
+      return {
+        JSXAttribute(node) {
+          if (node.name.name !== 'type') return;
+          const value = node.value;
+          const text =
+            value?.type === 'Literal'
+              ? value.value
+              : value?.type === 'JSXExpressionContainer' && value.expression.type === 'Literal'
+                ? value.expression.value
+                : null;
+          if (text !== 'number') return;
+          used = true;
+          if (file in ALLOWED) return;
+          context.report({
+            node,
+            message:
+              'An amount is a text input with inputMode="decimal" and the shared quantity rule, not type="number"; only a bounded whole number keeps it, on the list in lint/source-sweeps.js (M17.24, R2)',
+          });
+        },
+        'Program:exit'(program) {
+          if (file in ALLOWED && !used) {
+            context.report({
+              node: program,
+              message:
+                'This file no longer uses type="number", so take it off the list in lint/source-sweeps.js (' +
+                ALLOWED[file] +
+                ')',
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // A length or size limit in a zod schema is a named constant exported from the module that owns it, so the service, the server schema
+  // and the form share one number (R3). Applies to any src file importing zod. .min(0) and .min(1) are "not negative" and "not empty",
+  // not limits, and pass.
+  'schema-limits-are-named': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file) || file.startsWith('src/gql/')) return {};
+      let zod = false;
+      const calls = [];
+      return {
+        ImportDeclaration(node) {
+          if (node.source.value === 'zod') zod = true;
+        },
+        CallExpression(node) {
+          const { callee } = node;
+          if (
+            callee.type !== 'MemberExpression' ||
+            callee.computed ||
+            callee.property.type !== 'Identifier' ||
+            !['max', 'min'].includes(callee.property.name) ||
+            (callee.object.type === 'Identifier' && callee.object.name === 'Math')
+          )
+            return;
+          const [first] = node.arguments;
+          if (first?.type !== 'Literal' || typeof first.value !== 'number') return;
+          if (callee.property.name === 'min' && (first.value === 0 || first.value === 1)) return;
+          calls.push(first);
+        },
+        'Program:exit'() {
+          if (!zod) return;
+          for (const literal of calls) {
+            context.report({
+              node: literal,
+              message:
+                'Write a schema limit as a named constant exported from the module that owns it, not a bare number (M17.24, R3)',
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // A length limit is soft: Field's limit prop shows a count and the schema refuses past it, because a hard maxLength silently cuts
+  // pasted text (R4). Only a fixed-length code, where an extra character is always a typo, keeps one.
+  'no-max-length-attribute': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx$/.test(file) || isStory(file) || file.startsWith('src/components/Field/'))
+        return {};
+      const FIXED_LENGTH_CODES = new Set([
+        'src/components/SignInPanel/two-factor-step.tsx',
+        'src/components/PasswordSection/two-factor.tsx',
+      ]);
+      if (FIXED_LENGTH_CODES.has(file)) return {};
+      return {
+        JSXAttribute(node) {
+          if (node.name.type === 'JSXIdentifier' && node.name.name.toLowerCase() === 'maxlength') {
+            context.report({
+              node,
+              message:
+                'Show a limit through Field’s limit prop and the schema’s .max(LIMIT), not a hard maxLength (M17.24, R4)',
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // A react-hook-form form lists its errors in FormErrorSummary (R6). The list names the forms that do not, with the reason; a listed file
+  // that no longer needs its place is reported.
+  'use-form-renders-error-summary': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
+      const ALLOWED = {
+        'src/components/IngredientEntry/coven-choice.tsx':
+          'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; there is no second field to list',
+      };
+      let calls = null;
+      return {
+        CallExpression(node) {
+          if (node.callee.type === 'Identifier' && node.callee.name === 'useForm') calls ??= node;
+        },
+        'Program:exit'(program) {
+          if (!calls && file in ALLOWED) {
+            context.report({
+              node: program,
+              message:
+                'This file no longer needs its place in the no-summary list: remove it from lint/source-sweeps.js',
+            });
+            return;
+          }
+          if (!calls) return;
+          const summarised = /<FormErrorSummary\b/.test(codeOf(context));
+          if (!summarised && !(file in ALLOWED)) {
+            context.report({
+              node: calls,
+              message:
+                'A form that calls useForm renders FormErrorSummary, so an error is listed and focused on Save (M17.24, R6)',
+            });
+          } else if (summarised && file in ALLOWED) {
+            context.report({
+              node: program,
+              message:
+                'This file now renders FormErrorSummary: remove it from the no-summary list in lint/source-sweeps.js',
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // A placeholder is empty or a short sample; a rule about the value goes in the hint (R8). Counts words, not the articles a, an and
+  // the, so the field doc's own "Add a name" is two. (Field's placeholder prop and a raw control both end up as a JSX attribute.)
+  'placeholder-is-short': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
+      const words = (text) =>
+        text.split(/\s+/).filter((word) => word !== '' && !/^(a|an|the)$/i.test(word)).length;
+      return {
+        JSXAttribute(node) {
+          if (node.name.name !== 'placeholder') return;
+          const value = node.value;
+          const literal =
+            value?.type === 'Literal'
+              ? value
+              : value?.type === 'JSXExpressionContainer' && value.expression.type === 'Literal'
+                ? value.expression
+                : null;
+          if (typeof literal?.value !== 'string' || words(literal.value) <= 2) return;
+          context.report({
+            node,
+            message:
+              'A placeholder is one or two words; put a rule about the value in the field’s hint (M17.24, R8)',
           });
         },
       };

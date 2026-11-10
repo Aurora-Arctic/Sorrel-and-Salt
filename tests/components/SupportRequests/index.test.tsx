@@ -136,6 +136,17 @@ describe('Error reference', () => {
 });
 
 describe('Reply', () => {
+  it('counts the reply against 4000 characters without cutting what is typed', () => {
+    open(ADMIN);
+    chooseReply();
+    const body = within(dialog()).getByRole('textbox', { name: /^Your Reply/ });
+
+    fireEvent.change(body, { target: { value: 'x'.repeat(4002) } });
+
+    expect(body).toHaveValue('x'.repeat(4002));
+    expect(body).toHaveAccessibleDescription(/2 characters over/);
+  });
+
   it('is disabled until there is a body, then sends it and reads the page again', async () => {
     const sent: ReplyToSupportRequestMutationVariables[] = [];
     mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
@@ -495,6 +506,21 @@ describe('Time-Out', () => {
 });
 
 describe('Issue', () => {
+  it('turns a project-board link into the plain issue address when the field is left', () => {
+    open(ADMIN);
+    const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
+
+    fireEvent.change(field, {
+      target: {
+        value:
+          'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?pane=issue&issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409',
+      },
+    });
+    fireEvent.blur(field);
+
+    expect(field).toHaveValue('https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409');
+  });
+
   it('says a pasted address that is not an issue on the project beside its field', async () => {
     mockGraphQLError('SetSupportRequestIssueUrl', {
       code: 'VALIDATION',

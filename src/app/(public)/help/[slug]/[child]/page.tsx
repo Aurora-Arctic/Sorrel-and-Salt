@@ -38,6 +38,7 @@ export default async function Page({ params }: Props) {
   const parent = await orNotFound(() => readHelpArticle(slug));
   return (
     <HelpArticleView
+      framed
       terms={await readGlossaryTerms()}
       title={found.title}
       body={found.body}

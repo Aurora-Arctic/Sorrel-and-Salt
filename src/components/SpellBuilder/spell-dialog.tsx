@@ -9,11 +9,13 @@ import { graphqlQuery } from '../../lib/graphql-client';
 import { withParam } from '../../lib/list-href';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
+import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type { ModalHeading } from '../Modal/types';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { copiedHrefOf } from '../SpellRecipe/copied-href';
 import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
+import { SpellEditSkeleton } from './skeleton';
 import { SpellBuilderStepsDocument } from './steps/documents';
 import type { SpellDialogProps } from './types';
 
@@ -25,6 +27,8 @@ import type { SpellDialogProps } from './types';
  * handed down, since a server page cannot hand a client part a function.
  */
 const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', id);
+
+const EDIT_SPELL = 'Edit Spell';
 
 export const newSpellHeading = (covenName: string): ModalHeading => ({
   title: 'New Spell',
@@ -44,6 +48,8 @@ export default function SpellDialog({
   userId,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
+  // A press of Edit opens over the saved spell's shut sections; New Spell's open form keeps the plain bars.
+  const editPressed = useRouteModalOpener()?.loading?.eyebrow === EDIT_SPELL;
   const adding = useSearchParams().get(NEW);
   const opened =
     adding === null ? read : opensNewSpell(adding, covenSlug) && canCreate ? {} : undefined;
@@ -66,11 +72,12 @@ export default function SpellDialog({
   });
   const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
-    ? { eyebrow: 'Edit Spell', title: spell.title?.trim() || UNTITLED_SPELL }
+    ? { eyebrow: EDIT_SPELL, title: spell.title?.trim() || UNTITLED_SPELL }
     : newSpellHeading(covenName);
   return (
     <RouteModal
       closeHref={closeHref}
+      loadingBody={editPressed ? <SpellEditSkeleton canDelete={canDelete} /> : undefined}
       content={
         opened && {
           heading,

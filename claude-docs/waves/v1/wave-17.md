@@ -16,7 +16,7 @@
 
 **M17.19 and M17.20 follow M17.12**, minted on 2026-11-07 on the owner's call: two housekeeping tasks with no behaviour change. M17.19 keeps one Drizzle snapshot in `src/db/migrations/meta/` in place of one per migration, and M17.20 adds the stories eleven components lack. Neither is a prerequisite for anything.
 
-**M17.24 follows M17.23 and comes before the other audits**, minted on the owner's call of 2026-11-08: an audit of the format checks and format-as-you-type of every form input that keepers, curators, stewards and practitioners use. Like M17.6 → M17.11, it writes findings and changes no code, and it is a prerequisite for nothing.
+**M17.24 follows M17.23 and comes before the other audits**, minted on the owner's call of 2026-11-08: an audit of the format checks of every form input that keepers, curators, stewards and practitioners use, re-scoped on the owner's call of 2026-11-09 to fix the approved findings in the same PR. It is a prerequisite for nothing.
 
 **M17.27 → M17.29 follow M17.24 and come before the other audits**, minted on the owner's call of 2026-11-09 so the audits see them: an About Us page (M17.27), keeper invitations that turn on coven creation (M17.28), and invitations and a sign-in dialog that do not assume an account (M17.29). M17.29's design is approved before it is built.
 

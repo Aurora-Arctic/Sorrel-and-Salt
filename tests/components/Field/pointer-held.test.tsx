@@ -28,6 +28,7 @@ async function leaveName() {
   const name = screen.getByRole('textbox', { name: 'Name' });
   await act(async () => {
     name.focus();
+    fireEvent.change(name, { target: { value: 'x' } });
     name.blur();
   });
   return name;
