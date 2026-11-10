@@ -10,9 +10,16 @@ import { readSource, sourceFiles } from '../support/repo-scan';
 const HOME = 'tests/support/interact.tsx';
 const HELPERS = ['save', 'type', 'fill'];
 
-// `const save =` or `function save(`, exported or not: the function form is the same copy under another keyword.
+// A local binding of any helper's name, exported or not, however it is declared: `const`, `let` or `var`, typed or not,
+// a function (async or not), or destructured from a local harness. Each is the same copy under another keyword.
+const NAMES = HELPERS.join('|');
 const LOCAL = new RegExp(
-  `^\\s*(?:export\\s+)?(?:const\\s+(?:${HELPERS.join('|')})\\s*=|function\\s+(?:${HELPERS.join('|')})\\s*\\()`,
+  [
+    `^\\s*(?:export\\s+)?(?:const|let|var)\\s+(?:${NAMES})\\s*[=:]`,
+    `^\\s*(?:export\\s+)?(?:async\\s+)?function\\s*\\*?\\s*(?:${NAMES})\\s*[(<]`,
+    // A key followed by `:` is renamed, so it binds nothing of that name.
+    `\\b(?:const|let|var)\\s*\\{[^}]*\\b(?:${NAMES})\\b(?!\\s*:)[^}]*\\}\\s*=`,
+  ].join('|'),
   'm',
 );
 
@@ -25,7 +32,17 @@ describe('form helpers component tests share', () => {
     );
     expect(LOCAL.test('function type(address: string) {')).toBe(true);
     expect(LOCAL.test('  const fill = (label: string, text: string) => {')).toBe(true);
+    expect(LOCAL.test('async function save(): Promise<HTMLElement> {')).toBe(true);
+    expect(LOCAL.test('let save = () => button;')).toBe(true);
+    expect(LOCAL.test('var fill = (label: string) => label;')).toBe(true);
+    expect(
+      LOCAL.test('const type: (label: string, text: string) => void = (label, text) => {};'),
+    ).toBe(true);
+    expect(LOCAL.test('const { save, sent } = heldSave();')).toBe(true);
+    expect(LOCAL.test('const {\n  dialog,\n  type,\n} = harness();')).toBe(true);
     expect(LOCAL.test("import { fill, save, type } from '../../support/interact';")).toBe(false);
+    expect(LOCAL.test('const { type: kind } = event;')).toBe(false);
+    expect(LOCAL.test('const saved = await saveSpell();')).toBe(false);
   });
 
   it('exports save, submitForm, type and fill from the shared module', () => {
