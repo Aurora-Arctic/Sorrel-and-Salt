@@ -1,8 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import ImpersonationBanner from '../components/ImpersonationBanner';
-import { useSession } from '../lib/auth-client';
+import ImpersonationBanner from '@/components/ImpersonationBanner';
+import { useSession } from '@/lib/auth-client';
 
 // The banner's slot in the root layout, which mounts it only where impersonation is registered, never
 // at production. Read in the browser rather than the layout: a session read there would make every

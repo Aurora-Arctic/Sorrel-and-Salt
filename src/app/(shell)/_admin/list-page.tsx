@@ -1,7 +1,7 @@
 import 'server-only';
-import { orMissing } from '../../../lib/or-not-found';
-import { readPageCursors } from '../../../lib/numbered-page';
-import { single, trimmed } from '../../../lib/search-params';
+import { orMissing } from '@/lib/or-not-found';
+import { readPageCursors } from '@/lib/numbered-page';
+import { single, trimmed } from '@/lib/search-params';
 import type { ListPlace, ListSearchParams } from './types';
 
 // What every admin list page reads off its address and builds back into one: the cursor read and

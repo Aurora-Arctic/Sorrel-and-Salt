@@ -11,3 +11,7 @@ export const plainQuantity = (quantity: string | number): string => {
 /** The amount and unit as one phrase, "2 tsp"; a missing or empty unit leaves the amount alone. */
 export const formatQuantity = (quantity: string | number, unit?: string | null): string =>
   unit ? `${plainQuantity(quantity)} ${unit}` : plainQuantity(quantity);
+
+/** A stored amount as the number a jar row shows; none stays none. */
+export const amountOf = (value: string | number | null): number | null =>
+  value === null ? null : Number(value);

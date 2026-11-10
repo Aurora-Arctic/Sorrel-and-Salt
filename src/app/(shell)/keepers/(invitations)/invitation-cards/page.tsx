@@ -1,73 +1,69 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import { cache } from 'react';
-import AdminCards from '../../../../../components/AdminCards';
-import { batchStatus } from '../../../../../components/AdminCards/batches';
-import { readCardsFilter } from '../../../../../components/AdminCards/filter-params';
-import { cardsHref } from '../../../../../components/AdminCards/href';
-import type { CardsFilter } from '../../../../../components/AdminCards/types';
-import { pagerHrefs } from '../../../../../lib/list-href';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import type { Session } from '../../../../../lib/session';
+import AdminCards from '@/components/AdminCards';
+import { batchStatus } from '@/components/AdminCards/batches';
+import { readCardsFilter } from '@/components/AdminCards/filter-params';
+import { cardsHref } from '@/components/AdminCards/href';
+import type { CardsFilter } from '@/components/AdminCards/types';
+import { pagerHrefs } from '@/lib/list-href';
+import { requireAdminSession } from '@/lib/request-session';
+import type { Session } from '@/lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { cardBatchTotals, countCardBatches, listCardBatches } from '@/modules/identity';
-import { readListPlace } from '../../../curator/list-page';
+import { readListPlace } from '@/app/(shell)/_admin/list-page';
 import type { CardsPageProps } from './types';
 
 export const metadata: Metadata = pageTitle('Invitation Cards');
 
-// Cached so a second render in the request reads once.
-const readBatches = cache(
-  async (
-    session: Session,
-    filter: CardsFilter,
-    after: string | undefined,
-    before: string | undefined,
-  ) => {
-    const sent = {
-      batch: filter.batch,
-      status: filter.status || undefined,
-      mintedFrom: filter.mintedFrom,
-      mintedTo: filter.mintedTo,
-      expiresFrom: filter.expiresFrom,
-      expiresTo: filter.expiresTo,
+const readBatches = async (
+  session: Session,
+  filter: CardsFilter,
+  after: string | undefined,
+  before: string | undefined,
+) => {
+  const sent = {
+    batch: filter.batch,
+    status: filter.status || undefined,
+    mintedFrom: filter.mintedFrom,
+    mintedTo: filter.mintedTo,
+    expiresFrom: filter.expiresFrom,
+    expiresTo: filter.expiresTo,
+  };
+  const page = await readNumberedPage(
+    { after, before },
+    (request) => listCardBatches(session, sent, request),
+    (start) => countCardBatches(session, sent, start),
+  );
+  const totals = new Map(
+    (
+      await cardBatchTotals(
+        session,
+        page.edges.map(({ node }) => node.batchId),
+      )
+    ).map((total) => [total.batchId, total] as const),
+  );
+  // What the list shows of each: no token or hash leaves the page.
+  const now = new Date();
+  const batches = page.edges.map(({ node }) => {
+    const total = totals.get(node.batchId);
+    const counts = {
+      cards: total?.cards ?? 0,
+      accepted: total?.accepted ?? 0,
+      pending: total?.pending ?? 0,
     };
-    const page = await readNumberedPage(
-      { after, before },
-      (request) => listCardBatches(session, sent, request),
-      (start) => countCardBatches(session, sent, start),
-    );
-    const totals = new Map(
-      (
-        await cardBatchTotals(
-          session,
-          page.edges.map(({ node }) => node.batchId),
-        )
-      ).map((total) => [total.batchId, total] as const),
-    );
-    // What the list shows of each: no token or hash leaves the page.
-    const now = new Date();
-    const batches = page.edges.map(({ node }) => {
-      const total = totals.get(node.batchId);
-      const counts = {
-        cards: total?.cards ?? 0,
-        accepted: total?.accepted ?? 0,
-        pending: total?.pending ?? 0,
-      };
-      return {
-        batchId: node.batchId,
-        mintedAt: node.createdAt,
-        expiresAt: node.expiresAt,
-        note: node.note,
-        beta: node.beta,
-        ...counts,
-        attempts: total?.attempts ?? 0,
-        status: batchStatus(counts, node.expiresAt, now),
-      };
-    });
-    return { batches, pageInfo: page.pageInfo, position: page.position };
-  },
-);
+    return {
+      batchId: node.batchId,
+      mintedAt: node.createdAt,
+      expiresAt: node.expiresAt,
+      note: node.note,
+      beta: node.beta,
+      ...counts,
+      attempts: total?.attempts ?? 0,
+      status: batchStatus(counts, node.expiresAt, now),
+    };
+  });
+  return { batches, pageInfo: page.pageInfo, position: page.position };
+};
 
 // The invitation card batches with Revoke Batch, paged by cursor, with the mint form `?mint` opens. The page and GraphQL
 // end at the same identity services, which are the guard (claude-docs/auth/admin-bootstrap.md, "Invitation cards").

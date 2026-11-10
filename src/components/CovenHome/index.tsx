@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
@@ -9,6 +8,7 @@ import PageWithNav from '../PageWithNav';
 import Skeleton from '../Skeleton';
 import SkeletonText from '../Skeleton/text';
 import type { CovenHomeProps } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // The page a coven opens on, and its skeleton, drawn from one source so the words, and so the lines
 // they wrap to, are the same. Pending draws the same words as plain text with no links, no ids and no
@@ -106,10 +106,7 @@ const CovenHome = ({
                   {bar(label)}
                 </span>
               ) : (
-                <PendingLink
-                  href={`/coven/${slug}/${key}` as Route}
-                  aria-describedby={`coven-contents-${key}`}
-                >
+                <PendingLink href={covenPath(slug, key)} aria-describedby={`coven-contents-${key}`}>
                   {label}
                 </PendingLink>
               )}

@@ -1,7 +1,7 @@
 import type { Route } from 'next';
-import type { MemberDetailProps } from '../../../../../../components/MemberDetail/types';
-import type { MemberListEntry } from '../../../../../../components/MemberList/types';
-import type { ModalHeading } from '../../../../../../components/Modal/types';
+import type { MemberDetailProps } from '@/components/MemberDetail/types';
+import type { MemberListEntry } from '@/components/MemberList/types';
+import type { ModalHeading } from '@/components/Modal/types';
 
 export interface MembersPageProps {
   searchParams: Promise<{

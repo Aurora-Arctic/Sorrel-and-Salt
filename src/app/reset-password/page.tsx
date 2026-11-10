@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { noIndexMetadata } from '@/lib/page-metadata';
-import ResetPasswordForm from '../../components/ResetPasswordForm';
-import PageHeader from '../../components/PageHeader';
+import ResetPasswordForm from '@/components/ResetPasswordForm';
+import PageHeader from '@/components/PageHeader';
 import type { ResetPasswordPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 

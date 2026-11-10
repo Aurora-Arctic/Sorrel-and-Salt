@@ -1,4 +1,5 @@
 import PageFrame from '@/components/PageFrame';
+import { EMAIL_TITLE } from '@/components/EmailForm/head';
 import PageHeader from '@/components/PageHeader';
 import Skeleton from '@/components/Skeleton';
 
@@ -6,7 +7,7 @@ import Skeleton from '@/components/Skeleton';
 export const AccountEmailSkeleton = () => (
   <PageFrame as="div" narrow>
     <section className="page-frame__section panel">
-      <PageHeader title="Your Email" />
+      <PageHeader title={EMAIL_TITLE} />
       <Skeleton shape="block" quiet />
     </section>
   </PageFrame>

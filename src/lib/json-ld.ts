@@ -2,6 +2,7 @@
 // entry's name ("</script>") would end the element early, and the escape is the same character to JSON and not a tag to HTML.
 
 import { SITE_NAME, siteUrl } from './site';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 export function jsonLd(data: Record<string, unknown>): string {
   return JSON.stringify({ '@context': 'https://schema.org', ...data }).replace(/</g, '\\u003c');
@@ -19,7 +20,7 @@ export function entryJsonLd(entry: {
   description: string | null;
   folkNames: readonly string[];
 }): string {
-  const url = siteUrl(`/compendium/ingredients/${entry.slug}`);
+  const url = siteUrl(compendiumEntryPath(entry.slug));
   const others = [entry.canonicalName, ...entry.folkNames].filter(
     (other): other is string => !!other && other.toLowerCase() !== entry.name.toLowerCase(),
   );

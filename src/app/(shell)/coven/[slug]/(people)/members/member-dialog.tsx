@@ -1,8 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import MemberDetail from '../../../../../../components/MemberDetail';
-import { RouteModal } from '../../../../../../components/Modal';
+import MemberDetail from '@/components/MemberDetail';
+import { RouteModal } from '@/components/Modal';
 import type { MemberDialogProps } from './types';
 
 // The members page's modal, opened by `?member=<id>` or at once by a press. The client edge between the server page

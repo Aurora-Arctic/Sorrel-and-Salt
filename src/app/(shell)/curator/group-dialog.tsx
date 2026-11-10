@@ -1,8 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import GroupForm from '../../../components/GroupForm';
-import { RouteModal } from '../../../components/Modal';
+import GroupForm from '@/components/GroupForm';
+import { RouteModal } from '@/components/Modal';
 import type { GroupDialogProps } from './types';
 
 // A group page's modal, opened by its address or at once by a press. The client edge between server

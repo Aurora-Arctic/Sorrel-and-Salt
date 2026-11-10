@@ -1,9 +1,9 @@
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
-import { ADMIN_PAGES } from '../../../../components/AdminNav/sections';
-import HelpOutline from '../../../../components/HelpOutline';
-import { keepersHelpHref } from '../../../../components/HelpOutline/href';
+import { ADMIN_PAGES } from '@/components/AdminNav/sections';
+import HelpOutline from '@/components/HelpOutline';
+import { keepersHelpHref } from '@/components/HelpOutline/href';
 import type {
   HelpOutlineFilter,
   HelpOutlineGuide,
@@ -12,23 +12,23 @@ import type {
   HelpOutlineRow,
   HelpOutlineShown,
   HelpOutlineView,
-} from '../../../../components/HelpOutline/types';
-import PageHeader from '../../../../components/PageHeader';
-import { helpPath, keeperHelpEditPath } from '../../../../lib/help-paths';
-import { byAudience, placeInAudience } from '../../../../lib/help-audience';
-import { listHref, pagerHrefs } from '../../../../lib/list-href';
-import { readCursorPage, readPageCursors } from '../../../../lib/numbered-page';
-import { allPages } from '../../../../lib/pagination';
-import { requireAdminSession } from '../../../../lib/request-session';
-import { single } from '../../../../lib/search-params';
-import type { Session } from '../../../../lib/session';
+} from '@/components/HelpOutline/types';
+import PageHeader from '@/components/PageHeader';
+import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
+import { byAudience, placeInAudience } from '@/lib/help-audience';
+import { listHref, pagerHrefs } from '@/lib/list-href';
+import { readCursorPage, readPageCursors } from '@/lib/numbered-page';
+import { allPages } from '@/lib/pagination';
+import { requireAdminSession } from '@/lib/request-session';
+import { single } from '@/lib/search-params';
+import type { Session } from '@/lib/session';
 import {
   type HelpArticle,
   type HelpAudience,
   listKeeperHelpArticles,
   readKeeperHelpArticle,
 } from '@/modules/help';
-import AddAction from '../../curator/add-action';
+import AddAction from '@/app/(shell)/_admin/add-action';
 
 export const metadata: Metadata = pageTitle('Help');
 

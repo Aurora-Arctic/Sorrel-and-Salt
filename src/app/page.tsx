@@ -1,12 +1,12 @@
 import type { Metadata, Route } from 'next';
-import type { Session } from '../lib/session';
-import Welcome from '../components/Welcome';
-import { getSession, sessionIsVerified } from '../lib/request-session';
-import { websiteJsonLd } from '../lib/json-ld';
-import { emailPagePath } from '../lib/account-email';
-import { signedInLanding } from '../lib/landing';
-import { SITE_NAME, SITE_TITLE_NAME } from '../lib/site';
-import { publicPageMetadata } from '../lib/page-metadata';
+import type { Session } from '@/lib/session';
+import Welcome from '@/components/Welcome';
+import { getSession, sessionIsVerified } from '@/lib/request-session';
+import { websiteJsonLd } from '@/lib/json-ld';
+import { emailPagePath } from '@/lib/account-email';
+import { signedInLanding } from '@/lib/landing';
+import { SITE_NAME, SITE_TITLE_NAME } from '@/lib/site';
+import { publicPageMetadata } from '@/lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an

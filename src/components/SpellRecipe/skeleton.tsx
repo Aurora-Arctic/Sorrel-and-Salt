@@ -3,7 +3,7 @@ import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';
 import SkeletonText, { SkeletonWords } from '../Skeleton/text';
-import { recipeMenu } from './sections';
+import { CATEGORY_MATCH_TITLE, INVENTORY_TITLE, WORKINGS_TITLE, recipeMenu } from './sections';
 import '../LinkHint/index.scss';
 import './index.scss';
 import '../SpellBuilder/panels.scss';
@@ -61,13 +61,13 @@ export const SpellRecipeSkeleton = () => (
         <aside className="spell-recipe__aside" aria-hidden="true">
           <section className="comparison-panel">
             <h2>
-              <SkeletonText>Category Match</SkeletonText>
+              <SkeletonText>{CATEGORY_MATCH_TITLE}</SkeletonText>
             </h2>
             <Skeleton shape="line" quiet />
           </section>
           <section className="spell-inventory">
             <h2>
-              <SkeletonText>In the Cupboard</SkeletonText>
+              <SkeletonText>{INVENTORY_TITLE}</SkeletonText>
             </h2>
             <Skeleton shape="line" quiet />
           </section>
@@ -75,7 +75,7 @@ export const SpellRecipeSkeleton = () => (
         <section className="spell-workings page-frame__section" aria-hidden="true">
           <div className="spell-workings__title">
             <h2>
-              <SkeletonText>Workings</SkeletonText>
+              <SkeletonText>{WORKINGS_TITLE}</SkeletonText>
             </h2>
           </div>
           <Skeleton shape="line" quiet />

@@ -1,13 +1,14 @@
 import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata } from 'next';
 import { cache } from 'react';
-import HelpArticleForm from '../../../../../components/HelpArticleForm';
-import { helpFormHeading } from '../../../../../components/HelpArticleForm/heading';
-import HelpViewLink from '../../../../../components/HelpArticleForm/view-link';
-import BackLink from '../../../../../components/IngredientEntry/back-link';
-import PageHeader from '../../../../../components/PageHeader';
-import { requireAdminSession } from '../../../../../lib/request-session';
-import type { Session } from '../../../../../lib/session';
+import HelpArticleForm from '@/components/HelpArticleForm';
+import { helpFormHeading } from '@/components/HelpArticleForm/heading';
+import HelpViewLink from '@/components/HelpArticleForm/view-link';
+import { HelpArticlePage } from '@/components/HelpArticleForm/page';
+import BackLink from '@/components/IngredientEntry/back-link';
+import PageHeader from '@/components/PageHeader';
+import { requireAdminSession } from '@/lib/request-session';
+import type { Session } from '@/lib/session';
 import { readKeeperHelpArticle } from '@/modules/help';
 import { helpFormReturn, readHelpFormChoices } from '../form-choices';
 
@@ -38,10 +39,7 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
   const guideTitle = article.title;
   const returnHref = helpFormReturn(article.kind, article.parentId ?? article.id);
   return (
-    <main className="help-article-page">
-      <div className="back-bar help-article-form__bar">
-        <BackLink href={returnHref} label="Help" />
-      </div>
+    <HelpArticlePage back={<BackLink href={returnHref} label="Help" />}>
       <PageHeader
         eyebrow={helpFormHeading(article.kind, true)}
         title={article.title}
@@ -72,6 +70,6 @@ export default async function EditHelpArticlePage({ params }: { params: Promise<
         candidates={candidates}
         returnHref={returnHref}
       />
-    </main>
+    </HelpArticlePage>
   );
 }

@@ -1,26 +1,24 @@
-import type { Metadata, Route } from 'next';
+import { compendiumEntryPath } from '@/lib/compendium-path';
+import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import type { ModalHeading } from '../../../../components/Modal/types';
+import type { ModalHeading } from '@/components/Modal/types';
 import { redirect } from 'next/navigation';
-import CompendiumList from '../../../../components/CompendiumList';
-import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
-import { compendiumHref } from '../../../../components/CompendiumList/href';
-import { editHeading } from '../../../../components/CompendiumList/heading';
-import { cardName } from '../../../../components/IngredientCard/card-name';
-import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
-import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
-import ShownToggle from '../../../../components/IngredientEntry/shown-toggle';
-import ReviewMark from '../../../../components/IngredientEntry/review-mark';
-import IngredientSummary from '../../../../components/IngredientEntry/summary';
-import type { ListDialog } from '../../../../lib/types';
-import { single } from '../../../../lib/search-params';
-import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
-import type {
-  CompendiumListEntry,
-  CompendiumListFilter,
-} from '../../../../components/CompendiumList/types';
-import PageHeader from '../../../../components/PageHeader';
-import { DEFAULT_PAGE_SIZE } from '../../../../lib/pagination';
+import CompendiumList from '@/components/CompendiumList';
+import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
+import { compendiumHref } from '@/components/CompendiumList/href';
+import { editHeading } from '@/components/CompendiumList/heading';
+import { cardName } from '@/components/IngredientCard/card-name';
+import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import ShownToggle from '@/components/IngredientEntry/shown-toggle';
+import ReviewMark from '@/components/IngredientEntry/review-mark';
+import IngredientSummary from '@/components/IngredientEntry/summary';
+import type { ListDialog } from '@/lib/types';
+import { single } from '@/lib/search-params';
+import { NEW_COMPENDIUM_ENTRY } from '@/lib/coven-path';
+import type { CompendiumListEntry, CompendiumListFilter } from '@/components/CompendiumList/types';
+import PageHeader from '@/components/PageHeader';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import {
@@ -29,28 +27,28 @@ import {
   readCompendiumReview,
   resolveCompendiumSlug,
 } from '@/modules/ingredients';
-import { requireCuratorSession } from '../../../../lib/request-session';
+import { requireCuratorSession } from '@/lib/request-session';
 import {
+  readCardCategories,
   readCategories,
   readCompendium,
   readDeities,
   readFacets,
   readFormIcons,
 } from '../../../compendium-reads';
-import { readCardCategories } from '../../../compendium-reads';
-import AddAction from '../add-action';
-import { pagerHrefs } from '../../../../lib/list-href';
-import { orMissing } from '../../../../lib/or-not-found';
-import { readEditPlace, readListPlace } from '../list-page';
-import MissingNotice from '../missing-notice';
+import AddAction from '@/app/(shell)/_admin/add-action';
+import { pagerHrefs } from '@/lib/list-href';
+import { orMissing } from '@/lib/or-not-found';
+import { readEditPlace, readListPlace } from '@/app/(shell)/_admin/list-page';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
+import { ADD_INGREDIENT_TITLE } from '@/components/AppShell/add-href';
 
 export const metadata: Metadata = pageTitle('Compendium');
 
-const ADD_TITLE = 'Add Ingredient';
-const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
+const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_INGREDIENT_TITLE };
 
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   const session = await requireCuratorSession();
@@ -136,7 +134,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         title="Compendium"
         action={
           <AddAction href={compendiumHref(list, 'new')} heading={ADD_HEADING}>
-            {ADD_TITLE}
+            {ADD_INGREDIENT_TITLE}
           </AddAction>
         }
       />
@@ -160,7 +158,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           detailed && {
             heading: detailsHeading(detailed),
             marks: summary && detailsMarks(summary),
-            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            pageHref: compendiumEntryPath(detailed.slug),
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {

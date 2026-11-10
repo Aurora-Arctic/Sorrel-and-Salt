@@ -2,10 +2,10 @@
 
 import { usePendingNavigation } from '@/lib/navigation';
 import { useState, type ReactElement } from 'react';
-import { compendiumHref } from '../../../../components/CompendiumList/href';
-import { detailsHeading } from '../../../../components/IngredientEntry/details';
-import CompendiumEntryForm from '../../../../components/CompendiumEntryForm/lazy';
-import { RouteModal } from '../../../../components/Modal';
+import { compendiumHref } from '@/components/CompendiumList/href';
+import { detailsHeading } from '@/components/IngredientEntry/details';
+import CompendiumEntryForm from '@/components/CompendiumEntryForm/lazy';
+import { RouteModal } from '@/components/Modal';
 import type { CompendiumDialogProps } from './types';
 
 // The page's `RouteModal` (claude-docs/components/modal.md, "RouteModal"). It keeps a router of its

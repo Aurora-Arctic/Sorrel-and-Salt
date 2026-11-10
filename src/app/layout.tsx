@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Backdrop from '../components/Backdrop';
-import SiteFooter from '../components/SiteFooter';
-import { StatusRegionProvider } from '../components/ClickFeedback/status-region';
-import ThemeToggle from '../components/ThemeToggle';
-import { impersonationEnabled } from '../lib/impersonation';
-import { SITE_NAME, SITE_ORIGIN, SITE_TITLE_NAME, titleTemplate } from '../lib/site';
+import Backdrop from '@/components/Backdrop';
+import SiteFooter from '@/components/SiteFooter';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import ThemeToggle from '@/components/ThemeToggle';
+import { impersonationEnabled } from '@/lib/impersonation';
+import { SITE_NAME, SITE_ORIGIN, SITE_TITLE_NAME, titleTemplate } from '@/lib/site';
 import CatalogLink from './catalog-link';
 import { body, display } from './fonts';
 import ImpersonationBannerSlot from './impersonation-banner';
 import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
-import SupportDialog from '../components/SupportDialog';
+import SupportDialog from '@/components/SupportDialog';
 import './globals.scss';
 
 export const metadata: Metadata = {

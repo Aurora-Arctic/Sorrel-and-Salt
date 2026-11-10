@@ -1,10 +1,10 @@
 import { createYoga } from 'graphql-yoga';
-import { isBrowserNavigation, renderAltairPage } from '../../../graphql/altair';
-import { protections } from '../../../graphql/armor';
-import { refuseCrossSite } from '../../../graphql/csrf';
-import { createContext } from '../../../graphql/context';
-import { maskedErrors } from '../../../graphql/errors';
-import { schema } from '../../../graphql/schema';
+import { isBrowserNavigation, renderAltairPage } from '@/graphql/altair';
+import { protections } from '@/graphql/armor';
+import { refuseCrossSite } from '@/graphql/csrf';
+import { createContext } from '@/graphql/context';
+import { maskedErrors } from '@/graphql/errors';
+import { schema } from '@/graphql/schema';
 
 // Every deploy, staging included, runs at NODE_ENV=production; local
 // development is the one place that does not.

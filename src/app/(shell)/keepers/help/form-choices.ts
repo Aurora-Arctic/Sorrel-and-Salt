@@ -1,14 +1,11 @@
 import 'server-only';
 import type { Route } from 'next';
 import { cache } from 'react';
-import { KEEPERS_HELP, keepersHelpHref } from '../../../../components/HelpOutline/href';
-import type { HelpOutlineFilter } from '../../../../components/HelpOutline/types';
-import type {
-  HelpGuideChoice,
-  HelpSubPageChoice,
-} from '../../../../components/HelpArticleForm/types';
-import { allPages } from '../../../../lib/pagination';
-import type { Session } from '../../../../lib/session';
+import { KEEPERS_HELP, keepersHelpHref } from '@/components/HelpOutline/href';
+import type { HelpOutlineFilter } from '@/components/HelpOutline/types';
+import type { HelpGuideChoice, HelpSubPageChoice } from '@/components/HelpArticleForm/types';
+import { allPages } from '@/lib/pagination';
+import type { Session } from '@/lib/session';
 import { type HelpArticle, listKeeperHelpArticles } from '@/modules/help';
 
 const NO_FILTER: HelpOutlineFilter = { query: '', kind: '', audience: '', shown: 'all' };

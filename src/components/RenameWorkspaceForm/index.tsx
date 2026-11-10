@@ -12,6 +12,7 @@ import { FormActions } from '../Field';
 import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { covenPath } from '@/lib/coven-path';
 
 // A plain controlled input, as CreateWorkspaceForm is: every refusal is the server's (claude-docs/components/rename-workspace-form.md).
 
@@ -44,7 +45,7 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
       graphqlRequest(RenameWorkspaceDocument, { workspaceId, name: typed }),
     onSuccess: ({ renameWorkspace: { slug } }) => {
       setLeaving(true);
-      navigate(`/coven/${slug}`);
+      navigate(covenPath(slug));
       // The shell's switcher lists the viewer's covens from the layout, which a client-side push does not re-run.
       refresh();
     },

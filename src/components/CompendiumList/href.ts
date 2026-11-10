@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { NEW_COMPENDIUM_ENTRY } from '../../lib/coven-path';
+import { NEW_COMPENDIUM_ENTRY, covenPath } from '../../lib/coven-path';
 import { dialogParams } from '../../lib/list-href';
 import type { ListDialog } from '../../lib/types';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
@@ -27,9 +27,6 @@ export function compendiumHref(
   });
 }
 
-export const covenIngredientsPath = (covenSlug: string): Route =>
-  `/coven/${covenSlug}/ingredients` as Route;
-
 /**
  * The coven list under a filter, at a page, with a dialog open over it or not: an entry's edit
  * (`?edit=<id>`) or a held entry's Annotate (`?annotate=<id>`). The details modal's `entry` comes before
@@ -40,7 +37,7 @@ export function covenIngredientsHref(
   place: Partial<CovenListFilter> & SearchCursor & { entry?: string },
   dialog?: CovenListDialog,
 ): Route {
-  return COVEN_PARAMS.href(covenIngredientsPath(covenSlug), place, {
+  return COVEN_PARAMS.href(covenPath(covenSlug, 'ingredients'), place, {
     after: place.after,
     before: place.before,
     entry: place.entry,

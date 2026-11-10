@@ -1,44 +1,36 @@
+import { covenAccessOf } from '@/lib/coven-access';
+import { covenPath } from '@/lib/coven-path';
+import { amountOf } from '@/lib/quantity';
+import { single } from '@/lib/search-params';
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import CovenCards from '../../../../../components/CovenCards';
-import { covenCardActions } from '../../../../../components/CovenCards/actions';
-import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
-import { editHeading } from '../../../../../components/CompendiumList/heading';
-import {
-  covenIngredientsHref,
-  covenIngredientsPath,
-} from '../../../../../components/CompendiumList/href';
-import type {
-  CovenListDialog,
-  CovenListFilter,
-} from '../../../../../components/CompendiumList/types';
-import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
-import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
-import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
-import { categoryRefs } from '../../../../../components/IngredientCard/category-refs';
-import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
-import type { JarLine } from '../../../../../components/JarLines/types';
-import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
+import CovenCards from '@/components/CovenCards';
+import { covenCardActions } from '@/components/CovenCards/actions';
+import type { CovenCardEntry } from '@/components/CovenCards/types';
+import { editHeading } from '@/components/CompendiumList/heading';
+import { covenIngredientsHref } from '@/components/CompendiumList/href';
+import type { CovenListDialog, CovenListFilter } from '@/components/CompendiumList/types';
+import { cupboardFormValues } from '@/components/CupboardEntryForm/entry-values';
+import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
+import EntryDialog from '@/components/IngredientEntry/entry-dialog';
+import { categoryRefs } from '@/components/IngredientCard/category-refs';
+import { COVEN_PARAMS } from '@/components/IngredientSearch/coven-params';
+import type { JarLine } from '@/components/JarLines/types';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
-import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
-import PageHeader from '../../../../../components/PageHeader';
-import { pagerHrefs } from '../../../../../lib/list-href';
-import { readPageCursors } from '../../../../../lib/numbered-page';
-import { requireCovenMembership } from '../../../../../lib/request-session';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
+import PageHeader from '@/components/PageHeader';
+import { pagerHrefs } from '@/lib/list-href';
+import { readPageCursors } from '@/lib/numbered-page';
+import { requireCovenMembership } from '@/lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
-import { detailsHeading } from '../../../../../components/IngredientEntry/details';
+import { detailsHeading } from '@/components/IngredientEntry/details';
 import AddIngredientAction from './add-ingredient-action';
 import { readCovenFacets, readCovenIngredients, readEditedEntry, readViewedEntry } from './reads';
 import { viewedDetailsOf } from './viewed-details';
 import type { CovenIngredientsParams } from './types';
-import { rolePermits } from '@/modules/coven';
-import {
-  applyCupboardEntry,
-  heldCompendiumEntry,
-  isRetired,
-  MAKE_IT_OURS_PERMISSION,
-} from '@/modules/ingredients';
+import { applyCupboardEntry, heldCompendiumEntry, isRetired } from '@/modules/ingredients';
 import { stockDialogOf } from '@/app/coven-stock';
 
 // A coven's Ingredients: compact cards with their jars. Per request, never cached (rule 6). The page
@@ -57,21 +49,21 @@ export default async function CovenIngredientsPage({
   const filter: CovenListFilter = COVEN_PARAMS.read(query);
   const { after, before } = readPageCursors(query);
   const listHref = covenIngredientsHref(workspace.slug, { ...filter, after, before });
-  const mayEdit = rolePermits(membership.role, { ingredient: ['update'] });
-  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const access = covenAccessOf(membership.role);
+  const mayEdit = access.canUpdateIngredient;
+  const entryId = single(query.entry) || undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
   const here = { ...filter, after, before, entry: viewed ? entryId : undefined };
   const hereHref = covenIngredientsHref(workspace.slug, here);
-  const editId = typeof query.edit === 'string' && query.edit ? query.edit : undefined;
+  const editId = single(query.edit) || undefined;
   const edited = mayEdit && editId ? await readEditedEntry(workspace.id, editId) : undefined;
-  const annotateId =
-    typeof query.annotate === 'string' && query.annotate ? query.annotate : undefined;
+  const annotateId = single(query.annotate) || undefined;
   const annotated =
     mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
-  const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
-  const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
-  const mayStock = rolePermits(membership.role, { inventory: ['update'] });
-  const canAdd = rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] });
+  const mayDelete = access.canDeleteIngredient;
+  const mayMakeOurs = access.canMakeOurs;
+  const mayStock = access.canUpdateStock;
+  const canAdd = access.canAddToCupboard;
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
   const footOf = (
@@ -132,9 +124,9 @@ export default async function CovenIngredientsPage({
             id: jar.id,
             form,
             icon: formIcons.get(form.toLocaleLowerCase()) ?? null,
-            quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
+            quantity: amountOf(jar.quantityOnHand),
             unit: jar.unit,
-            threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+            threshold: amountOf(jar.lowStockThreshold),
           },
         ];
       }),
@@ -212,7 +204,7 @@ export default async function CovenIngredientsPage({
               },
               coven: {
                 workspaceId: workspace.id,
-                ingredientsHref: covenIngredientsPath(workspace.slug),
+                ingredientsHref: covenPath(workspace.slug, 'ingredients'),
                 mayPromote: mayEdit,
               },
             }}

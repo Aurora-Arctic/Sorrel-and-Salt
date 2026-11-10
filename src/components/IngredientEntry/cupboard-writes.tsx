@@ -10,6 +10,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { failureMessage } from '../../lib/graphql-failure';
 import CovenChoice from './lazy-coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // Make It Ours and Remove, the two writes a coven's member makes to a compendium entry it holds,
 // shared by the entry page and the Annotate dialog so the two ask the same confirmation and land in
@@ -134,7 +135,7 @@ export function useCupboardWrites({
   const makeOurs = useMutation({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
     onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) => {
-      const href = `/coven/${covenSlug}/ingredients/${entry.id}`;
+      const href = covenPath(covenSlug, 'ingredients', entry.id);
       navigate(href as Route);
     },
     onError: refused,
