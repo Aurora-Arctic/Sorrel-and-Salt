@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import TwoFactorSettings, {
   PASSWORD_SIGN_IN_PAUSED_MESSAGE,
@@ -7,7 +6,7 @@ import TwoFactorSettings, {
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
 import { WRONG_CODE } from '@/lib/auth-messages';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;
 // tests/db/two-factor.test.ts proves what the server does with each.
@@ -32,13 +31,11 @@ const TOTP_URI = `otpauth://totp/Sorrel%20%26%20Salt:someone%40two-factor.test?s
 const BACKUP_CODES = ['aaaaa-11111', 'bbbbb-22222', 'ccccc-33333'];
 
 function renderSection(twoFactorEnabled: boolean) {
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <section aria-labelledby="two-factor-heading">
-        <h2 id="two-factor-heading">Two-Factor Sign-In</h2>
-        <TwoFactorSettings enabled={twoFactorEnabled} />
-      </section>
-    </QueryClientProvider>,
+  return renderWithQuery(
+    <section aria-labelledby="two-factor-heading">
+      <h2 id="two-factor-heading">Two-Factor Sign-In</h2>
+      <TwoFactorSettings enabled={twoFactorEnabled} />
+    </section>,
   );
 }
 
@@ -50,7 +47,7 @@ const press = (element: Element) =>
 const twoFactorRegion = () => screen.getByRole('region', { name: 'Two-Factor Sign-In' });
 const field = (label: string) =>
   within(twoFactorRegion()).getByLabelText(new RegExp(`^${label}`), { selector: 'input' });
-const type = (label: string, value: string) =>
+const typeInField = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 const button = (name: string) => within(twoFactorRegion()).getByRole('button', { name });
 const isOn = () =>
@@ -61,7 +58,7 @@ const isOff = () =>
 async function startEnrolment() {
   enable.mockResolvedValue({ data: { totpURI: TOTP_URI, backupCodes: BACKUP_CODES }, error: null });
   renderSection(false);
-  type('Confirm Your Password', PASSWORD);
+  typeInField('Confirm Your Password', PASSWORD);
   await press(button('Turn On Two-Factor'));
 }
 
@@ -76,7 +73,7 @@ describe('TwoFactorSettings', () => {
     renderSection(false);
 
     expect(button('Turn On Two-Factor')).toBeDisabled();
-    type('Confirm Your Password', PASSWORD);
+    typeInField('Confirm Your Password', PASSWORD);
     expect(button('Turn On Two-Factor')).toBeEnabled();
   });
 
@@ -88,7 +85,7 @@ describe('TwoFactorSettings', () => {
     renderSection(false);
     expect(field('Confirm Your Password')).toHaveAttribute('autocomplete', 'current-password');
 
-    type('Confirm Your Password', PASSWORD);
+    typeInField('Confirm Your Password', PASSWORD);
     await press(button('Turn On Two-Factor'));
 
     expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
@@ -119,7 +116,7 @@ describe('TwoFactorSettings', () => {
     await startEnrolment();
     await press(button('Copy'));
 
-    type('Code From Your App', '123 456');
+    typeInField('Code From Your App', '123 456');
     await press(button('Confirm and Turn On'));
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456' });
@@ -134,7 +131,7 @@ describe('TwoFactorSettings', () => {
   it('warns before turning on with the codes unsaved, and turns on only when told to', async () => {
     verifyTotp.mockResolvedValue({ data: {}, error: null });
     await startEnrolment();
-    type('Code From Your App', '123456');
+    typeInField('Code From Your App', '123456');
 
     await press(button('Confirm and Turn On'));
 
@@ -150,7 +147,7 @@ describe('TwoFactorSettings', () => {
 
   it('goes back to the codes, still unconfirmed, when the warning is answered Go Back', async () => {
     await startEnrolment();
-    type('Code From Your App', '123456');
+    typeInField('Code From Your App', '123456');
     await press(button('Confirm and Turn On'));
 
     await press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Go Back' }));
@@ -165,7 +162,7 @@ describe('TwoFactorSettings', () => {
     await startEnrolment();
     await press(button('Download'));
 
-    type('Code From Your App', '000000');
+    typeInField('Code From Your App', '000000');
     await press(button('Confirm and Turn On'));
 
     expect(field('Code From Your App')).toHaveAccessibleDescription(
@@ -178,7 +175,7 @@ describe('TwoFactorSettings', () => {
     enable.mockResolvedValue({ data: null, error: { status: 400, code: 'INVALID_PASSWORD' } });
     renderSection(false);
 
-    type('Confirm Your Password', 'Testwort guesses wrongly');
+    typeInField('Confirm Your Password', 'Testwort guesses wrongly');
     await press(button('Turn On Two-Factor'));
 
     expect(field('Confirm Your Password')).toHaveAccessibleDescription(
@@ -198,7 +195,7 @@ describe('TwoFactorSettings', () => {
       });
       renderSection(startsOn);
 
-      type('Confirm Your Password', PASSWORD);
+      typeInField('Confirm Your Password', PASSWORD);
       await press(button(action));
 
       expect(call).toHaveBeenCalledWith({ password: PASSWORD });
@@ -280,7 +277,7 @@ describe('TwoFactorSettings', () => {
     renderSection(true);
     expect(isOn()).toBe(true);
 
-    type('Confirm Your Password', PASSWORD);
+    typeInField('Confirm Your Password', PASSWORD);
     await press(button('Turn Off Two-Factor'));
 
     expect(disable).toHaveBeenCalledWith({ password: PASSWORD });
@@ -291,7 +288,7 @@ describe('TwoFactorSettings', () => {
     disable.mockResolvedValue({ data: null, error: { status: 400, code: 'INVALID_PASSWORD' } });
     renderSection(true);
 
-    type('Confirm Your Password', 'Testwort guesses wrongly');
+    typeInField('Confirm Your Password', 'Testwort guesses wrongly');
     await press(button('Turn Off Two-Factor'));
 
     expect(field('Confirm Your Password')).toHaveAccessibleDescription(
@@ -304,7 +301,7 @@ describe('TwoFactorSettings', () => {
     disable.mockResolvedValue({ data: null, error: { status: 403, code: 'SESSION_NOT_FRESH' } });
     renderSection(true);
 
-    type('Confirm Your Password', PASSWORD);
+    typeInField('Confirm Your Password', PASSWORD);
     await press(button('Turn Off Two-Factor'));
 
     expect(within(twoFactorRegion()).getByRole('alert')).toHaveTextContent(STALE_SESSION);

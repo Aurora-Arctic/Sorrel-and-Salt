@@ -3,7 +3,10 @@ import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string | null>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => ({}) }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => pathname(),
+}));
 
 const { default: ReportThis } = await import('@/components/ReportThis');
 

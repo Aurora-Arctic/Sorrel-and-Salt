@@ -27,6 +27,7 @@ import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice'
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
+import { ORIGIN } from '../../../support/constants';
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -48,7 +49,7 @@ beforeEach(async () => {
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  origin: async () => 'http://localhost:3000',
+  origin: async () => ORIGIN,
 };
 
 const send = () => sendSupportRequest(asUser(C), INPUT, mail);
@@ -364,7 +365,7 @@ describe('internal notes', () => {
 
     expect(await statusOf(request.id)).toBe('open');
     // The reply's notice alone: the note starts none.
-    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(replyNotices()).toEqual([[reply.id, ORIGIN]]);
   });
 
   it('are written by a keeper, and by a curator on any request they can read, assigned to them or not', async () => {

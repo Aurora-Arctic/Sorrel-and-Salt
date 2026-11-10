@@ -9,10 +9,11 @@ import type { Message } from '@/lib/types';
 import { placeholderEmail } from '@/modules/identity';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { send } from '../support/mail';
+import { ORIGIN } from '../support/constants';
 
 // The run is started with ids and an origin, never the address, the token or the link.
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 const delivered = vi.hoisted(() => [] as Message[]);
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: Message) => {
@@ -269,7 +270,7 @@ describe('the notice to the address a completed change left', () => {
     );
     startJob.mockClear();
     const { emailVerificationSender } = await import('@/lib/email-verification');
-    const request = new Request('http://localhost:8000/api/graphql', { headers: { cookie } });
+    const request = new Request(`${ORIGIN}/api/graphql`, { headers: { cookie } });
     await emailVerificationSender(request).requestChange(id);
     const [run] = await secretLinkRuns();
     const { changeLinkStep } = await import('@/modules/identity/jobs/secret-link-mail-steps');

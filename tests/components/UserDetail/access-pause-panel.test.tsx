@@ -10,11 +10,9 @@ import type {
   PauseUserAccessMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/user-detail.md, "Contracts"
-
-const router = { refresh: vi.fn(), push: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {

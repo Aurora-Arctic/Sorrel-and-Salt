@@ -8,8 +8,6 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { ADD, HELD } from '../../support/cupboard-wording';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-
 const client = makeQueryClient();
 const Cards = (props: CompendiumCardsProps): ReactElement => (
   <StatusRegionProvider>

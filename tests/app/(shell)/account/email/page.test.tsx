@@ -1,16 +1,15 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 import { USER_ID } from '../../../../support/constants';
+import { requireSession } from '../../../../support/request-session';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // Where the email page's Continue goes once a followed link has proved the address: the `next` the account was sent with, or with none, the landing for the role it holds now,
 // a primary keeper promoted by that very link included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and row are mocked (tests/lib/request-session.test.ts's and the identity service's);
 // which landing a role gets and which `next` is safe are tests/lib/sign-in.test.ts's.
 
-const requireSession = vi.fn<() => Promise<Session>>();
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => import('../../../../support/request-session'));
 
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
@@ -27,7 +26,7 @@ const { default: EmailPage } = await import('@/app/(shell)/account/email/page');
 async function renderPage(role: Session['role'], params: Record<string, string>) {
   requireSession.mockResolvedValue({ userId: USER_ID, role });
   const page = await EmailPage({ searchParams: Promise.resolve(params) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  renderWithQuery(page);
 }
 
 const continueLink = () => screen.getByRole('link', { name: 'Continue' });

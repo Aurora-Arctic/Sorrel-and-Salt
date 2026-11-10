@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HelpIndex from '@/components/HelpIndex';
 import { hrefs } from '../../support/links';
+import { expectBefore } from '../../support/interact';
 
 // /help: the FAQ in the order it is handed (the finder's `position` order), each entry an anchor from its slug so a
 // search result can link to it, then the article index, the glossary link and the search box (DESIGN.md §10).
@@ -28,9 +29,7 @@ describe('HelpIndex', () => {
     expect(anchors.every((anchor) => anchor !== null)).toBe(true);
     for (let i = 1; i < anchors.length; i += 1) {
       // Each anchor follows the one before it in the document.
-      expect(
-        anchors[i - 1]!.compareDocumentPosition(anchors[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(anchors[i - 1]!, anchors[i]!);
     }
     expect(anchors[0]).toHaveTextContent('Testwort Question One?');
   });
@@ -180,7 +179,7 @@ describe('HelpIndex front page', () => {
     const back = within(faq).getByRole('link', { name: 'Back to Top' });
     expect(back).toHaveAttribute('href', '#main');
     const last = document.getElementById(FAQ[FAQ.length - 1].slug)!;
-    expect(last.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(last, back);
     expect(last).not.toContainElement(back);
   });
 

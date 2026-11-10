@@ -26,7 +26,7 @@ function recordCalls() {
 
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
-function fill() {
+function fillForm() {
   fireEvent.click(screen.getByRole('radio', { name: /^Account/ }));
   fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), {
     target: { value: ' visitor@example.test ' },
@@ -74,7 +74,7 @@ describe('SignedOutSupportForm', () => {
       return { sendSignedOutSupportRequest: true };
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
 
     fireEvent.click(send());
 
@@ -95,7 +95,7 @@ describe('SignedOutSupportForm', () => {
       message: 'You have sent too many requests today. Try again later.',
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
 
     fireEvent.click(send());
 
@@ -123,7 +123,7 @@ describe('SignedOutSupportForm', () => {
 
   it('refuses on Send Request with the same words the box showed when it was left', async () => {
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     const email = screen.getByRole('textbox', { name: /Email/ });
     fireEvent.change(email, { target: { value: 'visitor@example.invalid' } });
     fireEvent.blur(email);
@@ -147,7 +147,7 @@ describe('SignedOutSupportForm', () => {
       return { sendSignedOutSupportRequest: true };
     });
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), {
       target: { value: 'visitor' },
     });
@@ -196,7 +196,7 @@ describe('SignedOutSupportForm', () => {
   it('focuses the first wrong field after the topics when a topic is chosen', async () => {
     const calls = recordCalls();
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(box(/Subject/), { target: { value: ' ' } });
     fireEvent.change(box(/Message/), { target: { value: '' } });
 
@@ -212,7 +212,7 @@ describe('SignedOutSupportForm', () => {
   it('focuses the address first when it is the first wrong field', async () => {
     recordCalls();
     render(<SignedOutSupportForm path="/support" />);
-    fill();
+    fillForm();
     fireEvent.change(box(/Email/), { target: { value: '' } });
     fireEvent.change(box(/Message/), { target: { value: '' } });
 

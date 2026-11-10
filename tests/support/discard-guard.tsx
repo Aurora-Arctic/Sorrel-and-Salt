@@ -1,9 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { StrictMode, type ReactNode } from 'react';
 import { expect, type Mock, vi } from 'vitest';
 import Modal from '@/components/Modal';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithQuery } from './render-with-query';
 
 // Each keeper form's unsaved-changes wiring, asserted through the modal (claude-docs/components/modal.md, "Unsaved changes").
 
@@ -13,15 +12,13 @@ export function renderInModal(
 ): Mock {
   const onClose = vi.fn();
   const tree = (
-    <QueryClientProvider client={makeQueryClient()}>
-      <Modal title="Edit" onClose={onClose}>
-        {form}
-      </Modal>
-    </QueryClientProvider>
+    <Modal title="Edit" onClose={onClose}>
+      {form}
+    </Modal>
   );
   // `strict`: React's development double mount, as `next dev` runs it,
   // which re-checks a form's changes as it mounts again.
-  render(strict ? <StrictMode>{tree}</StrictMode> : tree);
+  renderWithQuery(strict ? <StrictMode>{tree}</StrictMode> : tree);
   return onClose;
 }
 

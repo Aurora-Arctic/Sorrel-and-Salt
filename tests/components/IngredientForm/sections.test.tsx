@@ -45,7 +45,7 @@ function changeDescription() {
   fireEvent.click(toggle('Details & Care'));
 }
 
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 
 describe('IngredientForm’s sections', () => {
   it('opens a new entry with every section open, its fields in view', () => {
@@ -154,7 +154,7 @@ describe('IngredientForm’s sections', () => {
     changeDescription();
     expect(expanded('Correspondences')).toBe(false);
 
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(expanded('Correspondences')).toBe(true));
     const colour = control('Colour');
@@ -173,7 +173,7 @@ describe('IngredientForm’s sections', () => {
     changeDescription();
     expect(expanded('Details & Care')).toBe(false);
 
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(expanded('Details & Care')).toBe(true));
     const notes = control('Safety Notes');

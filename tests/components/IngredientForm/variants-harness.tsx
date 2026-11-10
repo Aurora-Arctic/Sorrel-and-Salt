@@ -83,7 +83,7 @@ const byLabel = (scope: HTMLElement, name: string, selector: string) =>
   });
 export const control = (scope: HTMLElement, name: string) =>
   byLabel(scope, name, 'input:not([role]), textarea, [role="combobox"]');
-export const type = (scope: HTMLElement, name: string, value: string) =>
+export const typeInScope = (scope: HTMLElement, name: string, value: string) =>
   fireEvent.change(control(scope, name), { target: { value } });
 export const newForm = () => control(document.body, 'New Form');
 
@@ -228,7 +228,7 @@ export const skippedNotice = (scope: HTMLElement) =>
   within(scope).getByRole('status', { name: 'Substitute Ingredients skipped' });
 
 export const addVariant = (form: string) => {
-  type(document.body, 'New Form', form);
+  typeInScope(document.body, 'New Form', form);
   fireEvent.click(screen.getByLabelText('Add Form', { selector: 'button' }));
 };
 

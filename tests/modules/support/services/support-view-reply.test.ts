@@ -22,15 +22,12 @@ import { insertSupportRequest } from '../../../support/db/insert-support-request
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
 import { ORIGIN } from '../../../support/constants';
+import { send } from '../../../support/mail';
 
 // Every way the token could be stale answers the same not-found (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply").
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
-vi.mock('@/lib/mail', () => ({
-  send: async (message: (typeof sent)[number]) => {
-    sent.push(message);
-  },
-}));
+vi.mock('@/lib/mail', () => import('../../../support/mail'));
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: (typeof sent)[number]) => {
     sent.push(message);
@@ -56,6 +53,10 @@ beforeEach(async () => {
   vi.stubEnv('MAIL_TRANSPORT', 'smtp');
   startJob.mockClear();
   sent.length = 0;
+  send.mockReset();
+  send.mockImplementation(async (message: (typeof sent)[number]) => {
+    sent.push(message);
+  });
   await sql`truncate support_replies, support_timeouts, support_requests, support_send_counts cascade`;
 });
 

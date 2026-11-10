@@ -1,12 +1,9 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ComparisonPanel } from '@/components/SpellBuilder/comparison-panel';
 import type { SpellStepValue } from '@/components/SpellBuilder/steps/types';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -236,49 +233,47 @@ describe('the panel in the builder', () => {
       { ...ward, description: 'Keeps a fixture from harm.', group },
       { id: id(5), name: 'Calm', description: 'Settles a fixture.', group },
     ]);
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <SpellBuilder
-          workspaceId="w1"
-          spell={{
-            id: 's9',
-            revision: 1,
-            title: 'Hedge Ward',
-            intent: null,
-            jarDescription: null,
-            sealWaxColor: null,
-            moonPhase: null,
-            dayOfWeek: null,
-            note: null,
-            visibility: 'workspace',
-            categoryIds: [ward.id],
-            steps: [
-              {
-                id: id(3),
-                name: 'Fixture Rosewort',
-                form: 'dried leaf',
-                quantity: null,
-                unit: null,
-                body: null,
-                ingredient: {
-                  id: id(4),
-                  toxic: false,
-                  safetyNotes: null,
-                  categories: [{ id: id(5), name: 'Calm' }],
-                  stock: [],
-                },
-                variant: {
-                  id: id(6),
-                  toxic: false,
-                  safetyNotes: null,
-                  categories: [],
-                  formChoice: null,
-                },
+    renderWithQuery(
+      <SpellBuilder
+        workspaceId="w1"
+        spell={{
+          id: 's9',
+          revision: 1,
+          title: 'Hedge Ward',
+          intent: null,
+          jarDescription: null,
+          sealWaxColor: null,
+          moonPhase: null,
+          dayOfWeek: null,
+          note: null,
+          visibility: 'workspace',
+          categoryIds: [ward.id],
+          steps: [
+            {
+              id: id(3),
+              name: 'Fixture Rosewort',
+              form: 'dried leaf',
+              quantity: null,
+              unit: null,
+              body: null,
+              ingredient: {
+                id: id(4),
+                toxic: false,
+                safetyNotes: null,
+                categories: [{ id: id(5), name: 'Calm' }],
+                stock: [],
               },
-            ],
-          }}
-        />
-      </QueryClientProvider>,
+              variant: {
+                id: id(6),
+                toxic: false,
+                safetyNotes: null,
+                categories: [],
+                formChoice: null,
+              },
+            },
+          ],
+        }}
+      />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     await waitFor(() =>

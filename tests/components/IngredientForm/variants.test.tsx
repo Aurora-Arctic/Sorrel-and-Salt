@@ -42,7 +42,7 @@ import {
   openWhole,
   sectionOf,
   twoForms,
-  type,
+  typeInScope,
   variant,
 } from './variants-harness';
 
@@ -72,7 +72,7 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
   return onSaved;
 }
 
-const save = () => press('Save Ingredient');
+const saveIngredient = () => press('Save Ingredient');
 
 describe('IngredientForm’s variants', () => {
   beforeEach(() => {
@@ -97,10 +97,10 @@ describe('IngredientForm’s variants', () => {
     expect(form).toHaveAccessibleDescription(expect.stringContaining('Preparation'));
     expect(asks[0].workspaceId).toBeNull();
 
-    type(document.body, 'Name', 'Testwort');
+    typeInScope(document.body, 'Name', 'Testwort');
     fireEvent.click(screen.getByRole('combobox', { name: 'Classification' }));
     fireEvent.click(screen.getByRole('option', { name: 'None' }));
-    save();
+    saveIngredient();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.variants).toEqual([
       expect.objectContaining({ form: 'Oil', formId: OIL_ID }),
@@ -134,7 +134,7 @@ describe('IngredientForm’s variants', () => {
 
     const form = control(openVariant('Oil'), 'Form');
     fireEvent.change(form, { target: { value: 'Oyl' } });
-    save();
+    saveIngredient();
 
     await waitFor(() => expect(form).toBeInvalid());
     expectSummaryLinksTo(form);
@@ -167,8 +167,8 @@ describe('IngredientForm’s variants', () => {
       },
     });
 
-    type(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
-    save();
+    typeInScope(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
+    saveIngredient();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.variants).toEqual([
@@ -191,9 +191,9 @@ describe('IngredientForm’s variants', () => {
       });
       const herb = openVariant('Herb');
       openSectionsIn(herb, 'Details & Care');
-      type(herb, 'Description', 'Dug in autumn.');
+      typeInScope(herb, 'Description', 'Dug in autumn.');
 
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
       const oil = variant('Oil');
@@ -214,9 +214,9 @@ describe('IngredientForm’s variants', () => {
       renderForm({ workspaceId: null, values: twoForms() });
       const oil = openVariant('Oil');
       openSectionsIn(oil, 'Details & Care');
-      type(oil, 'Description', 'Pressed from the fixture.');
+      typeInScope(oil, 'Description', 'Pressed from the fixture.');
 
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'true'));
       const herb = variant('Herb');
@@ -249,12 +249,12 @@ describe('IngredientForm’s variants', () => {
     it('links the form a row names, sent as substituteVariantId, its pill naming the form', async () => {
       const calls = acceptCreate();
       renderForm({ workspaceId: WORKSPACE_ID });
-      type(document.body, 'Name', 'Testwort');
+      typeInScope(document.body, 'Name', 'Testwort');
       const oil = await addOil();
 
       const list = await openSubstitutes(oil);
       fireEvent.click(await within(list).findByRole('option', { name: /^Oilwort · / }));
-      save();
+      saveIngredient();
 
       expect(within(oil).getAllByRole('button', { name: /^Remove Oilwort/ })).toHaveLength(1);
       expect(within(oil).queryByRole('button', { name: 'Remove Oilwort' })).toBeNull();
@@ -278,9 +278,9 @@ describe('IngredientForm’s variants', () => {
       const remove = (name: string) => within(oil).getByRole('button', { name: `Remove ${name}` });
       const described = (element: HTMLElement) =>
         element.getAttribute('aria-describedby')?.split(' ') ?? [];
-      type(oil, 'Description', 'A fixture oil.');
+      typeInScope(oil, 'Description', 'A fixture oil.');
 
-      save();
+      saveIngredient();
 
       const box = control(oil, 'Substitute Ingredient');
       await waitFor(() => expect(box).toHaveAttribute('aria-invalid', 'true'));
@@ -292,7 +292,7 @@ describe('IngredientForm’s variants', () => {
 
       // Why: the same save, the formless link removed, goes.
       fireEvent.click(remove('Plainwort'));
-      save();
+      saveIngredient();
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ name: 'Fixture moss' }]);
     });
@@ -328,7 +328,7 @@ describe('IngredientForm’s variants', () => {
       ).not.toBeEmptyDOMElement();
 
       expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
-      save();
+      saveIngredient();
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0].input.variants?.[0]).toEqual(
         expect.objectContaining({
@@ -352,7 +352,7 @@ describe('IngredientForm’s variants', () => {
 
     it('takes an added variant out, and gives back the form typed for it, on one undo; a redo adds it again', async () => {
       renderForm({ workspaceId: WORKSPACE_ID });
-      type(document.body, 'Name', 'Testwort');
+      typeInScope(document.body, 'Name', 'Testwort');
       addVariant('Oil');
       await settle();
       expect(variant('Oil')).toBeInTheDocument();
@@ -377,7 +377,7 @@ describe('IngredientForm’s variants', () => {
         values: { ...EMPTY_VALUES, name: 'Testwort', nomenclature: 'none' },
       });
       openSections('Correspondences');
-      type(document.body, 'Colour', 'Silver');
+      typeInScope(document.body, 'Colour', 'Silver');
       fireEvent.click(screen.getByLabelText('Add Colour', { selector: 'button' }));
       await settle();
       const toggle = screen.getByRole('button', { name: 'Correspondences' });
@@ -401,7 +401,7 @@ describe('IngredientForm’s variants', () => {
       renderForm({ workspaceId: null, values: twoForms() });
       const oil = openVariant('Oil');
       openSectionsIn(oil, 'Details & Care');
-      type(oil, 'Description', 'Pressed from the fixture.');
+      typeInScope(oil, 'Description', 'Pressed from the fixture.');
       await settle();
       fireEvent.click(sectionOf(oil, 'Details & Care'));
       fireEvent.click(editOf('Oil'));
@@ -426,7 +426,7 @@ describe('IngredientForm’s variants, undone', () => {
 
   it('lands on the New Form box after a redo that only takes a variant out', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
-    type(document.body, 'Name', 'Testwort');
+    typeInScope(document.body, 'Name', 'Testwort');
     addVariant('Oil');
     fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
@@ -444,11 +444,11 @@ describe('IngredientForm’s variants, undone', () => {
 
   it('lands on the box of a list inside a variant after undoing an entry added to it', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
-    type(document.body, 'Name', 'Testwort');
+    typeInScope(document.body, 'Name', 'Testwort');
     addVariant('Oil');
     addVariant('Herb');
     const herb = openWhole('Herb');
-    type(herb, 'Colour', 'Silver');
+    typeInScope(herb, 'Colour', 'Silver');
     fireEvent.click(within(herb).getByLabelText('Add Colour', { selector: 'button' }));
     expect(within(herb).getByLabelText('Remove Silver')).toBeInTheDocument();
 

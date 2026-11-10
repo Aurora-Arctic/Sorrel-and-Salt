@@ -1,6 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import type {
   SpellIngredientSuggestionsQuery,
@@ -9,11 +8,10 @@ import type {
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+import { renderWithQuery } from '../../support/render-with-query';
+import { save, submitForm } from '../../support/interact';
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
@@ -85,11 +83,7 @@ function acceptUpdate() {
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   offerCategories([]);
-  return render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <SpellBuilder workspaceId="w1" {...props} />
-    </QueryClientProvider>,
-  );
+  return renderWithQuery(<SpellBuilder workspaceId="w1" {...props} />);
 }
 
 function renderSaved() {
@@ -106,8 +100,6 @@ const openStep = (name: string) => {
   const pencil = screen.getByRole('button', { name: `Edit ${name}` });
   if (pencil.getAttribute('aria-expanded') !== 'true') fireEvent.click(pencil);
 };
-const save = () => screen.getByRole('button', { name: /^Sav/ });
-const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 const announced = () =>
   screen
     .getAllByRole('status')
@@ -151,7 +143,7 @@ describe('the spell builder’s step text', () => {
     await addOneOff('Testwort');
     expect(instructions()).toHaveLength(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Crush it first' } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([
@@ -169,7 +161,7 @@ describe('the spell builder’s step text', () => {
       target: { value: 'Fixture Working' },
     });
 
-    submit();
+    submitForm();
 
     const field = await screen.findByRole('textbox', { name: /^Instruction/ });
     await waitFor(() => expect(field).toHaveAccessibleDescription(/Write the instruction/));
@@ -197,7 +189,7 @@ describe('the spell builder’s step text', () => {
     openStep('Light the candle');
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([
@@ -212,7 +204,7 @@ describe('the spell builder’s step text', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: '' } });
-    submit();
+    submitForm();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps?.[1]).toEqual({ id: ID.stepCrush, name: 'Testwort' });
@@ -262,7 +254,7 @@ describe('the spell builder’s step text', () => {
 
     expect(announced()).toContain('Removed Light the candle, from position 1 of 2.');
     expect(rows()).toHaveLength(1);
-    submit();
+    submitForm();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps).toEqual([
       { id: ID.stepCrush, name: 'Testwort', body: 'Crush it first' },

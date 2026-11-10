@@ -1,6 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
 import GroupedValueForm from '@/components/GroupedValueForm';
 import type { GroupedValueFormProps } from '@/components/GroupedValueForm/types';
 import type {
@@ -18,7 +18,6 @@ import type {
   UpdateIngredientFormValueMutation,
   UpdateIngredientFormValueMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
 import { choose, press, typeIn, undo } from '../../support/interact';
@@ -96,11 +95,7 @@ const SUBJECT: GroupedValueFormSubject = {
 
 function renderForm(props: Pick<GroupedValueFormProps, 'kind'> & Partial<GroupedValueFormProps>) {
   const onDone = vi.fn();
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <GroupedValueForm onDone={onDone} {...props} />
-    </QueryClientProvider>,
-  );
+  renderWithQuery(<GroupedValueForm onDone={onDone} {...props} />);
   return onDone;
 }
 
@@ -295,7 +290,7 @@ describe('GroupedValueForm, a category', () => {
 describe('GroupedValueForm, a form', () => {
   const renderFormKind = (props: Partial<GroupedValueFormProps> = {}) =>
     renderForm({ kind: 'form', groups: FORM_GROUPS, ...props });
-  const save = () => screen.getByRole('button', { name: 'Save Form' });
+  const saveForm = () => screen.getByRole('button', { name: 'Save Form' });
 
   describe('adding', () => {
     it('creates the form from what was entered, then is done', async () => {
@@ -313,7 +308,7 @@ describe('GroupedValueForm, a form', () => {
 
       typeIn(name(), 'Testwort Shard');
       // Nothing is renamed on a new form, so Save carries no rename note.
-      expect(save()).toHaveAccessibleDescription('');
+      expect(saveForm()).toHaveAccessibleDescription('');
       typeIn(description(), 'A form the test made');
       chooseGroup('Fixture Mineral');
       press('Save Form');
@@ -383,15 +378,15 @@ describe('GroupedValueForm, a form', () => {
     it('describes Save by the rename note once the name changes, and only then', () => {
       renderFormKind({ value: FORM });
 
-      expect(save()).toHaveAccessibleDescription('');
+      expect(saveForm()).toHaveAccessibleDescription('');
       typeIn(description(), 'Described again');
-      expect(save()).toHaveAccessibleDescription('');
+      expect(saveForm()).toHaveAccessibleDescription('');
 
       typeIn(name(), 'Testwort Sliver');
-      expect(save()).toHaveAccessibleDescription(/\S/);
+      expect(saveForm()).toHaveAccessibleDescription(/\S/);
 
       typeIn(name(), 'Testwort Shard');
-      expect(save()).toHaveAccessibleDescription('');
+      expect(saveForm()).toHaveAccessibleDescription('');
     });
   });
 
@@ -421,7 +416,7 @@ describe('GroupedValueForm, a deity', () => {
   const renderDeity = (props: Partial<GroupedValueFormProps> = {}) =>
     renderForm({ kind: 'deity', groups: TRADITIONS, ...props });
   const tradition = () => screen.getByRole('combobox', { name: 'Tradition' });
-  const save = () => screen.getByRole('button', { name: 'Save Deity' });
+  const saveDeity = () => screen.getByRole('button', { name: 'Save Deity' });
 
   it('creates the deity with its tradition as `traditionId`, then is done', async () => {
     const calls: CreateDeityMutationVariables[] = [];
@@ -469,9 +464,9 @@ describe('GroupedValueForm, a deity', () => {
     const onDone = renderDeity({ value: DEITY });
 
     expect(tradition()).toHaveValue('Mockish');
-    expect(save()).toHaveAccessibleDescription('');
+    expect(saveDeity()).toHaveAccessibleDescription('');
     typeIn(name(), 'Mockra');
-    expect(save()).toHaveAccessibleDescription(/\S/);
+    expect(saveDeity()).toHaveAccessibleDescription(/\S/);
     press('Save Deity');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -519,7 +514,7 @@ describe('GroupedValueForm, a deity', () => {
       const onDone = renderDeity({ value: { ...DEITY, otherNames: ['Testrina', 'Tess'] } });
 
       expect(listed()).toEqual(['Remove Testrina', 'Remove Tess']);
-      expect(save()).toBeDisabled();
+      expect(saveDeity()).toBeDisabled();
       press('Remove Testrina');
       addName('Testrix');
       press('Save Deity');
@@ -672,19 +667,19 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
 // Undo and redo: the hook is tested in tests/components/Field; this
 // is its wiring, and where it is switched off.
 describe('GroupedValueForm, its undo and redo', () => {
-  const save = () => screen.getByRole('button', { name: 'Save Category' });
+  const saveCategory = () => screen.getByRole('button', { name: 'Save Category' });
 
   it('undoes a group pick back to the saved one, and Save goes off with it', () => {
     renderForm({ kind: 'category', value: CATEGORY, groups: CATEGORY_GROUPS });
-    expect(save()).toBeDisabled();
+    expect(saveCategory()).toBeDisabled();
     chooseGroup(CATEGORY_GROUPS[0].name);
     expect(group()).toHaveValue(CATEGORY_GROUPS[0].name);
-    expect(save()).toBeEnabled();
+    expect(saveCategory()).toBeEnabled();
 
     undo();
 
     expect(group()).toHaveValue(CATEGORY_GROUPS[1].name);
-    expect(save()).toBeDisabled();
+    expect(saveCategory()).toBeDisabled();
   });
 
   it('has Undo and Redo buttons, off with nothing to do, that act on a click', () => {

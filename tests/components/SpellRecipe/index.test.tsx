@@ -7,9 +7,10 @@ import SpellRecipe from '@/components/SpellRecipe';
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellRecipeSummary from '@/components/SpellRecipe/summary';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
+import { expectBefore, isBefore } from '../../support/interact';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/here',
 }));
 
@@ -121,7 +122,7 @@ describe('SpellRecipe', () => {
     expect(items[1]).toHaveTextContent('Testwort');
     expect(items[1]).toHaveTextContent('Testus wortus');
     const steps = screen.getByRole('list', { name: 'Steps' });
-    expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(summary, steps);
   });
 
   it("adds a form's amounts in one dimension in its first step's unit, and lists amounts that cross dimensions", () => {
@@ -295,7 +296,7 @@ describe('SpellRecipe', () => {
     );
     const edited = screen.getByText(/Fixture Author/);
     const title = screen.getByRole('heading', { level: 1, name: 'Fixture Working' });
-    expect(edited.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(edited, title);
   });
 
   it('draws the aside it is given after the body, and none otherwise', () => {
@@ -312,7 +313,7 @@ describe('SpellRecipe', () => {
     const aside = screen.getByRole('complementary', { name: 'The Cupboard' });
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
-    expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(note, aside);
   });
 
   describe('jump menu', () => {
@@ -360,11 +361,9 @@ describe('SpellRecipe', () => {
         />,
       );
       const nav = screen.getByRole('navigation', { name: 'On This Page' });
-      const follows = (a: Node, b: Node) =>
-        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(follows(screen.getByText('To keep the testwort fresh.'), nav)).toBe(true);
-      expect(follows(screen.getByRole('list', { name: 'Categories' }), nav)).toBe(true);
-      expect(follows(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
+      expect(isBefore(screen.getByText('To keep the testwort fresh.'), nav)).toBe(true);
+      expect(isBefore(screen.getByRole('list', { name: 'Categories' }), nav)).toBe(true);
+      expect(isBefore(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
     });
 
     it('puts the side column before Workings in the source, as the menu lists them', () => {
@@ -376,7 +375,7 @@ describe('SpellRecipe', () => {
           .map((link) => link.textContent)
           .slice(-2),
       ).toEqual(['In the Cupboard', 'Workings']);
-      expect(side.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expectBefore(side, section);
     });
 
     it('leaves out an entry whose section is not drawn', () => {

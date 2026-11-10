@@ -11,7 +11,7 @@ function Host(props: Partial<PlainTextFieldProps>) {
 
 const box = () => screen.getByRole('textbox', { name: 'Note' }) as HTMLInputElement;
 
-const type = (value: string) =>
+const typeValue = (value: string) =>
   act(async () => {
     fireEvent.change(box(), { target: { value } });
   });
@@ -19,12 +19,12 @@ const type = (value: string) =>
 describe('PlainTextField', () => {
   it('shows the value the caller holds and reports each change', async () => {
     render(<Host />);
-    await type('Sage');
+    await typeValue('Sage');
     expect(box().value).toBe('Sage');
   });
   it('tidies on blur by default when single-line, and trims only the ends when multiline', async () => {
     const { unmount } = render(<Host />);
-    await type('  a   b ');
+    await typeValue('  a   b ');
     await act(async () => {
       box().focus();
       box().blur();
@@ -32,7 +32,7 @@ describe('PlainTextField', () => {
     expect(box().value).toBe('a b');
     unmount();
     render(<Host multiline />);
-    await type('  a   b ');
+    await typeValue('  a   b ');
     await act(async () => {
       box().focus();
       box().blur();
@@ -41,7 +41,7 @@ describe('PlainTextField', () => {
   });
   it('uses the format it is given', async () => {
     render(<Host format={(t) => t.toUpperCase()} />);
-    await type('sage');
+    await typeValue('sage');
     await act(async () => {
       box().focus();
       box().blur();
@@ -62,7 +62,7 @@ describe('PlainTextField', () => {
   });
   it('shows the limit count, and never sets a maxlength', async () => {
     render(<Host limit={10} />);
-    await type('a'.repeat(12));
+    await typeValue('a'.repeat(12));
     expect(screen.getByText('2 characters over')).toBeTruthy();
     expect(box().maxLength).toBe(-1);
     expect(box().value).toHaveLength(12);
@@ -93,7 +93,7 @@ describe('PlainTextField', () => {
 
     it('stays quiet while the first value is typed, then flags a bad one when the box is left', async () => {
       render(<Host check={tooShort} />);
-      await type('ab');
+      await typeValue('ab');
       expect(box()).not.toBeInvalid();
       await leave();
       expect(box()).toBeInvalid();
@@ -101,16 +101,16 @@ describe('PlainTextField', () => {
     });
     it('re-checks as it is typed once it has flagged, and clears once the value passes', async () => {
       render(<Host check={tooShort} />);
-      await type('ab');
+      await typeValue('ab');
       await leave();
-      await type('abc');
+      await typeValue('abc');
       expect(box()).not.toBeInvalid();
-      await type('a');
+      await typeValue('a');
       expect(box()).toBeInvalid();
     });
     it('checks the value as the format left it', async () => {
       render(<Host check={tooShort} format={(text) => `${text}xx`} />);
-      await type('a');
+      await typeValue('a');
       await leave();
       expect(box().value).toBe('axx');
       expect(box()).not.toBeInvalid();
@@ -120,15 +120,15 @@ describe('PlainTextField', () => {
       render(<Host check={check} />);
       await leave();
       expect(box()).not.toBeInvalid();
-      await type('ab');
+      await typeValue('ab');
       await leave();
       expect(box()).toBeInvalid();
-      await type('');
+      await typeValue('');
       expect(box()).not.toBeInvalid();
     });
     it("shows the caller's error over its own", async () => {
       render(<Host check={tooShort} error="That name is taken" />);
-      await type('ab');
+      await typeValue('ab');
       await leave();
       expect(errorText()).toContain('That name is taken');
       expect(errorText()).not.toContain('Enter at least three letters');

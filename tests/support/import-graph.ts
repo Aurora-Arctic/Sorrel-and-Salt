@@ -15,7 +15,7 @@ export interface Walk {
 }
 
 /** The file a specifier names, or none for a package or a stylesheet. */
-export function resolveLocal(from: string, specifier: string): string | undefined {
+function resolveLocal(from: string, specifier: string): string | undefined {
   const base = specifier.startsWith('@/')
     ? join(REPO_ROOT, 'src', specifier.slice(2))
     : specifier.startsWith('.')

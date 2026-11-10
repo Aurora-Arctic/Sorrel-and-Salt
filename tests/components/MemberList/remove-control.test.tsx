@@ -4,12 +4,9 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import RemoveControl from '@/components/MemberList/remove-control';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
+import { router } from '../../support/next-navigation';
 
-const { refresh, graphqlRequest } = vi.hoisted(() => ({
-  refresh: vi.fn(),
-  graphqlRequest: vi.fn(),
-}));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh }) }));
+const { graphqlRequest } = vi.hoisted(() => ({ graphqlRequest: vi.fn() }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const WORKSPACE = '00000000-0000-0000-0000-000000000001';
@@ -31,7 +28,7 @@ async function openAndConfirm() {
 
 describe('RemoveControl', () => {
   beforeEach(() => {
-    refresh.mockReset();
+    router.refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
@@ -40,7 +37,7 @@ describe('RemoveControl', () => {
 
     await openAndConfirm();
 
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), {
       workspaceId: WORKSPACE,
       userId: USER,
@@ -62,7 +59,7 @@ describe('RemoveControl', () => {
 
     const said = await expectRefusalUnder(screen.getByRole('button', { name: NAME }), NAME);
     expect(said).toBe('A coven needs at least one owner.');
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
     expect(announced()).toBe('');
   });
 });
@@ -71,7 +68,7 @@ describe('RemoveControl', () => {
 // so one row proves the landing for them all.
 describe('RemoveControl, where the focus lands', () => {
   beforeEach(() => {
-    refresh.mockReset();
+    router.refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
@@ -98,7 +95,7 @@ describe('RemoveControl, where the focus lands', () => {
   it("goes to the page's heading once the re-read takes the row away", async () => {
     graphqlRequest.mockResolvedValue({ removeMember: true });
     const view = await confirmFrom(render(<Roll present />, { wrapper: StatusRegionProvider }));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     // Busy until the re-read: the row and its button are still there.
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 

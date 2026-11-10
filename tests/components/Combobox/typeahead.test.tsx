@@ -45,7 +45,7 @@ function Harness({
 
 const box = () => screen.getByRole('combobox', { name: 'Tradition' });
 const value = () => screen.getByRole('status', { name: 'Value' });
-const type = (text: string) => fireEvent.change(box(), { target: { value: text } });
+const typeInBox = (text: string) => fireEvent.change(box(), { target: { value: text } });
 const key = (name: string) => fireEvent.keyDown(box(), { key: name });
 const options = () => screen.queryAllByRole('option').map((option) => option.textContent);
 
@@ -60,18 +60,18 @@ describe('ComboboxTypeahead', () => {
 
     expect(screen.getByRole('listbox')).toBeVisible();
     expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
-    type('zzz');
+    typeInBox('zzz');
     expect(options()).toEqual([]);
   });
 
   it('narrows the list to the choices holding the text, in any case and anywhere in the name', () => {
     render(<Harness />);
 
-    type('TEST');
+    typeInBox('TEST');
     expect(options()).toEqual(['Old Testic']);
-    type('i');
+    typeInBox('i');
     expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
-    type('ish');
+    typeInBox('ish');
     expect(options()).toEqual(['Mockish']);
     expect(value()).toBeEmptyDOMElement();
   });
@@ -80,7 +80,7 @@ describe('ComboboxTypeahead', () => {
     render(<Harness />);
     act(() => box().focus());
 
-    type('i');
+    typeInBox('i');
     expect(box()).toHaveAttribute(
       'aria-activedescendant',
       screen.getByRole('option', { name: 'Fixtural' }).id,
@@ -96,12 +96,12 @@ describe('ComboboxTypeahead', () => {
   it('chooses by a click, and Escape closes without choosing', () => {
     render(<Harness />);
 
-    type('fix');
+    typeInBox('fix');
     key('Escape');
     expect(box()).toHaveAttribute('aria-expanded', 'false');
     expect(value()).toBeEmptyDOMElement();
 
-    type('fixt');
+    typeInBox('fixt');
     fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
     expect(value()).toHaveTextContent('fixtural');
     expect(box()).toHaveValue('Fixtural');
@@ -118,11 +118,11 @@ describe('ComboboxTypeahead', () => {
   it('holds no value while the text names no choice, and a choice once it names one in full', () => {
     render(<Harness initial="mockish" />);
 
-    type('Mocki');
+    typeInBox('Mocki');
     expect(value()).toBeEmptyDOMElement();
     expect(box()).toHaveValue('Mocki');
 
-    type('old testic');
+    typeInBox('old testic');
     expect(value()).toHaveTextContent('testic');
     fireEvent.blur(box());
     expect(box()).toHaveValue('Old Testic');
@@ -153,11 +153,11 @@ describe('ComboboxTypeahead', () => {
     expect(clear()).not.toBeInTheDocument();
     expect(kept()).toHaveAttribute('tabindex', '-1');
 
-    type('zz');
+    typeInBox('zz');
     expect(clear()).toBeInTheDocument();
     expect(kept()).not.toHaveAttribute('tabindex');
 
-    type('mockish');
+    typeInBox('mockish');
     fireEvent.click(clear()!);
     expect(value()).toBeEmptyDOMElement();
     expect(box()).toHaveValue('');
@@ -187,15 +187,15 @@ describe('ComboboxTypeahead', () => {
 
     fireEvent.click(box());
     expect(options()).toEqual(['Fixtural (Fixture Isle)', 'Mockish', 'Old Testic']);
-    type('isle');
+    typeInBox('isle');
     expect(options()).toEqual([]);
 
-    type('fix');
+    typeInBox('fix');
     fireEvent.click(screen.getByRole('option', { name: /Fixtural/ }));
     expect(box()).toHaveValue('Fixtural');
     expect(box()).toHaveAccessibleDescription('(Fixture Isle) Practised on the isle.');
 
-    type('fixtural');
+    typeInBox('fixtural');
     expect(box()).not.toHaveAccessibleDescription(/Fixture Isle/);
   });
 
@@ -227,7 +227,7 @@ describe('ComboboxTypeahead', () => {
     expect(control().querySelector('[aria-hidden="true"] [data-mark]')).not.toBeNull();
     expect(box()).toHaveAccessibleName('Tradition');
 
-    type('fixtural');
+    typeInBox('fixtural');
     expect(control().querySelector('[aria-hidden="true"] [data-mark]')).toBeNull();
   });
 
@@ -235,19 +235,19 @@ describe('ComboboxTypeahead', () => {
     const onSettle = vi.fn();
     render(<Harness clearable onSettle={onSettle} />);
 
-    type('mock');
-    type('mockish');
+    typeInBox('mock');
+    typeInBox('mockish');
     expect(value()).toHaveTextContent('mockish');
     expect(onSettle).not.toHaveBeenCalled();
 
     fireEvent.blur(box());
     expect(onSettle).toHaveBeenLastCalledWith('mockish');
 
-    type('zz');
+    typeInBox('zz');
     fireEvent.blur(box());
     expect(onSettle).toHaveBeenLastCalledWith('');
 
-    type('fix');
+    typeInBox('fix');
     fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
     expect(onSettle).toHaveBeenLastCalledWith('fixtural');
 
@@ -264,7 +264,7 @@ describe('ComboboxTypeahead', () => {
     expect(options()).toEqual(['Fixtural', 'Mockish', 'Old Testic']);
     expect(match).not.toHaveBeenCalled();
 
-    type('Q');
+    typeInBox('Q');
     expect(match).toHaveBeenLastCalledWith('q');
     expect(options()).toEqual(['Old Testic', 'Fixtural']);
     fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
@@ -285,7 +285,7 @@ describe('ComboboxTypeahead under a Turkish-locale browser', () => {
           choices={[{ value: 'irisic', label: 'Irisic' }]}
         />,
       );
-      type('irisic');
+      typeInBox('irisic');
       expect(options()).toEqual(['Irisic']);
     } finally {
       restore();

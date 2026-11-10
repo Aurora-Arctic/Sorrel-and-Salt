@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
+import { ORIGIN } from '../support/constants';
 
-const URL = 'http://localhost:8000/invite/fixture-token';
+const URL = `${ORIGIN}/invite/fixture-token`;
 
 const INVITER = 'Fixture Owner';
 

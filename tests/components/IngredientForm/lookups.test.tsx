@@ -18,7 +18,7 @@ import {
 } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
-import { press, type } from '../../support/interact';
+import { press, type, expectBefore } from '../../support/interact';
 import {
   WORKSPACE_ID,
   offerDeities,
@@ -516,9 +516,7 @@ describe('LookupListField', () => {
     expect(within(yours).getByRole('option')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect(within(compendium).getAllByRole('option')).toHaveLength(2);
     expect(within(compendium).getByRole('option', { name: /^Mockwort Tea/ })).toBeInTheDocument();
-    expect(
-      yours.compareDocumentPosition(compendium) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expectBefore(yours, compendium);
   });
 
   it('saves a picked ingredient as a link, its entry reading as that ingredient', async () => {

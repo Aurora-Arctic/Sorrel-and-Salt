@@ -1,12 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
+import { router } from '../../support/next-navigation';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The address the section is showing, set by each test before it renders.
 const here = vi.hoisted(() => ({ pathname: '/coven/testwort-circle/ingredients' }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => here.pathname,
 }));
 vi.mock('@/app/skeletons', async () => ({

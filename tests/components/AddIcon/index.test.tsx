@@ -12,11 +12,9 @@ import { expectRefusalUnder } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 import { ADD, HELD_MARK } from '../../support/cupboard-wording';
+import { router } from '../../support/next-navigation';
 
 // Label in Name, WCAG 2.5.3 (claude-docs/components/add-icon.md, "Contracts").
-
-const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
 const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };

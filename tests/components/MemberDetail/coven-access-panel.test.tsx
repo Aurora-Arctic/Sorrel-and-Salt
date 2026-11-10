@@ -1,19 +1,16 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import MemberDetail from '@/components/MemberDetail';
 import Modal from '@/components/Modal';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { announced } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/member-detail.md, "Coven Access"
-
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, replace: vi.fn() }) }));
 
 const owner = { id: 'o', name: 'Owner Testwort' };
 const LIFTED = {
@@ -54,28 +51,26 @@ function serve(history: readonly object[]) {
 }
 
 const renderPanel = (standing: { until: Date | null } | null) =>
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <StatusRegionProvider>
-        <Modal title="Testwort" onClose={vi.fn()}>
-          <MemberDetail
-            workspaceId="w"
-            currentUserId="o"
-            member={{
-              userId: 'u',
-              name: 'Testwort',
-              role: 'member',
-              joinedAt: new Date('2026-03-04T05:06:07Z'),
-              invitedBy: null,
-              updatedBy: null,
-              updatedAt: null,
-              paused: standing,
-            }}
-            canPause
-          />
-        </Modal>
-      </StatusRegionProvider>
-    </QueryClientProvider>,
+  renderWithQuery(
+    <StatusRegionProvider>
+      <Modal title="Testwort" onClose={vi.fn()}>
+        <MemberDetail
+          workspaceId="w"
+          currentUserId="o"
+          member={{
+            userId: 'u',
+            name: 'Testwort',
+            role: 'member',
+            joinedAt: new Date('2026-03-04T05:06:07Z'),
+            invitedBy: null,
+            updatedBy: null,
+            updatedAt: null,
+            paused: standing,
+          }}
+          canPause
+        />
+      </Modal>
+    </StatusRegionProvider>,
   );
 
 const section = () => screen.getByRole('region', { name: 'Coven Access' });
@@ -112,7 +107,7 @@ describe('CovenAccessPanel, while access stands open', () => {
     expect(sent).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
 
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(sent).toEqual([
       {
         name: 'PauseMemberAccess',
@@ -233,7 +228,7 @@ describe('CovenAccessPanel, while a pause stands', () => {
     expect(sent).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'Lift' }));
 
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(sent).toEqual([
       { name: 'LiftMemberAccessPause', variables: { workspaceId: 'w', userId: 'u' } },
     ]);

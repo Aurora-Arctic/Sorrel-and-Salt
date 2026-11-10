@@ -1,10 +1,8 @@
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import IngredientCard from '@/components/IngredientCard';
 import IngredientCardList from '@/components/IngredientCardList';
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const card = (label: string, slug: string) => (
   <IngredientCard

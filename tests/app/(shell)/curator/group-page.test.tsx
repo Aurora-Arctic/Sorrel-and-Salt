@@ -1,14 +1,14 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvalidCursor, NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupKind } from '@/components/GroupForm/types';
+import { requireCuratorSession } from '../../../support/request-session';
+import { renderWithQuery } from '../../../support/render-with-query';
+import { router } from '../../../support/next-navigation';
 
-const requireCuratorSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+vi.mock('@/lib/request-session', () => import('../../../support/request-session'));
 
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
@@ -42,9 +42,6 @@ vi.mock('@/modules/vocabulary', () => ({
   countDeities,
 }));
 
-const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
-
 const { GroupAction, GroupPage } = await import('@/app/(shell)/curator/group-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
@@ -75,11 +72,11 @@ async function renderPage(params: Record<string, string> = {}, kind: GroupKind =
     GroupAction({ kind, searchParams: Promise.resolve(params) }),
     GroupPage({ kind, searchParams: Promise.resolve(params) }),
   ]);
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
+  renderWithQuery(
+    <>
       {action}
       {page}
-    </QueryClientProvider>,
+    </>,
   );
 }
 

@@ -8,8 +8,8 @@ import type { HelpOutlineChosen, HelpOutlineGuide } from '@/components/HelpOutli
 // The keeper help outline's guides: the count of a guide's sub pages in the chosen guide's facts, and none at all for a
 // guide that holds none; the Guides bar and the phone's Guide select carry no count (claude-docs/components/help-outline.md).
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/help',
   useSearchParams: () => new URLSearchParams(),
 }));

@@ -1,17 +1,15 @@
 import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import PrivilegeLedger from '@/components/PrivilegeLedger';
 import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
 import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
 import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/privilege-ledger.md
-
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const GRANT: PrivilegeLedgerEntry = {
   id: 'c1',

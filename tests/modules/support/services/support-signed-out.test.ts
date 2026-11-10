@@ -15,6 +15,7 @@ import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice'
 import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 // A signed-out send sets no cookie and makes no account (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link"); tests/e2e/support-signed-out-sender.spec.ts walks the cookie half.
 
@@ -53,7 +54,7 @@ const receipts = () =>
   startJob.mock.calls.filter(([job]) => job === supportStatusMail).map(([, args]) => args);
 
 function notifier() {
-  const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+  const mail: SupportNotifier = { origin: async () => ORIGIN };
   return { mail };
 }
 
@@ -86,9 +87,7 @@ describe('sendSignedOutSupportRequest', () => {
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    expect(receipts()).toEqual([
-      [{ kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' }],
-    ]);
+    expect(receipts()).toEqual([[{ kind: 'received', requestId: row!.id, origin: ORIGIN }]]);
     expect(JSON.stringify(receipts())).not.toContain('visitor@example.test');
   });
 
@@ -235,6 +234,6 @@ describe('a reply to a signed-out request', () => {
       mail,
     );
 
-    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(replyNotices()).toEqual([[reply.id, ORIGIN]]);
   });
 });

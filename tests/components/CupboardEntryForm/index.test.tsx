@@ -1,6 +1,7 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../support/render-with-query';
+import { router } from '../../support/next-navigation';
 import CupboardEntryForm from '@/components/CupboardEntryForm';
 import type {
   CompendiumValues,
@@ -11,12 +12,8 @@ import type {
   AnnotateCupboardEntryMutation,
   AnnotateCupboardEntryMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press, typeIn } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/cupboard-entry-form.md
 
@@ -51,11 +48,7 @@ function renderForm(overrides: Partial<CupboardOverrides> = {}) {
     overrides: { ...NONE, ...overrides },
     onDone,
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <CupboardEntryForm {...props} />
-    </QueryClientProvider>,
-  );
+  renderWithQuery(<CupboardEntryForm {...props} />);
   return onDone;
 }
 
@@ -71,7 +64,7 @@ function captureSaves(): Variables[] {
   return calls;
 }
 
-const save = () => screen.getByRole('button', { name: 'Save Annotation' });
+const saveAnnotation = () => screen.getByRole('button', { name: 'Save Annotation' });
 const label = () => screen.getByRole('textbox', { name: 'Label' });
 
 describe('CupboardEntryForm', () => {
@@ -95,9 +88,9 @@ describe('CupboardEntryForm', () => {
   it('keeps Save off until something changes', () => {
     renderForm();
 
-    expect(save()).toBeDisabled();
+    expect(saveAnnotation()).toBeDisabled();
     typeIn(label(), 'Fixture Wort');
-    expect(save()).toBeEnabled();
+    expect(saveAnnotation()).toBeEnabled();
   });
 
   it('sends only the fields that changed', async () => {
@@ -105,7 +98,7 @@ describe('CupboardEntryForm', () => {
     const onDone = renderForm();
 
     typeIn(label(), ' Fixture Wort ');
-    press(save());
+    press(saveAnnotation());
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(calls).toHaveLength(1);
@@ -122,7 +115,7 @@ describe('CupboardEntryForm', () => {
     expect(
       screen.queryByRole('button', { name: 'Restore Original: Label' }),
     ).not.toBeInTheDocument();
-    press(save());
+    press(saveAnnotation());
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(calls[0]?.input).toEqual({ label: null });
@@ -133,7 +126,7 @@ describe('CupboardEntryForm', () => {
     const onDone = renderForm();
 
     press('Remove green');
-    press(save());
+    press(saveAnnotation());
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(calls[0]?.input).toEqual({ colors: [] });
@@ -143,10 +136,10 @@ describe('CupboardEntryForm', () => {
     renderForm();
 
     press('Remove green');
-    expect(save()).toBeEnabled();
+    expect(saveAnnotation()).toBeEnabled();
     press('Undo');
 
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(saveAnnotation()).toBeDisabled());
     expect(screen.getByRole('button', { name: 'Remove green' })).toBeInTheDocument();
   });
 
@@ -156,7 +149,7 @@ describe('CupboardEntryForm', () => {
 
     typeIn(screen.getByLabelText('Colour', { selector: 'input' }), 'indigo');
     press('Add Colour');
-    press(save());
+    press(saveAnnotation());
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(calls[0]?.input).toEqual({ colors: ['green', 'indigo'] });
@@ -170,7 +163,7 @@ describe('CupboardEntryForm', () => {
     const onDone = renderForm();
 
     typeIn(label(), 'Fixture Wort');
-    await act(async () => fireEvent.click(save()));
+    await act(async () => fireEvent.click(saveAnnotation()));
 
     await waitFor(() => expect(label()).toBeInvalid());
     expect(label()).toHaveAccessibleDescription(/another entry/i);
@@ -185,7 +178,7 @@ describe('CupboardEntryForm', () => {
     renderForm();
 
     typeIn(label(), 'Fixture Wort');
-    await act(async () => fireEvent.click(save()));
+    await act(async () => fireEvent.click(saveAnnotation()));
 
     const summary = await screen.findByRole('group', { name: 'There Is a Problem' });
     expect(summary).toHaveFocus();

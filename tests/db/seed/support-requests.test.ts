@@ -11,6 +11,7 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { retentionDueStep } from '@/modules/support/jobs/support-retention-steps';
 import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
+import { ORIGIN } from '../../support/constants';
 
 // The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast
 // and the held-back accounts the demo seeds before it.
@@ -249,7 +250,7 @@ describe('the support request seed', () => {
           kind: 'anonymise',
           ids: page,
           now,
-          origin: 'http://localhost:3000',
+          origin: ORIGIN,
         }),
       ).toBe(page.length);
 

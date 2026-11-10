@@ -15,7 +15,7 @@ import {
   sent,
   substitute,
   twoForms,
-  type,
+  typeInScope,
   variant,
 } from './variants-harness';
 import { press } from '../../support/interact';
@@ -62,7 +62,7 @@ describe('a variant’s substitutes', () => {
     const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID });
     const oil = await addOil();
 
-    type(oil, 'Substitute Ingredient', 'Plainwort');
+    typeInScope(oil, 'Substitute Ingredient', 'Plainwort');
     fireEvent.click(within(oil).getByRole('button', { name: 'Add Substitute Ingredient' }));
     press('Save Ingredient');
 

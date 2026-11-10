@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import DocumentPage from '@/components/DocumentPage';
 import { slugify } from '@/lib/slugify';
+import { expectBefore } from '../../support/interact';
 
 // claude-docs/components/document-page.md
 
@@ -203,9 +204,7 @@ describe('DocumentPage', () => {
       expect(herbal.tagName).toBe('LI');
       expect(herbal).toHaveTextContent('A Fixture Herbal');
       expect(targetOf(secondMark)).toHaveTextContent('A Second Fixture');
-      expect(
-        sources.compareDocumentPosition(herbal) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(sources, herbal);
     });
 
     it('links each source back to every mark that cites it', () => {
@@ -358,7 +357,7 @@ describe('DocumentPage', () => {
     const first = screen.getByRole('link', { name: /15 January 2026/ });
     expect(second).toHaveAttribute('href', '/privacy/versions/2');
     expect(first).toHaveAttribute('href', '/privacy/versions/1');
-    expect(second.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(second, first);
   });
 
   describe('a placeholder paragraph', () => {
@@ -381,12 +380,8 @@ describe('DocumentPage', () => {
       expect(screen.queryByText('{fixture-cards}')).toBeNull();
       const opening = screen.getByText('Fixture opening.');
       const closing = screen.getByText('Fixture closing.');
-      expect(
-        opening.compareDocumentPosition(drawn) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(
-        drawn.compareDocumentPosition(closing) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expectBefore(opening, drawn);
+      expectBefore(drawn, closing);
     });
 
     it('prints a placeholder the page does not map as the text it was written as', () => {

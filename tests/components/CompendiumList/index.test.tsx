@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useEffect } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { router } from '../../support/next-navigation';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type { CompendiumListFilter } from '@/components/CompendiumList/types';
@@ -26,8 +27,6 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 import { rowCells } from '../../support/table';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/compendium-list.md
 

@@ -1,7 +1,7 @@
 import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
 
-export function totpSecret(totpURI: string): string {
+function totpSecret(totpURI: string): string {
   const encoded = new URL(totpURI).searchParams.get('secret');
   if (!encoded) throw new Error(`no secret in ${totpURI}`);
   return new TextDecoder().decode(base32.decode(encoded));

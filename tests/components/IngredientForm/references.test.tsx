@@ -118,7 +118,7 @@ const noPanel = () =>
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
 const nameBox = () => screen.getByLabelText(labelled('Name'), { selector: 'input' });
 const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
-const save = () => press(saveButton());
+const saveIngredient = () => press(saveButton());
 const newReference = () => {
   fireEvent.keyDown(box(), { key: 'ArrowDown' });
   fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
@@ -357,14 +357,14 @@ describe('ReferencesField', () => {
       offerReferences([]);
 
       typeIn(box(), 'testwort');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(box()).toBeInvalid());
       expect(box()).toHaveAccessibleDescription(expect.stringContaining('testwort'));
       expect(onSubmit).not.toHaveBeenCalled();
 
       typeIn(box(), '');
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     });
   });
@@ -407,7 +407,7 @@ describe('ReferencesField', () => {
       expect(changes()).toHaveTextContent(short);
       expect(within(row(short)).getByRole('textbox', { name: 'Locator' })).toHaveFocus();
 
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(onSubmit.mock.calls[0][0].references).toEqual([
         { referenceId: NEW_REFERENCE_ID, locator: '' },
@@ -432,13 +432,13 @@ describe('ReferencesField', () => {
       const onSubmit = renderField();
       newReference();
 
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(box()).toBeInvalid());
       expect(onSubmit).not.toHaveBeenCalled();
 
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     });
   });
@@ -567,7 +567,7 @@ describe('ReferencesField', () => {
       expect(editSource(RENAMED_SHORT)).toHaveFocus();
 
       // The links sent are as they were: the source was saved already.
-      save();
+      saveIngredient();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
       expect(onSubmit.mock.calls[0][0].references).toEqual([
         { referenceId: COVEN_ID, locator: '' },
@@ -709,7 +709,7 @@ describe('ReferencesField', () => {
 
       await pickBoth(calls);
       typeIn(nameBox(), 'Testwort');
-      save();
+      saveIngredient();
 
       await waitFor(() => expect(box()).toBeInvalid());
       expect(box()).toHaveAccessibleDescription(expect.stringContaining(NOTES_SHORT));

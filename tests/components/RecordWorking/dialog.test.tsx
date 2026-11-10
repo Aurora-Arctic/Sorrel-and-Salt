@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
@@ -11,7 +10,6 @@ import type {
   UpdateWorkingMutationVariables,
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { HttpResponse } from 'msw/http';
 import {
   graphqlLink,
@@ -22,9 +20,8 @@ import {
 import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 import { server } from '../../support/msw/server';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // claude-docs/components/record-working.md
 
@@ -59,10 +56,6 @@ beforeEach(() => {
 
 const dialog = () => screen.getByRole('dialog');
 
-function wrap(node: React.ReactNode) {
-  return <QueryClientProvider client={makeQueryClient()}>{node}</QueryClientProvider>;
-}
-
 function mockRecording() {
   const calls: RecordWorkingMutationVariables[] = [];
   mockGraphQLMutation<RecordWorkingMutation, RecordWorkingMutationVariables>(
@@ -91,17 +84,15 @@ function mockRecording() {
 }
 
 function openButton(visibility: 'private' | 'workspace' = 'workspace') {
-  render(
-    wrap(
-      <RecordWorkingButton
-        workspaceId={WORKSPACE_ID}
-        spellId={SPELL}
-        spellName="Testwort Tonic"
-        spellVisibility={visibility}
-        recorder={RECORDER}
-        steps={STEPS}
-      />,
-    ),
+  renderWithQuery(
+    <RecordWorkingButton
+      workspaceId={WORKSPACE_ID}
+      spellId={SPELL}
+      spellName="Testwort Tonic"
+      spellVisibility={visibility}
+      recorder={RECORDER}
+      steps={STEPS}
+    />,
   );
   fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
 }
@@ -375,17 +366,15 @@ describe('Edit Working', () => {
       },
     );
     const onClose = vi.fn();
-    render(
-      wrap(
-        <RecordWorkingDialog
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          spellVisibility="workspace"
-          steps={STEPS}
-          working={working}
-          onClose={onClose}
-        />,
-      ),
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={working}
+        onClose={onClose}
+      />,
     );
     expect(screen.getByRole('dialog', { name: 'Edit Working' })).toBeInTheDocument();
     const note = within(dialog()).getByRole('textbox', { name: 'Note' });
@@ -405,17 +394,15 @@ describe('Edit Working', () => {
   });
 
   it('draws no Delete Working when recording a new working', () => {
-    render(
-      wrap(
-        <RecordWorkingDialog
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          spellVisibility="workspace"
-          steps={STEPS}
-          deleteWorking={{ name: '1 October 2026', remove: () => Promise.resolve() }}
-          onClose={() => {}}
-        />,
-      ),
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        deleteWorking={{ name: '1 October 2026', remove: () => Promise.resolve() }}
+        onClose={() => {}}
+      />,
     );
     expect(screen.getByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
     expect(within(dialog()).queryByRole('button', { name: /^Delete Working/ })).toBeNull();
@@ -425,17 +412,15 @@ describe('Edit Working', () => {
     ['a future day', '2999-01-01', false],
     ['today', new Date().toLocaleDateString('en-CA'), true],
   ])('has Complete %s: enabled is %s', (_name, workedOn, enabled) => {
-    render(
-      wrap(
-        <RecordWorkingDialog
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          spellVisibility="workspace"
-          steps={STEPS}
-          working={{ ...working, workedOn }}
-          onClose={() => {}}
-        />,
-      ),
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={{ ...working, workedOn }}
+        onClose={() => {}}
+      />,
     );
     const complete = within(dialog()).getByRole('button', { name: 'Complete' });
     if (enabled) expect(complete).toBeEnabled();
@@ -450,17 +435,15 @@ describe('Edit Working', () => {
   });
 
   it('keeps a shared complete working shared', () => {
-    render(
-      wrap(
-        <RecordWorkingDialog
-          workspaceId={WORKSPACE_ID}
-          spellId={SPELL}
-          spellVisibility="workspace"
-          steps={STEPS}
-          working={{ ...working, status: 'complete', visibility: 'workspace' }}
-          onClose={() => {}}
-        />,
-      ),
+    renderWithQuery(
+      <RecordWorkingDialog
+        workspaceId={WORKSPACE_ID}
+        spellId={SPELL}
+        spellVisibility="workspace"
+        steps={STEPS}
+        working={{ ...working, status: 'complete', visibility: 'workspace' }}
+        onClose={() => {}}
+      />,
     );
     const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
     expect(share).toBeChecked();

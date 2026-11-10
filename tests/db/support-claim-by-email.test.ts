@@ -1,7 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/types';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { B, E } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
@@ -15,11 +14,12 @@ import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
 import { useTestDatabase } from '../support/db/database';
+import { send } from '../support/mail';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints.
 // (claude-docs/design-decisions/support.md, "Claim by verified email")
-const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
-vi.mock('@/lib/mail', () => ({ send }));
+vi.mock('@/lib/mail', () => import('../support/mail'));
 const startJob = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => 'run-id'));
 vi.mock('@/lib/jobs', () => ({ startJob }));
 vi.stubEnv('MAIL_TRANSPORT', '');
@@ -240,7 +240,7 @@ describe('an account claiming by an address a standing time-out binds', () => {
     sendSupportRequest(
       { userId: claimerId, role: 'user' },
       { about: 'account', subject: 'After the claim', message: 'It still sticks.' },
-      { origin: async () => 'http://localhost:3000' },
+      { origin: async () => ORIGIN },
     );
 
   it('moves the time-out to the claiming account, and leaves another address’s alone', async () => {

@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CovenCards from '@/components/CovenCards';
 import type { CovenCardEntry, CovenCardsProps } from '@/components/CovenCards/types';
@@ -12,10 +13,9 @@ import { filterForm, sent } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
+import { expectBefore } from '../../support/interact';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // A coven's Ingredients list: a link per entry inside the coven, the coven's own label,
 // the jars beneath the forms, Edit in the foot where an entry has an edit address, and a filter with the coven's three extra
@@ -199,7 +199,7 @@ describe('CovenCards', () => {
     const list = screen.getByRole('list', { name: 'Ingredients' });
     const pencil = within(list).getByRole('button', { name: /^Edit Stock/ });
     const edit = within(list).getByRole('link', { name: /^Edit Testwort/ });
-    expect(pencil.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expectBefore(pencil, edit);
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {

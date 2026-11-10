@@ -1,13 +1,12 @@
 import { render } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 
 const pathname = vi.fn<() => string>();
-const push = vi.fn();
-const replace = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(window.location.search),
-  useRouter: () => ({ push, replace }),
 }));
 
 const { default: NewSpellElsewhere } = await import('@/components/AppShell/new-spell-elsewhere');
@@ -18,25 +17,20 @@ const at = (path: string, search: string) => {
   render(<NewSpellElsewhere />);
 };
 
-beforeEach(() => {
-  push.mockClear();
-  replace.mockClear();
-});
-
 describe('NewSpellElsewhere', () => {
   it('moves a coven’s New Spell from another page to its grimoire, replacing the address', () => {
     at('/coven/fixture-coven/ingredients', 'new=spell-testwort-circle');
 
-    expect(replace).toHaveBeenCalledExactlyOnceWith(
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith(
       '/coven/testwort-circle/grimoire?new=spell-testwort-circle',
     );
-    expect(push).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('moves it from another coven’s grimoire', () => {
     at('/coven/fixture-coven/grimoire', 'new=spell-testwort-circle');
 
-    expect(replace).toHaveBeenCalledOnce();
+    expect(router.replace).toHaveBeenCalledOnce();
   });
 
   it.each([
@@ -47,7 +41,7 @@ describe('NewSpellElsewhere', () => {
   ])('leaves the address alone on %s', (_, path, search) => {
     at(path, search);
 
-    expect(replace).not.toHaveBeenCalled();
-    expect(push).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,7 @@ import { ViewerIdProvider } from '@/lib/viewer-id';
 import { textbox, waitFor } from '../../../../support/ingredient-form';
 import { press, type } from '../../../../support/interact';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../../../support/msw/ingredient-lookups';
+import { renderWithQuery } from '../../../../support/render-with-query';
 
 // The form loads on first use; loading it once up front keeps each test off a cold import.
 beforeAll(async () => {
@@ -20,9 +21,6 @@ const navigation = vi.hoisted(() => ({ navigate: vi.fn(), refresh: vi.fn() }));
 vi.mock('@/lib/navigation', async (original) => ({
   ...(await original<typeof import('@/lib/navigation')>()),
   usePendingNavigation: () => navigation,
-}));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 const { RouteModalProvider } = await import('@/components/Modal');
@@ -42,9 +40,9 @@ const opened = (name: string, revision: number) => ({
   entry: { id: ENTRY_ID, revision, updatedAt: null, values: NAMED(name) },
 });
 
-function dialog(name: string, revision: number): ReactElement {
+function dialog(name: string, revision: number, client = makeQueryClient()): ReactElement {
   return (
-    <QueryClientProvider client={makeQueryClient()}>
+    <QueryClientProvider client={client}>
       <ViewerIdProvider id="u1">
         <RouteModalProvider>
           <CompendiumDialog place={{}} opened={opened(name, revision)} />
@@ -108,23 +106,21 @@ describe('CompendiumDialog after an autosave', () => {
 describe('CompendiumDialog on an edit', () => {
   it("shows the entry's sourcing score at the start of the Sources section", async () => {
     offerNothing();
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <ViewerIdProvider id="u1">
-          <RouteModalProvider>
-            <CompendiumDialog
-              place={{}}
-              opened={{
-                ...opened('Mockwort', 1),
-                sourcing: {
-                  score: 10,
-                  facts: [{ fact: 'sources', label: '1 Source', points: 10 }],
-                },
-              }}
-            />
-          </RouteModalProvider>
-        </ViewerIdProvider>
-      </QueryClientProvider>,
+    renderWithQuery(
+      <ViewerIdProvider id="u1">
+        <RouteModalProvider>
+          <CompendiumDialog
+            place={{}}
+            opened={{
+              ...opened('Mockwort', 1),
+              sourcing: {
+                score: 10,
+                facts: [{ fact: 'sources', label: '1 Source', points: 10 }],
+              },
+            }}
+          />
+        </RouteModalProvider>
+      </ViewerIdProvider>,
     );
 
     const modal = await screen.findByRole('dialog', { name: 'Edit Ingredient, Mockwort' });

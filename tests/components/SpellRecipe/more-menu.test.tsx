@@ -14,9 +14,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/constants';
-
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+import { router } from '../../support/next-navigation';
 
 // claude-docs/components/spell-recipe.md
 

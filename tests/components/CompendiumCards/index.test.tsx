@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumCards from '@/components/CompendiumCards';
 import type { CompendiumCardEntry, CompendiumCardsProps } from '@/components/CompendiumCards/types';
@@ -11,10 +12,9 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm, sent } from '../../support/filter-form';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 import { WORKSPACE_ID } from '../../support/constants';
+import { isBefore } from '../../support/interact';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
-const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // claude-docs/components/compendium-cards.md
 
@@ -259,10 +259,8 @@ describe('CompendiumCards', () => {
       const add = foot.getByRole('button', { name: /^Add to / });
       const edit = foot.getByRole('link', { name: 'Edit in Compendium Fixture Salt' });
       const dots = foot.getByRole('button', { name: 'More for Fixture Salt' });
-      const follows = (first: Element, second: Element) =>
-        Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(follows(add, edit)).toBe(true);
-      expect(follows(edit, dots)).toBe(true);
+      expect(isBefore(add, edit)).toBe(true);
+      expect(isBefore(edit, dots)).toBe(true);
     });
   });
 

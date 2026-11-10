@@ -1,9 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 
-const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
+  usePathname: () => '/here',
+}));
 
 const { NavigationProvider, useLeaveGuard, usePendingNavigation } =
   await import('@/lib/navigation');

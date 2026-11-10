@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
 import { limitMessage } from '@/lib/formats';
 import { createWorkspace } from '@/modules/coven';
 import { A, D, E, asUser } from '../../../support/as-user';
@@ -22,8 +23,10 @@ describe('createWorkspace', () => {
   });
 
   it('refuses a name past the limit in the shared limit wording', async () => {
-    await expect(createWorkspace(asUser(A), { name: 'F'.repeat(81) })).rejects.toMatchObject({
-      issues: [{ path: ['name'], message: limitMessage(80) }],
+    await expect(
+      createWorkspace(asUser(A), { name: 'F'.repeat(COVEN_NAME_LIMIT + 1) }),
+    ).rejects.toMatchObject({
+      issues: [{ path: ['name'], message: limitMessage(COVEN_NAME_LIMIT) }],
     });
   });
 

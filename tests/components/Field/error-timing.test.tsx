@@ -30,7 +30,7 @@ function Form() {
 }
 
 const box = () => screen.getByRole('textbox', { name: /Name/ });
-const type = (value: string) =>
+const typeValue = (value: string) =>
   act(async () => {
     fireEvent.change(box(), { target: { value } });
   });
@@ -50,12 +50,12 @@ describe('when a field shows its error', () => {
   });
   it('flags a wrong value on leaving, re-checks it as it is typed, and clears it once fixed', async () => {
     render(<Form />);
-    await type('ab');
+    await typeValue('ab');
     await leave();
     expect(box()).toBeInvalid();
-    await type('abc');
+    await typeValue('abc');
     expect(box()).not.toBeInvalid();
-    await type('a');
+    await typeValue('a');
     expect(box()).toBeInvalid();
   });
 });

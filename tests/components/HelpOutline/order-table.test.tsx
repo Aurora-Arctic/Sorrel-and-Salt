@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { router } from '../../support/next-navigation';
 import type { HelpOrderList, HelpOrderRow } from '@/components/HelpOutline/types';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
@@ -9,9 +10,8 @@ import { moveByKeyboard } from '../../support/sortable';
 // The outline's sortable tables, a guide's sub pages and the FAQ: a grip on every row, and a drop saved at once in the
 // whole order, the rows the filter leaves out among it (claude-docs/components/help-outline.md, "Ordering").
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh }),
+vi.mock('next/navigation', async () => ({
+  ...(await import('../../support/next-navigation')),
   usePathname: () => '/keepers/help',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -47,7 +47,6 @@ function layOutTableRows() {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  refresh.mockClear();
 });
 
 const table = (list: HelpOrderList = { kind: 'subPages', guideId: 'g1' }, rows = ROWS) =>
@@ -102,7 +101,7 @@ describe('HelpOrderTable', () => {
 
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]).toEqual({ id: 'g1', input: { childIds: ['s2', 's3', 's1', 's4'] } });
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(gripNames()).toEqual([
       'Move Testwort Middle',
       'Move Testwort Opening',
@@ -157,7 +156,7 @@ describe('HelpOrderTable', () => {
 
     const alert = await screen.findByRole('alert');
     expect(gripNames()[0]).toBe('Move Testwort Opening');
-    expect(refresh).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
 
     const sent: string[][] = [];
     mockGraphQLMutation(
