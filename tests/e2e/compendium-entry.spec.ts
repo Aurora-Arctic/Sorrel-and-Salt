@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
+import { signInKeeperOnSidePage } from './session';
 import { withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
@@ -12,25 +12,12 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-async function authorOf(
-  browser: import('@playwright/test').Browser,
-  baseURL: string | undefined,
-  email: string,
-): Promise<string> {
-  const author = await browser.newPage({ baseURL });
-  try {
-    return (await signInAs(author, email, ['discord'], 'admin')).userId;
-  } finally {
-    await author.close();
-  }
-}
-
 test('a slug an entry has moved off answers 308 to its current address', async ({
   page,
   browser,
   baseURL,
 }) => {
-  const author = await authorOf(browser, baseURL, 'author@compendium-entry-308.test');
+  const author = await signInKeeperOnSidePage(browser, baseURL, 'author@compendium-entry-308.test');
   const name = 'Fixture Moved Bramble';
   const was = slugify(name);
   const now = `${was}-renamed`;
@@ -75,7 +62,7 @@ test('a visitor reads an entry with its details and each form on a phone, a long
   browser,
   baseURL,
 }) => {
-  const author = await authorOf(browser, baseURL, 'author@compendium-entry-url.test');
+  const author = await signInKeeperOnSidePage(browser, baseURL, 'author@compendium-entry-url.test');
   const name = 'Fixture Long Sourced Sedge';
   const url = `https://fixtures.example/${'averylongpathsegmentwithnobreak'.repeat(5)}/testwort?edition=1`;
   await withSql(async (sql) => {
@@ -126,7 +113,11 @@ test('an entry no curator has reviewed wears Needs Review in the theme warning c
   browser,
   baseURL,
 }) => {
-  const author = await authorOf(browser, baseURL, 'author@compendium-entry-review-mark.test');
+  const author = await signInKeeperOnSidePage(
+    browser,
+    baseURL,
+    'author@compendium-entry-review-mark.test',
+  );
   const name = 'Fixture Unreviewed Yarrow';
   await withSql(async (sql) => {
     await insertIngredient(

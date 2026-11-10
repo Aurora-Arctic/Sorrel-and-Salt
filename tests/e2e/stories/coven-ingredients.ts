@@ -8,6 +8,7 @@ import type { IngredientFixture, Overrides } from '../../support/fixtures/types'
 import { withE2eSql } from '../database';
 import { signInAs } from '../session';
 import { insertWorkspace } from '../../support/db/insert-workspace';
+export { graphqlFromPage } from '../graphql';
 
 // Rows go in through the raw client so setup does not depend on the code a story proves (CLAUDE.md, Testing).
 
@@ -244,33 +245,6 @@ export async function insertDeduction(
   });
 }
 
-interface GraphqlAnswer {
-  data?: Record<string, unknown> | null;
-  errors?: { message: string; extensions?: { code?: string } }[];
-}
-
-// `page.request` would not carry the session: it reaches Chromium as an extra header on the page (tests/e2e/session.ts, `holdSession`).
-export async function graphqlFromPage(
-  page: Page,
-  query: string,
-  variables: Record<string, unknown> = {},
-): Promise<GraphqlAnswer> {
-  return page.evaluate(
-    async ({ query, variables }) => {
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/graphql-response+json, application/json',
-        },
-        body: JSON.stringify({ query, variables }),
-      });
-      return (await response.json()) as GraphqlAnswer;
-    },
-    { query, variables },
-  );
-}
-
 export async function markDocument(page: Page): Promise<void> {
   await page.evaluate(() => {
     (window as unknown as { storyMark?: boolean }).storyMark = true;
@@ -279,6 +253,11 @@ export async function markDocument(page: Page): Promise<void> {
 
 export async function stillSameDocument(page: Page): Promise<boolean> {
   return page.evaluate(() => (window as unknown as { storyMark?: boolean }).storyMark === true);
+}
+
+/** The spell list: the Spells list and the Drafts list unless a name narrows it to one. */
+export function grimoireList(page: Page, name: string | RegExp = /^(Spells|Drafts)$/): Locator {
+  return page.getByRole('list', { name });
 }
 
 /** CovenCards' `IngredientCardList` (claude-docs/components/coven-cards.md). */
