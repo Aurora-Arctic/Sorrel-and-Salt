@@ -3,13 +3,12 @@
 import { type FormEvent, type ReactElement, type ReactNode, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
-import { MESSAGE_MAX_LENGTH } from '../../modules/support/validation/limits';
-import { PlainTextField, SwitchField } from '../Field';
-import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
+import { SwitchField } from '../Field';
+import { ConfirmQuestion } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
+import SupportReplyShell from './reply-shell';
 import { useSupportAction } from './use-support-action';
 
 // Reply on a request, or an internal note nobody is mailed; it opens on Internal Note so a reply is always chosen. A
@@ -73,7 +72,6 @@ const ReplyForm = ({
   const [asking, setAsking] = useState(false);
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
-  const discard = useDiscardGuard(body.trim() !== '');
 
   async function send() {
     if (
@@ -101,81 +99,72 @@ const ReplyForm = ({
   }
 
   return (
-    <form className="form support-detail__reply" noValidate onSubmit={submit}>
-      {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      {!noteOnly && (
-        <ChoiceChip
-          legend="Send As"
-          name="mode"
-          options={MODES}
-          value={mode}
-          disabled={busy}
-          hint="A reply emails the sender that one is waiting. An internal note is read only by staff and emails nobody."
-          onChange={setMode}
-        />
-      )}
-      <PlainTextField
-        name="body"
-        label={note ? 'Your Note' : 'Your Reply'}
-        required
-        multiline
-        rows={4}
-        placeholder={
-          note
-            ? 'Write a note for staff'
-            : 'Write a reply. The sender is emailed that one is waiting'
-        }
-        limit={MESSAGE_MAX_LENGTH}
-        value={body}
-        disabled={busy}
-        error={failure.field?.message}
-        onChange={setBody}
-      />
-      {!note && canWait && (
-        <SwitchField
-          label="Waiting on Sender"
-          name="waitingOnSender"
-          value="1"
-          checked={waiting}
-          busy={busy}
-          hint="Marks the request as waiting for the sender's answer."
-          onChange={setWaiting}
-        />
-      )}
-      {!note && senderTimedOut && (
-        <Notice kind="warn" quiet>
-          The sender cannot answer {cannotAnswer(senderTimedOut.until)}.
-        </Notice>
-      )}
-      <div className="support-detail__actions">
-        <BusyButton
-          type="submit"
-          className="btn btn--solid"
-          disabled={body.trim() === '' || busy}
-          busy={busy}
-          busyLabel={note ? 'Adding' : 'Replying'}
-        >
-          {note ? 'Add Note' : 'Reply'}
-        </BusyButton>
-        {resolve}
-      </div>
-      {discard.asking && <DiscardQuestion guard={discard} />}
-      {asking && senderTimedOut && (
-        <ConfirmQuestion
-          question="Reply to a sender who is timed out?"
-          details={<>They cannot answer {cannotAnswer(senderTimedOut.until)}.</>}
-          tone="solid"
-          confirmLabel="Send Reply"
-          busyLabel="Sending"
-          busy={busy}
-          onConfirm={async () => {
-            await send();
-            setAsking(false);
-          }}
-          onKeep={() => setAsking(false)}
-        />
-      )}
-    </form>
+    <SupportReplyShell
+      body={body}
+      onBody={setBody}
+      onSubmit={submit}
+      busy={busy}
+      failure={failure}
+      label={note ? 'Your Note' : 'Your Reply'}
+      required
+      placeholder={
+        note ? 'Write a note for staff' : 'Write a reply. The sender is emailed that one is waiting'
+      }
+      submitLabel={note ? 'Add Note' : 'Reply'}
+      busyLabel={note ? 'Adding' : 'Replying'}
+      above={
+        !noteOnly && (
+          <ChoiceChip
+            legend="Send As"
+            name="mode"
+            options={MODES}
+            value={mode}
+            disabled={busy}
+            hint="A reply emails the sender that one is waiting. An internal note is read only by staff and emails nobody."
+            onChange={setMode}
+          />
+        )
+      }
+      below={
+        <>
+          {!note && canWait && (
+            <SwitchField
+              label="Waiting on Sender"
+              name="waitingOnSender"
+              value="1"
+              checked={waiting}
+              busy={busy}
+              hint="Marks the request as waiting for the sender's answer."
+              onChange={setWaiting}
+            />
+          )}
+          {!note && senderTimedOut && (
+            <Notice kind="warn" quiet>
+              The sender cannot answer {cannotAnswer(senderTimedOut.until)}.
+            </Notice>
+          )}
+        </>
+      }
+      actions={resolve}
+      questions={
+        asking &&
+        senderTimedOut && (
+          <ConfirmQuestion
+            question="Reply to a sender who is timed out?"
+            details={<>They cannot answer {cannotAnswer(senderTimedOut.until)}.</>}
+            tone="solid"
+            confirmLabel="Send Reply"
+            busyLabel="Sending"
+            busy={busy}
+            onConfirm={async () => {
+              await send();
+              setAsking(false);
+            }}
+            onKeep={() => setAsking(false)}
+          />
+        )
+      }
+    />
   );
 };
 
