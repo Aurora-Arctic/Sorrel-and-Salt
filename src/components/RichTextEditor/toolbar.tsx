@@ -185,7 +185,9 @@ const Toolbar = ({ label }: { label: string }): ReactElement => {
   }
 
   function addLink(url: string): boolean {
+    // An editor never clicked into has no selection, and upsertLink adds nothing without one: the address goes at the end.
     if (linkSelection.current) editor.tf.select(linkSelection.current);
+    else if (!editor.selection) editor.tf.select(editor.api.end([]));
     return upsertLink(editor, { url }) === true;
   }
 

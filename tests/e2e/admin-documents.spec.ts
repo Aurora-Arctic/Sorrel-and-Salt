@@ -619,3 +619,48 @@ test('the editor link dialog spaces its field and buttons as every other form mo
   expect(gaps.titleToField).toBeCloseTo(gaps.probeTitleToField, 0);
   expect(gaps.fieldToActions).toBeCloseTo(gaps.probeFieldToActions, 0);
 });
+
+test('Add Link with the caret placed and nothing selected inserts the address as a link, with no error', async ({
+  page,
+}) => {
+  await signInAs(page, 'caret-link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await appendTo(page, 'Changes to This Policy', ' ');
+  await page.waitForTimeout(300);
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(editorOf(page).getByRole('link', { name: 'https://example.com' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
+});
+
+test('Add Link before the editor has ever been clicked into still adds the address as a link, with no error', async ({
+  page,
+}) => {
+  await signInAs(page, 'unfocused-link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
+  await expect(editorOf(page).getByRole('link', { name: 'https://example.com' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
+});
