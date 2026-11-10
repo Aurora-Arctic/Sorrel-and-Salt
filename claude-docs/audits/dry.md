@@ -2635,7 +2635,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/db/repository/invitations*.test.ts`, `tests/modules/coven/**`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-92: Curator group and value types and dialogs are near-copies
 
@@ -2840,7 +2840,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/modules/coven/**` invitation-card tests, `tests/modules/support/**` sender-group tests, `tests/db/repository/invitations*.test.ts`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-104: Jar-row number conversion `quantityOnHand === null ? null : Number(quantityOnHand)` is repeated
 
@@ -3016,7 +3016,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/support/` reply tests; `tests/db/repository/support*.test.ts`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-114: The keepers and curator area layouts are the same file
 
@@ -3394,7 +3394,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** tests/modules/vocabulary list tests.
 
 - **Estimate:** 2.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed. The cached page and count reads in astrology.ts, categories.ts, deities.ts and ingredient-form-values.ts stay declared in each service, so each cache key sits beside the read it names.
 
 ### D-136: Page and count twin finders repeat their filter in every repository file
 
@@ -3408,7 +3408,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** the matching tests/db and tests/modules suites.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-137: Support-request status marks written as seven separate `IconTip` plus button blocks
 
@@ -4622,7 +4622,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/db repository predicates tests.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-206: Help repository repeats its sort and filter clauses
 
@@ -4636,7 +4636,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/db help repository tests, tests/modules/help.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-207: Tier-2 uncurated suggestion select repeated
 
