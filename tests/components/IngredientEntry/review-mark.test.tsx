@@ -1,12 +1,10 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import ReviewMark from '@/components/IngredientEntry/review-mark';
 import type {
   SetCompendiumEntryReviewedMutation,
   SetCompendiumEntryReviewedMutationVariables,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { router } from '../../support/next-navigation';
@@ -107,13 +105,8 @@ describe('ReviewMark', () => {
 describe('ReviewMark, while a flip is pending', () => {
   it('is busy with a spinner until the new answer arrives, and not disabled', async () => {
     acceptReview();
-    const client = makeQueryClient();
-    const mark = (at: string | null) => (
-      <QueryClientProvider client={client}>
-        <ReviewMark ingredientId={ID} reviewedAt={at} />
-      </QueryClientProvider>
-    );
-    const { container, rerender } = render(mark(null));
+    const mark = (at: string | null) => <ReviewMark ingredientId={ID} reviewedAt={at} />;
+    const { container, rerender } = renderWithQuery(mark(null));
     expect(toggle()).not.toHaveAttribute('aria-busy');
     expect(container.querySelector('.spinner')).toBeNull();
 

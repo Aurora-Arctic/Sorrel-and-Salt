@@ -1,19 +1,15 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumCards from '@/components/CompendiumCards';
 import type { CompendiumCardEntry, CompendiumCardsProps } from '@/components/CompendiumCards/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { ADD, HELD } from '../../support/cupboard-wording';
+import { renderWithQuery } from '../../support/render-with-query';
 
-const client = makeQueryClient();
 const Cards = (props: CompendiumCardsProps): ReactElement => (
   <StatusRegionProvider>
-    <QueryClientProvider client={client}>
-      <CompendiumCards {...props} />
-    </QueryClientProvider>
+    <CompendiumCards {...props} />
   </StatusRegionProvider>
 );
 
@@ -94,7 +90,7 @@ describe('the add icon on the cards', () => {
   });
 
   it('keeps the plus on a card one coven holds, and the check where all do', () => {
-    render(
+    renderWithQuery(
       <Cards
         {...props([
           entry({ id: 'one', name: 'Fixture Heldone', slug: 'heldone', heldIn: [FIRST.id] }),

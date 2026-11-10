@@ -1,29 +1,23 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { router } from '../../support/next-navigation';
-import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumCards from '@/components/CompendiumCards';
 import type { CompendiumCardEntry, CompendiumCardsProps } from '@/components/CompendiumCards/types';
 import type { CompendiumListFilter } from '@/components/CompendiumList/types';
 import type { CompendiumFacets } from '@/modules/ingredients';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm, sent } from '../../support/filter-form';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 import { WORKSPACE_ID } from '../../support/constants';
 import { isBefore } from '../../support/interact';
+import { renderWithQuery } from '../../support/render-with-query';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 
 // claude-docs/components/compendium-cards.md
 
-const client = makeQueryClient();
-const Cards = (props: CompendiumCardsProps): ReactElement => (
-  <QueryClientProvider client={client}>
-    <CompendiumCards {...props} />
-  </QueryClientProvider>
-);
+const Cards = (props: CompendiumCardsProps): ReactElement => <CompendiumCards {...props} />;
 
 const NO_FILTER: CompendiumListFilter = {
   query: '',
@@ -110,7 +104,7 @@ describe('CompendiumCards', () => {
   });
 
   it('lists each entry as a plain link to its own page, with no modal', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Compendium' });
     const hrefs = within(list)
       .getAllByRole('link')
@@ -120,13 +114,13 @@ describe('CompendiumCards', () => {
   });
 
   it('tells two entries of one label apart by their formal names', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     expect(screen.getByText('Fixtura testalis')).toBeInTheDocument();
     expect(screen.getByText('Fixtura alteralis')).toBeInTheDocument();
   });
 
   it('draws every form an entry has', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     expect(screen.getAllByText('Fixture Herb')).toHaveLength(2);
     expect(screen.getByText('Fixture Oil')).toBeInTheDocument();
   });
@@ -135,7 +129,7 @@ describe('CompendiumCards', () => {
     const PLUS = { name: new RegExp(`^${ADD}: `) };
     const HELD = { name: new RegExp(`^${HELD_TEXT}: `) };
     it('holds a plus button on each card not yet held, named Add to My Ingredients and its entry', () => {
-      render(<Cards {...props({ action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ action: 'add' })} />);
       const buttons = screen.getAllByRole('button', PLUS);
       expect(buttons.map((button) => button.textContent)).toEqual([
         `${ADD}: Testwort, Fixtura testalis`,
@@ -148,7 +142,7 @@ describe('CompendiumCards', () => {
 
     it('swaps the plus for a check named In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
-      render(<Cards {...props({ entries: held, action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', PLUS)).toHaveLength(2);
       const mark = screen.getByRole('button', HELD);
       expect(mark).toHaveAccessibleName(`${HELD_TEXT}: Testwort, Fixtura testalis`);
@@ -159,7 +153,7 @@ describe('CompendiumCards', () => {
     // A click here focuses nothing, so the press alone opens the tip, as a tap does on InfoTip's ⓘ.
     it('opens the In Every Cupboard tip when the check is pressed', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
-      render(<Cards {...props({ entries: held, action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ entries: held, action: 'add' })} />);
       const mark = screen.getByRole('button', HELD);
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
@@ -172,14 +166,16 @@ describe('CompendiumCards', () => {
 
     it('draws neither without a coven to add to', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
-      render(<Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />);
+      renderWithQuery(
+        <Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />,
+      );
       expect(screen.queryByRole('button', PLUS)).toBeNull();
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
     it('draws neither where the action is none, even for a held entry', () => {
       const held = ENTRIES.map((one) => ({ ...one, held: true }));
-      render(<Cards {...props({ entries: held, action: 'none' })} />);
+      renderWithQuery(<Cards {...props({ entries: held, action: 'none' })} />);
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
   });
@@ -190,7 +186,7 @@ describe('CompendiumCards', () => {
       editHref: `/compendium?edit=${one.slug}` as Route,
       editHeading: { eyebrow: 'Edit Compendium Entry', title: one.name },
     }));
-    render(<Cards {...props({ entries: editable, action: 'add' })} />);
+    renderWithQuery(<Cards {...props({ entries: editable, action: 'add' })} />);
     const hrefs = screen
       .getAllByRole('link', { name: /^Edit in Compendium / })
       .map((link) => link.getAttribute('href'));
@@ -223,7 +219,7 @@ describe('CompendiumCards', () => {
       ) as HTMLElement;
 
     it('gives a signed-out visitor no plus, no Edit and no dots', () => {
-      render(<Cards {...props({ action: 'none' })} />);
+      renderWithQuery(<Cards {...props({ action: 'none' })} />);
       expect(screen.queryByRole('button', { name: /^Add to / })).toBeNull();
       expect(screen.queryByRole('link', { name: /^Edit / })).toBeNull();
       expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
@@ -235,7 +231,7 @@ describe('CompendiumCards', () => {
       const entries = ENTRIES.map((one) =>
         one.slug === 'fixture-salt' ? { ...one, places: [PLACE] } : one,
       );
-      render(<Cards {...props({ entries, action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ entries, action: 'add' })} />);
       expect(
         within(saltCard()).getByRole('button', { name: 'More for Fixture Salt' }),
       ).toBeInTheDocument();
@@ -254,7 +250,7 @@ describe('CompendiumCards', () => {
             }
           : one,
       );
-      render(<Cards {...props({ entries, action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ entries, action: 'add' })} />);
       const foot = within(saltCard());
       const add = foot.getByRole('button', { name: /^Add to / });
       const edit = foot.getByRole('link', { name: 'Edit in Compendium Fixture Salt' });
@@ -272,7 +268,7 @@ describe('CompendiumCards', () => {
         heading: { eyebrow: 'Ingredient', title: one.name },
       },
     }));
-    render(<Cards {...props({ entries: looked })} />);
+    renderWithQuery(<Cards {...props({ entries: looked })} />);
     const hrefs = screen
       .getAllByRole('link', { name: /^Quick Look / })
       .map((link) => link.getAttribute('href'));
@@ -283,7 +279,7 @@ describe('CompendiumCards', () => {
   });
 
   it('offers no Classification and no No Refs, and submits to the public page', () => {
-    render(<Cards {...props()} />);
+    renderWithQuery(<Cards {...props()} />);
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     expect(screen.queryByRole('switch', { name: /^No Refs/ })).toBeNull();
     expect(screen.queryByRole('group', { name: /Classification/ })).toBeNull();
@@ -299,7 +295,7 @@ describe('CompendiumCards', () => {
     ];
 
     it('offers In My Covens with every coven of the viewer’s', () => {
-      render(<Cards {...props({ myCovens: MINE })} />);
+      renderWithQuery(<Cards {...props({ myCovens: MINE })} />);
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
       fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
       expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
@@ -312,7 +308,7 @@ describe('CompendiumCards', () => {
         { ...ENTRIES[1], held: true, holding: ['Testhollow'] },
         ENTRIES[2],
       ];
-      render(<Cards {...props({ entries, action: 'add' })} />);
+      renderWithQuery(<Cards {...props({ entries, action: 'add' })} />);
       screen.getByRole('button', {
         name: `${ADD}: Testwort, Fixtura testalis. In 2 covens: Testhollow, Testwren`,
       });

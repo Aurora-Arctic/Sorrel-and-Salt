@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { press, expectBefore, isBefore } from '../../support/interact';
 import SpellCard from '@/components/SpellCard';
@@ -13,8 +13,6 @@ import type {
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { renderWithQuery } from '../../support/render-with-query';
 
 vi.mock('next/navigation', async () => ({
@@ -44,7 +42,7 @@ const MORE = {
 
 describe('SpellCard', () => {
   it('says how many times a spell has been made, once for one and nothing for none', () => {
-    const { rerender } = render(<SpellCard {...BASE} workingCount={3} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} workingCount={3} />);
     expect(screen.getByText('Made 3 times')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={1} />);
     expect(screen.getByText('Made once')).toBeInTheDocument();
@@ -56,7 +54,7 @@ describe('SpellCard', () => {
 
   // The count is read with the edit line, after it and before the actions, as one line of the foot.
   it('reads the made count after the edit line and before the actions', () => {
-    render(
+    renderWithQuery(
       <SpellCard
         {...BASE}
         workingCount={3}
@@ -124,14 +122,9 @@ describe('SpellCard', () => {
       workspaceId: 'workspace-1',
       recorder: { userId: 'u1', name: 'Testa Owner' },
     };
-    const { rerender } = render(<SpellCard {...BASE} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
-    const queryClient = makeQueryClient();
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <SpellCard {...BASE} recordWorking={recordWorking} />
-      </QueryClientProvider>,
-    );
+    rerender(<SpellCard {...BASE} recordWorking={recordWorking} />);
     // A list draws many cards, so nothing is read for a card until its dialog opens.
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(asked).toEqual([]);
@@ -171,14 +164,9 @@ describe('SpellCard', () => {
   });
 
   it('draws a More menu holding Duplicate and Delete Spell, and no Print, and Delete asks in a dialog naming the spell', async () => {
-    const { rerender } = render(<SpellCard {...BASE} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^More for / })).not.toBeInTheDocument();
-    const queryClient = makeQueryClient();
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <SpellCard {...BASE} more={MORE} />
-      </QueryClientProvider>,
-    );
+    rerender(<SpellCard {...BASE} more={MORE} />);
     press(screen.getByRole('button', { name: 'More for Fixture Working' }));
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
@@ -200,12 +188,7 @@ describe('SpellCard', () => {
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
     ]);
-    const queryClient = makeQueryClient();
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <SpellCard {...BASE} more={{ ...MORE, canDuplicate: false, canDelete: false }} />
-      </QueryClientProvider>,
-    );
+    rerender(<SpellCard {...BASE} more={{ ...MORE, canDuplicate: false, canDelete: false }} />);
     expect(screen.queryByRole('button', { name: /^More for / })).not.toBeInTheDocument();
   });
 
@@ -229,7 +212,7 @@ describe('SpellCard', () => {
   });
 
   it('draws an Edit link named for the spell only when given the address', () => {
-    const { rerender } = render(<SpellCard {...BASE} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} />);
     expect(screen.getByRole('link', { name: 'Edit Fixture Working' })).toHaveAttribute(
@@ -240,7 +223,7 @@ describe('SpellCard', () => {
 
   it('draws a Quick Look eye named for the spell only when given the address, apart from the title link', () => {
     const href = '/coven/x/grimoire/spell-1' as Route;
-    const { rerender } = render(<SpellCard {...BASE} href={href} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} href={href} />);
     expect(screen.queryByRole('link', { name: /^Quick Look / })).not.toBeInTheDocument();
     rerender(
       <SpellCard
@@ -257,7 +240,7 @@ describe('SpellCard', () => {
   });
 
   it('keeps the Edit link out of the title link, so the stretched title link never swallows it', () => {
-    render(
+    renderWithQuery(
       <SpellCard
         {...BASE}
         href={'/coven/x/grimoire/spell-1' as Route}
@@ -272,30 +255,30 @@ describe('SpellCard', () => {
   });
 
   it('names the card by its title heading', () => {
-    render(<SpellCard {...BASE} />);
+    renderWithQuery(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
     expect(within(card).getByRole('heading', { name: 'Fixture Working' })).toBeInTheDocument();
   });
 
   it('calls a spell with no title Untitled Spell', () => {
-    render(<SpellCard {...BASE} title={null} status="draft" />);
+    renderWithQuery(<SpellCard {...BASE} title={null} status="draft" />);
     expect(screen.getByRole('heading', { name: 'Untitled Spell' })).toBeInTheDocument();
   });
 
   it('calls a blank title Untitled Spell too', () => {
-    render(<SpellCard {...BASE} title="   " status="draft" />);
+    renderWithQuery(<SpellCard {...BASE} title="   " status="draft" />);
     expect(screen.getByRole('heading', { name: 'Untitled Spell' })).toBeInTheDocument();
   });
 
   it('shows the intent, and no paragraph for a spell without one', () => {
-    const { rerender } = render(<SpellCard {...BASE} />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.getByText('To keep the testwort fresh.')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} intent={null} />);
     expect(screen.queryByText('To keep the testwort fresh.')).not.toBeInTheDocument();
   });
 
   it('marks a draft with a Draft badge, and a complete spell with no status badge', () => {
-    const { rerender } = render(<SpellCard {...BASE} status="draft" />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} status="draft" />);
     expect(within(screen.getByRole('article')).getByText('Draft')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} status="complete" />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
@@ -306,21 +289,23 @@ describe('SpellCard', () => {
   // Only its author lists a private spell, so the badge tells them it
   // is theirs alone. A word, not a colour, so it reads without one.
   it('marks a private spell Private, and a spell shared with the coven with nothing', () => {
-    const { rerender } = render(<SpellCard {...BASE} visibility="private" />);
+    const { rerender } = renderWithQuery(<SpellCard {...BASE} visibility="private" />);
     expect(within(screen.getByRole('article')).getByText('Private')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} visibility="workspace" />);
     expect(within(screen.getByRole('article')).queryByText('Private')).not.toBeInTheDocument();
   });
 
   it('marks a private draft with both badges', () => {
-    render(<SpellCard {...BASE} status="draft" visibility="private" />);
+    renderWithQuery(<SpellCard {...BASE} status="draft" visibility="private" />);
     const card = within(screen.getByRole('article'));
     expect(card.getByText('Draft')).toBeInTheDocument();
     expect(card.getByText('Private')).toBeInTheDocument();
   });
 
   it('says who last edited the spell and when, given the edit', () => {
-    render(<SpellCard {...BASE} lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }} />);
+    renderWithQuery(
+      <SpellCard {...BASE} lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }} />,
+    );
     const card = screen.getByRole('article', { name: 'Fixture Working' });
     expect(within(card).getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
       'Last edited by Fixture A on 1 September 2026',
@@ -328,12 +313,12 @@ describe('SpellCard', () => {
   });
 
   it('draws no edit line when it is given none', () => {
-    render(<SpellCard {...BASE} />);
+    renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
   });
 
   it('lists the assigned categories as chips', () => {
-    render(
+    renderWithQuery(
       <SpellCard
         {...BASE}
         categories={[{ category: { id: 'c1', name: 'Testward' }, group: GROUP }]}
@@ -344,13 +329,13 @@ describe('SpellCard', () => {
   });
 
   it('is not a link until the spell page exists', () => {
-    render(<SpellCard {...BASE} />);
+    renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
   // The smouldering edge (spell-card.md) is decoration: a screen reader meets the card's title
   // and nothing the hover draws.
   it('exposes the card as its title alone, with no description and no image from the smoulder', () => {
-    render(<SpellCard {...BASE} />);
+    renderWithQuery(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
     expect(card).toHaveAccessibleName('Fixture Working');
     expect(card).toHaveAccessibleDescription('');
@@ -360,14 +345,16 @@ describe('SpellCard', () => {
 
 describe('SpellCard link', () => {
   it('makes the title a link to the recipe page when given an address', () => {
-    render(<SpellCard {...BASE} href={'/coven/fixture-coven/grimoire/spell-1' as Route} />);
+    renderWithQuery(
+      <SpellCard {...BASE} href={'/coven/fixture-coven/grimoire/spell-1' as Route} />,
+    );
     const link = screen.getByRole('link', { name: 'Fixture Working' });
     expect(link).toHaveAttribute('href', '/coven/fixture-coven/grimoire/spell-1');
     expect(within(screen.getByRole('heading')).getByRole('link')).toBe(link);
   });
 
   it('leaves the title plain text with no address', () => {
-    render(<SpellCard {...BASE} />);
+    renderWithQuery(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });

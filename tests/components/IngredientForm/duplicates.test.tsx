@@ -10,7 +10,8 @@ import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { ADDED_HOLD_MS } from '@/components/AddIcon';
-import { renderWithClient, duplicateHref } from '../../support/ingredient-form';
+import { duplicateHref } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { Navigating } from '../../support/navigating';
 import { press, typeIn, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
@@ -93,7 +94,7 @@ function renderName(
       form
     );
   };
-  renderWithClient(
+  renderWithQuery(
     routed ? (
       <Navigating push={router.push}>
         <RouteModalProvider>

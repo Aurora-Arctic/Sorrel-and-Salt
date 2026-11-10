@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import type { Route } from 'next';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -11,7 +10,6 @@ import type {
   MakeItOursMutation,
   RemoveCupboardEntryMutation,
 } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { press, expectBefore } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
@@ -65,17 +63,13 @@ function renderActions(props: Partial<CupboardActionsProps> = {}) {
 }
 
 const onPage = (props: Partial<CupboardActionsProps> = {}) => (
-  <QueryClientProvider client={queryClient}>
-    <main>
-      <h1>Testwort</h1>
-      <CupboardActions {...BASE} {...props} />
-    </main>
-  </QueryClientProvider>
+  <main>
+    <h1>Testwort</h1>
+    <CupboardActions {...BASE} {...props} />
+  </main>
 );
-let queryClient = makeQueryClient();
 function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
-  queryClient = makeQueryClient();
-  return render(onPage(props));
+  return renderWithQuery(onPage(props));
 }
 
 const button = (name: string) => screen.queryByRole('button', { name });
@@ -204,13 +198,7 @@ describe('CupboardActions', () => {
     const { container, rerender } = renderActions(none);
     expect(container).toBeEmptyDOMElement();
 
-    const fresh = makeQueryClient();
-
-    rerender(
-      <QueryClientProvider client={fresh}>
-        <CupboardActions {...BASE} {...none} held />
-      </QueryClientProvider>,
-    );
+    rerender(<CupboardActions {...BASE} {...none} held />);
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -261,13 +249,7 @@ describe('CupboardActions', () => {
     const view = renderActions({ held: true, annotate: { ...ANNOTATE, opened: true } });
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    const fresh = makeQueryClient();
-
-    view.rerender(
-      <QueryClientProvider client={fresh}>
-        <CupboardActions {...BASE} held annotate={ANNOTATE} />
-      </QueryClientProvider>,
-    );
+    view.rerender(<CupboardActions {...BASE} held annotate={ANNOTATE} />);
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     await waitFor(() =>
@@ -375,11 +357,9 @@ describe('CupboardActions', () => {
     ).toBeDisabled();
 
     view.rerender(
-      <QueryClientProvider client={queryClient}>
-        <main>
-          <h1>Ingredients</h1>
-        </main>
-      </QueryClientProvider>,
+      <main>
+        <h1>Ingredients</h1>
+      </main>,
     );
 
     await waitFor(() =>

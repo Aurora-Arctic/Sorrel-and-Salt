@@ -9,13 +9,8 @@ import {
   compendiumResolver,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
-import {
-  chooseKind,
-  inPanel,
-  referencePanel,
-  renderWithClient,
-  waitFor,
-} from '../../support/ingredient-form';
+import { chooseKind, inPanel, referencePanel, waitFor } from '../../support/ingredient-form';
+import { renderWithQuery } from '../../support/render-with-query';
 import { press, typeIn } from '../../support/interact';
 import {
   WORKSPACE_ID,
@@ -105,7 +100,7 @@ function renderListed(workspaceId: string | null, sources: ReferenceNode[] = [HE
       </FormProvider>
     );
   };
-  renderWithClient(<Harness />);
+  renderWithQuery(<Harness />);
   return onSubmit;
 }
 
