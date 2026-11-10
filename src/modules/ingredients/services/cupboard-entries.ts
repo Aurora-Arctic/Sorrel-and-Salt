@@ -23,7 +23,7 @@ import { fold, trimmedOrUndefined } from '../../../lib/text';
 import { isRowId, parseInput } from '../../../lib/validation';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
-import { ingredients } from '../schema/ingredients';
+import { ingredients, mapCorrespondences, type CorrespondenceKey } from '../schema/ingredients';
 import { inventoryItems } from '../schema/inventory-items';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { CupboardEntryInput, type CupboardEntryValues } from '../validation/cupboard-entry';
@@ -417,10 +417,10 @@ async function ownValuesOf(
     description: merged.description,
     safetyNotes: merged.safetyNotes,
     toxic: merged.toxic,
-    elements: merged.elements,
-    celestialBodies: merged.celestialBodies,
-    zodiacSigns: merged.zodiacSigns,
-    colors: merged.colors,
+    ...mapCorrespondences<IngredientRow, Pick<IngredientRow, CorrespondenceKey>>(
+      merged,
+      (list) => list,
+    ),
     folkNames: allFolkNames.filter((name) => name.toLowerCase() !== nameKey),
     substitutes: copied(substitutes),
     deities: deities
@@ -436,10 +436,10 @@ async function ownValuesOf(
         description: form.description ?? '',
         safetyNotes: form.safetyNotes ?? '',
         toxic: form.toxic,
-        elements: form.elements ?? [],
-        celestialBodies: form.celestialBodies ?? [],
-        zodiacSigns: form.zodiacSigns ?? [],
-        colors: form.colors ?? [],
+        ...mapCorrespondences<
+          typeof form,
+          Pick<NonNullable<IngredientValues['variants']>[number], CorrespondenceKey>
+        >(form, (list) => list ?? []),
         categoryIds: filed(ownedBy(formCategories, index)),
         substitutes: copied(formSubstitutes.filter(({ row }) => row.variantId === form.id)),
         references: cited(ownedBy(formReferences, index)),

@@ -81,7 +81,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-67  | Vocabulary admin services repeat the create and delete sequences                                                                                             | medium   | Server        |      9 |   4.5 | Fixed                                           |
 | D-68  | Four hand-built hover-tip wrappers on `useTip` in UserList                                                                                                   | medium   | Components    |      9 |     4 | Moved to MC.6                                   |
 | D-69  | AdminCards and AdminInvitations small duplicates and hard-coded constants                                                                                    | medium   | Components    |      8 |   3.5 | Moved to MC.8                                   |
-| D-70  | Correspondence columns declared three times                                                                                                                  | medium   | Server        |      8 |  3.25 | Fixed in part                                   |
+| D-70  | Correspondence columns declared three times                                                                                                                  | medium   | Server        |      8 |  3.25 | Fixed                                           |
 | D-71  | Delete and remove write hooks repeat one mutation shape                                                                                                      | medium   | Components    |      8 |   3.5 | Moved to MC.6                                   |
 | D-72  | A callback-ref merge written twice                                                                                                                           | medium   | Components    |      8 |     2 | Moved to MC.6                                   |
 | D-73  | Help article title row and page head repeated across four Help pages and their skeletons                                                                     | medium   | Components    |      8 |  2.75 | Moved to MC.8                                   |
@@ -2142,7 +2142,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** ingredient write tests and the SDL snapshot.
 
 - **Estimate:** 3.25 hours
-- **Status:** Fixed in part. The schema columns (`correspondenceColumns()` in `src/modules/ingredients/schema/ingredients.ts`) and the GraphQL fields (`src/modules/ingredients/graphql/correspondences.ts`) are shared. The five service sites in `ingredient-rows.ts` and `cupboard-entries.ts` stay, because each transforms the four lists differently.
+- **Status:** Fixed. The schema columns (`correspondenceColumns()`), the key list (`CORRESPONDENCE_KEYS`) and `mapCorrespondences(source, transform)` live in `src/modules/ingredients/schema/ingredients.ts`; the five service sites in `ingredient-rows.ts` and `cupboard-entries.ts` use the helper, and a type-level check beside the key list fails when the keys and the columns differ. The GraphQL fields are shared in `src/modules/ingredients/graphql/correspondences.ts`.
 
 ### D-71: Delete and remove write hooks repeat one mutation shape
 

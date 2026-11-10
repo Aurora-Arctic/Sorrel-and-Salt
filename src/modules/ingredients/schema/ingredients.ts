@@ -42,6 +42,36 @@ export function correspondenceColumns() {
   };
 }
 
+export const CORRESPONDENCE_KEYS = [
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+] as const;
+
+export type CorrespondenceKey = (typeof CORRESPONDENCE_KEYS)[number];
+
+/** Fails to compile when a correspondence column has no key in `CORRESPONDENCE_KEYS`, or a key has no column. */
+export type CorrespondenceKeysMatchColumns<
+  Match extends true = [CorrespondenceKey] extends [keyof ReturnType<typeof correspondenceColumns>]
+    ? [keyof ReturnType<typeof correspondenceColumns>] extends [CorrespondenceKey]
+      ? true
+      : false
+    : false,
+> = Match;
+
+/**
+ * The four correspondence lists of `source`, each passed through `transform`. `Out` names the result the transform makes;
+ * it defaults to the lists as they stand.
+ */
+export function mapCorrespondences<
+  Source extends Partial<Record<CorrespondenceKey, unknown>>,
+  Out extends Partial<Record<CorrespondenceKey, unknown>> = Pick<Source, CorrespondenceKey>,
+>(source: Source, transform: (list: Source[CorrespondenceKey]) => unknown): Out {
+  // Safe because the check above ties the keys to the columns.
+  return Object.fromEntries(CORRESPONDENCE_KEYS.map((key) => [key, transform(source[key])])) as Out;
+}
+
 /** An ingredient's identity: its formal name, falling back to the label, never the form. One builder gives the column and its finders one spelling. */
 export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL {
   return sql`lower(coalesce(${canonicalName}, ${name}))`;

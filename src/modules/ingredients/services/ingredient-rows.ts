@@ -18,7 +18,7 @@ import { addressTaken, fold } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { isRowId } from '../../../lib/validation';
 import { assertRowId } from './messages';
-import { ingredients } from '../schema/ingredients';
+import { ingredients, mapCorrespondences, type CorrespondenceKey } from '../schema/ingredients';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
@@ -66,10 +66,10 @@ export function ingredientColumns(fields: IngredientFields) {
     canonicalName: fields.canonicalName ?? null,
     nomenclature: fields.nomenclature,
     description: fields.description ?? null,
-    elements: fields.elements ?? null,
-    celestialBodies: fields.celestialBodies ?? null,
-    zodiacSigns: fields.zodiacSigns ?? null,
-    colors: fields.colors ?? null,
+    ...mapCorrespondences<
+      IngredientFields,
+      { [K in CorrespondenceKey]: NonNullable<IngredientFields[K]> | null }
+    >(fields, (list) => list ?? null),
     safetyNotes: fields.safetyNotes ?? null,
     toxic: fields.toxic ?? false,
     slug: ingredientSlug(fields.name, fields.canonicalName),
@@ -300,10 +300,9 @@ function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
     formId: variant.formId || null,
     description: variant.description || null,
     safetyNotes: variant.safetyNotes || null,
-    elements: listOrNone(variant.elements),
-    celestialBodies: listOrNone(variant.celestialBodies),
-    zodiacSigns: listOrNone(variant.zodiacSigns),
-    colors: listOrNone(variant.colors),
+    ...mapCorrespondences<VariantEntry, Pick<PickedVariant, CorrespondenceKey>>(variant, (list) =>
+      listOrNone(list as unknown[]),
+    ),
     at,
   };
 }
@@ -773,27 +772,14 @@ async function writeVariant(
   variant: PickedVariant,
   row?: VariantRecord,
 ): Promise<string> {
-  const {
-    form,
-    formId,
-    description,
-    safetyNotes,
-    toxic,
-    elements,
-    celestialBodies,
-    zodiacSigns,
-    colors,
-  } = variant;
+  const { form, formId, description, safetyNotes, toxic } = variant;
   const columns = {
     form,
     formId,
     description,
     safetyNotes,
     toxic,
-    elements,
-    celestialBodies,
-    zodiacSigns,
-    colors,
+    ...mapCorrespondences(variant, (list) => list),
   };
   const refuse = (error: unknown): never => {
     if (violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) throw error;
