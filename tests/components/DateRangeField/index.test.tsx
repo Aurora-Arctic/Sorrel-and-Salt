@@ -1,10 +1,16 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import DateRangeField from '@/components/DateRangeField';
 import type { DayRange } from '@/components/DateRangeField/types';
+import { dayPickerModule } from '@/components/DateField/lazy-day-picker';
 
 // claude-docs/components/date-field.md
+
+// The calendar loads on its own; these tests start after it has arrived, as a person opening the field after the page has been idle finds it.
+beforeAll(async () => {
+  await dayPickerModule.load();
+});
 
 const PICKS = [
   { label: 'First Week', range: () => ({ from: '2026-10-01', to: '2026-10-07' }) },
