@@ -333,6 +333,8 @@ export const rules = {
           'a panel inside IngredientForm, which it tells of its changes (`useReportPanelChanges`) and whose guard holds them',
         'src/components/IngredientEntry/coven-choice.tsx':
           'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; nothing is submitted through it',
+        'src/components/SpellBuilder/skeleton.tsx':
+          'the Edit Spell form’s loading skeleton, inert and holding no input: nothing can be typed into it',
       };
       return {
         Program(program) {

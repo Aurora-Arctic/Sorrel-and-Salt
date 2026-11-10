@@ -91,7 +91,10 @@ const SECTIONS = {
 
 type SectionName = keyof typeof SECTIONS;
 
-const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
+/** Why Save is off as the form opens, before anything is changed. */
+export const NOTHING_TO_SAVE = 'Nothing to save yet';
+
+export const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
 
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
@@ -529,7 +532,7 @@ const SpellBuilder = ({
         : !jarReady
           ? 'Waiting for the jar to load'
           : !dirty && autosave.status === 'idle'
-            ? 'Nothing to save yet'
+            ? NOTHING_TO_SAVE
             : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   useSaveOnClose(dirty && stepsRead !== 'failed' && !removed, saveForClose);

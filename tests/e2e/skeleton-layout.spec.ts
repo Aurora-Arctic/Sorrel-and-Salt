@@ -23,10 +23,12 @@ import type { Coven } from './stories/coven-ingredients';
 /** How far a static part may move between the skeleton and the page, in pixels. */
 const TOLERANCE = 2;
 
-const SPELL_TITLE = 'Fixture Layout Charm';
+// Short enough to stand on one line at 375px, as the skeleton's title bar does.
+const SPELL_TITLE = 'Charmwort';
 
 let coven: Coven;
 let keeperId: string;
+let spellId: string;
 /** One signed-in browser state per user, built once per worker after the seed and shared by that user's cases. */
 const sessions: Partial<
   Record<Navigation['as'], Awaited<ReturnType<BrowserContext['storageState']>>>
@@ -58,6 +60,7 @@ test.beforeAll(async ({ browser }) => {
         return id;
       };
       const spell = await typical(SPELL_TITLE, 'complete');
+      spellId = spell;
       for (let position = 0; position < 3; position += 1) {
         await insertStep(sql, spell, held, { quantity: 2, unit: 'g', position }, A);
       }
@@ -119,6 +122,8 @@ interface Navigation {
   stackedParts?: string[];
   /** The account menu draws its links only once opened, so it is opened before the link is looked for. */
   inAccountMenu?: boolean;
+  /** Static parts of this page alone, by name: the first shown match of each selector, and the dimensions compared. */
+  parts?: Record<string, { selector: string; dimensions: Dimension[] }>;
 }
 
 // A move between two tabs of one admin page is not listed: the tab row stays mounted and swaps its own panel skeleton, so no cover is drawn (skeletonFor).
@@ -192,9 +197,20 @@ const navigations: Navigation[] = [
     name: 'coven-spell',
     as: 'steward',
     from: (slug) => `/coven/${slug}/grimoire`,
-    to: (slug) => new RegExp(`^/coven/${slug}/grimoire/[0-9a-f-]{36}$`),
+    // The Charm, whose steps match the Steps entry the skeleton's menu draws.
+    to: (slug) => `/coven/${slug}/grimoire/${spellId}`,
     dynamicTitle: true,
     stackedParts: ['aside'],
+    // The back link, the last-edit line, the menu (its entries are fixed) and the headings of the side
+    // column and Workings, whose words are fixed; where the headings stand depends on the steps above them.
+    parts: {
+      backLink: { selector: '.spell-recipe__bar .back-link', dimensions: ['x', 'y', 'w', 'h'] },
+      lastEdit: { selector: '.last-edit', dimensions: ['x', 'y', 'h'] },
+      menu: { selector: 'nav.page-nav', dimensions: ['h'] },
+      categoryMatch: { selector: '.comparison-panel h2', dimensions: ['x', 'w', 'h'] },
+      cupboard: { selector: '.spell-inventory h2', dimensions: ['x', 'w', 'h'] },
+      workings: { selector: '.spell-workings h2', dimensions: ['x', 'w', 'h'] },
+    },
   },
   {
     name: 'coven-ingredients',
@@ -311,77 +327,84 @@ const frameOf = (page: Page) =>
   });
 
 /** The static parts inside the skeleton's cover, or on the arrived page. */
-const layoutOf = (page: Page, inSkeleton: boolean) =>
-  page.evaluate((skeleton): Layout => {
-    const root = skeleton ? document.querySelector('.skeleton-cover') : document;
-    const outside =
-      '.skeleton-cover, .skeleton-fade, .skeleton-held, .app-shell__bar, .context-row, .site-footer, dialog';
-    const shown = (element: Element) => {
-      if (!skeleton && element.closest(outside)) return false;
-      if (skeleton && element.closest('dialog')) return false;
-      const rect = element.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    };
-    const find = (selector: string) =>
-      [...(root?.querySelectorAll(selector) ?? [])].find(shown) ?? null;
-    const box = (element: Element | null) => {
-      if (!element) return null;
-      const rect = element.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
-    };
-    // A document's body is published text, so a table or list inside it sits wherever the text puts it.
-    const listed = (element: Element) => shown(element) && !element.closest('.document-page__body');
-    const table = [...(root?.querySelectorAll('table') ?? [])].find(listed) ?? null;
-    const list =
-      table ??
-      [
-        ...(root?.querySelectorAll('ul[aria-label], ol[aria-label], [role="list"][aria-label]') ??
-          []),
-      ].find((element) => listed(element) && !element.closest('nav, header, form')) ??
-      null;
-    const item = table ? table.querySelector('tbody tr') : (list?.firstElementChild ?? null);
-    let frame = table?.parentElement ?? null;
-    while (frame && !['auto', 'scroll'].includes(getComputedStyle(frame).overflowX)) {
-      frame = frame.parentElement;
-    }
-    const stacked =
-      !!table && getComputedStyle(table.querySelector('thead') ?? table).display === 'none';
-    return {
-      parts: {
-        h1: box(find('h1')),
-        header: box(find('.page-header')),
-        action: box(
-          find(
-            '.page-header > :not(h1, h2, .page-header__title, .tabbed-page__tabs, .tabbed-page__action), .tabbed-page__action > *',
+const layoutOf = (page: Page, inSkeleton: boolean, extra: Navigation['parts'] = {}) =>
+  page.evaluate(
+    ({ skeleton, extra }): Layout => {
+      const root = skeleton ? document.querySelector('.skeleton-cover') : document;
+      const outside =
+        '.skeleton-cover, .skeleton-fade, .skeleton-held, .app-shell__bar, .context-row, .site-footer, dialog';
+      const shown = (element: Element) => {
+        if (!skeleton && element.closest(outside)) return false;
+        if (skeleton && element.closest('dialog')) return false;
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const find = (selector: string) =>
+        [...(root?.querySelectorAll(selector) ?? [])].find(shown) ?? null;
+      const box = (element: Element | null) => {
+        if (!element) return null;
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+      };
+      // A document's body is published text, so a table or list inside it sits wherever the text puts it.
+      const listed = (element: Element) =>
+        shown(element) && !element.closest('.document-page__body');
+      const table = [...(root?.querySelectorAll('table') ?? [])].find(listed) ?? null;
+      const list =
+        table ??
+        [
+          ...(root?.querySelectorAll('ul[aria-label], ol[aria-label], [role="list"][aria-label]') ??
+            []),
+        ].find((element) => listed(element) && !element.closest('nav, header, form')) ??
+        null;
+      const item = table ? table.querySelector('tbody tr') : (list?.firstElementChild ?? null);
+      let frame = table?.parentElement ?? null;
+      while (frame && !['auto', 'scroll'].includes(getComputedStyle(frame).overflowX)) {
+        frame = frame.parentElement;
+      }
+      const stacked =
+        !!table && getComputedStyle(table.querySelector('thead') ?? table).display === 'none';
+      return {
+        parts: {
+          h1: box(find('h1')),
+          header: box(find('.page-header')),
+          action: box(
+            find(
+              '.page-header > :not(h1, h2, .page-header__title, .tabbed-page__tabs, .tabbed-page__action), .tabbed-page__action > *',
+            ),
           ),
-        ),
-        eyebrow: box(find('.eyebrow')),
-        lede: box(find('.lede')),
-        tabs: box(find('.tabbed-page__tabs')),
-        pageNav: box(find('nav.page-nav')),
-        filter: box(find('.filter-row')),
-        aside: box(find('aside')),
-        toolbar: box(find('[role="toolbar"]')),
-        list: box(list),
-        item: item && shown(item) ? box(item) : null,
-      },
-      headings: table
-        ? [...table.querySelectorAll('thead th')]
-            .map((th) => {
-              // A sort button's spoken state is not part of the heading the eye reads.
-              const copy = th.cloneNode(true) as HTMLElement;
-              copy
-                .querySelectorAll('.visually-hidden')
-                .forEach((hidden) => hidden.textContent?.startsWith(',') && hidden.remove());
-              return copy.textContent?.trim();
-            })
-            .join('|')
-        : null,
-      itemIsCard: !table || stacked,
-      tableFrame: box(frame),
-      tableScrolls: !!frame && frame.scrollWidth > frame.clientWidth + 1,
-    };
-  }, inSkeleton);
+          eyebrow: box(find('.eyebrow')),
+          lede: box(find('.lede')),
+          tabs: box(find('.tabbed-page__tabs')),
+          pageNav: box(find('nav.page-nav')),
+          filter: box(find('.filter-row')),
+          aside: box(find('aside')),
+          toolbar: box(find('[role="toolbar"]')),
+          list: box(list),
+          item: item && shown(item) ? box(item) : null,
+          ...Object.fromEntries(
+            Object.entries(extra).map(([name, { selector }]) => [name, box(find(selector))]),
+          ),
+        },
+        headings: table
+          ? [...table.querySelectorAll('thead th')]
+              .map((th) => {
+                // A sort button's spoken state is not part of the heading the eye reads.
+                const copy = th.cloneNode(true) as HTMLElement;
+                copy
+                  .querySelectorAll('.visually-hidden')
+                  .forEach((hidden) => hidden.textContent?.startsWith(',') && hidden.remove());
+                return copy.textContent?.trim();
+              })
+              .join('|')
+          : null,
+        itemIsCard: !table || stacked,
+        tableFrame: box(frame),
+        tableScrolls: !!frame && frame.scrollWidth > frame.clientWidth + 1,
+      };
+    },
+    { skeleton: inSkeleton, extra },
+  );
 
 /** Which dimensions of each part are static: a dynamic title fixes only where the heading starts. */
 function staticDimensions(
@@ -391,6 +414,8 @@ function staticDimensions(
   phone: boolean,
 ): Dimension[] {
   if (phone && navigation.stackedParts?.includes(part)) return ['x', 'w'];
+  const own = navigation.parts?.[part];
+  if (own) return own.dimensions;
   switch (part) {
     case 'h1':
       return navigation.dynamicTitle ? ['x', 'y'] : ['x', 'y', 'h'];
@@ -641,7 +666,7 @@ for (const as of ['steward', 'keeper'] as const) {
             () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
           );
           const frameWaiting = await frameOf(page);
-          const skeleton = await layoutOf(page, true);
+          const skeleton = await layoutOf(page, true, navigation.parts);
           const skeletonDrawn = await decorationsOf(page, true);
 
           await server.release();
@@ -651,7 +676,7 @@ for (const as of ['steward', 'keeper'] as const) {
           await expect(page.locator('[aria-busy="true"]')).toHaveCount(0, { timeout: 20_000 });
           const frameArrived = await frameOf(page);
           await expect(page.locator('h1').first()).toBeVisible();
-          const arrived = await layoutOf(page, false);
+          const arrived = await layoutOf(page, false, navigation.parts);
           const arrivedDrawn = await decorationsOf(page, false);
           // Why the comparison means something: the page arrived and drew its heading.
           expect(arrived.parts.h1, 'the arrived page has a heading').not.toBeNull();
@@ -668,3 +693,76 @@ for (const as of ['steward', 'keeper'] as const) {
     }
   });
 }
+
+/** The Edit Spell dialog's parts, by name: its box, the header's control row, each section, the Shared switch and the actions. */
+const dialogLayoutOf = (page: Page) =>
+  page.evaluate(() => {
+    const dialog = document.querySelector('dialog[open]');
+    const box = (element: Element | null | undefined) => {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+    };
+    const parts: Record<string, Box | null> = {
+      dialog: box(dialog),
+      controls: box(dialog?.querySelector('.modal-dialog__header-slot')),
+      share: box(dialog?.querySelector('.spell-builder__share')),
+      actions: box(dialog?.querySelector('.form__actions')),
+    };
+    dialog?.querySelectorAll('.collapsible-section').forEach((section, at) => {
+      parts[`section ${at + 1}`] = box(section);
+    });
+    return parts;
+  });
+
+// The Edit Spell dialog opens at once over a skeleton of its form: the header's Open All and Undo and Redo,
+// the four shut sections, the Shared switch and the actions stand where the form puts them.
+test('the Edit Spell dialog at 1280px and 375px: its skeleton stands where the form does', async ({
+  page,
+}) => {
+  const session = sessions.steward;
+  if (!session) throw new Error('no session was built for the steward');
+  await page.context().addCookies(session.cookies);
+  const server = await holdServerAnswers(page);
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const edit = page.getByRole('link', { name: `Edit ${SPELL_TITLE}` });
+    await expect(edit).toBeVisible();
+    await hydrated(page, `a[href$="?edit=${spellId}"]`);
+
+    server.hold();
+    await edit.click();
+    await expect.poll(server.held).toBeGreaterThan(0);
+    await expect(page.locator('dialog[open] .modal-dialog__body[aria-busy="true"]')).toHaveCount(1);
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
+    const skeleton = await dialogLayoutOf(page);
+
+    await server.release();
+    await expect(page.locator('dialog[open] [aria-busy="true"]')).toHaveCount(0, {
+      timeout: 20_000,
+    });
+    await expect(page.getByRole('button', { name: 'Save Spell' })).toBeVisible();
+    const arrived = await dialogLayoutOf(page);
+    // Why the comparison means something: the form arrived with its four sections.
+    expect(Object.keys(arrived).filter((name) => name.startsWith('section'))).toHaveLength(4);
+
+    const found: string[] = [];
+    for (const [name, want] of Object.entries(arrived)) {
+      const got = skeleton[name];
+      if (want && !got) found.push(`${width}px ${name}: on the form, missing from the skeleton`);
+      if (!want || !got) continue;
+      for (const dimension of ['x', 'y', 'w', 'h'] as const) {
+        const gap = Math.round(Math.abs(got[dimension] - want[dimension]));
+        if (gap > TOLERANCE) {
+          found.push(
+            `${width}px ${name}.${dimension}: skeleton ${Math.round(got[dimension])}, form ${Math.round(want[dimension])} (${gap}px)`,
+          );
+        }
+      }
+    }
+    expect(found, found.join('\n')).toEqual([]);
+  }
+});

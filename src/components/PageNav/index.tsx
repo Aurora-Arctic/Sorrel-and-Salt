@@ -119,60 +119,59 @@ export default function PageNav({
           .join(' ') || undefined
       }
     >
-      <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
-        {entry.label}
-      </a>
+      {pending ? (
+        <span className="page-nav__pending">
+          <SkeletonText>{entry.label}</SkeletonText>
+        </span>
+      ) : (
+        <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
+          {entry.label}
+        </a>
+      )}
     </li>
   );
 
   // The entries stay one flat list for the observer above; only the drawing
-  // nests a group, its label naming its list.
-  const list = pending ? (
-    <ul aria-hidden="true">
-      {entries.length > 0
-        ? entries.map((entry) => (
-            <li key={entry.href}>
-              <span className="page-nav__pending">
-                <SkeletonText>{entry.label}</SkeletonText>
-              </span>
-            </li>
-          ))
-        : Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
-            <li key={at}>
-              <span className="page-nav__pending">
-                <Skeleton shape="line" quiet />
-              </span>
-            </li>
-          ))}
-    </ul>
-  ) : (
-    <ul>
-      {itemsOf(entries).map((item, at) =>
-        item.kind === 'entry' ? (
-          link(item.entry)
-        ) : (
-          <li
-            key={`group-${at}`}
-            className={
-              [
-                item.entries[0]?.apart && 'page-nav__apart',
-                item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
-              ]
-                .filter(Boolean)
-                .join(' ') || undefined
-            }
-          >
-            <span className="page-nav__group" id={`${groupId}-${at}`}>
-              {item.label}
+  // nests a group, its label naming its list. A skeleton with no entries draws bars.
+  const list =
+    pending && entries.length === 0 ? (
+      <ul aria-hidden="true">
+        {Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
+          <li key={at}>
+            <span className="page-nav__pending">
+              <Skeleton shape="line" quiet />
             </span>
-            <ul aria-labelledby={`${groupId}-${at}`}>
-              {item.entries.map((entry) => link(entry, false))}
-            </ul>
           </li>
-        ),
-      )}
-    </ul>
-  );
+        ))}
+      </ul>
+    ) : (
+      <ul aria-hidden={pending ? true : undefined}>
+        {itemsOf(entries).map((item, at) =>
+          item.kind === 'entry' ? (
+            link(item.entry)
+          ) : (
+            <li
+              key={`group-${at}`}
+              className={
+                [
+                  item.entries[0]?.apart && 'page-nav__apart',
+                  item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
+            >
+              <span className="page-nav__group" id={`${groupId}-${at}`}>
+                {pending ? <SkeletonText>{item.label}</SkeletonText> : item.label}
+              </span>
+              <ul aria-labelledby={`${groupId}-${at}`}>
+                {item.entries.map((entry) => link(entry, false))}
+              </ul>
+            </li>
+          ),
+        )}
+      </ul>
+    );
 
   return (
     <nav

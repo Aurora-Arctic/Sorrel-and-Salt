@@ -84,7 +84,8 @@
   // for.
   // Entries are not stepped in from the label: an indent read as too much room on a phone and
   // pushed right-aligned text off the column's edge on a wide screen.
-  &--grouped > ul > li > a {
+  &--grouped > ul > li > a,
+  &--grouped > ul > li > .page-nav__pending {
     font-size: $nav-link-size;
   }
 
@@ -103,7 +104,8 @@
       inset-inline-start: space(4);
     }
 
-    > a {
+    > a,
+    > .page-nav__pending {
       font-size: inherit;
     }
 
