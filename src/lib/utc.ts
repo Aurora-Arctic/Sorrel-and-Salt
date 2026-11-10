@@ -1,6 +1,12 @@
 /** The no-break space between a 12-hour time and its am or pm, so a line never breaks between them. */
 export const TIME_PERIOD_SPACE = '\u00a0';
 
+/** The date's parts by type, with an empty string for one the options leave out, so no caller depends on a locale's separators. */
+function partsOf(at: Date, options: Intl.DateTimeFormatOptions): (type: string) => string {
+  const parts = new Intl.DateTimeFormat('en-GB', options).formatToParts(at);
+  return (type) => parts.find((p) => p.type === type)?.value ?? '';
+}
+
 /** `expires_at` is midnight UTC, so the server's zone must not move it. */
 export function inUtc(at: Date): string {
   const day = at.toLocaleDateString('en-GB', {
@@ -35,7 +41,7 @@ export function isoDayInUtc(at: Date): string {
 
 /** Built from parts so it never depends on a locale's separators. */
 export function minuteInZone(at: Date, timeZone?: string): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const part = partsOf(at, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -43,15 +49,14 @@ export function minuteInZone(at: Date, timeZone?: string): string {
     minute: '2-digit',
     hourCycle: 'h12',
     timeZone,
-  }).formatToParts(at);
-  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  });
   const period = part('dayPeriod').toLowerCase();
   return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
 /** No zone suffix; the long form beside `minuteInZone`. */
 export function longMinuteInZone(at: Date, timeZone?: string): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const part = partsOf(at, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -59,8 +64,7 @@ export function longMinuteInZone(at: Date, timeZone?: string): string {
     minute: '2-digit',
     hourCycle: 'h12',
     timeZone,
-  }).formatToParts(at);
-  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  });
   const period = part('dayPeriod').toLowerCase();
   return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
@@ -93,27 +97,25 @@ export function printedDayOf(expiresAt: Date): string {
 
 /** An instant's day in a time zone as `30 Oct 2026` (the viewer's own when none is given): for a list's date column. */
 export function shortDayInZone(at: Date, timeZone?: string): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const part = partsOf(at, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone,
-  }).formatToParts(at);
-  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  });
   return `${part('day')} ${part('month')} ${part('year')}`;
 }
 
 /** An instant to the minute as `30 Oct, 2:01 pm` in a time zone (the viewer's own when none is given): for a thread's entries. */
 export function shortMinuteInZone(at: Date, timeZone?: string): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
+  const part = partsOf(at, {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
     hourCycle: 'h12',
     timeZone,
-  }).formatToParts(at);
-  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  });
   return `${part('day')} ${part('month')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${part('dayPeriod').toLowerCase()}`;
 }
 

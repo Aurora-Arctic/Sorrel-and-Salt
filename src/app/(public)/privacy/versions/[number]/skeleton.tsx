@@ -1,8 +1,3 @@
-import PageColumn from '@/components/PageColumn';
-import { DocumentSkeleton } from '@/components/DocumentPage/skeleton';
+import { DocumentPageSkeleton } from '../../../_document-skeleton';
 
-export const PrivacyVersionSkeleton = () => (
-  <PageColumn as="div">
-    <DocumentSkeleton title="Privacy Policy" />
-  </PageColumn>
-);
+export const PrivacyVersionSkeleton = () => <DocumentPageSkeleton title="Privacy Policy" />;

@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
 import Notice from '../Notice';
 import SpellMarks from '../SpellMarks';
-import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
+import { WORKINGS_ID, WORKINGS_TITLE, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
 
@@ -78,7 +78,7 @@ const SpellWorkings = ({
     aria-labelledby={WORKINGS_TITLE_ID}
   >
     <div className="spell-workings__title">
-      <h2 id={WORKINGS_TITLE_ID}>Workings</h2>
+      <h2 id={WORKINGS_TITLE_ID}>{WORKINGS_TITLE}</h2>
       {headingAction}
     </div>
     {workings.length === 0 ? (

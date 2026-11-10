@@ -1,8 +1,3 @@
-import PageColumn from '@/components/PageColumn';
-import { DocumentSkeleton } from '@/components/DocumentPage/skeleton';
+import { DocumentPageSkeleton } from '../_document-skeleton';
 
-export const CodeOfEthicsSkeleton = () => (
-  <PageColumn as="div">
-    <DocumentSkeleton title="Code of Ethics" />
-  </PageColumn>
-);
+export const CodeOfEthicsSkeleton = () => <DocumentPageSkeleton title="Code of Ethics" />;

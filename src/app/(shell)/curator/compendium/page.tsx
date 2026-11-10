@@ -47,11 +47,11 @@ import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
+import { ADD_INGREDIENT_TITLE } from '@/components/AppShell/add-href';
 
 export const metadata: Metadata = pageTitle('Compendium');
 
-const ADD_TITLE = 'Add Ingredient';
-const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
+const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_INGREDIENT_TITLE };
 
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   const session = await requireCuratorSession();
@@ -137,7 +137,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         title="Compendium"
         action={
           <AddAction href={compendiumHref(list, 'new')} heading={ADD_HEADING}>
-            {ADD_TITLE}
+            {ADD_INGREDIENT_TITLE}
           </AddAction>
         }
       />

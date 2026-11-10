@@ -7,6 +7,7 @@ import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
 import { useCovenSlug } from '@/lib/use-coven-slug';
 import { covenPath } from '@/lib/coven-path';
+import { NEW_SPELL_TITLE } from '@/components/AppShell/add-href';
 
 /** A Grimoire tab's filter row and spell cards, compact as the coven lists open. */
 export const GrimoirePanelSkeleton = ({ drafts }: { drafts?: boolean }) => (
@@ -44,7 +45,7 @@ const GrimoireTabsSkeleton = ({ drafts }: { drafts?: boolean }) => {
       title="Grimoire"
       tabs={tabs}
       open={covenPath(slug, 'grimoire', drafts && 'drafts')}
-      action={<ActionFace>New Spell</ActionFace>}
+      action={<ActionFace>{NEW_SPELL_TITLE}</ActionFace>}
     >
       <GrimoirePanelSkeleton drafts={drafts} />
     </TabbedPage>

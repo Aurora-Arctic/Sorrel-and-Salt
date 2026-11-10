@@ -13,7 +13,14 @@ import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
 import ModalLoading from '../Modal/loading';
 import { useLazyModule } from '@/lib/use-lazy-module';
-import { NEW, NEW_COMPENDIUM_ENTRY, askedCoven, closedHref, openHref } from './add-href';
+import {
+  ADD_INGREDIENT_TITLE,
+  NEW,
+  NEW_COMPENDIUM_ENTRY,
+  askedCoven,
+  closedHref,
+  openHref,
+} from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 import { compendiumEntryPath } from '@/lib/compendium-path';
@@ -25,7 +32,6 @@ const loadForm = () => import('../IngredientForm');
 // coven's dialog opens at `?new=ingredient-coven-<slug>` by `pushState`; the compendium's New Entry
 // is a navigation (claude-docs/components/modal.md, "Add Ingredient").
 
-const LABEL = 'Add Ingredient';
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
@@ -203,7 +209,7 @@ const AddIngredientButton = ({
       {saved && <output className="app-shell__saved">{saved}</output>}
       <span className="app-shell__add-group">
         <button ref={main} type="button" className={CLASSES} onClick={() => go(initial)}>
-          {LABEL}
+          {ADD_INGREDIENT_TITLE}
         </button>
         {all.length > 1 && (
           <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
@@ -214,7 +220,7 @@ const AddIngredientButton = ({
           // Another coven's address is another form.
           key={adding.id}
           destination={adding.name}
-          title={LABEL}
+          title={ADD_INGREDIENT_TITLE}
           onClose={close}
           loading={!form}
           // Focus returns to the bar's main part: the menu item that opened this goes with the

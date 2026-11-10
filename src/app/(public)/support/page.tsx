@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SUPPORT_LEDE } from './head';
 import { noIndexMetadata } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../../components/PageHeader';
@@ -43,11 +44,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.
   return (
     <PageWithNav as="div">
-      <PageHeader
-        eyebrow="Help"
-        title="Support"
-        lede="Tell us about something you cannot use, something broken, or ask a question."
-      />
+      <PageHeader eyebrow="Help" title="Support" lede={SUPPORT_LEDE} />
       <p>
         <PendingLink href="/help">Search Help</PendingLink>
       </p>

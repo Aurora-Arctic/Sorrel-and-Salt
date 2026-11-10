@@ -17,6 +17,7 @@ import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
 import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
+import PanelSection from '@/components/PanelSection';
 
 export const metadata: Metadata = pageTitle('Your Account');
 
@@ -46,27 +47,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
-      <section
-        id="account-name"
-        className="page-frame__section panel"
-        aria-labelledby="account-name-heading"
-      >
-        <div className="header">
-          <h2 id="account-name-heading">Name</h2>
-          <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
-        </div>
+      <PanelSection id="account-name" title="Name" lede="The name Sorrel & Salt shows for you.">
         <NameForm name={me.name} />
-      </section>
-      <section
-        id="account-email"
-        className="page-frame__section panel"
-        aria-labelledby="account-email-heading"
-      >
+      </PanelSection>
+      <PanelSection id="account-email" title="Email">
         {/* No lede here: the form's own status line says what the section
             is for, and changes with the address's state. */}
-        <div className="header">
-          <h2 id="account-email-heading">Email</h2>
-        </div>
         <EmailForm
           embedded
           // A placeholder is the row's way of having no address; the form
@@ -76,16 +62,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           landing={landing}
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
         />
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id={ACCOUNT_INVITATIONS_ID}
-        className="page-frame__section panel"
-        aria-labelledby="account-invitations-heading"
+        title="Invitations"
+        lede="Covens that have invited this email address to join them."
       >
-        <div className="header">
-          <h2 id="account-invitations-heading">Invitations</h2>
-          <p className="lede">Covens that have invited this email address to join them.</p>
-        </div>
         {/* The list is drawn even with no rows, so its own empty line is
             live: the section is always on the page. */}
         <ReceivedInvitations
@@ -96,7 +78,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           }
           nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
         />
-      </section>
+      </PanelSection>
     </PageWithNav>
   );
 }

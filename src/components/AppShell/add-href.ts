@@ -12,6 +12,8 @@ import {
 } from '../../lib/coven-path';
 
 export const NEW = 'new';
+export const ADD_INGREDIENT_TITLE = 'Add Ingredient';
+export const NEW_SPELL_TITLE = 'New Spell';
 
 export {
   NEW_COMPENDIUM_ENTRY,
