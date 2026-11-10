@@ -137,7 +137,7 @@ const ReplyForm = ({
           name="waitingOnSender"
           value="1"
           checked={waiting}
-          busy={busy}
+          disabled={busy}
           hint="Marks the request as waiting for the sender's answer."
           onChange={setWaiting}
         />

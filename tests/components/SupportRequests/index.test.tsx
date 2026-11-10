@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
@@ -22,7 +22,11 @@ import type {
   TimeOutSupportSenderMutation,
   TimeOutSupportSenderMutationVariables,
 } from '@/gql/graphql';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import {
+  mockGraphQLError,
+  mockGraphQLMutation,
+  mockGraphQLPendingMutation,
+} from '../../support/msw/graphql';
 import { rowCells } from '../../support/table';
 import { router } from '../../support/next-navigation';
 
@@ -222,6 +226,37 @@ describe('Reply', () => {
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]?.waitingOnSender).toBe(true);
+  });
+
+  it('holds the Waiting on Sender choice still while the reply sends, without showing it as loading', async () => {
+    const answer = mockGraphQLPendingMutation<ReplyToSupportRequestMutation>(
+      'ReplyToSupportRequest',
+      { replyToSupportRequest: { id: 'x' } },
+    );
+    // Answered however the test ends, so a failed assertion leaves no request open to stall the next test.
+    onTestFinished(answer);
+    open(ADMIN);
+    chooseReply();
+    const waiting = within(dialog()).getByRole('switch', { name: /Waiting on Sender/ });
+    // Precondition: the choice can be changed before the reply goes.
+    expect(waiting).toBeEnabled();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
+      target: { value: 'Which jar?' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+
+    // The reply is in flight once its own button reports busy.
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: /Replying/ })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
+    expect(waiting).toBeDisabled();
+    expect(waiting).not.toHaveAttribute('aria-busy');
+
+    answer();
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
 });
 

@@ -343,7 +343,7 @@ const GroupedValueForm = ({
   // Kept with the sentence it came with, so a later alert never shows another refusal's link.
   const [inUse, setInUse] = useState<{ message: string; heldBy: HeldBy }>();
   const discard = useDiscardGuard(isDirty);
-  const { root, history, setAlert, rootError, send } = useEntityForm({
+  const { root, history, setAlert, rootError, settle, send } = useEntityForm({
     methods,
     discard,
     save: (input) => spec.save(input, value?.id),
@@ -413,7 +413,7 @@ const GroupedValueForm = ({
         >
           <FormHistoryButtons />
           {rootError && (
-            <Notice kind="error">
+            <Notice kind="error" result>
               {rootError}
               {inUse?.message === rootError && (
                 <>
@@ -479,6 +479,8 @@ const GroupedValueForm = ({
               const heldBy = heldByOf(error);
               setInUse(heldBy && { message: refusal, heldBy });
               setAlert(refusal);
+              // After the question hands the focus back to the delete button as it goes.
+              settle('result');
             }}
           />
         </form>

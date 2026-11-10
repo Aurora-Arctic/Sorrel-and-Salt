@@ -44,6 +44,27 @@ export function mockGraphQLMutation<
   );
 }
 
+/**
+ * A mutation held unanswered until the returned function is called, for asserting what the page shows
+ * while it is in flight. Call it before the test ends, or the open request stalls the tests after it.
+ */
+export function mockGraphQLPendingMutation<TData extends GraphQLQuery>(
+  operationName: string,
+  data: TData,
+): () => void {
+  let release = () => {};
+  const answered = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  server.use(
+    graphqlLink.mutation<TData>(operationName, async () => {
+      await answered;
+      return HttpResponse.json({ data });
+    }),
+  );
+  return release;
+}
+
 function thrownFor({
   code,
   fieldErrors = [],
