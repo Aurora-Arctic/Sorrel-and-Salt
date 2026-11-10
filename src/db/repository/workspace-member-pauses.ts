@@ -1,22 +1,13 @@
-import { and, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import { applyAudit } from '../audit';
 import { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { Membership } from '@/modules/coven';
-import { newestFirst, notSoftDeleted, scopedTo } from './predicates';
+import { newestFirst, noEndOrAhead, notSoftDeleted, scopedTo } from './predicates';
+import { closeThenInsertPause, liftedNow } from './pause-ledger';
 import { findPageInWorkspace } from './finders';
 import { selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, WorkspaceMemberPauseRow, WriterContext } from './types';
-
-/**
- * A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. Exported for
- * `findWorkspaceSeat`, which reads the pause in the same query as the role.
- */
-export const notRunOut = or(
-  isNull(workspaceMemberPauses.until),
-  gt(workspaceMemberPauses.until, sql`now()`),
-);
 
 /**
  * One member's live pause in the proof's coven: not lifted, and (by the writes' own filter, or `notSoftDeleted` in a read) not
@@ -39,7 +30,11 @@ export function findStandingWorkspaceMemberPause(
 ): Promise<WorkspaceMemberPauseRow | undefined> {
   return selectOne(
     workspaceMemberPauses,
-    and(notSoftDeleted(workspaceMemberPauses), liveFor(membership, userId), notRunOut),
+    and(
+      notSoftDeleted(workspaceMemberPauses),
+      liveFor(membership, userId),
+      noEndOrAhead(workspaceMemberPauses.until),
+    ),
   );
 }
 
@@ -72,7 +67,7 @@ export function findStandingWorkspaceMemberPauses(
       scopedTo(membership, workspaceMemberPauses),
       inArray(workspaceMemberPauses.userId, [...userIds]),
       isNull(workspaceMemberPauses.liftedAt),
-      notRunOut,
+      noEndOrAhead(workspaceMemberPauses.until),
     ),
   );
 }
@@ -97,32 +92,27 @@ export function findWorkspaceMemberPausePage(
   );
 }
 
-export function workspaceMemberPauseWrites({
-  tx,
-  session,
-  update,
-}: WriterContext): Pick<AuditWriter, 'setWorkspaceMemberPause' | 'liftWorkspaceMemberPause'> {
-  // `now()` beside the trigger's `updated_at`, so the two read alike.
-  const lifted = () => ({ liftedAt: sql`now()`, liftedBy: session.userId });
+export function workspaceMemberPauseWrites(
+  context: WriterContext,
+): Pick<AuditWriter, 'setWorkspaceMemberPause' | 'liftWorkspaceMemberPause'> {
+  const { session, update } = context;
   return {
     // The live row is closed first, run out or standing, so the one-live index takes the new one. No conflict target: a pause
     // set for the same member in a transaction alongside wins the slot, and this call writes nothing rather than failing.
-    setWorkspaceMemberPause: async (membership, userId, { until, note, message }) => {
-      await update(workspaceMemberPauses, lifted(), liveFor(membership, userId));
-      return tx
-        .insert(workspaceMemberPauses)
-        .values(
-          applyAudit(
-            'insert',
-            { workspaceId: membership.workspaceId, userId, until, note, message },
-            session,
-          ) as never,
-        )
-        .onConflictDoNothing()
-        .returning();
-    },
+    setWorkspaceMemberPause: (membership, userId, { until, note, message }) =>
+      closeThenInsertPause(context, workspaceMemberPauses, liveFor(membership, userId), {
+        workspaceId: membership.workspaceId,
+        userId,
+        until,
+        note,
+        message,
+      }),
     // A pause that has run out ended by itself, so it is left alone rather than recorded as a steward's lift.
     liftWorkspaceMemberPause: (membership, userId) =>
-      update(workspaceMemberPauses, lifted(), and(liveFor(membership, userId), notRunOut)),
+      update(
+        workspaceMemberPauses,
+        liftedNow(session),
+        and(liveFor(membership, userId), noEndOrAhead(workspaceMemberPauses.until)),
+      ),
   };
 }

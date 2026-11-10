@@ -3,6 +3,9 @@ import { auditColumns } from '../../identity/schema/users';
 import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 import { FORM_GROUP_ICONS } from './form-group-icons';
 
+/** The index naming a variant's identity. Declared here because the form vocabulary's service must match it and may not import the ingredients module; the variants table uses it. */
+export const INGREDIENT_VARIANTS_FORM_UNIQUE = 'ingredient_variants_form_unique';
+
 export const formGroupIcon = pgEnum('form_group_icon', FORM_GROUP_ICONS);
 
 // Form groups: global, keeper-curated, a table rather than an enum. A group sections a dropdown, so it has no colour pair, but it carries its icon as data;

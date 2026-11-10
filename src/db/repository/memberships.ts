@@ -9,10 +9,8 @@ import { users } from '../../modules/identity/schema/users';
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { Membership, WorkspaceRole, WorkspaceSeat } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
-import { applyAudit } from '../audit';
-import { containsText, notSoftDeleted, scopedTo } from './predicates';
+import { containsText, noEndOrAhead, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom, selectOne } from './select';
-import { notRunOut } from './workspace-member-pauses';
 import type { AuditWriter, Keyset, WriterContext } from './types';
 
 /** The standing pause on a seat: unlifted, undeleted and not run out. The one-live index allows one per seat, so joining it adds no row. */
@@ -21,7 +19,7 @@ const standingPauseOnSeat = and(
   eq(workspaceMemberPauses.userId, workspaceMembers.userId),
   isNull(workspaceMemberPauses.liftedAt),
   notSoftDeleted(workspaceMemberPauses),
-  notRunOut,
+  noEndOrAhead(workspaceMemberPauses.until),
 ) as SQL;
 
 /**
@@ -197,7 +195,7 @@ export function membershipWrites({
   update,
   softDelete,
   tx,
-  session,
+  stampUpdate,
 }: WriterContext): Pick<
   AuditWriter,
   | 'insertMembership'
@@ -246,7 +244,7 @@ export function membershipWrites({
       return tx
         .update(workspaceMembers)
         .set({
-          ...applyAudit('update', { role, joinedAt: now, invitedBy }, session),
+          ...stampUpdate({ role, joinedAt: now, invitedBy }),
           deletedAt: null,
           deletedBy: null,
         })

@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNotNull, like, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, like, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
@@ -7,13 +7,11 @@ import { users } from '../../modules/identity/schema/users';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import type { SiteAdmin } from '@/modules/identity';
-import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
-import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
-import { containsText, newestFirst, notSoftDeleted } from './predicates';
+import { newestFirst, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
+import { nameOrEmailHolds, notStandIn } from './user-filters';
 import { timeoutStands } from './support';
 import { pauseStands } from './user-access-pauses';
 import type {
@@ -41,12 +39,7 @@ const USER_ORDER: readonly SortPart[] = [users.name];
 
 /** The users the list holds under `filter`: all but the three system users. */
 function listedUsers(filter: UserFilter): SQL | undefined {
-  return and(
-    ne(users.id, BOOTSTRAP_USER_ID),
-    ne(users.id, SIGNED_OUT_SENDER_ID),
-    ne(users.id, SYSTEM_ACTOR_ID),
-    ...userArms(filter),
-  );
+  return and(notStandIn, ...userArms(filter));
 }
 
 /**
@@ -197,10 +190,6 @@ function userArms({
       ? existsIn(userAccessPauses, and(eq(userAccessPauses.userId, users.id), pauseStands))
       : undefined,
   ];
-}
-
-function nameOrEmailHolds(query: string): SQL | undefined {
-  return or(containsText(users.name, query), containsText(users.email, query));
 }
 
 /**

@@ -1,11 +1,11 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
+import { nameOrEmailHolds } from './user-filters';
 import { containsText, newestFirst, notSoftDeleted, scopedTo, startsWithText } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -337,13 +337,7 @@ function arrivedByCard(): SQL {
 function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
   if (!query) return undefined;
   return or(
-    existsIn(
-      users,
-      and(
-        eq(users.id, invitations.acceptedBy),
-        or(containsText(users.name, query), containsText(users.email, query)),
-      ),
-    ),
+    existsIn(users, and(eq(users.id, invitations.acceptedBy), nameOrEmailHolds(query))),
     startsWithText(invitations.batchId, query),
   );
 }
@@ -534,6 +528,8 @@ export function findCardAttemptCount(
 export function invitationWrites({
   tx,
   session,
+  stampInsert,
+  stampUpdate,
   insert,
   update,
 }: WriterContext): Pick<
@@ -582,21 +578,16 @@ export function invitationWrites({
         : (tx
             .insert(invitations)
             .values(
-              tokens.map(
-                (token, index) =>
-                  applyAudit(
-                    'insert',
-                    {
-                      kind: 'card',
-                      batchId,
-                      note,
-                      beta,
-                      expiresAt,
-                      tokenHash: hashToken(token),
-                      position: index + 1,
-                    },
-                    session,
-                  ) as never,
+              tokens.map((token, index) =>
+                stampInsert({
+                  kind: 'card',
+                  batchId,
+                  note,
+                  beta,
+                  expiresAt,
+                  tokenHash: hashToken(token),
+                  position: index + 1,
+                }),
               ),
             )
             .returning() as never),
@@ -612,13 +603,7 @@ export function invitationWrites({
     recordCardAttempt: (invitationId: string, reason: CardAttemptReason) =>
       tx
         .insert(cardInvitationAttempts)
-        .values(
-          applyAudit(
-            'insert',
-            { invitationId, userId: session.userId, reason, attempts: 1 },
-            session,
-          ) as never,
-        )
+        .values(stampInsert({ invitationId, userId: session.userId, reason, attempts: 1 }))
         .onConflictDoUpdate({
           target: [
             cardInvitationAttempts.invitationId,
@@ -629,7 +614,7 @@ export function invitationWrites({
           set: {
             attempts: sql`${cardInvitationAttempts.attempts} + 1`,
             lastAttemptedAt: sql`now()`,
-            ...applyAudit('update', {}, session),
+            ...stampUpdate({}),
           },
         })
         .returning() as never,

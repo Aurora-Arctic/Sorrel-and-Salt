@@ -71,7 +71,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-57  | Hairline surface box repeated 12 times (exact triplicates)                                                                                                   | medium   | Styles        |     14 |   1.5 | Moved to MC.9                                   |
 | D-58  | Two pages read search params by hand instead of `single()` and `trimmed()`                                                                                   | medium   | Pages and lib |     13 |  1.25 | Moved to MC.2                                   |
 | D-59  | "named only in an allowed set of files" guards each rebuild the same scanner                                                                                 | medium   | Tests         |     13 |     2 | Moved to MC.1                                   |
-| D-60  | The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`                                                                          | medium   | Server        |     12 |   3.5 | Moved to MC.3                                   |
+| D-60  | The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`                                                                          | medium   | Server        |     12 |   3.5 | Fixed                                           |
 | D-61  | A class-name joiner is hand-written in about nine components with four different idioms                                                                      | medium   | Components    |     12 |     4 | Moved to MC.7                                   |
 | D-62  | small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2                                                     | medium   | Tests         |     11 |     2 | Moved to MC.1                                   |
 | D-63  | Trim, then empty to undefined or null, written inline in eight services                                                                                      | medium   | Server        |     11 |     2 | Moved to MC.4                                   |
@@ -167,10 +167,10 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-153 | Help module small repeats                                                                                                                                    | low      | Server        |      5 |     1 | Moved to MC.4                                   |
 | D-154 | "Until X" / "with no end date" wording built in five places                                                                                                  | low      | Components    |      5 |   1.5 | Moved to MC.5                                   |
 | D-155 | "Back to" link markup: `HelpBackLink` repeats `IngredientEntry/back-link.tsx`'s render and the skeleton rebuilds it                                          | low      | Components    |      5 |     1 | Moved to MC.8                                   |
-| D-156 | Stand-in user id list and direct `applyAudit(...) as never` inserts                                                                                          | low      | Server        |      4 |  2.75 | Moved to MC.3                                   |
+| D-156 | Stand-in user id list and direct `applyAudit(...) as never` inserts                                                                                          | low      | Server        |      4 |  2.75 | Fixed                                           |
 | D-157 | lock-probe.drizzle.config.ts is a false positive; fix the knip config                                                                                        | low      | Unused code   |      4 |  0.25 | Moved to MC.9                                   |
-| D-158 | Unique-index names and their race handling repeated as string literals                                                                                       | low      | Server        |      4 |     1 | Moved to MC.3                                   |
-| D-159 | User search: name-or-email test, and the three-way system-user exclusion                                                                                     | low      | Server        |      4 |   0.5 | Moved to MC.3                                   |
+| D-158 | Unique-index names and their race handling repeated as string literals                                                                                       | low      | Server        |      4 |     1 | Fixed                                           |
+| D-159 | User search: name-or-email test, and the three-way system-user exclusion                                                                                     | low      | Server        |      4 |   0.5 | Fixed                                           |
 | D-160 | Admin shared files live in `curator/` and the keepers area imports them across the sibling boundary                                                          | low      | Pages and lib |      4 |     2 | Moved to MC.2                                   |
 | D-161 | `TABLET_BAND` and its `useSyncExternalStore` subscription written in both PageNav and SectionNav                                                             | low      | Components    |      4 |     1 | Moved to MC.6                                   |
 | D-162 | "Deleted account" and "Signed-out sender" literals repeated across the support screens                                                                       | low      | Components    |      4 |   0.5 | Moved to MC.5                                   |
@@ -210,7 +210,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-196 | Three identical notifier interfaces                                                                                                                          | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-197 | "a/an role" noun written three times                                                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-198 | Batch refusal try/catch around an assert, returning one error per id                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
-| D-199 | Constants: `SYSTEM`, day length, retention cutoff                                                                                                            | low      | Server        |      1 |     1 | Moved to MC.3                                   |
+| D-199 | Constants: `SYSTEM`, day length, retention cutoff                                                                                                            | low      | Server        |      1 |     1 | Fixed                                           |
 | D-200 | Confirm-email Forbidden and "no row" NotFound copies                                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-201 | Site-admin list services repeat assert, parse filter, page, count                                                                                            | low      | Server        |      1 |  0.25 | Moved to MC.4                                   |
 | D-202 | Working report mapping duplicated                                                                                                                            | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
@@ -1921,7 +1921,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** tests/modules/identity and tests/modules/coven pause tests, tests/db repository pause tests.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-61: A class-name joiner is hand-written in about nine components with four different idioms
 
@@ -3881,7 +3881,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/db/repository/invitations*.test.ts`, `tests/modules/grimoire/**` working tests.
 
 - **Estimate:** 2.75 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-157: lock-probe.drizzle.config.ts is a false positive; fix the knip config
 
@@ -3910,7 +3910,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/ingredients/` stock and ingredient-row race specs.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-159: User search: name-or-email test, and the three-way system-user exclusion
 
@@ -3925,7 +3925,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/db/repository/users*.test.ts`, `tests/modules/documents/**`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-160: Admin shared files live in `curator/` and the keepers area imports them across the sibling boundary
 
@@ -4536,7 +4536,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
   Estimate: 1 h
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-200: Confirm-email Forbidden and "no row" NotFound copies
 

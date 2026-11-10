@@ -23,8 +23,10 @@ import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
+import { MS_PER_DAY } from '../../lib/duration';
 import { findPage, findPageCount } from './finders';
-import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
+import { newestFirst, notSoftDeleted } from './predicates';
+import { standingPause } from './pause-ledger';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
@@ -44,8 +46,6 @@ import type {
 
 export const RESOLVED_CLOSES_AFTER_DAYS = 7;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
  * A resolved request whose seven days have passed reads as closed, whether or not its job has closed it yet, so a lost run only
  * delays the stored move. Every finder and move below reads status through this. `coalesce` keeps a resolved request with no
@@ -55,7 +55,7 @@ const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and coalesce(
 
 function asOfNow<Row extends typeof supportRequests.$inferSelect>(row: Row): Row {
   if (row.status !== 'resolved' || row.resolvedAt === null) return row;
-  const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+  const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * MS_PER_DAY);
   return closedAt.getTime() <= Date.now() ? { ...row, status: 'closed', closedAt } : row;
 }
 
@@ -351,10 +351,7 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
   ).then(oneAsOfNow);
 }
 
-export const timeoutStands = and(
-  isNull(supportTimeouts.liftedAt),
-  noEndOrAhead(supportTimeouts.until),
-) as SQL;
+export const timeoutStands = standingPause(supportTimeouts);
 
 // The rows that stand on a sender; the send lock reads them inside its own transaction by the same predicate.
 const standingOnUser = (userId: string): SQL =>

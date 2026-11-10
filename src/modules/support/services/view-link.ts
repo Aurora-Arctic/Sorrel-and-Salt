@@ -1,4 +1,5 @@
 import 'server-only';
+import { MS_PER_DAY } from '../../../lib/duration';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   findOneById,
@@ -27,7 +28,7 @@ import {
 // SHA-256 hash is stored, so the newest mailed link alone opens the request. A request a real account holds, or one
 // anonymised, has no address on the row, so no token finds it (claude-docs/design-decisions/support.md, "A signed-out sender reaches their request by a mailed link").
 
-const DAY_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
+const SIGNED_OUT_WINDOW_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
 
 /** Replies one signed-out request may take through its link in 24 hours. */
 export const SIGNED_OUT_REPLY_REQUEST_LIMIT = 5;
@@ -52,7 +53,7 @@ export async function mintSupportViewToken(requestId: string): Promise<string> {
     write.setSupportViewToken(
       requestId,
       hashOf(token),
-      new Date(Date.now() + VIEW_TOKEN_DAYS * DAY_MS),
+      new Date(Date.now() + VIEW_TOKEN_DAYS * MS_PER_DAY),
     ),
   );
   return token;
@@ -138,7 +139,7 @@ export async function replyToSupportRequestByViewToken(
     );
 
   if (
-    (await countSenderRepliesSince(request.id, new Date(now.getTime() - DAY_MS))) >=
+    (await countSenderRepliesSince(request.id, new Date(now.getTime() - SIGNED_OUT_WINDOW_MS))) >=
     SIGNED_OUT_REPLY_REQUEST_LIMIT
   ) {
     throw tooMany();

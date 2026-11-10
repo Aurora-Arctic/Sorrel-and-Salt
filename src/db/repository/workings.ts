@@ -5,7 +5,6 @@ import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { spells } from '../../modules/grimoire/schema/spells';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { Membership } from '@/modules/coven';
-import { applyAudit } from '../audit';
 import { findPageInScope } from './finders';
 import { newestFirst, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
@@ -153,7 +152,7 @@ export async function findDeductionsOfWorkings(
  */
 export function workingWrites({
   tx,
-  session,
+  stampInsert,
   update,
   softDelete,
 }: WriterContext): Pick<
@@ -189,16 +188,12 @@ export function workingWrites({
         const [row] = await tx
           .insert(spellWorkingParticipants)
           .values(
-            applyAudit(
-              'insert',
-              {
-                workingId,
-                userId: participant.userId ?? null,
-                name: participant.name ?? null,
-                position,
-              },
-              session,
-            ) as never,
+            stampInsert({
+              workingId,
+              userId: participant.userId ?? null,
+              name: participant.name ?? null,
+              position,
+            }),
           )
           .returning();
         written.push(row as WorkingParticipantRow);
