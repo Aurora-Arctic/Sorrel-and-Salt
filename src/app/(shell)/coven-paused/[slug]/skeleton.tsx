@@ -1,12 +1,10 @@
-import PageFrame from '@/components/PageFrame';
-import PageHeader from '@/components/PageHeader';
+import NarrowPanelPage from '@/components/NarrowPanelPage';
 import Skeleton from '@/components/Skeleton';
+import { SkeletonContextRow } from '@/components/SkeletonFrame';
+import { ACCESS_PAUSED_TITLE } from './head';
 
 export const CovenPausedSkeleton = () => (
-  <PageFrame as="div" narrow>
-    <div className="page-frame__section panel">
-      <PageHeader title="Access Paused" />
-      <Skeleton shape="line" count={3} quiet />
-    </div>
-  </PageFrame>
+  <NarrowPanelPage as="div" contextRow={<SkeletonContextRow />} title={ACCESS_PAUSED_TITLE}>
+    <Skeleton shape="line" count={3} quiet />
+  </NarrowPanelPage>
 );

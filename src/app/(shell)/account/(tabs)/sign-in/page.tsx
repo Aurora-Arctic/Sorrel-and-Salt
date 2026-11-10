@@ -21,6 +21,7 @@ import { configuredProviders } from '../../../../../lib/social-providers-config'
 import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
+import PanelSection from '@/components/PanelSection';
 import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = pageTitle('Sign-In');
@@ -53,15 +54,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           { href: '#passkeys', label: 'Passkeys' },
         ]}
       />
-      <section
+      <PanelSection
         id="sign-in-methods"
-        className="page-frame__section panel"
-        aria-labelledby="account-sign-in-methods-heading"
+        title="Sign-In Methods"
+        lede="You can sign in to this account with any of these."
       >
-        <div className="header">
-          <h2 id="account-sign-in-methods-heading">Sign-In Methods</h2>
-          <p className="lede">You can sign in to this account with any of these.</p>
-        </div>
         <SignInMethods
           passwordHeld={passwordHeld}
           passkeyCount={passkeys.length}
@@ -72,35 +69,25 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           fresh={fresh}
           error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
         />
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="password"
-        className="page-frame__section panel"
-        aria-labelledby="account-password-heading"
+        title="Password"
+        lede={
+          passwordHeld
+            ? 'Changing your password signs out every other device signed in to your account.'
+            : linked.length > 0
+              ? 'Set a password to sign in with your email address as well as your providers.'
+              : 'Set a password to sign in with your email address as well.'
+        }
       >
-        <div className="header">
-          <h2 id="account-password-heading">Password</h2>
-          <p className="lede">
-            {passwordHeld
-              ? 'Changing your password signs out every other device signed in to your account.'
-              : linked.length > 0
-                ? 'Set a password to sign in with your email address as well as your providers.'
-                : 'Set a password to sign in with your email address as well.'}
-          </p>
-        </div>
         <PasswordSection hasPassword={passwordHeld} />
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="two-factor"
-        className="page-frame__section panel"
-        aria-labelledby="account-two-factor-heading"
+        title="Two-Factor Sign-In"
+        lede="Ask for a code from an authenticator app, as well as your password, when you sign in."
       >
-        <div className="header">
-          <h2 id="account-two-factor-heading">Two-Factor Sign-In</h2>
-          <p className="lede">
-            Ask for a code from an authenticator app, as well as your password, when you sign in.
-          </p>
-        </div>
         {/* Two-factor guards password sign-ins alone, so an account with no password has nothing to turn on. */}
         {passwordHeld ? (
           <TwoFactorSettings enabled={me.twoFactorEnabled} />
@@ -110,21 +97,19 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             <PendingLink href={ACCOUNT_PASSWORD_PATH}>Set a Password</PendingLink> first.
           </p>
         )}
-      </section>
-      <section
+      </PanelSection>
+      <PanelSection
         id="passkeys"
-        className="page-frame__section panel"
-        aria-labelledby="account-passkeys-heading"
-      >
-        <div className="header">
-          <h2 id="account-passkeys-heading">Passkeys</h2>
-          <p className="lede">
+        title="Passkeys"
+        lede={
+          <>
             A passkey is tied to this website&rsquo;s address and to the device or password manager
             that holds it.
-          </p>
-        </div>
+          </>
+        }
+      >
         <Passkeys passkeys={passkeys} />
-      </section>
+      </PanelSection>
     </PageWithNav>
   );
 }

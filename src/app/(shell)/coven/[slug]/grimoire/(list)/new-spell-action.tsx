@@ -3,7 +3,7 @@
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
-import { NEW, spellValue } from '@/components/AppShell/add-href';
+import { NEW, NEW_SPELL_TITLE, spellValue } from '@/components/AppShell/add-href';
 import { covenSlugOf } from '@/lib/coven-path';
 import AddAction from '@/app/(shell)/curator/add-action';
 import { newSpellHeading } from '@/components/SpellBuilder/spell-dialog';
@@ -23,7 +23,7 @@ export default function NewSpellAction({ covenName }: NewSpellActionProps): Reac
   const href = `${path}?${query}` as Route;
   return (
     <AddAction href={href} heading={newSpellHeading(covenName)} drawnHere>
-      New Spell
+      {NEW_SPELL_TITLE}
     </AddAction>
   );
 }

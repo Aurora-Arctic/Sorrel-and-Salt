@@ -12,20 +12,16 @@ import { configuredProviders } from '../../lib/social-providers-config';
 // frame. The layout owns `<main>`, so one landmark stays while the skeleton swaps in.
 export default async function PublicLayout({ children }: { children: ReactNode }) {
   const shell = await viewerIfSignedIn();
+  const page = (
+    <main>
+      <PageColumn as="div">{children}</PageColumn>
+    </main>
+  );
 
-  if (!shell)
-    return (
-      <PublicFrame configured={configuredProviders()}>
-        <main>
-          <PageColumn as="div">{children}</PageColumn>
-        </main>
-      </PublicFrame>
-    );
+  if (!shell) return <PublicFrame configured={configuredProviders()}>{page}</PublicFrame>;
   return (
     <AppShell viewer={shell.viewer} workspaces={shell.workspaces}>
-      <main>
-        <PageColumn as="div">{children}</PageColumn>
-      </main>
+      {page}
     </AppShell>
   );
 }

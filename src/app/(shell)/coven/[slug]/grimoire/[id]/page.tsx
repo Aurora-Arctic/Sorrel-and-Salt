@@ -16,7 +16,7 @@ import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
-import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
+import { demoNoticeOf } from '@/lib/demo-notice';
 import { Forbidden } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
@@ -173,13 +173,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 moonPhase={spell.moonPhase}
                 dayOfWeek={spell.dayOfWeek}
                 steps={previewStepsOf(recipe.steps)}
-                demoNotice={
-                  workspace.demo
-                    ? membership.role === 'owner'
-                      ? DEMO_OWNER_NOTICE
-                      : DEMO_NOTICE
-                    : undefined
-                }
+                demoNotice={demoNoticeOf(workspace, membership.role)}
               />
               <SpellMoreMenu
                 workspaceId={workspace.id}

@@ -3,7 +3,7 @@
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
-import { openHref } from '@/components/AppShell/add-href';
+import { ADD_INGREDIENT_TITLE, openHref } from '@/components/AppShell/add-href';
 import AddAction from '@/app/(shell)/curator/add-action';
 import type { AddIngredientActionProps } from './types';
 
@@ -16,7 +16,7 @@ export default function AddIngredientAction({ covenSlug }: AddIngredientActionPr
   const href = openHref(usePathname(), new URLSearchParams(useSearchParams()), covenSlug) as Route;
   return (
     <AddAction href={href} drawnHere>
-      Add Ingredient
+      {ADD_INGREDIENT_TITLE}
     </AddAction>
   );
 }

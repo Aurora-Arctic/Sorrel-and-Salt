@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { NewHelpArticleForm } from '../../../../../components/HelpArticleForm';
+import { HelpArticlePage } from '../../../../../components/HelpArticleForm/page';
 import BackLink from '../../../../../components/IngredientEntry/back-link';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import { single } from '../../../../../lib/search-params';
@@ -22,16 +23,13 @@ export default async function NewHelpArticlePage({
   const preset = guides.find(({ id }) => id === single(params.parent));
   const returnHref = helpFormReturn('article', preset?.id);
   return (
-    <main className="help-article-page">
-      <div className="back-bar help-article-form__bar">
-        <BackLink href={returnHref} label="Help" />
-      </div>
+    <HelpArticlePage back={<BackLink href={returnHref} label="Help" />}>
       <NewHelpArticleForm
         guides={guides}
         candidates={candidates}
         presetParentId={preset?.id}
         returnHref={returnHref}
       />
-    </main>
+    </HelpArticlePage>
   );
 }

@@ -1,18 +1,14 @@
 import { CuratorContentsPending } from '@/components/AdminNav/contents';
 import { AdminPageSkeleton } from '@/components/AdminNav/skeleton';
 import SkeletonText from '@/components/Skeleton/text';
+import { CURATOR_LEDE } from './head';
 import PageHeader from '@/components/PageHeader';
 
 export const CuratorSkeleton = () => (
   <div className="admin-index">
     <PageHeader
       title={<SkeletonText>Curator</SkeletonText>}
-      lede={
-        <SkeletonText>
-          Here you curate what every coven reads from. Pick a page below, or from the links at the
-          top of any Curator page.
-        </SkeletonText>
-      }
+      lede={<SkeletonText>{CURATOR_LEDE}</SkeletonText>}
     />
     <CuratorContentsPending />
   </div>
