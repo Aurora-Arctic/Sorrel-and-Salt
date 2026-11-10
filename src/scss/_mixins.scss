@@ -42,6 +42,36 @@
   }
 }
 
+// The container width queries, written once like the breakpoints above. `container-to` holds the edge itself
+// (`max-width`); `container-from` starts strictly above it (`width > `), so no 0.01rem step is written by hand and
+// a width is on exactly one side. Nest the two to bound a container on both edges. A `null` name queries the
+// nearest container.
+@mixin container-from($name, $width) {
+  @if $name {
+    // stylelint-disable-next-line container-name-pattern -- the name is the caller's argument
+    @container #{$name} (width > #{$width}) {
+      @content;
+    }
+  } @else {
+    @container (width > #{$width}) {
+      @content;
+    }
+  }
+}
+
+@mixin container-to($name, $width) {
+  @if $name {
+    // stylelint-disable-next-line container-name-pattern -- the name is the caller's argument
+    @container #{$name} (max-width: #{$width}) {
+      @content;
+    }
+  } @else {
+    @container (max-width: #{$width}) {
+      @content;
+    }
+  }
+}
+
 // One transition list for a state change (a hover, a flip, a fade): each property at the long duration
 // and one easing. A theme change has no transition of its own; ThemeToggle cross-fades the page.
 @mixin motion($props...) {

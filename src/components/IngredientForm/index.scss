@@ -524,7 +524,7 @@ $panel-head-gap: space(3);
 
   // The content width at which the longer legend and the group still have a step of border
   // between.
-  @container (min-width: 18rem) {
+  @include container-from(null, 18rem) {
     // Absolutely placed against the fieldset, so the head is no box of its
     // own: without a note it would otherwise still take a gap above Kind.
     .ingredient-form__panel-head {

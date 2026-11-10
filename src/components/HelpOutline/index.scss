@@ -327,7 +327,7 @@
 }
 
 // Above the stacking width only: a card sets its cells' padding to nothing and stacks them.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .help-outline__order-table
     > tbody
     > .help-outline__order-row
@@ -343,7 +343,7 @@
 
 // The corner's two controls, the grip and the position take only the room they need, rather than a share of the
 // table; above the stacking width only, as a card is full width.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .help-outline .help-outline__corner,
   .help-outline .help-outline__grip-cell,
   .help-outline .help-outline__number {

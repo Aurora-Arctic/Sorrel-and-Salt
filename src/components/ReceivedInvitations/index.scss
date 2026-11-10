@@ -1,9 +1,10 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // At the account card's width rows always stack, and a stacked card on `$surface-card` would read
 // as an unexplained inset. Here rows run the card's full width, each set apart by a hairline so two
 // never read as one.
-@container data-table (max-width: #{$table-stack-width}) {
+@include container-to(data-table, #{$table-stack-width}) {
   .received-invitations .data-table--stack {
     > tbody {
       gap: 0;

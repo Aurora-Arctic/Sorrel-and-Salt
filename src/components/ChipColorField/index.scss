@@ -276,7 +276,7 @@
 // A phone's width: closer gaps and a narrower hex, so the three channels
 // keep room for their values and captions beside it. 30rem is where the
 // picker's own grid stops fitting its full captions, not a form's width.
-@container (max-width: 30rem) {
+@include container-to(null, 30rem) {
   .chip-color-field__controls {
     column-gap: space(1);
   }

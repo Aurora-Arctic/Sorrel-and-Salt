@@ -47,7 +47,7 @@ Each job below has one shared piece, and a component or page uses it, never a co
 - **Downloading a file**: `saveFile` (`src/lib/save-file.ts`).
 - **A drag handle**: `GripHandle` (`src/components/GripHandle/`). Guard: `sortable-wiring`.
 - **A page and its skeleton**: `PanelSection`, `NarrowPanelPage`, `HelpFrontShell`, `HelpArticlePage`, `DocumentPageSkeleton` and the title constants (`ADD_INGREDIENT_TITLE`, `NEW_SPELL_TITLE`, the spell section titles in `SpellRecipe/sections.ts`) are written once and used by both. Guard: `page-pieces`.
-- **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`), never a hand-written `@media` width query. Guard: `breakpoints`.
+- **A breakpoint**: the mixins in `src/scss/_mixins.scss` (`phone-down`, `above-phone`, `tablet-down`, `above-tablet`, `width-from`, `width-to`; `container-from` and `container-to` for a container width), never a hand-written `@media` or `@container` width query. Guard: `breakpoints`.
 
 ## Destructive controls
 

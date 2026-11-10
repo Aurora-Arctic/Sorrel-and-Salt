@@ -475,7 +475,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include focus-ring;
 }
 
-@container modal-main (max-width: #{$narrow-column + $modal-padding}) {
+@include container-to(modal-main, #{$narrow-column + $modal-padding}) {
   .confirm-overlay__card .modal__actions {
     flex-direction: column;
     align-items: stretch;

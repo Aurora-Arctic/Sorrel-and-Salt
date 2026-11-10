@@ -16,7 +16,7 @@
   font-size: type-size('caption');
 }
 
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .member-list .member-list__fact {
     color: $text-muted;
     font-size: type-size('caption');
@@ -29,14 +29,14 @@
 
 // The role column takes only the room its word and tip need, rather than
 // a share of the table; above the stacking width only, as a card is full width.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .member-list .member-list__role-column {
     width: 1%;
     white-space: nowrap;
   }
 }
 
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .member-list .member-list__mark-column {
     text-align: center;
   }

@@ -45,7 +45,7 @@ describe('width media queries', () => {
 describe('container width queries', () => {
   it('are written only by container-from and container-to, never by hand in a stylesheet', () => {
     // Precondition: the scan reads container queries, so a sheet with one is in reach.
-    expect(readFileSync('src/components/TabbedPage/index.scss', 'utf8')).toMatch(/@container/);
+    expect(readFileSync(MIXINS, 'utf8')).toMatch(/@container/);
 
     expect(offenders(CONTAINER_WIDTH_QUERY)).toEqual([]);
   });

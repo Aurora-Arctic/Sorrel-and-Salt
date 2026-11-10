@@ -364,7 +364,7 @@ $step-line: type-size('body') * 1.65;
   }
 }
 
-@container spell-steps (max-width: #{$narrow-column}) {
+@include container-to(spell-steps, #{$narrow-column}) {
   // The marks and badge take their own line under the name, so the name, Edit and Remove all fit
   // on the first line; beside the name they leave Remove no room. The opened fields stack:
   // Form whole, Quantity and Unit half each, Instruction whole.

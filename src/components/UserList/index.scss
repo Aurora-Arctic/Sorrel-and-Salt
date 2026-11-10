@@ -117,7 +117,7 @@
 // The table above the stacking width: rows a step taller than the primitive's, since a row holds
 // buttons, and the facts no control changes (Logins, Signed Up) muted at caption size.
 // Scoped here because a card already labels each fact.
-@container data-table (width > #{$table-stack-width}) {
+@include container-from(data-table, #{$table-stack-width}) {
   .user-list .user-list__fact {
     color: $text-muted;
     font-size: type-size('caption');

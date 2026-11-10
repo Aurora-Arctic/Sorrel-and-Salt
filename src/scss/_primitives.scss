@@ -302,7 +302,7 @@
     white-space: nowrap;
   }
 
-  @container pager (max-width: #{$pager-tight-width}) {
+  @include container-to(pager, #{$pager-tight-width}) {
     .pager > ul {
       gap: space(2);
     }
@@ -380,22 +380,26 @@
     height: $glyph-size-large;
   }
 
-  @container page-header (max-width: #{$narrow-column}) {
+  @include container-to(page-header, #{$narrow-column}) {
     .page-header > h1,
     .page-header > .page-header__title {
       flex-basis: 100%;
     }
   }
 
-  @container page-header (min-width: calc(#{$add-below-width} + 0.01rem)) and (max-width: #{$narrow-column}) {
-    @include add-action-as-plus('.page-header');
+  @include container-from(page-header, #{$add-below-width}) {
+    @include container-to(page-header, #{$narrow-column}) {
+      @include add-action-as-plus('.page-header');
+    }
   }
 
-  @container page-header (min-width: calc(#{$add-below-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
-    @include add-action-as-plus('.tabbed-page > .page-header', false);
+  @include container-from(page-header, #{$add-below-width}) {
+    @include container-to(page-header, #{$tabbed-plus-width}) {
+      @include add-action-as-plus('.tabbed-page > .page-header', false);
+    }
   }
 
-  @container page-header (max-width: #{$add-below-width}) {
+  @include container-to(page-header, #{$add-below-width}) {
     .page-header > :has(.add-action),
     .page-header > .add-action {
       top: 0;
@@ -439,7 +443,7 @@
   }
 
   // One `:is()` at the choice rule's weight, so it overrides by coming later.
-  @container filter-row (max-width: #{$narrow-column}) {
+  @include container-to(filter-row, #{$narrow-column}) {
     .filter-row > :is(:first-child, .field:has(> .select), .filter-row__choice) {
       flex-basis: 100%;
     }
@@ -1069,7 +1073,7 @@
   // A table whose rows turn into cards when its frame is narrower than `$table-stack-width`. Every stacking table
   // carries explicit `role` attributes, since WebKit drops a table's semantics once `display` changes on its parts.
   // A component's `position: sticky` cell must reset to `static` under this rule (claude-docs/styling.md, "Tables at phone width").
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     .data-table-frame > .data-table__sort {
       display: flex;
       margin-block-end: space(3);
@@ -1174,7 +1178,7 @@
     box-shadow: none;
   }
 
-  @container data-table (max-width: #{$table-stack-width}) {
+  @include container-to(data-table, #{$table-stack-width}) {
     .data-table--pending > tbody > tr {
       position: relative;
       box-sizing: border-box;
@@ -1449,7 +1453,7 @@
 
   // A phone-width form stacks its buttons, full width and in order, rather than wrapping them unevenly
   // with a Delete pushed to one side; every form's row of three fits on one line above 28rem.
-  @container (max-width: #{$narrow-column}) {
+  @include container-to(null, #{$narrow-column}) {
     .form .form__actions,
     .form .modal__actions {
       flex-direction: column;

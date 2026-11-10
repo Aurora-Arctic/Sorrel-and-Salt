@@ -164,5 +164,5 @@ _Acceptance criteria:_
 - `ignoreExportsUsedInFile` is off in the knip config (D-86), and each newly reported export is un-exported or listed with a reason, with the codegen consts, email functions and Pothos Refs handled per class
 - `npm run lint:unused` is no worse than before and reports less than before for D-129 and D-145; it stays non-blocking, with no CI gate and no pre-commit step
 - `postSingle` reuses `upsertComment` and the four unused `pr-comment.cjs` exports are gone (S-5); `DEFAULT_PROJECT` is removed and one `defaultOf` helper serves the three lookups (S-6)
-- The duplicate, unused and test-only exports in D-243 are deleted or un-exported, and `container-from` and `container-to` mixins own the `0.01rem` step in the four container queries, with `tests/guards/breakpoints.test.ts` refusing a raw `@container` width (D-244)
+- The duplicate, unused and test-only exports in D-243 are deleted or un-exported, and `container-from` and `container-to` mixins write every container width query, `container-from` using `(width > X)` so no `0.01rem` step is needed, with `tests/guards/breakpoints.test.ts` refusing a raw `@container` width (D-244)
 - The test files the change touches pass, and `npm run pre-commit` and `npm run lint` pass

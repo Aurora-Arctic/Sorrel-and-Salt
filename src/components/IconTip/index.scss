@@ -18,7 +18,7 @@
   --tip-placement: top;
 }
 
-@container data-table (max-width: #{$table-stack-width}) {
+@include container-to(data-table, #{$table-stack-width}) {
   .data-table--stack .icon-tip--side {
     --tip-placement: left;
   }
