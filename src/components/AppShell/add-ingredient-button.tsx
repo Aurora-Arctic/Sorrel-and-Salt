@@ -4,6 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useRef, useState } from 'react';
+import { isAtPath } from '../../lib/at-path';
 import { covenSlugOf, covenPath } from '../../lib/coven-path';
 import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -41,9 +42,7 @@ const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
  */
 /** True on the curator and keepers pages, where the add button files into the compendium. */
 function onCuratedPage(pathname: string): boolean {
-  return ['/curator', '/keepers'].some(
-    (base) => pathname === base || pathname.startsWith(`${base}/`),
-  );
+  return ['/curator', '/keepers'].some((base) => isAtPath(pathname, base));
 }
 
 function savedMessage(saved: SavedIngredient): string {

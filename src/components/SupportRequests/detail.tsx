@@ -2,6 +2,7 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { repeatable } from '@/lib/repeat-announcement';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../ConfirmedAction';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
@@ -246,16 +247,13 @@ const standingTimeout = (timeouts: SupportTimeoutEntry[]): SupportTimeoutEntry |
   timeouts.find((timeout) => stands(timeout, Date.now()));
 
 const SupportDetail = (props: SupportDetailProps): ReactElement => {
-  // The last write's outcome. A trailing no-break space on every other call lets a repeat be spoken,
+  // The last write's outcome. `repeatable` lets a repeat be spoken,
   // since a live region speaks only a change.
   const [said, setSaid] = useState({ text: '', count: 0 });
   const announce = (text: string): void => setSaid(({ count }) => ({ text, count: count + 1 }));
   return (
     <AnnounceContext value={announce}>
-      <output className="visually-hidden">
-        {said.text}
-        {said.count % 2 === 0 && said.count > 0 ? '\u00a0' : ''}
-      </output>
+      <output className="visually-hidden">{repeatable(said.text, said.count)}</output>
       <DetailBody {...props} />
     </AnnounceContext>
   );

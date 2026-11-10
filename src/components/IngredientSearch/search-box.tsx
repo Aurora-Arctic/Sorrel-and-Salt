@@ -9,7 +9,7 @@ import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
 import { UNTITLED_SPELL } from '../SpellCard/untitled';
-import { MagnifierIcon } from '../Field/icons';
+import { SearchSubmit } from '../Field/search-submit';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type {
@@ -278,11 +278,8 @@ const IngredientSearchBox = ({
       leading={
         // The form's one submit, as SearchField's was, at the start of the box:
         // Enter in the closed box reaches it too, and before hydration it
-        // sends the whole form. Its own id lets FilterForm give it the focus back.
-        <button id={`${controlId}-submit`} type="submit" className="combobox__indicator">
-          <MagnifierIcon />
-          <span className="visually-hidden">Search</span>
-        </button>
+        // sends the whole form.
+        <SearchSubmit id={`${controlId}-submit`} className="combobox__indicator" />
       }
     />
   );
