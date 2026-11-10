@@ -1,7 +1,9 @@
-import type { ReactNode, RefCallback } from 'react';
+import type { ReactNode, Ref, RefCallback } from 'react';
 
 export interface ClickFeedbackOptions {
   name: string;
+  /** Also filled with the control, for a caller that keeps it (focus return). */
+  ref?: Ref<HTMLElement>;
 }
 
 export interface ClickFeedback {

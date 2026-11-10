@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
-import { useTip } from '../InfoTip/use-tip';
+import TipAnchor from '../InfoTip/tip-anchor';
 
 type TipMarkProps = {
   label: string;
@@ -14,32 +14,26 @@ type TipMarkProps = {
 // (claude-docs/components/entry-marks.md).
 const TipMark = ({ label, palette, tip }: TipMarkProps): ReactElement => {
   const tipId = useId();
-  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   return (
-    // Hover on the wrapper, which holds the tip as well as the button, so the
-    // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="entry-mark-tip" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
-      <button
-        type="button"
-        className={`badge badge--${palette} entry-mark entry-mark--tip`}
-        aria-describedby={tipId}
-        onFocus={show}
-        onBlur={hide}
-        onClick={show}
-      >
-        {label}
-      </button>
-      <span
-        id={tipId}
-        ref={bubble}
-        style={bubbleStyle}
-        role="tooltip"
-        className={open ? 'entry-mark__tip is-open' : 'entry-mark__tip'}
-        aria-hidden={!open}
-      >
-        {tip}
-      </span>
-    </span>
+    <TipAnchor
+      className="entry-mark-tip"
+      bubbleClass="entry-mark__tip"
+      bubbleId={tipId}
+      bubble={tip}
+    >
+      {({ show, hide }) => (
+        <button
+          type="button"
+          className={`badge badge--${palette} entry-mark entry-mark--tip`}
+          aria-describedby={tipId}
+          onFocus={show}
+          onBlur={hide}
+          onClick={show}
+        >
+          {label}
+        </button>
+      )}
+    </TipAnchor>
   );
 };
 

@@ -14,9 +14,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useDismiss } from '../../lib/use-dismiss';
+import { escapeKeyHandler, useDismiss } from '../../lib/use-dismiss';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
+import { useMediaQuery } from '../../lib/use-media-query';
 import { useSlide } from '../../lib/use-slide';
 import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
@@ -143,11 +144,12 @@ export function FacetShell({
   };
 
   // Crossing the tablet width swaps the panel's kind (an overlay for a sheet), so it shuts.
+  const wide = useMediaQuery(WIDE);
+  const wasWide = useRef(wide);
   useEffect(() => {
-    const query = window.matchMedia(WIDE);
-    const snap = () => shut(true);
-    query.addEventListener('change', snap);
-    return () => query.removeEventListener('change', snap);
+    if (wasWide.current === wide) return;
+    wasWide.current = wide;
+    shut(true);
   });
 
   const toggle = () => {
@@ -155,17 +157,17 @@ export function FacetShell({
       dismiss();
       return;
     }
-    modal.current = !window.matchMedia(WIDE).matches;
+    modal.current = !wide;
     slide.open();
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    // An Escape a combobox popup used to close itself is not the panel's; a modal sheet's
-    // own Escape is the browser's, which ends in `onClose`.
-    if (event.key !== 'Escape' || event.defaultPrevented || modal.current) return;
-    event.preventDefault();
-    dismiss();
-  };
+  // An Escape a combobox popup used to close itself is not the panel's (`skipHandled`); a modal
+  // sheet's own Escape is the browser's, which ends in `onClose`.
+  const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) =>
+    escapeKeyHandler<KeyboardEvent<HTMLDialogElement>>(dismiss, {
+      active: !modal.current,
+      skipHandled: true,
+    })(event);
 
   // The clip never scrolls: a focus moving into a hidden part of it would otherwise shift
   // the panel out of its slide.

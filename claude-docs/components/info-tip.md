@@ -7,7 +7,7 @@
 It follows WCAG 1.4.13, content on hover or focus.
 
 - **It opens on hover, on a tap, and on the ⓘ's focus.** A tap opens rather than toggles: on touch the emulated hover has already opened it, and a toggle would shut it again at once.
-- **Hover waits 300ms; focus and a tap do not.** A pointer crossing a form on its way somewhere else would otherwise open every tip it passed. A tip opens only once the pointer rests on its control, and a pointer that leaves sooner opens nothing. Focus and a tap are asked for on purpose, so they open at once. This holds for every tip built on `useTip`, and for CategoryChips' +N panel, which places itself and keeps its own open state but waits the same `TIP_OPEN_DELAY_MS` (`InfoTip/constants.ts`; [`category-chips.md`](category-chips.md)).
+- **Hover waits 300ms; focus and a tap do not.** A pointer crossing a form on its way somewhere else would otherwise open every tip it passed. A tip opens only once the pointer rests on its control, and a pointer that leaves sooner opens nothing. Focus and a tap are asked for on purpose, so they open at once. This holds for every tip built on `useTip`, and for CategoryChips' +N panel, which is a pinnable `TipAnchor` ([`category-chips.md`](category-chips.md)).
 - **It never opens on the field's own focus.** The cost is a sighted keyboard user in Safari, or Firefox on macOS by default, which skip buttons when tabbing: they never land on the ⓘ, so never see the tip. A screen reader user loses nothing, because the field reads the hint as its description, open or not.
 - **The ⓘ stays in the tab order.** It is how a keyboard opens the tip, and it costs one stop per field.
 - **It stays open while the pointer is over it.** Hover is heard on the wrapper, which holds the tip as well as the button. Leaving both closes it after 150ms, long enough to cross the gap onto the tip, and coming back cancels that.
@@ -18,8 +18,11 @@ It follows WCAG 1.4.13, content on hover or focus.
 
 `useTip(canOpen?, placement?, timing?)` (`use-tip.ts`) holds the open state, the handlers and the Escape listener, so another tip beside a control behaves the same without being an ⓘ. [`IconTip`](icon-tip.md), the Edit pencils' tooltip, Combobox's entry and qualifier tooltips ([`combobox.md`](combobox.md)), and `UserList`'s history link, primary keeper crown and locked Revoke ([`user-list.md`](user-list.md)) all use it.
 
+`TipAnchor` (`tip-anchor.tsx`) is the wrapper for the common case: it holds the hook, renders the anchor element and the bubble, and takes the bubble class, role and id, `canOpen`, the placement and the options above. A caller whose triggers sit outside the anchor passes `handle` (a ref to `show`, `hide` and `toggle`) or reads them in a render-prop child. Use it rather than calling `useTip` and drawing a bubble by hand; `tests/guards/hover-tips.test.ts` refuses `useTip(` outside `InfoTip/`.
+
 - **`canOpen`** is asked each time the tip would open, not watched, for a tip that has nothing to show at some moments: a Combobox entry whose text fits (which changes with the control's width and matters only when someone looks), a qualifier with no detail. Left out, the tip always opens.
 - **`timing`** (`{ openDelayMs, closeDelayMs }`) changes the 300ms and 150ms waits. `IconTip` sets the close to `0`, because its bubble cannot be hovered.
+- **`options`** (`reference`, `gapPx`, `minWidthPx`, `pinnable`, `onEscape`) place the bubble against another element (CategoryChips places its +N panel against the chip row), set the gap and a minimum width, make a press on the control toggle the tip and keep it open until a second press, blur or Escape, and run after Escape closes it.
 - **`hide`** lets a caller close a tip for its own reasons: Combobox's qualifier closes its tip at the first printable key and when its list opens, so it never sits over what is being typed.
 
 ### Placement
