@@ -19,6 +19,7 @@ merely absent:
   M11.19: keyed `{ workspaceId, userId }`, one check and one read per coven a
   batch names, a `Forbidden` per key to anyone but a steward),
   `providersByUser` (`identity`, for `User.providers`, MB.52),
+  `passkeyHeldByUser` (`identity`, for `User.hasPasskey`),
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
   `.actor`, MB.199), `usersById` (`identity`, a co-member's display name, MB.10,
   landed ahead of the fields that read it, M6.11's `WorkspaceMember.user` and
@@ -70,11 +71,11 @@ merely absent:
   `ingredientFormsById` is keyed by id too, but answers null for a form no
   longer curated, since a retired pick reads as no pick rather than an error.
 - **A null session is not always a refusal.** `membershipsByUser`,
-  `providersByUser`, `usersByIdForAdmin` and `usersById` refuse every key
-  signed out, and `providersByUser` and `usersByIdForAdmin` every key to a
+  `providersByUser`, `passkeyHeldByUser`, `usersByIdForAdmin` and `usersById` refuse every key
+  signed out, and `providersByUser`, `passkeyHeldByUser` and `usersByIdForAdmin` every key to a
   non-admin: each is `defineSignedInLoader(batch)`, which answers `Forbidden`
   in every slot without a session and hands `batch` a `Session` otherwise, so
-  the four services never see a null. `usersById` refuses nobody
+  the five services never see a null. `usersById` refuses nobody
   signed in: a stranger's id answers `null` in its own slot. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface, and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders

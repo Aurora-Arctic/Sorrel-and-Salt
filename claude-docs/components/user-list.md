@@ -1,6 +1,6 @@
 # UserList
 
-`src/components/UserList/` draws the filter, table and pager of `/keepers/users`. It is render-only and a server component: the page reads one page of users through the identity service and hands it over with the filter as asked and the hrefs of the pages either side ([`auth/admin-users.md`](../auth/admin-users.md)). The page reads each row's `primaryAdmin` from `isPrimaryAdmin`, and the standing time-outs (`standingTimeoutsOf`, support) and access pauses (`standingAccessPausesOf`, identity) of the whole page in one query each, both under `assertSiteAdmin`.
+`src/components/UserList/` draws the filter, table and pager of `/keepers/users`. It is render-only and a server component: the page reads one page of users through the identity service and hands it over with the filter as asked and the hrefs of the pages either side ([`auth/admin-users.md`](../auth/admin-users.md)). The page reads each row's `primaryAdmin` from `isPrimaryAdmin`, the linked providers (`providersOf`) and whether each user holds a passkey (`holdsPasskey`), both identity, and the standing time-outs (`standingTimeoutsOf`, support) and access pauses (`standingAccessPausesOf`, identity) of the whole page in one query each, both under `assertSiteAdmin`.
 
 ## Contracts
 
@@ -13,7 +13,8 @@
 ### Table
 
 - **A row is an index into the user's modal.** No row holds a control but Impersonate; Change Role, Approve and Revoke are the modal's ([`user-detail.md`](user-detail.md)).
-- **A mark’s hover tip is hidden from assistive technology**, because its hidden word carries it. `Mark` and `ProviderLogo` (`marks.tsx`) are shared with the user's modal so the two cannot drift.
+- **A mark’s hover tip is hidden from assistive technology**, because its hidden word carries it. `Mark` and `SignInMarks` (`marks.tsx`) are shared with the user's modal so the two cannot drift.
+- **Logins draws every way in as a mark, never as a provider id.** `SignInMarks` draws each linked social provider's `ProviderLogo` on its brand's circle, then Email & Password for a `credential` account, then Passkey when `hasPasskey` is true. A passkey is not an account, so it is not among `providers`. The two marks with no brand are the list's own outline glyphs (`EmailPasswordIcon`, `PasskeyIcon` in `icons.tsx`) on the neutral `.provider-mark--own` circle ([`styling.md`](../styling.md), "Provider marks"); each takes the same `Hint` and hidden word as a provider's. A provider id outside the roster still prints as its id, so an unknown one is not dropped.
 - **Support and Access** are a check while no time-out or pause stands and a red cross while one does. One stands when it is not lifted, not deleted, and has no end or an end still to come (the services' own rule), so a lapsed one reads as a check and nothing is written to end it.
 - **`UntilMark`** (shared with the coven members list) reads the viewer's zone through `useLocalTime`, an external store: the server and hydration print UTC, so the renders never mismatch.
 - **Every role is a [`RoleTip`](role-tip.md)** whose text is `SITE_ROLE_ACCESS[role]`, the sentence Change Role shows beside that role, so the two never drift.
