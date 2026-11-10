@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
+import { expect } from 'vitest';
 
 // What a person does to a form in a component test (press, choose, type), written once for every form.
 // Fields are found by label, not role and name, as a role query names every element of the role, most of a
@@ -69,4 +70,12 @@ export function fill(label: string, text: string): void {
   const field = screen.getByRole('textbox', { name: label });
   fireEvent.change(field, { target: { value: text } });
   fireEvent.blur(field);
+}
+
+// True when `a` comes before `b` in the document, whether or not one holds the other.
+export const isBefore = (a: Node, b: Node): boolean =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+export function expectBefore(a: Node, b: Node): void {
+  expect(isBefore(a, b)).toBe(true);
 }
