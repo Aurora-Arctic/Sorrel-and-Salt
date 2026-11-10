@@ -47,6 +47,7 @@ export default function LinkDialog({
           enterKeyHint="done"
           placeholder="https://example.com"
           format={tidyLinkAddress}
+          check={linkAddressProblem}
           value={url}
           error={error}
           onChange={(next) => {
