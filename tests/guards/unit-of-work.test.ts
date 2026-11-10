@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, inject, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { existsSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import { fromRoot } from '../support/paths';
+import { readSource as read, sourceFiles as listSources } from '../support/repo-scan';
 
 // `withAudit` publishes its transaction through an `AsyncLocalStorage`, and `selectFrom` reads on it when one is
 // present, so a finder called inside a write runs on that write's connection (CLAUDE.md rule 3). The store is held in
@@ -12,13 +12,8 @@ const STORE = 'src/db/repository/unit-of-work.ts';
 const WRITER = 'src/db/repository/write.ts';
 const READER = 'src/db/repository/select.ts';
 
-const read = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
-
 function sourceFiles(): string[] {
-  const files = inject('repoFiles').filter(
-    (file) =>
-      file.startsWith('src/') && /\.[cm]?tsx?$/.test(file) && !file.includes('__lint-probe'),
-  );
+  const files = listSources({ under: 'src/' });
   // Precondition: the listing holds the reader, so an empty match below means no other file.
   expect(files).toContain(READER);
   return files;
@@ -26,7 +21,7 @@ function sourceFiles(): string[] {
 
 describe('CLAUDE.md rule 3 — the write transaction a read runs on', () => {
   it('lives in one module that exports a getter and a runner, never the store', () => {
-    expect(existsSync(join(REPO_ROOT, STORE))).toBe(true);
+    expect(existsSync(fromRoot(STORE))).toBe(true);
     const source = read(STORE);
 
     expect(source).toMatch(/new AsyncLocalStorage\b/);

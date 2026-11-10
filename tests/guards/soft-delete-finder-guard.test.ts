@@ -1,7 +1,5 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { readSource as source, sourceFiles } from '../support/repo-scan';
 
 // CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
 // Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
@@ -36,8 +34,6 @@ const FILTERING_PREDICATES: Record<string, string> = {
   standingOnUser: `${REPOSITORY}/support.ts`,
 };
 
-const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
-
 function predicateBody(name: string): string {
   const text = source(FILTERING_PREDICATES[name]);
   const start = text.search(new RegExp(`^const ${name}\\s*=`, 'm'));
@@ -45,9 +41,9 @@ function predicateBody(name: string): string {
   return text.slice(start, text.indexOf(';\n', start) + 1);
 }
 
-const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
-  .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
-  .map((entry) => `${REPOSITORY}/${entry.name}`);
+const FILES = sourceFiles({ under: `${REPOSITORY}/`, extension: /\.ts$/ }).filter(
+  (file) => !file.slice(REPOSITORY.length + 1).includes('/'),
+);
 
 const declaration = (name: string) =>
   new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');

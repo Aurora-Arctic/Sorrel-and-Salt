@@ -1,24 +1,16 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import { readSource, sourceFiles } from '../support/repo-scan';
 
 // A `${{ }}` expression inside a `run:` script is pasted into the script's text before the shell
 // reads it, so a branch name or title that contains shell syntax would run as part of the script.
 // Passing the value through the step's `env:` and reading it as a quoted shell variable keeps the
 // script fixed text. The scan covers the workflows and the composite actions under `.github/`.
 
-const ROOT = '.github';
 const UNTRUSTED = /\$\{\{[^}]*\b(?:github\.event\.|github\.head_ref)[^}]*\}\}/;
 
-function yamlFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) return yamlFiles(path);
-    return /\.ya?ml$/.test(entry.name) ? [path] : [];
-  });
-}
+const yamlFiles = (dir: string): string[] =>
+  sourceFiles({ under: `${dir}/`, extension: /\.ya?ml$/ });
 
 function runScripts(node: unknown): string[] {
   if (Array.isArray(node)) return node.flatMap(runScripts);
@@ -30,14 +22,15 @@ function runScripts(node: unknown): string[] {
 
 describe('a workflow run script', () => {
   it('holds no expression that reads event or branch text', () => {
-    const offenders = yamlFiles(join(ROOT, 'workflows'))
-      .concat(yamlFiles(join(ROOT, 'actions')))
-      .flatMap((file) =>
-        runScripts(parse(readFileSync(file, 'utf8')))
-          .flatMap((script) => script.split('\n'))
-          .filter((line) => UNTRUSTED.test(line))
-          .map((line) => `${file}: ${line.trim()}`),
-      );
+    const files = yamlFiles('.github/workflows').concat(yamlFiles('.github/actions'));
+    // Precondition: the listing holds workflows, so an empty scan cannot pass.
+    expect(files.length).toBeGreaterThan(0);
+    const offenders = files.flatMap((file) =>
+      runScripts(parse(readSource(file)))
+        .flatMap((script) => script.split('\n'))
+        .filter((line) => UNTRUSTED.test(line))
+        .map((line) => `${file}: ${line.trim()}`),
+    );
     expect(offenders).toEqual([]);
   });
 
