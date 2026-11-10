@@ -46,7 +46,7 @@ test('a keeper opens Business Cards from the Keepers index and from the Keepers 
   await assertNoAccessibilityViolations(page);
 });
 
-test('Generate waits for a name, an email address and a phone number, and builds the sheet without asking the server for anything', async ({
+test('Generate refuses empty or wrong boxes without building, and with them filled builds the sheet without asking the server for anything', async ({
   page,
 }, testInfo) => {
   await signInAs(page, 'a-printer@business-cards.test', ['discord'], 'admin');
@@ -55,20 +55,29 @@ test('Generate waits for a name, an email address and a phone number, and builds
   const generate = main.getByRole('button', { name: 'Generate' });
   const backs = main.getByRole('switch', { name: 'Include Backs' });
   await expect(backs).not.toBeChecked();
-  await expect(generate).toBeDisabled();
-
-  await main.getByRole('textbox', { name: 'Name' }).fill('Testwort Hollin');
-  await main.getByRole('textbox', { name: 'Phone' }).fill('202-555-0199');
-  await expect(generate).toBeDisabled();
-  await main.getByRole('textbox', { name: 'Email' }).fill('testwort at example');
-  await main.getByRole('textbox', { name: 'Email' }).blur();
-  await expect(generate).toBeDisabled();
-  await expect(main.getByRole('textbox', { name: 'Email' })).toHaveAttribute(
-    'aria-invalid',
-    'true',
-  );
-  await main.getByRole('textbox', { name: 'Email' }).fill('testwort@example.test');
   await expect(generate).toBeEnabled();
+
+  // A press with the boxes empty builds nothing and marks each box that needs fixing.
+  let downloads = 0;
+  page.on('download', () => {
+    downloads += 1;
+  });
+  await generate.click();
+  const name = main.getByRole('textbox', { name: 'Name' });
+  const phone = main.getByRole('textbox', { name: 'Phone' });
+  const email = main.getByRole('textbox', { name: 'Email' });
+  for (const box of [name, email, phone]) await expect(box).toHaveAttribute('aria-invalid', 'true');
+  await expect(generate).toBeEnabled();
+
+  await name.fill('Testwort Hollin');
+  await phone.fill('202-555-0199');
+  await email.fill('testwort at example');
+  await generate.click();
+  await expect(email).toHaveAttribute('aria-invalid', 'true');
+  await expect(generate).toBeEnabled();
+  expect(downloads).toBe(0);
+  await email.fill('testwort@example.test');
+  await expect(email).not.toHaveAttribute('aria-invalid', 'true');
 
   // Every request from here on: the PDF is built from the fonts and pictures fetched when the page opened, and
   // writes nothing anywhere, since a write would be a request. The router's own link prefetches are left out:
