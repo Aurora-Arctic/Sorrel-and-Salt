@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ShellWorkspace } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // A member goes straight into the first coven the switcher lists, not the `/coven` landing that would only redirect there.
 
@@ -12,5 +13,5 @@ export function firstReachable<Workspace extends Pick<ShellWorkspace, 'paused'>>
 
 export function covenHome(workspaces: readonly Pick<ShellWorkspace, 'slug' | 'paused'>[]): Route {
   const first = firstReachable(workspaces);
-  return first ? (`/coven/${first.slug}` as Route) : '/coven';
+  return first ? covenPath(first.slug) : '/coven';
 }

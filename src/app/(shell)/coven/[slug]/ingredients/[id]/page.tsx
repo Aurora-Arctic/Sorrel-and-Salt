@@ -1,3 +1,5 @@
+import { compendiumEntryPath } from '@/lib/compendium-path';
+import { covenPath } from '@/lib/coven-path';
 import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata, Route } from 'next';
 import { cache } from 'react';
@@ -40,8 +42,6 @@ const SAME_TIP = 'This is the compendium entry that names the same thing. Compar
 const SIMILAR_TIP =
   'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. Any of them might be the same thing. This page does not change your entry; the links open the compendium\u2019s pages.';
 
-const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
-
 // One read per request, shared by the metadata and the page. It runs the
 // guard first, so a stranger is refused before the ingredient is looked up.
 const entryOf = cache(async (slug: string, id: string) => {
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: CovenIngredientParams): Promi
   const description = entryDescription(title, entry.description);
   return isRetired(entry)
     ? { title, description }
-    : { title, description, alternates: { canonical: siteUrl(publicAddress(entry.slug)) } };
+    : { title, description, alternates: { canonical: siteUrl(compendiumEntryPath(entry.slug)) } };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
@@ -120,8 +120,8 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       : undefined;
   const stock = mayStock ? stockData : undefined;
 
-  const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
-  const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
+  const own = covenPath(workspace.slug, 'ingredients', entry.id);
+  const ingredientsHref = covenPath(workspace.slug, 'ingredients');
   const canEdit = isOwn
     ? rolePermits(role, { ingredient: ['update'] })
     : inCompendium && viewer.canCurate;
@@ -139,8 +139,8 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   const annotating = mayAnnotate && 'annotate' in (await searchParams);
 
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
-    if (workspaceId === null) return publicAddress(slug);
-    if (workspaceId === workspace.id) return `/coven/${workspace.slug}/ingredients/${id}` as Route;
+    if (workspaceId === null) return compendiumEntryPath(slug);
+    if (workspaceId === workspace.id) return covenPath(workspace.slug, 'ingredients', id);
     return undefined;
   };
 
@@ -192,9 +192,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 plus,
                 stock,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
-                removedHref: detail.retired
-                  ? (`/coven/${workspace.slug}/ingredients` as Route)
-                  : undefined,
+                removedHref: detail.retired ? covenPath(workspace.slug, 'ingredients') : undefined,
               }
             : undefined
         }
@@ -205,7 +203,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   detail.cupboardEntry && isAnnotated(detail.cupboardEntry)
                     ? ANNOTATED_TIP
                     : COMPENDIUM_TIP,
-                entries: [{ title: pageTitleOf(entry), href: publicAddress(entry.slug) }],
+                entries: [{ title: pageTitleOf(entry), href: compendiumEntryPath(entry.slug) }],
                 total: 1,
               }
             : matches.kind === 'same' && matches.entries.length > 0
@@ -213,7 +211,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   tip: SAME_TIP,
                   entries: matches.entries.map((match) => ({
                     title: pageTitleOf(match),
-                    href: publicAddress(match.slug),
+                    href: compendiumEntryPath(match.slug),
                   })),
                   total: matches.total,
                   allHref: COMPENDIUM_PARAMS.href('/compendium', {
@@ -229,7 +227,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 tip: SIMILAR_TIP,
                 entries: matches.entries.map((match) => ({
                   title: pageTitleOf(match),
-                  href: publicAddress(match.slug),
+                  href: compendiumEntryPath(match.slug),
                 })),
                 total: matches.total,
                 allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),

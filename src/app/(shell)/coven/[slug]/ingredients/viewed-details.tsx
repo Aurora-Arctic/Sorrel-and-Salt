@@ -1,9 +1,9 @@
-import type { Route } from 'next';
 import { detailsHeading, detailsMarks } from '../../../../../components/IngredientEntry/details';
 import IngredientSummary from '../../../../../components/IngredientEntry/summary';
 import type { IngredientDetailsOpened } from '../../../../../components/IngredientEntry/types';
 import type { readViewedEntry } from './reads';
 import { stockDialogOf } from '@/app/coven-stock';
+import { covenPath } from '@/lib/coven-path';
 
 export function viewedDetailsOf(
   viewed: NonNullable<Awaited<ReturnType<typeof readViewedEntry>>>,
@@ -14,7 +14,7 @@ export function viewedDetailsOf(
     heading: detailsHeading(viewed.shown),
     marks: detailsMarks(viewed.detail, true),
     lastEdit: viewed.lastEdit,
-    pageHref: `/coven/${covenSlug}/ingredients/${viewed.shown.id}` as Route,
+    pageHref: covenPath(covenSlug, 'ingredients', viewed.shown.id),
     children: (
       <IngredientSummary
         detail={viewed.detail}

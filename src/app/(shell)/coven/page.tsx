@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import Notice from '../../../components/Notice';
-import { NEW_COVEN_PATH } from '../../../lib/coven-path';
+import { NEW_COVEN_PATH, covenPath } from '../../../lib/coven-path';
 import PageHeader from '../../../components/PageHeader';
 import { PendingLink } from '../../../lib/navigation';
 import { requireSession } from '../../../lib/request-session';
@@ -21,7 +21,7 @@ export default async function CovenLandingPage() {
   const { viewer, workspaces } = await viewerOf();
 
   const first = firstReachable(workspaces);
-  if (first) redirect(`/coven/${first.slug}`);
+  if (first) redirect(covenPath(first.slug));
 
   const pending = viewer.pendingInvitations;
 

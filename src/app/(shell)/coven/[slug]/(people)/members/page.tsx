@@ -1,3 +1,4 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
@@ -91,7 +92,7 @@ export default async function MembersPage({
     return standing ? { until: standing.until } : null;
   };
 
-  const path = `/coven/${slug}/members`;
+  const path = covenPath(slug, 'members');
   const cursor: PagerCursor | undefined = after ? { after } : before ? { before } : undefined;
   const members = page.edges.map(({ node }): MemberListEntry => {
     const row = {

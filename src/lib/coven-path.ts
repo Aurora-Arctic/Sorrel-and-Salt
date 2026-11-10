@@ -1,3 +1,5 @@
+import type { Route } from 'next';
+
 // A workspace is named by the address alone, never by session state, so two tabs can sit in two workspaces without disagreeing.
 const COVEN = 'coven';
 
@@ -9,6 +11,15 @@ const NEW = 'new';
 
 /** Where someone in no coven lands, and which opens the first coven of someone who has another. */
 export const COVEN_LANDING_PATH = `/${COVEN}`;
+
+/**
+ * A coven's address, `/coven/<slug>/<segments>`: each part is encoded and a segment a condition turned off (`false`,
+ * `undefined`) is left out. The caller adds any query or hash.
+ */
+export function covenPath(slug: string, ...segments: (string | false | undefined)[]): Route {
+  const parts = [slug, ...segments].filter((part): part is string => Boolean(part));
+  return `${COVEN_LANDING_PATH}/${parts.map(encodeURIComponent).join('/')}` as Route;
+}
 
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
@@ -71,7 +82,7 @@ export function pathInCoven(
 ): string {
   const parts = covenSlugOf(pathname) ? pathname.split('/') : [];
   const section = parts[3];
-  const home = `/${COVEN}/${slug}`;
+  const home = covenPath(slug);
   if (!section) return home;
   if (section === 'invitations' && !canInvite) return canReadMembers ? `${home}/members` : home;
   if (PEOPLE_SECTIONS.has(section) && !canReadMembers) return home;
@@ -85,6 +96,6 @@ export function pathInCoven(
  */
 export function movedCovenPath(path: string, slug: string): string {
   const match = /^\/coven\/([^/?#]+)(.*)$/s.exec(path);
-  if (!match || isReservedCovenSlug(match[1]!)) return `/${COVEN}/${slug}`;
-  return `/${COVEN}/${slug}${match[2]}`;
+  if (!match || isReservedCovenSlug(match[1]!)) return covenPath(slug);
+  return `${covenPath(slug)}${match[2]}`;
 }

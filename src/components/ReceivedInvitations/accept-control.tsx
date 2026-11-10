@@ -1,7 +1,6 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import type { Route } from 'next';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -9,6 +8,7 @@ import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import type { AcceptControlProps } from './types';
+import { covenPath } from '@/lib/coven-path';
 
 // A received invitation's Accept: it sends `acceptInvitationById`, which checks the address match
 // and decides. The landing is the coven; a refusal shows in a floating callout so a phone card does
@@ -42,7 +42,7 @@ const AcceptControl = ({
       // Busy until the coven replaces this page. A cast: the built routes
       // know `/coven/[slug]`, not this literal. The refresh redraws the shell
       // too, whose layout a navigation keeps, so the menu's count drops.
-      navigate(`/coven/${covenSlug}` as Route);
+      navigate(covenPath(covenSlug));
       refresh();
     } catch (error) {
       setSending(false);

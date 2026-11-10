@@ -1,13 +1,11 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import CovenCards from '../../../../../components/CovenCards';
 import { covenCardActions } from '../../../../../components/CovenCards/actions';
 import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
 import { editHeading } from '../../../../../components/CompendiumList/heading';
-import {
-  covenIngredientsHref,
-  covenIngredientsPath,
-} from '../../../../../components/CompendiumList/href';
+import { covenIngredientsHref } from '../../../../../components/CompendiumList/href';
 import type {
   CovenListDialog,
   CovenListFilter,
@@ -212,7 +210,7 @@ export default async function CovenIngredientsPage({
               },
               coven: {
                 workspaceId: workspace.id,
-                ingredientsHref: covenIngredientsPath(workspace.slug),
+                ingredientsHref: covenPath(workspace.slug, 'ingredients'),
                 mayPromote: mayEdit,
               },
             }}

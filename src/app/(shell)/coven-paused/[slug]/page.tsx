@@ -1,6 +1,6 @@
 import { orNotFound } from '@/lib/or-not-found';
 import { noIndexMetadata } from '@/lib/page-metadata';
-import type { Metadata, Route } from 'next';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { pausedCovenBySlug } from '@/modules/coven';
 import ContextRow from '../../../../components/ContextRow';
@@ -15,6 +15,7 @@ import LocalTime from '../../../../components/LocalTime';
 import type { CovenPausedPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
 import { PendingLink } from '@/lib/navigation';
+import { covenPath } from '@/lib/coven-path';
 
 export const metadata: Metadata = noIndexMetadata('Access Paused');
 
@@ -24,7 +25,7 @@ export const metadata: Metadata = noIndexMetadata('Access Paused');
 export default async function CovenPausedPage({ params }: CovenPausedPageProps) {
   const [session, { slug }] = await Promise.all([requireSession(), params]);
   const paused = await orNotFound(() => pausedCovenBySlug(session, slug), Forbidden);
-  if (!paused) redirect(`/coven/${encodeURIComponent(slug)}` as Route);
+  if (!paused) redirect(covenPath(slug));
   const { viewer, workspaces } = await viewerOf();
   const others = workspaces.filter((workspace) => workspace.slug !== slug && !workspace.paused);
 
@@ -64,9 +65,7 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
               <ul aria-labelledby="other-covens">
                 {others.map((other) => (
                   <li key={other.slug}>
-                    <PendingLink href={`/coven/${encodeURIComponent(other.slug)}` as Route}>
-                      {other.name}
-                    </PendingLink>
+                    <PendingLink href={covenPath(other.slug)}>{other.name}</PendingLink>
                   </li>
                 ))}
               </ul>

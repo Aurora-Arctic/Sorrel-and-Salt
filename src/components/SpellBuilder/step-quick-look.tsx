@@ -3,6 +3,7 @@
 import { type ReactElement, useRef, useState } from 'react';
 import { QuickLookButton } from '../IconTip';
 import { LazyDuplicateQuickLook as DuplicateQuickLook } from '../IngredientForm/lazy-quick-look';
+import { covenPath } from '@/lib/coven-path';
 
 export type QuickLookCoven = { workspaceId: string; covenSlug: string };
 
@@ -27,7 +28,7 @@ export function StepQuickLook({
           id={ingredientId}
           entry={{ name }}
           workspaceId={look.workspaceId}
-          pageHref={`/coven/${look.covenSlug}/ingredients/${ingredientId}`}
+          pageHref={covenPath(look.covenSlug, 'ingredients', ingredientId)}
           onClose={() => setLooking(false)}
           returnTo={() => eye.current}
         />

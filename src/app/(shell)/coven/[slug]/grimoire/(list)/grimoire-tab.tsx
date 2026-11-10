@@ -1,3 +1,4 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Route } from 'next';
 import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
@@ -75,7 +76,7 @@ export async function grimoireTab({
   const query = await searchParams;
   const filter = GRIMOIRE_PARAMS.read(query);
   const { after, before } = readPageCursors(query);
-  const path = `/coven/${workspace.slug}/grimoire${beneath}` as Route;
+  const path = covenPath(workspace.slug, 'grimoire', beneath);
 
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
@@ -197,7 +198,7 @@ export async function grimoireTab({
                 status: looked.spell.status,
                 visibility: looked.spell.visibility,
                 lastEdit: looked.recipe.lastEdit,
-                recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
+                recipeHref: covenPath(workspace.slug, 'grimoire', looked.spell.id),
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
                 children: (
                   <SpellRecipeBody
