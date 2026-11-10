@@ -67,7 +67,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-53  | Untitled-spell name expression written in ten places                                                                                                         | medium   | Components    |     15 |   1.5 | Moved to MC.7                                   |
 | D-54  | Hand-written singular/plural ternaries beside an existing `plural()` helper                                                                                  | medium   | Components    |     15 |  3.25 | Moved to MC.7                                   |
 | D-55  | Four public document pages and their versions repeated eight times, plus eight skeletons                                                                     | medium   | Pages and lib |     14 |     4 | Moved to MC.2                                   |
-| D-56  | Three near-identical support reply forms                                                                                                                     | medium   | Components    |     14 |   5.5 | Fixed in part                                   |
+| D-56  | Three near-identical support reply forms                                                                                                                     | medium   | Components    |     14 |   5.5 | Fixed                                           |
 | D-57  | Hairline surface box repeated 12 times (exact triplicates)                                                                                                   | medium   | Styles        |     14 |   1.5 | Moved to MC.9                                   |
 | D-58  | Two pages read search params by hand instead of `single()` and `trimmed()`                                                                                   | medium   | Pages and lib |     13 |  1.25 | Moved to MC.2                                   |
 | D-59  | "named only in an allowed set of files" guards each rebuild the same scanner                                                                                 | medium   | Tests         |     13 |     2 | Moved to MC.1                                   |
@@ -93,7 +93,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-79  | Form `sending`/`failure` state and GraphQL error display is hand-written in each form                                                                        | medium   | Components    |      7 |  4.75 | Fixed                                           |
 | D-80  | Five components pair `useOpenModalClick` with `ModalLink` to make a link that opens a modal                                                                  | medium   | Components    |      7 |   1.5 | Moved to MC.6                                   |
 | D-81  | Two near-identical `Day` components, plus three inline copies of the ISO-day cell                                                                            | medium   | Components    |      7 |     1 | Moved to MC.6                                   |
-| D-82  | CupboardEntryForm lists its field names in four places that can drift apart                                                                                  | medium   | Components    |      7 |     2 | Fixed in part                                   |
+| D-82  | CupboardEntryForm lists its field names in four places that can drift apart                                                                                  | medium   | Components    |      7 |     2 | Fixed                                           |
 | D-83  | The user-dialog block is written out in three keeper pages                                                                                                   | medium   | Pages and lib |      6 |     2 | Moved to MC.2                                   |
 | D-84  | `SignInMethods/provider-row.tsx` hand-rolls a Remove confirmation the shared confirm pieces already provide                                                  | medium   | Components    |      6 |     2 | Moved to MC.8                                   |
 | D-85  | Magnifier submit button written in the search box, its idle twin and `SearchField`                                                                           | medium   | Components    |      6 |   1.6 | Moved to MC.6                                   |
@@ -1812,7 +1812,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - The length check: `reply-box.tsx` and `SupportViewReplyForm/index.tsx` each keep a local `tooLong` that `PlainTextField`'s `limit` already covers, and `reply-form.tsx` does neither. The merged form uses `limit`.
 
 - **Estimate:** 5.5 hours
-- **Status:** Fixed in part. Part 1 is done: `SupportReplyShell` serves the three reply forms. Part 2 (a shared subject and message field pair, a bot-trap field) and Part 3 (`readToken` in `SupportRequestByLink`) are not done; the limits already come from the module constants, and the problems logic of the two request forms is shared by D-233.
+- **Status:** Fixed. `SupportReplyShell` serves the three reply forms; `SupportMessageFields` and `BotTrapField` are the shared subject, message and bot-trap fields; `SupportRequestByLink` reads its token through one `readToken` and its failure code through `readGraphqlFailureCode`.
 
 ### D-57: Hairline surface box repeated 12 times (exact triplicates)
 
@@ -2425,7 +2425,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/components/CupboardEntryForm/`.
 
 - **Estimate:** 2 hours
-- **Status:** Fixed in part. `isTextField` and `placeServerIssues` replace the copies; the seven-field object lists in `baselineOf`, `openingValues` and the entry values are left as they are.
+- **Status:** Fixed. `isTextField` and `placeServerIssues` replace the copies, and `baselineOf`, `openingValues` and the entry values derive from the one `FIELDS` list.
 
 ### D-83: The user-dialog block is written out in three keeper pages
 
