@@ -1,7 +1,7 @@
 import { orMissing } from '@/lib/or-not-found';
 import { cache } from 'react';
 import { readNumberedPage } from '@/lib/numbered-page';
-import { listUsers } from '@/modules/identity';
+import { listUsers, standingAccessPausesOf } from '@/modules/identity';
 import {
   countSupportRequests,
   countSupportViews,
@@ -158,8 +158,15 @@ export const readOpened = cache(
       ...replies.map((reply) => reply.createdBy),
       ...(Array.isArray(timeouts) ? timeouts.flatMap(timeoutPeople) : []),
     ]);
+    const person = personOf(names, row.assignedTo);
+    // Only a keeper may read a pause, and only a keeper gets the picker the mark is for.
+    const [pause] =
+      person && row.assignedTo && session.role === 'admin'
+        ? await standingAccessPausesOf(session, [row.assignedTo])
+        : [];
     return {
       ...entryOf(row, names, tier === 'beta_tester'),
+      assignee: person && { ...person, paused: pause !== undefined },
       message: row.message,
       path: row.path || null,
       errorDetail: row.errorDetail,
@@ -179,13 +186,13 @@ export const readOpened = cache(
   },
 );
 
-/** The curators and keepers a request may be assigned to: only a keeper assigns, so a curator is given none. */
+/** The curators and keepers a request may be assigned to, bar those whose site access is paused: only a keeper assigns, so a curator is given none. */
 export const readAssignees = cache(async (session: Session): Promise<SupportPerson[]> => {
   if (session.role !== 'admin') return [];
   const page = { limit: 200, inverted: false };
   const [keepers, curators] = await Promise.all([
-    listUsers(session, { role: 'admin' }, page),
-    listUsers(session, { role: 'curator' }, page),
+    listUsers(session, { role: 'admin', unpaused: true }, page),
+    listUsers(session, { role: 'curator', unpaused: true }, page),
   ]);
   return [...keepers, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });

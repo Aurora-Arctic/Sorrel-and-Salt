@@ -245,6 +245,23 @@ describe('listUsers by support time-out and site access pause', () => {
     // Both at once is the users under both, none here.
     expect(await ids({ paused: true, timedOut: true })).toEqual([]);
   });
+
+  it('drops the users a site access pause stands on, keeping one lifted or run out', async () => {
+    const everyone = await ids({});
+    const standing = await ids({ paused: true });
+    expect(standing.length).toBeGreaterThan(0);
+
+    const unpaused = await ids({ unpaused: true });
+    expect(unpaused).toEqual(everyone.filter((id) => !standing.includes(id)));
+    expect(unpaused).not.toContain(PAUSED_OPEN);
+    expect(unpaused).not.toContain(PAUSED_DATED);
+    expect(unpaused).toEqual(expect.arrayContaining([PAUSED_LIFTED, PAUSED_RUN_OUT, E.id]));
+    expect((await names({ unpaused: true, query: 'paused' })).sort()).toEqual([
+      'Paused Lifted Testwort',
+      'Paused Run Out Testwort',
+    ]);
+    expect(await ids({ unpaused: true, paused: true })).toEqual([]);
+  });
 });
 
 describe('countUsers', () => {
@@ -259,6 +276,7 @@ describe('countUsers', () => {
       { role: 'user', awaitingApproval: true, query: 'pending' },
       { timedOut: true },
       { paused: true },
+      { unpaused: true, role: 'user' },
     ];
     const listed = await Promise.all(filters.map((filter) => names(filter)));
     // Each filter keeps some and narrows, or a count ignoring it would pass.

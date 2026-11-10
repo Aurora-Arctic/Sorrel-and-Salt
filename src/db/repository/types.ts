@@ -1304,6 +1304,8 @@ export interface UserFilter {
   timedOut?: boolean;
   /** Only the users a site access pause stands on: not lifted, and with no end date or one still ahead. */
   paused?: boolean;
+  /** Only the users with no standing site access pause. Unlike `paused: false`, which is no filter, this one narrows. */
+  unpaused?: boolean;
 }
 
 export interface PrivilegeChangeFilter {

@@ -19,7 +19,7 @@ import type { Session } from '../../../lib/session';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
-import { assertSiteAdmin } from '../../identity';
+import { assertSiteAdmin, standingAccessPause } from '../../identity';
 import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportNotifier, SupportRequestRow } from '../types';
@@ -143,11 +143,11 @@ async function change(
 }
 
 /**
- * Assigns the request to a curator or keeper, or to no one. The assignee must be a live curator or keeper.
+ * Assigns the request to a curator or keeper, or to no one. The assignee must be a live curator or keeper whose site access is not paused.
  *
  * @throws {Forbidden} the session is not a keeper, or the request is anonymised.
  * @throws {NotFound} no request has this id, or the assignee is not a live account.
- * @throws {ValidationError} the assignee is neither a curator nor a keeper.
+ * @throws {ValidationError} the assignee is neither a curator nor a keeper, or their site access is paused.
  */
 export async function assignSupportRequest(
   session: Session,
@@ -162,6 +162,14 @@ export async function assignSupportRequest(
     if (assignee.role !== 'curator' && assignee.role !== 'admin') {
       throw new ValidationError([
         { path: ['assigneeId'], message: 'Assign a request to a curator or an admin' },
+      ]);
+    }
+    if (await standingAccessPause(assignee.id)) {
+      throw new ValidationError([
+        {
+          path: ['assigneeId'],
+          message: 'That person’s site access is paused, so a request cannot be assigned to them',
+        },
       ]);
     }
   }
