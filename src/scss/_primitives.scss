@@ -1608,6 +1608,10 @@
     padding-inline-start: space(3);
   }
 
+  .form-error-summary {
+    --list-marker-ink: #{$secondary};
+  }
+
   // Out of flow while empty, so the always-drawn live region adds no gap to the field.
   .field__error:empty {
     position: absolute;
