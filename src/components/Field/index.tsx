@@ -14,6 +14,7 @@ export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';
 export { VisibilitySwitch } from './visibility-switch';
 export { SearchField } from './search-field';
+export { SuggestField } from './suggest-field';
 export { FilterSelectField } from './filter-select-field';
 export { errorShown, useField } from './use-field';
 export { EditedFieldsContext, useEditedFields, useEditedFieldsContext } from './edited-fields';
