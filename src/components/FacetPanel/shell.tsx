@@ -144,13 +144,7 @@ export function FacetShell({
   };
 
   // Crossing the tablet width swaps the panel's kind (an overlay for a sheet), so it shuts.
-  const wide = useMediaQuery(WIDE);
-  const wasWide = useRef(wide);
-  useEffect(() => {
-    if (wasWide.current === wide) return;
-    wasWide.current = wide;
-    shut(true);
-  });
+  const wide = useMediaQuery(WIDE, () => shut(true));
 
   const toggle = () => {
     if (slide.shown) {
