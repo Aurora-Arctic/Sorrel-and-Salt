@@ -103,7 +103,7 @@ export async function createCurated<TTable extends CuratedTable>(
  * Soft-deletes a row that no live compendium entry holds, as `held` reads the entries holding it, and expires the compendium cache.
  * The caller has checked the curator.
  *
- * @throws {Forbidden} a live entry holds the row.
+ * @throws {InUse} a live entry holds the row.
  * @throws {NotFound} no live row has this id.
  */
 export async function deleteCurated<TTable extends CuratedTable>(
