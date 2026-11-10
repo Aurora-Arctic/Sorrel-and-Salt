@@ -1,3 +1,4 @@
+import { labelByKey } from '@/lib/options';
 import type { ReactElement } from 'react';
 import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
@@ -12,7 +13,7 @@ import './index.scss';
 // caller outside the list draws them styled; Sass bundles the file once.
 
 function providerLabel(id: string): string {
-  return SOCIAL_PROVIDERS.find((provider) => provider.id === id)?.label ?? id;
+  return labelByKey(SOCIAL_PROVIDERS, 'id', id);
 }
 
 export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {

@@ -1,5 +1,6 @@
 'use client';
 
+import { labelByKey } from '@/lib/options';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
@@ -58,7 +59,7 @@ export default function BackLink({
 
   // The server and the hydrating render say the list the page names; the browser then says the one it returns to.
   const historyPath = historyHref?.split(/[?#]/)[0];
-  const shownLabel = also.find(({ path }) => path === historyPath)?.label ?? label;
+  const shownLabel = labelByKey(also, 'path', historyPath, label);
 
   const goBack = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!historyHref) return;
