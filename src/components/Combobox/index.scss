@@ -292,7 +292,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // The list, floating beneath the control at its width on the card surface with the floating shadow, hidden rather than unmounted while closed since Downshift keeps its ref
 // (claude-docs/components/combobox.md, "List").
 .combobox__list {
-  z-index: 1;
+  z-index: layer('floating');
   display: none;
   box-sizing: border-box;
   max-height: min(20rem, var(--combobox-list-room, 20rem));
@@ -309,7 +309,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // With an empty message the popup is the placed, bordered panel and the listbox inside is the scroller, reading the `--combobox-list-room` the placement sets
 // (claude-docs/components/combobox.md, "The popup's styling").
 .combobox__popup {
-  z-index: 1;
+  z-index: layer('floating');
   display: none;
   box-sizing: border-box;
   // The popup's rounded edge clips what it holds: a row highlighted at a
