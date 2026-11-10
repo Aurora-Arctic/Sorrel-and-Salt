@@ -12,14 +12,12 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import { fold } from '@/lib/text';
 import Combobox, { ComboboxEntry } from '../Combobox';
-import DateField from '../DateField';
 import {
   FieldError,
-  FieldShell,
   FormActions,
+  PlainDateField,
   PlainTextField,
   VisibilitySwitch,
-  fieldDescription,
 } from '../Field';
 import { BinButton } from '../IconTip';
 import { useLookup } from '../IngredientForm/suggestions';
@@ -161,10 +159,6 @@ export default function RecordWorkingForm({
     </button>
   );
 
-  const dateField = fieldDescription({
-    id: `${ids}-date`,
-    error: fieldMessage(failure, 'workedOn'),
-  });
   const peopleError = fieldMessage(failure, 'participants');
 
   const typed = text.trim();
@@ -242,16 +236,14 @@ export default function RecordWorkingForm({
       }}
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Date" required {...dateField}>
-        <DateField
-          id={dateField.controlId}
-          labelledBy={dateField.labelId}
-          value={workedOn}
-          disabled={submitting}
-          onChange={setWorkedOn}
-          {...dateField.aria}
-        />
-      </FieldShell>
+      <PlainDateField
+        label="Date"
+        required
+        value={workedOn}
+        disabled={submitting}
+        onChange={setWorkedOn}
+        error={fieldMessage(failure, 'workedOn')}
+      />
       {/* A fieldset so `disabled` shuts the box, its chevron and every chip's x at once while the save runs. */}
       <fieldset className="fieldset" aria-labelledby={`${ids}-people-label`} disabled={submitting}>
         <span id={`${ids}-people-label`} className="fieldset__legend">

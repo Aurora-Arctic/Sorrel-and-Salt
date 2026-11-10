@@ -1,11 +1,10 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
-import DateField from '../DateField';
 import { today } from '../DateField/day';
 import { MS_PER_DAY } from '../../lib/duration';
 import { PAUSE_TEXT_MAX_LENGTH } from '../../lib/pause-message';
-import { FieldShell, PlainTextField, fieldDescription } from '../Field';
+import { FieldShell, PlainDateField, PlainTextField, fieldDescription } from '../Field';
 import { LocalDay } from '../SupportRequests/day-range';
 import type { AccessPauseEntry, PauseFieldsProps, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
@@ -77,9 +76,7 @@ export const PauseFields = ({
   messagePlaceholder,
 }: PauseFieldsProps): ReactElement => {
   const spanId = useId();
-  const dayId = useId();
   const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
-  const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
   return (
     <>
       <FieldShell label="For" {...spanField}>
@@ -98,16 +95,7 @@ export const PauseFields = ({
         </select>
       </FieldShell>
       {span === 'date' && (
-        <FieldShell label="Until" {...dayField}>
-          <DateField
-            id={dayField.controlId}
-            labelledBy={dayField.labelId}
-            value={day}
-            min={today()}
-            onChange={onDay}
-            {...dayAria}
-          />
-        </FieldShell>
+        <PlainDateField label="Until" value={day} min={today()} onChange={onDay} />
       )}
       <PlainTextField
         name="note"

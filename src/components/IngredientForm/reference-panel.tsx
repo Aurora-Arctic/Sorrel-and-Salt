@@ -24,7 +24,6 @@ import {
 import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
-import DateField from '../DateField';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import Notice from '../Notice';
@@ -33,7 +32,7 @@ import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schem
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF, latestDay } from '@/modules/ingredients/validation/reference-format';
 import {
-  FieldShell,
+  DateFieldShell,
   FormActions,
   FormHistoryButtons,
   FormErrorSummary,
@@ -473,14 +472,17 @@ function ReferenceDayField({ spec }: { spec: ReferenceFieldSpec }): ReactElement
   const name = spec.name as FieldPath<ReferenceFormValues>;
   const { control } = useFormContext<ReferenceFormValues>();
   const { field } = useController({ control, name });
-  const { aria, ...shell } = useField<ReferenceFormValues>(name);
+  const description = useField<ReferenceFormValues>(name);
   const [latest] = useState(() => latestDay());
   const value = typeof field.value === 'string' ? field.value : '';
   return (
-    <FieldShell
+    <DateFieldShell
+      description={description}
       label={spec.label}
       required={spec.required}
-      {...shell}
+      value={value}
+      max={latest}
+      onChange={field.onChange}
       action={
         value !== '' && !spec.required ? (
           <button
@@ -493,16 +495,7 @@ function ReferenceDayField({ spec }: { spec: ReferenceFieldSpec }): ReactElement
           </button>
         ) : undefined
       }
-    >
-      <DateField
-        id={shell.controlId}
-        labelledBy={shell.labelId}
-        value={value}
-        max={latest}
-        onChange={field.onChange}
-        {...aria}
-      />
-    </FieldShell>
+    />
   );
 }
 

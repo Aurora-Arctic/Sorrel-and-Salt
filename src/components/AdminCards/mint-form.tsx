@@ -7,8 +7,14 @@ import { MS_PER_DAY } from '../../lib/duration';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { useFormSend } from '../../lib/use-form-send';
 import { expiryOfDay } from '../../lib/utc';
-import DateField from '../DateField';
-import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription } from '../Field';
+import {
+  FieldShell,
+  FormActions,
+  PlainDateField,
+  PlainTextField,
+  SwitchField,
+  fieldDescription,
+} from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
@@ -84,7 +90,6 @@ const totalOf = (text: string): string | undefined => {
 
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
-  const dayId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
@@ -105,12 +110,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
       (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
       fieldMessage(failure, 'sheets'),
   });
-  const dayField = fieldDescription({
-    id: dayId,
-    error: fieldMessage(failure, 'expiresAt'),
-  });
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
-  const { aria: dayAria, ...dayShell } = dayField;
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
   const discard = useDiscardGuard(
@@ -194,17 +194,15 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             onBlur={() => setSheets(wholeSheets)}
           />
         </FieldShell>
-        <FieldShell label="Expires On" required {...dayShell}>
-          <DateField
-            id={dayShell.controlId}
-            labelledBy={dayShell.labelId}
-            value={day}
-            min={earliestDay()}
-            disabled={minting}
-            onChange={setDay}
-            {...dayAria}
-          />
-        </FieldShell>
+        <PlainDateField
+          label="Expires On"
+          required
+          value={day}
+          min={earliestDay()}
+          disabled={minting}
+          onChange={setDay}
+          error={fieldMessage(failure, 'expiresAt')}
+        />
       </div>
       <PlainTextField
         name="note"
