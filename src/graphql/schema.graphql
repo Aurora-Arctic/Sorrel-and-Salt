@@ -3234,6 +3234,9 @@ type User {
   canCreateWorkspace: Boolean!
   email: String!
   emailVerified: Boolean!
+
+  """Whether the account holds at least one passkey."""
+  hasPasskey: Boolean!
   id: ID!
   image: String
   memberships: [WorkspaceMember!]!
