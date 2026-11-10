@@ -18,7 +18,7 @@
 
 **M17.24 follows M17.23 and comes before the other audits**, minted on the owner's call of 2026-11-08: an audit of the format checks of every form input that keepers, curators, stewards and practitioners use, re-scoped on the owner's call of 2026-11-09 to fix the approved findings in the same PR. It is a prerequisite for nothing.
 
-**M17.27 → M17.29 follow M17.24 and come before the other audits**, minted on the owner's call of 2026-11-09 so the audits see them: an About Us page (M17.27), keeper invitations that turn on coven creation (M17.28), and invitations and a sign-in dialog that do not assume an account (M17.29). M17.29's design is approved before it is built.
+**M17.27 → M17.30 follow M17.24 and come before the other audits**, minted on the owner's call of 2026-11-09 so the audits see them: an About Us page (M17.27), keeper invitations that turn on coven creation (M17.28), invitations and a sign-in dialog that do not assume an account (M17.29), and icons for email & password and passkey logins in the user list (M17.30, minted 2026-11-10). M17.29's design is approved before it is built.
 
 **M11.14 and M7.A.1 close the row**, moved here from Wave 15 on the owner's call of 2026-11-08. M11.14 promotes `release/1.0.0` to `main` once the wave's other work is done. M7.A.1 turns on the merge queue; it is unscheduled by design, its trigger is in [`tasks/v1/m7a.md`](../../tasks/v1/m7a.md), and it sits last only so it has a place.
 
