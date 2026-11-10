@@ -1247,7 +1247,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - `src/app/(shell)/coven-paused/[slug]/page.tsx` (`/coven/${encodeURIComponent(slug)}`, twice); see D-41 for the rest.
 
 - **Estimate:** 10 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-42: `vi.mock('@/lib/request-session', ...)` and `vi.mock('@/lib/mail', () => ({ send }))` repeated in 51 and 31 files
 
@@ -1533,7 +1533,7 @@ Two more page-and-skeleton pairs:
 - `src/components/SpellRecipe/skeleton.tsx` types "Category Match", "In the Cupboard" and "Workings" again from `src/components/SpellRecipe/index.tsx` and `sections.ts` (`recipeMenu()` is already shared). Shared piece: export the section titles from `sections.ts` and import them in both.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-50: `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting
 
@@ -1574,7 +1574,7 @@ Two more page-and-skeleton pairs:
 `toISOString().slice(0, 10)` for a `<time>` day, where `lib/utc.ts:33` (`dayInUtc`) exists: `UserList/index.tsx:141-143`, `UserDetail/index.tsx:30-32`. Elsewhere: `MemberList/index.tsx:66`, `MemberDetail/index.tsx:15`, `DataTable/updated-column.tsx:15`, `app/(shell)/account/terms/page.tsx:38`.
 
 - **Estimate:** 3.25 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-51: "Has text" check (`(x ?? '').trim() !== ''`) written as a local `said` in four places and inline in six more
 
@@ -1662,7 +1662,7 @@ Two more page-and-skeleton pairs:
 - See D-52.
 
 - **Estimate:** 4.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-53: Untitled-spell name expression written in ten places
 
@@ -1761,7 +1761,7 @@ The ninth public document page and skeleton shape: src/app/(public)/about/{page.
 `/about` added by hand to: src/app/robots.ts, src/app/sitemap.ts, src/lib/public-routes.ts (PUBLIC_ROUTES and STAY_ON), src/lib/page-routes.ts, src/app/skeletons.ts, src/components/AdminNav/sections.ts, src/components/AdminNav/skeleton.tsx, SiteFooter.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-56: Three near-identical support reply forms
 
@@ -1875,7 +1875,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 ---
 
 - **Estimate:** 1.25 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-59: "named only in an allowed set of files" guards each rebuild the same scanner
 
@@ -2341,7 +2341,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - `keepers/(people)/users/page.tsx:86-90`, `keepers/help/page.tsx:74-90` (see D-1).
 
 - **Estimate:** 2.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-79: Form `sending`/`failure` state and GraphQL error display is hand-written in each form
 
@@ -2453,7 +2453,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - See D-83 for the line ranges.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-84: `SignInMethods/provider-row.tsx` hand-rolls a Remove confirmation the shared confirm pieces already provide
 
@@ -2616,7 +2616,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/lib/search-param-table.test.ts`, `tests/components/CompendiumList/`, `tests/components/IngredientSearch/`.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-91: Invitation page and count twins repeat both scope and filter; `pendingInvitation` and `openInvitation` are near-twins
 
@@ -2649,7 +2649,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** curator vocabulary e2e specs; component tests for the dialogs if present under `tests/components/`.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed in part: the group and value types are shared and the two dialogs share one props type; the dialogs stay two files, as each wraps a different form.
 
 ### D-93: The formal-name label (`name (canonicalName)` and `name, canonicalName`) is formatted in five places
 
@@ -2857,7 +2857,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/app/entry-stock.test.ts`, `tests/app/(shell)/coven/[slug]/ingredient.test.tsx`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-105: IngredientForm/duplicates `PlusChoice` re-implements AddIcon's button and glyph
 
@@ -3034,7 +3034,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - `keepers/layout.tsx` and `curator/layout.tsx` share the `ContextRow` / `SectionBody` / `RouteModalProvider` scaffolding; `keepers/layout.tsx:12` already imports the curator type.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-115: `readBatches` and `readArrivals` wrap `cache()` around an object argument, which React's cache never matches, and each has one caller
 
@@ -3048,7 +3048,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** keepers invitation-cards and card-sign-ups e2e specs.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-116: Three cron route handlers are the same function
 
@@ -3065,7 +3065,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/app/cron-routes.test.ts`, `tests/guards/daily-job-starts.test.ts`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-117: Account tab pages write the panel section markup seven times
 
@@ -3082,7 +3082,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/app/(shell)/account/*`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-118: Three "more" menus repeat the Asking state, trigger ref and alert logic
 
@@ -3939,7 +3939,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `npm run typecheck`; any test importing these files.
 
 - **Estimate:** 2 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-161: `TABLET_BAND` and its `useSyncExternalStore` subscription written in both PageNav and SectionNav
 
@@ -4084,7 +4084,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - `invite/[token]/invitation-panel.tsx` (six `../../../components|lib/*`).
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-170: The mail glue repeats `${origin}/<path>` three times in one file
 
@@ -4098,7 +4098,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** `tests/lib/*-mail.test.ts`.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-171: Help back-bar markup is written in both help form pages, and the edit page repeats the not-found catch
 
@@ -4112,7 +4112,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** keepers help e2e spec.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-172: `readLedgerPage` and `cursorOf` are one-caller wrappers
 
@@ -4126,7 +4126,7 @@ The "Deleted account" and "Signed-out sender" literals: `SupportRequests/index.t
 - **Tests covering the callers:** keepers users and privilege-changes e2e specs.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-173: Identical `revokeInvitation` mutation document written twice, and three `RemoveControl` names
 
@@ -4299,7 +4299,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/app/(shell)/coven/[slug]/*`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-184: The demo notice's text choice is written twice
 
@@ -4314,7 +4314,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/app/(shell)/coven/[slug]/layout.test.tsx`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-185: Narrow-panel page scaffold repeated in Create Coven and Access Paused
 
@@ -4330,7 +4330,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/app/(shell)/coven/new/*`, `tests/app/(shell)/coven-paused/*`, `tests/app/(shell)/account/*`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-186: Password-section message constants are exported and compared in tests, but the client `STALE_SESSION` wording differs from the server's
 
@@ -4664,7 +4664,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/lib/request-session.test.ts`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-209: `PublicLayout` writes `<main><PageColumn as="div">` once per branch
 
@@ -4680,7 +4680,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 ---
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-210: The `'Prev' | 'Next'` label union is written three times in `Pager/types.ts`
 
@@ -5119,7 +5119,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/e2e/skeleton-layout.spec.ts` (help routes).
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.2.
+- **Status:** Fixed.
 
 ### D-240: AddIngredientAction and NewSpellAction are near twins
 

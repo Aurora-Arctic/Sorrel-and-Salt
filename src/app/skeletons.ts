@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { SkeletonHost } from '../lib/navigation/skeleton-for';
+import type { SkeletonHost } from '@/lib/navigation/skeleton-for';
 import { CompendiumSkeleton } from './(public)/compendium/skeleton';
 import { CompendiumEntrySkeleton } from './(public)/compendium/ingredients/[slug]/skeleton';
 import { TermsSkeleton } from './(public)/terms/skeleton';

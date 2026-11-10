@@ -20,6 +20,7 @@ import TabbedPage from '../TabbedPage';
 import type { PageTab } from '../TabbedPage/types';
 import { ADMIN_PAGES } from './sections';
 import type { AdminPage } from './types';
+import { ADD_INGREDIENT_TITLE } from '../AppShell/add-href';
 
 const documentPanel: ReactNode = <DocumentEditorSkeleton />;
 
@@ -55,7 +56,7 @@ const panels = (): Record<string, ReactNode> => ({
 // The header action each tab carries, drawn with nothing to press: the Add of the curator tabs, and the
 // keeper tabs' own button.
 const ACTIONS: Record<string, ReactNode> = {
-  '/curator/compendium': <ActionFace>Add Ingredient</ActionFace>,
+  '/curator/compendium': <ActionFace>{ADD_INGREDIENT_TITLE}</ActionFace>,
   ...Object.fromEntries(
     Object.values(VALUE_KINDS).map((kind) => [
       kind.path,

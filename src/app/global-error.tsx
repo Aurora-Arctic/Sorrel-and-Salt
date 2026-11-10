@@ -1,9 +1,9 @@
 'use client';
 
-import ErrorPage from '../components/ErrorPage';
-import { SupportIcon } from '../components/IconTip/icons';
-import { useErrorReport } from '../lib/error-report';
-import { SUPPORT_FROM_PARAM, SUPPORT_PATH, bugReportQuery } from '../lib/support-path';
+import ErrorPage from '@/components/ErrorPage';
+import { SupportIcon } from '@/components/IconTip/icons';
+import { useErrorReport } from '@/lib/error-report';
+import { SUPPORT_FROM_PARAM, SUPPORT_PATH, bugReportQuery } from '@/lib/support-path';
 import './globals.scss';
 
 // The boundary for an error in the root layout itself, which `error.tsx` cannot catch. Plain anchors, not `next/link`,

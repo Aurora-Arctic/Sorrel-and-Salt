@@ -1,3 +1,4 @@
+import { compendiumEntryPath } from '@/lib/compendium-path';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import { type ReactNode, useEffect } from 'react';
@@ -220,8 +221,7 @@ const FULL: IngredientDetail = {
   ],
 };
 
-const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
-  `/compendium/ingredients/${ingredient.slug}` as Route;
+const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) => compendiumEntryPath(ingredient.slug);
 
 const COMPENDIUM_CASE: NonNullable<IngredientEntryProps['replaces']> = {
   tip: 'This is the compendium’s entry. The link opens its public page.',
@@ -589,7 +589,7 @@ const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
 
 const PUBLIC_LINKS = {
   listHref: '/compendium' as Route,
-  pageHref: `/compendium/ingredients/${FULL.entry.slug}` as Route,
+  pageHref: compendiumEntryPath(FULL.entry.slug),
 };
 
 const OWN: IngredientDetail = {

@@ -1,21 +1,16 @@
-import PageFrame from '@/components/PageFrame';
-import PageHeader from '@/components/PageHeader';
+import NarrowPanelPage from '@/components/NarrowPanelPage';
 import Skeleton from '@/components/Skeleton';
 import { SkeletonContextRow } from '@/components/SkeletonFrame';
+import { CREATE_COVEN_LEDE, CREATE_COVEN_TITLE } from './head';
 
 export const NewCovenSkeleton = () => (
-  <>
-    <SkeletonContextRow />
-    <PageFrame as="div" narrow>
-      <div className="page-frame__section panel new-coven-skeleton">
-        <PageHeader
-          className="card-page-header"
-          headingClassName="auth-title"
-          title="Create Coven"
-          lede="Start a coven of your own. You will be its steward."
-        />
-        <Skeleton shape="block" count={2} quiet />
-      </div>
-    </PageFrame>
-  </>
+  <NarrowPanelPage
+    as="div"
+    contextRow={<SkeletonContextRow />}
+    title={CREATE_COVEN_TITLE}
+    lede={CREATE_COVEN_LEDE}
+    className="new-coven-skeleton"
+  >
+    <Skeleton shape="block" count={2} quiet />
+  </NarrowPanelPage>
 );

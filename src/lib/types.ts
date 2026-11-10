@@ -252,3 +252,27 @@ export interface PreloadHandlers {
   onFocus: () => void;
   onPointerDown: () => void;
 }
+
+/** What a coven role may do on a page: each flag is the statement its service asserts, never a rank. */
+export interface CovenAccess {
+  canUpdateCoven: boolean;
+  canDeleteCoven: boolean;
+  canReadMembers: boolean;
+  canReadMemberEmails: boolean;
+  canInvite: boolean;
+  canChangeRoles: boolean;
+  canRemoveMembers: boolean;
+  canPauseMembers: boolean;
+  canCreateIngredient: boolean;
+  canUpdateIngredient: boolean;
+  canDeleteIngredient: boolean;
+  canMakeOurs: boolean;
+  canUpdateStock: boolean;
+  canAddToCupboard: boolean;
+  canCreateSpell: boolean;
+  canUpdateSpell: boolean;
+  canDeleteSpell: boolean;
+  canCreateWorking: boolean;
+  canUpdateWorking: boolean;
+  canDeleteWorking: boolean;
+}

@@ -1,9 +1,9 @@
 'use client';
 
 import type { MouseEvent, ReactElement } from 'react';
-import IconTip, { PlusIcon } from '../../../components/IconTip';
-import { ModalLink, useOpenModalClick } from '../../../components/Modal';
-import { PendingLink } from '../../../lib/navigation';
+import IconTip, { PlusIcon } from '@/components/IconTip';
+import { ModalLink, useOpenModalClick } from '@/components/Modal';
+import { PendingLink } from '@/lib/navigation';
 import type { AddActionProps } from './types';
 
 /**

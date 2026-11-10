@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { cache } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import type { GrimoireSpell } from '@/components/GrimoireList/types';
-import type { CardCategory } from '@/components/IngredientCard/types';
+import { cardCategoryReader } from '@/components/CategoryChips/card-categories';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
@@ -65,7 +65,7 @@ export const readGrimoire = cache(
         page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId })),
       ),
     ]);
-    const byId = new Map(known.map((category) => [category.id, category]));
+    const cardCategories = cardCategoryReader(known);
     const spells = page.edges.map(({ node }, i): GrimoireSpell => {
       const answer = answers[i];
       if (answer instanceof Error) throw answer;
@@ -77,10 +77,7 @@ export const readGrimoire = cache(
         intent: node.intent,
         status: node.status,
         visibility: node.visibility,
-        categories: answer.flatMap(({ id }): CardCategory[] => {
-          const category = byId.get(id);
-          return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
-        }),
+        categories: cardCategories(answer),
         lastEdit: { by: editors[i] ?? null, at: node.updatedAt.toISOString() },
         workingCount: count,
       };

@@ -1,28 +1,23 @@
+import { covenPath } from '@/lib/coven-path';
 import type { Metadata } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
-import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
-import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
-import MemberList from '../../../../../../components/MemberList';
-import type { MemberListEntry } from '../../../../../../components/MemberList/types';
-import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
+import ListFrame, { ListBody } from '@/components/ListFrame';
+import { MemberListBodySkeleton } from '@/components/MemberList/skeleton';
+import MemberList from '@/components/MemberList';
+import type { MemberListEntry } from '@/components/MemberList/types';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import { SoleStewardNotice } from '../sole-steward-notice';
-import Notice from '../../../../../../components/Notice';
-import Pager from '../../../../../../components/Pager';
-import { Forbidden } from '../../../../../../lib/errors';
-import { orNotFound } from '../../../../../../lib/or-not-found';
-import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
-import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
-import { readCursorPage, readPageCursors } from '../../../../../../lib/numbered-page';
-import { single } from '../../../../../../lib/search-params';
-import type { PagerCursor } from '../../../../../../lib/types';
+import Notice from '@/components/Notice';
+import Pager from '@/components/Pager';
+import { Forbidden } from '@/lib/errors';
+import { orNotFound } from '@/lib/or-not-found';
+import { requireCovenMembership, requireSession } from '@/lib/request-session';
+import { listHref, pagerHrefs } from '@/lib/list-href';
+import { cursorOf, readCursorPage, readPageCursors } from '@/lib/numbered-page';
+import { single } from '@/lib/search-params';
+import { covenAccessOf } from '@/lib/coven-access';
 import { displayNamesOf } from '@/modules/identity';
-import {
-  listMembers,
-  memberEmails,
-  memberRoster,
-  rolePermits,
-  standingMemberPauses,
-} from '@/modules/coven';
+import { listMembers, memberEmails, memberRoster, standingMemberPauses } from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
 import MemberDialog from './member-dialog';
 import { memberHeading } from './member-heading';
@@ -66,7 +61,12 @@ export default async function MembersPage({
   // The editor's name withheld, the stamp is left empty: a date with no one to
   // ask about it says little.
   const editorOf = (id: string) => names[ids.indexOf(id)] ?? null;
-  const showEmail = rolePermits(membership.role, { member: ['readEmail'] });
+  const {
+    canReadMemberEmails: showEmail,
+    canChangeRoles,
+    canRemoveMembers: canRemove,
+    canPauseMembers: canPause,
+  } = covenAccessOf(membership.role);
   const emails = showEmail
     ? await memberEmails(
         session,
@@ -75,9 +75,6 @@ export default async function MembersPage({
       )
     : [];
   const emailOf = (id: string) => emails.find(({ userId }) => userId === id)?.address ?? null;
-  const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
-  const canRemove = rolePermits(membership.role, { member: ['remove'] });
-  const canPause = rolePermits(membership.role, { member: ['pause'] });
   const pauses = canPause
     ? await standingMemberPauses(
         session,
@@ -91,8 +88,8 @@ export default async function MembersPage({
     return standing ? { until: standing.until } : null;
   };
 
-  const path = `/coven/${slug}/members`;
-  const cursor: PagerCursor | undefined = after ? { after } : before ? { before } : undefined;
+  const path = covenPath(slug, 'members');
+  const cursor = cursorOf({ after, before });
   const members = page.edges.map(({ node }): MemberListEntry => {
     const row = {
       userId: node.userId,

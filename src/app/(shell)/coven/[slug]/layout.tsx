@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
-import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
-import { rolePermits } from '@/modules/coven';
-import DemoNotice from '../../../../components/DemoNotice';
-import SectionBody from '../../../../components/SectionBody';
-import ContextRow from '../../../../components/ContextRow';
-import { CovenFactsProvider } from '../../../../components/CovenFacts';
-import CovenNav from '../../../../components/CovenNav';
-import { CovenSwitchProvider } from '../../../../components/CovenSwitchTargets/context';
-import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
-import { requireCovenMembership } from '../../../../lib/request-session';
-import { titleTemplate } from '../../../../lib/site';
-import { viewerOf } from '../../../../lib/viewer';
+import { demoNoticeOf } from '@/lib/demo-notice';
+import DemoNotice from '@/components/DemoNotice';
+import SectionBody from '@/components/SectionBody';
+import ContextRow from '@/components/ContextRow';
+import { CovenFactsProvider } from '@/components/CovenFacts';
+import CovenNav from '@/components/CovenNav';
+import { CovenSwitchProvider } from '@/components/CovenSwitchTargets/context';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import { requireCovenMembership } from '@/lib/request-session';
+import { titleTemplate } from '@/lib/site';
+import { viewerOf } from '@/lib/viewer';
+import { homeAccessOf } from './home-access';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
 
 // Each page under the coven gives its own name ('Grimoire') and this template finishes it with the
@@ -34,6 +34,7 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
   const { slug } = await params;
   const { workspace, membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
+  const demoNotice = demoNoticeOf(workspace, membership.role);
 
   // The coven's words for its home page's skeleton, which draws them before the page arrives.
   const facts = {
@@ -41,12 +42,7 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
     name: workspace.name,
     demo: workspace.demo,
     role: membership.role,
-    access: {
-      canDelete: rolePermits(membership.role, { workspace: ['delete'] }),
-      canReadMembers: rolePermits(membership.role, { member: ['read'] }),
-      canInvite: rolePermits(membership.role, { member: ['invite'] }),
-      canRename: rolePermits(membership.role, { workspace: ['update'] }),
-    },
+    access: homeAccessOf(membership.role),
   };
 
   return (
@@ -55,17 +51,9 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
         <ContextRow
           lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}
         >
-          <CovenNav
-            slug={slug}
-            canReadMembers={rolePermits(membership.role, { member: ['read'] })}
-          />
+          <CovenNav slug={slug} canReadMembers={facts.access.canReadMembers} />
         </ContextRow>
-        {workspace.demo && (
-          <DemoNotice
-            slug={slug}
-            text={membership.role === 'owner' ? DEMO_OWNER_NOTICE : DEMO_NOTICE}
-          />
-        )}
+        {demoNotice && <DemoNotice slug={slug} text={demoNotice} />}
         <SectionBody region="coven" className="coven-layout">
           {children}
         </SectionBody>

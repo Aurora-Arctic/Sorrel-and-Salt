@@ -26,6 +26,7 @@ const getIngredient = vi.fn();
 // The sourcing score's read, for a curator or keeper; its tests are slug-page.test.tsx's.
 const readSourcingScore = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   readCompendiumEntry,
   readCompendiumReview,
   getIngredient,

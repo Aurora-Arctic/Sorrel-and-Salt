@@ -1,8 +1,3 @@
-import PageColumn from '@/components/PageColumn';
-import { DocumentSkeleton } from '@/components/DocumentPage/skeleton';
+import { DocumentPageSkeleton } from '../../../_document-skeleton';
 
-export const TermsVersionSkeleton = () => (
-  <PageColumn as="div">
-    <DocumentSkeleton title="Terms of Use" />
-  </PageColumn>
-);
+export const TermsVersionSkeleton = () => <DocumentPageSkeleton title="Terms of Use" />;

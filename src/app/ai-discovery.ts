@@ -1,7 +1,8 @@
-import { pageTitleOf } from '../components/IngredientEntry/page-title';
-import { describe } from '../lib/page-metadata';
-import { SITE_NAME, siteUrl } from '../lib/site';
+import { pageTitleOf } from '@/components/IngredientEntry/page-title';
+import { describe } from '@/lib/page-metadata';
+import { SITE_NAME, siteUrl } from '@/lib/site';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
+import { compendiumEntryPath } from '@/lib/compendium-path';
 
 // The two public files that describe the compendium to a crawler or AI agent: `/llms.txt` and the
 // catalog at `/.well-known/ai-catalog.json` and `/.well-known/ard.json`. Every URL is built on
@@ -27,7 +28,7 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
     `- [Compendium](${siteUrl('/compendium')}): every ingredient in the reference, searchable and filterable`,
     ...entries.map(
       (entry) =>
-        `- [${linkText(pageTitleOf(entry))}](${siteUrl(`/compendium/ingredients/${entry.slug}`)})${note(entry.description)}`,
+        `- [${linkText(pageTitleOf(entry))}](${siteUrl(compendiumEntryPath(entry.slug))})${note(entry.description)}`,
     ),
     '',
     '## Optional',

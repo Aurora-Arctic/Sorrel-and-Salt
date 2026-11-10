@@ -1,39 +1,41 @@
-import type { Metadata, Route } from 'next';
+import { compendiumEntryPath } from '@/lib/compendium-path';
+import { COMPENDIUM_EYEBROW, COMPENDIUM_LEDE, COMPENDIUM_TITLE } from './head';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import CompendiumCards from '../../../components/CompendiumCards';
-import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
-import { categoryRefs } from '../../../components/IngredientCard/category-refs';
-import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
-import { editHeading } from '../../../components/CompendiumList/heading';
-import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
-import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
-import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
-import { cardName } from '../../../components/IngredientCard/card-name';
-import { detailsHeading, detailsMarks } from '../../../components/IngredientEntry/details';
-import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
-import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
-import IngredientSummary from '../../../components/IngredientEntry/summary';
-import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
-import { Forbidden } from '../../../lib/errors';
-import { listJsonLd } from '../../../lib/json-ld';
-import { publicPageMetadata } from '../../../lib/page-metadata';
-import { entryRecency } from '../../../lib/entry-recency';
-import { pagerHrefs } from '../../../lib/list-href';
-import { readPageCursors } from '../../../lib/numbered-page';
-import { CARD_PAGE_SIZE } from '../../../lib/pagination';
-import { single } from '../../../lib/search-params';
-import PageHeader from '../../../components/PageHeader';
-import ReviewMark from '../../../components/IngredientEntry/review-mark';
-import { getSession } from '../../../lib/request-session';
-import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import CompendiumCards from '@/components/CompendiumCards';
+import CompendiumCardMore from '@/components/CompendiumCards/card-more';
+import { categoryRefs } from '@/components/IngredientCard/category-refs';
+import type { CompendiumCardEntry } from '@/components/CompendiumCards/types';
+import { editHeading } from '@/components/CompendiumList/heading';
+import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '@/components/CompendiumList/href';
+import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
+import type { CompendiumListFilter } from '@/components/CompendiumList/types';
+import { cardName } from '@/components/IngredientCard/card-name';
+import { detailsHeading, detailsMarks } from '@/components/IngredientEntry/details';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import { EDIT_ENTRY_EYEBROW } from '@/components/IngredientEntry/edit-heading';
+import IngredientSummary from '@/components/IngredientEntry/summary';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
+import { Forbidden } from '@/lib/errors';
+import { listJsonLd } from '@/lib/json-ld';
+import { publicPageMetadata } from '@/lib/page-metadata';
+import { entryRecency } from '@/lib/entry-recency';
+import { pagerHrefs } from '@/lib/list-href';
+import { readPageCursors } from '@/lib/numbered-page';
+import { CARD_PAGE_SIZE } from '@/lib/pagination';
+import { single } from '@/lib/search-params';
+import PageHeader from '@/components/PageHeader';
+import ReviewMark from '@/components/IngredientEntry/review-mark';
+import { getSession } from '@/lib/request-session';
+import { viewerIfSignedIn } from '@/lib/viewer';
+import { heldCompendiumEntryIdsIn } from '@/modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/curator/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
 import { cardPlacesOf, readCardCovens } from './card-places';
 import { readCompendiumEntry } from '../../(shell)/curator/compendium/read-entry';
-import { readEditPlace } from '../../(shell)/curator/list-page';
-import MissingNotice from '../../(shell)/curator/missing-notice';
+import { readEditPlace } from '@/app/(shell)/_admin/list-page';
+import MissingNotice from '@/app/(shell)/_admin/missing-notice';
 import {
   readCardCategories,
   readCategories,
@@ -87,7 +89,7 @@ const isListAddress = (params: PublicCompendiumSearchParams) =>
 async function canonicalPath(params: PublicCompendiumSearchParams): Promise<string> {
   const entryId = single(params.entry);
   const shown = entryId ? await readCompendiumDetails(entryId) : undefined;
-  if (shown) return `/compendium/ingredients/${shown.entry.slug}`;
+  if (shown) return compendiumEntryPath(shown.entry.slug);
   if (isFiltered(params)) return PUBLIC_COMPENDIUM_PATH;
   const { after, before } = readPageCursors(params);
   const cursor = after ? ['after', after] : before ? ['before', before] : undefined;
@@ -207,7 +209,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     ? cardPlacesOf(
         cardCovens,
         (id) => holding.some((coven) => coven.id === id),
-        `/compendium/ingredients/${detailed.slug}`,
+        compendiumEntryPath(detailed.slug),
         stockIn(detailed.id),
       )
     : [];
@@ -236,7 +238,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       places: cardPlacesOf(
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,
-        `/compendium/ingredients/${node.slug}`,
+        compendiumEntryPath(node.slug),
         stockIn(node.id),
       ),
       ...(canEdit && {
@@ -259,11 +261,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       )}
       {/* A public page, so its head carries an eyebrow naming the section and a lede saying
           what it is for, where the app's list pages have the heading alone. */}
-      <PageHeader
-        eyebrow="Reference"
-        title="Compendium"
-        lede="Ingredients for spellwork: their formal and folk names, categories, deities and forms, with the sources behind them."
-      />
+      <PageHeader eyebrow={COMPENDIUM_EYEBROW} title={COMPENDIUM_TITLE} lede={COMPENDIUM_LEDE} />
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}
@@ -291,7 +289,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           detailed && {
             heading: detailsHeading(detailed),
             marks: detailsMarks(shown),
-            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            pageHref: compendiumEntryPath(detailed.slug),
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             ...(detailsReview && {
               reviewLine: (

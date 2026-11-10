@@ -1,3 +1,4 @@
+import { amountOf } from '../../../lib/quantity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import type { Built } from '../../../graphql/loaders/types';
@@ -21,8 +22,6 @@ const UnitDimensionEnum = builder.enumType('UnitDimension', {
   values: UNIT_DIMENSIONS,
 });
 
-const amount = (value: string | null) => (value === null ? null : Number(value));
-
 export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').implement({
   description: "A coven's jar of one form of an ingredient.",
   fields: (t) => ({
@@ -44,7 +43,7 @@ export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').imp
     quantityOnHand: t.float({
       nullable: true,
       description: 'Null is "held, unweighed"; 0 is out of stock.',
-      resolve: (row) => amount(row.quantityOnHand),
+      resolve: (row) => amountOf(row.quantityOnHand),
     }),
     unit: t.expose('unit', { type: InventoryUnitEnum, nullable: true }),
     unitDimension: t.expose('unitDimension', {
@@ -54,7 +53,7 @@ export const InventoryItemRef = builder.objectRef<StockRow>('InventoryItem').imp
     }),
     lowStockThreshold: t.float({
       nullable: true,
-      resolve: (row) => amount(row.lowStockThreshold),
+      resolve: (row) => amountOf(row.lowStockThreshold),
     }),
     source: t.exposeString('source', { nullable: true }),
     acquiredDate: t.expose('acquiredDate', { type: 'LocalDate', nullable: true }),
