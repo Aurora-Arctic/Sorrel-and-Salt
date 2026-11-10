@@ -100,7 +100,7 @@ export async function updateDeity(
     if (current.name !== fields.name) await write.carryDeityRename(curator, id, fields.name);
     await replaceOtherNames(write, id, otherNames);
     return row;
-  }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, fields.name, slug));
   expireCompendium();
   return written;
 }

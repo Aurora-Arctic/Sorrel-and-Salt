@@ -6,13 +6,14 @@ import {
 } from '../../../db/repository';
 import type { IngredientFilter } from '../../../db/repository';
 import { Forbidden, ValidationError } from '../../../lib/errors';
-import { joinAnd, plural } from '../../../lib/text';
+import { joinAnd, joinAndMore, plural } from '../../../lib/text';
 import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
 
 // The index exports `describeEntry` and `redirectRefusal` for the ingredient services, and nothing else.
 
-const ENTRIES_NAMED = 3;
+/** How many held entries a refusal names before counting the rest. */
+export const ENTRIES_NAMED = 3;
 
 /**
  * Refuses a delete while live compendium entries under `filter` hold the row.
@@ -28,8 +29,7 @@ export async function refuseWhileHeld(
   if (totalCount === 0) return;
   const named = await findCompendiumPage(filter, { limit: ENTRIES_NAMED, inverted: false });
   const names = named.map(({ node }) => describeEntry(node));
-  const rest = totalCount - names.length;
-  const list = joinAnd(rest > 0 ? [...names, `${rest} more`] : names);
+  const list = joinAndMore(names, totalCount);
   throw new Forbidden(
     `"${name}" ${holding} ${totalCount} compendium ${plural(totalCount, 'entry', 'entries')} — ${list}. ${remedy(totalCount)}`,
   );

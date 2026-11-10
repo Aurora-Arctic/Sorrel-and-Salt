@@ -877,7 +877,11 @@ export async function refuseCollision(
     case 'ingredients_workspace_slug_unique':
       return refuse(
         'name',
-        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
+        addressTaken(
+          name,
+          'the name of another ingredient in this coven',
+          'change the name or formal name',
+        ),
       );
   }
   throw error;

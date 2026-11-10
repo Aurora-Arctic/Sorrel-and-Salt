@@ -295,8 +295,7 @@ describe('GroupForm, for a category group', () => {
         fieldErrors: [
           {
             path: ['name'],
-            message:
-              '"Fixture Shields" already has the address "fixture-shields" — choose another name',
+            message: '"Fixture Shields" already exists — choose another name',
           },
         ],
       });

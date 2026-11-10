@@ -125,7 +125,7 @@ export async function updateAstrologyValue(
       await write.carryAstrologyRename(curator, field, current.name, fields.name);
     }
     return row;
-  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, fields.name, slug));
   expireCompendium();
   return written;
 }

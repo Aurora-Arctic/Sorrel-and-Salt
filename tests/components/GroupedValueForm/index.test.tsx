@@ -89,7 +89,7 @@ const SUBJECT: GroupedValueFormSubject = {
   },
   slugClash: {
     name: 'Testcraft-Ward',
-    message: '"Testcraft Ward" already has the address "testcraft-ward" — choose another name',
+    message: '"Testcraft Ward" already exists — choose another name',
   },
 };
 

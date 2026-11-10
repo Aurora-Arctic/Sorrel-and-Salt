@@ -314,7 +314,7 @@ describe('createCategory', () => {
         {
           path: ['name'],
           message:
-            '"Testcraft Ward" already has the address "testcraft-ward" — choose another name',
+            '"Testcraft-Ward" is too close to "Testcraft Ward", which already exists — choose another name',
         },
       ],
     });
@@ -413,7 +413,7 @@ describe('updateCategory', () => {
         {
           path: ['name'],
           message:
-            '"Testcraft Taken" already has the address "testcraft-taken" — choose another name',
+            '"Testcraft-Taken" is too close to "Testcraft Taken", which already exists — choose another name',
         },
       ],
     });

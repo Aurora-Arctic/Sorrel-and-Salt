@@ -86,7 +86,7 @@ export async function updateCategory(
     const [row] = await write.updateById(categories, id, { ...fields, slug });
     if (!row) throw new NotFound('No such category');
     return row;
-  }).catch((error: unknown) => refuseSlugCollision(CATEGORIES, error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(CATEGORIES, error, fields.name, slug));
   expireCompendium();
   return written;
 }

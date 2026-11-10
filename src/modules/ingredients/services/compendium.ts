@@ -559,8 +559,15 @@ async function refuseCollision(
       refuse(
         'name',
         addressTaken(
-          holder ? describeEntry(holder) : 'Another compendium entry',
-          slug,
+          fields.name,
+          holder
+            ? {
+                label: describeEntry(holder),
+                same:
+                  fold(holder.name) === fold(fields.name) &&
+                  fold(holder.canonicalName ?? '') === fold(fields.canonicalName ?? ''),
+              }
+            : 'the name of another compendium entry',
           'change the name or formal name',
         ),
       );

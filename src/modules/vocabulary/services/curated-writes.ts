@@ -5,7 +5,7 @@ import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
-import { addressTaken, plural } from '../../../lib/text';
+import { addressTaken, fold, plural } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { isRowId, parseInput } from '../../../lib/validation';
 import { refuseWhileHeld } from './held-entries';
@@ -24,10 +24,11 @@ import type {
 // The steps every curated vocabulary's admin write is made of, shared so that how a slug collision, a missing row or a group's move
 // is refused is one edit (claude-docs/modules.md, "Shared steps inside a module"). Internal to the module.
 
-/** A write that broke the vocabulary's slug index, as a `ValidationError` on `name` naming the row holding the address; any other error unchanged. */
+/** A write of `name` that broke the vocabulary's slug index, as a `ValidationError` on `name` naming the row holding the address; any other error unchanged. */
 export async function refuseSlugCollision(
   vocabulary: CuratedVocabulary,
   error: unknown,
+  name: string,
   slug: string,
 ): Promise<never> {
   if (violatedUniqueIndex(error) !== vocabulary.slugIndex) throw error;
@@ -35,8 +36,10 @@ export async function refuseSlugCollision(
   throw fieldRefusal(
     'name',
     addressTaken(
-      holder ? `"${holder.name}"` : `Another ${vocabulary.noun}`,
-      slug,
+      name,
+      holder
+        ? { label: `"${holder.name}"`, same: fold(holder.name) === fold(name) }
+        : `the name of another ${vocabulary.noun}`,
       `choose another name${vocabulary.addressHint ?? ''}`,
     ),
   );
@@ -75,7 +78,7 @@ export async function bySlug<TTable extends CuratedTable>(
 export async function createCurated<TTable extends CuratedTable>(
   session: Session,
   vocabulary: CuratedVocabulary<TTable>,
-  fields: object,
+  fields: { name: string; [field: string]: unknown },
   slug: string,
   alsoWrite?: (write: AuditWriter, row: TTable['$inferSelect']) => Promise<void>,
 ): Promise<TTable['$inferSelect']> {
@@ -90,7 +93,7 @@ export async function createCurated<TTable extends CuratedTable>(
     )) as TTable['$inferSelect'][];
     await alsoWrite?.(write, row);
     return row;
-  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, fields.name, slug));
   expireCompendium();
   return written;
 }
@@ -190,7 +193,7 @@ export async function updateGroup<TTable extends GroupTable>(
     return row as TTable['$inferSelect'];
   }).catch(async (error: unknown) => {
     await refuseCollidingMoves(members, moves, refuse, error);
-    return refuseSlugCollision(group, error, slug);
+    return refuseSlugCollision(group, error, fields.name, slug);
   });
 }
 

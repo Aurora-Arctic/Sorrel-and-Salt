@@ -9,7 +9,7 @@ import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-
 import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { formSlug } from '../../../lib/slugify';
-import { joinAnd, plural } from '../../../lib/text';
+import { joinAndMore, plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { assertCurator } from '@/modules/identity';
@@ -28,7 +28,7 @@ import {
   parseUnderLiveParent,
   refuseSlugCollision,
 } from './curated-writes';
-import { describeEntry } from './held-entries';
+import { ENTRIES_NAMED, describeEntry } from './held-entries';
 import type {
   CuratedVocabulary,
   IngredientFormValueFilter,
@@ -115,7 +115,7 @@ export async function updateIngredientFormValue(
     return row;
   }).catch(async (error: unknown) => {
     if (renamed) await refuseDoubledForms(rename, error);
-    return refuseSlugCollision(FORMS, error, slug);
+    return refuseSlugCollision(FORMS, error, fields.name, slug);
   });
   expireCompendium();
   return written;
@@ -160,19 +160,19 @@ async function refuseDoubledForms(
   if (error !== undefined && violatedUniqueIndex(error) !== INGREDIENT_VARIANTS_FORM_UNIQUE) {
     return;
   }
-  const renaming = `Renaming "${rename.from}" to "${rename.to}"`;
   const doubled = await findCompendiumFormRenameClashes(rename.id, rename.to);
-  if (doubled.length > 0) {
-    const entries = joinAnd(doubled.map(describeEntry));
+  const count = doubled.length;
+  if (count > 0) {
+    const entries = joinAndMore(doubled.slice(0, ENTRIES_NAMED).map(describeEntry), count);
     throw fieldRefusal(
       'name',
-      `${renaming} would give ${entries} two forms called "${rename.to}" — remove one of them first`,
+      `"${rename.to}" already exists on ${count} compendium ${plural(count, 'entry', 'entries')} that also ${plural(count, 'has', 'have')} "${rename.from}" — ${entries}. Remove one of the two forms from ${plural(count, 'it', 'each')} first.`,
     );
   }
   if (error !== undefined) {
     throw fieldRefusal(
       'name',
-      `${renaming} would give a compendium entry two forms of one name — try again`,
+      `"${rename.to}" already exists on a compendium entry that also has "${rename.from}" — try again`,
     );
   }
 }

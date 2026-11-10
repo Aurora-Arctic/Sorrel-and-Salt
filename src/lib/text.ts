@@ -9,9 +9,25 @@ export function joinAnd(items: readonly string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-/** One sentence for the vocabularies, the compendium and a coven's ingredients, so the wording is one edit. */
-export function addressTaken(holder: string, slug: string, remedy: string): string {
-  return `${holder} already has the address "${slug}" — ${remedy}`;
+/**
+ * One sentence for the vocabularies, the compendium and a coven's ingredients, so the wording is one edit. A different name can make the
+ * same address ("&" and "and" both read "and"), so only a `same` holder "already exists"; any other is "too close". A string holder is one
+ * that could not be read, named in general terms.
+ */
+export function addressTaken(
+  typed: string,
+  holder: { label: string; same: boolean } | string,
+  remedy: string,
+): string {
+  if (typeof holder === 'string') return `"${typed}" is too close to ${holder} — ${remedy}`;
+  if (holder.same) return `${holder.label} already exists — ${remedy}`;
+  return `"${typed}" is too close to ${holder.label}, which already exists — ${remedy}`;
+}
+
+/** Names the first of a longer list and counts the rest: "A, B and 3 more". */
+export function joinAndMore(names: readonly string[], totalCount: number): string {
+  const rest = totalCount - names.length;
+  return joinAnd(rest > 0 ? [...names, `${rest} more`] : names);
 }
 
 /** Not a title case, which would also raise "of" and "and"; a label that wants one is written so. */
