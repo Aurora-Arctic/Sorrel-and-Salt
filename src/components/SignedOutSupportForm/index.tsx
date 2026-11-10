@@ -8,13 +8,10 @@ import { emailAddressProblem, normaliseEmail } from '../../lib/email-address';
 import { useFormSend } from '../../lib/use-form-send';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { ABOUT_REQUIRED } from '../../lib/support-messages';
-import {
-  EmailField,
-  FormActions,
-  RadioGroupField,
-  usePlainProblems,
-  type PlainProblems,
-} from '../Field';
+import { EmailField } from '../Field/email-field';
+import { FormActions } from '../Field/form-actions';
+import { RadioGroupField } from '../Field/radio-group-field';
+import { usePlainProblems, type PlainProblems } from '../Field/use-plain-problems';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from '../SupportForm/error-details';

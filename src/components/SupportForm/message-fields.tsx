@@ -2,7 +2,7 @@
 
 import type { ReactElement, ReactNode } from 'react';
 import { MESSAGE_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../../modules/support/validation/limits';
-import { PlainTextField } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
 
 interface SupportMessageFieldsProps {
   subject: string;

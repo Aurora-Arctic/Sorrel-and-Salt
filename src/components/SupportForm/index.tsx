@@ -7,13 +7,10 @@ import { useFormSend } from '../../lib/use-form-send';
 import { PATH_MAX_LENGTH } from '../../modules/support/validation/limits';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { ABOUT_REQUIRED, PATH_TOO_LONG } from '../../lib/support-messages';
-import {
-  FormActions,
-  PlainTextField,
-  RadioGroupField,
-  usePlainProblems,
-  type PlainProblems,
-} from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
+import { FormActions } from '../Field/form-actions';
+import { RadioGroupField } from '../Field/radio-group-field';
+import { usePlainProblems, type PlainProblems } from '../Field/use-plain-problems';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { ErrorDetails } from './error-details';
