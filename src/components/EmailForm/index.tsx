@@ -9,6 +9,7 @@ import { graphql } from '@/lib/graphql-document';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { fold } from '../../lib/text';
+import { UNCONFIRMED_EMAIL } from '../../lib/sign-in';
 import { FormActions, PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -43,8 +44,7 @@ function normalise(input: string): string {
 // state, so the tests read them from here rather than restating the words.
 export const VERIFIED_STATUS = "Your email address is confirmed. We'll send your emails here.";
 export const NO_EMAIL_STATUS = 'No email address yet. Enter the one we should write to.';
-export const UNVERIFIED_STATUS =
-  "Your email address isn't confirmed yet. Open the link we sent you, or send a new one.";
+export const UNVERIFIED_STATUS = `${UNCONFIRMED_EMAIL} Open the link we sent you, or send a new one.`;
 export const CHANGE_STATUS = "Enter a new email address and we'll send it a confirmation link.";
 
 function statusLine(email: string, verified: boolean): string {
