@@ -1,12 +1,12 @@
 import 'server-only';
 import { MS_PER_DAY } from '../../../lib/duration';
-import { createHash } from 'node:crypto';
 import {
   findOneById,
   countSenderRepliesSince,
   findPublicSupportReplies,
   findStandingSupportTimeoutByAddress,
   findSupportRequestByViewTokenHash,
+  hashToken,
   withAudit,
 } from '../../../db/repository';
 import { NotFound, RateLimited } from '../../../lib/errors';
@@ -40,8 +40,6 @@ const VIEW_TOKEN_DAYS = 30;
 /** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */
 export const SIGNED_OUT_VIEW_LIMIT = 60;
 
-const hashOf = (token: string) => createHash('sha256').update(token).digest('hex');
-
 /**
  * Mints a new view token for signed-out request `requestId`, stores its hash in place of the last one and returns the token,
  * for the mail to carry. It appears nowhere else.
@@ -54,7 +52,7 @@ export async function mintSupportViewToken(requestId: string): Promise<string> {
   await withAudit({ userId: request.createdBy }, (write) =>
     write.setSupportViewToken(
       requestId,
-      hashOf(token),
+      hashToken(token),
       new Date(Date.now() + VIEW_TOKEN_DAYS * MS_PER_DAY),
     ),
   );
@@ -62,7 +60,7 @@ export async function mintSupportViewToken(requestId: string): Promise<string> {
 }
 
 async function requestByToken(token: string): Promise<SupportRequestRow> {
-  const request = token ? await findSupportRequestByViewTokenHash(hashOf(token)) : undefined;
+  const request = token ? await findSupportRequestByViewTokenHash(hashToken(token)) : undefined;
   if (!request) throw new NotFound(NO_SUCH_REQUEST);
   return request;
 }

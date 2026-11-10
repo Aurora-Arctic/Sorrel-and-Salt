@@ -9,7 +9,7 @@
 - **`write.ts`** holds `withAudit` and the writer it builds, spreading in the named writes of each table marked `namedWrites` from the file beside its finders (`writerFor`).
 - **`unit-of-work.ts`** holds `currentWriteTransaction` and `runInWriteTransaction`, the store `withAudit` publishes its transaction in, so `selectFrom` reads on it.
 - **`ingredient-parent.ts`** holds `readableIngredientParent` (a child row's parent ingredient read in its tier), `inUseIngredientParent` (the same read, also admitting a retired compendium entry the reading coven's cupboard names) and `inUseVariantParent` (a variant's row read through the variant to that ingredient).
-- **`tokens.ts`** holds `hashToken`, the one place a link's token is hashed, so no caller holds a hash.
+- **`tokens.ts`** holds `hashToken`, the one place a link's token is hashed, so a caller that needs a view token's hash (the support view link, the seed) takes it from the index.
 - **`finders.ts`** holds the generic finders and the page-and-count pairs every list is cut and counted by: `findPageInTiers`, `findPageInScope`, and `findPageInScopeIncludingSoftDeleted` (the same without the tombstone filter, for the coven Ingredients list alone).
 
 ### Why some repository files are apart

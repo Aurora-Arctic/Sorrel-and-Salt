@@ -2,6 +2,7 @@
 // `withAudit`'s `AuditWriter` is the sole write mechanism. Import this file, never a sibling.
 
 export { rotateInvitationToken, withAudit } from './write';
+export { hashToken } from './tokens';
 export {
   findMany,
   findManyByIds,
