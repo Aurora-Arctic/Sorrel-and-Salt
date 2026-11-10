@@ -10,7 +10,7 @@ import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
+import { NO_MATCH_ADVICE, emptyList, noMatchLead, plural } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { labelOf } from '@/lib/options';
@@ -216,22 +216,22 @@ export function emptyText(
     query && value(`“${query}”`),
     forms.length > 0 && (
       <>
-        the {forms.length === 1 ? 'form' : 'forms'} {orValues(forms)}
+        the {plural(forms.length, 'form', 'forms')} {orValues(forms)}
       </>
     ),
     deityNames.length > 0 && (
       <>
-        the {deityNames.length === 1 ? 'deity' : 'deities'} {orValues(deityNames)}
+        the {plural(deityNames.length, 'deity', 'deities')} {orValues(deityNames)}
       </>
     ),
     zodiac.length > 0 && (
       <>
-        the {zodiac.length === 1 ? 'sign' : 'signs'} {orValues(zodiac)}
+        the {plural(zodiac.length, 'sign', 'signs')} {orValues(zodiac)}
       </>
     ),
     celestialBodies.length > 0 && (
       <>
-        the {celestialBodies.length === 1 ? 'celestial body' : 'celestial bodies'}{' '}
+        the {plural(celestialBodies.length, 'celestial body', 'celestial bodies')}{' '}
         {orValues(celestialBodies)}
       </>
     ),
@@ -241,7 +241,7 @@ export function emptyText(
     hidden && value('Hidden'),
     elements.length > 0 && (
       <>
-        the {elements.length === 1 ? 'element' : 'elements'}{' '}
+        the {plural(elements.length, 'element', 'elements')}{' '}
         {joinedNames(
           elements.map((each) => labelOf(ELEMENT_OPTIONS, each)),
           ' or ',
@@ -250,7 +250,7 @@ export function emptyText(
     ),
     named.length > 0 && (
       <>
-        the {named.length === 1 ? 'category' : 'categories'}{' '}
+        the {plural(named.length, 'category', 'categories')}{' '}
         {joinedNames(named, categoryMode === 'any' ? ' or ' : ' and ')}
       </>
     ),

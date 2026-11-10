@@ -9,6 +9,7 @@ import Notice from '../Notice';
 import { batchName } from './batches';
 import { saveFile } from '../../lib/save-file';
 import { CARDS_PER_SHEET } from '../../lib/invitation-cards/limits';
+import { plural } from '@/lib/text';
 
 // The tokens live in this component's props alone: nothing stores them, the PDF keeps them.
 export interface MintedBatch {
@@ -82,7 +83,7 @@ const MintedCards = ({
           Batch {name}: {batch.tokens.length} cards minted.
         </p>
         <p className="admin-cards__result-detail">
-          {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring{' '}
+          {sheets} {plural(sheets, 'sheet', 'sheets')}, expiring{' '}
           {dayInUtc(printedDateOf(new Date(batch.expiresAt)))}.
         </p>
       </div>

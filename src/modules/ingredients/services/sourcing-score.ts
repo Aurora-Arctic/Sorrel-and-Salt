@@ -10,7 +10,7 @@ import {
   SAFETY_UNSOURCED,
   SOURCES,
 } from '../schema/sourcing-weights';
-import { hasText } from '../../../lib/text';
+import { hasText, plural } from '../../../lib/text';
 import { NAMELESS_KIND, UNSETTLED_KIND, type ReferenceKind } from '../schema/ingredient-enums';
 import type { CitedReference, SourcingFact, SourcingInput, SourcingScore } from '../types';
 
@@ -100,7 +100,7 @@ export function sourcingScore(input: SourcingInput): SourcingScore | null {
   const facts: SourcingFact[] = [
     {
       fact: 'sources',
-      label: `${works.length} ${works.length === 1 ? 'Source' : 'Sources'}`,
+      label: `${works.length} ${plural(works.length, 'Source', 'Sources')}`,
       points: capped(works.length, SOURCES.each, SOURCES.cap),
     },
     bestSource(works),

@@ -16,6 +16,7 @@ import { MoveFailedNotice, useOptimisticOrder } from './use-optimistic-order';
 import { SortableColumn } from '@/lib/sortable/column';
 import { useHelpSortableRow } from './sortable';
 import type { HelpGuidesBarProps, HelpOutlineAudience, HelpOutlineOrderGuide } from './types';
+import { plural } from '@/lib/text';
 
 // The keepers' Guides bar: the guides under their audience, Public, then Staff, then Keeper, once each. At rest it
 // lists those the filter admits; in Reorder Mode every live guide, each moved by its grip among its own audience's
@@ -279,7 +280,7 @@ const HelpGuidesBar = ({
                                 <span className="badge help-outline__count">
                                   {`${guide.subPages} `}
                                   <span className="visually-hidden">
-                                    {guide.subPages === 1 ? 'Sub Page' : 'Sub Pages'}
+                                    {plural(guide.subPages, 'Sub Page', 'Sub Pages')}
                                   </span>
                                 </span>
                               )}

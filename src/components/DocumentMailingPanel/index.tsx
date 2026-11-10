@@ -9,6 +9,7 @@ import ConfirmedAction from '../ConfirmedAction';
 import Notice from '../Notice';
 import type { DocumentMailingPanelProps, MailingProgressProps } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 // The service is the guard (claude-docs/components/document-mailing-panel.md).
 
@@ -95,7 +96,7 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
   const recipients = open.reduce((sum, mailing) => sum + mailing.recipientCount, 0);
 
   // On its own line, in the warning's colour, as how many it reaches is what makes the mailing high-risk.
-  const reach = `That is ${count(accountCount)} ${accountCount === 1 ? 'account' : 'accounts'}, sent over ${days} ${days === 1 ? 'day' : 'days'}.`;
+  const reach = `That is ${count(accountCount)} ${plural(accountCount, 'account', 'accounts')}, sent over ${days} ${plural(days, 'day', 'days')}.`;
 
   const question = (
     <>
@@ -119,8 +120,8 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
         <>
           <p className="document-mailing__status">Changed since the last email: the {titles}.</p>
           <Notice kind="warn" quiet className="document-mailing__reach">
-            {count(accountCount)} {accountCount === 1 ? 'account' : 'accounts'} would be reached
-            over {days} {days === 1 ? 'day' : 'days'}.
+            {count(accountCount)} {plural(accountCount, 'account', 'accounts')} would be reached
+            over {days} {plural(days, 'day', 'days')}.
           </Notice>
           {pending.map((document) => (
             <PlainTextField

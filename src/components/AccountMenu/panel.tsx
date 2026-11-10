@@ -11,6 +11,7 @@ import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import SignOutButton from './sign-out-button';
 import { countText, supportTip } from './counts';
 import type { AccountMenuProps } from './types';
+import { plural } from '@/lib/text';
 
 // The rows of the account menu's panel (claude-docs/components/account-menu.md).
 
@@ -59,7 +60,7 @@ export default function AccountMenuPanel({
   const pending = verified && pendingInvitations > 0;
   const staffCount = verified ? assignedSupport : 0;
   const senderCount = verified ? waitingSupport : 0;
-  const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
+  const invitations = `${pendingInvitations} Coven ${plural(pendingInvitations, 'Invitation', 'Invitations')}`;
   return (
     <>
       {verified && (

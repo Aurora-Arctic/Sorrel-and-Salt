@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import { emptyList } from '../../lib/text';
+import { emptyList, plural } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
@@ -24,12 +24,12 @@ const labelOfAbout = (value: string): string =>
 
 const repliesText = (count: number): string => {
   if (count === 0) return 'No reply yet';
-  return count === 1 ? '1 reply' : `${count} replies`;
+  return `${count} ${plural(count, 'reply', 'replies')}`;
 };
 
 const countsText = ({ open, closed }: SupportListProps['counts']): string => {
   if (open === 0 && closed === 0) return 'No Requests Yet';
-  const part = (n: number, word: string) => `${n} ${word} Request${n === 1 ? '' : 's'}`;
+  const part = (n: number, word: string) => `${n} ${word} Request${plural(n, '', 's')}`;
   return `${part(open, 'Open')} / ${part(closed, 'Closed')}`;
 };
 

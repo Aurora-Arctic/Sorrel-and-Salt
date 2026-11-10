@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement } from 'react';
-import { emptyList, noMatchText } from '../../lib/text';
+import { emptyList, noMatchText, plural } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
@@ -106,7 +106,7 @@ const SupportRequests = ({
         />
         <ListBody skeleton={<SupportListBodySkeleton />}>
           <output className="visually-hidden">
-            {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
+            {requests.length} {plural(requests.length, 'Request', 'Requests')}
           </output>
           <StackTable
             columns={[

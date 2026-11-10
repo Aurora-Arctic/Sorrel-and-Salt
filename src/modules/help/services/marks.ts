@@ -3,6 +3,7 @@ import { findHelpGlossaryPage } from '@/db/repository';
 import { fieldRefusal } from '@/lib/errors';
 import { helpTerms, marksInMarkdown } from '@/lib/help-marks';
 import { HELP_WIDGETS, unknownWidgets } from '@/lib/help-widgets';
+import { plural } from '@/lib/text';
 
 // Wide enough for every glossary term the help centre will hold.
 const TERMS_LIMIT = 2001;
@@ -31,7 +32,7 @@ export async function assertMarksExist(
   if (missing.length === 0) return;
   throw fieldRefusal(
     'body',
-    `The body marks ${missing.map((name) => `“${name}”`).join(', ')}, which ${missing.length === 1 ? 'is' : 'are'} not in the glossary. Add the term first, or write the word without [[ ]].`,
+    `The body marks ${missing.map((name) => `“${name}”`).join(', ')}, which ${plural(missing.length, 'is', 'are')} not in the glossary. Add the term first, or write the word without [[ ]].`,
   );
 }
 
@@ -45,6 +46,6 @@ export function assertWidgetsKnown(body: string): void {
   if (unknown.length === 0) return;
   throw fieldRefusal(
     'body',
-    `The body places ${unknown.map((name) => `“${name}”`).join(', ')}, which ${unknown.length === 1 ? 'is not a widget' : 'are not widgets'}. The widgets are ${HELP_WIDGETS.join(', ')}.`,
+    `The body places ${unknown.map((name) => `“${name}”`).join(', ')}, which ${plural(unknown.length, 'is not a widget', 'are not widgets')}. The widgets are ${HELP_WIDGETS.join(', ')}.`,
   );
 }

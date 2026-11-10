@@ -22,6 +22,7 @@ import { ProviderRow } from './provider-row';
 import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
+import { plural } from '@/lib/text';
 
 // The account page's list of the ways into this account. A session too old to remove one is offered a fresh sign-in in
 // place of every Remove. The heading and intro are the page's (claude-docs/components/sign-in-methods.md).
@@ -183,7 +184,7 @@ const SignInMethods = ({
           status={
             passkeyCount === 0
               ? 'None Added'
-              : `${passkeyCount} ${passkeyCount === 1 ? 'passkey' : 'passkeys'}`
+              : `${passkeyCount} ${plural(passkeyCount, 'passkey', 'passkeys')}`
           }
           href={ACCOUNT_PASSKEYS_PATH}
           linkLabel="Manage Passkeys"

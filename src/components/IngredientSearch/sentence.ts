@@ -1,4 +1,5 @@
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { plural } from '@/lib/text';
 import type {
   SearchSentence,
   SearchSentenceFacet,
@@ -79,7 +80,7 @@ export function buildSearchSentence({
   const label = (facet: SearchSentenceLabelFacet, value: string) => labels[facet]?.[value] ?? value;
   const picked = (values?: readonly string[]) => (values ?? []).filter((v) => v !== '');
 
-  const lead = total === 0 ? `No ${noun.other}` : `${total} ${total === 1 ? noun.one : noun.other}`;
+  const lead = total === 0 ? `No ${noun.other}` : `${total} ${plural(total, noun.one, noun.other)}`;
   const parts: Part[] = [text(lead)];
   let hasFilter = false;
   const clause = (...clauseParts: Part[]) => {

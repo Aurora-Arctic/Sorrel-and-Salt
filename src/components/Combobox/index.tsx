@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { fold } from '@/lib/text';
+import { fold, plural } from '@/lib/text';
 import Spinner from '../Spinner';
 import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, noMatch, Popup } from './popup';
@@ -152,7 +152,7 @@ function statusOf(
   if (!suggestions) return '';
   if (!isOpen) return empty ?? '';
   const count = suggestions.options.length;
-  if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  if (count > 0) return `${count} ${noun}${plural(count, '', 's')}`;
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
