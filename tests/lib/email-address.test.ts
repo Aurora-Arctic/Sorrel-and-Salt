@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EmailAddress, emailFormat, validateEmailAddress } from '@/lib/email-address';
+import { emailFormat, validateEmailAddress } from '@/lib/email-address';
+import { EmailAddress } from '@/lib/email-address-schema';
 
 // The empty, over-long and reserved-domain refusals are tests/modules/identity/services/email.test.ts's.
 describe('validateEmailAddress', () => {

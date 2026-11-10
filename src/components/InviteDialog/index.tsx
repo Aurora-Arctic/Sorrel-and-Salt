@@ -3,7 +3,8 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { EmailAddress, emailFormat } from '../../lib/email-address';
+import { emailFormat } from '../../lib/email-address';
+import { EmailAddress } from '../../lib/email-address-schema';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';

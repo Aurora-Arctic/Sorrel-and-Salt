@@ -1,9 +1,9 @@
-import { z } from 'zod';
 import type { FieldFormat } from './formats';
 import type { ValidationIssue } from './types';
 
 // The one rule for what an email address looks like, with no server-only import so the client and the
-// services share it; the identity module's email service re-exports it.
+// services share it; the identity module's email service re-exports it. The zod schema is in email-address-schema.ts, so a
+// client file drawn at first load can import this one without the schema library.
 
 export function normaliseEmail(input: string): string {
   return input.trim().toLowerCase();
@@ -33,12 +33,3 @@ export const emailFormat: FieldFormat = (text) => {
   const at = trimmed.lastIndexOf('@');
   return at < 0 ? trimmed : `${trimmed.slice(0, at)}@${trimmed.slice(at + 1).toLowerCase()}`;
 };
-
-/** The one zod schema for an address in a form or a request; its output is the normalised address. */
-export const EmailAddress = z
-  .string()
-  .transform(normaliseEmail)
-  .superRefine((email, ctx) => {
-    const issue = validateEmailAddress(email);
-    if (issue) ctx.addIssue({ code: 'custom', message: issue.message });
-  });

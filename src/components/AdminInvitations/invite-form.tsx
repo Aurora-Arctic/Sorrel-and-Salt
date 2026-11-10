@@ -3,7 +3,8 @@
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { EmailAddress, emailFormat } from '../../lib/email-address';
+import { emailFormat } from '../../lib/email-address';
+import { EmailAddress } from '../../lib/email-address-schema';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { reasonTooLong } from '../../modules/identity/validation/reason';
 import type { Failure } from '../../lib/types';

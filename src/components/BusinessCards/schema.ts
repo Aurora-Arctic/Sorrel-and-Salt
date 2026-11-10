@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EmailAddress } from '../../lib/email-address';
+import { EmailAddress } from '../../lib/email-address-schema';
 import { PHONE_MESSAGE, isPhoneNumber } from '../../lib/phone-number';
 
 export const BusinessCardSchema = z.object({
