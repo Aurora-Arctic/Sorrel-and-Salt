@@ -27,6 +27,7 @@
 // The tip: placed by `useTip`, one layer up, mounted only while open so it fades in over `$icon-tip-fade`, and it takes no pointer
 // (claude-docs/components/icon-tip.md, "Contracts").
 .icon-tip__bubble {
+  box-sizing: content-box;
   @include tip-above;
   @include tip-bubble-open($icon-tip-fade);
 

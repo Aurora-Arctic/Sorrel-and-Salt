@@ -12,7 +12,6 @@
 // The page around it is `.page-frame--narrow`. Compounded with `.panel` because in the app the primitives compile as
 // `body .panel`, which outranks a lone class, while the workshop scopes them with `:where()`.
 .sign-in-panel.panel {
-  box-sizing: border-box;
   width: 100%;
 
   padding: space(5) space(6) space(6);
@@ -119,7 +118,6 @@
   // would otherwise widen the column past the card.
   > .notice,
   > p {
-    box-sizing: border-box;
     width: 0;
     min-width: 100%;
   }

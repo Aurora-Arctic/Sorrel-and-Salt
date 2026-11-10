@@ -10,7 +10,6 @@ $-details-width: 22rem;
 // The page is centred as one column the form's own width, so the back link and the heading start at the text's edge, as
 // the documents' editor column does. Its width is the two tracks and the gap between them, in the form's own font.
 .help-article-page {
-  box-sizing: border-box;
   width: 100%;
   max-width: calc(#{$measure} + #{space(7)} + #{$-details-width});
   margin-inline: auto;
@@ -111,6 +110,7 @@ $-details-width: 22rem;
 
 // The edit page's pending title: a bar as tall as the title's own line, so the form stands where it will.
 .help-article-form__pending-head h1 .skeleton__line {
+  box-sizing: content-box;
   // The borders add to the height, so the whole bar is one line.
   block-size: 0.7lh;
   border-block: 0.15lh solid transparent;

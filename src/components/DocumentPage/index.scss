@@ -141,6 +141,7 @@ $pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')}
   // A `>` paragraph is a pull-quote: larger type with a hanging opening mark in the accent, and a short accent rule
   // closing it. The mark is drawn by CSS, so the file holds only the quoted words.
   blockquote {
+    box-sizing: content-box;
     position: relative;
     max-width: $measure;
     margin-block: space(5) space(6);

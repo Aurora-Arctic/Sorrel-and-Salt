@@ -22,7 +22,6 @@
 // the tablet width up, `showModal()` below it. The slide is grid rows 0fr to 1fr on the clip
 // inside, and the dialog stays open until it ends.
 .facet-panel {
-  box-sizing: border-box;
   position: absolute;
   inset: auto;
   inset-block-start: 100%;

@@ -763,6 +763,8 @@ $motion-medium: 300ms;
 // shows, so a quick answer never flashes one; skeletons are not held back.
 $loading-delay: 100ms;
 $spin-duration: 0.8s;
+// The Spinner ring's border. Its size is the ring's inside edge (content-box), so a spinner fitted to a given outer size takes this off twice.
+$spinner-border: 2px;
 $shimmer-duration: 1.4s;
 $pulse-duration: 2s;
 $arrive-duration: 200ms;

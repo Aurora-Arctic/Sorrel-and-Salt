@@ -124,6 +124,7 @@
 }
 
 .chip-color-field__thumb {
+  box-sizing: content-box;
   inline-size: 1.125rem;
   block-size: 1.125rem;
   border: 2px solid $chalk;

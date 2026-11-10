@@ -319,7 +319,6 @@
 
 // A border, not a box-shadow, as forced colours drops a shadow; the padding above takes its height back. Told by shape, not colour alone.
 @mixin nav-current {
-  box-sizing: border-box;
   padding-top: $rule-heavy;
   border-bottom: $rule-heavy solid $accent;
   font-weight: 500;
@@ -466,7 +465,6 @@
 
   @if map.get($size, min-block-size) {
     min-block-size: map.get($size, min-block-size);
-    box-sizing: border-box;
   }
 }
 
@@ -621,7 +619,6 @@
 
   // The stack's gap alone spaces the sections, not `section`'s own margins.
   > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -667,7 +664,6 @@
 
 // `fit-content` wide so it ends past the text, `max-width: 100%` so a wrapped heading stays in its column.
 @mixin entry-heading-rule {
-  box-sizing: border-box;
   width: fit-content;
   max-width: 100%;
   padding-block-end: space(1);
@@ -739,7 +735,6 @@
 
 // Shared with the admin menu's closed summary so the menu reads as a select does. Width, margin and font are the caller's.
 @mixin field-box {
-  box-sizing: border-box;
   min-height: $control-height;
   padding: space(2) space(3);
   border: 1px solid $text-muted;

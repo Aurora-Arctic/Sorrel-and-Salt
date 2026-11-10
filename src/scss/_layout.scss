@@ -1,6 +1,17 @@
 @use './variables' as *;
 @use './mixins' as *;
 
+// Every box is sized by its border edge, so a width includes its padding and border. Emitted once by each global
+// sheet (globals.scss, and the workshop's layout.scss), so a component sheet never repeats it; a `content-box`
+// left in a sheet is the exception (tests/guards/box-sizing.test.ts).
+@mixin box-sizing-reset {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+}
+
 @mixin layout-base {
   // Bare elements carry document rhythm regardless of class, as _typography.scss's
   // `p`/`ul` do; `.header`/`.footer` opt an element into the flex treatment.

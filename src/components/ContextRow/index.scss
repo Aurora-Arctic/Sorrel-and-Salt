@@ -17,7 +17,6 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 }
 
 .context-row__inner {
-  box-sizing: border-box;
   display: flex;
   align-items: stretch;
   max-width: $wide-column;

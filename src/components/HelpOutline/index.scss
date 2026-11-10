@@ -233,6 +233,7 @@
 
 @include tablet-down {
   .help-outline__side.is-reordering .help-outline__nav {
+    box-sizing: content-box;
     position: fixed;
     inset-inline: 0;
     inset-block-end: 0;

@@ -10,11 +10,9 @@ $jump-link-size: $nav-link-size;
 $jump-link-line: 1.25;
 
 .ingredient-entry {
-  box-sizing: border-box;
   @include stack(6);
 
   > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 }
@@ -300,8 +298,6 @@ $formal-line: $icon-size;
 // (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__stock-panel {
   @include stack(4);
-
-  box-sizing: border-box;
 }
 
 .ingredient-entry__forms {

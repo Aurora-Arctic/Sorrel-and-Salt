@@ -138,7 +138,6 @@
     font-size: type-size('small');
     font-weight: 500;
     // Level with a field ($control-height): the padding leaves the label short of it and the minimum makes up the rest.
-    box-sizing: border-box;
     min-height: $control-height;
     padding: space(2) space(5);
     border-radius: radius('control');
@@ -557,7 +556,6 @@
   // The centred, full-height frame of a page: one column held below the top inset and, inside the shell, below its
   // bars (claude-docs/styling.md, "The page frame").
   .page-frame {
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -626,10 +624,9 @@
     }
   }
 
-  // The gap alone spaces the column: this outranks `section`'s and `.page-header`'s margins. `border-box` keeps a
-  // padded child inside the column at 375px.
+  // The gap alone spaces the column: this outranks `section`'s and `.page-header`'s margins. Every box is sized by its
+  // border edge, which keeps a padded child inside the column at 375px.
   .page-frame > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -667,7 +664,6 @@
   // A primitive because layouts and stories use the class as their frame.
   .page-column,
   .coven-layout {
-    box-sizing: border-box;
     @include stack(5);
     margin-inline: auto;
     padding: space(6) space(4);
@@ -677,7 +673,6 @@
   // gutter as `.coven-layout`), so its box spans the content while the sentence stops at the reading
   // measure; the measure is on the text because a box capped at it would end short of the content.
   .coven-layout__demo-notice {
-    box-sizing: border-box;
     width: 100%;
     max-width: $wide-column;
     margin-inline: auto;
@@ -707,7 +702,6 @@
   }
 
   .admin-index {
-    box-sizing: border-box;
     width: 100%;
     max-width: $narrow-column;
     margin-inline: auto;
@@ -764,7 +758,6 @@
   }
 
   .page-with-nav > * {
-    box-sizing: border-box;
     margin-block: 0;
   }
 
@@ -832,6 +825,7 @@
 
   // One frame for a screenshot or a widget in running text, with its caption beneath (claude-docs/styling.md).
   .figure {
+    box-sizing: content-box;
     max-width: $measure;
     margin: space(5) 0;
     padding: space(3);
@@ -857,7 +851,6 @@
   // page shares the text's edges. A primitive, as a route loads a component's stylesheet only when it draws the
   // component, and the public layout's `.page-column` is the wide box (claude-docs/components/help-pages.md, "Layout").
   .help-page {
-    box-sizing: border-box;
     width: 100%;
     max-width: $measure;
     margin-inline: auto;
@@ -892,7 +885,6 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
     // The mark's own geometry, a circle sized to sit on a line of text.
     width: 1.5rem;
     height: 1.5rem;
@@ -1181,7 +1173,6 @@
   @include container-to(data-table, #{$table-stack-width}) {
     .data-table--pending > tbody > tr {
       position: relative;
-      box-sizing: border-box;
       padding: 0;
       @include card-skeleton-fill;
 
@@ -1793,11 +1784,9 @@
       inset-block-start: 50%;
       inset-inline-start: calc(#{$inset} + 1px);
       translate: 0 -50%;
-      // The ring's outer edge is the thumb's: border-box, so Spinner's 2px border sits inside the
-      // size instead of adding 4px to its `1em`.
-      box-sizing: border-box;
-      inline-size: $glyph-size;
-      block-size: $glyph-size;
+      // The ring's outer edge is the thumb's: its border comes off the size.
+      inline-size: calc(#{$glyph-size} - #{$spinner-border * 2});
+      block-size: calc(#{$glyph-size} - #{$spinner-border * 2});
       margin: 0;
       padding: 0;
       color: $text-muted;
@@ -1812,7 +1801,6 @@
     input {
       position: relative;
       flex: none;
-      box-sizing: border-box;
       inline-size: $switch-width;
       block-size: $icon-size;
       margin: 0;
@@ -2018,7 +2006,6 @@
 
     input {
       flex: none;
-      box-sizing: border-box;
       inline-size: $radio-size;
       block-size: $radio-size;
       margin-block-start: 0.125rem;
@@ -2120,7 +2107,6 @@
   }
 
   .radio.radio--card {
-    box-sizing: border-box;
     min-block-size: $control-height;
     align-items: center;
     padding: space(2) space(3);
@@ -2207,7 +2193,6 @@
     position: relative;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
     inline-size: 3rem;
     block-size: 3rem;
     @include state-fade(background-color);
