@@ -1,3 +1,4 @@
+import { hasText } from '@/lib/text';
 import type { ReactElement } from 'react';
 import type { SafetyVariant } from '../SafetyNote/types';
 import CardFace from './face';
@@ -10,8 +11,7 @@ import type { IngredientCardProps } from './types';
 // The card shows only that notes exist, as the Caution badge, never their text, so the browser is
 // sent this stand-in for any notes rather than the notes themselves.
 const NOTED = '*';
-const noted = (notes: string | null | undefined): string | null =>
-  (notes ?? '').trim() !== '' ? NOTED : null;
+const noted = (notes: string | null | undefined): string | null => (hasText(notes) ? NOTED : null);
 
 // A form with only what the face reads: its name, its group's icon, its flag and whether it has notes.
 const facing = ({ form, formChoice, toxic, safetyNotes }: SafetyVariant): SafetyVariant => ({

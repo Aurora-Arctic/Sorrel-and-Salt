@@ -1,3 +1,4 @@
+import { hasText } from '@/lib/text';
 import { parseQuantity, showQuantity } from '@/lib/formats';
 import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
@@ -157,7 +158,7 @@ export function warningOf(step: Pick<SpellStepValue, 'safety' | 'form'>): string
   if (safety === null) return null;
   if (safety.toxic || safety.variants.some((variant) => variant.toxic)) return 'Warning: Toxic.';
   const noted = [safety.safetyNotes, ...safety.variants.map((variant) => variant.safetyNotes)];
-  return noted.some((notes) => (notes ?? '').trim() !== '') ? 'Caution: has safety notes.' : null;
+  return noted.some(hasText) ? 'Caution: has safety notes.' : null;
 }
 
 export const isInstruction = (step: Pick<SpellStepValue, 'ingredientId' | 'name'>): boolean =>
@@ -237,7 +238,7 @@ export function stepNameOf({ name, form, body }: SpellStepValue): string {
 }
 
 const blankInstruction = (step: SpellStepValue): boolean =>
-  isInstruction(step) && (step.body ?? '').trim() === '';
+  isInstruction(step) && !hasText(step.body);
 
 /**
  * A new instruction with no text yet. The autosave leaves it out of what it

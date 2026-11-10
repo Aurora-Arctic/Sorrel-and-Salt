@@ -1,3 +1,4 @@
+import { hasText } from '@/lib/text';
 import { covenPath } from '@/lib/coven-path';
 import type { ReactElement } from 'react';
 import FormIcon from '../FormIcon';
@@ -7,14 +8,7 @@ import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
 import type { HoldingCoven, IngredientDetail } from '@/modules/ingredients';
-import {
-  blockOf,
-  categoryItems,
-  CorrespondenceBlock,
-  correspondences,
-  ListBlock,
-  said,
-} from './blocks';
+import { blockOf, categoryItems, CorrespondenceBlock, correspondences, ListBlock } from './blocks';
 import { ShelfIcon } from './held-mark';
 import type { SummaryJar } from './types';
 import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
@@ -49,7 +43,7 @@ export default function IngredientSummary({
   const { cupboardEntry, folkNames, categories, deities, variants } = detail;
   const shown = applyCupboardEntry(detail.entry, cupboardEntry);
   const cautioned = variants
-    .filter(({ variant }) => said(variant.safetyNotes))
+    .filter(({ variant }) => hasText(variant.safetyNotes))
     .map(({ variant }) => formLabel(variant.form));
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
@@ -122,8 +116,8 @@ export default function IngredientSummary({
   if (
     !listed &&
     !forms &&
-    !said(shown.description) &&
-    !said(shown.safetyNotes) &&
+    !hasText(shown.description) &&
+    !hasText(shown.safetyNotes) &&
     cautioned.length === 0
   ) {
     return (
@@ -139,7 +133,7 @@ export default function IngredientSummary({
           over a second h2 read as two titles. The blocks keep the page's h3s. */}
       {/* The page's own description, cut to its first lines here. Left out
           when empty, where the page says so. */}
-      {said(shown.description) && <SummaryDescription text={shown.description!} />}
+      {hasText(shown.description) && <SummaryDescription text={shown.description!} />}
       <SafetyNote
         safetyNotes={shown.safetyNotes}
         level={3}

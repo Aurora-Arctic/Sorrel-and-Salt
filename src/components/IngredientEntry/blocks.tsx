@@ -1,14 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { capitalise } from '../../lib/text';
+import { capitalise, hasText } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
 import './index.scss';
 import { cx } from '@/lib/class-names';
 
-export const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
-
 export const listed = (values: readonly string[] | null | undefined): string[] =>
-  (values ?? []).filter(said);
+  (values ?? []).filter(hasText);
 
 export interface Row {
   label: string;
