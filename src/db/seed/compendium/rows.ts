@@ -192,8 +192,6 @@ export function variantColumns({ variant, form }: PickedVariant, picks: Picks): 
   };
 }
 
-/** The fold the variant's unique index keys a form by. */
-
 export type FolkNameRow = Pick<typeof ingredientFolkNames.$inferInsert, 'ingredientId' | 'name'>;
 
 export function folkNameRows(entry: SeedCompendiumEntry, ingredientId: string): FolkNameRow[] {

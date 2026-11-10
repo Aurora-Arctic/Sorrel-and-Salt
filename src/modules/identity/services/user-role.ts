@@ -5,12 +5,11 @@ import { Forbidden, NotFound } from '../../../lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
-import { adminDeclaration, liveUser } from './admin-changes';
+import { adminDeclaration, liveUser, NO_SUCH_USER } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
-import { NO_SUCH_USER } from './admin-changes';
 
 // A keeper sets a user's site role from `/keepers/users`. Each change is declared `via: 'admin'` and the trigger on `users` records it;
 // the service writes no ledger row. Rules: claude-docs/design-decisions/auth.md, "Granting and revoking admin" and design-decisions/auth.md, "A third site role, `curator`";

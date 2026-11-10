@@ -3001,7 +3001,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/grimoire/spells*.test.ts`, GraphQL spell mutation tests.
 
 - **Estimate:** 2 hours
-- **Status:** Fixed. The spell columns, the spell input fields and the linked ingredient ids are each written once in `src/modules/grimoire/validation/spell.ts` and `src/modules/grimoire/graphql/spell.ts`.
+- **Status:** Fixed. `spellColumns` in `src/modules/grimoire/services/spells.ts` picks the spell columns for create, update and `duplicateSpell`; `spellFields` in `src/modules/grimoire/graphql/spell.ts` builds the input fields for both `SpellInput` and `UpdateSpellInput`; `linkedIngredientIds` in `src/modules/grimoire/services/step-views.ts` lists the linked ingredient ids.
 
 ### D-113: Public-reply test `eq(supportReplies.visibility, 'public')` written three times, each with a lint disable
 
@@ -3172,7 +3172,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/ingredients/compendium*.test.ts` (redirect cases).
 
 - **Estimate:** 2 hours
-- **Status:** Fixed. The slug move and the slug retirement (`retireSlug`) are each written once in `src/modules/ingredients/services/compendium.ts`.
+- **Status:** Fixed. `planSlugMove` and `retireSlug` in `src/modules/ingredients/services/compendium.ts` write the slug move and the slug retirement once.
 
 ### D-123: Same "cupboard insertion on first compendium jar" block in `createStock` and `saveStock`
 
@@ -4487,7 +4487,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
   Estimate: 0.5 h
 
 - **Estimate:** 0.5 hours
-- **Status:** Fixed. `OriginNotifier` is declared once and each module names it by alias in its `types.ts`.
+- **Status:** Fixed. `OriginNotifier` is declared once in `src/lib/types.ts` and each module names it by alias in its `types.ts`.
 
 ### D-197: "a/an role" noun written three times
 
@@ -4566,7 +4566,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
   Estimate: 0 h
 
 - **Estimate:** 0.25 hours
-- **Status:** Fixed. The shared steps of the site-admin list services are written once and the services call them.
+- **Status:** Fixed. The four services trim their optional filter text with `trimmedOrUndefined` and `trimmedOrNull` from `src/lib/text.ts` (`identity/services/admin-invitations.ts`, `invitation-cards.ts`, `privilege-changes.ts`, `user-list.ts`). The assert, parse, page and count steps stay in each service, as the filters differ in shape.
 
 ### D-202: Working report mapping duplicated
 
@@ -4580,7 +4580,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** `tests/modules/grimoire/workings*.test.ts`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Fixed. The working report is built by one function in `src/modules/grimoire/services/workings.ts`.
+- **Status:** Fixed. `reportsOf` in `src/modules/grimoire/services/workings.ts` builds the reports for both `listWorkings` and `listWorkingsPage`.
 
 ### D-203: Compendium entry page assembled twice
 

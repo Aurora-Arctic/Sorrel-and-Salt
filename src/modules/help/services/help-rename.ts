@@ -6,11 +6,11 @@ import { helpPath } from '@/lib/help-paths';
 import { HELP_QUICK_LINKS } from '@/lib/help-quick-links';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
+import { fold } from '@/lib/text';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type { HelpRenameEffects } from '../types';
 import { requireHelpArticle } from './help-reads';
-import { fold } from '@/lib/text';
 import { toHelpArticles } from './rows';
 
 // Nothing redirects an old help address, so the editor reads this before a save that moves one and asks the keeper first

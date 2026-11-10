@@ -1,5 +1,5 @@
-import { trimmedOrUndefined } from '../../../lib/text';
 import 'server-only';
+import { trimmedOrUndefined } from '../../../lib/text';
 import { findMemberEmails, findMemberPage } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';

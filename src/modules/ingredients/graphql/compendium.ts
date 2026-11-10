@@ -63,7 +63,7 @@ export const categoryArgs = builder.args((t) => ({
   }),
 }));
 
-/** The eight arguments the compendium's list and its facet counts share. */
+/** The arguments the compendium's list and its facet counts share. */
 const compendiumFilterArgs = builder.args((t) => ({
   query: t.string({ required: false }),
   ...categoryArgs,
