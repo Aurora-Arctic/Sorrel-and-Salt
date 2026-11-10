@@ -5,13 +5,28 @@ import { fromRoot } from '../support/paths';
 
 // Each one-pixel border the sheets share is one token in _variables.scss, so its weight and style change in one
 // place. A pattern reads the value, so it covers every border property and side, a namespaced or interpolated
-// colour, and any spacing or line break between the parts; a longer name (`$hairline-border`) is another token.
+// colour, the parts in any order, and any spacing or line break between them; a longer name (`$hairline-border`) is another token.
 
 const STYLESHEET = /^(src|\.storybook)\/.*\.scss$/;
 const VARIABLES = 'src/scss/_variables.scss';
 
-const handWritten = (colour: string) =>
-  new RegExp(String.raw`\b1px\s+solid\s+(?:#\{\s*)?(?:[\w-]+\.)?\$${colour}(?![\w-])`, 'g');
+// The three parts of the shorthand, in any of their six orders.
+const handWritten = (colour: string) => {
+  const parts = [
+    String.raw`(?<![\w.-])1px(?![\w-])`,
+    String.raw`(?<![\w-])solid(?![\w-])`,
+    String.raw`(?:#\{\s*)?(?:[\w-]+\.)?\$${colour}(?![\w-])(?:\s*\})?`,
+  ];
+  const orders = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ].map((order) => order.map((index) => parts[index]).join(String.raw`\s+`));
+  return new RegExp(orders.join('|'), 'g');
+};
 
 const TOKENS = [
   {
