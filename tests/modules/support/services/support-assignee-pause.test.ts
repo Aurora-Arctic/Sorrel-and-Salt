@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { readAssignees } from '@/app/(shell)/keepers/support/reads';
+import { readAssignees, readOpened } from '@/app/(shell)/keepers/support/reads';
 import { ValidationError } from '@/lib/errors';
 import { liftUserAccessPause, standingAccessPause } from '@/modules/identity';
 import { assignSupportRequest } from '@/modules/support';
@@ -106,6 +106,42 @@ describe('the support assignee picker', () => {
 
       await liftUserAccessPause(asUser(E), F.id);
       expect(await assigneeIds()).toEqual(expect.arrayContaining([E.id, F.id]));
+    },
+  );
+});
+
+describe('the opened request’s assignee', () => {
+  it.each(ROLES)(
+    'is said to be paused while a pause stands on the $title it is assigned to, and not once it is lifted',
+    async ({ role }) => {
+      await setRoleOfF(role);
+      const requestId = await insertSupportRequest(sql, { createdBy: C.id });
+      await sql`update support_requests set assigned_to = ${F.id} where id = ${requestId}`;
+
+      // The preconditions: the request is assigned to F, who holds a role it may be assigned to, and no pause stands yet.
+      expect(await roleOfF()).toBe(role);
+      expect(await assignedTo(requestId)).toBe(F.id);
+      expect(await standingAccessPause(F.id)).toBeUndefined();
+      expect((await readOpened(asUser(E), requestId))?.assignee).toMatchObject({
+        id: F.id,
+        paused: false,
+      });
+
+      await pauseF();
+      expect(await standingAccessPause(F.id)).toMatchObject({ userId: F.id, liftedAt: null });
+      // The case the mark is for: the picker no longer offers the request’s assignee.
+      expect(await assigneeIds()).not.toContain(F.id);
+      expect((await readOpened(asUser(E), requestId))?.assignee).toMatchObject({
+        id: F.id,
+        paused: true,
+      });
+
+      await liftUserAccessPause(asUser(E), F.id);
+      expect(await standingAccessPause(F.id)).toBeUndefined();
+      expect((await readOpened(asUser(E), requestId))?.assignee).toMatchObject({
+        id: F.id,
+        paused: false,
+      });
     },
   );
 });

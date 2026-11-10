@@ -63,7 +63,13 @@ export interface SupportTimeoutEntry {
   liftedBy: SupportPerson | null;
 }
 
+/** A request's assignee, as its detail gives it: `paused` while a site access pause stands on them, which leaves them out of the picker. */
+export interface SupportAssignee extends SupportPerson {
+  paused?: boolean;
+}
+
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
+  assignee: SupportAssignee | null;
   message: string;
   path: string | null;
   issueUrl: string | null;
