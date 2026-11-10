@@ -123,3 +123,6 @@ export function shortMinuteInZone(at: Date, timeZone?: string): string {
 export function utcMinute(at: Date): string {
   return `${at.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
+
+/** Whether `text` is written `YYYY-MM-DD`. The shape only: the range of the month and day is its caller's to check. */
+export const isCalendarDay = (text: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(text);

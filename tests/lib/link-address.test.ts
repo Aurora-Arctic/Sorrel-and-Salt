@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   LINK_SCHEMES,
+  OPENABLE_ADDRESS,
   isOpenableAddress,
   linkAddressProblem,
   tidyLinkAddress,
@@ -55,5 +56,22 @@ describe('linkAddressProblem', () => {
 
   it('allows exactly the schemes the renderer opens', () => {
     expect(LINK_SCHEMES).toEqual(['https', 'mailto']);
+  });
+});
+
+describe('OPENABLE_ADDRESS', () => {
+  // The editor's link plugin accepts LINK_SCHEMES and the page opens OPENABLE_ADDRESS: the two agree, or a saved link is dead.
+  it('opens an address in every scheme the link plugin accepts', () => {
+    for (const scheme of LINK_SCHEMES)
+      expect(OPENABLE_ADDRESS.test(`${scheme}:testwort`)).toBe(true);
+  });
+
+  it('opens no scheme the link plugin refuses', () => {
+    const others = ['http', 'tel', 'ftp', 'javascript', 'data', 'file', 'sms'].filter(
+      (scheme) => !LINK_SCHEMES.includes(scheme),
+    );
+    // Precondition: the list still has schemes outside LINK_SCHEMES to try.
+    expect(others.length).toBeGreaterThan(0);
+    for (const scheme of others) expect(OPENABLE_ADDRESS.test(`${scheme}:testwort`)).toBe(false);
   });
 });

@@ -16,7 +16,7 @@ import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
-import { UNTITLED_SPELL } from '@/components/SpellCard';
+import { spellNameOf } from '@/components/SpellCard/untitled';
 import { demoNoticeOf } from '@/lib/demo-notice';
 import { Forbidden } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
@@ -51,7 +51,7 @@ const spellOf = cache(async (slug: string, id: string) => {
 export async function generateMetadata({ params }: SpellRecipeParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { spell } = await spellOf(slug, id);
-  return { title: spell.title?.trim() || UNTITLED_SPELL };
+  return { title: spellNameOf(spell.title) };
 }
 
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
@@ -88,7 +88,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     canCreateSpell: canDuplicate,
   } = access;
   const canRecord = spell.status === 'complete' && access.canCreateWorking;
-  const name = spell.title?.trim() || UNTITLED_SPELL;
+  const name = spellNameOf(spell.title);
   const { viewer } = await viewerOf();
   const recordButton = (
     <RecordWorkingButton

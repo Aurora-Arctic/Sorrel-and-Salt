@@ -10,6 +10,7 @@ import {
   SAFETY_UNSOURCED,
   SOURCES,
 } from '../schema/sourcing-weights';
+import { hasText } from '../../../lib/text';
 import { NAMELESS_KIND, UNSETTLED_KIND, type ReferenceKind } from '../schema/ingredient-enums';
 import type { CitedReference, SourcingFact, SourcingInput, SourcingScore } from '../types';
 
@@ -22,8 +23,6 @@ const KIND_LABELS: Record<ReferenceKind, string> = {
   article: 'Article',
   web_page: 'Web Page',
 };
-
-const hasText = (text: string | null) => Boolean(text?.trim());
 
 /** A positive count's points at `each` apiece, stopped at `cap`; caps below zero stop from beneath. */
 function capped(count: number, each: number, cap: number): number {

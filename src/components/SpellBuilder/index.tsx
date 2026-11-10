@@ -29,7 +29,7 @@ import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { DeleteSpellWords, useDeleteSpell } from '../SpellRecipe/delete-spell';
-import { UNTITLED_SPELL } from '../SpellCard';
+import { spellNameOf } from '../SpellCard/untitled';
 import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -446,7 +446,7 @@ const SpellBuilder = ({
 
   const [deleting, setDeleting] = useState(false);
   const spellId = createdId ?? opened?.id ?? null;
-  const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
+  const name = spellNameOf(useWatch({ control, name: 'title' }));
   // `removed` holds the autosave and the save on close once the delete is sent.
   const { remove, pending: removed } = useDeleteSpell({
     workspaceId,

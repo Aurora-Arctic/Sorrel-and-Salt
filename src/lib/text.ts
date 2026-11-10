@@ -72,3 +72,7 @@ export function titleCase(text: string): string {
     })
     .join(' ');
 }
+
+/** Whether `value` holds anything besides white space. */
+export const hasText = (value: string | null | undefined): value is string =>
+  value != null && value.trim() !== '';

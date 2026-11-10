@@ -13,14 +13,6 @@ import type { SelectOption } from '../Field/types';
 const optionsOf = (values: readonly string[]): SelectOption[] =>
   values.map((value) => ({ value, label: capitalise(value) }));
 
-/**
- * The label `options` give `value`, as a summary or a table says a choice:
- * "Botanical" for `botanical`. A value the options lack is said as itself,
- * so a closed set grown on the server is never shown blank.
- */
-export const labelOf = (options: readonly SelectOption[], value: string): string =>
-  options.find((option) => option.value === value)?.label ?? value;
-
 export const NOMENCLATURE_OPTIONS = optionsOf(NOMENCLATURE_KINDS);
 export const ELEMENT_OPTIONS = optionsOf(INGREDIENT_ELEMENTS);
 export const NAME_BASIS_OPTIONS = optionsOf(NAME_BASES);

@@ -8,7 +8,7 @@ import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
-import { UNTITLED_SPELL } from '../SpellCard/untitled';
+import { spellNameOf } from '../SpellCard/untitled';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -181,11 +181,11 @@ const IngredientSearchBox = ({
             rows: page.edges.map(({ node }) => ({
               key: node.id,
               value: node.title?.trim() || query,
-              label: node.title?.trim() || UNTITLED_SPELL,
+              label: spellNameOf(node.title),
               match: {
                 id: node.id,
                 slug: node.id,
-                name: node.title?.trim() || UNTITLED_SPELL,
+                name: spellNameOf(node.title),
                 canonicalName: null,
                 nomenclature: 'none',
               },

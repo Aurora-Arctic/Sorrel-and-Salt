@@ -9,6 +9,7 @@ import { signedInLanding } from '@/lib/landing';
 import { looksLikeCardToken } from '@/lib/invitation-token';
 import { getSession, sessionIsVerified } from '@/lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '@/lib/sign-in';
+import { invitationTokenFromPath } from '@/lib/invitation-link';
 import { publicPageMetadata } from '@/lib/page-metadata';
 import { SITE_NAME } from '@/lib/site';
 // Server component, so the env var names this reads never reach the client bundle; only the `configured` ids pass as a prop.
@@ -29,11 +30,9 @@ export async function generateMetadata({ searchParams }: SignInPageProps): Promi
   };
 }
 
-const INVITE_LINK = /^\/invite\/([^/?#]+)$/;
-
 /** Read from the address alone, as the invite page does signed out: reading the invitation would tell a visitor with no account whether its token is live. */
 function ledesFor(next: string | undefined): SignInLedes | undefined {
-  const token = next === undefined ? undefined : INVITE_LINK.exec(next)?.[1];
+  const token = next === undefined ? undefined : (invitationTokenFromPath(next) ?? undefined);
   return token === undefined || looksLikeCardToken(token) ? undefined : ADDRESS_LEDES;
 }
 

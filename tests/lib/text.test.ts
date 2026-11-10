@@ -1,5 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { addressTaken, capitalise, joinAnd, noMatchText, plural, titleCase } from '@/lib/text';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import {
+  addressTaken,
+  capitalise,
+  hasText,
+  joinAnd,
+  noMatchText,
+  plural,
+  titleCase,
+} from '@/lib/text';
 
 describe('plural', () => {
   it('takes the singular for one and the plural for any other count', () => {
@@ -90,5 +98,20 @@ describe('titleCase', () => {
     for (const form of ['dried leaf', 'oil of cloves', 'cold-pressed oil', ' whole root ']) {
       expect(titleCase(form).toLowerCase()).toBe(form.trim().toLowerCase());
     }
+  });
+});
+
+describe('hasText', () => {
+  it('holds for text with something besides white space in it', () => {
+    expect(hasText('Testwort')).toBe(true);
+    expect(hasText('  Testwort \n')).toBe(true);
+  });
+
+  it.each([null, undefined, '', '   ', '\n\t'])('fails for %j', (value) => {
+    expect(hasText(value)).toBe(false);
+  });
+
+  it('narrows a possibly missing value to a string', () => {
+    expectTypeOf(hasText).guards.toEqualTypeOf<string>();
   });
 });

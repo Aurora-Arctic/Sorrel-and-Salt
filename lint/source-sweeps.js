@@ -797,4 +797,101 @@ export const rules = {
       };
     },
   },
+
+  // A class name is joined by `cx` (src/lib/class-names.ts), not by `.filter(Boolean).join(' ')` or a `className` added by a
+  // ternary. Two shapes only: the same join building an id list or a sentence, and a template with an optional part, are other jobs.
+  'class-names-joined-through-cx': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!isComponentFile(file, { ts: true }) || !/^src\/(components|app)\//.test(file)) return {};
+      const CLASSY = /class/i;
+      const FUNCTIONS = new Set([
+        'FunctionDeclaration',
+        'FunctionExpression',
+        'ArrowFunctionExpression',
+      ]);
+      const nameOf = (node) => (node?.type === 'Identifier' ? node.name : node?.value);
+      const functionName = (fn) =>
+        fn.id?.name ??
+        (fn.parent?.type === 'VariableDeclarator' ? nameOf(fn.parent.id) : undefined);
+      /** Whether the join sits where a class name is built: a `className` attribute or property, or a class-named variable or function. */
+      function buildsClass(node) {
+        for (let at = node.parent; at; at = at.parent) {
+          if (at.type === 'JSXAttribute') return at.name.name === 'className';
+          if (at.type === 'Property') return CLASSY.test(String(nameOf(at.key)));
+          if (at.type === 'VariableDeclarator') return CLASSY.test(String(nameOf(at.id)));
+          if (at.type === 'ReturnStatement') {
+            let fn = at.parent;
+            while (fn && !FUNCTIONS.has(fn.type)) fn = fn.parent;
+            return Boolean(fn) && CLASSY.test(String(functionName(fn)));
+          }
+          if (at.type.endsWith('Statement') || at.type === 'FunctionDeclaration') return false;
+        }
+        return false;
+      }
+      const isFilterBoolean = (node) =>
+        node.type === 'CallExpression' &&
+        node.callee.type === 'MemberExpression' &&
+        node.callee.property.name === 'filter' &&
+        node.arguments.length === 1 &&
+        node.arguments[0].type === 'Identifier' &&
+        node.arguments[0].name === 'Boolean';
+      return {
+        CallExpression(node) {
+          const { callee } = node;
+          if (
+            callee.type !== 'MemberExpression' ||
+            callee.property.name !== 'join' ||
+            node.arguments.length !== 1 ||
+            nameOf(node.arguments[0]) !== ' ' ||
+            node.arguments[0].type !== 'Literal' ||
+            !isFilterBoolean(callee.object) ||
+            !buildsClass(node)
+          ) {
+            return;
+          }
+          context.report({
+            node,
+            message: 'Join class names with cx from @/lib/class-names, not by hand',
+          });
+        },
+        ConditionalExpression(node) {
+          const { test, consequent } = node;
+          if (test.type !== 'Identifier' || !/classname$/i.test(test.name)) return;
+          const names = consequent.type === 'TemplateLiteral' ? consequent.expressions : [];
+          if (!names.some((part) => part.type === 'Identifier' && part.name === test.name)) return;
+          context.report({
+            node,
+            message: 'Add a className with cx from @/lib/class-names, not by a ternary',
+          });
+        },
+      };
+    },
+  },
+
+  // A spell's shown name is `spellNameOf(title)`, so its trimming and its untitled fallback are one edit.
+  'spell-name-through-spell-name-of': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!isComponentFile(file, { ts: true }) || file === 'src/components/SpellCard/untitled.ts') {
+        return {};
+      }
+      return {
+        LogicalExpression(node) {
+          if (
+            (node.operator !== '||' && node.operator !== '??') ||
+            node.right.type !== 'Identifier' ||
+            node.right.name !== 'UNTITLED_SPELL'
+          ) {
+            return;
+          }
+          context.report({
+            node,
+            message:
+              'Name a spell with spellNameOf from @/components/SpellCard/untitled, not a fallback to UNTITLED_SPELL',
+          });
+        },
+      };
+    },
+  },
 };
