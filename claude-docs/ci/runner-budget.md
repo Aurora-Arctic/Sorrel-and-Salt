@@ -104,6 +104,9 @@ answer sooner and a timeout in one kind of test no longer fails the others.
 | `vitest-db`   | `--project db --project db-mocking --project workflow` | Yes              |
 | `vitest`      | Merges the three; applies the 80% bar                  | No               |
 
+The three part jobs differ in their projects and in `vitest-db`'s service; their
+steps are the composite action `.github/actions/vitest-part`.
+
 - **Each part writes a blob.** `vitest run … --coverage --reporter=blob`
   writes the part's results and its coverage map to
   `.reports/blobs/blob-<part>.json`, uploaded as the artifact

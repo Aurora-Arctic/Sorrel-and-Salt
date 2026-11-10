@@ -11,13 +11,8 @@
 
 import { execFileSync } from 'node:child_process';
 
-import { idsNamedByMerge } from '../../../scripts/task-ids.mjs';
-import {
-  ID_LETTERS,
-  PROJECTS,
-  projectByNumber,
-  projectOfId,
-} from '../../../scripts/task-projects.mjs';
+import { BRANCH_NAME, idsNamedByMerge } from '../../../scripts/task-ids.mjs';
+import { PROJECTS, projectByNumber, projectOfId } from '../../../scripts/task-projects.mjs';
 import { HEADING, ID, orderTaskFiles, projectOfDocPath } from '../../../scripts/tasks-md.mjs';
 
 const args = process.argv.slice(2);
@@ -149,17 +144,16 @@ for (const id of [
 // Task branches, local or pushed, whose id has not merged: work under way, PR or not.
 const open = new Set();
 for (const branch of git('branch', '-a', '--format=%(refname:short)').split('\n')) {
-  const m = new RegExp(
-    String.raw`(?:^|\/)(?:feature|hotfix)\/(?:backlog-)?([${ID_LETTERS}][a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-`,
-    'i',
-  ).exec(branch);
+  const m = new RegExp(String.raw`(?:^|\/)${BRANCH_NAME}`, 'i').exec(branch);
   if (m && !done.has(norm(m[1])) && !plan.get(norm(m[1]))?.retired) open.add(norm(m[1]));
 }
+
+const ofProject = (id) => projectOf.get(id) ?? projectOfId(id);
 
 const chosen = option('--project')
   ? [projectByNumber(option('--project'))]
   : option('--task')
-    ? [projectOf.get(norm(option('--task'))) ?? projectOfId(norm(option('--task')))]
+    ? [ofProject(norm(option('--task')))]
     : PROJECTS;
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const h = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)}h`;
@@ -167,7 +161,6 @@ const bar = (n, d, width = 24) => {
   const filled = d ? Math.round((n / d) * width) : 0;
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 };
-const ofProject = (id) => projectOf.get(id) ?? projectOfId(id);
 
 const reports = chosen.map((project) => {
   const t = { done: 0, doneH: 0, left: 0, leftH: 0, retired: 0 };

@@ -4,10 +4,10 @@
 import { ID_LETTERS } from './task-projects.mjs';
 import { ID } from './tasks-md.mjs';
 
-export const BRANCH = new RegExp(
-  String.raw`from [^/\s]+\/(?:feature|hotfix)\/(?:backlog-)?([${ID_LETTERS}][a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-`,
-  'i',
-);
+// The task-branch name `feature/<id>-…` or `hotfix/<id>-…`, as a regex source whose group 1 is the id.
+export const BRANCH_NAME = String.raw`(?:feature|hotfix)\/(?:backlog-)?([${ID_LETTERS}][a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-`;
+
+export const BRANCH = new RegExp(String.raw`from [^/\s]+\/${BRANCH_NAME}`, 'i');
 
 export const LEAD = new RegExp(String.raw`^((?:${ID})(?:\s*/\s*${ID})*)\s+[—-]\s`);
 

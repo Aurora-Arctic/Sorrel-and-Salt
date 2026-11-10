@@ -45,3 +45,10 @@ export function planPlacement(options: {
 }): { projectId: string | null; move: Move | null };
 export function reorderMutationArgs(projectId: string, move: Move): string[];
 export function main(argv?: string[]): Promise<void>;
+export function graphqlArgs(
+  query: string,
+  variables?: Record<string, string | number>,
+  flags?: string[],
+): string[];
+export function addItemArgs(projectId: string, contentId: string): string[];
+export function deleteItemArgs(projectId: string, itemId: string): string[];
