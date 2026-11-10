@@ -7,7 +7,7 @@ import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import ConfirmDialog from '../ConfirmDialog';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import CovenChoice from './lazy-coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
@@ -121,7 +121,7 @@ export function useCupboardWrites({
   const { navigate, refresh } = usePendingNavigation();
   const refused = (error: unknown): void => {
     onSettle();
-    onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+    onRefused(failureMessage(error));
   };
   const remove = useMutation({
     mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),

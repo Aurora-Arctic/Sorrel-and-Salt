@@ -4,6 +4,44 @@
 @use 'sass:string';
 @use './variables' as *;
 
+// The breakpoints. Each owns its `@media` condition once; a stylesheet never writes a width query itself
+// (tests/guards/breakpoints.test.ts). `above-` is the edge plus 0.01rem, so a width is on exactly one side.
+@mixin width-from($width) {
+  @media (min-width: $width) {
+    @content;
+  }
+}
+
+@mixin width-to($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}
+
+@mixin phone-down {
+  @include width-to($shell-phone-width) {
+    @content;
+  }
+}
+
+@mixin above-phone {
+  @include width-from(calc(#{$shell-phone-width} + 0.01rem)) {
+    @content;
+  }
+}
+
+@mixin tablet-down {
+  @include width-to($shell-tablet-width) {
+    @content;
+  }
+}
+
+@mixin above-tablet {
+  @include width-from(calc(#{$shell-tablet-width} + 0.01rem)) {
+    @content;
+  }
+}
+
 // One transition list for a state change (a hover, a flip, a fade): each property at the long duration
 // and one easing. A theme change has no transition of its own; ThemeToggle cross-fades the page.
 @mixin motion($props...) {
@@ -493,24 +531,38 @@
   }
 }
 
+// The width from which a menu column fits on each side of the text column, with the frame's padding.
+@function page-with-nav-wide($menu, $column) {
+  @return calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2);
+}
+
 // One mixin for the pages and the shell's paused notice (AppShell), so the two cannot differ. A document page passes its wider pair.
+// `$menu: null` is a page with no menu, which keeps an equal free track each side so its column centres at every width.
 @mixin page-with-nav-grid($menu: calc(#{space(8)} * 3), $column: $narrow-column) {
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     display: grid;
-    grid-template-columns: $menu minmax(0, $column);
     place-content: start center;
+
+    @if $menu {
+      // The menu gives up width before the text is squeezed: it never takes more than a third of the row, so the text keeps the rest.
+      grid-template-columns: min(#{$menu}, 35%) minmax(0, $column);
+    } @else {
+      grid-template-columns: minmax(0, 1fr) minmax(0, $column) minmax(0, 1fr);
+    }
   }
 
   // Not from a tablet up, which lacks the room for three columns and the frame's padding.
-  @media (min-width: calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    grid-template-columns: $menu minmax(0, $column) $menu;
+  @if $menu {
+    @media (min-width: page-with-nav-wide($menu, $column)) {
+      grid-template-columns: $menu minmax(0, $column) $menu;
+    }
   }
 }
 
 // One mixin for the page and its wait (Skeleton), so they cannot differ in width. The breakpoint and offset are
 // `.page-with-nav`'s (_primitives.scss).
 @mixin entry-nav-grid {
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     display: grid;
     grid-template-columns:
       minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
@@ -532,7 +584,6 @@
 }
 
 // The side column spans both rows (claude-docs/components/ingredient-entry.md, "Layout").
-$-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 
 // `$details` and `$side` select the Details section and its side column; the first child that is neither is Stock.
 @mixin entry-body($details, $side) {
@@ -544,7 +595,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
     margin-block: 0;
   }
 
-  @media (min-width: $-entry-tablet) {
+  @include above-tablet {
     display: grid;
     grid-template-columns: minmax(0, 1fr) $side-column;
     grid-template-rows: auto 1fr;
@@ -606,7 +657,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 @mixin entry-section($heading: 'h2, h3') {
   @include stack(4);
 
-  @media (min-width: $-entry-tablet) {
+  @include above-tablet {
     display: grid;
     grid-template-columns: minmax(0, 1fr) $side-column;
     gap: space(4) space(8);
@@ -623,7 +674,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 
   margin-block-start: space(4);
 
-  @media (min-width: $-entry-tablet) {
+  @include above-tablet {
     grid-column: 2;
     margin-block-start: 0;
   }
@@ -633,7 +684,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 @mixin entry-forms {
   @include stack(6);
 
-  @media (min-width: $-entry-tablet) {
+  @include above-tablet {
     clear: both;
   }
 }

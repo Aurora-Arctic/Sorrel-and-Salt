@@ -1,15 +1,16 @@
-import { afterAll, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
 import { FIXTURE_USERS, FIXTURE_WORKSPACES } from '@/db/seed/standard';
+import { useTestDatabase } from '../support/db/database';
 
 // The `db` project keeps a worker's modules from one file to the next, and the re-clone before each file is the
 // runner's, not a setup file's top level, which runs once per worker in some runs. A file that empties every
 // table must leave the next file in its worker the whole fixture cast, which this file reads.
 
-const sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+let sql: postgres.Sql;
 
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 describe('a db file starts on the seeded template', () => {

@@ -1,11 +1,12 @@
 import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
-import type { FieldFormat, ReferenceTextField } from './types';
+import { type FieldFormat, tidy, withScheme } from '../../../lib/formats';
+import type { ReferenceTextField } from './types';
 
 // How a reference's fields are tidied, and the shapes the schema's extra checks accept. Pure and client-safe, so the server stores
 // what the form already showed. A format changes only what it can read with certainty and leaves the rest as typed, since
 // Chicago's forms vary more than any rule would guess (claude-docs/db/references.md, "Formatting and checks").
 
-export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
+export { tidy, withScheme };
 
 /** A title less the quotation marks wrapping the whole of it: the citation quotes the title itself, so typed marks would print twice. */
 export const unquote: FieldFormat = (text) => {
@@ -25,12 +26,6 @@ export const dashRanges: FieldFormat = (text) =>
 
 /** As `dashRanges`, and a range of roman numerals too ("xii-xv"), only in a field that holds nothing but numbers. */
 export const dashNumbers: FieldFormat = (text) => dashRanges(text).replace(NUMERAL_RANGE, '$1–');
-
-const SCHEME = /^[a-z][a-z\d+.-]*:/i;
-const BARE_HOST = /^[\w-]+(\.[\w-]+)+([/?#]|$)/;
-
-export const withScheme: FieldFormat = (text) =>
-  !SCHEME.test(text) && BARE_HOST.test(text) ? `https://${text}` : text;
 
 const ORDINAL_WORDS = [
   'first',

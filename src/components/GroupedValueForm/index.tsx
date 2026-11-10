@@ -3,12 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { placeServerIssues } from '../../lib/graphql-failure';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import FormIcon from '../FormIcon';
@@ -18,7 +17,8 @@ import {
   FormHistoryContext,
   SelectField,
   TextField,
-  useFormHistory,
+  useEntityForm,
+  FormErrorSummary,
 } from '../Field';
 import Notice from '../Notice';
 import { ListField } from '../IngredientForm/fields';
@@ -220,7 +220,6 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: LIST_KINDS.category.label,
-    describe: 'What this category covers',
     group: {
       label: 'Group',
       placeholder: 'Choose a group',
@@ -238,7 +237,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   form: defineKind({
     noun: LIST_KINDS.form.label,
-    describe: 'What this form is, and what it is not',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     group: {
       label: 'Group',
@@ -254,7 +252,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   deity: defineKind({
     noun: LIST_KINDS.deity.label,
-    describe: 'Who they are and what they are honoured for',
     descriptionHint:
       "Who they are, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name; the other names they go by are Other Names.",
     otherNamesHint:
@@ -285,7 +282,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // moves none; it still carries onto the entries listing the value.
   celestialBody: defineKind({
     noun: LIST_KINDS.celestialBody.label,
-    describe: 'What this body is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
@@ -297,7 +293,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   zodiacSign: defineKind({
     noun: LIST_KINDS.zodiacSign.label,
-    describe: 'What this sign is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
@@ -332,42 +327,34 @@ const GroupedValueForm = ({
         }
       : EMPTY,
     resolver: spec.resolver,
+    mode: 'onTouched',
+    shouldFocusError: false,
   });
   const {
     control,
     handleSubmit,
-    setError,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
   const discard = useDiscardGuard(isDirty);
-  const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root, enabled: !discard.asking && !confirming });
-  const [alert, setAlert] = useState<string>();
+  const { root, history, setAlert, rootError, send } = useEntityForm({
+    methods,
+    discard,
+    save: (input) => spec.save(input, value?.id),
+    onDone,
+    asking: confirming,
+    toField: ({ path: [key, ...rest] }) => {
+      if (key === 'otherNames' && typeof rest[0] === 'number') {
+        return `folkNames.${rest[0]}.value` as const;
+      }
+      return rest.length === 0 ? fieldOf(spec, key) : undefined;
+    },
+  });
   const name = useWatch({ control, name: 'name' });
   const renamed =
     renameNote !== undefined && value !== undefined && (name ?? '').trim() !== value.name;
 
-  const save = useMutation({
-    mutationFn: (input: GroupedValueValues) => spec.save(input, value?.id),
-  });
-
   const remove = useMutation({ mutationFn: (valueId: string) => spec.remove(valueId) });
-
-  const send = async (input: GroupedValueValues): Promise<void> => {
-    setAlert(undefined);
-    try {
-      await save.mutateAsync(input);
-      onDone();
-    } catch (error) {
-      placeServerIssues(error, setError, ({ path: [key, ...rest] }) => {
-        if (key === 'otherNames' && typeof rest[0] === 'number') {
-          return `folkNames.${rest[0]}.value` as const;
-        }
-        return rest.length === 0 ? fieldOf(spec, key) : undefined;
-      });
-    }
-  };
 
   const confirmDelete = async (): Promise<void> => {
     if (!value) return;
@@ -381,7 +368,6 @@ const GroupedValueForm = ({
     label: each.name,
     icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
   }));
-  const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
 
   const actions = (): ReactElement => (
@@ -421,6 +407,7 @@ const GroupedValueForm = ({
         >
           <FormHistoryButtons />
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           {/* Autofill off: Chrome takes a field named "name" for a person's and
             offers the user's own. */}
           <TextField<GroupedValueValues>
@@ -443,7 +430,6 @@ const GroupedValueForm = ({
             name="description"
             label="Description"
             hint={spec.descriptionHint}
-            placeholder={spec.describe}
             multiline
             required
           />

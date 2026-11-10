@@ -1,7 +1,6 @@
-import postgres from 'postgres';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
+import { recreateE2eDatabase, withE2eSql } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
@@ -41,15 +40,12 @@ test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@sto
         },
       });
 
-    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-    try {
+    await withE2eSql(async (sql) => {
       await sql`
         insert into support_requests (about, subject, message, path, error_code, created_by, updated_by)
         values ('bug', 'Wobbling Cauldron', 'The cauldron wobbles on save.', '/coven/[slug]/grimoire', 500, ${senderId}, ${senderId})
       `;
-    } finally {
-      await sql.end();
-    }
+    });
 
     await test.step('the admin opens the list and the request', async () => {
       await page.goto('/keepers/support');

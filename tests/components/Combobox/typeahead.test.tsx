@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ComboboxTypeahead } from '@/components/Combobox/typeahead';
+import { useTurkishCaseFolding } from '../../support/turkish-locale';
 
 // claude-docs/components/combobox.md, "The type-ahead box"
 
@@ -268,5 +269,26 @@ describe('ComboboxTypeahead', () => {
     expect(options()).toEqual(['Old Testic', 'Fixtural']);
     fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
     expect(value()).toHaveTextContent('fixtural');
+  });
+});
+
+describe('ComboboxTypeahead under a Turkish-locale browser', () => {
+  it('finds a choice whose label has a capital I by the same word in lower case', () => {
+    const restore = useTurkishCaseFolding();
+    try {
+      render(
+        <ComboboxTypeahead
+          id="tradition"
+          label="Tradition"
+          value=""
+          onChange={() => {}}
+          choices={[{ value: 'irisic', label: 'Irisic' }]}
+        />,
+      );
+      type('irisic');
+      expect(options()).toEqual(['Irisic']);
+    } finally {
+      restore();
+    }
   });
 });

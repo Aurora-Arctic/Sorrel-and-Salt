@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useNavigationState } from '../../lib/navigation';
 import { usePathname } from 'next/navigation';
 import { skeletonFor } from '../../lib/navigation/skeleton-for';
@@ -24,11 +24,14 @@ export default function SectionBody({
 }: SectionBodyProps): ReactElement {
   const { busy, href } = useNavigationState();
   const pathname = usePathname();
+  // The help pages' body sits inside the public layout's `main`, so its skeleton takes no second one.
+  const landmark = (inner: ReactNode) =>
+    region === 'help' ? <div>{inner}</div> : <main>{inner}</main>;
   const Shown = busy ? skeletonFor(region, href, pathname) : null;
   const skeleton = Shown ? <Shown /> : null;
   // When the wait ends the skeleton stays over the arrived page and fades
   // (SkeletonFade); without the hidden status, since the page has its own.
-  const leaving = useLeavingSkeleton(skeleton && <main>{skeleton}</main>);
+  const leaving = useLeavingSkeleton(skeleton && landmark(skeleton));
 
   // The page is held beneath the skeleton rather than swapped, so the scroll position the browser saves for Back is the
   // page's. The skeleton stands in a copy of the section's frame, so its flex column and gap are untouched.
@@ -40,10 +43,12 @@ export default function SectionBody({
       </div>
       {skeleton && (
         <SkeletonCover className={className}>
-          <main>
-            <output className="visually-hidden">Loading</output>
-            {skeleton}
-          </main>
+          {landmark(
+            <>
+              <output className="visually-hidden">Loading</output>
+              {skeleton}
+            </>,
+          )}
         </SkeletonCover>
       )}
     </div>

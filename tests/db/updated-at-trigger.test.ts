@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { AUDITED_TABLES } from '../support/db/table-metadata';
 import { eq } from 'drizzle-orm';
@@ -7,6 +7,7 @@ import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { truncateAllTables } from '../support/seeded-database';
 import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
+import { useTestDatabase } from '../support/db/database';
 
 // One function attached to every audited table
 // (claude-docs/db/updated-at.md, "`updated_at` is the database's").
@@ -14,6 +15,10 @@ const FUNCTION = 'set_updated_at';
 const TRIGGER = 'set_updated_at';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
 
 const AUTHOR = '11111111-1111-1111-1111-111111111111';
 const WORKSPACE = '22222222-2222-2222-2222-222222222222';
@@ -53,8 +58,6 @@ async function insertUser(id = randomUUID(), overrides = ''): Promise<string> {
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   // Emptied first so beforeEach's delete of users finds nothing seeded still pointing at a user.
   await truncateAllTables(sql);
 
@@ -88,10 +91,6 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.useRealTimers();
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('the updated_at trigger', () => {

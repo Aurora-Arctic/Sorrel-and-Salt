@@ -20,6 +20,7 @@ import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
+import { ORIGIN } from '../../../support/constants';
 
 // A keeper invites an address to become a keeper. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
 // Creating and revoking are a site admin's alone and paused with the rest of the keeper changes for every keeper but the primary one (claude-docs/auth/admin-users.md, "Inviting a keeper").
@@ -38,7 +39,6 @@ const INVITED = `invited${DOMAIN}`;
 const PRIMARY = '00000000-0000-0000-0000-0000000000b1';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
-const ORIGIN = 'http://localhost:8000';
 
 /** More than the list's page, so every row is read in one. */
 const PAGE: PageRequest = { limit: 101, inverted: false };
@@ -186,6 +186,25 @@ describe('createAdminInvitation', () => {
     await createAdminInvitation(asUser(E), INVITED, 'admin', '   ', sender());
 
     expect((await invitations())[0].note).toBeNull();
+  });
+
+  it('keeps a reason of 500 characters and refuses one of 501, writing and mailing nothing', async () => {
+    await createAdminInvitation(asUser(E), INVITED, 'admin', 'r'.repeat(500), sender());
+    expect((await invitations())[0].note).toHaveLength(500);
+
+    send.mockClear();
+    const refused = await createAdminInvitation(
+      asUser(E),
+      `other${DOMAIN}`,
+      'admin',
+      'r'.repeat(501),
+      sender(),
+    ).catch((error: unknown) => error);
+
+    expect(refused).toBeInstanceOf(ValidationError);
+    expect((refused as ValidationError).issues[0]?.path).toEqual(['note']);
+    expect(await invitations()).toHaveLength(1);
+    expect(send).not.toHaveBeenCalled();
   });
 
   // The address rules are email.ts's (tests/modules/identity/services/email.test.ts);

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -17,21 +17,22 @@ import { asTouch } from '../../support/db/touch-row';
 import { citationText } from '@/lib/citation';
 import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
 import { TESTWORT, fileOf, loadedOf, parsed } from './compendium/files-fixture';
+import { useTestDatabase } from '../../support/db/database';
 
 // A file citation's `nameBasis` and `supports` land on its link, on the entry and on a form, and a work the seed knows as
 // scholarly lands with its mark. On a present entry they are provenance, not content: each link and source the seed wrote and no
 // person edited takes the file's values with no mark, whatever was done to the entry; one a person edited is kept and reported.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 async function freshDatabase(): Promise<void> {

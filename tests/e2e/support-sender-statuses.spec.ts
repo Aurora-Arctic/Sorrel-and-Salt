@@ -1,7 +1,6 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { recreateE2eDatabase, withE2eSql } from './database';
 import { signInAs } from './session';
 
 // What no story walks: the sender's request page passes the accessibility check in every status, and while timed out.
@@ -16,9 +15,8 @@ test('the sender’s request page is accessible in every status and while timed 
   page,
 }) => {
   const { userId } = await signInAs(page, 'sender@support-statuses.test');
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   const ids: Record<string, string> = {};
-  try {
+  await withE2eSql(async (sql) => {
     for (const status of STATUSES) {
       const [row] = await sql`
         insert into support_requests (about, subject, message, path, status, created_by, updated_by)
@@ -31,9 +29,7 @@ test('the sender’s request page is accessible in every status and while timed 
         values (${row!.id}, 'A staff answer.', ${userId}, ${userId})
       `;
     }
-  } finally {
-    await sql.end();
-  }
+  });
 
   for (const status of STATUSES) {
     await page.goto(`/account/support?request=${ids[status]}`);
@@ -47,15 +43,12 @@ test('the sender’s request page is accessible in every status and while timed 
     await assertNoAccessibilityViolations(page);
   }
 
-  const timeouts = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (timeouts) => {
     await timeouts`
         insert into support_timeouts (user_id, until, note, created_by, updated_by)
         values (${userId}, now() + interval '2 days', 'Spam', ${userId}, ${userId})
       `;
-  } finally {
-    await timeouts.end();
-  }
+  });
 
   await page.goto(`/account/support?request=${ids.open}`);
   const dialog = page.getByRole('dialog', { name: 'A open request' });

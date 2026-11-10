@@ -2,7 +2,8 @@
 
 import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
+import { reasonProblem } from '../../modules/identity/validation/reason';
 import { useClickFeedback } from '../ClickFeedback';
 import { ReasonField } from '../Field';
 import Modal, { ConfirmOverlay } from '../Modal';
@@ -43,6 +44,7 @@ const ConfirmedAction = ({
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState<string>();
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
@@ -73,6 +75,9 @@ const ConfirmedAction = ({
   }
 
   async function confirm() {
+    const problem = withNote ? reasonProblem(note) : undefined;
+    setNoteError(problem);
+    if (problem) return;
     setStep('sending');
     report(undefined);
     try {
@@ -90,11 +95,7 @@ const ConfirmedAction = ({
       // No fields of its own, so the shared reader always answers an alert:
       // the service's refusal verbatim, or the one generic sentence, unless
       // the caller words the refusal itself.
-      report(
-        typeof refusal === 'function'
-          ? refusal(error)
-          : (refusal ?? readGraphqlFailure(error).alert),
-      );
+      report(typeof refusal === 'function' ? refusal(error) : (refusal ?? failureMessage(error)));
     }
   }
 
@@ -118,7 +119,11 @@ const ConfirmedAction = ({
         <ReasonField
           className="confirmed-action__note"
           value={note}
-          onChange={setNote}
+          onChange={(next) => {
+            setNote(next);
+            setNoteError(undefined);
+          }}
+          error={noteError}
           disabled={sending}
         />
       )}
@@ -148,6 +153,7 @@ const ConfirmedAction = ({
         onClick={() => {
           report(undefined);
           setNote('');
+          setNoteError(undefined);
           setStep('confirming');
         }}
       >

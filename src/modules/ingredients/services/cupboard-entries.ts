@@ -53,7 +53,13 @@ import {
   splitChildren,
   writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership, byCovenName, membershipsOf } from '@/modules/coven';
+import {
+  type Membership,
+  assertMembership,
+  byCovenName,
+  liveMembershipsOf,
+  tryMembership,
+} from '@/modules/coven';
 import { curatedNames } from '@/modules/vocabulary';
 
 // (claude-docs/db/workspace-compendium-entries.md, "Reading it").
@@ -123,13 +129,8 @@ async function entriesOf(
   workspaceId: string,
   ingredientIds: string[],
 ): Promise<CupboardEntryRow[] | Forbidden> {
-  let membership: Membership;
-  try {
-    membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  } catch (error) {
-    if (error instanceof Forbidden) return error;
-    throw error;
-  }
+  const membership = await tryMembership(session, workspaceId, { ingredient: ['read'] });
+  if (membership instanceof Forbidden) return membership;
   return findCupboardEntriesOf(membership, ingredientIds);
 }
 
@@ -602,10 +603,7 @@ export async function covensHoldingEntry(
   session: Session,
   ingredientId: string,
 ): Promise<readonly HoldingCoven[]> {
-  const [all] = await membershipsOf(session, [session.userId]);
-  if (!all || all instanceof Error) return [];
-  // A paused seat reads nothing in its coven, so the read leaves it out rather than be refused.
-  const memberships = all.filter(({ pause }) => !pause);
+  const memberships = await liveMembershipsOf(session);
   const held = await heldCompendiumEntryIdsIn(
     session,
     memberships.map(({ workspace }) => workspace.id),

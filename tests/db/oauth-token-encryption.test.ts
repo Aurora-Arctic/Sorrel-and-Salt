@@ -10,6 +10,7 @@ import {
 import type { Message } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // `account.encryptOAuthTokens` through a real sign-in: the access and refresh tokens in `accounts` are unreadable without BETTER_AUTH_SECRET, and a row written in plaintext before the switch still reads.
 // The id token is stored as issued (claude-docs/auth/config.md, "Config").
@@ -24,12 +25,8 @@ const ACCESS_TOKEN = 'test-access-token';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

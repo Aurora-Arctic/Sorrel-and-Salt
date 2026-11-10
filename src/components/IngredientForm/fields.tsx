@@ -8,6 +8,7 @@ import {
   useWatch,
   type FieldError as FormFieldError,
 } from 'react-hook-form';
+import { tidy } from '../../lib/formats';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect } from '../Combobox';
 import { LazySortableEntries } from '../Combobox/lazy-sortable';
 import type { ComboboxOption } from '../Combobox/types';
@@ -75,7 +76,12 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
           onEdit?.(text);
         }}
         onFocus={onActivate}
-        onBlur={field.onBlur}
+        onBlur={() => {
+          const tidied = tidy(field.value ?? '');
+          if (tidied !== field.value) field.onChange(tidied);
+          field.onBlur();
+        }}
+        spellCheck={false}
         onPick={(value, option) => {
           field.onChange(value);
           onPick?.(option);
@@ -369,6 +375,7 @@ export function ListField({
           suggestions={offered}
           offerTyped={!pickOnly && !repeat(text)}
           placeholder={placeholder}
+          spellCheck={false}
           listAnchor={boxRow}
           entries={entries}
           clear={{ label: `Clear ${legend}`, onClear: clear, empty: fields.length === 0 }}

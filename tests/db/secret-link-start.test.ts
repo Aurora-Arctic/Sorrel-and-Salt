@@ -8,6 +8,7 @@ import { post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
 import { placeholderEmail } from '@/modules/identity';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // The run is started with ids and an origin, never the address, the token or the link.
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -29,11 +30,9 @@ const RIGHT = 'Testwort crowns the eastern hedge';
 const WRONG = 'Testwort climbs the western wall';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer(pwnedRange([], []));

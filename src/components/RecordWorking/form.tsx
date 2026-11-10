@@ -3,14 +3,24 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import type { RecordWorkingMembersQuery, WorkingParticipantInput } from '../../gql/graphql';
+import { trimEnds } from '../../lib/formats';
+import { CalendarDay } from '../../lib/validation';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { useDebouncedValue } from '../../lib/debounce';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
+import { fold } from '@/lib/text';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
-import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
+import {
+  FieldError,
+  FieldShell,
+  FormActions,
+  PlainTextField,
+  VisibilitySwitch,
+  fieldDescription,
+} from '../Field';
 import { BinButton } from '../IconTip';
 import { useLookup } from '../IngredientForm/suggestions';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -88,9 +98,7 @@ const memberOptions = (data: RecordWorkingMembersQuery) =>
 
 const FIELDS = ['workedOn', 'note', 'participants', 'visibility'];
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
-
-const sameText = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const sameText = (a: string, b: string) => fold(a) === fold(b);
 
 export default function RecordWorkingForm({
   workspaceId,
@@ -133,7 +141,7 @@ export default function RecordWorkingForm({
       (p, i) =>
         p.userId !== initial.participants[i]?.userId || p.name !== initial.participants[i]?.name,
     );
-  const valid = DAY.test(workedOn);
+  const valid = CalendarDay.safeParse(workedOn).success;
   const waitFor = completeReason(workedOn);
   const dirty = completing === undefined && changed && !removed;
   const discard = useDiscardGuard(dirty);
@@ -156,10 +164,6 @@ export default function RecordWorkingForm({
   const dateField = fieldDescription({
     id: `${ids}-date`,
     error: failure.field?.name === 'workedOn' ? failure.field.message : undefined,
-  });
-  const noteField = fieldDescription({
-    id: `${ids}-note`,
-    error: failure.field?.name === 'note' ? failure.field.message : undefined,
   });
   const peopleError = failure.field?.name === 'participants' ? failure.field.message : undefined;
 
@@ -293,17 +297,17 @@ export default function RecordWorkingForm({
         />
         <FieldError id={`${ids}-people-error`} message={peopleError} />
       </fieldset>
-      <FieldShell label="Note" {...noteField}>
-        <textarea
-          id={noteField.controlId}
-          className="textarea"
-          rows={3}
-          {...noteField.aria}
-          value={note}
-          disabled={submitting}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        label="Note"
+        multiline
+        rows={3}
+        spellCheck
+        format={trimEnds}
+        value={note}
+        onChange={setNote}
+        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        disabled={submitting}
+      />
       <VisibilitySwitch
         noun="working"
         checked={visibility === 'workspace'}

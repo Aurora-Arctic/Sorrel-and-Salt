@@ -19,12 +19,18 @@ import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
+import { useTestDatabase } from '../../support/db/database';
 
 // The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 let tables: string[];
 let tombstoned: Set<string>;
@@ -55,7 +61,6 @@ async function snapshot(): Promise<Record<string, string[]>> {
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
 
   tables = (
@@ -93,7 +98,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
   await sql`drop table if exists ${sql(PROBE)}`;
-  await sql.end();
 });
 
 describe('seed(db, { scenario: "minimal" })', () => {

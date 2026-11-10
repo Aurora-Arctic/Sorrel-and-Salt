@@ -46,3 +46,11 @@ export interface CategoryPickerProps {
 export type Announce = (message: string) => void;
 
 export type LegendAction = (announce: Announce) => ReactNode;
+
+export interface CategoryIndex {
+  categories: PickerCategory[];
+  names: ReadonlyMap<string, string>;
+  colors: ReadonlyMap<string, GroupColors>;
+  isPending: boolean;
+  isError: boolean;
+}

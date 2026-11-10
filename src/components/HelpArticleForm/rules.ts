@@ -1,4 +1,4 @@
-import type { HelpFormAudience, HelpFormKind } from './types';
+import type { HelpFormKind } from './types';
 
 export const NOUNS: Record<HelpFormKind, string> = {
   faq: 'FAQ Entry',
@@ -7,14 +7,10 @@ export const NOUNS: Record<HelpFormKind, string> = {
   term: 'Term',
 };
 
-export const AUDIENCE_LABELS: Record<HelpFormAudience, string> = {
-  public: 'Public',
-  staff: 'Staff',
-  keeper: 'Keeper',
-};
-
-/** How narrow each audience is: a sub page's is at least its guide's. */
-export const NARROWNESS: Record<HelpFormAudience, number> = { public: 0, staff: 1, keeper: 2 };
+export {
+  HELP_AUDIENCE_LABELS as AUDIENCE_LABELS,
+  HELP_AUDIENCE_RANK as NARROWNESS,
+} from '../../lib/help-audience';
 
 const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
 

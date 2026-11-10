@@ -5,7 +5,6 @@
 // The text on the left at the measure, the details card on the right, sticky as the body scrolls. The card is before
 // the Save row in the page's order, so the grid places the row back under the text (claude-docs/components/help-article-form.md).
 // Tokens only, before the section's design review.
-$-two-columns: calc(#{$shell-tablet-width} + 0.01rem);
 $-details-width: 22rem;
 
 // The page is centred as one column the form's own width, so the back link and the heading start at the text's edge, as
@@ -32,7 +31,7 @@ $-details-width: 22rem;
   gap: space(6);
   align-items: start;
 
-  @media (min-width: $-two-columns) {
+  @include above-tablet {
     grid-template:
       'main details' auto
       'actions details' 1fr / minmax(0, $measure) minmax(16rem, $-details-width);
@@ -66,7 +65,7 @@ $-details-width: 22rem;
     margin-block: 0;
   }
 
-  @media (min-width: $-two-columns) {
+  @include above-tablet {
     position: sticky;
     top: calc(#{$shell-bar-height} + #{space(4)});
   }

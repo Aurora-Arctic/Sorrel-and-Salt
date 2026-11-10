@@ -6,7 +6,7 @@ import GroupList from '../../../components/GroupList';
 import { groupsHref } from '../../../components/GroupList/href';
 import { KINDS } from '../../../components/GroupList/kinds';
 import type { GroupListEntry } from '../../../components/GroupList/types';
-import { resolveNumberedPage } from '../../../lib/pagination';
+import { readNumberedPage } from '../../../lib/numbered-page';
 import { requireCuratorSession } from '../../../lib/request-session';
 import {
   countCategories,
@@ -65,7 +65,7 @@ const readPage = cache(
   (kind: GroupKind, query: string, after: string | undefined, before: string | undefined) => {
     const { list, count } = GROUP_KINDS[kind];
     const filter = query ? { query } : undefined;
-    return resolveNumberedPage(
+    return readNumberedPage(
       { after, before },
       (request) => list(request, filter),
       (start) => count(start, filter),

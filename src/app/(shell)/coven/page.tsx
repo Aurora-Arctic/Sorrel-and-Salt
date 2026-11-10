@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { redirect } from 'next/navigation';
 import Notice from '../../../components/Notice';
 import { NEW_COVEN_PATH } from '../../../lib/coven-path';
@@ -10,9 +11,7 @@ import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
 import PageFrame from '@/components/PageFrame';
 
-export const metadata: Metadata = {
-  title: 'Your Coven',
-};
+export const metadata: Metadata = pageTitle('Your Coven');
 
 // The post-sign-in landing for someone with no return path. A member goes into the first coven they can open; one who
 // may create a coven is offered the create page; anyone else is told how to get in. The right is read

@@ -8,7 +8,7 @@ export const PROJECTS = [
     title: 'Sorrel & Salt',
     // The directory under claude-docs/tasks/ and claude-docs/waves/ holding this Project's entries.
     slug: 'v1',
-    // Its ids: M<milestone>.<n>, MB.<n> for bugs and gaps, MW.<n> for wave close-outs.
+    // Its ids: M<milestone>.<n>, MB.<n> for bugs and gaps, MC.<n> for audit clean-up, MW.<n> for wave close-outs.
     prefix: 'M',
     milestonePrefix: '',
     bugfixes: 'Z. Bugfixes',

@@ -1,13 +1,20 @@
 'use client';
 
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { FormProvider, useFieldArray, useForm, useFormContext, useWatch } from 'react-hook-form';
+import {
+  type FieldErrors,
+  FormProvider,
+  useFieldArray,
+  useForm,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
-import { FieldError, FieldShell, FormActions, fieldDescription } from '../Field';
+import { FieldError, FieldShell, FormActions, FormErrorSummary, fieldDescription } from '../Field';
 import { BinButton } from '../IconTip';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import EmptyState from '../EmptyState';
@@ -20,7 +27,7 @@ import StockFields, {
   stockAmountsOf,
   stockFormValues,
 } from '../StockFields';
-import { changed, openingRows, rowFieldOf, stockBatch } from './batch';
+import { amountResolver, changed, openingRows, rowFieldOf, stockBatch } from './batch';
 import type { StockDialogFormProps, StockDialogValues, StockForm, StockRow } from './types';
 import './index.scss';
 
@@ -198,7 +205,11 @@ export const StockDialogForm = ({
       seeded: seed ? openOn : null,
     };
   });
-  const methods = useForm<StockDialogValues>({ defaultValues: { rows: opened.rows } });
+  const methods = useForm<StockDialogValues>({
+    defaultValues: { rows: opened.rows },
+    shouldFocusError: false,
+    resolver: amountResolver,
+  });
   const {
     control,
     handleSubmit,
@@ -253,6 +264,13 @@ export const StockDialogForm = ({
     setAdding('');
   }
 
+  // The form with the first bad amount is chosen so its error is in view.
+  function chooseFirstRefused(refused: FieldErrors<StockDialogValues>): void {
+    const at = refused.rows?.findIndex?.((row) => row !== undefined) ?? -1;
+    const first = at >= 0 ? getValues('rows')[at] : undefined;
+    if (first) setChosenVariant(first.variantId);
+  }
+
   async function send({ rows: values }: StockDialogValues): Promise<void> {
     const { input, from } = stockBatch(values, jars);
     try {
@@ -282,7 +300,8 @@ export const StockDialogForm = ({
   return (
     <FormProvider {...methods}>
       {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
-      <form className="form" noValidate onSubmit={handleSubmit(send)}>
+      <form className="form" noValidate onSubmit={handleSubmit(send, chooseFirstRefused)}>
+        <FormErrorSummary />
         <div className="stock-dialog">
           <div className="stock-dialog__columns">
             <div className="stock-dialog__list">

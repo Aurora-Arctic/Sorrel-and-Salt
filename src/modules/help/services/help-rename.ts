@@ -1,16 +1,15 @@
 import 'server-only';
 import { findHelpArticlesWhoseBodyHolds, findOneById } from '@/db/repository';
 import type { HelpArticleRow } from '@/db/repository';
-import { NotFound } from '@/lib/errors';
 import { marksInMarkdown } from '@/lib/help-marks';
 import { helpPath } from '@/lib/help-paths';
 import { HELP_QUICK_LINKS } from '@/lib/help-quick-links';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { RowId } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { helpArticles } from '../schema/help-articles';
 import type { HelpRenameEffects } from '../types';
+import { requireHelpArticle } from './help-reads';
 import { toHelpArticles } from './rows';
 
 // Nothing redirects an old help address, so the editor reads this before a save that moves one and asks the keeper first
@@ -47,8 +46,7 @@ export async function readHelpRenameEffects(
   title: string,
 ): Promise<HelpRenameEffects> {
   assertSiteAdmin(session);
-  const row = RowId.safeParse(id).success ? await findOneById(helpArticles, id) : undefined;
-  if (!row) throw new NotFound('Help article not found');
+  const row = await requireHelpArticle(id);
   const parentSlug = await parentSlugOf(row);
   const oldPath = helpPath({ ...row, parentSlug });
   const newSlug = slugify(title);

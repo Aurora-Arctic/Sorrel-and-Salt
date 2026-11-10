@@ -268,7 +268,7 @@ $account-menu-avatar: 2rem;
   border-radius: 0 0 calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px);
 }
 
-@media (max-width: $shell-tablet-width) {
+@include tablet-down {
   .account-menu__button {
     justify-content: center;
     width: $control-height;

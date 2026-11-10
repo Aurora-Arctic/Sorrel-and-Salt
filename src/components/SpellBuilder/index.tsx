@@ -23,6 +23,7 @@ import {
   FormHistoryContext,
   TextField,
   useFormHistory,
+  FormErrorSummary,
 } from '../Field';
 import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
@@ -33,7 +34,7 @@ import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories } from './categories-field';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
@@ -90,7 +91,10 @@ const SECTIONS = {
 
 type SectionName = keyof typeof SECTIONS;
 
-const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
+/** Why Save is off as the form opens, before anything is changed. */
+export const NOTHING_TO_SAVE = 'Nothing to save yet';
+
+export const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
 
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
@@ -228,6 +232,7 @@ const SpellBuilder = ({
     // A field is checked when it is first left, and on every change after,
     // as the ingredient form's are.
     mode: 'onTouched',
+    shouldFocusError: false,
     reValidateMode: 'onChange',
   });
   const {
@@ -527,7 +532,7 @@ const SpellBuilder = ({
         : !jarReady
           ? 'Waiting for the jar to load'
           : !dirty && autosave.status === 'idle'
-            ? 'Nothing to save yet'
+            ? NOTHING_TO_SAVE
             : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   useSaveOnClose(dirty && stepsRead !== 'failed' && !removed, saveForClose);
@@ -629,6 +634,7 @@ const SpellBuilder = ({
         >
           {recovery && (headerNote ? createPortal(recovery, headerNote) : recovery)}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
+          <FormErrorSummary />
           <div className="collapsible-sections">
             <FoldAll
               anyOpen={open.size > 0}
@@ -643,11 +649,14 @@ const SpellBuilder = ({
                   label="Title"
                   placeholder="Add a title"
                   autoComplete="off"
+                  spellCheck
+                  enterKeyHint="next"
                 />
                 <TextField<SpellBuilderValues>
                   name="intent"
                   label="Intent"
                   placeholder="Add an intent"
+                  spellCheck
                   multiline
                   rows={3}
                 />
@@ -664,14 +673,18 @@ const SpellBuilder = ({
                       label="Jar Description"
                       placeholder="Add a description"
                       autoComplete="off"
+                      spellCheck
+                      enterKeyHint="next"
                     />
                   }
                   waxField={
                     <TextField<SpellBuilderValues>
                       name="sealWaxColor"
                       label="Seal Wax"
-                      placeholder="Add a colour"
+                      hint="Any colour, in your own words"
                       autoComplete="off"
+                      spellCheck={false}
+                      enterKeyHint="next"
                     />
                   }
                 />
@@ -695,6 +708,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="moonPhase"
                   label="Moon Phase"
+                  hint="Pick one, or write your own"
                   placeholder="Add a phase"
                   options={MOON_PHASES}
                   icon={moonPhaseIcon}
@@ -702,6 +716,7 @@ const SpellBuilder = ({
                 <SpellSuggestField
                   name="dayOfWeek"
                   label="Day"
+                  hint="Pick one, or write your own"
                   placeholder="Add a day"
                   options={DAYS_OF_THE_WEEK}
                 />
@@ -714,6 +729,7 @@ const SpellBuilder = ({
                   name="note"
                   label="Note"
                   placeholder="Add a note"
+                  spellCheck
                   multiline
                 />
               </>,

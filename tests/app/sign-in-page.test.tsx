@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
+import { USER_ID } from '../support/constants';
 
 // /sign-in sends an already signed-in visitor on, by `?next=` or the role's landing, the way a sign-in itself does.
 // The session and landing are mocked; `redirect` throws as Next's does, so the page stops at it.
@@ -26,7 +27,6 @@ const { default: SignInPage, generateMetadata } = await import('@/app/sign-in/pa
 const { ADDRESS_LEDES } = await import('@/components/InvitationAcceptance/ledes');
 const { newCardToken, newToken, looksLikeCardToken } = await import('@/lib/invitation-token');
 
-const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 const SIGNED_IN: Session = { userId: USER_ID, role: 'user' };
 
 const visit = async (next?: string | string[]) => {

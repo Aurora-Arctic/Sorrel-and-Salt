@@ -1,5 +1,6 @@
 'use client';
 
+import { prefersReducedMotion } from '@/lib/motion';
 import {
   type ReactElement,
   type ReactNode,
@@ -26,8 +27,6 @@ import {
 } from './typing';
 import type { SearchSentenceProps } from './types';
 import './index.scss';
-
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
 function leadNode(lead: string): ReactNode {
   const count = /^(?:\d+|No(?= |$))/.exec(lead)?.[0];
@@ -164,7 +163,7 @@ export default function SearchSentence({
             term: parts.term,
             clauses: fullClauses,
           };
-    const reduced = window.matchMedia(REDUCED_QUERY).matches;
+    const reduced = prefersReducedMotion();
     let step = 1;
     if (reduced) step = editsLeft(lineRef.current, goalNow()) || 1;
     else if (wipe) {

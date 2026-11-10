@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { buildLoaders } from '@/graphql/loaders';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
@@ -8,6 +8,7 @@ import { A, B, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
+import { useTestDatabase } from '../../../support/db/database';
 
 // `Ingredient.references`' loader: a page of ingredients answered in one read, the citations in the order a bibliography files them, and refused per key as the other children's loaders are.
 // The query count is observed at the repository, wrapped so the test counts calls without changing what they answer; a seat lookup is `assertMembership`'s one query.
@@ -30,8 +31,8 @@ const countOf = () =>
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

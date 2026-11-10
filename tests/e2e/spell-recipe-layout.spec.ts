@@ -66,7 +66,7 @@ for (const [name, size] of [
   ['desktop', { width: 1280, height: 900 }],
   ['phone', { width: 390, height: 844 }],
 ] as const) {
-  test(`the header's icon buttons start level with the title's first line on a ${name}, wrapped title`, async ({
+  test(`the header's icon buttons ${name === 'phone' ? "sit under the title's last line" : "start level with the title's first line"} on a ${name}, wrapped title`, async ({
     page,
   }) => {
     const coven = await seedCoven(page, `Fixture Coven Head ${name}`, `spell-head-${name}.test`, {
@@ -87,7 +87,8 @@ for (const [name, size] of [
     const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
     const [titleBox, editBox] = [await box(title), await box(edit)];
     expect(titleBox.height).toBeGreaterThan(editBox.height * 1.5);
-    expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
+    if (name === 'phone') expect(editBox.top).toBeGreaterThanOrEqual(titleBox.bottom);
+    else expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
   });
 }
 
@@ -237,7 +238,7 @@ for (const [name, size] of [
   ['tablet', { width: 800, height: 900 }],
   ['phone', { width: 390, height: 844 }],
 ] as const) {
-  test(`the title takes the head's row with its action icons beside it on a ${name}`, async ({
+  test(`the title takes the head's row with its action icons ${name === 'phone' ? 'beneath' : 'beside'} it on a ${name}`, async ({
     page,
   }) => {
     const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-title-${name}.test`, {
@@ -270,8 +271,11 @@ for (const [name, size] of [
     expect(edited.bottom).toBeLessThanOrEqual(title.top + 1);
     expect(title.width).toBeGreaterThan(head.width / 2);
     expect(title.left).toBeLessThanOrEqual(head.left + 1);
-    expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
-    expect(actions.top).toBeLessThan(title.top + 60);
+    if (name === 'phone') expect(actions.top).toBeGreaterThanOrEqual(title.bottom);
+    else {
+      expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
+      expect(actions.top).toBeLessThan(title.top + 60);
+    }
   });
 }
 
@@ -574,3 +578,53 @@ test('on a phone the keyboard reaches The Cupboard after the recipe and before W
   expect(seen).toContain('workings');
   expect(seen.slice(0, seen.indexOf('workings')).every((at) => at === 'side')).toBe(true);
 });
+
+for (const visibility of ['private', 'workspace'] as const) {
+  test(`a ${visibility} spell's title breaks only between words at 375px`, async ({ page }) => {
+    const coven = await seedCoven(
+      page,
+      `Fixture Words ${visibility}`,
+      `spell-words-${visibility}.test`,
+      {
+        A: 'owner',
+      },
+    );
+    const { A } = coven.users;
+    const title = 'Blackthorn Threshold Warding Vow';
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, title, visibility, A, 'complete'),
+    );
+    await signInAgainAs(page, A);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const heading = page.getByRole('heading', { level: 1, name: title });
+    await expect(heading).toBeVisible();
+    // Each word's glyphs, measured as a range: a word split across lines, by a break or a hyphen, has a box on each.
+    const lines = await heading.evaluate((h1) => {
+      const text = [...h1.childNodes].find(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      );
+      if (!text?.textContent) return null;
+      const words: Record<string, number> = {};
+      const range = document.createRange();
+      for (const match of text.textContent.matchAll(/\S+/g)) {
+        range.setStart(text, match.index);
+        range.setEnd(text, match.index + match[0].length);
+        words[match[0]] = new Set(
+          [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+        ).size;
+      }
+      return words;
+    });
+    expect(lines).toEqual({ Blackthorn: 1, Threshold: 1, Warding: 1, Vow: 1 });
+
+    // The badges and the icon buttons wrap beneath the title rather than squeeze it.
+    const titleBottom = await heading.evaluate((h1) => h1.getBoundingClientRect().bottom);
+    const beside = page.locator('.spell-recipe__head .page-header > :not(h1)');
+    const tops = await beside.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
+    // The icons, and the Private badge on a private spell.
+    expect(tops).toHaveLength(visibility === 'private' ? 2 : 1);
+    for (const top of tops) expect(top).toBeGreaterThanOrEqual(titleBottom);
+  });
+}

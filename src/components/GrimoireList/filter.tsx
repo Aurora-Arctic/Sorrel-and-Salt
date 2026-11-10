@@ -132,7 +132,7 @@ const PanelCategories = ({
             label="Moon Phases"
             name="moonPhase"
             typeahead
-            placeholder="Add a moon phase"
+            placeholder="Add a phase"
             removeNoun="Moon Phase"
             loading={pending}
             choices={facets.moonPhases.map((choice) => ({

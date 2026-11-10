@@ -15,6 +15,7 @@ import { UNMEASURABLE_UNIT } from '@/modules/grimoire/validation/step-unit';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { useTurkishCaseFolding } from '../../support/turkish-locale';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -320,6 +321,22 @@ describe('the spell builder’s Add to Jar', () => {
     expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
   });
 
+  it('refuses a one-off already in the jar however a Turkish-locale browser folds its capital I', async () => {
+    const restore = useTurkishCaseFolding();
+    try {
+      suggest();
+      renderBuilder();
+
+      await addOneOff('Irisic');
+      await addOneOff('irisic');
+
+      expect(stepRows()).toHaveLength(1);
+      expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
+    } finally {
+      restore();
+    }
+  });
+
   it('saves each step as its ingredient and form, or its one-off name and form, with its amount', async () => {
     suggest(ROSEWORT);
     const calls = acceptCreate();
@@ -327,7 +344,7 @@ describe('the spell builder’s Add to Jar', () => {
 
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+    fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
       target: { value: '2' },
     });
     chooseUnit(row, 'g');
@@ -342,12 +359,37 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
+  it('saves a point quantity as the number it means, and refuses an unreadable one without sending', async () => {
+    suggest(ROSEWORT);
+    const calls = acceptCreate();
+    renderBuilder();
+
+    await add('Rose', /Fixture Rosewort/);
+    const box = () =>
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
+    fireEvent.change(box(), { target: { value: 'lots' } });
+    fireEvent.blur(box());
+    submit();
+
+    await waitFor(() => expect(stepRow('Fixture Rosewort')).toHaveClass('step-row--closed'));
+    expect(calls).toHaveLength(0);
+    openRow('Fixture Rosewort (Dried Leaf)');
+    expect(box()).toBeInvalid();
+
+    fireEvent.change(box(), { target: { value: '2.50' } });
+    fireEvent.blur(box());
+    expect(box()).toHaveValue('2.5');
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.steps).toMatchObject([{ quantity: 2.5 }]);
+  });
+
   it('shows a closed one-off’s quantity and unit in its row, as an ingredient step’s are', async () => {
     suggest(ROSEWORT);
     renderBuilder();
     await addOneOff('Testwort');
     const row = stepRow('Testwort');
-    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+    fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
       target: { value: '2' },
     });
     chooseUnit(row, 'g');
@@ -355,7 +397,7 @@ describe('the spell builder’s Add to Jar', () => {
       fireEvent.click(within(row).getByRole('button', { name: 'Close Testwort' }));
     });
 
-    expect(within(row).queryByRole('spinbutton', { name: /^Quantity/ })).toBeNull();
+    expect(within(row).queryByRole('textbox', { name: /^Quantity/ })).toBeNull();
     expect(row).toHaveTextContent('2 g');
   });
 
@@ -373,7 +415,10 @@ describe('the spell builder’s Add to Jar', () => {
 
     fireEvent.change(name(), { target: { value: '' } });
     fireEvent.blur(name());
-    await waitFor(() => expect(name()).toHaveAccessibleDescription('Give the ingredient a name'));
+    submit();
+    await waitFor(() =>
+      expect(name()).toHaveAccessibleDescription('Error: Give the ingredient a name'),
+    );
 
     fireEvent.change(name(), { target: { value: 'Mockwort' } });
     submit();
@@ -393,7 +438,7 @@ describe('the spell builder’s Add to Jar', () => {
     submit();
 
     await waitFor(() =>
-      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar.'),
+      expect(name()).toHaveAccessibleDescription('Error: This ingredient is already in the jar.'),
     );
   });
 
@@ -427,7 +472,7 @@ describe('the spell builder’s Add to Jar', () => {
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
     const quantity = () =>
-      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ });
     fireEvent.change(quantity(), { target: { value: '7' } });
     fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort (Dried Leaf)' }));
     fireEvent.click(
@@ -469,7 +514,7 @@ describe('the spell builder’s Add to Jar', () => {
     );
     expect(pencil()).toHaveAttribute('aria-expanded', 'true');
     expect(
-      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ }),
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ }),
     ).toBeInTheDocument();
 
     fireEvent.click(
@@ -504,7 +549,7 @@ describe('the spell builder’s Add to Jar', () => {
     fireEvent.pointerDown(listbox);
     fireEvent.click(listbox);
     open();
-    for (const field of within(row).getAllByRole('spinbutton')) {
+    for (const field of within(row).getAllByRole('textbox')) {
       fireEvent.pointerDown(field);
       act(() => field.focus());
       fireEvent.click(field);
@@ -556,7 +601,7 @@ describe('the spell builder’s Add to Jar', () => {
 
     chooseUnit(row, 'ml');
     await waitFor(() => expect(unit).toHaveAttribute('aria-invalid', 'true'));
-    expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT);
+    expect(unit).toHaveAccessibleDescription(`Error: ${UNMEASURABLE_UNIT}`);
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     chooseUnit(row, 'kg');
@@ -604,6 +649,45 @@ describe('the spell builder’s Add to Jar', () => {
     await waitFor(() => expect(unit).toHaveTextContent('ml'));
     expect(unit).not.toHaveAttribute('aria-invalid', 'true');
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
+  });
+
+  it('opens a saved quantity with thousands separators', () => {
+    suggest(MOCKROOT);
+    renderBuilder({
+      spell: {
+        ...answer('s3', 4),
+        steps: [
+          {
+            id: ID.savedRosewort,
+            name: 'Fixture Rosewort',
+            form: 'dried leaf',
+            quantity: 1000,
+            unit: 'g',
+            body: null,
+            ingredient: {
+              id: ID.rosewort,
+              toxic: false,
+              safetyNotes: null,
+              categories: [category('Love')],
+              stock: [],
+            },
+            variant: {
+              id: ID.roseLeaf,
+              toxic: false,
+              safetyNotes: null,
+              categories: [],
+              formChoice: null,
+            },
+          },
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+    openRow('Fixture Rosewort (Dried Leaf)');
+
+    expect(
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ }),
+    ).toHaveValue('1,000');
   });
 
   it('opens a saved spell’s steps, and saves them back by id with the step added', async () => {
@@ -654,7 +738,7 @@ describe('the spell builder’s Add to Jar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     openRow('Fixture Rosewort (Dried Leaf)');
     const row = stepRow('Fixture Rosewort');
-    expect(within(row).getByRole('spinbutton', { name: /^Quantity/ })).toHaveValue(3);
+    expect(within(row).getByRole('textbox', { name: /^Quantity/ })).toHaveValue('3');
     expect(within(row).getByRole('combobox', { name: /^Unit/ })).toHaveTextContent('g');
     expect(stepRow('Testwort')).toBeInTheDocument();
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
@@ -688,7 +772,7 @@ describe('the spell builder’s Add to Jar', () => {
     submit();
 
     const unit = within(stepRow('Fixture Mockroot')).getByRole('combobox', { name: /^Unit/ });
-    await waitFor(() => expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT));
+    await waitFor(() => expect(unit).toHaveAccessibleDescription(`Error: ${UNMEASURABLE_UNIT}`));
   });
 });
 
@@ -899,15 +983,15 @@ describe('the spell builder’s open and closed steps', () => {
 
     await add('Rose', /Fixture Rosewort/);
     expect(
-      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ }),
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ }),
     ).toBeInTheDocument();
 
     await add('Mock', /Fixture Mockroot/);
     expect(
-      within(stepRow('Fixture Mockroot')).getByRole('spinbutton', { name: /^Quantity/ }),
+      within(stepRow('Fixture Mockroot')).getByRole('textbox', { name: /^Quantity/ }),
     ).toBeInTheDocument();
     expect(
-      within(stepRow('Fixture Rosewort')).queryByRole('spinbutton', { name: /^Quantity/ }),
+      within(stepRow('Fixture Rosewort')).queryByRole('textbox', { name: /^Quantity/ }),
     ).toBeNull();
     expect(
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
@@ -919,7 +1003,7 @@ describe('the spell builder’s open and closed steps', () => {
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+    fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
       target: { value: '2' },
     });
     chooseUnit(row, 'g');
@@ -928,8 +1012,8 @@ describe('the spell builder’s open and closed steps', () => {
     expect(stepRow('Fixture Rosewort')).toHaveTextContent('2 g');
     openRow('Fixture Rosewort (Dried Leaf)');
     expect(
-      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ }),
-    ).toHaveValue(2);
+      within(stepRow('Fixture Rosewort')).getByRole('textbox', { name: /^Quantity/ }),
+    ).toHaveValue('2');
   });
 
   it('forces a row open while its unit is refused', async () => {
@@ -955,10 +1039,10 @@ describe('the spell builder’s open and closed steps', () => {
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+    fireEvent.change(within(row).getByRole('textbox', { name: /^Quantity/ }), {
       target: { value: '3' },
     });
-    fireEvent.pointerDown(within(row).getByRole('spinbutton', { name: /^Quantity/ }));
+    fireEvent.pointerDown(within(row).getByRole('textbox', { name: /^Quantity/ }));
     expect(
       screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
     ).toHaveAttribute('aria-expanded', 'true');

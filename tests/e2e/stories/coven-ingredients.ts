@@ -5,21 +5,15 @@ import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import type { IngredientFixture, Overrides } from '../../support/fixtures/types';
-import { e2eDatabaseUrl } from '../database';
+import { withE2eSql } from '../database';
 import { signInAs } from '../session';
+import { insertWorkspace } from '../../support/db/insert-workspace';
 
 // Rows go in through the raw client so setup does not depend on the code a story proves (CLAUDE.md, Testing).
 
 export type Role = 'owner' | 'member' | 'viewer';
 
-export async function withSql<T>(use: (sql: postgres.Sql) => Promise<T>): Promise<T> {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await use(sql);
-  } finally {
-    await sql.end();
-  }
-}
+export { withE2eSql as withSql };
 
 export interface Coven {
   id: string;
@@ -43,25 +37,18 @@ export async function seedCoven(
   const creator = users[owner];
   const slug = slugify(name);
 
-  const id = await withSql((sql) =>
+  const id = await withE2eSql((sql) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${creator}, true)`;
       for (const [key, userId] of Object.entries(users)) {
         await tx`update users set name = ${`Fixture ${key}`} where id = ${userId}`;
       }
-      const [workspace] = await tx<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${name}, ${slug}, ${creator}, ${creator})
-        returning id`;
-      await tx`
-        insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
-        values (${workspace.id}, ${slug}, ${creator}, ${creator})`;
-      for (const [key, role] of Object.entries(roles)) {
-        await tx`
-          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-          values (${workspace.id}, ${users[key]}, ${role}, ${creator}, ${creator})`;
-      }
-      return workspace.id;
+      return insertWorkspace(
+        tx,
+        name,
+        Object.entries(roles).map(([key, role]) => [users[key]!, role] as const),
+        { slug, author: creator, address: true },
+      );
     }),
   );
 
@@ -403,9 +390,9 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
       const group = dialog.getByRole('group', { name: form, exact: true });
       return {
         group,
-        quantity: group.getByRole('spinbutton', { name: fieldName('Quantity', form) }),
+        quantity: group.getByRole('textbox', { name: fieldName('Quantity', form) }),
         unit: group.getByRole('combobox', { name: fieldName('Unit', form) }),
-        threshold: group.getByRole('spinbutton', { name: fieldName('Low Stock At', form) }),
+        threshold: group.getByRole('textbox', { name: fieldName('Low Stock At', form) }),
         remove: group.getByRole('button', { name: `Remove ${form}`, exact: true }),
         undo: group.getByRole('button', { name: `Undo Remove ${form}`, exact: true }),
         async pickUnit(label: string) {

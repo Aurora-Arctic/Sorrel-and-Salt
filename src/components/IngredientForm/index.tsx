@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
+import { useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '@/lib/graphql-document';
@@ -12,7 +12,7 @@ import type {
   IngredientUpdateInput,
 } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage, placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
@@ -53,6 +53,7 @@ import { EntryHrefContext } from './substitute-summary';
 import {
   FormActions,
   FormHistoryButtons,
+  FormErrorSummary,
   FormHistoryContext,
   SelectField,
   TextField,
@@ -317,9 +318,6 @@ const IngredientForm = ({
         return next;
       }),
   });
-  // The first field marked invalid, in page order, takes the focus once a
-  // save's errors are all drawn.
-  useFocusFirstInvalid(form, submitCount);
   // A save held on the duplicate warning focuses its button rather than the
   // name it marks, which needs no change, only an answer. After the effect
   // above, so it wins when both run, and again on each held save.
@@ -545,7 +543,7 @@ const IngredientForm = ({
           await graphqlRequest(SetCompendiumEntryReviewedDocument, { id: row.id, reviewed });
           setReviewedSaved(reviewed);
         } catch (error) {
-          reviewRefusal = `Saved, but the review mark was not: ${readGraphqlFailure(error).alert}`;
+          reviewRefusal = `Saved, but the review mark was not: ${failureMessage(error)}`;
         }
       }
       if (mirror) clearMirror(mirror);
@@ -723,7 +721,7 @@ const IngredientForm = ({
         });
         setReviewedSaved(sent.reviewed);
       } catch (error) {
-        setRefusal('Saved, but the review mark was not: ' + readGraphqlFailure(error).alert);
+        setRefusal('Saved, but the review mark was not: ' + failureMessage(error));
       }
     }
     if (shownField) setShownSaved(sent.shown);
@@ -883,6 +881,8 @@ const IngredientForm = ({
               >
                 {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
                 {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+                {/* Not while a near-match warning holds the save: its answer is Create Anyway, which takes the focus. */}
+                {!blocking && <FormErrorSummary />}
                 {refusal && <Notice kind="error">{refusal}</Notice>}
                 {/* The sections flush, between hairlines. The one control that opens or closes them
               all sits beside the modal's title; outside a modal, at the end of the line above the
@@ -931,7 +931,9 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add a formal name"
+                      placeholder="Add a name"
+                      spellCheck={false}
+                      autoComplete="off"
                       note={
                         kind === NAMELESS_KIND
                           ? 'A "none" entry records no formal name.'
@@ -962,7 +964,7 @@ const IngredientForm = ({
                       }}
                       legend="Folk Names"
                       entry="Folk Name"
-                      placeholder="Add a folk name"
+                      placeholder="Add a name"
                     />
                   </CollapsibleSection>
                   <CollapsibleSection
@@ -973,14 +975,13 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="description"
                       label="Description"
-                      placeholder="What it is, where it comes from and how it is used"
                       multiline
                       rows={7}
                     />
                     <TextField<IngredientFormValues>
                       name="safetyNotes"
                       label="Safety Notes"
-                      placeholder="Add safety notes"
+                      placeholder="Add notes"
                       multiline
                     />
                     {/* Its own flag: a toxic form says so on its own. */}
@@ -995,7 +996,7 @@ const IngredientForm = ({
             the answer "none", so there is no None to choose. */}
                     <MultiSelectField
                       name="elements"
-                      label="Element"
+                      label="Elements"
                       placeholder="Add an element"
                       options={ELEMENT_OPTIONS}
                     />

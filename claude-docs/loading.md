@@ -19,7 +19,7 @@ Every wait has the same three parts. Each does one job, and none repeats another
 The control is the thing the person pressed, and it answers before anything else does. A press that changes nothing visible feels like a press that did not register.
 
 - A **button** is a [`BusyButton`](components/busy-button.md): it keeps its place, gains a [`Spinner`](components/busy-button.md), swaps its label for a busy one, and carries `aria-busy="true"`.
-- A **link** in the page shows the [`LinkHint`](components/link-hint.md) dot after its text. A link that wears the chain icon shows no dot: its icon turns into the `Spinner` ring in the same space (`LinkIconHint`). A link that is a tab moves its pill at once ([`TabbedPage`](components/tabbed-page.md)). The site's menu links (the global bar's links, the admin pages' lead link and the account menu's items) show no dot, because the page bar and the skeleton answer for them. Each still carries `aria-busy` while its navigation is pending.
+- A **link** in the page shows the [`LinkHint`](components/link-hint.md) dot after its text. A link that wears the chain icon shows no dot: its icon turns into the `Spinner` ring in the same space (`LinkIconHint`), as the help search's magnifier does; the icon hides through the shared `loading-leave` keyframe as the ring appears. A link that is a tab moves its pill at once ([`TabbedPage`](components/tabbed-page.md)). The site's menu links (the global bar's links, the admin pages' lead link and the account menu's items) show no dot, because the page bar and the skeleton answer for them. Each still carries `aria-busy` while its navigation is pending.
 - The **coven switcher** shows the picked coven's name with a spinner ([`WorkspaceSwitcher`](components/workspace-switcher.md)).
 - A **field** that is searching shows a spinner inside the input. In a [`Combobox`](components/combobox.md) it sits in the indicator strip at the right of the control, beside the clear button and the chevron, and the input carries `aria-busy`.
 
@@ -76,17 +76,18 @@ The wait itself is held by `useOptimistic`. A value set with it inside a transit
 
 The **destination address** chooses the skeleton, not the link that was pressed. `src/app/skeletons.ts` is the registry: it maps each route pattern (the folder names under `src/app`, with route groups and `@` slots ignored) to `{ host, Skeleton }`. A link carries only its `href`. `NavigationProvider` stores that `href` as the active navigation, and `useNavigationState()` returns `{ busy, href }`. `skeletonFor(body, href, pathname)` (`src/lib/navigation/skeleton-for.ts`) matches the address against the patterns (`route-match.ts`, which handles `[slug]`, `[id]`, `[number]`, `[token]` and `[key]`, drops the query string, and is the site's own because Next has no client-side matcher) and says which body draws it.
 
-There are three hosts:
+There are four hosts:
 
-| Host    | Body drawn in                                           | Draws when                                                                                      |
-| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `main`  | `MainBody` (`.app-shell__main`, shell and public frame) | The registry entry names `main`, or names a section host that is not standing for the address.  |
-| `coven` | `SectionBody` in the coven layout                       | The entry names `coven` and both the current page and the destination are in a coven (any two). |
-| `admin` | `SectionBody` in the `/curator` or `/keepers` layout    | The entry names `admin` and the destination is in the same area as the current page.            |
+| Host    | Body drawn in                                           | Draws when                                                                                                                         |
+| ------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `main`  | `MainBody` (`.app-shell__main`, shell and public frame) | The registry entry names `main`, or names a section host that is not standing for the address.                                     |
+| `coven` | `SectionBody` in the coven layout                       | The entry names `coven` and both the current page and the destination are in a coven (any two).                                    |
+| `admin` | `SectionBody` in the `/curator` or `/keepers` layout    | The entry names `admin` and the destination is in the same area as the current page.                                               |
+| `help`  | `SectionBody` in the public help layout (`HelpFront`)   | The entry names `help` and both the current page and the destination are public help pages (`/help` and below, not `/help/staff`). |
 
 The coven host stands for a switch between two covens, so the header and switcher stay up and busy through the wait. A section host that does not stand (a link from the Compendium into a coven page, or from `/curator` into `/keepers`) falls back to `MainBody`, which draws the whole frame.
 
-**Nothing draws** when the destination's path is the one already showing (a pager or filter change keeps its own skeleton in `ListFrame`), when both addresses are tabs of one admin page (`ADMIN_PAGES`; the layout's tab row stays mounted, its pill slides, and only the panel shows the tab's own skeleton), when the navigation is a refresh, which has no `href`, or when the address matches no registered pattern. In those cases the page stays up under the bar alone.
+**Nothing draws** when the destination's path is the one already showing (a pager or filter change keeps its own skeleton in `ListFrame`), except on a page whose query is its content (`QUERY_PAGES`, `/help/search`, whose new search draws its skeleton), when both addresses are tabs of one admin page (`ADMIN_PAGES`; the layout's tab row stays mounted, its pill slides, and only the panel shows the tab's own skeleton), when the navigation is a refresh, which has no `href`, or when the address matches no registered pattern. In those cases the page stays up under the bar alone.
 
 ## How to adopt it
 
@@ -165,7 +166,7 @@ BETTER_AUTH_SECRET=local-dev-not-a-real-secret \
 
 ### Frames, context rows and the scroll
 
-Some pages sit in a layout that draws a row of its own above the page: the context row (the coven switcher or the admin area's row). A skeleton for such a page is drawn without that row when the host stands, because the layout keeps it up. When the host does not stand, `framed(host, Page)` in `src/components/SkeletonFrame` wraps the skeleton in a `SkeletonContextRow` and the page's column (`.page-column` or `.coven-layout`), so the frame is the same either way. `skeletonFor` does this for every `main` skeleton that is not standing, so a registered skeleton never draws a frame itself.
+Some pages sit in a layout that draws a row of its own above the page: the context row (the coven switcher or the admin area's row). A skeleton for such a page is drawn without that row when the host stands, because the layout keeps it up. When the host does not stand, `framed(host, Page)` in `src/components/SkeletonFrame` wraps the skeleton in a `SkeletonContextRow` and the page's column (`.page-column` or `.coven-layout`), so the frame is the same either way. A public help page's layout draws the help header instead of a row; unframed, its skeleton is wrapped in `HelpFrontSkeleton` and `.page-column`. `skeletonFor` does this for every `main` skeleton that is not standing, so a registered skeleton never draws a frame itself.
 
 The window scrolls to the top, instantly, as a host (`MainBody` or `SectionBody`) starts drawing a destination's skeleton. It runs once per wait, in `useLeavingSkeleton` (`src/components/SkeletonFade`), which both hosts call. A click made far down the page therefore moves the page once, at the tap, and the arrived page has no scroll left to reset. A navigation that draws no host skeleton (a pager, a filter, a sort) and a route modal do not scroll. Next's own scroll on arrival is left on and has nothing to do. The hook saves the left page's position into its history entry before it scrolls and restores it on Back or Forward ([`components/skeleton.md`](components/skeleton.md), "Back after a skeleton"). The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`); with the page at the top, the context row above the cover needs no extra allowance.
 
@@ -176,7 +177,7 @@ A skeleton must not render a component that runs a data hook such as a query: it
 ### Where the skeletons are used
 
 - `MainBody` (`src/components/AppShell/main-body.tsx`) answers a `main` skeleton by hiding everything inside `.app-shell__main` and laying one `<main>` holding the skeleton over it, so the page frame is covered as well as the page's content. The hidden page stays mounted at its full height, and the skeleton is pinned to the top of the window under the bar. The skeleton draws its own frame, so `MainBody` adds none.
-- `SectionBody` does the same for a `coven` or `admin` skeleton, inside the section's layout, so the coven's or admin area's row and navigation stay while the page changes.
+- `SectionBody` does the same for a `coven`, `admin` or `help` skeleton, inside the section's layout, so the coven's or admin area's row and navigation, or the help header, stay while the page changes.
 - A pager or filter in a `ListFrame`, a tab, and the route modal's provider navigate through the hook directly; they keep their own skeletons. A route modal shows its own `loadingBody`, with the modal skeleton beside the modal (`SupportRequests`).
 - **The public pages wait the same way.** A signed-out visitor's Compendium pages sit in `PublicFrame`, not the shell, and its body is the same `MainBody`. In both chromes the page sits in a wrapper `div` (`.app-shell__main`), the skip link's target is an empty span just before it, and the `(public)` layout renders the page's own `<main>` inside the wrapper: during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays the skeleton's over it, so the page still exposes one `main` and one h1. A `main` on the wrapper would nest the two. There is no `loading.tsx` here either, so a direct request for an unknown entry still answers 404 and a moved one 308.
 

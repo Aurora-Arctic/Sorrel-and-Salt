@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The query findPossibleDuplicates actually sends, planned. Its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
 // The connection is rebuilt with a logger rather than the query copied here: a hand-written copy would prove a plan for SQL the service may not send.
@@ -22,8 +23,8 @@ vi.mock('@/db/connection', async () => {
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(() => {

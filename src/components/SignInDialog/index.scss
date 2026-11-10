@@ -7,7 +7,7 @@
   justify-content: center;
   margin: 0;
 
-  @media (width <= #{$shell-phone-width}) {
+  @include phone-down {
     flex-direction: column;
   }
 }

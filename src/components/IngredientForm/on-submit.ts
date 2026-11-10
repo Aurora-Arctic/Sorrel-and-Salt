@@ -1,4 +1,4 @@
-import { type RefObject, useLayoutEffect, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * Runs `opened` while rendering, once for each new `submitCount`: a save's last update carries its
@@ -11,19 +11,4 @@ export function useOnEachSubmit(submitCount: number, opened: () => void): void {
     setSeen(submitCount);
     opened();
   }
-}
-
-/**
- * Focuses the first field marked invalid within `within`, in page order, once a save's errors are
- * drawn. A layout effect, so no commit shows the error without the focus; used in place of
- * react-hook-form's `shouldFocusError`, which skips a list's entries, never registered as fields.
- */
-export function useFocusFirstInvalid(
-  within: RefObject<HTMLElement | null>,
-  submitCount: number,
-): void {
-  useLayoutEffect(() => {
-    if (submitCount > 0)
-      within.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-  }, [within, submitCount]);
 }

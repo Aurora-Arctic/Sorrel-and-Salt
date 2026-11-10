@@ -1,14 +1,16 @@
 import type { Metadata, Route } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath, keeperHelpEditPath } from '@/lib/help-paths';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { guideSteps, linkTo, orNotFound } from '@/lib/help-pages';
+import { guideSteps, linkTo } from '@/lib/help-pages';
+import { orNotFound } from '@/lib/or-not-found';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
 
-export const metadata: Metadata = { title: 'Staff Help', robots: { index: false } };
+export const metadata: Metadata = noIndexMetadata('Staff Help');
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const session = await requireCuratorSession();

@@ -18,7 +18,7 @@ import { press, setInputValue, submitForm, useSteps } from '../../../.storybook/
 import { Reopenable } from '../../../.storybook/reopenable';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { mirrorKey } from '../../lib/autosave/mirror';
-import { CategoriesDocument } from '../IngredientForm/categories';
+import { CategoriesDocument } from '../CategoryPicker/categories';
 import SpellDialog from './spell-dialog';
 import { SpellBuilderStepsDocument, SpellIngredientSuggestionsDocument } from './steps/documents';
 import type { SpellBuilderStep, SpellBuilderValues, SpellDialogSpell } from './types';

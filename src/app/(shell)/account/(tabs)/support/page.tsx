@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countMySupportRequests,
@@ -13,9 +14,7 @@ import { readOpenedRequest } from './reads';
 import type { SupportListPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
 
-export const metadata: Metadata = {
-  title: 'Your Support Requests',
-};
+export const metadata: Metadata = pageTitle('Your Support Requests');
 
 // The sender's own requests, one compact row each, with the request `?request=` opens in a dialog. The
 // services take the session, so another sender's rows are outside the queries.

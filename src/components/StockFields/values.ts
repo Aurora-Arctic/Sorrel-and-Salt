@@ -1,3 +1,4 @@
+import { parseQuantity, showQuantity } from '@/lib/formats';
 import { type Unit, isUnit } from '@/modules/ingredients/schema/units';
 import type { StockAmounts, StockFormValues, StockOfJar } from './types';
 
@@ -6,17 +7,15 @@ export const EMPTY_STOCK: StockFormValues = { quantityOnHand: '', unit: '', lowS
 /** The form's start for a jar held already: each amount as the text it would be typed as. */
 export function stockFormValues({ quantity, unit, threshold }: StockOfJar): StockFormValues {
   return {
-    quantityOnHand: quantity === null ? '' : String(quantity),
+    quantityOnHand: quantity === null ? '' : showQuantity(quantity),
     unit: unit ?? '',
-    lowStockThreshold: threshold === null ? '' : String(threshold),
+    lowStockThreshold: threshold === null ? '' : showQuantity(threshold),
   };
 }
 
 const amountOf = (text: string): number | null => {
-  const trimmed = text.trim();
-  if (trimmed === '') return null;
-  const amount = Number(trimmed);
-  return Number.isFinite(amount) ? amount : null;
+  const amount = parseQuantity(text);
+  return amount === null || !Number.isFinite(amount) ? null : amount;
 };
 
 /**

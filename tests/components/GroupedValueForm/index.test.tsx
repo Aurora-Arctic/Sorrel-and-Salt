@@ -538,14 +538,14 @@ describe('GroupedValueForm, a deity', () => {
       ]);
     });
 
-    it("refuses at the box a name the list holds, or the deity's own name", () => {
+    it("refuses at the box a name the list holds, or the deity's own name", async () => {
       renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
 
       addName('testrina');
-      expect(box()).toHaveAccessibleDescription(/already listed/);
+      await waitFor(() => expect(box()).toHaveAccessibleDescription(/already listed/));
       typeIn(box(), 'Testra');
       press('Add Other Name');
-      expect(box()).toHaveAccessibleDescription(/already the name/);
+      await waitFor(() => expect(box()).toHaveAccessibleDescription(/already the name/));
 
       expect(listed()).toEqual(['Remove Testrina']);
     });

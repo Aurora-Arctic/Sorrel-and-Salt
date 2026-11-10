@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type MouseEvent,
   type ReactElement,
@@ -25,23 +26,12 @@ import './index.scss';
 // URL-driven modal's address never says open while it is shut (claude-docs/components/modal.md).
 
 /**
- * How long the fade out may take before the owner is asked to close it anyway, for a browser that
- * never reports its end (past the transition's own length, index.scss).
- */
-const FADE_LIMIT_MS = 400;
-
-/**
  * How soon after one modal goes, open and not faded out, another that opens takes its place:
  * a link in the first one's foot unmounts one and mounts the other in one commit.
  */
 const HANDOVER_MS = 100;
 
 let handedAt = Number.NEGATIVE_INFINITY;
-
-/** Motion turned down, or no way to ask, so a close is not held for a fade. */
-const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** By point, not target: a click on the backdrop reports the dialog itself as its target. */
 function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent): boolean {
@@ -178,7 +168,7 @@ const Modal = ({
   const close = (): void => {
     if (phase !== 'open') return;
     shutting.current = true;
-    if (!fadesAreOff()) return setPhase('fading');
+    if (!prefersReducedMotion()) return setPhase('fading');
     setPhase('asked');
     onClose();
   };

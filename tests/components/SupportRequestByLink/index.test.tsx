@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SupportRequestByLink from '@/components/SupportRequestByLink';
@@ -118,6 +118,22 @@ describe('SupportRequestByLink', () => {
 
     await waitFor(() => expect(window.sessionStorage.getItem(KEY)).toBeNull());
     expect(screen.queryByRole('heading', { name: SUBJECT })).toBeNull();
+  });
+
+  it('counts a reply as unsaved only when it has more than whitespace', async () => {
+    answered();
+    window.sessionStorage.setItem(KEY, 'stored-token');
+    render(<SupportRequestByLink />);
+    const box = await screen.findByRole('textbox', { name: 'Your Reply' });
+    const leavingAsks = (): boolean => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    fireEvent.change(box, { target: { value: '   ' } });
+    expect(leavingAsks()).toBe(false);
+    fireEvent.change(box, { target: { value: 'Noted.' } });
+    expect(leavingAsks()).toBe(true);
   });
 
   describe('a newer link pasted into the open tab', () => {

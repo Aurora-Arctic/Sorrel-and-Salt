@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import IconTip, { LiddedEyeIcon } from '../IconTip';
@@ -66,7 +66,7 @@ export default function ShownSwitch({
       }
     } catch (error) {
       failed = true;
-      setRefusal(readGraphqlFailure(error).alert);
+      setRefusal(failureMessage(error));
       wanted.current = saved.current;
       setOn(saved.current);
     }

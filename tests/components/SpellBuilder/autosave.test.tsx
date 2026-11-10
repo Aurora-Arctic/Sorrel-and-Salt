@@ -141,7 +141,7 @@ describe('the spell builder’s saves', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     fireEvent.click(save());
 
-    expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
+    expect(await screen.findAllByText('Write the instruction, or remove it')).toHaveLength(2);
     expect(created).toHaveLength(0);
   });
 
@@ -208,7 +208,7 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByText(/Could not save/i)).toBeNull();
 
     fireEvent.click(save());
-    expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
+    expect(await screen.findAllByText('Write the instruction, or remove it')).toHaveLength(2);
     expect(updated).toHaveLength(0);
   });
 

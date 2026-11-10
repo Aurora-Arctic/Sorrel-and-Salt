@@ -1,14 +1,12 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
+import { fold } from '@/lib/text';
 import Combobox from '.';
 import type { ComboboxChoice, ComboboxOption, ComboboxTypeaheadProps } from './types';
 
 // A closed set chosen by typing, react-select's single select: only a choice is ever the value. Not re-exported from the folder's index, as the lint refuses an import cycle
 // (claude-docs/components/combobox.md, "The type-ahead box").
-
-// Not the ingredient form's `fold`: this matches what a person types against a label they read, so it folds in their locale.
-const fold = (text: string) => text.trim().toLocaleLowerCase();
 
 const choiceNamed = (choices: readonly ComboboxChoice[], text: string) =>
   choices.find((choice) => fold(choice.label) === fold(text));
@@ -47,7 +45,7 @@ export function ComboboxTypeahead({
         ? choices
         : match
           ? match(query)
-          : choices.filter((choice) => choice.label.toLocaleLowerCase().includes(query))
+          : choices.filter((choice) => fold(choice.label).includes(query))
       ).map((choice): ComboboxOption => ({
         value: choice.label,
         label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,

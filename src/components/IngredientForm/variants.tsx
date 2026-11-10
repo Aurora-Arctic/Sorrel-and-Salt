@@ -3,6 +3,7 @@
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import { type ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { fold as folded } from '@/lib/text';
 import {
   get,
   useController,
@@ -59,7 +60,6 @@ import {
   EMPTY_VARIANT,
   UNNAMED_FORM,
   VARIANT_SECTION_KEYS,
-  fold as folded,
   formRows,
   rankForForm,
   repeatedForm,
@@ -469,7 +469,6 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.description`}
               label="Description"
-              placeholder="What sets this form apart"
               action={<CopyFromIngredient at={at} field="description" />}
               multiline
               rows={7}
@@ -477,7 +476,7 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.safetyNotes`}
               label="Safety Notes"
-              placeholder="Add safety notes"
+              placeholder="Add notes"
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />
@@ -492,7 +491,7 @@ function VariantFieldset({
           >
             <MultiSelectField
               name={`${at}.elements`}
-              label="Element"
+              label="Elements"
               placeholder="Add an element"
               options={ELEMENT_OPTIONS}
               action={<CopyFromIngredient at={at} field="elements" />}

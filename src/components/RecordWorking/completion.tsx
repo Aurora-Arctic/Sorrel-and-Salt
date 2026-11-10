@@ -6,14 +6,14 @@ import { graphql } from '@/lib/graphql-document';
 import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { GENERIC_FAILURE, failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import JarLine from '../JarLine';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
-import { withUnit } from '../StockBadge/stock-words';
+import { formatQuantity } from '@/lib/quantity';
 import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
@@ -66,7 +66,8 @@ type Taken = Plan['deductions'][number];
 type Skipped = Plan['warnings'][number];
 type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
-const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
+const amount = (quantity: number, unit: string) =>
+  formatQuantity(Number(quantity.toFixed(3)), unit);
 const holds = (quantity: number, unit: string) => (quantity > 0 ? amount(quantity, unit) : 'none');
 
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
@@ -160,7 +161,7 @@ export default function WorkingCompletion({
       refresh();
       onCompleted?.();
     },
-    onError: (error) => setFailure(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
+    onError: (error) => setFailure(failureMessage(error)),
   });
 
   if (preview.isError) {

@@ -30,6 +30,7 @@ import {
 } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The query count, observed at the repository: every read the path reaches is
 // wrapped so the test counts calls without changing what they answer. A seat
@@ -57,13 +58,16 @@ const countOf = () =>
 
 let sql: ReturnType<typeof postgres>;
 
+useTestDatabase((client) => {
+  sql = client;
+});
+
 // Three of §6's seeded categories, picked by name so the expectation reads;
 // the ids are what the loader answers with.
 const CATEGORY_NAMES = ['Banishing', 'Protection', 'Cleansing'];
 let categoryIds: Map<string, string>;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string);
   const rows = await sql`
     select id, name from categories where name in ${sql(CATEGORY_NAMES)} and deleted_at is null
   `;

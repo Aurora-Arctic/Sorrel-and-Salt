@@ -71,6 +71,14 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
   });
 
+  it('passes the keyboard attributes to the typed box', () => {
+    render(<Harness autoCapitalize="none" enterKeyHint="next" spellCheck={false} />);
+
+    expect(box()).toHaveAttribute('autocapitalize', 'none');
+    expect(box()).toHaveAttribute('enterkeyhint', 'next');
+    expect(box()).toHaveAttribute('spellcheck', 'false');
+  });
+
   it('opens from its chevron, which only a source gives it', () => {
     const { rerender } = render(<Harness suggestions={TWO_BUCKETS} />);
 

@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -253,6 +254,15 @@ describe('ReferencesField', () => {
       press(edit);
       expect(edit).toHaveAttribute('aria-expanded', 'true');
       expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
+    });
+
+    it('turns spell-check off on the locator, since a page or a verse is not a word', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+
+      expect(locatorOf(HERBAL_SHORT)).toHaveAttribute('spellcheck', 'false');
     });
 
     it("gives each row a locator, labelled and read with its source's citation and the tip beside it", async () => {
@@ -709,7 +719,7 @@ describe('ReferencesField', () => {
       expect(
         within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
       ).toHaveAccessibleDescription(HERBAL.citation);
-      expect(box()).toHaveFocus();
+      expectSummaryLinksTo(box());
     });
   });
 });

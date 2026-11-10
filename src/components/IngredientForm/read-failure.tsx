@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import Notice from '../Notice';
 import type { ReadFailureProps } from './types';
 
@@ -8,7 +8,7 @@ import type { ReadFailureProps } from './types';
 export default function ReadFailure({ error, onRetry }: ReadFailureProps): ReactElement {
   return (
     <>
-      <Notice kind="error">{readGraphqlFailure(error).alert}</Notice>
+      <Notice kind="error">{failureMessage(error)}</Notice>
       <button type="button" className="btn btn--small" onClick={onRetry}>
         Try Again
       </button>

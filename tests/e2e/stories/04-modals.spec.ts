@@ -381,6 +381,15 @@ test(
   },
 );
 
+// A failed Save puts the focus on the form's error summary, which links to the field; following the link focuses it.
+async function expectSummaryLeadsTo(dialog: Locator, field: Locator) {
+  const summary = dialog.getByRole('group', { name: 'There Is a Problem' });
+  await expect(summary).toBeFocused();
+  const id = await field.getAttribute('id');
+  await summary.locator(`a[href="#${id}"]`).click();
+  await expect(field).toBeFocused();
+}
+
 test(
   'errors show beside their fields on leaving one and on submit',
   {
@@ -436,7 +445,7 @@ test(
       await expect(dialog).toHaveCount(0);
     });
 
-    await test.step('a submit with a field missing marks it and focuses it, saving nothing, until each is filled', async () => {
+    await test.step('a submit with a field missing marks it, and the error summary takes focus and links to it, saving nothing, until each is filled', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       const formal = dialog.getByRole('textbox', { name: 'Formal Name', exact: true });
@@ -452,14 +461,14 @@ test(
 
       await saveIngredient(dialog).click();
       await expectFieldError(name, validName);
-      await expect(name).toBeFocused();
+      await expectSummaryLeadsTo(dialog, name);
       await expect(dialog).toBeVisible();
 
       await name.fill('Dorvenmoss');
       await saveIngredient(dialog).click();
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       await expectFieldError(formal, validFormal);
-      await expect(formal).toBeFocused();
+      await expectSummaryLeadsTo(dialog, formal);
       await expect(dialog).toBeVisible();
       const described = await withSql(
         (sql) => sql`

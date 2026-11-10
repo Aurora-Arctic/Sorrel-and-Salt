@@ -367,6 +367,7 @@ export interface ReferenceFieldSpec {
   placeholder?: string;
   required?: boolean;
   type?: 'date' | 'url';
+  inputMode?: 'url';
 }
 
 export interface PanelChanges {

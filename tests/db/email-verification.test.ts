@@ -6,7 +6,6 @@ import { createEmailVerificationToken } from 'better-auth/api';
 import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
 import { seedDemoCoven } from '@/db/seed/demo-coven';
 import {
-  ORIGIN,
   cookieHeader,
   expectSignedIn,
   landingOf,
@@ -17,6 +16,8 @@ import type { Message, ProviderId } from '@/lib/types';
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
@@ -33,12 +34,8 @@ const STRANGER = `stranger${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

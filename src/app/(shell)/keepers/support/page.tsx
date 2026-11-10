@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
 import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
@@ -16,9 +17,7 @@ import { readAssignees, readOpened, readRequests, readViewCounts } from './reads
 import type { SupportRequestsCursor } from '@/components/SupportRequests/types';
 import type { SupportPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Support',
-};
+export const metadata: Metadata = pageTitle('Support');
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const session = await requireCuratorSession();

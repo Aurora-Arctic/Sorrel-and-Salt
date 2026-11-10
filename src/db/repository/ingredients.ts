@@ -27,7 +27,6 @@ import type {
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
-import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
@@ -42,6 +41,7 @@ import {
   findPageInScopeIncludingSoftDeleted,
   findPageInTiers,
 } from './finders';
+import { categoryArms as categoryArmsFor, pointsLive } from './category-arms';
 import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import {
   fold,
@@ -55,7 +55,7 @@ import {
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
 import { sourcingScoreExpression } from './sourcing-score';
-import { curated, inLiveGroup } from './vocabularies';
+import { curated } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 import type {
   SearchField,
@@ -835,26 +835,19 @@ export function hasNoForm(): SQL {
   return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
 }
 
-/**
- * The category filter: under `all` one correlated `EXISTS` per id, so an entry carries every one; under `any` a single `EXISTS` over the list.
- * The category may be filed on the entry or on a live form, and the variant's liveness is read here; the category itself must be live too, through `pointsLive` (claude-docs/db/compendium-read.md, "Filter arms").
- */
-function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
-  if (categoryIds.length === 0) return [];
-  const carries = (category: SQL | undefined) =>
-    existsIn(
-      ingredientCategories,
-      and(
-        eq(ingredientCategories.ingredientId, ingredients.id),
-        category,
-        pairIsLive(ingredientCategories),
-        pointsLive(categories, ingredientCategories.categoryId),
-      ),
-    );
-  return mode === 'any'
-    ? [carries(inArray(ingredientCategories.categoryId, [...categoryIds]))]
-    : categoryIds.map((categoryId) => carries(eq(ingredientCategories.categoryId, categoryId)));
-}
+/** The category filter. The category may be filed on the entry or on a live form, and the variant's liveness is read here (claude-docs/db/compendium-read.md, "Filter arms"). */
+const categoryArms = (categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] =>
+  categoryArmsFor(
+    {
+      table: ingredientCategories,
+      owner: ingredientCategories.ingredientId,
+      category: ingredientCategories.categoryId,
+      outer: ingredients.id,
+      also: pairIsLive(ingredientCategories),
+    },
+    categoryIds,
+    mode,
+  );
 
 /**
  * A category pair counts: it is the entry's own, or its variant is live. The table is hard-deleted, so a pair outlives the soft-deleted variant it belongs to.
@@ -965,17 +958,6 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
       pointsLive(deities, ingredientDeities.deityId),
     ),
   );
-}
-
-/**
- * The curated row a link's `column` names is live, and so is its group: what the facets' join to the same row reads, so a value the facets count at nothing lists nothing.
- * A curator cannot delete a row a compendium entry links, but a coven's own entry keeps its link through the delete.
- */
-export function pointsLive(
-  vocabulary: typeof categories | typeof deities,
-  column: AnyPgColumn,
-): SQL {
-  return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
 }
 
 /**

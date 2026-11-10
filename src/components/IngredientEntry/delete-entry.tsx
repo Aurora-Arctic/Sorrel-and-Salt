@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import ConfirmDialog from '../ConfirmDialog';
@@ -64,7 +64,7 @@ export function useDeleteEntry({
     },
     onError: (error) => {
       onSettle();
-      onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+      onRefused(failureMessage(error));
     },
   });
   return { run: () => remove.mutate(), pending: remove.isPending || remove.isSuccess };

@@ -619,6 +619,11 @@ export type CreateAdminInvitationMutationVariables = Exact<{
 
 export type CreateAdminInvitationMutation = { createAdminInvitation: { id: string } };
 
+export type PickerCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PickerCategoriesQuery = { categories: { edges: Array<{ node: { id: string, name: string, description: string, group: { id: string, name: string, colorDark: string, colorLight: string } } }> } };
+
 export type CompendiumFacetCountsQueryVariables = Exact<{
   query?: string | null | undefined;
   forms?: Array<string> | string | null | undefined;
@@ -1016,11 +1021,6 @@ export type SetCompendiumEntryShownMutationVariables = Exact<{
 
 
 export type SetCompendiumEntryShownMutation = { setCompendiumEntryShown: { id: string } };
-
-export type PickerCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PickerCategoriesQuery = { categories: { edges: Array<{ node: { id: string, name: string, description: string, group: { id: string, name: string, colorDark: string, colorLight: string } } }> } };
 
 export type CompendiumEntryUsersQueryVariables = Exact<{
   id: string | number;
@@ -1785,6 +1785,25 @@ export const CreateAdminInvitationDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>;
+export const PickerCategoriesDocument = new TypedDocumentString(`
+    query PickerCategories {
+  categories(first: 100) {
+    edges {
+      node {
+        id
+        name
+        description
+        group {
+          id
+          name
+          colorDark
+          colorLight
+        }
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<PickerCategoriesQuery, PickerCategoriesQueryVariables>;
 export const CompendiumFacetCountsDocument = new TypedDocumentString(`
     query CompendiumFacetCounts($query: String, $forms: [String!], $withoutReferences: Boolean, $withoutForms: Boolean, $elements: [IngredientElement!], $categoryIds: [ID!], $categoryMode: CategoryMode, $deityIds: [ID!], $zodiacSigns: [String!], $celestialBodies: [String!], $toxic: ToxicFilter, $reviewed: Boolean, $listing: CompendiumListing, $covenIds: [ID!], $covensNot: Boolean) {
   compendiumFacets(
@@ -2245,25 +2264,6 @@ export const SetCompendiumEntryShownDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<SetCompendiumEntryShownMutation, SetCompendiumEntryShownMutationVariables>;
-export const PickerCategoriesDocument = new TypedDocumentString(`
-    query PickerCategories {
-  categories(first: 100) {
-    edges {
-      node {
-        id
-        name
-        description
-        group {
-          id
-          name
-          colorDark
-          colorLight
-        }
-      }
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<PickerCategoriesQuery, PickerCategoriesQueryVariables>;
 export const CompendiumEntryUsersDocument = new TypedDocumentString(`
     query CompendiumEntryUsers($id: ID!) {
   compendiumEntryUsers(id: $id)

@@ -3,15 +3,13 @@
 
 // Two panes from a tablet up: the outline of guides, then the chosen one. Below it the outline gives way to the
 // Guide select (claude-docs/components/help-outline.md). Tokens only, before the section's design review.
-$-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
-
 .help-outline {
   display: grid;
   gap: space(5) space(7);
   align-items: start;
   margin-block-start: space(5);
 
-  @media (min-width: $-two-panes) {
+  @include above-tablet {
     grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
   }
 }
@@ -19,7 +17,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 // The left pane, drawn as the site's side menu draws its entries (PageNav): muted links, the current one in body ink
 // with the accent bar on the edge toward the pane.
 .help-outline__side {
-  @media (min-width: $-two-panes) {
+  @include above-tablet {
     position: sticky;
     top: calc(#{$shell-bar-height} + #{space(4)});
   }
@@ -30,7 +28,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
 
   display: none;
 
-  @media (min-width: $-two-panes) {
+  @include above-tablet {
     display: block;
   }
 
@@ -224,7 +222,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
     min-width: 0;
   }
 
-  @media (min-width: $-two-panes) {
+  @include above-tablet {
     display: none;
   }
 }
@@ -233,7 +231,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
   flex: none;
 }
 
-@media (max-width: $shell-tablet-width) {
+@include tablet-down {
   .help-outline__side.is-reordering .help-outline__nav {
     position: fixed;
     inset-inline: 0;
@@ -289,7 +287,7 @@ $-two-panes: calc(#{$shell-tablet-width} + 0.01rem);
     white-space: nowrap;
   }
 
-  @media (max-width: $shell-tablet-width) {
+  @include tablet-down {
     > * {
       max-inline-size: 100%;
       white-space: normal;

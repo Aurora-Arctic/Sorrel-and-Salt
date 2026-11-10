@@ -35,6 +35,11 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
   return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }
 
+/** The one sentence to show for a failed request: the first issue of a VALIDATION refusal, else the error's own message, else GENERIC_FAILURE. */
+export function failureMessage(error: unknown): string {
+  return readGraphqlIssues(error)[0].message;
+}
+
 /** Answers whether it set any error (claude-docs/modules.md, "Placing server issues on a form"). */
 export function placeServerIssues<Name extends string>(
   error: unknown,

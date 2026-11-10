@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import UserList from '../../../../../components/UserList';
 import { USER_MODAL_ORIGINS, userListHref } from '../../../../../components/UserList/href';
@@ -29,9 +30,7 @@ import { readOpenedUser } from './opened-user';
 import { userHeading } from './user-heading';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
-export const metadata: Metadata = {
-  title: 'Users',
-};
+export const metadata: Metadata = pageTitle('Users');
 
 // The page and GraphQL's `users` end at the same service, paged by the same helper (rules 1 and 8)
 // and counted for the pager as every admin list is; a cursor naming no row gives the first page

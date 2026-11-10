@@ -134,7 +134,7 @@
 }
 
 .admin-cards__status {
-  @media (min-width: $shell-tablet-width) {
+  @include width-from($shell-tablet-width) {
     flex: none;
     min-inline-size: 10rem;
   }

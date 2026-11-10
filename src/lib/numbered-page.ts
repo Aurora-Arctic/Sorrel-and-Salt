@@ -1,5 +1,5 @@
 import { InvalidCursor } from './errors';
-import { resolveNumberedPage } from './pagination';
+import { DEFAULT_PAGE_SIZE, resolveNumberedPage, resolvePage } from './pagination';
 import { readableCursor, single } from './search-params';
 import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } from './types';
 
@@ -24,6 +24,27 @@ export async function readNumberedPage<T, Edge extends object = {}>(
     if (error instanceof InvalidCursor && (after || before)) {
       return resolveNumberedPage({}, fetch, count, size);
     }
+    throw error;
+  }
+}
+
+/** A list with no "Page X of Y": the same fallback to the first page for a cursor this list will not cast. */
+export async function readCursorPage<T, Edge extends object = {}>(
+  { after, before }: { after?: string; before?: string },
+  fetch: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
+  size: number = DEFAULT_PAGE_SIZE,
+): Promise<Page<T, Edge>> {
+  const read = (cursors: { after?: string; before?: string }) =>
+    resolvePage(
+      cursors.after === undefined && cursors.before !== undefined
+        ? { last: size, before: cursors.before }
+        : { first: size, after: cursors.after },
+      fetch,
+    );
+  try {
+    return await read({ after, before });
+  } catch (error) {
+    if (error instanceof InvalidCursor && (after || before)) return read({});
     throw error;
   }
 }

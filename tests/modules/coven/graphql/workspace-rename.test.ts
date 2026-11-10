@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { A, B, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 // The transport's half of the rename: the service's answer, and its refusals by code. Who is refused, and why, is the
 // service's (tests/modules/coven/services/workspace-rename.test.ts); a signed-out caller is the scope sweep's.
@@ -21,19 +21,14 @@ const RENAME = /* GraphQL */ `
 
 type Renamed = { renameWorkspace: { id: string; name: string; slug: string } | null };
 
-async function insertCoven(name: string): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  await sql`
-    insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-    values (${row.id}, ${A.id}, 'owner', ${A.id}, ${A.id}), (${row.id}, ${B.id}, 'member', ${A.id}, ${A.id})`;
-  return row.id as string;
-}
+const MEMBERS = [
+  [A.id, 'owner'],
+  [B.id, 'member'],
+] as const;
 
 describe('the renameWorkspace mutation', () => {
   it("answers a steward with the coven's new name and address", async () => {
-    const id = await insertCoven('Fixture Wire Before');
+    const id = await insertWorkspace(sql, 'Fixture Wire Before', MEMBERS);
 
     const result = await run<Renamed>(asUser(A), RENAME, {
       workspaceId: id,
@@ -49,7 +44,7 @@ describe('the renameWorkspace mutation', () => {
   });
 
   it('answers a practitioner FORBIDDEN, renaming nothing', async () => {
-    const id = await insertCoven('Fixture Wire Refused');
+    const id = await insertWorkspace(sql, 'Fixture Wire Refused', MEMBERS);
 
     const result = await run<Renamed>(asUser(B), RENAME, {
       workspaceId: id,
@@ -62,7 +57,7 @@ describe('the renameWorkspace mutation', () => {
   });
 
   it('answers a blank name VALIDATION on `name`', async () => {
-    const id = await insertCoven('Fixture Wire Blank');
+    const id = await insertWorkspace(sql, 'Fixture Wire Blank', MEMBERS);
 
     const result = await run<Renamed>(asUser(A), RENAME, { workspaceId: id, name: '   ' });
 

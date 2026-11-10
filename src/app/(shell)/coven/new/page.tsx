@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { getMe } from '@/modules/identity';
 import CreateWorkspaceForm from '../../../../components/CreateWorkspaceForm';
 import ContextRow from '../../../../components/ContextRow';
@@ -9,9 +10,7 @@ import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
 import PageFrame from '@/components/PageFrame';
 
-export const metadata: Metadata = {
-  title: 'Create Coven',
-};
+export const metadata: Metadata = pageTitle('Create Coven');
 
 // The create-workspace page. It belongs to no one coven, so the coven guard does not run;
 // `isReservedCovenSlug` keeps `new` from being a slug. The right is read from the row, not the session,

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findCompendiumEntryBySlug, findCompendiumSlugRedirect, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
@@ -6,14 +6,15 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { A, E, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
+import { useTestDatabase } from '../../support/db/database';
 
 // The compendium's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the entry at a slug, and a slug an entry moved off, which redirects to it until the retirement's `expires_at`, midnight UTC of the retirement's date plus 180 days.
 // Every instant below is UTC; the columns are `timestamp` holding UTC.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

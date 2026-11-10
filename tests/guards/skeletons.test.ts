@@ -67,14 +67,29 @@ function skeletonHomes(file: string): string[] {
   return homes;
 }
 
+type Host = 'main' | 'coven' | 'admin' | 'help';
+const REGION = /<SectionBody\s+region="(coven|admin|help)"/;
+
+/** The region a layout's source mounts, directly or through a component of `src/components` it draws. */
+function regionIn(source: string): Host | null {
+  const own = REGION.exec(source);
+  if (own) return own[1] as Host;
+  for (const [, name] of source.matchAll(/import \w+ from '@\/components\/(\w+)'/g)) {
+    const component = join(REPO_ROOT, 'src/components', name!, 'index.tsx');
+    const drawn = existsSync(component) && REGION.exec(readFileSync(component, 'utf8'));
+    if (drawn) return drawn[1] as Host;
+  }
+  return null;
+}
+
 /** The host a page is drawn under: the region of the nearest layout above it that mounts a `SectionBody`, else `main`. */
-function hostOf(file: string): 'main' | 'coven' | 'admin' {
+function hostOf(file: string): Host {
   const segments = segmentsOf(file);
   for (let depth = segments.length; depth >= 1; depth -= 1) {
     const layout = join(APP, ...segments.slice(0, depth), 'layout.tsx');
     if (!existsSync(layout)) continue;
-    const region = /<SectionBody\s+region="(coven|admin)"/.exec(readFileSync(layout, 'utf8'));
-    if (region) return region[1] as 'coven' | 'admin';
+    const region = regionIn(readFileSync(layout, 'utf8'));
+    if (region) return region;
   }
   return 'main';
 }
@@ -134,10 +149,12 @@ describe('the skeleton registry', () => {
       .filter((file) => skeletons[patternOf(file) as keyof typeof skeletons].host !== hostOf(file))
       .map((file) => `${patternOf(file)}: ${hostOf(file)}`);
 
-    // Preconditions: the three hosts are each found where their layouts mount them.
+    // Preconditions: the hosts are each found where their layouts mount them.
     expect(hostOf('src/app/(shell)/coven/[slug]/ingredients/page.tsx')).toBe('coven');
     expect(hostOf('src/app/(shell)/keepers/(people)/users/page.tsx')).toBe('admin');
     expect(hostOf('src/app/(shell)/curator/compendium/page.tsx')).toBe('admin');
+    expect(hostOf('src/app/(public)/help/search/page.tsx')).toBe('help');
+    expect(hostOf('src/app/(shell)/help/staff/page.tsx')).toBe('main');
     expect(hostOf('src/app/(public)/compendium/page.tsx')).toBe('main');
     expect(hostOf('src/app/(shell)/coven/new/page.tsx')).toBe('main');
     expect(wrong).toEqual([]);

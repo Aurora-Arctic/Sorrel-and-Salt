@@ -202,6 +202,26 @@ describe('Not In', () => {
     );
   });
 
+  it('with no coven picked, leaves a paused coven out of the viewer’s covens, as the entry page does', async () => {
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${D.id}, 'viewer', ${A.id}, ${A.id})`;
+    // Why W's entry could be hidden: while no pause stands, W counts.
+    expect(ids(await listCompendiumHeldIn(asUser(D), notIn([]), {}, PAGE))).toEqual(
+      [free, removed].sort(),
+    );
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${D.id}, null, ${A.id}, ${A.id})`;
+    try {
+      expect(ids(await listCompendiumHeldIn(asUser(D), notIn([]), {}, PAGE))).toEqual(
+        [heldByW, free, removed].sort(),
+      );
+    } finally {
+      await sql`delete from workspace_member_pauses where user_id = ${D.id}`;
+    }
+  });
+
   it('reads the whole compendium for a viewer in no coven, or signed out', async () => {
     expect(ids(await listCompendiumHeldIn(asUser(E), notIn([]), {}, PAGE))).toEqual(all());
     expect(ids(await listCompendiumHeldIn(null, notIn([]), {}, PAGE))).toEqual(all());

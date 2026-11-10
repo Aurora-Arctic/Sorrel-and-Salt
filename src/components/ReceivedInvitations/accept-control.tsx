@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import type { AcceptControlProps } from './types';
@@ -47,7 +47,7 @@ const AcceptControl = ({
     } catch (error) {
       setSending(false);
       // No fields of its own, so the reader always answers with an alert.
-      feedback.report(readGraphqlFailure(error).alert);
+      feedback.report(failureMessage(error));
     }
   }
 

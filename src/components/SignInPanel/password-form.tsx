@@ -1,12 +1,15 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving, PendingLink } from '../../lib/navigation';
+import { TOO_MANY_ATTEMPTS, WRONG_CREDENTIALS, rateLimited } from '../../lib/auth-messages';
+import { newPasswordRefusal } from '../../lib/password-refusals';
+import { emailAddressProblem, emailFormat, validateEmailAddress } from '../../lib/email-address';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import ModeSwitch from './mode-switch';
@@ -17,17 +20,12 @@ import type { PasswordFormProps, SignInMode } from './types';
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
 // (claude-docs/components/sign-in-panel.md, "Contracts").
 
-export const WRONG_CREDENTIALS =
-  "That email address and password don't match an account. Please try again.";
 export const SIGN_UP_UNAVAILABLE =
   "We couldn't create your account just now. Please try again later.";
-export const TOO_MANY_ATTEMPTS = 'Too many attempts. Please wait a minute, then try again.';
 export const GENERIC_PASSWORD_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 export const GENERIC_SIGN_UP_ERROR = "We couldn't create your account. Please try again.";
 
 const FIELD_ERRORS: Record<string, { field: 'email' | 'password'; message: string }> = {
-  PASSWORD_TOO_SHORT: { field: 'password', message: 'Use at least 15 characters.' },
-  PASSWORD_TOO_LONG: { field: 'password', message: 'Use 128 characters or fewer.' },
   INVALID_EMAIL: { field: 'email', message: 'Enter an email address, such as name@example.com.' },
 };
 
@@ -46,10 +44,12 @@ interface Refusal {
 // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive
 // here.
 function refusal(mode: SignInMode, failure: Failure): Refusal {
+  const chosen = newPasswordRefusal(failure);
+  if (chosen) return { password: chosen };
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
   if (field) return { [field.field]: field.message };
   if (failure.code === 'PASSWORD_COMPROMISED') return { password: failure.message };
-  if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
+  if (rateLimited(failure)) return { alert: TOO_MANY_ATTEMPTS };
   if (mode === 'sign-in') {
     return { alert: failure.status === 401 ? WRONG_CREDENTIALS : GENERIC_PASSWORD_SIGN_IN_ERROR };
   }
@@ -76,8 +76,6 @@ const PasswordForm = ({
   onStart,
   onCodeStep,
 }: PasswordFormProps): ReactElement => {
-  const nameId = useId();
-  const emailId = useId();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
@@ -102,6 +100,11 @@ const PasswordForm = ({
     event.preventDefault();
     // A disabled submit stops a click, not Enter in a field.
     if (!ready) return;
+    const invalid = validateEmailAddress(email.trim());
+    if (invalid) {
+      setProblem({ email: invalid.message });
+      return;
+    }
     setPending(true);
     setProblem({});
     setSignedUp(undefined);
@@ -165,9 +168,6 @@ const PasswordForm = ({
     );
   }
 
-  const nameField = fieldDescription({ id: nameId });
-  const emailField = fieldDescription({ id: emailId, error: problem.email });
-
   return (
     <div className="sign-in-panel__password" ref={ref}>
       {problem.alert && (
@@ -183,33 +183,27 @@ const PasswordForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {signingUp && (
-          <FieldShell label="Name" required {...nameField}>
-            <input
-              id={nameField.controlId}
-              className="input"
-              type="text"
-              autoComplete="name"
-              placeholder="Add a name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              aria-required
-              {...nameField.aria}
-            />
-          </FieldShell>
-        )}
-        <FieldShell label="Email Address" required {...emailField}>
-          <input
-            id={emailField.controlId}
-            className="input"
-            type="email"
-            autoComplete={signingUp ? 'email' : 'username'}
-            placeholder="Add an email"
-            value={email}
-            onChange={(event) => onEmailChange(event.target.value)}
-            aria-required
-            {...emailField.aria}
+          <PlainTextField
+            label="Name"
+            required
+            autoComplete="name"
+            placeholder="Your name"
+            value={name}
+            onChange={setName}
           />
-        </FieldShell>
+        )}
+        <PlainTextField
+          label="Email Address"
+          required
+          type="email"
+          autoComplete={signingUp ? 'email' : 'username'}
+          placeholder="name@example.com"
+          format={emailFormat}
+          check={emailAddressProblem}
+          value={email}
+          onChange={onEmailChange}
+          error={problem.email}
+        />
         <PasswordField
           label="Password"
           purpose={signingUp ? 'new' : 'current'}

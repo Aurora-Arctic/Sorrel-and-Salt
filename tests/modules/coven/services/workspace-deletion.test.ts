@@ -4,27 +4,13 @@ import { Forbidden } from '@/lib/errors';
 import { assertMembership, deleteWorkspace, membershipsOf } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-type Role = 'owner' | 'member' | 'viewer';
-
-async function insertCoven(name: string, members: [string, Role][]): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
-
 describe('deleteWorkspace', () => {
   it('soft-deletes the workspace row, stamped from the session, and nothing else', async () => {
-    const covenId = await insertCoven('Fixture Deletion Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Deletion Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -41,7 +27,7 @@ describe('deleteWorkspace', () => {
   });
 
   it('refuses a member or a viewer, who do belong to the coven', async () => {
-    const covenId = await insertCoven('Fixture Deletion Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Deletion Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -58,7 +44,9 @@ describe('deleteWorkspace', () => {
   });
 
   it('refuses a stranger and an id that names no workspace, by direct id', async () => {
-    const covenId = await insertCoven('Fixture Deletion Stranger Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Deletion Stranger Coven', [
+      [A.id, 'owner'],
+    ]);
 
     await expect(deleteWorkspace(asUser(D), covenId)).rejects.toThrow(Forbidden);
     await expect(deleteWorkspace(asUser(A), 'not-an-id')).rejects.toThrow(Forbidden);
@@ -68,7 +56,7 @@ describe('deleteWorkspace', () => {
   });
 
   it('takes every member out at once, other owners included, leaving their rows live', async () => {
-    const covenId = await insertCoven('Fixture Deletion Access Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Deletion Access Coven', [
       [A.id, 'owner'],
       [D.id, 'owner'],
       [B.id, 'member'],
@@ -94,15 +82,17 @@ describe('deleteWorkspace', () => {
   });
 
   it('refuses a second delete of the same workspace', async () => {
-    const covenId = await insertCoven('Fixture Deletion Twice Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Deletion Twice Coven', [[A.id, 'owner']]);
     await deleteWorkspace(asUser(A), covenId);
 
     await expect(deleteWorkspace(asUser(A), covenId)).rejects.toThrow(Forbidden);
   });
   it('refuses the demo coven to an owner who holds the delete permission, and still deletes an ordinary one', async () => {
-    const demoId = await insertCoven('Fixture Demo Deletion Coven', [[A.id, 'owner']]);
+    const demoId = await insertWorkspace(sql, 'Fixture Demo Deletion Coven', [[A.id, 'owner']]);
     await sql`update workspaces set demo = true where id = ${demoId}`;
-    const ordinaryId = await insertCoven('Fixture Ordinary Deletion Coven', [[A.id, 'owner']]);
+    const ordinaryId = await insertWorkspace(sql, 'Fixture Ordinary Deletion Coven', [
+      [A.id, 'owner'],
+    ]);
     // Why the refusal is the demo rule's: A holds the delete permission in both.
     await expect(
       assertMembership(asUser(A), demoId, { workspace: ['delete'] }),

@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { HELP_AUDIENCE_LABELS } from '../../lib/help-audience';
 import { PendingLink } from '../../lib/navigation';
+import { NOUNS } from '../HelpArticleForm/rules';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import HelpShownSwitch from './shown-switch';
@@ -29,7 +30,7 @@ import './index.scss';
 // (claude-docs/components/help-outline.md). Render-only but for its islands: the filter, the bar, the sortable tables and the
 // shown switches.
 
-const KIND_LABELS = { faq: 'FAQ Entry', article: 'Article', guide: 'Guide', term: 'Term' } as const;
+const KIND_LABELS = NOUNS;
 
 /** The audience as a badge: green for Public, which every reader may read, muted for Staff and Keeper. */
 export const AudienceBadge = ({ audience }: Pick<HelpOutlineRow, 'audience'>): ReactNode => (

@@ -2,11 +2,12 @@
 
 import { type ReactElement, useId, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { GripIcon, LinkIcon } from './icons';
+import { LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
+import GripHandle from '../GripHandle';
 import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
-import type { ComboboxEntryProps, EntryHandleProps } from './types';
+import type { ComboboxEntryProps } from './types';
 
 // An entry a list holds, inside the control: its text and the x that takes it out, with the whole text in a tooltip when cut off or when it has a detail
 // (claude-docs/components/combobox.md, "An entry"; "A sortable list"; "A linked entry's summary").
@@ -16,35 +17,6 @@ const translateOf = (transform: { x: number; y: number } | null): string | undef
   transform
     ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
     : undefined;
-
-/** A sortable entry's handle: a real button, so it is in the tab order with its focus ring, holding the grip and the text. */
-function EntryHandle({
-  value,
-  sortable,
-  describedBy,
-  onFocus,
-  onBlur,
-  children,
-}: EntryHandleProps): ReactElement {
-  const { setActivatorNodeRef, listeners, attributes } = sortable;
-  const { role: _role, 'aria-describedby': instructions, ...rest } = attributes;
-  return (
-    <button
-      type="button"
-      ref={setActivatorNodeRef}
-      className="combobox__entry-handle"
-      {...rest}
-      {...listeners}
-      aria-label={`Move ${value}`}
-      aria-describedby={[describedBy, instructions].filter(Boolean).join(' ')}
-      onFocus={onFocus}
-      onBlur={onBlur}
-    >
-      <GripIcon />
-      {children}
-    </button>
-  );
-}
 
 export function ComboboxEntry({
   value,
@@ -151,15 +123,16 @@ export function ComboboxEntry({
             {textSpan}
           </button>
         ) : sortable ? (
-          <EntryHandle
-            value={value}
+          <GripHandle
             sortable={sortable}
+            name={value}
+            className="combobox__entry-handle"
             describedBy={describedBy}
             onFocus={show}
             onBlur={hide}
           >
             {textSpan}
-          </EntryHandle>
+          </GripHandle>
         ) : (
           textSpan
         )}

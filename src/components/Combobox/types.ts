@@ -64,6 +64,12 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   typedIcon?: ReactNode;
   icon?: ReactNode;
   placeholder?: string;
+  /** Turns the browser's spell-check off for a box whose words are names, not prose. */
+  spellCheck?: boolean;
+  /** `none` for a box whose words are not sentences; unset, the browser decides. */
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  /** The label on a phone keyboard's Enter key. */
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
   required?: boolean;
   qualifier?: ComboboxQualifier;
   listAnchor?: HTMLElement | null;
@@ -126,15 +132,6 @@ export interface FlowSlot {
   left: number;
   top: number;
   width: number;
-}
-
-export interface EntryHandleProps {
-  value: string;
-  sortable: ReturnType<typeof useSortable>;
-  describedBy?: string;
-  onFocus: () => void;
-  onBlur: () => void;
-  children: ReactNode;
 }
 
 export interface ComboboxSortableEntry extends Omit<ComboboxEntryProps, 'sortable'> {

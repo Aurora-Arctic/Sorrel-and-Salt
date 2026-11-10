@@ -6,6 +6,8 @@ import {
   chipContrast,
   contrastRatio,
   formatRatio,
+  hexColour,
+  hexMask,
   relativeLuminance,
 } from '@/lib/contrast';
 
@@ -65,5 +67,48 @@ describe('formatRatio', () => {
   // A refused ratio must never read as the floor it missed.
   it('cuts rather than rounds', () => {
     expect(formatRatio(4.4996)).toBe('4.49');
+  });
+});
+
+describe('hexColour', () => {
+  it('shows a hex as # and six lower-case digits, however it was typed', () => {
+    for (const typed of ['#4e8bc2', '4E8BC2', ' 4E8BC2', '#4E8BC2 ', '# 4e 8b c2', '\t#4e8bc2\n']) {
+      expect(hexColour(typed), typed).toBe('#4e8bc2');
+    }
+  });
+
+  it('expands three-digit shorthand by doubling each digit', () => {
+    expect(hexColour('abc')).toBe('#aabbcc');
+    expect(hexColour(' #ABC ')).toBe('#aabbcc');
+    expect(hexColour('#06c')).toBe('#0066cc');
+  });
+
+  it('leaves text it cannot read as a hex as it was typed', () => {
+    for (const typed of ['', 'blue', '#ab', '#4e8bc', '#4e8bc2ff', '#gggggg', '4e8b']) {
+      expect(hexColour(typed), typed).toBe(typed);
+    }
+  });
+});
+
+describe('hexMask', () => {
+  it('keeps one leading # and the digits after it, as typed', () => {
+    expect(hexMask.format('4E8BC2')).toBe('#4E8BC2');
+    expect(hexMask.format('#4e8bc2')).toBe('#4e8bc2');
+    expect(hexMask.format(' 4e8bc2')).toBe('#4e8bc2');
+    expect(hexMask.format('##4e8bc2')).toBe('#4e8bc2');
+  });
+  it('leaves the box empty when nothing but the # is left', () => {
+    expect(hexMask.format('')).toBe('');
+    expect(hexMask.format('#')).toBe('');
+    expect(hexMask.format(' # ')).toBe('');
+  });
+  it('keeps a character that is not a hex digit on screen, so the refusal can name it', () => {
+    expect(hexMask.format('4e8bg2')).toBe('#4e8bg2');
+  });
+  it('counts the digits typed, not the # it adds', () => {
+    expect(hexMask.isSignificant('4')).toBe(true);
+    expect(hexMask.isSignificant('g')).toBe(true);
+    expect(hexMask.isSignificant('#')).toBe(false);
+    expect(hexMask.isSignificant(' ')).toBe(false);
   });
 });

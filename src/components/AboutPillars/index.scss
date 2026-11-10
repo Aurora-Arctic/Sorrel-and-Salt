@@ -9,7 +9,7 @@
   grid-template-columns: 1fr;
   gap: space(5);
 
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  @include above-phone {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

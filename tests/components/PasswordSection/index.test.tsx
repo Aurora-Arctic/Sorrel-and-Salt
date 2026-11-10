@@ -6,7 +6,7 @@ import PasswordSection, {
   GENERIC_CHANGE_ERROR,
   WRONG_CURRENT_PASSWORD,
 } from '@/components/PasswordSection';
-import { TOO_MANY_ATTEMPTS } from '@/components/SignInPanel/password-form';
+import { TOO_MANY_ATTEMPTS } from '@/lib/auth-messages';
 import type { SetPasswordMutation, SetPasswordMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
@@ -63,6 +63,19 @@ describe('PasswordSection, changing a password', () => {
     expect(change()).toBeDisabled();
     await act(async () => type('New Password', CHOSEN));
     expect(change()).toBeEnabled();
+  });
+
+  it('names the current password to confirm with and the new one to set', () => {
+    renderSection(<PasswordSection hasPassword />);
+
+    expect(screen.getByLabelText(/^Current Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'current-password',
+    );
+    expect(screen.getByLabelText(/^New Password/, { selector: 'input' })).toHaveAttribute(
+      'autocomplete',
+      'new-password',
+    );
   });
 
   it('sends both passwords as typed, signing out every other session, and clears the fields', async () => {

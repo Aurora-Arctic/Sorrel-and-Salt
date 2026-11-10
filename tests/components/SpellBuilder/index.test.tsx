@@ -177,6 +177,17 @@ describe('SpellBuilder', () => {
     });
   });
 
+  it('tidies the spacing of a suggest-only field on blur and keeps other values as typed', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
+    type('Moon Phase', '  Dark   of the moon ');
+    fireEvent.blur(field('Moon Phase'));
+
+    expect(field('Moon Phase')).toHaveValue('Dark of the moon');
+    await waitFor(() => expect(calls).toHaveLength(1));
+  });
+
   it('sends every field it holds, trimmed, as the schema reads them', async () => {
     const calls = acceptCreate();
     renderBuilder();
@@ -306,7 +317,7 @@ describe('SpellBuilder', () => {
 
     await waitFor(() => expect(field('Title')).toHaveAttribute('aria-invalid', 'true'));
     expect(field('Title')).toHaveAccessibleDescription(
-      'Give the spell a title before marking it complete',
+      'Error: Give the spell a title before marking it complete',
     );
     expect(
       screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
@@ -535,7 +546,9 @@ describe('SpellBuilder', () => {
 
       await waitFor(() => expect(when()).toHaveAttribute('aria-expanded', 'true'));
       expect(when()).toHaveAccessibleDescription('Has an error to fix');
-      expect(field('Moon Phase')).toHaveAccessibleDescription('Name a moon phase');
+      expect(field('Moon Phase')).toHaveAccessibleDescription(
+        expect.stringContaining('Error: Name a moon phase'),
+      );
       expect(section('Purpose')).toHaveAttribute('aria-expanded', 'false');
       expect(section('Jar')).toHaveAttribute('aria-expanded', 'false');
     });

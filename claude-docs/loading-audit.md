@@ -131,7 +131,7 @@ Routes: `/coven`, `/coven/new`, `/coven/[slug]`, `members`, `invitations`, `/cov
 | Spell dialog, New Spell save  | Has                              | Lacks: `navigate` with no target                          | Has                                                                         | `src/components/…/spell-dialog.tsx:104`                                                           |
 | Duplicate and Delete Spell    | Has                              | Has (targets)                                             | Has                                                                         | `duplicate-spell:41`, `delete-spell:45`                                                           |
 | Spell builder: save, autosave | Has (`FormActions`, save status) | N/A                                                       | N/A                                                                         | `src/components/SpellBuilder/`, `SaveStatus`                                                      |
-| Spell builder category index  | N/A                              | Lacks: no skeleton seen while it loads (not read in full) | N/A                                                                         | `src/components/SpellBuilder/category-index.tsx`                                                  |
+| Spell builder category index  | N/A                              | Lacks: no skeleton seen while it loads (not read in full) | N/A                                                                         | `useCategoryIndex` in `src/components/CategoryPicker/`                                            |
 | Record Working, look dialog   | Has                              | Has (`Skeleton shape="form"`)                             | Lacks: the recipe link in the look dialog is a `PendingLink` with no target | `src/components/SpellCard/record-working.tsx:85`, `src/components/SpellRecipe/look-dialog.tsx:73` |
 | Delete a working              | Has (confirm dialog)             | N/A                                                       | Has                                                                         | `src/components/SpellWorkings/delete-working.tsx`                                                 |
 | Working completion list       | N/A                              | Has (`Skeleton shape="line"`)                             | N/A                                                                         | `src/components/RecordWorking/completion.tsx:202`                                                 |
@@ -162,7 +162,7 @@ These are mutations and queries that change data without leaving the page. They 
 
 - **Has a Control:** every file named in the Control sections above, including `FormActions` users, `ConfirmedAction` users and the spinner users.
 - **Lacks a Control:** `AdminCards/download-csv.tsx` (partial, label only).
-- **Not read in full, so not judged:** `CompendiumList/live-facets.ts`, `IngredientForm/{categories,delete-users,suggestions}`, `SpellBuilder/{autosave,category-index}`. The first three feed fields that already show a spinner or are background reads.
+- **Not read in full, so not judged:** `CompendiumList/live-facets.ts`, `IngredientForm/{categories,delete-users,suggestions}`, `SpellBuilder/autosave`, `useCategoryIndex` in `CategoryPicker/`. The first three feed fields that already show a spinner or are background reads.
 
 ## Part 2: Skeleton Layout Against the Real Page
 
@@ -279,7 +279,7 @@ Sizes are rough minutes for the change, tests included. Every fix uses only the 
 19. **Card CSV download has no spinner or `aria-busy` (`download-csv.tsx`).** Use `BusyButton` with `busyLabel="Preparing"`. 10 minutes. **Status:** Closed by `f165e95ab`.
 20. **Member pauses list shows nothing while loading (`coven-access-panel.tsx`).** Render `<Skeleton shape="line" count={2} />` while the query is pending. 10 minutes. **Status:** Closed by `f165e95ab`.
 21. **Signed-out request link shows text only (`SupportRequestByLink/index.tsx:139`).** Add `<Skeleton shape="detail" />` beside the status line, keeping `role="status"` on the text. 15 minutes. **Status:** Closed by `f165e95ab`.
-22. **Spell builder category index has no loading state (`SpellBuilder/category-index.tsx`).** Confirm, then add `<Skeleton shape="line" />`. 15 minutes. **Status:** Closed by `f165e95ab` (held category picks).
+22. **Spell builder category index has no loading state (`useCategoryIndex` in `CategoryPicker/`).** Confirm, then add `<Skeleton shape="line" />`. 15 minutes. **Status:** Closed by `f165e95ab` (held category picks).
 
 ### Totals
 

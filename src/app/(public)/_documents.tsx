@@ -1,12 +1,14 @@
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
-import { notFound } from 'next/navigation';
 import DocumentPage from '@/components/DocumentPage';
 import type { DocumentPageProps, DocumentPlaceholders } from '@/components/DocumentPage/types';
 import { NotFound } from '@/lib/errors';
+import { orNotFound } from '@/lib/or-not-found';
 import { helpViewerOffers } from '@/lib/help-viewer';
 import { UNVERSIONED_DOCUMENT_KEYS } from '@/lib/unversioned-documents';
-import { siteUrl } from '@/lib/site';
+import { publicPageMetadata } from '@/lib/page-metadata';
+import { SITE_NAME } from '@/lib/site';
 import { listDocumentVersions, readDocument, readDocumentVersion } from '@/modules/documents';
 import type { DocumentKey } from '@/modules/documents';
 
@@ -15,16 +17,6 @@ import type { DocumentKey } from '@/modules/documents';
 // keeper the editor address; the text is the same for every reader, and a version page reads no session.
 
 const HISTORY_LENGTH = 50;
-
-/** A missing document or version is a 404; any other failure is the page's to show. */
-async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
-  try {
-    return await read();
-  } catch (error) {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  }
-}
 
 export async function currentDocumentPage(
   key: DocumentKey,
@@ -86,10 +78,8 @@ export async function versionDocumentMetadata(
       readDocument(key),
     ]);
     const path = version.number === current.number ? `/${key}` : `/${key}/versions/${address}`;
-    return {
-      title: `${version.title}, Version ${version.number}`,
-      alternates: { canonical: siteUrl(path) },
-    };
+    const title = `${version.title}, Version ${version.number}`;
+    return publicPageMetadata(title, `${title}, as published on ${SITE_NAME}.`, path);
   } catch (error) {
     if (error instanceof NotFound) return {};
     throw error;

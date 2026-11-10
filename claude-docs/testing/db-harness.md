@@ -32,11 +32,12 @@ there is never run as a test.
   const catalogue = useTestDatabase((client) => (sql = client));
   ```
 
-  `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`),
-  `updated-at-trigger.test.ts`, `test-database-isolation.test.ts` and
-  `tests/db/seed/*` open their own client: the isolation test's subject _is_ the
-  connection, and the others read the clone as the template built it or truncate
-  everything before a seed run they assert.
+  Every `db` file opens its client through it, `useRawClient` and `useProbeTables` in
+  `tests/support/db/probe-tables.ts` included. Two files open a second client on
+  purpose and end it themselves: `connection-under-msw.test.ts`, whose subject is
+  the connection, and `user-role.test.ts`, whose seed needs a client Drizzle has
+  not rewired. `tests/guards/test-database-client.test.ts` fails on any other
+  hand-opened client, and on a client no `.end()` closes.
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups schema tests share: `byName`,
@@ -60,6 +61,13 @@ there is never run as a test.
   transaction, with a variant row for each of the fixture's forms (`insertVariant`
   writes one more). Why setup avoids `withAudit` is under
   ["Fixture factories"](fixture-factories.md). It has no test of its own.
+- **`insert-workspace.ts` — `insertWorkspace(sql, name, members, options)`** is the
+  setup inserter for a coven: its row, its seats and, with `address`, its current
+  address in `workspace_slugs`, all stamped from `options.author` (`A` by default).
+  `insertWorkspaceWithSlug` also returns the slug and `addMembers` adds seats to a
+  coven that exists. A test never writes its own coven insert;
+  `tests/guards/workspace-inserts.test.ts` refuses a local `insertCoven` or
+  `makeCoven`.
 - **`insert-spell.ts` — `insertSpell(sql, fixture, author)`** is the same for a
   spell: its row, layers and assigned categories. `author` is `created_by`,
   whom a private spell is readable by, and a layer's ingredient id is written as

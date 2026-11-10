@@ -39,6 +39,23 @@ export async function assertMembership(
 }
 
 /**
+ * `assertMembership` for a caller that answers a refusal as a value: the `Forbidden` (a paused seat's `AccessPaused` included) comes back
+ * instead of being thrown. Any other error still throws.
+ */
+export async function tryMembership(
+  session: Session,
+  workspaceId: string,
+  permission: WorkspacePermission,
+): Promise<Membership | Forbidden> {
+  try {
+    return await assertMembership(session, workspaceId, permission);
+  } catch (error) {
+    if (error instanceof Forbidden) return error;
+    throw error;
+  }
+}
+
+/**
  * The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
  *
  * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.

@@ -23,7 +23,7 @@ import { StockInput } from '../validation/stock';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { variantsOf } from './ingredient-children';
 import type { IngredientVariantRow, SaveStockValues, StockKey, StockValues } from '../types';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership, tryMembership } from '@/modules/coven';
 
 // Writes check `inventory: update` (the statement has no `create` or `delete`), reads `inventory: read`; the dimension is the unit's, never input (claude-docs/db/stock.md, "The stock service").
 
@@ -312,13 +312,8 @@ async function formsHeldBy(
   workspaceId: string,
   ingredientIds: string[],
 ): Promise<Map<string, IngredientVariantRow[] | NotFound> | Forbidden> {
-  let membership: Membership;
-  try {
-    membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  } catch (error) {
-    if (error instanceof Forbidden) return error;
-    throw error;
-  }
+  const membership = await tryMembership(session, workspaceId, { ingredient: ['read'] });
+  if (membership instanceof Forbidden) return membership;
   const rows = await variantsOf(
     session,
     ingredientIds.map((id) => ({ id, workspaceId: null })),
@@ -354,13 +349,8 @@ async function jarsOf(
   workspaceId: string,
   ingredientIds: string[],
 ): Promise<StockRow[] | Forbidden> {
-  let membership: Membership;
-  try {
-    membership = await assertMembership(session, workspaceId, { inventory: ['read'] });
-  } catch (error) {
-    if (error instanceof Forbidden) return error;
-    throw error;
-  }
+  const membership = await tryMembership(session, workspaceId, { inventory: ['read'] });
+  if (membership instanceof Forbidden) return membership;
   return findStockOfIngredients(membership, ingredientIds);
 }
 

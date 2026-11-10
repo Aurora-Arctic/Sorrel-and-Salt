@@ -36,7 +36,7 @@ export function RadioGroupField<T extends string>({
   return (
     <fieldset
       id={groupId}
-      className={`fieldset radio-group${layout === 'list' ? '' : ` radio-group--${layout}`}`}
+      className={`fieldset radio-group${layout === 'list' ? '' : ` radio-group--${layout}`}${cards && error ? ' radio-group--invalid' : ''}`}
       disabled={disabled}
       aria-describedby={
         [note && noteId, hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined
@@ -139,7 +139,12 @@ export function RadioGroupField<T extends string>({
                   value={option.value}
                   checked={value === option.value}
                   disabled={option.disabled}
-                  aria-describedby={option.description ? descriptionId : undefined}
+                  // A card names the error itself: `aria-invalid` is not allowed on a radio.
+                  aria-describedby={
+                    [option.description && descriptionId, cards && error && errorId]
+                      .filter(Boolean)
+                      .join(' ') || undefined
+                  }
                   onChange={() => onChange(option.value)}
                   {...pressFeedback}
                 />

@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import { requiredText } from '../../../lib/validation';
+import { limitedText } from '../../../lib/validation';
 
 export const NAME_MAX_LENGTH = 100;
 
 export const NameInput = z.object({
-  name: requiredText('Enter a name').max(NAME_MAX_LENGTH, {
-    error: `Keep the name to ${NAME_MAX_LENGTH} characters`,
-  }),
+  name: limitedText('Enter a name', NAME_MAX_LENGTH),
 });
 
 export type NameInput = z.output<typeof NameInput>;

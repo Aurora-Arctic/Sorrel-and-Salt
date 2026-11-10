@@ -57,7 +57,7 @@ client and `drizzle-orm`, `dataloader`, deep module imports, `slugify`,
 rejected in the PR that added it.
 
 Seven more were Vitest guards that read the source as text or as a syntax
-tree. They are rules in `lint/source-sweeps.js`, spread into the same
+tree, and six form-input rules (below) joined them. They are rules in `lint/source-sweeps.js`, spread into the same
 plugin, each proved by one passing and one failing case in
 `tests/lint/source-sweeps.test.ts` (oxlint's `RuleTester`, in the `unit`
 project) and by the whole tree passing `npm run lint`:
@@ -78,9 +78,20 @@ project) and by the whole tree passing `npm run lint`:
 - `e2e-chained-tests-serial` — a Playwright
   spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E — Playwright").
   `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.
+- The form-input rules, R1 to R13 in `.claude/rules/components.md`, "Form inputs":
+  `inputs-use-field` (a raw text `<input>` or `<textarea>` outside
+  `src/components/Field/` and the Combobox; its list holds the chip colour hex
+  box, Locator and the help search, and an `aria-hidden` honeypot passes),
+  `no-number-input` (`type="number"` outside a list of bounded whole numbers),
+  `schema-limits-are-named` (a bare number in a zod `.max()` or `.min()`, bar
+  `.min(0)` and `.min(1)`), `no-max-length-attribute` (`maxLength` outside
+  Field, bar the two-factor code inputs), `use-form-renders-error-summary` (a
+  `useForm` component without `FormErrorSummary`) and `placeholder-is-short` (a
+  placeholder over two words, not counting "a", "an" and "the").
 
-The two that keep an allowance list (`modal-focus-return-through-modal` and
-`long-form-guards-leaving`) also report a listed file that no longer needs its
+The ones that keep an allowance list (`modal-focus-return-through-modal`,
+`long-form-guards-leaving`, `inputs-use-field`, `no-number-input` and
+`use-form-renders-error-summary`) also report a listed file that no longer needs its
 place, so the list can only shrink.
 
 What stays in `tests/guards/` reads the

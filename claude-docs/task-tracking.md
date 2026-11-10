@@ -35,7 +35,7 @@ The rules for naming, labelling and keeping each object are in `.claude/rules/ta
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `number`, `title` | The org Project.                                                                                                                                  |
 | `slug`            | The directory under `claude-docs/tasks/` and `claude-docs/waves/` holding its entries and wave files: `v1`, `v1-next`.                            |
-| `prefix`          | The letter its task ids start with: `M` (with `MB` and `MW`), `N`. The tally and the branch patterns route an id by it.                           |
+| `prefix`          | The letter its task ids start with: `M` (with `MB`, `MC` and `MW`), `N`. The tally and the branch patterns route an id by it.                     |
 | `milestonePrefix` | What starts each of its milestone titles: nothing for Project 1, `N · ` for Project 4. A milestone belongs to the Project whose prefix starts it. |
 | `bugfixes`        | Its bug milestone: `Z. Bugfixes`, `N · Z. Bugfixes`.                                                                                              |
 | `default`         | The one Project a milestone, wave row or id belongs to when no other prefix matches.                                                              |

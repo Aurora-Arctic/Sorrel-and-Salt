@@ -21,7 +21,7 @@ Tests are `tests/components/Modal/`, `tests/support/discard-guard.tsx` (`expectG
 
 ### The fade
 
-**It fades over 150ms.** In is CSS (`@starting-style`). Out is the component's: Close, Escape and a click outside set `.is-closing`, and the owner is asked once, when the transition ends or at `FADE_LIMIT_MS` (400) if the end is never reported. Under reduced motion, or with no `matchMedia`, the owner is asked at once. Contents that close it themselves (a save, a delete) use `children(close)` so that fades too.
+**It fades over 150ms.** In is CSS (`@starting-style`). Out is the component's: Close, Escape and a click outside set `.is-closing`, and the owner is asked once, when the transition ends or at `FADE_LIMIT_MS` (400, in `src/lib/motion.ts`) if the end is never reported. Under reduced motion, or with no `matchMedia`, the owner is asked at once. Contents that close it themselves (a save, a delete) use `children(close)` so that fades too.
 
 ### A modal replaced by another
 

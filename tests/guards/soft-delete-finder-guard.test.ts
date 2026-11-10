@@ -31,7 +31,19 @@ const INTERNAL_HATCHES: Record<string, string[]> = {
   ],
 };
 
+/** The folder's arrow-function predicates that carry `notSoftDeleted(...)` for the finders sharing them, each with its file. */
+const FILTERING_PREDICATES: Record<string, string> = {
+  standingOnUser: `${REPOSITORY}/support.ts`,
+};
+
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
+
+function predicateBody(name: string): string {
+  const text = source(FILTERING_PREDICATES[name]);
+  const start = text.search(new RegExp(`^const ${name}\\s*=`, 'm'));
+  expect(start, `${name} is declared as a top-level const`).toBeGreaterThanOrEqual(0);
+  return text.slice(start, text.indexOf(';\n', start) + 1);
+}
 
 const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
@@ -117,7 +129,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin, or another the
       // index exports and this guard holds, never a hatch), `readableSpells` or `readableWorkings` (with the visibility rule),
       // `readableInTiers` (with the tier) or `curated` (with the group's).
-      const delegates = finders.some(
+      const delegates = [...finders, ...Object.keys(FILTERING_PREDICATES)].some(
         (sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body),
       );
       expect(
@@ -127,6 +139,14 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
           ),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
+    }
+  });
+
+  it('admits a shared predicate only while it applies the filter itself', () => {
+    for (const name of Object.keys(FILTERING_PREDICATES)) {
+      expect(predicateBody(name), `${name} applies notSoftDeleted(...)`).toMatch(
+        /notSoftDeleted\(/,
+      );
     }
   });
 

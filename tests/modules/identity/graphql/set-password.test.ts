@@ -1,9 +1,10 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { ValidationError } from '@/lib/errors';
 import type { PasswordSetter } from '@/modules/identity';
 import { B, asUser } from '../../../support/as-user';
 import { run as runOperation } from '../../../support/graphql/run';
+import { useTestDatabase } from '../../../support/db/database';
 
 const NEW = 'a fresh fixture passphrase';
 
@@ -15,16 +16,12 @@ const SET_PASSWORD = /* GraphQL */ `
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+useTestDatabase((client) => {
+  sql = client;
 });
 
 afterEach(async () => {
   await sql`update users set email_verified = true where id = ${B.id}`;
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 async function run(set: PasswordSetter['set'], fresh = true) {

@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { trimEnds } from '@/lib/formats';
 import { RowId, optionalText, requiredText } from '@/lib/validation';
+import { helpArticleKind, helpAudience } from '../schema/help-articles';
 
-const Kind = z.enum(['faq', 'article', 'guide', 'term']);
-const Audience = z.enum(['public', 'staff', 'keeper']);
+const Kind = z.enum(helpArticleKind.enumValues);
+const Audience = z.enum(helpAudience.enumValues);
 const Position = z
   .number()
   .int('Give the position as a whole number')
@@ -17,9 +19,9 @@ const ChildIds = z
 export const HelpArticleInput = z.object({
   kind: Kind,
   title: requiredText('Give the article a title'),
-  body: requiredText('Give the article a body'),
+  body: requiredText('Give the article a body', trimEnds),
   audience: Audience.nullish(),
-  summary: optionalText(),
+  summary: optionalText(trimEnds),
   searchTerms: optionalText(),
   position: Position,
   parentId: RowId.nullish(),
@@ -30,9 +32,9 @@ export const HelpArticleInput = z.object({
 export const HelpArticlePatch = z.object({
   kind: Kind.nullish(),
   title: requiredText('Give the article a title').nullish(),
-  body: requiredText('Give the article a body').nullish(),
+  body: requiredText('Give the article a body', trimEnds).nullish(),
   audience: Audience.nullish(),
-  summary: optionalText(),
+  summary: optionalText(trimEnds),
   searchTerms: optionalText(),
   position: Position,
   parentId: RowId.nullish(),

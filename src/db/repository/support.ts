@@ -24,7 +24,7 @@ import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-send
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
-import { noEndOrAhead, notSoftDeleted } from './predicates';
+import { newestFirst, noEndOrAhead, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
@@ -101,7 +101,7 @@ const REQUEST_ORDER: readonly SortPart[] = [
     expression: sql`case when ${supportRequests.status} = 'open' then 0 else 1 end`,
     type: 'integer',
   },
-  { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
+  newestFirst(supportRequests.createdAt),
 ];
 
 // The sender's list: still open (open, waiting on the sender) ahead of done (resolved, closed), then newest first.
@@ -110,7 +110,7 @@ const OWN_ORDER: readonly SortPart[] = [
     expression: sql`case when ${supportRequests.status} in ('open', 'waiting_on_sender') then 0 else 1 end`,
     type: 'integer',
   },
-  { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
+  newestFirst(supportRequests.createdAt),
 ];
 
 // The queue views: the oldest sender activity first, which a request with none dates from its sending.
@@ -308,7 +308,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
       eq(supportRequests.viewTokenHash, hash),
       sql`${supportRequests.viewTokenExpiresAt} > now()`,
       isNotNull(supportRequests.senderEmail),
-      ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+      notAnonymised,
     ),
   ).then(oneAsOfNow);
 }
@@ -356,6 +356,10 @@ export const timeoutStands = and(
   noEndOrAhead(supportTimeouts.until),
 ) as SQL;
 
+// The rows that stand on a sender; the send lock reads them inside its own transaction by the same predicate.
+const standingOnUser = (userId: string): SQL =>
+  and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands) as SQL;
+
 /**
  * The end of the time-out standing on the sender, latest first, `until` null when one has no end date; `undefined` when none
  * stands.
@@ -363,10 +367,7 @@ export const timeoutStands = and(
 export async function findStandingSupportTimeout(
   userId: string,
 ): Promise<StandingTimeout | undefined> {
-  const rows = await selectFrom(
-    supportTimeouts,
-    and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands),
-  );
+  const rows = await selectFrom(supportTimeouts, standingOnUser(userId));
   return latestEnd(rows);
 }
 
@@ -476,21 +477,28 @@ function closingNoticeDue(dueBy: Date, lapsedBy: Date): SQL | undefined {
   );
 }
 
+// A request the System account owns has been anonymised.
+const notAnonymised = ne(supportRequests.createdBy, SYSTEM_ACTOR_ID);
+
+/** Resolved at or before `cutoff`: due to close. The finder and the closing writer both read it. */
+const dueToClose = (cutoff: Date): SQL =>
+  and(eq(supportRequests.status, 'resolved'), lte(supportRequests.resolvedAt, cutoff)) as SQL;
+
+/** Closed at or before `cutoff` and not yet anonymised: due to anonymise. The finder and the anonymising writer both read it. */
+const dueToAnonymise = (cutoff: Date): SQL =>
+  and(
+    eq(supportRequests.status, 'closed'),
+    lte(supportRequests.closedAt, cutoff),
+    notAnonymised,
+  ) as SQL;
+
 /** A page of ids of resolved requests resolved at or before `cutoff`, so due to close. In id order after `after`, at most `limit`. */
 export function findSupportRequestsDueToClose(
   cutoff: Date,
   after: string | null,
   limit: number,
 ): Promise<string[]> {
-  return retentionPage(
-    and(
-      notSoftDeleted(supportRequests),
-      eq(supportRequests.status, 'resolved'),
-      lte(supportRequests.resolvedAt, cutoff),
-    ),
-    after,
-    limit,
-  );
+  return retentionPage(and(notSoftDeleted(supportRequests), dueToClose(cutoff)), after, limit);
 }
 
 /**
@@ -502,16 +510,7 @@ export function findSupportRequestsDueToAnonymise(
   after: string | null,
   limit: number,
 ): Promise<string[]> {
-  return retentionPage(
-    and(
-      notSoftDeleted(supportRequests),
-      eq(supportRequests.status, 'closed'),
-      lte(supportRequests.closedAt, cutoff),
-      ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
-    ),
-    after,
-    limit,
-  );
+  return retentionPage(and(notSoftDeleted(supportRequests), dueToAnonymise(cutoff)), after, limit);
 }
 
 export function findSupportTimeoutById(id: string) {
@@ -755,11 +754,7 @@ export function supportWrites({
           status: 'closed',
           closedAt: sql`${supportRequests.resolvedAt} + make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS})`,
         },
-        and(
-          inArray(supportRequests.id, [...ids]),
-          eq(supportRequests.status, 'resolved'),
-          lte(supportRequests.resolvedAt, cutoff),
-        ),
+        and(inArray(supportRequests.id, [...ids]), dueToClose(cutoff)),
       ),
     markClosingNoticeSent: (id, sentAt) =>
       update(
@@ -805,9 +800,7 @@ export function supportWrites({
           and(
             notSoftDeleted(supportRequests),
             inArray(supportRequests.id, [...ids]),
-            eq(supportRequests.status, 'closed'),
-            lte(supportRequests.closedAt, cutoff),
-            ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+            dueToAnonymise(cutoff),
           ),
         )
         .returning();
@@ -847,14 +840,7 @@ export function supportWrites({
       const timeouts = await tx
         .select({ until: supportTimeouts.until })
         .from(supportTimeouts)
-        .where(
-          and(
-            notSoftDeleted(supportTimeouts),
-            eq(supportTimeouts.userId, userId),
-            isNull(supportTimeouts.liftedAt),
-            noEndOrAhead(supportTimeouts.until),
-          ),
-        );
+        .where(standingOnUser(userId));
       return { recent: recent.length, timedOut: latestEnd(timeouts) };
     },
   };

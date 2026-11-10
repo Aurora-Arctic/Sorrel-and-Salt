@@ -66,7 +66,7 @@ describe('ChoiceChip as a form field', () => {
 
   it('shows an error, describes the group with it and marks the choices invalid', () => {
     renderChip({ error: 'Too wide for its guide.' });
-    expect(group()).toHaveAccessibleDescription('Too wide for its guide.');
+    expect(group()).toHaveAccessibleDescription('Error: Too wide for its guide.');
     expect(group()).toHaveAttribute('aria-invalid', 'true');
     for (const name of ['Wide', 'Middle', 'Narrow']) {
       expect(radio(name)).toHaveAttribute('aria-invalid', 'true');
@@ -75,13 +75,13 @@ describe('ChoiceChip as a form field', () => {
 
   it('describes the group with the note and the error together', () => {
     renderChip({ note: 'Who reaches it.', error: 'Too wide for its guide.' });
-    expect(group()).toHaveAccessibleDescription('Who reaches it. Too wide for its guide.');
+    expect(group()).toHaveAccessibleDescription('Who reaches it. Error: Too wide for its guide.');
   });
 
   it('keeps the note and the error on a held chip, which offers no choice', () => {
     renderChip({ disabled: true, note: 'Who reaches it.', error: 'Too wide for its guide.' });
     expect(within(group()).queryAllByRole('radio')).toHaveLength(0);
-    expect(group()).toHaveAccessibleDescription('Who reaches it. Too wide for its guide.');
+    expect(group()).toHaveAccessibleDescription('Who reaches it. Error: Too wide for its guide.');
     expect(group()).toHaveAttribute('aria-invalid', 'true');
   });
 });

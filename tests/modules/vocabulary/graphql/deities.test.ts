@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { createLoaders } from '@/graphql/loaders';
 import { deitySlug, slugify } from '@/lib/slugify';
@@ -7,16 +7,17 @@ import { insertDeityLink, insertIngredient } from '../../../support/db/insert-in
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { DeityNode, FilteredDeities } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // `deities` and `deityTraditions` over the wire, readable signed out, and the six admin writes: the transport's half (claude-docs/testing/layer-ownership.md).
 // That is a filtered page and its count, each deity's tradition, `moveTo` reaching the delete, the loaders cleared by a write, and one refusal per error code per write.
 // Roles and the services' rules are services/deities.test.ts's and services/deity-traditions.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+
+useTestDatabase((client) => {
+  sql = client;
 });
-afterAll(() => sql.end());
 
 let greek: string;
 beforeAll(async () => {

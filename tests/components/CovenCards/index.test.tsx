@@ -265,19 +265,12 @@ describe('CovenCards', () => {
   const emptyState = () => screen.queryByRole('status', { name: 'No Ingredients' });
   const noMatchState = () => screen.queryByRole('status', { name: 'No Matches' });
 
-  it('offers the first add for an empty cupboard, opening the shell dialog by the address', () => {
-    window.history.replaceState(null, '', '/coven/fixture-coven/ingredients');
+  it('draws an empty cupboard as its own status, with no add of its own', () => {
     render(<Cards {...props(empty)} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
     expect(noMatchState()).toBeNull();
-    const state = emptyState();
-    expect(state).not.toBeNull();
-    fireEvent.click(within(state!).getByRole('button', { name: 'Add Ingredient' }));
-    expect(new URLSearchParams(window.location.search).get('new')).toBe(
-      'ingredient-coven-fixture-coven',
-    );
-    // The add is a button writing the address, never a link to another page.
-    expect(within(state!).queryByRole('link', { name: 'Add Ingredient' })).toBeNull();
+    // The page header's action is the one way to add; a writer's empty cupboard draws no button.
+    expect(within(emptyState()!).queryByRole('button')).toBeNull();
   });
 
   it('links the empty cupboard to the Ingredients help article', () => {

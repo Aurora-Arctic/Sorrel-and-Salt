@@ -1,6 +1,7 @@
 import type { AuthInstance } from './types';
-import { ORIGIN, cookieHeader } from './oauth';
+import { cookieHeader } from './oauth';
 import { assert, attest, type SoftKey } from './passkey-authenticator';
+import { ORIGIN } from './constants';
 
 const join = (...cookies: string[]) => cookies.filter(Boolean).join('; ');
 

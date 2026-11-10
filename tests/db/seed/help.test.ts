@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
@@ -7,6 +7,7 @@ import type { SeedHelpArticle } from '@/db/seed/types';
 import { slugify } from '@/lib/slugify';
 import { E } from '../../support/as-user';
 import { insertHelpArticle } from '../../support/db/insert-help-article';
+import { useTestDatabase } from '../../support/db/database';
 
 // What running the help seed writes: each entry as a row keyed on its `seed_key`, its slug derived from its title, a sub page linked
 // to its parent by the parent's key. A re-run restates a row no person has touched and leaves one a keeper edited or deleted as
@@ -14,15 +15,15 @@ import { insertHelpArticle } from '../../support/db/insert-help-article';
 // rows the shipped list holds is help-list.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

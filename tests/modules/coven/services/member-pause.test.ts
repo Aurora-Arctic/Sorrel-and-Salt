@@ -12,30 +12,12 @@ import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier } from '../../../support/email-verification';
+import { insertWorkspace } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-type Role = 'owner' | 'member' | 'viewer';
-
 const LATER = new Date('2099-01-01T00:00:00Z');
-
-async function insertCoven(
-  name: string,
-  members: [string, Role][],
-  { demo = false } = {},
-): Promise<string> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), demo, created_by: A.id, updated_by: A.id })}
-    returning id`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return row.id as string;
-}
 
 const pausesOf = (workspaceId: string, userId: string) => sql`
   select until, note, lifted_at, lifted_by, created_by, updated_by from workspace_member_pauses
@@ -58,7 +40,7 @@ async function issuePaths(promise: Promise<unknown>): Promise<unknown> {
 
 describe('pauseMemberAccess', () => {
   it("pauses a member until a time, stamped with the owner's id, and the member keeps the seat", async () => {
-    const covenId = await insertCoven('Fixture Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -95,7 +77,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('pauses with no end when no time is given, and keeps no blank note', async () => {
-    const covenId = await insertCoven('Fixture Open Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Open Pause Coven', [
       [A.id, 'owner'],
       [C.id, 'viewer'],
     ]);
@@ -117,7 +99,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('refuses a member and a viewer of the coven, who do belong to it, and writes nothing', async () => {
-    const covenId = await insertCoven('Fixture Pause Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Pause Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -139,11 +121,11 @@ describe('pauseMemberAccess', () => {
   });
 
   it("refuses an owner of another coven, by this coven's id", async () => {
-    const covenId = await insertCoven('Fixture Paused Elsewhere Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Paused Elsewhere Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    const homeId = await insertCoven('Fixture Pausing Home Coven', [
+    const homeId = await insertWorkspace(sql, 'Fixture Pausing Home Coven', [
       [D.id, 'owner'],
       [C.id, 'member'],
     ]);
@@ -158,7 +140,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('refuses a site keeper, who holds no seat in the coven', async () => {
-    const covenId = await insertCoven('Fixture Admin Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Admin Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -172,7 +154,8 @@ describe('pauseMemberAccess', () => {
   });
 
   it('lets a site keeper pause in the demo coven only from an owner seat there', async () => {
-    const demoId = await insertCoven(
+    const demoId = await insertWorkspace(
+      sql,
       'Fixture Demo Pause Coven',
       [
         [A.id, 'owner'],
@@ -199,7 +182,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('refuses to pause an owner, saying why, and writes nothing', async () => {
-    const covenId = await insertCoven('Fixture Owner Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Owner Pause Coven', [
       [A.id, 'owner'],
       [D.id, 'owner'],
     ]);
@@ -227,7 +210,7 @@ describe('pauseMemberAccess', () => {
   ])(
     'refuses %s, which is not a person, even holding a seat, saying why',
     async (label, accountId) => {
-      const covenId = await insertCoven(`Fixture Pause Stand-In Coven for ${label}`, [
+      const covenId = await insertWorkspace(sql, `Fixture Pause Stand-In Coven for ${label}`, [
         [A.id, 'owner'],
         [accountId, 'member'],
         [B.id, 'member'],
@@ -255,7 +238,7 @@ describe('pauseMemberAccess', () => {
   );
 
   it('refuses a person who is not a member of the coven, and an id that names no one', async () => {
-    const covenId = await insertCoven('Fixture Stranger Pause Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Stranger Pause Coven', [[A.id, 'owner']]);
 
     const stranger = new Forbidden('That person is not a member of this coven');
     await expect(
@@ -269,7 +252,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('refuses a second pause while one stands, and writes nothing', async () => {
-    const covenId = await insertCoven('Fixture Double Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Double Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -290,7 +273,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('sets a new pause once the last has run out, closing the old row', async () => {
-    const covenId = await insertCoven('Fixture Run Out Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Run Out Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -311,7 +294,7 @@ describe('pauseMemberAccess', () => {
   });
 
   it('refuses a time that is not in the future, and a note over 500 characters', async () => {
-    const covenId = await insertCoven('Fixture Invalid Pause Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Invalid Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -351,7 +334,7 @@ describe('pauseMemberAccess', () => {
     ).rejects.toMatchObject({ message: 'Choose a time in the future' });
     await expect(
       pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501), noPauseNotifier),
-    ).rejects.toMatchObject({ message: 'Keep the note to 500 characters' });
+    ).rejects.toMatchObject({ message: 'Keep this to 500 characters or fewer' });
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
 
     await expect(
@@ -362,7 +345,7 @@ describe('pauseMemberAccess', () => {
 
 describe('liftMemberAccessPause', () => {
   it("lifts the standing pause, stamped with the owner's id, and the member is admitted again", async () => {
-    const covenId = await insertCoven('Fixture Lift Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Lift Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -381,7 +364,7 @@ describe('liftMemberAccessPause', () => {
   });
 
   it('answers NotFound when no pause stands: none set, lifted already, or run out', async () => {
-    const covenId = await insertCoven('Fixture Lift Nothing Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Lift Nothing Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -399,7 +382,7 @@ describe('liftMemberAccessPause', () => {
   });
 
   it('refuses a person who is not a member of the coven, rather than answering NotFound', async () => {
-    const covenId = await insertCoven('Fixture Lift Stranger Coven', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Lift Stranger Coven', [[A.id, 'owner']]);
 
     await expect(liftMemberAccessPause(asUser(A), covenId, D.id)).rejects.toThrow(
       'That person is not a member of this coven',
@@ -408,12 +391,12 @@ describe('liftMemberAccessPause', () => {
   });
 
   it('refuses a member, a viewer, an owner of another coven and a site keeper, and the pause stands', async () => {
-    const covenId = await insertCoven('Fixture Lift Refusal Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Lift Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
     ]);
-    const homeId = await insertCoven('Fixture Lift Home Coven', [[D.id, 'owner']]);
+    const homeId = await insertWorkspace(sql, 'Fixture Lift Home Coven', [[D.id, 'owner']]);
     await pauseMemberAccess(asUser(A), covenId, C.id, null, null, noPauseNotifier);
     // Why each could have succeeded: B is admitted to the coven, D holds the permission in D's own, and E is a site keeper.
     await expect(
@@ -436,7 +419,7 @@ describe('liftMemberAccessPause', () => {
 
 describe('standingMemberPauses', () => {
   it('answers the pause standing on each asked member, and none for a lifted, run-out or unasked one', async () => {
-    const covenId = await insertCoven('Fixture Standing Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Standing Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -457,11 +440,11 @@ describe('standingMemberPauses', () => {
   });
 
   it("reads only the proof's coven: a pause in another coven is not answered", async () => {
-    const covenId = await insertCoven('Fixture Standing Here', [
+    const covenId = await insertWorkspace(sql, 'Fixture Standing Here', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    const otherId = await insertCoven('Fixture Standing There', [
+    const otherId = await insertWorkspace(sql, 'Fixture Standing There', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -472,7 +455,7 @@ describe('standingMemberPauses', () => {
   });
 
   it('refuses a member and a viewer, who hold no member: pause', async () => {
-    const covenId = await insertCoven('Fixture Standing Refused', [
+    const covenId = await insertWorkspace(sql, 'Fixture Standing Refused', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -489,7 +472,7 @@ describe('standingMemberPauses', () => {
 
 describe('listMemberPauses', () => {
   it("answers one member's pauses, newest first, lifted and standing alike, and no other member's", async () => {
-    const covenId = await insertCoven('Fixture History Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture History Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
@@ -507,12 +490,12 @@ describe('listMemberPauses', () => {
   });
 
   it('refuses a member, a viewer and an owner of another coven by direct id', async () => {
-    const covenId = await insertCoven('Fixture History Refused', [
+    const covenId = await insertWorkspace(sql, 'Fixture History Refused', [
       [A.id, 'owner'],
       [B.id, 'member'],
       [C.id, 'viewer'],
     ]);
-    const otherId = await insertCoven('Fixture History Elsewhere', [[D.id, 'owner']]);
+    const otherId = await insertWorkspace(sql, 'Fixture History Elsewhere', [[D.id, 'owner']]);
     await pauseMemberAccess(asUser(A), covenId, C.id, LATER, null, noPauseNotifier);
     const page = { limit: 25, inverted: false };
     // Why each refusal is the guard's: the owner reads the pause, and D is an owner, of another coven.
@@ -540,7 +523,7 @@ describe('pausedCovenBySlug', () => {
   }
 
   it("names the coven and the end of the pause standing on the caller's seat", async () => {
-    const covenId = await insertCoven('Fixture Paused Page Coven', [
+    const covenId = await insertWorkspace(sql, 'Fixture Paused Page Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
@@ -560,7 +543,7 @@ describe('pausedCovenBySlug', () => {
   });
 
   it('refuses a non-member and an unknown slug alike with a bare Forbidden', async () => {
-    const covenId = await insertCoven('Fixture Paused Page Stranger', [[A.id, 'owner']]);
+    const covenId = await insertWorkspace(sql, 'Fixture Paused Page Stranger', [[A.id, 'owner']]);
     const slug = await slugOf(covenId);
     await expect(pausedCovenBySlug(asUser(A), slug)).resolves.toBeNull();
     await expect(pausedCovenBySlug(asUser(D), slug)).rejects.toEqual(new Forbidden());

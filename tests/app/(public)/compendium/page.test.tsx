@@ -34,6 +34,13 @@ vi.mock('@/app/compendium-reads', () => ({
   readCompendiumHeldIn,
   readFacetsHeldIn,
   readCompendiumDetails,
+  // The real read composes the two module reads mocked below; the page only delegates to it.
+  readEntryReview: async (curator: unknown, id: string) => {
+    if (!curator) return undefined;
+    const review = await readCompendiumReview(curator, id);
+    const row = await getIngredient(curator, id);
+    return { reviewedAt: review?.reviewedAt.toISOString() ?? null, shown: row.shown };
+  },
   readFormIcons: async () => new Map(),
   readDeities: async () => [],
   readCategories: async () => [],

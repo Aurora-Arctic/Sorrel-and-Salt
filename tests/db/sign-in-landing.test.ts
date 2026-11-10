@@ -14,6 +14,7 @@ import { slugify } from '@/lib/slugify';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // Where the callback lands a sign-in: a return path wins; otherwise a keeper goes to /keepers, a curator to /curator, a coven member into the first coven the switcher lists, anyone else to /coven;
 // an unverified account lands on the email page first. Driven through Better Auth's real endpoints (claude-docs/auth/route-protection.md, "Route protection").
@@ -32,12 +33,8 @@ const COVEN_PREFIX = 'Fixture Landing ';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

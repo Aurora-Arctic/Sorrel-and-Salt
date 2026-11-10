@@ -1,11 +1,12 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
+import { WRONG_CODE } from '../../lib/auth-messages';
 import { signInPath } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
+import { PlainTextField, SwitchField } from '../Field';
 import Notice from '../Notice';
 import type { TwoFactorStepProps } from './types';
 
@@ -13,7 +14,6 @@ import type { TwoFactorStepProps } from './types';
 // backup code. The right password has already been checked; this step's answer is what signs in
 // (claude-docs/components/sign-in-panel.md, "Contracts").
 
-export const WRONG_CODE = "That code isn't right. Please try again.";
 export const CODE_LOCKED =
   'Too many wrong codes. Your account is locked for 15 minutes; please try again after that.';
 export const CHALLENGE_EXPIRED =
@@ -43,7 +43,6 @@ function refusal(failure: Failure): Refusal | 'restart' {
 }
 
 const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement => {
-  const codeId = useId();
   const [method, setMethod] = useState<Method>('app');
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
@@ -80,8 +79,6 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
     window.location.assign(signInPath(next));
   };
 
-  const codeField = fieldDescription({ id: codeId, error: problem.code });
-
   return (
     <div className="sign-in-panel__password">
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
@@ -92,30 +89,22 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
       </p>
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
-        <FieldShell
+        <PlainTextField
+          // A new input for each method, so the browser's one-time-code autofill is offered only for the app's.
+          key={method}
           label={method === 'app' ? 'Code From Your App' : 'Backup Code'}
           required
-          {...codeField}
-        >
-          <input
-            // A new input for each method, so the browser's one-time-code autofill is offered only for the app's.
-            key={method}
-            placeholder="Add a code"
-            id={codeField.controlId}
-            className="input"
-            type="text"
-            inputMode={method === 'app' ? 'numeric' : 'text'}
-            autoComplete={method === 'app' ? 'one-time-code' : 'off'}
-            spellCheck={false}
-            // The step replaces the password form, so the field the person was typing in is gone.
-            // oxlint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            aria-required
-            {...codeField.aria}
-          />
-        </FieldShell>
+          placeholder={method === 'app' ? '123456' : undefined}
+          inputMode={method === 'app' ? 'numeric' : undefined}
+          autoComplete={method === 'app' ? 'one-time-code' : 'off'}
+          spellCheck={false}
+          // The step replaces the password form, so the field the person was typing in is gone.
+          // oxlint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          value={code}
+          onChange={setCode}
+          error={problem.code}
+        />
         <SwitchField
           label="Trust This Device for 30 Days"
           name="trustDevice"

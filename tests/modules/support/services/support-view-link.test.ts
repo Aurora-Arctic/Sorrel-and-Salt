@@ -20,6 +20,7 @@ import { retentionBatchStep } from '@/modules/support/jobs/support-retention-bat
 import { C, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 // Only the newest mailed link works (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply"); the last describe holds every GraphQL answer to carrying neither token nor hash.
 
@@ -45,9 +46,10 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const mail: SupportNotifier = { origin: async () => ORIGIN };
-const VIEW_LINK = /http:\/\/localhost:3000\/support\/request#([A-Za-z0-9_-]{32,})/;
+const VIEW_LINK = new RegExp(
+  `${ORIGIN.replace(/[.]/g, '\\.')}/support/request#([A-Za-z0-9_-]{32,})`,
+);
 const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');
 const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
 

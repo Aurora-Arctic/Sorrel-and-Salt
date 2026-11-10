@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { noIndexMetadata } from '@/lib/page-metadata';
 import HelpIndex from '@/components/HelpIndex';
 import { readGlossaryTerms } from '@/lib/help-glossary';
 import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { requireCuratorSession } from '@/lib/request-session';
 import { listStaffHelpArticles } from '@/modules/help';
 
-export const metadata: Metadata = { title: 'Staff Help', robots: { index: false } };
+export const metadata: Metadata = noIndexMetadata('Staff Help');
 
 export default async function Page() {
   const session = await requireCuratorSession();

@@ -16,6 +16,7 @@ import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
+import { useTestDatabase } from '../support/db/database';
 
 const leaves = pgTable('pagination_probe_leaves', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -45,6 +46,10 @@ void (() => findPage(jars, [jars.label], PAGE_REQUEST));
 
 let sql: ReturnType<typeof postgres>;
 
+useTestDatabase((client) => {
+  sql = client;
+});
+
 const AUDIT_DDL = `
   created_at timestamp not null default now(),
   created_by uuid not null,
@@ -54,7 +59,6 @@ const AUDIT_DDL = `
   deleted_by uuid`;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string);
   await sql.unsafe(`
     create table pagination_probe_leaves (
       id uuid primary key default gen_random_uuid(),
@@ -75,7 +79,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await sql`drop table if exists pagination_probe_leaves`;
   await sql`drop table if exists pagination_probe_jars`;
-  await sql.end();
 });
 
 beforeEach(async () => {

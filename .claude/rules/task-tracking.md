@@ -68,3 +68,7 @@ node scripts/task-board.mjs reorder --apply
 A Project 4 task also takes its Project's `label` from `scripts/task-projects.mjs` (`--label tracked --label v1-next`) and an `N · ` milestone, and, since Project 4 has no auto-add, `node scripts/task-board.mjs place <ID> --apply` runs before `estimate`.
 
 The notes are the entry's text in `claude-docs/tasks/<slug>/<milestone>.md`, in the directory of the task's Project. The entry, the wave's row in its Project's execution-order table in `TASKS.md`, its wave file in `claude-docs/waves/<slug>/` where the reasoning changes, `tasks/v1/mb.md`'s summary table for a Project 1 bug and the first line of the milestone's description are edited in the same pass, the row before `reorder --apply` runs, since that places the new item by the row. An issue minted into a closed milestone takes it after creation (claude-docs/task-tracking.md, "Minting a task").
+
+## Estimating an audit's findings
+
+Before an audit gives hours for its findings, it finds two or three Done tasks of the same kind and size, and scales its estimates to them. For removing duplicated code, those are MB.206 → MB.226.

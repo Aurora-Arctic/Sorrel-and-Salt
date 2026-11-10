@@ -2,6 +2,7 @@
 
 import { ColorPicker, Tooltip, parseColor } from '@ark-ui/react';
 import { type ReactElement, useMemo, useState } from 'react';
+import { useMask } from '../Field/mask';
 import { chipColors } from '../../lib/chip-colors';
 import {
   CHIP_GROUNDS,
@@ -9,6 +10,8 @@ import {
   MIN_CHIP_CONTRAST,
   chipContrast,
   formatRatio,
+  hexColour,
+  hexMask,
 } from '../../lib/contrast';
 import {
   contrastBoundary,
@@ -109,6 +112,7 @@ const ChipColorField = ({
   'aria-invalid': invalid,
   'aria-required': required,
 }: ChipColorFieldProps): ReactElement => {
+  const hexInput = useMask(hexMask);
   const hex = HEX_COLOR.test(value) ? value.toLowerCase() : undefined;
   // The picker keeps its own colour, since a hex forgets a grey's hue and a drag through the grey edge
   // would snap the hue to red. A hex from outside (typed, or the partner's) replaces it; half a hex
@@ -235,7 +239,8 @@ const ChipColorField = ({
             ))}
             {/* From the top of the inputs to the foot of the buttons under them. */}
             <span className="chip-color-field__divider" aria-hidden="true" />
-            {/* The hex the form validates: the box its label names. */}
+            {/* The hex the form validates: the box its label names. It stays a plain input and not a PlainTextField, which draws a label and an
+                error of its own and takes neither this `id`, `ref` nor the ratio's description. */}
             <div className="chip-color-field__channel">
               <input
                 id={id}
@@ -243,9 +248,18 @@ const ChipColorField = ({
                 className="input chip-color-field__hex"
                 value={value}
                 spellCheck={false}
+                autoCapitalize="none"
                 autoComplete="off"
                 placeholder={placeholder}
-                onChange={(event) => onChange(event.currentTarget.value)}
+                onFocus={hexInput.onFocus}
+                onChange={(event) => {
+                  hexInput.mask(event);
+                  onChange(event.currentTarget.value);
+                }}
+                onBlur={(event) => {
+                  const shown = hexColour(event.currentTarget.value);
+                  if (shown !== event.currentTarget.value) onChange(shown);
+                }}
                 aria-invalid={invalid}
                 aria-required={required}
                 aria-describedby={

@@ -3,7 +3,7 @@ import { applyAudit } from '../audit';
 import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { SiteAdmin } from '@/modules/identity';
-import { notSoftDeleted } from './predicates';
+import { newestFirst, notSoftDeleted } from './predicates';
 import { findPage } from './finders';
 import { selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
@@ -52,9 +52,7 @@ export function findStandingUserAccessPausesFor(
 }
 
 // A user's pauses, newest first.
-const HISTORY_ORDER: readonly SortPart[] = [
-  { expression: sql`-extract(epoch from ${userAccessPauses.createdAt})`, type: 'numeric' },
-];
+const HISTORY_ORDER: readonly SortPart[] = [newestFirst(userAccessPauses.createdAt)];
 
 /**
  * One page of every pause set on a user, standing, run out and lifted alike, newest first (CLAUDE.md rule 8). Under the

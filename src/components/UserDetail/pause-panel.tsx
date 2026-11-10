@@ -1,10 +1,12 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import { usePendingNavigation } from '../../lib/navigation';
+import { failureMessage } from '../../lib/graphql-failure';
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import IconTip from '../IconTip';
+import { HistoryIcon } from '../IconTip/icons';
 import Skeleton from '../Skeleton';
 import { LocalDay } from '../SupportRequests/day-range';
 import ConfirmedAction from '../ConfirmedAction';
@@ -16,8 +18,6 @@ import '../SupportRequests/timeout-panel.scss';
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its
 // own words and its own writes (claude-docs/components/user-detail.md, "Contracts").
 
-const refusal = (error: unknown) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE;
-
 const StandingCard = ({
   pause,
   copy,
@@ -28,7 +28,7 @@ const StandingCard = ({
   return (
     <div className="timeout-panel__card">
       <p className="timeout-panel__head">
-        <span className="badge badge--caution">Paused</span>
+        <span className="badge badge--caution">{copy.badge}</span>
         <span>
           <Until until={pause.until} />
         </span>
@@ -42,17 +42,17 @@ const StandingCard = ({
         </p>
       )}
       <ConfirmedAction
-        label="Lift Pause"
-        accessibleName="Lift Pause"
-        confirmLabel="Lift"
+        label={copy.liftLabel}
+        accessibleName={copy.liftLabel}
+        confirmLabel={copy.liftConfirm}
         openClass="btn btn--quiet btn--small"
-        title="Lift the Pause?"
+        title={copy.liftTitle}
         question={copy.liftQuestion(pause.until)}
         busy="Lifting"
         confirmClass="btn btn--destructive"
         announcement={copy.lifted}
         inModal
-        refusal={refusal}
+        refusal={failureMessage}
         send={lift}
         onSent={() => {
           onChanged?.();
@@ -106,18 +106,18 @@ const PauseForm = ({
       />
       <div className="form__actions">
         <ConfirmedAction
-          label="Pause Access"
-          accessibleName="Pause Access"
-          confirmLabel="Pause"
+          label={copy.pauseLabel}
+          accessibleName={copy.pauseLabel}
+          confirmLabel={copy.pauseConfirm}
           openClass="btn btn--quiet"
           disabled={!ready}
-          title={`Pause Access for ${name}?`}
+          title={copy.pauseTitle(name)}
           question={copy.pauseQuestion(end ?? null)}
-          busy="Pausing"
+          busy={copy.pauseBusy}
           confirmClass="btn btn--destructive"
           announcement={copy.paused}
           inModal
-          refusal={refusal}
+          refusal={failureMessage}
           send={() => {
             const until = endOf(span, day, new Date());
             if (until === undefined) return Promise.reject(new Error('No end chosen'));
@@ -149,6 +149,7 @@ const PausePanel = ({
   pause,
   lift,
   onChanged,
+  earlierHref,
 }: PausePanelProps): ReactElement => {
   const [folded, setFolded] = useState(false);
 
@@ -158,7 +159,7 @@ const PausePanel = ({
         title={title}
         summary={
           <span className="timeout-panel__summary">
-            {standing && <span className="badge badge--caution">Paused</span>}
+            {standing && <span className="badge badge--caution">{copy.badge}</span>}
             <span className="timeout-panel__muted">
               {standing ? (
                 <>
@@ -169,6 +170,16 @@ const PausePanel = ({
               )}
             </span>
           </span>
+        }
+        info={
+          earlier.length > 0 && earlierHref ? (
+            <IconTip tip={copy.earlierTitle}>
+              <PendingLink className="timeout-panel__icon" href={earlierHref}>
+                <HistoryIcon />
+                <span className="visually-hidden">{copy.earlierTitle}</span>
+              </PendingLink>
+            </IconTip>
+          ) : undefined
         }
         fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
       >
@@ -186,7 +197,8 @@ const PausePanel = ({
         {earlierLoading ? (
           <Skeleton shape="line" count={2} />
         ) : (
-          earlier.length > 0 && <Ledger pauses={earlier} />
+          earlier.length > 0 &&
+          !earlierHref && <Ledger pauses={earlier} title={copy.earlierTitle} />
         )}
       </CollapsibleSection>
     </div>

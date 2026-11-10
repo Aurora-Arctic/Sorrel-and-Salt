@@ -25,3 +25,7 @@ export interface CovenIngredientsParams {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
+
+export interface AddIngredientActionProps {
+  covenSlug: string;
+}

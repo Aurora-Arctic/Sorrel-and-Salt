@@ -1,3 +1,4 @@
+import { expectSummaryLinksTo } from '../../support/error-summary';
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
@@ -158,7 +159,7 @@ describe('IngredientForm’s sections', () => {
     await waitFor(() => expect(expanded('Correspondences')).toBe(true));
     const colour = control('Colour');
     expect(colour).toBeInvalid();
-    expect(colour).toHaveFocus();
+    expectSummaryLinksTo(colour);
     expect(openSections()).toEqual(['Correspondences']);
     expect(calls).toHaveLength(0);
   });
@@ -177,6 +178,6 @@ describe('IngredientForm’s sections', () => {
     await waitFor(() => expect(expanded('Details & Care')).toBe(true));
     const notes = control('Safety Notes');
     expect(notes).toBeInvalid();
-    expect(notes).toHaveFocus();
+    expectSummaryLinksTo(notes);
   });
 });

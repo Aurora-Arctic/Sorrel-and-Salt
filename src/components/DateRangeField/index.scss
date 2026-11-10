@@ -67,7 +67,7 @@
   align-content: start;
   gap: space(1);
 
-  @media (min-width: 48rem) {
+  @include width-from(48rem) {
     flex-flow: column nowrap;
     min-inline-size: 8rem;
   }

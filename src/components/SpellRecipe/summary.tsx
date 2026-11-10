@@ -1,14 +1,10 @@
 import type { ReactElement } from 'react';
+import { plainQuantity } from '@/lib/quantity';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
 import { SUMMARY_TITLE_ID } from './sections';
 import type { IngredientRecipeStep, SpellRecipeSummaryProps } from './types';
-
-const plain = (quantity: string | null): string =>
-  quantity === null || !Number.isFinite(Number(quantity))
-    ? (quantity ?? '')
-    : String(Number(quantity));
 
 const SpellRecipeSummary = ({ steps, level = 2 }: SpellRecipeSummaryProps): ReactElement | null => {
   const Heading = level === 3 ? 'h3' : 'h2';
@@ -26,7 +22,10 @@ const SpellRecipeSummary = ({ steps, level = 2 }: SpellRecipeSummaryProps): Reac
           const same =
             step.variantId === null ? [step] : laid.filter((o) => o.variantId === step.variantId);
           const need = needOf(
-            same.map((o) => ({ quantity: plain(o.quantity), unit: o.unit ?? '' })),
+            same.map((o) => ({
+              quantity: o.quantity === null ? '' : plainQuantity(o.quantity),
+              unit: o.unit ?? '',
+            })),
             (same[0]!.unit || null) as Unit | null,
           );
           return (

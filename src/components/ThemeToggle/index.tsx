@@ -1,5 +1,6 @@
 'use client';
 
+import { prefersReducedMotion } from '@/lib/motion';
 import { type ReactElement, useEffect, useRef } from 'react';
 import type { ThemeToggleProps } from './types';
 import './index.scss';
@@ -49,11 +50,6 @@ const parkFacet = (facet: Element): void => {
   facet.classList.remove(OUT_CLASS);
   facet.classList.add(PRE_ENTER_CLASS);
 };
-
-// Under reduced motion index.scss zeroes the transitions, so no `transitionend`
-// fires. Read at click time, so an OS change mid-session takes effect.
-const prefersReducedMotion = (): boolean =>
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
 const handleFacetTransitionEnd = (event: TransitionEvent): void => {
   const facet = event.target;

@@ -13,14 +13,9 @@ import { curates } from '../../../../../lib/site-roles';
 import { entryJsonLd } from '../../../../../lib/json-ld';
 import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
+import { readEntryReview, readEntrySourcing } from '@/app/compendium-reads';
 import { entryValues } from '@/app/entry-values';
-import {
-  getIngredient,
-  readCompendiumEntry,
-  readCompendiumEntryAsCurator,
-  readCompendiumReview,
-  readSourcingScore,
-} from '@/modules/ingredients';
+import { readCompendiumEntry, readCompendiumEntryAsCurator } from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
@@ -63,34 +58,6 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
 const hrefOf = ({ slug, workspaceId }: LinkedIngredient): Route | undefined =>
   workspaceId === null ? addressOf(slug) : undefined;
 
-// The curator's own review read. A refusal or a missing entry means no switch, never an error page.
-async function reviewOf(id: string) {
-  const curator = await getSession();
-  if (!curator) return undefined;
-  try {
-    const found = await readCompendiumReview(curator, id);
-    // A curator's read reaches a hidden entry too, so the switch starts from the row's own flag.
-    const row = await getIngredient(curator, id);
-    return { reviewedAt: found?.reviewedAt ?? null, shown: row.shown };
-  } catch (error) {
-    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
-
-// The curator's sourcing score, from its own guarded, uncached read: never part of the cached public
-// read above. A refusal or a missing entry means no score, never an error page.
-async function sourcingOf(id: string) {
-  const curator = await getSession();
-  if (!curator) return undefined;
-  try {
-    return await readSourcingScore(curator, id);
-  } catch (error) {
-    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
-
 export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
   const found = await entryAt(slug);
@@ -121,8 +88,9 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
   // The review switch's read, for a curator or keeper only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
-  const review = canEdit ? await reviewOf(entry.id) : undefined;
-  const sourcing = canEdit ? await sourcingOf(entry.id) : undefined;
+  const curator = canEdit ? await getSession() : null;
+  const review = await readEntryReview(curator, entry.id);
+  const sourcing = await readEntrySourcing(curator, entry.id);
 
   return (
     <>
@@ -151,7 +119,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
                 ...(review && {
                   review: {
                     reviewed: review.reviewedAt !== null,
-                    reviewedAt: review.reviewedAt?.toISOString() ?? null,
+                    reviewedAt: review.reviewedAt,
                   },
                 }),
               }
@@ -161,7 +129,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
           review && (
             <ReviewMark
               ingredientId={entry.id}
-              reviewedAt={review.reviewedAt?.toISOString() ?? null}
+              reviewedAt={review.reviewedAt}
               alongside={
                 <ShownToggle
                   ingredientId={entry.id}

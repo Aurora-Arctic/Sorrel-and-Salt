@@ -1518,7 +1518,7 @@ describe('IngredientEntry stock', () => {
       'aria-current',
       'true',
     );
-    expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
+    expect(open.getByRole('textbox', { name: 'Quantity, Testoil' })).toHaveValue('');
     // The new row is a place to fill, not a change, so Save is off.
     expect(open.getByRole('button', { name: 'Save Stock' })).toBeDisabled();
   });

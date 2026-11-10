@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CovenCardActionsEntry } from '@/components/CovenCards/actions';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -10,8 +10,10 @@ import {
   pointTo,
   setReadyState,
   stubIdle,
+  waitForLoads,
   watchLoads,
 } from '../../support/preload';
+import { WORKSPACE_ID } from '../../support/constants';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => LIST }));
@@ -23,7 +25,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 
 const SORTABLE = ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'];
 const LIST = '/coven/fixture-coven/ingredients';
-const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 
 const OWN: CovenCardActionsEntry = {
   id: '00000000-0000-4000-8000-000000000002',
@@ -59,7 +60,7 @@ async function renderActions(entry: CovenCardActionsEntry, watched: readonly str
   const { covenCardActions } = await import('@/components/CovenCards/actions');
   render(
     <QueryClientProvider client={makeQueryClient()}>
-      <main>{covenCardActions(entry, WORKSPACE, 'fixture-coven')}</main>
+      <main>{covenCardActions(entry, WORKSPACE_ID, 'fixture-coven')}</main>
     </QueryClientProvider>,
   );
   // Effects that start a load on mount have run, so an empty count below means nothing started it.
@@ -82,7 +83,7 @@ describe.each(OPENERS)('a coven card’s %s, before its dialog opens', (_opener,
     expect(loaded()).toEqual([]);
 
     idle.runIdle();
-    await waitFor(() => expect(loaded()).toEqual(expect.arrayContaining(['@dnd-kit/sortable'])));
+    await waitForLoads(loaded, expect.arrayContaining(['@dnd-kit/sortable']));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -98,7 +99,7 @@ describe.each(OPENERS)('a coven card’s %s, before its dialog opens', (_opener,
     expect(loaded()).toEqual([]);
 
     intend(screen.getByRole('link', { name }));
-    await waitFor(() => expect(loaded()).toEqual(expect.arrayContaining(['@dnd-kit/sortable'])));
+    await waitForLoads(loaded, expect.arrayContaining(['@dnd-kit/sortable']));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
@@ -126,7 +127,7 @@ describe.each(FORMS)(
       expect(loaded()).toEqual([]);
 
       idle.runIdle();
-      await waitFor(() => expect(loaded()).toEqual(form));
+      await waitForLoads(loaded, form);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -142,7 +143,7 @@ describe.each(FORMS)(
       expect(loaded()).toEqual([]);
 
       intend(screen.getByRole(role, { name }));
-      await waitFor(() => expect(loaded()).toEqual(form));
+      await waitForLoads(loaded, form);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   },

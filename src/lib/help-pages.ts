@@ -1,5 +1,3 @@
-import { notFound } from 'next/navigation';
-import { NotFound } from './errors';
 import { stripMarks } from './help-marks';
 import { helpPath, type HelpAddressed } from './help-paths';
 
@@ -17,16 +15,6 @@ export const HELP_GLOSSARY_CARD = {
   summary: 'The words Sorrel & Salt uses, and what each one means.',
   href: '/help/glossary',
 };
-
-/** A read that finds nothing answers the site's 404. */
-export async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
-  try {
-    return await read();
-  } catch (error) {
-    if (error instanceof NotFound) notFound();
-    throw error;
-  }
-}
 
 /** The link a list draws for a row: its title and summary at its address. */
 export function linkTo(row: HelpAddressed & { title: string; summary: string | null }) {

@@ -1,33 +1,29 @@
 import { z } from 'zod';
+import { trimEnds } from '../../../lib/formats';
 import { RowId, optionalText } from '../../../lib/validation';
-import type { SpellStatus, SpellVisibility } from '../types';
+import type { SpellStatus } from '../types';
 import { SpellStepInput } from './spell-step';
+import { STATUSES, VISIBILITIES, VISIBILITY_MESSAGE } from './visibility';
 
 // A spell as the builder and the mutation both read it. Pure: it imports no
 // server-only module, so the form runs the same schema the service does
 // (claude-docs/validation.md).
-
-// Both lists are written out because the table's enums would pull the database
-// schema into the browser; the `satisfies` and a test keep each equal to its
-// column.
-const VISIBILITIES = ['private', 'workspace'] as const satisfies readonly SpellVisibility[];
-const STATUSES = ['draft', 'complete'] as const satisfies readonly SpellStatus[];
 
 // Kept apart from the rule below because Zod will not extend a schema that
 // already carries a refinement, and the update input extends this one.
 const SpellFields = z.object({
   // Required once the spell is complete (see `titleRule`).
   title: optionalText(),
-  intent: optionalText(),
-  jarDescription: optionalText(),
+  intent: optionalText(trimEnds),
+  jarDescription: optionalText(trimEnds),
   sealWaxColor: optionalText(),
   moonPhase: optionalText(),
   dayOfWeek: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
-  visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
+  visibility: z.enum(VISIBILITIES, { error: VISIBILITY_MESSAGE }).optional(),
   // Left out means the column's default on create, and unchanged on update.
   status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
-  note: optionalText(),
+  note: optionalText(trimEnds),
   steps: z.array(SpellStepInput).default([]),
   // The assigned categories, never the derived ones. The whole set when given; left out, unchanged on update and none on create.
   categoryIds: z.array(z.string().trim()).optional(),

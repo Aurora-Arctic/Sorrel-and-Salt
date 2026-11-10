@@ -3,9 +3,8 @@ import { findOneById } from '../../../db/repository';
 import { deliver } from '../../../lib/mail-transport';
 import { supportStatusMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
-import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
-import { mintSupportViewToken } from './view-link';
+import { supportRecipientFor } from './recipient';
 import type { Message } from '../../../lib/types';
 import type { SupportStatusMail } from '../types';
 
@@ -19,16 +18,15 @@ export async function supportStatusMessageFor(mail: SupportStatusMail): Promise<
   const request = await findOneById(supportRequests, mail.requestId);
   if (!request || request.createdBy === SYSTEM_ACTOR_ID) return null;
   if (mail.kind === 'resolved' && request.status !== 'resolved') return null;
-  const signedOut = request.senderEmail !== null;
-  const to = request.senderEmail ?? (await findOneById(users, request.createdBy))?.email;
-  if (!to) return null;
+  const recipient = await supportRecipientFor(request);
+  if (!recipient) return null;
   return supportStatusMessage(
     mail.kind,
     mail.origin,
-    to,
+    recipient.to,
     request.subject,
-    signedOut ? null : request.id,
-    signedOut ? await mintSupportViewToken(request.id) : undefined,
+    recipient.signedOut ? null : request.id,
+    recipient.viewToken,
   );
 }
 

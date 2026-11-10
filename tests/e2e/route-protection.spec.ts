@@ -1,6 +1,5 @@
-import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { e2eDatabaseUrl } from './database';
+import { withE2eSql } from './database';
 import { signInAs } from './session';
 
 // The proxy's redirect against the built server (claude-docs/auth/route-protection.md, "Route protection").
@@ -50,12 +49,9 @@ test('a revoked session following a link into the shell lands on /sign-in', asyn
   const proceed = page.getByRole('link', { name: 'Continue' });
   await expect(proceed).toBeVisible();
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
+  await withE2eSql(async (sql) => {
     await sql`delete from sessions where user_id = ${userId}`;
-  } finally {
-    await sql.end();
-  }
+  });
   await proceed.click();
 
   await expect(page).toHaveURL('/sign-in?next=%2Fcoven');

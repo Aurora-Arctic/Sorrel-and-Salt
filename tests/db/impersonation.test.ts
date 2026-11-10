@@ -1,23 +1,21 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { ORIGIN, cookieHeader } from '../support/oauth';
+import { cookieHeader } from '../support/oauth';
 import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 let auth: AuthInstance;

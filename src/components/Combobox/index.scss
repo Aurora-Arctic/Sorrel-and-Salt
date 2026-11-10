@@ -292,7 +292,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // The list, floating beneath the control at its width on the card surface with the floating shadow, hidden rather than unmounted while closed since Downshift keeps its ref
 // (claude-docs/components/combobox.md, "List").
 .combobox__list {
-  z-index: 1;
+  z-index: layer('floating');
   display: none;
   box-sizing: border-box;
   max-height: min(20rem, var(--combobox-list-room, 20rem));
@@ -309,7 +309,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // With an empty message the popup is the placed, bordered panel and the listbox inside is the scroller, reading the `--combobox-list-room` the placement sets
 // (claude-docs/components/combobox.md, "The popup's styling").
 .combobox__popup {
-  z-index: 1;
+  z-index: layer('floating');
   display: none;
   box-sizing: border-box;
   // The popup's rounded edge clips what it holds: a row highlighted at a
@@ -516,7 +516,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
   max-width: 100%;
   // A step more room above the chips than the box's own padding, on the list so one row still fits the text's line and the box stays at $control-height.
-  @include list-reset(space(1) 0, false);
+  @include list-reset(space(1) 0);
 }
 
 .combobox__entry {
@@ -526,7 +526,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
   min-width: 0;
   max-width: 100%;
-  margin: 0;
   padding: 0 0 0 space(2);
   border-radius: radius('sharp');
   background-color: $fill-quiet;
@@ -538,10 +537,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The fill is dropped, so an edge keeps the chip's shape.
   @include forced-colors {
     border: 1px solid CanvasText;
-  }
-
-  &::before {
-    content: none;
   }
 
   // In its group's colours: the wash chip() draws, read from the pair chipColors() sets (claude-docs/styling.md, "Category chips"),

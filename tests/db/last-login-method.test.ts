@@ -5,7 +5,6 @@ import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import {
   EMAIL_PAGE,
   LINK_LANDING,
-  ORIGIN,
   cookieHeader,
   landingOf,
   link as linkThrough,
@@ -16,6 +15,8 @@ import {
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
+import { ORIGIN } from '../support/constants';
 
 // Through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
@@ -31,12 +32,8 @@ const OWNER = `owner${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer();

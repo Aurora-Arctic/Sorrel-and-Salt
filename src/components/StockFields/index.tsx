@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
+import { formatQuantity } from '@/lib/formats';
+import { QUANTITY_HINT } from '@/lib/quantity-rule';
 import { SelectField, TextField } from '../Field';
 import type { StockFieldsProps, StockFormValues } from './types';
 import { UNIT_OPTIONS } from './units';
@@ -22,9 +24,12 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         label="Quantity"
         labelSuffix={form}
         disabled={disabled}
-        type="number"
-        placeholder="Add an amount"
+        inputMode="decimal"
+        format={formatQuantity}
+        hint={QUANTITY_HINT}
         autoComplete="off"
+        spellCheck={false}
+        enterKeyHint="next"
       />
       <SelectField<V>
         name={at('unit')}
@@ -40,10 +45,13 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         label="Low Stock At"
         labelSuffix={form}
         disabled={disabled}
-        type="number"
+        inputMode="decimal"
+        format={formatQuantity}
         hint="The jar is badged Low Stock at this amount or below. Zero turns the badge off."
         placeholder="Add a level"
         autoComplete="off"
+        spellCheck={false}
+        enterKeyHint="done"
       />
     </>
   );

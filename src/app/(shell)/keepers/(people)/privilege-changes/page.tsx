@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import PrivilegeLedger from '../../../../../components/PrivilegeLedger';
 import { privilegeLedgerHref } from '../../../../../components/PrivilegeLedger/href';
@@ -23,9 +24,7 @@ import { readListPlace } from '../../../curator/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
-export const metadata: Metadata = {
-  title: 'Privilege Changes',
-};
+export const metadata: Metadata = pageTitle('Privilege Changes');
 
 function readLedgerPage(
   session: Session,

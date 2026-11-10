@@ -93,7 +93,7 @@ A new spell opens with every section open, a saved spell with every section shut
 
 ## The fields
 
-Each field has a one- or two-word placeholder and no info tip ([`info-tip.md`](info-tip.md), "When a field gets a tip"). Every value is stored as typed: the columns are free text ([`../db/grimoire.md`](../db/grimoire.md)).
+Each field has a one- or two-word placeholder and no info tip ([`info-tip.md`](info-tip.md), "When a field gets a tip"). Every value is stored as typed: the columns are free text ([`../db/grimoire.md`](../db/grimoire.md)). Suggest-only fields (Moon Phase, Day, Seal Wax, step Form) stay free text, tidy on blur, and carry a hint that other values are allowed. A step Quantity is text with a decimal keypad, shown with thousands separators on blur and when a saved step opens (saved without them) and refused with "Enter an amount as a number, like 2.5". The error summary lists only controls on the page, so a refused amount inside a collapsed step row shows as "Has an error to fix" on its section until the row is opened.
 
 - **Moon Phase and Day** are the recipe's timing, when to work the spell, not a record of when it was worked (a working's own day and phase follow from its `workedOn`). Both are comboboxes ([`combobox.md`](combobox.md)), `SpellSuggestField`, suggesting a fixed list from `constants.ts` narrowed to what is typed. A pick fills the box with the name and anything else typed is kept, so a value saved before the lists existed ("Full") opens unchanged. The phases are the eight of Wikipedia's "Lunar phase", then Dark Moon (the span around the new moon when no crescent shows), Waxing Moon and Waning Moon. The days start at Monday, with no planet beside them. They are constants rather than vocabulary tables: each set is closed and adding a name is a one-line change, unlike the celestial bodies, which keep growing.
 - **Moon phase drawings** (`MoonPhaseIcon`, `src/components/MoonPhaseIcon/`) follow the northern hemisphere (waxing lit on the right), and the maria are placed by an orthographic projection whose table, sources and formula are in `icons.tsx`. A phase typed outside the list shows its words with no drawing.
@@ -149,7 +149,7 @@ The Jar section is one column at every width (the default dialog is 32rem of con
 
 ## The categories, read once
 
-`useCategoryIndex()` (`category-index.ts`) is the builder's one read of the `categories` query (the picker's filter list, each id's name and group colours, and the pending and failed states). Every caller shares one request through the query cache.
+`useCategoryIndex()` (`CategoryPicker/categories.ts`, shared with the ingredient form) is the builder's one read of the `categories` query (the picker's filter list, each id's name and group colours, and the pending and failed states). Every caller shares one request through the query cache.
 
 ## Reordering
 

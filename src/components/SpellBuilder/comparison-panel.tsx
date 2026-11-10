@@ -3,7 +3,7 @@
 import EmptyState from '../EmptyState';
 import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useCategoryIndex } from './category-index';
+import { useCategoryIndex } from '../CategoryPicker/categories';
 import CategoryChips, { type CardCategory } from '../CategoryChips';
 import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';

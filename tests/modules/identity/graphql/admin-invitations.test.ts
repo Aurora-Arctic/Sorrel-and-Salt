@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { getNamedType, isEnumType, isObjectType, type GraphQLField } from 'graphql';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { schema } from '@/graphql/schema';
 import type { InvitationSender } from '@/modules/identity';
@@ -14,15 +14,12 @@ import type {
   CreateAdminInvitationResult,
   DeclineInvitationByIdResult,
 } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
-afterAll(async () => {
-  await sql.end();
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const DOMAIN = '@admin-invitations-graphql.test';

@@ -35,6 +35,13 @@ export async function membershipsOf(
   });
 }
 
+/** The viewer's own seats that are not paused, or none when the list is refused: a paused seat opens nothing, so it is left out rather than refused. */
+export async function liveMembershipsOf(session: Session): Promise<MembershipOfUser[]> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return [];
+  return memberships.filter(({ pause }) => !pause);
+}
+
 /** The demo coven last, so a coven of the user's own is always the landing. */
 export function byCovenName(
   a: { name: string; demo?: boolean },

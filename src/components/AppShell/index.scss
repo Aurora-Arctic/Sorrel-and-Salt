@@ -74,7 +74,7 @@
   }
 }
 
-@media (max-width: $shell-phone-width) {
+@include phone-down {
   .app-shell__nav a {
     padding: 0 space(2);
   }
@@ -84,7 +84,7 @@
   display: inline-flex;
 }
 
-@media (max-width: $shell-tablet-width) {
+@include tablet-down {
   .app-shell__nav {
     display: none;
   }
@@ -151,14 +151,22 @@
 // Where :has() is missing the notice keeps the wide column.
 .app-shell__main:has(.page-with-nav) .app-shell__pause {
   column-gap: space(6);
-  @include page-with-nav-grid;
+  @include page-with-nav-grid(null);
 
   > * {
     grid-column: 2;
   }
 }
 
+.app-shell__main:has(.page-with-nav > .page-nav) .app-shell__pause {
+  @include page-with-nav-grid;
+}
+
 .app-shell__main:has(.document-page) .app-shell__pause {
+  @include page-with-nav-grid(null, $measure);
+}
+
+.app-shell__main:has(.document-page > .page-nav) .app-shell__pause {
   @include page-with-nav-grid($document-menu-column, $measure);
 }
 

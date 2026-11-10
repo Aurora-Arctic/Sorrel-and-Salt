@@ -1,31 +1,12 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { holdServerAnswers } from './hold-server-answers';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-async function holdServerAnswers(page: Page) {
-  const held: Route[] = [];
-  let holding = false;
-  await page.route('**/*', async (route) => {
-    const request = route.request();
-    const rsc = request.headers().rsc === '1' || new URL(request.url()).searchParams.has('_rsc');
-    if (!holding || !rsc) return route.fallback();
-    held.push(route);
-  });
-  return {
-    hold() {
-      holding = true;
-    },
-    async release() {
-      holding = false;
-      for (const route of held.splice(0)) await route.fallback();
-    },
-  };
-}
 
 const edges = (page: Page) =>
   page.evaluate(() => {
@@ -58,7 +39,7 @@ for (const [index, { name, presses }] of destinations.entries()) {
   test(`the skeleton for ${name} ends above the footer while it waits`, async ({ page }) => {
     await signInAs(page, `admin-${index}@skeleton-footer.test`, ['discord'], 'admin');
     expect((await page.goto('/keepers'))?.status()).toBe(200);
-    const server = await holdServerAnswers(page);
+    const server = await holdServerAnswers(page, { prefetch: 'hold' });
     for (const [step, { nav, link }] of presses.entries()) {
       const area = nav ? page.getByRole('navigation', { name: nav }) : page.getByRole('main');
       const last = step === presses.length - 1;

@@ -6,7 +6,7 @@ import TwoFactorSettings, {
   STALE_SESSION,
   WRONG_PASSWORD,
 } from '@/components/PasswordSection/two-factor';
-import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
+import { WRONG_CODE } from '@/lib/auth-messages';
 import { makeQueryClient } from '@/lib/graphql-client';
 
 // The two-factor switch on the account page (@story-75). Better Auth's client is mocked at the three calls it makes;
@@ -78,6 +78,20 @@ describe('TwoFactorSettings', () => {
     expect(button('Turn On Two-Factor')).toBeDisabled();
     type('Confirm Your Password', PASSWORD);
     expect(button('Turn On Two-Factor')).toBeEnabled();
+  });
+
+  it('confirms with the current password, then takes the app’s code as a one-time code', async () => {
+    enable.mockResolvedValue({
+      data: { totpURI: TOTP_URI, backupCodes: BACKUP_CODES },
+      error: null,
+    });
+    renderSection(false);
+    expect(field('Confirm Your Password')).toHaveAttribute('autocomplete', 'current-password');
+
+    type('Confirm Your Password', PASSWORD);
+    await press(button('Turn On Two-Factor'));
+
+    expect(field('Code From Your App')).toHaveAttribute('autocomplete', 'one-time-code');
   });
 
   it('shows the QR code, the key and the backup codes, and is not on until a code is confirmed', async () => {
@@ -223,6 +237,20 @@ describe('TwoFactorSettings', () => {
       expect(click).toHaveBeenCalledOnce();
       expect(blobs).toHaveLength(1);
       expect(await blobs[0].text()).toBe(EXPECTED);
+      click.mockRestore();
+    });
+
+    it('keeps the download link alive after the click so the browser can read it', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:codes');
+      const revoke = vi.fn();
+      URL.revokeObjectURL = revoke;
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      await startEnrolment();
+
+      await press(button('Download'));
+
+      expect(click).toHaveBeenCalledOnce();
+      expect(revoke).not.toHaveBeenCalled();
       click.mockRestore();
     });
 

@@ -1,13 +1,14 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import { expiryOfDay } from '../../lib/utc';
 import DateField from '../DateField';
-import { FieldError, FieldShell, FormActions, SwitchField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, PlainTextField, SwitchField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
@@ -42,6 +43,8 @@ const NOTE_HINT =
 
 export const MINT_TITLE = 'Mint Cards';
 
+export const SHEETS_REQUIRED = 'Enter how many sheets to mint, like 3';
+
 /** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
 const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
@@ -52,7 +55,16 @@ const earliestDay = (): string =>
 const defaultDay = (): string =>
   new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-const sheetsOf = (text: string): number | undefined => {
+/** A decimal count is rounded to the nearest whole sheet, not refused. */
+const wholeSheets = (text: string): string => {
+  const sheets = Number(text);
+  return text.trim() !== '' && Number.isFinite(sheets) && !Number.isInteger(sheets)
+    ? String(Math.round(sheets))
+    : text;
+};
+
+const sheetsOf = (typed: string): number | undefined => {
+  const text = wholeSheets(typed);
   const sheets = Number(text);
   return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
 };
@@ -73,7 +85,6 @@ const totalOf = (text: string): string | undefined => {
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
   const dayId = useId();
-  const noteId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
@@ -84,23 +95,21 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [minted, setMinted] = useState<MintedBatch>();
+  const [pressed, setPressed] = useState(false);
+  const sheetsRef = useRef<HTMLInputElement>(null);
+  const [totalRow, setTotalRow] = useState<HTMLDivElement | null>(null);
   const sheetsField = fieldDescription({
     id: sheetsId,
     hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
     error:
       sheetsRefusal(sheets) ??
+      (pressed && sheets.trim() === '' ? SHEETS_REQUIRED : undefined) ??
       (failure.field?.name === 'sheets' ? failure.field.message : undefined),
   });
   const dayField = fieldDescription({
     id: dayId,
     error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
   });
-  const noteField = fieldDescription({
-    id: noteId,
-    hint: NOTE_HINT,
-    error: failure.field?.name === 'note' ? failure.field.message : undefined,
-  });
-  const { aria: noteAria, ...noteShell } = noteField;
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
   const { aria: dayAria, ...dayShell } = dayField;
 
@@ -112,10 +121,12 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const wanted = sheetsOf(sheets);
-    if (wanted === undefined || !day) return;
-    if (sheetsRefusal(sheets)) {
-      // The browser's own check moves the focus to the field, as it does for a form that is not noValidate.
-      (event.currentTarget.elements.namedItem('sheets') as HTMLInputElement).reportValidity();
+    if (wanted === undefined || sheetsRefusal(sheets)) {
+      flushSync(() => {
+        setPressed(true);
+        setSheets(wholeSheets(sheets));
+      });
+      sheetsRef.current?.focus();
       return;
     }
     setMinting(true);
@@ -160,18 +171,15 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           required
           hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
           {...sheetsShell}
-          error={undefined}
+          errorInto={totalRow}
           after={
             // The refusal takes the total line's place, so the row keeps its height.
-            sheetsShell.error ? (
-              <div className="admin-cards__total admin-cards__total--error">
-                <FieldError id={sheetsShell.errorId} message={sheetsShell.error} />
-              </div>
-            ) : (
-              <p className="admin-cards__total" aria-live="polite">
-                {totalOf(sheets)}
-              </p>
-            )
+            <div
+              ref={setTotalRow}
+              className={`admin-cards__total${sheetsShell.error ? ' admin-cards__total--error' : ''}`}
+            >
+              {!sheetsShell.error && <span aria-live="polite">{totalOf(sheets)}</span>}
+            </div>
           }
         >
           <input
@@ -188,7 +196,9 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...sheetsAria}
             value={sheets}
             disabled={minting}
+            ref={sheetsRef}
             onChange={(event) => setSheets(event.target.value)}
+            onBlur={() => setSheets(wholeSheets)}
           />
         </FieldShell>
         <FieldShell label="Expires On" required {...dayShell}>
@@ -203,19 +213,19 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           />
         </FieldShell>
       </div>
-      <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
-        <textarea
-          id={noteShell.controlId}
-          className="textarea"
-          rows={3}
-          maxLength={MAX_NOTE_LENGTH}
-          placeholder="Add a note"
-          {...noteAria}
-          value={note}
-          disabled={minting}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        name="note"
+        label="Note"
+        hint={NOTE_HINT}
+        multiline
+        rows={3}
+        placeholder="Add a note"
+        limit={MAX_NOTE_LENGTH}
+        value={note}
+        disabled={minting}
+        error={failure.field?.name === 'note' ? failure.field.message : undefined}
+        onChange={setNote}
+      />
       <div className="admin-cards__switches">
         <SwitchField
           label="Print Backs"
@@ -238,7 +248,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         noun="Cards"
         label="Mint Cards"
         busyLabel="Minting"
-        dirty={sheetsOf(sheets) !== undefined && day !== ''}
+        dirty
         submitting={minting}
         holdCancel
         onCancel={() => discard.request(close)}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole } from '@/db/repository';
 import { Forbidden, ValidationError } from '@/lib/errors';
+import { limitMessage } from '@/lib/formats';
 import { slugify } from '@/lib/slugify';
 import {
   assertMembership,
@@ -10,32 +11,13 @@ import {
 } from '@/modules/coven';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
-import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { insertWorkspaceWithSlug } from '../../../support/db/insert-workspace';
 
 useRawClient();
 
-type Role = 'owner' | 'member' | 'viewer';
+const SEEDED = { address: true };
 
 const token = () => crypto.randomUUID().slice(0, 8);
-
-// A coven written as the seed and creation write one: its row, its seats, and its current address in `workspace_slugs`.
-async function insertCoven(
-  name: string,
-  members: [string, Role][] = [[A.id, 'owner']],
-): Promise<{ id: string; slug: string }> {
-  const [row] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
-    returning id, slug`;
-  await sql`
-    insert into workspace_slugs (workspace_id, slug, created_by, updated_by)
-    values (${row.id}, ${row.slug}, ${A.id}, ${A.id})`;
-  for (const [userId, role] of members) {
-    await sql`
-      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-      values (${row.id}, ${userId}, ${role}, ${A.id}, ${A.id})`;
-  }
-  return { id: row.id as string, slug: row.slug as string };
-}
 
 const stored = async (id: string) =>
   (await sql`select name, slug, updated_by from workspaces where id = ${id}`)[0];
@@ -55,10 +37,15 @@ const liveHoldersOf = async (slug: string) =>
 describe('renameWorkspace', () => {
   it('renames the coven for a steward, moving its address and keeping the old one, stamped from the session', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Before ${t}`, [
-      [A.id, 'owner'],
-      [B.id, 'member'],
-    ]);
+    const coven = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Before ${t}`,
+      [
+        [A.id, 'owner'],
+        [B.id, 'member'],
+      ],
+      SEEDED,
+    );
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture After ${t}` });
 
@@ -80,7 +67,12 @@ describe('renameWorkspace', () => {
   });
 
   it('trims the name, as creation does', async () => {
-    const coven = await insertCoven(`Fixture Untrimmed ${token()}`);
+    const coven = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Untrimmed ${token()}`,
+      undefined,
+      SEEDED,
+    );
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: '  Fixture Trimmed  ' });
 
@@ -92,11 +84,16 @@ describe('renameWorkspace', () => {
       ['a practitioner', B, 'member'],
       ['an observer', C, 'viewer'],
     ] as const)('refuses %s, who holds a live seat in it', async (_who, user, role) => {
-      const coven = await insertCoven(`Fixture Seated Refusal ${token()}`, [
-        [A.id, 'owner'],
-        [B.id, 'member'],
-        [C.id, 'viewer'],
-      ]);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Seated Refusal ${token()}`,
+        [
+          [A.id, 'owner'],
+          [B.id, 'member'],
+          [C.id, 'viewer'],
+        ],
+        SEEDED,
+      );
       const before = await stored(coven.id);
       // Why the refusal is the permission's: the caller reads the coven, and A, a steward, may rename it.
       await expect(findWorkspaceRole(user.id, coven.id)).resolves.toBe(role);
@@ -116,8 +113,18 @@ describe('renameWorkspace', () => {
     });
 
     it('refuses a steward of another coven, who holds no seat in this one', async () => {
-      const coven = await insertCoven(`Fixture Stranger Refusal ${token()}`);
-      const own = await insertCoven(`Fixture Stranger Own ${token()}`, [[D.id, 'owner']]);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Stranger Refusal ${token()}`,
+        undefined,
+        SEEDED,
+      );
+      const own = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Stranger Own ${token()}`,
+        [[D.id, 'owner']],
+        SEEDED,
+      );
       const before = await stored(coven.id);
       // Why the refusal is the coven's: D renames a coven of D's own, and holds no seat in this one.
       await expect(findWorkspaceRole(D.id, coven.id)).resolves.toBeUndefined();
@@ -132,7 +139,12 @@ describe('renameWorkspace', () => {
     });
 
     it('refuses a site keeper with no seat in the coven', async () => {
-      const coven = await insertCoven(`Fixture Keeper Refusal ${token()}`);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Keeper Refusal ${token()}`,
+        undefined,
+        SEEDED,
+      );
       const before = await stored(coven.id);
       // Why the refusal is the seat's: E is a keeper, so a site role alone would let E through.
       expect(asUser(E).role).toBe('admin');
@@ -146,7 +158,12 @@ describe('renameWorkspace', () => {
     });
 
     it('refuses an id that names no coven, and a deleted coven, as it refuses a stranger', async () => {
-      const coven = await insertCoven(`Fixture Deleted Rename ${token()}`);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Deleted Rename ${token()}`,
+        undefined,
+        SEEDED,
+      );
       await deleteWorkspace(asUser(A), coven.id);
 
       await expect(
@@ -164,7 +181,12 @@ describe('renameWorkspace', () => {
       ['only spaces', '   '],
       ['81 characters', 'F'.repeat(81)],
     ])('refuses a name that is %s, writing nothing', async (_what, name) => {
-      const coven = await insertCoven(`Fixture Bad Name ${token()}`);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Bad Name ${token()}`,
+        undefined,
+        SEEDED,
+      );
       const before = await stored(coven.id);
 
       await expect(renameWorkspace(asUser(A), coven.id, { name })).rejects.toThrow(ValidationError);
@@ -173,8 +195,26 @@ describe('renameWorkspace', () => {
       expect(await addressesOf(coven.id)).toEqual([coven.slug]);
     });
 
+    it('refuses a name past the limit in the shared limit wording', async () => {
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Limit Words ${token()}`,
+        undefined,
+        SEEDED,
+      );
+
+      await expect(
+        renameWorkspace(asUser(A), coven.id, { name: 'F'.repeat(81) }),
+      ).rejects.toMatchObject({ issues: [{ path: ['name'], message: limitMessage(80) }] });
+    });
+
     it('admits a name of exactly 80 characters', async () => {
-      const coven = await insertCoven(`Fixture Long Name ${token()}`);
+      const coven = await insertWorkspaceWithSlug(
+        sql,
+        `Fixture Long Name ${token()}`,
+        undefined,
+        SEEDED,
+      );
       const name = `Fixture ${'L'.repeat(72)}`;
       expect(name).toHaveLength(80);
 
@@ -183,9 +223,19 @@ describe('renameWorkspace', () => {
   });
 
   it('refuses the demo coven to a steward who holds the update permission, and still renames an ordinary one', async () => {
-    const demo = await insertCoven(`Fixture Demo Rename ${token()}`);
+    const demo = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Demo Rename ${token()}`,
+      undefined,
+      SEEDED,
+    );
     await sql`update workspaces set demo = true where id = ${demo.id}`;
-    const ordinary = await insertCoven(`Fixture Ordinary Rename ${token()}`);
+    const ordinary = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Ordinary Rename ${token()}`,
+      undefined,
+      SEEDED,
+    );
     const before = await stored(demo.id);
     // Why the refusal is the demo rule's: A holds the update permission in both.
     await expect(
@@ -208,7 +258,12 @@ describe('renameWorkspace', () => {
 
 describe("renameWorkspace and the coven's address", () => {
   it('takes the address from slugify', async () => {
-    const coven = await insertCoven(`Fixture Slugged ${token()}`);
+    const coven = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Slugged ${token()}`,
+      undefined,
+      SEEDED,
+    );
     const name = `Fixture Ünusual & Odd — Name ${token()}`;
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name });
@@ -218,8 +273,8 @@ describe("renameWorkspace and the coven's address", () => {
 
   it("numbers the address when another live coven's current address is it", async () => {
     const t = token();
-    await insertCoven(`Fixture Holder ${t}`);
-    const coven = await insertCoven(`Fixture Mover ${t}`);
+    await insertWorkspaceWithSlug(sql, `Fixture Holder ${t}`, undefined, SEEDED);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Mover ${t}`, undefined, SEEDED);
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Holder ${t}` });
 
@@ -229,14 +284,14 @@ describe("renameWorkspace and the coven's address", () => {
 
   it("takes another live coven's old address plain, and that coven no longer holds it", async () => {
     const t = token();
-    const holder = await insertCoven(`Fixture Once ${t}`);
+    const holder = await insertWorkspaceWithSlug(sql, `Fixture Once ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), holder.id, { name: `Fixture Since ${t}` });
     // Precondition: the old address is held, and no coven's current address is it.
     expect(await addressesOf(holder.id)).toContain(`fixture-once-${t}`);
     expect(await sql`select id from workspaces where slug = ${`fixture-once-${t}`}`).toHaveLength(
       0,
     );
-    const coven = await insertCoven(`Fixture Other ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Other ${t}`, undefined, SEEDED);
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Once ${t}` });
 
@@ -247,10 +302,10 @@ describe("renameWorkspace and the coven's address", () => {
 
   it("takes an address a deleted coven held, once that coven's addresses are freed", async () => {
     const t = token();
-    const gone = await insertCoven(`Fixture Freed ${t}`);
+    const gone = await insertWorkspaceWithSlug(sql, `Fixture Freed ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), gone.id, { name: `Fixture Freed Later ${t}` });
     await deleteWorkspace(asUser(A), gone.id);
-    const coven = await insertCoven(`Fixture Taker ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Taker ${t}`, undefined, SEEDED);
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Freed ${t}` });
 
@@ -262,7 +317,12 @@ describe("renameWorkspace and the coven's address", () => {
     ['Spell', 'spell-2'],
     ['Ingredient', 'ingredient-2'],
   ])('never takes a reserved address: %s becomes %s', async (name, slug) => {
-    const coven = await insertCoven(`Fixture Reserved ${token()}`);
+    const coven = await insertWorkspaceWithSlug(
+      sql,
+      `Fixture Reserved ${token()}`,
+      undefined,
+      SEEDED,
+    );
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name });
 
@@ -274,7 +334,7 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('keeps the address when the new name slugs to it, rather than numbering against itself', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Same ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Same ${t}`, undefined, SEEDED);
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `FIXTURE same ${t}` });
 
@@ -284,7 +344,7 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('keeps one old address: a second rename drops the first', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Start ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Start ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Middle ${t}` });
     // Precondition: after one rename the first address is the coven's old address.
     expect(await addressesOf(coven.id)).toEqual([`fixture-middle-${t}`, coven.slug].sort());
@@ -296,7 +356,7 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('takes an address it dropped back plain, keeping one old address', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Dropped ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Dropped ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Between ${t}` });
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Latest ${t}` });
 
@@ -308,10 +368,10 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('takes an address another coven dropped plain', async () => {
     const t = token();
-    const dropper = await insertCoven(`Fixture Shed ${t}`);
+    const dropper = await insertWorkspaceWithSlug(sql, `Fixture Shed ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), dropper.id, { name: `Fixture Shed Then ${t}` });
     await renameWorkspace(asUser(A), dropper.id, { name: `Fixture Shed Now ${t}` });
-    const coven = await insertCoven(`Fixture Finder ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Finder ${t}`, undefined, SEEDED);
 
     const renamed = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Shed ${t}` });
 
@@ -320,7 +380,7 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('back to the previous address leaves no live row for an earlier one', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Earliest ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Earliest ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Prior ${t}` });
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Present ${t}` });
 
@@ -334,7 +394,7 @@ describe("renameWorkspace and the coven's address", () => {
 
   it('takes its own old address back plain, without a second row for it', async () => {
     const t = token();
-    const coven = await insertCoven(`Fixture Round ${t}`);
+    const coven = await insertWorkspaceWithSlug(sql, `Fixture Round ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), coven.id, { name: `Fixture Trip ${t}` });
 
     const back = await renameWorkspace(asUser(A), coven.id, { name: `Fixture Round ${t}` });
@@ -353,7 +413,7 @@ describe('createWorkspace and the addresses other covens hold', () => {
 
   it("takes another live coven's old address plain, and that coven no longer holds it", async () => {
     const t = token();
-    const holder = await insertCoven(`Fixture Former ${t}`);
+    const holder = await insertWorkspaceWithSlug(sql, `Fixture Former ${t}`, undefined, SEEDED);
     await renameWorkspace(asUser(A), holder.id, { name: `Fixture Latter ${t}` });
     // Precondition: the holder holds the old address, and no coven's current address is it.
     expect(await addressesOf(holder.id)).toContain(`fixture-former-${t}`);

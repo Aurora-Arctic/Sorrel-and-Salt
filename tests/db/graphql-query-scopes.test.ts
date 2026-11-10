@@ -1,28 +1,32 @@
 import type { GraphQLObjectType } from 'graphql';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
+import { useTestDatabase } from '../support/db/database';
 import type { AdminWrite, Governed, ScopeProbe } from './types';
 
 // Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes: the second check").
 // Resolver files need no signed-out test of their own (claude-docs/design-decisions/graphql.md, "The GraphQL file holds the transport's half").
 
 let compendiumId: string;
+let sql: postgres.Sql;
+
+useTestDatabase((client) => {
+  sql = client;
+});
 
 const NOWHERE = '00000000-0000-4000-8000-000000000000';
 
 beforeAll(async () => {
-  const sql = postgres(process.env.DATABASE_URL as string);
   const [row] = await sql`
     select id from ingredients where workspace_id is null and deleted_at is null
     order by name, id limit 1`;
   compendiumId = row.id as string;
-  await sql.end();
 });
 
 function fieldsOf(root: GraphQLObjectType | null | undefined): string[] {

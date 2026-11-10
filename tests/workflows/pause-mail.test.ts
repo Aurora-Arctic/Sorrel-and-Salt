@@ -5,15 +5,20 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { memberPauseMail } from '@/modules/coven/jobs/member-pause-mail';
 import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail';
-import { makeWorkspace, workspaceColumns } from '../support/fixtures';
+import { insertWorkspace } from '../support/db/insert-workspace';
+import { useTestDatabase } from '../support/db/database';
+import { MAILPIT_URL, ORIGIN } from '../support/constants';
 
 const DOMAIN = '@pause-mail-run.test';
-const ORIGIN = 'http://localhost:3000';
-const MAILPIT_URL = 'http://mailpit.test';
 const NOTE = 'Staff only: never mailed.';
 const MESSAGE = 'A message written to the user.';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
@@ -71,13 +76,9 @@ async function accessPause(userId: string, lifted = false): Promise<string> {
 let covensMade = 0;
 async function memberPause(userId: string, name: string, lifted = false): Promise<string> {
   covensMade += 1;
-  const [coven] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name: `${name} ${covensMade}` })), created_by: userId, updated_by: userId })}
-    returning id`;
-  const covenId = coven!.id as string;
-  await sql`
-    insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-    values (${covenId}, ${userId}, 'member', ${userId}, ${userId})`;
+  const covenId = await insertWorkspace(sql, `${name} ${covensMade}`, [[userId, 'member']], {
+    author: userId,
+  });
   const [{ id }] = await sql`
     insert into workspace_member_pauses (workspace_id, user_id, until, note, message, lifted_at, lifted_by, created_by, updated_by)
     values (${covenId}, ${userId}, null, ${NOTE}, ${MESSAGE}, ${lifted ? sql`now()` : null}, ${lifted ? userId : null},
@@ -88,7 +89,6 @@ async function memberPause(userId: string, name: string, lifted = false): Promis
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   vi.stubGlobal('fetch', mailpit);
   vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
   vi.stubEnv('MAILPIT_URL', MAILPIT_URL);
@@ -104,7 +104,6 @@ beforeAll(async () => {
 afterAll(async () => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  await sql.end();
 });
 
 beforeEach(() => {

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
@@ -8,14 +8,15 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { DuplicateNode, DuplicateConnection, Result } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 // The transport half of the duplicate warning: what the debounced lookup calls (the nodes, the score on each edge, a page at a time) and the compendium-only mode.
 // The threshold, the scope and who is refused are services/duplicates.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {

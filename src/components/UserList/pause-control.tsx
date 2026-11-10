@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { failureMessage } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
@@ -72,7 +72,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
       refresh();
     } catch (error) {
       setSending(false);
-      feedback.report(readGraphqlFailure(error).alert);
+      feedback.report(failureMessage(error));
     }
   }
 

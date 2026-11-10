@@ -45,6 +45,7 @@ function editingFields(page: Page): Locator {
   const outsideFilter = page.locator(':not(search *)');
   return main
     .getByRole('spinbutton')
+    .or(main.getByRole('textbox', { name: /^(Quantity|Low Stock At)/ }))
     .and(outsideFilter)
     .or(main.getByRole('switch').and(outsideFilter))
     .or(main.getByLabel('Visibility').and(outsideFilter));

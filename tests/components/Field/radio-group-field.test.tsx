@@ -147,6 +147,19 @@ describe('RadioGroupField, cards', () => {
   it('reads an error with the group', () => {
     render(<Cards error="Choose one." />);
     const group = screen.getByRole('group', { name: 'About' });
-    expect(group).toHaveAccessibleDescription('Choose one.');
+    expect(group).toHaveAccessibleDescription('Error: Choose one.');
+  });
+
+  it('marks every card with the error while it is set, and none once it is gone', () => {
+    const { rerender } = render(<Cards error="Choose one." />);
+    const radios = () => within(screen.getByRole('group', { name: 'About' })).getAllByRole('radio');
+    for (const radio of radios()) {
+      expect(radio).toHaveAccessibleDescription(expect.stringContaining('Choose one.'));
+    }
+
+    rerender(<Cards />);
+    for (const radio of radios()) {
+      expect(radio).not.toHaveAccessibleDescription(expect.stringContaining('Choose one.'));
+    }
   });
 });

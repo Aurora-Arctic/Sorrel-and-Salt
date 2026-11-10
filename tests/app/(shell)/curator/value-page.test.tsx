@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NotFound } from '@/lib/errors';
+import { InvalidCursor, NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
@@ -142,6 +142,18 @@ describe('a curated value page, on the categories', () => {
 
     await renderPage({ after });
     expect(lastRequest().after).toEqual({ key: ['Testcraft'], id: TESTCRAFT.id });
+  });
+
+  it('shows the first page when the cursor in the address is readable but this list will not cast it', async () => {
+    listCategories.mockImplementation(async (_filter: unknown, request: PageRequest) => {
+      if (request.after) throw new InvalidCursor();
+      return [entry(TESTCRAFT)];
+    });
+
+    await renderPage({ after: encodeCursor({ key: ['1'], id: TESTCRAFT.id }) });
+
+    expect(lastRequest().after).toBeUndefined();
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   it('says which page of how many, counted from the first row of the page', async () => {

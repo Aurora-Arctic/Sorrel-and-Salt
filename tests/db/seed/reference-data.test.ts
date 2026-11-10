@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -18,11 +18,17 @@ import {
   loadedOf,
   parsed,
 } from './compendium/files-fixture';
+import { useTestDatabase } from '../../support/db/database';
 
 // The six reference seeds in one transaction, which a dry run rolls back once. Each seed's own shape is index.test.ts's and force's per-refusal cases are compendium.test.ts's.
 // This file proves only what running them together adds, over the two-entry fixture.
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 /** Every row of every table, as text. */
@@ -43,12 +49,7 @@ async function snapshot(): Promise<Record<string, string[]>> {
 }
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 beforeEach(async () => {

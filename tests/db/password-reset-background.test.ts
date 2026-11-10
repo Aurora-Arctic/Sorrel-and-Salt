@@ -7,6 +7,7 @@ import { importAuth } from '../support/auth-module';
 import { post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
+import { useTestDatabase } from '../support/db/database';
 
 // The reset mail runs after the answer, so the answer does not wait on the mail transport: a verified address,
 // which is mailed, and any other, which is not, answer without the difference a send would make (DESIGN.md §8,
@@ -28,11 +29,9 @@ const DOMAIN = '@password-reset-background.test';
 const OWNER = `owner${DOMAIN}`;
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-afterAll(async () => {
-  await sql.end();
+
+useTestDatabase((client) => {
+  sql = client;
 });
 
 const server = setupServer(pwnedRange([], []));

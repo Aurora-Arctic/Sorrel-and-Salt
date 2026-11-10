@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
-import { latestMessageTo } from '../mailpit';
+import { VERIFY_LINK, latestMessageTo } from '../mailpit';
+import { PASSWORD, field } from '../session';
 import { BREACHED_PASSWORD } from '../pwned-range.mjs';
 import { withSql } from './coven-ingredients';
 import { DEMO_COVEN_NAME } from '@/db/seed/demo-coven';
@@ -14,12 +14,6 @@ import { slugify } from '@/lib/slugify';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
-const PASSWORD = 'lantern moss under the north window';
-
-const field = (page: Page, label: string) =>
-  page.getByRole('main').getByLabel(new RegExp(`^${label}`));
 
 test(
   'a visitor signs up with an email address and a password, is signed in, and confirms the address by the mailed link',
@@ -33,16 +27,16 @@ test(
     await expect(page).toHaveURL(/method=email/);
     await page.getByRole('button', { name: 'Create an Account' }).click();
     await expect(page.getByRole('heading', { name: 'Create an Account' })).toBeVisible();
-    await field(page, 'Name').fill('Testwort Holder');
-    await field(page, 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Name').fill('Testwort Holder');
+    await field(page.getByRole('main'), 'Email Address').fill(email);
 
-    await field(page, 'Password').fill(BREACHED_PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(BREACHED_PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(field(page, 'Password')).toHaveAttribute('aria-invalid', 'true');
+    await expect(field(page.getByRole('main'), 'Password')).toHaveAttribute('aria-invalid', 'true');
     const none = await withSql((sql) => sql`select 1 from users where email = ${email}`);
     expect(none).toHaveLength(0);
 
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
     await expect(page).toHaveURL('/account/email?next=%2Fcoven');
     await assertNoAccessibilityViolations(page);
@@ -95,7 +89,7 @@ test(
     await expect(page).toHaveURL('/forgot-password');
     await assertNoAccessibilityViolations(page);
 
-    await field(page, 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Email Address').fill(email);
     await page.getByRole('button', { name: 'Send Reset Link' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(email);
 
@@ -110,22 +104,22 @@ test(
     expect(landing.pathname).toBe('/reset-password');
     expect(landing.searchParams.get('token')).toBeTruthy();
     await page.goto(`${landing.pathname}${landing.search}`);
-    await expect(field(page, 'New Password')).toBeVisible();
+    await expect(field(page.getByRole('main'), 'New Password')).toBeVisible();
     await assertNoAccessibilityViolations(page);
 
-    await field(page, 'New Password').fill(NEW_PASSWORD);
+    await field(page.getByRole('main'), 'New Password').fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Set New Password' }).click();
     await expect(page.getByRole('main').getByRole('status')).toBeVisible();
 
     await page.getByRole('link', { name: 'Sign In', exact: true }).click();
     await expect(page).toHaveURL('/sign-in');
     await page.getByRole('button', { name: 'Continue with Email' }).click();
-    await field(page, 'Email Address').fill(email);
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
 
-    await field(page, 'Password').fill(NEW_PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await expect(page).not.toHaveURL(/\/sign-in/);
 
@@ -157,14 +151,14 @@ test(
     );
 
     await page.goto('/sign-in?method=email');
-    await field(page, 'Email Address').fill(email);
-    await field(page, 'Password').fill('not the password at all, sadly');
+    await field(page.getByRole('main'), 'Email Address').fill(email);
+    await field(page.getByRole('main'), 'Password').fill('not the password at all, sadly');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     const alert = page.getByRole('main').getByRole('alert');
     await expect(alert).toBeVisible();
     const wrongPassword = await alert.textContent();
 
-    await field(page, 'Password').fill(PASSWORD);
+    await field(page.getByRole('main'), 'Password').fill(PASSWORD);
     const refused = page.waitForResponse('**/api/auth/sign-in/email');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     expect((await refused).status()).toBe(401);

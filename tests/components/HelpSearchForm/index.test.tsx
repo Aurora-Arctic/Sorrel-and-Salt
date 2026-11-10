@@ -1,12 +1,19 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import HelpSearchForm from '@/components/HelpSearchForm';
+import { Navigating } from '../../support/navigating';
+
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+const at = vi.hoisted(() => ({ pathname: '/help' }));
+vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => at.pathname }));
 
 // The help search box: a plain GET form to /help/search, so it searches with no script, and nothing is asked while
 // a reader types (DESIGN.md §10, "Help and FAQ articles"; support.md, "Audiences, staff routes and search").
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  router.push.mockReset();
+  at.pathname = '/help';
 });
 
 const form = () => screen.getByRole('search');
@@ -68,11 +75,59 @@ describe('HelpSearchForm', () => {
     expect(fireEvent.submit(form())).toBe(false);
   });
 
-  it('submits on Enter once the box holds words', () => {
-    render(<HelpSearchForm />);
-    fireEvent.change(box(), { target: { value: 'coven' } });
+  it("searches through the site's own navigation once the box holds words, so the results page's wait shows", async () => {
+    render(
+      <Navigating push={router.push}>
+        <HelpSearchForm />
+      </Navigating>,
+    );
+    const submit = within(form()).getByRole('button', { name: 'Search' });
+    expect(submit).not.toHaveAttribute('aria-busy', 'true');
+    fireEvent.change(box(), { target: { value: '  stock levels ' } });
 
-    expect(box()).toHaveValue('coven');
-    expect(fireEvent.submit(form())).toBe(true);
+    // The browser's own page load is stopped: it would show nothing until the results arrived.
+    let loaded = true;
+    await act(async () => {
+      loaded = fireEvent.submit(form());
+    });
+    expect(loaded).toBe(false);
+
+    expect(router.push).toHaveBeenCalledWith('/help/search?q=stock+levels');
+    expect(submit).toHaveAttribute('aria-busy', 'true');
   });
+
+  it('sends nothing through the navigation for a blank box on the help index', () => {
+    render(
+      <Navigating push={router.push}>
+        <HelpSearchForm />
+      </Navigating>,
+    );
+    fireEvent.change(box(), { target: { value: '   ' } });
+
+    fireEvent.submit(form());
+
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it.each(['/help/search', '/help/testwort-guide'])(
+    'goes back to the help index for a blank box on %s',
+    async (pathname) => {
+      at.pathname = pathname;
+      render(
+        <Navigating push={router.push}>
+          <HelpSearchForm query="stock" />
+        </Navigating>,
+      );
+      fireEvent.change(box(), { target: { value: '   ' } });
+
+      let loaded = true;
+      await act(async () => {
+        loaded = fireEvent.submit(form());
+      });
+
+      expect(loaded).toBe(false);
+      expect(router.push).toHaveBeenCalledWith('/help');
+      expect(router.push).toHaveBeenCalledTimes(1);
+    },
+  );
 });

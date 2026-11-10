@@ -1,12 +1,16 @@
-import type { HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
+import type { AutoFill, HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
+import type { FieldMask } from '../../lib/formats';
 import type { FieldPath, FieldValues } from 'react-hook-form';
+
+/** A specific autofill token, or `off`. Never `on` or empty, which would let a password manager fill any field. */
+export type AutofillToken = Exclude<AutoFill, 'on' | ''>;
 
 export interface FieldProps {
   label: string;
   /** Read after the label, out of sight ("Quantity, Flower"), so a field drawn once per row has a name of its own. */
   labelSuffix?: string;
   hint?: string;
-  note?: string;
+  note?: ReactNode;
   required?: boolean;
 }
 
@@ -47,8 +51,11 @@ export interface FieldShellProps extends Omit<FieldProps, 'note'>, Omit<FieldDes
   className?: string;
 }
 
-export interface TextFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
-  name: FieldPath<V>;
+/**
+ * What a text control takes, whether it is the react-hook-form `TextField` or the plain-state
+ * `PlainTextField`.
+ */
+export interface TextControlProps extends FieldProps {
   placeholder?: string;
   multiline?: boolean;
   rows?: number;
@@ -56,19 +63,67 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
    * The input's type for a single line; a `number` takes any decimal and is read back as the text
    * typed.
    */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number' | 'email' | 'tel'>;
   /** The on-screen keyboard: `numeric` for a whole number, which a `number` type would take as any decimal. */
-  inputMode?: 'numeric';
+  inputMode?: 'numeric' | 'decimal' | 'email' | 'tel' | 'url';
   disabled?: boolean;
-  deps?: FieldPath<V>[];
+  /**
+   * Tidies the text when the person leaves the field. A single-line field defaults to `tidy`
+   * (src/lib/formats.ts); a multiline one to `trimEnds`. The server schema runs the same function.
+   */
+  format?: (text: string) => string;
+  /**
+   * A soft limit in characters: typing past it is allowed, a count shows from three quarters of it,
+   * and Save refuses. No `maxlength` is set. The schema states the same number, once.
+   */
+  limit?: number;
+  /**
+   * Formats the text while the person types, keeping the caret, paste and Backspace working
+   * (claude-docs/components/field.md, "Masks"). Only for a field the owner has approved; the schema still
+   * checks the value, and `format` still runs on blur. Not for a multiline field.
+   */
+  mask?: FieldMask;
+  /** The browser's autofill. `off` by default; a specific token (never `on`) for a credential or the person's own details. */
+  autoComplete?: AutofillToken;
+  /**
+   * Asks 1Password not to offer to fill or save this field (`data-1p-ignore`), for a field it may take
+   * for a credential, such as the address of someone being invited. LastPass and Bitwarden document no such field attribute.
+   */
+  ignorePasswordManagers?: boolean;
+  /** On for prose (the default for multiline), off for an identifier (the default for a single-line email, url or tel). */
+  spellCheck?: boolean;
+  /** `none` by default for email and url. */
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  /** The label on a phone keyboard's Enter key: `next` between fields, `done` or `send` on the last. */
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  /** Takes focus when the field appears, for a step that replaces the form the person was typing in. */
+  autoFocus?: boolean;
   describedBy?: string;
   invalid?: boolean;
   after?: ReactNode;
-  busy?: boolean;
   action?: ReactNode;
-  format?: (text: string) => string;
-  /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's. */
-  autoComplete?: 'off';
+  busy?: boolean;
+}
+
+export interface TextFieldProps<V extends FieldValues = FieldValues> extends TextControlProps {
+  name: FieldPath<V>;
+  deps?: FieldPath<V>[];
+}
+
+/** A text field for a form that holds its values in state: the caller holds `value` and the `error` text. */
+export interface PlainTextFieldProps extends TextControlProps {
+  value: string;
+  onChange: (value: string) => void;
+  /** The control's `name`, where the form submits natively. */
+  name?: string;
+  /** The error text the caller's own check found, drawn and announced as TextField's is. */
+  error?: string;
+  /**
+   * The value's format rule, run on the tidied value when the box is left and on each change once it has flagged;
+   * an empty value is left to the caller's Save check, and `error` wins over it.
+   */
+  check?: (value: string) => string | undefined;
+  onBlur?: () => void;
 }
 
 export interface SelectOption {
@@ -168,6 +223,8 @@ export interface ReasonFieldProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  /** The caller's refusal, such as the limit on a press; it wins over the field's own check. */
+  error?: string;
   hint?: string;
   className?: string;
 }

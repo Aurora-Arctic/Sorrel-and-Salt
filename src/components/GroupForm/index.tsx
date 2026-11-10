@@ -7,7 +7,7 @@ import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'reac
 import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
 import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
@@ -24,7 +24,8 @@ import {
   RadioGroupField,
   TextField,
   fieldDescription,
-  useFormHistory,
+  useEntityForm,
+  FormErrorSummary,
 } from '../Field';
 import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -155,7 +156,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   category: defineKind({
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
-    describe: 'What the categories in this group share',
     schema: CategoryGroupInput,
     create: CreateCategoryGroupDocument,
     update: UpdateCategoryGroupDocument,
@@ -164,7 +164,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   form: defineKind({
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
-    describe: 'What kind of thing the forms in this group are',
     // The schema drops the two empty colours a form group does not take, and reads None as null.
     schema: IngredientFormGroupInput.extend({
       icon: z.preprocess(
@@ -179,7 +178,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   tradition: defineKind({
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
-    describe: 'The people or religion whose deities it holds',
     schema: DeityTraditionInput,
     create: CreateDeityTraditionDocument,
     update: UpdateDeityTraditionDocument,
@@ -240,11 +238,12 @@ const GroupForm = ({
         }
       : EMPTY,
     resolver,
+    mode: 'onTouched',
+    shouldFocusError: false,
   });
   const {
     control,
     handleSubmit,
-    setError,
     setValue,
     getValues,
     formState: { errors, isSubmitting, isDirty },
@@ -267,18 +266,17 @@ const GroupForm = ({
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
   const discard = useDiscardGuard(isDirty);
-  const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, {
-    root,
-    enabled: !discard.asking && step.at === 'idle',
+  const { root, history, setAlert, rootError, send } = useEntityForm({
+    methods,
+    discard,
+    save: (input) => spec.save(input, group?.id),
+    onDone,
+    asking: step.at !== 'idle',
+    toField: ({ path: [field, ...rest] }) =>
+      rest.length === 0 && isField(field) ? field : undefined,
   });
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
-  const [alert, setAlert] = useState<string>();
-
-  const save = useMutation({
-    mutationFn: (input: GroupValues): Promise<void> => spec.save(input, group?.id),
-  });
 
   const remove = useMutation({
     mutationFn: async (target: string | undefined): Promise<void> => {
@@ -290,18 +288,6 @@ const GroupForm = ({
       await spec.remove(variables);
     },
   });
-
-  const send = async (input: GroupValues): Promise<void> => {
-    setAlert(undefined);
-    try {
-      await save.mutateAsync(input);
-      onDone();
-    } catch (error) {
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
-    }
-  };
 
   const confirmDelete = async (target: string | undefined): Promise<void> => {
     setAlert(undefined);
@@ -325,7 +311,6 @@ const GroupForm = ({
   const others = groups.filter((each) => each.id !== group?.id);
   const rowNoun = plural(memberCount, one, many);
   const rows = `${memberCount} ${rowNoun}`;
-  const rootError = errors.root?.message ?? alert;
 
   // The choosing step's safe answer, which takes the focus as it is asked;
   // the confirming step's are ConfirmQuestion's own.
@@ -455,6 +440,7 @@ const GroupForm = ({
         >
           <FormHistoryButtons />
           {rootError && <Notice kind="error">{rootError}</Notice>}
+          <FormErrorSummary />
           <TextField<GroupValues>
             name="name"
             label="Name"
@@ -462,13 +448,7 @@ const GroupForm = ({
             autoComplete="off"
             required
           />
-          <TextField<GroupValues>
-            name="description"
-            label="Description"
-            placeholder={spec.describe}
-            multiline
-            required
-          />
+          <TextField<GroupValues> name="description" label="Description" multiline required />
           {kind === 'category' &&
             COLORS.map(({ column, label, hint }) => {
               const { aria, ...shell } = fieldDescription({
@@ -495,7 +475,7 @@ const GroupForm = ({
                         id={shell.controlId}
                         label={label}
                         column={column}
-                        placeholder="Add a hex"
+                        placeholder="#4e8bc2"
                         value={field.value}
                         onChange={(value) => {
                           field.onChange(value);

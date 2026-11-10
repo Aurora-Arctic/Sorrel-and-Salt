@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
-import { ORIGIN } from './oauth';
 import type { AuthInstance } from './types';
+import { ORIGIN } from './constants';
 
 export const PWNED_RANGE = 'https://api.pwnedpasswords.com/range/:prefix';
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { MESSAGE_MAX_LENGTH } from '../../modules/support/validation/limits';
 import type { Failure } from '../../lib/types';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SupportViewReplyFormProps } from './types';
@@ -19,21 +20,15 @@ const ReplyByViewTokenDocument = graphql(`
   }
 `);
 
-const MESSAGE_LIMIT = 4000;
-
 const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): ReactElement => {
-  const bodyId = useId();
   const [body, setBody] = useState('');
   // The trap field: a person never sees it, so a value in it is a bot's.
   const [website, setWebsite] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
 
-  const discard = useDiscardGuard(body !== '');
-  const bodyField = fieldDescription({
-    id: bodyId,
-    error: failure.field?.name === 'body' ? failure.field.message : undefined,
-  });
+  const tooLong = body.trim().length > MESSAGE_MAX_LENGTH;
+  const discard = useDiscardGuard(body.trim() !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,19 +56,18 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
       onSubmit={(event) => void submit(event)}
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Your Reply" {...bodyField}>
-        <textarea
-          id={bodyField.controlId}
-          className="textarea"
-          rows={4}
-          placeholder="Write a reply."
-          maxLength={MESSAGE_LIMIT}
-          {...bodyField.aria}
-          value={body}
-          disabled={sending}
-          onChange={(event) => setBody(event.target.value)}
-        />
-      </FieldShell>
+      <PlainTextField
+        name="body"
+        label="Your Reply"
+        multiline
+        rows={4}
+        placeholder="Write a reply"
+        limit={MESSAGE_MAX_LENGTH}
+        disabled={sending}
+        value={body}
+        error={failure.field?.name === 'body' ? failure.field.message : undefined}
+        onChange={setBody}
+      />
       <div hidden>
         <input
           type="text"
@@ -90,7 +84,7 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
         <BusyButton
           type="submit"
           className="btn btn--solid"
-          disabled={body.trim() === '' || sending}
+          disabled={body.trim() === '' || tooLong || sending}
           busy={sending}
           busyLabel="Sending"
         >

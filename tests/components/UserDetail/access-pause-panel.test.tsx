@@ -148,6 +148,18 @@ describe('UserDetail, Site Access', () => {
     );
   });
 
+  it('counts the note and the message against 500 characters without cutting what is typed', () => {
+    renderDetail({ pauses: [] });
+    unfold();
+
+    for (const name of ['Note', /^Message to User/]) {
+      const field = within(section()).getByRole('textbox', { name });
+      fireEvent.change(field, { target: { value: 'x'.repeat(503) } });
+      expect(field).toHaveValue('x'.repeat(503));
+      expect(field).toHaveAccessibleDescription(/3 characters over/);
+    }
+  });
+
   it('holds Pause Access, and sends nothing, until the message has text', () => {
     const sent = pausesSent();
     renderDetail({ pauses: [] });

@@ -10,6 +10,7 @@ import { SearchField } from '../Field/search-field';
 import { fieldDescription } from '../Field/description';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { FacetShell } from '../FacetPanel/shell';
+import { BATCH_STATUSES, STATUS_LABEL } from './batches';
 import { CARDS_PATH, cardsHref } from './href';
 import type { CardsFilter, CardsFilterProps } from './types';
 
@@ -19,10 +20,7 @@ import type { CardsFilter, CardsFilterProps } from './types';
 
 const STATUS_OPTIONS: { value: CardsFilter['status']; label: string }[] = [
   { value: '', label: 'Any' },
-  { value: 'live', label: 'Live' },
-  { value: 'revoked', label: 'Revoked' },
-  { value: 'expired', label: 'Expired' },
-  { value: 'used-up', label: 'Used Up' },
+  ...BATCH_STATUSES.map((value) => ({ value, label: STATUS_LABEL[value] })),
 ];
 
 type Held = Omit<CardsFilter, 'batch'>;

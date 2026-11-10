@@ -1,12 +1,15 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
+import { limitMessage } from '../../lib/formats';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { COVEN_NAME_LIMIT } from '@/modules/coven/validation/workspace-name';
+import { FormActions } from '../Field';
+import { PlainTextField } from '../Field/plain-text-field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
@@ -52,8 +55,6 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
     },
   });
 
-  const { aria, ...field } = fieldDescription({ id: useId(), error: fieldError });
-
   const busy = mutation.isPending || leaving;
   const typed = value.trim();
   // Outer whitespace is no change, and a blank name is none: the service refuses it.
@@ -65,6 +66,10 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
     // A disabled submit stops a click, not a form submitted by other means.
     if (!dirty || busy) return;
     setAlert(undefined);
+    if (value.trim().length > COVEN_NAME_LIMIT) {
+      setFieldError(limitMessage(COVEN_NAME_LIMIT));
+      return;
+    }
     setFieldError(undefined);
     mutation.mutate(value);
   };
@@ -79,19 +84,18 @@ const RenameWorkspaceForm = ({ workspaceId, name }: RenameWorkspaceFormProps): R
     <>
       {alert && <Notice kind="error">{alert}</Notice>}
       <form className="form form--inline-actions" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Name" required {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="text"
-            autoComplete="off"
-            required
-            aria-required
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            {...aria}
-          />
-        </FieldShell>
+        <PlainTextField
+          label="Name"
+          required
+          autoComplete="off"
+          limit={COVEN_NAME_LIMIT}
+          value={value}
+          onChange={(next) => {
+            setValue(next);
+            setFieldError(undefined);
+          }}
+          error={fieldError}
+        />
         <FormActions noun="Coven" dirty={dirty} submitting={busy} holdCancel onCancel={cancel} />
         {discard.asking && <DiscardQuestion guard={discard} />}
       </form>

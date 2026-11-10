@@ -1,16 +1,17 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { createLoaders } from '@/graphql/loaders';
 import { slugify } from '@/lib/slugify';
 import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { CategoryGroupNode } from './types';
+import { useTestDatabase } from '../../../support/db/database';
 
 let sql: ReturnType<typeof postgres>;
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+
+useTestDatabase((client) => {
+  sql = client;
 });
-afterAll(() => sql.end());
 
 let seededId: string;
 beforeAll(async () => {

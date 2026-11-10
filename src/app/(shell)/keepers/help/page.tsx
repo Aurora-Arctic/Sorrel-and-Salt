@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import { ADMIN_PAGES } from '../../../../components/AdminNav/sections';
 import HelpOutline from '../../../../components/HelpOutline';
@@ -16,8 +17,8 @@ import PageHeader from '../../../../components/PageHeader';
 import { helpPath, keeperHelpEditPath } from '../../../../lib/help-paths';
 import { byAudience, placeInAudience } from '../../../../lib/help-audience';
 import { listHref, pagerHrefs } from '../../../../lib/list-href';
-import { readPageCursors } from '../../../../lib/numbered-page';
-import { allPages, resolvePage } from '../../../../lib/pagination';
+import { readCursorPage, readPageCursors } from '../../../../lib/numbered-page';
+import { allPages } from '../../../../lib/pagination';
 import { requireAdminSession } from '../../../../lib/request-session';
 import { single } from '../../../../lib/search-params';
 import type { Session } from '../../../../lib/session';
@@ -29,9 +30,7 @@ import {
 } from '@/modules/help';
 import AddAction from '../../curator/add-action';
 
-export const metadata: Metadata = {
-  title: 'Help',
-};
+export const metadata: Metadata = pageTitle('Help');
 
 const { label } = ADMIN_PAGES.help;
 const NEW_PATH = '/keepers/help/new';
@@ -73,19 +72,17 @@ const readAll = cache(
 
 const readSearch = cache(
   (session: Session, filter: HelpOutlineFilter, after?: string, before?: string) =>
-    resolvePage(
-      after === undefined && before !== undefined ? { last: 25, before } : { first: 25, after },
-      (request) =>
-        listKeeperHelpArticles(
-          session,
-          {
-            query: filter.query,
-            ...(filter.kind === 'article' ? { kinds: PAGE_KINDS } : { kind: filter.kind || null }),
-            audience: filter.audience || null,
-            listing: filter.shown,
-          },
-          request,
-        ),
+    readCursorPage({ after, before }, (request) =>
+      listKeeperHelpArticles(
+        session,
+        {
+          query: filter.query,
+          ...(filter.kind === 'article' ? { kinds: PAGE_KINDS } : { kind: filter.kind || null }),
+          audience: filter.audience || null,
+          listing: filter.shown,
+        },
+        request,
+      ),
     ),
 );
 

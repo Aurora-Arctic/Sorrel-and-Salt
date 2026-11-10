@@ -1,5 +1,6 @@
 'use client';
 
+import { FADE_LIMIT_MS, prefersReducedMotion } from '@/lib/motion';
 import {
   type KeyboardEvent,
   type ReactElement,
@@ -9,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
@@ -22,14 +24,6 @@ import { PendingLink } from '../../lib/navigation';
 
 /** space(2) in pixels: the gap between button and menu. */
 const MENU_GAP_PX = 8;
-
-/** Past the fade's own length (index.scss), for a browser that never reports its end. */
-const FADE_LIMIT_MS = 400;
-
-/** Motion turned down, or no way to ask, so a close is not held for a fade. */
-const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * The items as drawn: the green one, marked `primary`, first, and the rest in the caller's
@@ -115,7 +109,7 @@ export default function MenuButton({
       if (now) {
         setDrawn(true);
         setChosen(undefined);
-      } else if (fadesAreOff()) setDrawn(false);
+      } else if (prefersReducedMotion()) setDrawn(false);
       return now;
     });
   };
@@ -133,12 +127,13 @@ export default function MenuButton({
   useEffect(() => {
     if (!open) return;
     root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-    const closeOnOutsidePress = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePress);
-    return () => document.removeEventListener('pointerdown', closeOnOutsidePress);
   }, [open]);
+
+  useDismiss({
+    active: open,
+    inside: (target) => root.current?.contains(target) ?? false,
+    onOutsidePress: () => setOpen(false),
+  });
 
   const onMenuKey = (event: KeyboardEvent): void => {
     const list = all();

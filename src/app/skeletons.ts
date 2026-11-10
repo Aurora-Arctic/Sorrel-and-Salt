@@ -44,8 +44,8 @@ import {
 
 /**
  * What each page draws while it is on its way, by the address pattern the folders under `src/app`
- * name it with. `host` is the body that draws it: the shell's `main`, a coven's body or an admin
- * area's body. Each skeleton sits in `skeleton.tsx` beside its page or a layout above it.
+ * name it with. `host` is the body that draws it: the shell's `main`, a coven's body, an admin
+ * area's body or the public help pages' body. Each skeleton sits in `skeleton.tsx` beside its page or a layout above it.
  */ import {
   CategoriesSkeleton,
   CategoryGroupsSkeleton,
@@ -87,11 +87,11 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/disclaimer': { host: 'main', Skeleton: DisclaimerSkeleton },
   '/disclaimer/versions/[number]': { host: 'main', Skeleton: DisclaimerVersionSkeleton },
   '/support': { host: 'main', Skeleton: SupportSkeleton },
-  '/help': { host: 'main', Skeleton: HelpSkeleton },
-  '/help/glossary': { host: 'main', Skeleton: HelpGlossaryPageSkeleton },
-  '/help/search': { host: 'main', Skeleton: HelpSearchPageSkeleton },
-  '/help/[slug]': { host: 'main', Skeleton: HelpArticlePageSkeleton },
-  '/help/[slug]/[child]': { host: 'main', Skeleton: HelpSubPageSkeleton },
+  '/help': { host: 'help', Skeleton: HelpSkeleton },
+  '/help/glossary': { host: 'help', Skeleton: HelpGlossaryPageSkeleton },
+  '/help/search': { host: 'help', Skeleton: HelpSearchPageSkeleton },
+  '/help/[slug]': { host: 'help', Skeleton: HelpArticlePageSkeleton },
+  '/help/[slug]/[child]': { host: 'help', Skeleton: HelpSubPageSkeleton },
   '/help/staff': { host: 'main', Skeleton: StaffHelpSkeleton },
   '/help/staff/[slug]': { host: 'main', Skeleton: StaffHelpArticleSkeleton },
   '/help/staff/[slug]/[child]': { host: 'main', Skeleton: StaffHelpSubPageSkeleton },

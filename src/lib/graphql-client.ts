@@ -2,7 +2,8 @@ import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import type { GraphQLFormattedError } from 'graphql';
 import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
-import { ACCESS_PAUSED_CODE, covenPausedPath, covenSlugOf } from './access-paused';
+import { ACCESS_PAUSED_CODE, covenPausedPath } from './access-paused';
+import { covenSlugOf } from './coven-path';
 import { apiPath } from './api-path';
 import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import { reportLeaving } from './navigation/store';
@@ -24,7 +25,7 @@ type GraphQLBody<TResult> = { data?: TResult | null; errors?: readonly GraphQLFo
 function leaveIfCovenPaused(errors: readonly GraphQLFormattedError[] | undefined): void {
   if (!errors?.some(({ extensions }) => extensions?.code === ACCESS_PAUSED_CODE)) return;
   const slug = covenSlugOf(new URL(window.location.href).pathname);
-  if (slug === undefined) return;
+  if (slug === null) return;
   reportLeaving();
   window.location.assign(covenPausedPath(slug));
 }

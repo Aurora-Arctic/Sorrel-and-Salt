@@ -1,9 +1,10 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { start } from 'workflow/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalCleanup } from '@/modules/identity/jobs/provisional-cleanup';
 import { provisionalCleanupBatch } from '@/modules/identity/jobs/provisional-cleanup-batch';
+import { useTestDatabase } from '../support/db/database';
 
 // No run sleeps, so none is woken. Other files share the database and may leave lapsed rows of their own, so a coordinator's batch count is asserted only as a floor.
 
@@ -11,16 +12,12 @@ const DOMAIN = '@provisional-cleanup-run.test';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+useTestDatabase((client) => {
+  sql = client;
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 async function signUp(label: string, verified: boolean, age: string): Promise<string> {

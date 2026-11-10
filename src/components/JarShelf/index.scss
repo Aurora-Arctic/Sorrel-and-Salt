@@ -26,7 +26,7 @@ $-bracket: 7px;
   // (claude-docs/components/jar-shelf.md, "Contracts").
   overflow-x: clip;
 
-  @media (max-width: 30rem) {
+  @include width-to(30rem) {
     grid-template-columns: repeat(auto-fill, minmax(#{$jar-cell-min-narrow}, 1fr));
   }
 }

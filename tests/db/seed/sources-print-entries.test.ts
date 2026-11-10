@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -9,6 +9,7 @@ import { seedAstrology } from '@/db/seed/astrology';
 import { seedDeities } from '@/db/seed/deities';
 import { SOURCES, seedSources } from '@/db/seed/sources';
 import { citationText } from '@/lib/citation';
+import { useTestDatabase } from '../../support/db/database';
 
 // A source the seed stored before it carried its print work's details is not found by the seed, which then inserts a second copy.
 // This proves the seed updates the stored row in place once the migration that rewrites the keys has run (`0116`), and twins it
@@ -46,15 +47,15 @@ const A_ID = FIXTURE_USERS.A.id;
 const PERSONS_NOTE = 'Read in the reading room';
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 /** Seeds the sources, then puts Slavic Religion back as the seed stored it before, and returns its id. */

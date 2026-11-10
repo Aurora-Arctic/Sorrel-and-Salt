@@ -500,3 +500,30 @@ test("a pager end lands on the new page's first entries", async ({ page }) => {
   expect(await firstCardTop()).toBeLessThan(page.viewportSize()!.height);
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });
+
+test("the page header's Add Ingredient opens this coven's dialog for a writer, and is absent for an observer", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Header Add', 'header-add.test', {
+    A: 'owner',
+    B: 'member',
+    C: 'viewer',
+  });
+  await withSql((sql) => localIngredient(sql, coven.id, coven.users.A));
+  const headerAdd = page.getByRole('main').getByRole('link', { name: 'Add Ingredient' });
+
+  // Why the action could have shown for C: C reads the page and its cards.
+  await signInAgainAs(page, coven.users.C);
+  await page.goto(listPath(coven));
+  await expect(cardsIn(ingredientList(page))).toHaveCount(1);
+  await expect(headerAdd).toHaveCount(0);
+
+  for (const key of ['B', 'A']) {
+    await signInAgainAs(page, coven.users[key]);
+    await page.goto(listPath(coven));
+    await expect(cardsIn(ingredientList(page))).toHaveCount(1);
+    await headerAdd.click();
+    await expect(page).toHaveURL(new RegExp(`[?&]new=ingredient-coven-${coven.slug}$`));
+    await expect(page.getByRole('dialog')).toBeVisible();
+  }
+});

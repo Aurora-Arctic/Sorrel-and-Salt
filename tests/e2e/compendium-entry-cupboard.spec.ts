@@ -6,6 +6,7 @@ import { seedCoven, withSql } from './stories/coven-ingredients';
 import { ADD, HELD as EVERY, HELD_MARK, SHELF } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
+import { insertWorkspace } from '../support/db/insert-workspace';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -173,14 +174,10 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     sql.begin(async (tx) => {
       const by = one.users.B;
       await tx`select set_config('app.current_user_id', ${by}, true)`;
-      const [workspace] = await tx<{ id: string }[]>`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${SECOND}, 'fixture-coven-pantry-two', ${by}, ${by})
-        returning id`;
-      await tx`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${workspace.id}, ${by}, 'owner', ${by}, ${by})`;
-      return workspace.id;
+      return insertWorkspace(tx, SECOND, [[by, 'owner']], {
+        slug: 'fixture-coven-pantry-two',
+        author: by,
+      });
     }),
   );
   const admin = await browser.newPage({ baseURL });

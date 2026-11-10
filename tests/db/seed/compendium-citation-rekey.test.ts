@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -13,6 +13,7 @@ import { seedSources } from '@/db/seed/sources';
 import { citationText } from '@/lib/citation';
 import type { SeedCompendiumShard } from '@/db/seed/types';
 import { TESTWORT, fileOf, loadedOf } from './compendium/files-fixture';
+import { useTestDatabase } from '../../support/db/database';
 
 // A source stored under a citation's old wording is not found by the seed, which then reads its entry as changed. This proves the
 // seed skips an approved, unmarked entry once the migration that rewrites the keys has run (`0095`), and reports it pending before.
@@ -37,10 +38,14 @@ const NEW_KEY = citationText(ENTRY_SOURCE['fixture-encyclopaedia']);
 const OLD_KEY = NEW_KEY.replace(', under "', ', s.v. "');
 
 let sql: ReturnType<typeof postgres>;
+
+useTestDatabase((client) => {
+  sql = client;
+});
+
 let db: ReturnType<typeof drizzle>;
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
   await truncateAllTables(sql);
   await seedCategories(db);
@@ -48,10 +53,6 @@ beforeAll(async () => {
   await seedAstrology(db);
   await seedDeities(db);
   await seedSources(db);
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 /** Testwort, citing the reference-work entry beside what it already cites. */

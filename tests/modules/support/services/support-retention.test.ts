@@ -28,6 +28,7 @@ import { retentionDueStep as findRetentionDue } from '@/modules/support/jobs/sup
 import { retentionBatchStep as runRetentionBatch } from '@/modules/support/jobs/support-retention-batch-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { ORIGIN } from '../../../support/constants';
 
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
@@ -80,7 +81,6 @@ beforeEach(async () => {
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
-const ORIGIN = 'http://localhost:3000';
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The Testwort jar sticks', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {

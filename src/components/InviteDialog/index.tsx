@@ -1,17 +1,18 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
-import { normaliseEmail, validateEmailAddress } from '../../lib/email-address';
+import { EmailAddress } from '../../lib/email-address-schema';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
+import { FormActions, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
+import InviteEmailField from './email-field';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
 // A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
@@ -41,26 +42,24 @@ const INVITE_TITLE = 'Invite Someone';
  */
 const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement => {
   const { refresh } = usePendingNavigation();
-  const emailId = useId();
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('viewer');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sentTo, setSentTo] = useState<string>();
-  const { aria: emailAria, ...emailField } = fieldDescription({
-    id: emailId,
-    error: failure.field?.message,
-  });
 
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const parsed = EmailAddress.safeParse(email);
+    if (!parsed.success) {
+      return setFailure({
+        field: { name: 'email', message: parsed.error.issues[0]?.message ?? '' },
+      });
+    }
     const address = email.trim();
-    // The same rule the service applies, said before anything is sent.
-    const issue = validateEmailAddress(normaliseEmail(address));
-    if (issue) return setFailure({ field: { name: 'email', message: issue.message } });
 
     setSending(true);
     setFailure({});
@@ -95,23 +94,15 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Email Address" required {...emailField}>
-        <input
-          id={emailField.controlId}
-          className="input"
-          type="email"
-          autoComplete="off"
-          placeholder="Add an email"
-          aria-required
-          {...emailAria}
-          value={email}
-          disabled={sending}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            if (failure.field) setFailure({});
-          }}
-        />
-      </FieldShell>
+      <InviteEmailField
+        value={email}
+        error={failure.field?.message}
+        disabled={sending}
+        onChange={(next) => {
+          setEmail(next);
+          if (failure.field) setFailure({});
+        }}
+      />
       <RadioGroupField
         legend="Role"
         name="invite-role"

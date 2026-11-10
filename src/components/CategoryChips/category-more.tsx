@@ -2,6 +2,7 @@
 
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/react-dom';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useDismiss } from '../../lib/use-dismiss';
 import { chipColors } from '../../lib/chip-colors';
 import { TIP_OPEN_DELAY_MS } from '../InfoTip/constants';
 import CategoryTipChip from './category-tip-chip';
@@ -86,25 +87,17 @@ const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactEle
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+  useDismiss({
+    active: open,
+    inside: (target) => wrapper.current?.contains(target) ?? false,
+    onOutsidePress: close,
+    onEscape: () => {
       close();
       returning.current = true;
       button.current?.focus();
       returning.current = false;
-    };
-    const onPress = (event: Event) => {
-      if (!wrapper.current?.contains(event.target as Node)) close();
-    };
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPress);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onPress);
-    };
-  }, [open, close]);
+    },
+  });
 
   return (
     <span

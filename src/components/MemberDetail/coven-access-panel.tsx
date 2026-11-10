@@ -5,7 +5,7 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { longMinuteInZone } from '../../lib/utc';
-import { stands } from '../UserDetail/access-pause-parts';
+import { stands, PAUSE_WORDS } from '../UserDetail/access-pause-parts';
 import PausePanel from '../UserDetail/pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from '../UserDetail/types';
 import type { CovenAccessPanelProps } from './types';
@@ -74,7 +74,7 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
   who ? { id: who.id, name: who.name ?? 'Unknown' } : null;
 
 const copyFor = (name: string): PausePanelCopy => ({
-  noteHint: "Seen by the coven's stewards only, up to 500 characters.",
+  noteHint: "Seen by the coven's stewards only.",
   notePlaceholder: 'Why, for stewards',
   messageLabel: 'Message to Member',
   messagePlaceholder: 'For them',
@@ -90,6 +90,7 @@ const copyFor = (name: string): PausePanelCopy => ({
       {until ? `, rather than at ${longMinuteInZone(until)}` : ''}.
     </>
   ),
+  ...PAUSE_WORDS,
   paused: `${name}'s access is paused.`,
   lifted: `${name}'s access is restored.`,
 });

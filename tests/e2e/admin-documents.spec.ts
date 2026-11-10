@@ -451,6 +451,62 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
   ).toBeVisible();
 });
 
+test('a bare address typed into the link dialog becomes an https link, and stays one on the published page', async ({
+  page,
+  browser,
+}) => {
+  await signInAs(page, 'link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await appendTo(page, 'Changes to This Policy', ' Fixturelink');
+  await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
+  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  // The selection is read back, then given a beat: the editor copies the browser’s selection into its own on a throttle of about
+  // 100ms, and the Link button reads the editor’s copy, which would still be one letter short if it ran first.
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
+    .toBe('Fixturelink');
+  await page.waitForTimeout(300);
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const main = page.getByRole('main');
+  // The autosave can send part-way through the typing, and Save Draft is disabled while any save is in flight, so the
+  // test waits for the response to the save that carries the link, not for the button.
+  const saved = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/graphql') &&
+      Boolean(response.request().postData()?.includes('](https://example.com)')) &&
+      response.request().postDataJSON().operationName === 'SaveDocumentDraft',
+  );
+  await main.getByRole('button', { name: 'Save Draft' }).click();
+  await saved;
+  await page.reload();
+  await expect(editorOf(page).getByRole('link', { name: 'Fixturelink' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
+
+  await main.getByRole('button', { name: 'Publish', exact: true }).click();
+  const confirmation = page.getByRole('dialog');
+  await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(confirmation).toHaveCount(0);
+
+  const reader = await (await browser.newContext()).newPage();
+  await reader.goto('/privacy');
+  await expect(
+    reader.getByRole('main').getByRole('link', { name: 'Fixturelink', exact: true }),
+  ).toHaveAttribute('href', 'https://example.com');
+  await reader.context().close();
+});
+
 test('the Pull Quote button turns the paragraph holding the caret into a quote, and a second press undoes it', async ({
   page,
 }) => {
@@ -513,4 +569,98 @@ test('moving to another document keeps the same tab row and never marks Terms of
   expect(
     await page.evaluate(() => (window as unknown as { termsSeen: string[] }).termsSeen),
   ).toEqual([]);
+});
+
+test('the editor link dialog spaces its field and buttons as every other form modal does', async ({
+  page,
+}) => {
+  await signInAs(page, 'link-layout@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+  await appendTo(page, 'Changes to This Policy', ' Fixturelink');
+  await expect(editorOf(page).getByRole('heading', { name: /Fixturelink$/ })).toBeVisible();
+  for (let i = 0; i < 'Fixturelink'.length; i++) await page.keyboard.press('Shift+ArrowLeft');
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString()))
+    .toBe('Fixturelink');
+  await page.waitForTimeout(300);
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  await expect(dialog).toBeVisible();
+
+  // A `.form` holding a field and `.modal__actions` is every other form modal's shape; one is built beside the
+  // real controls, and the real gaps must equal its gaps.
+  const gaps = await dialog.evaluate((root) => {
+    const field = root.querySelector('.field')!;
+    const add = [...root.querySelectorAll('button')].find((b) => b.textContent === 'Add Link')!;
+    const actions = add.parentElement!;
+    const title = root.querySelector('h2')!;
+    const real = {
+      titleToField: field.getBoundingClientRect().top - title.getBoundingClientRect().bottom,
+      fieldToActions: actions.getBoundingClientRect().top - field.getBoundingClientRect().bottom,
+    };
+    const probe = document.createElement('div');
+    probe.className = 'form';
+    probe.innerHTML =
+      '<div class="field"><label class="field__label">Probe</label><input class="input"></div><div class="modal__actions"><button class="btn btn--solid">Probe</button></div>';
+    field.parentElement!.parentElement!.prepend(probe);
+    const bottom = (el: Element) => el.getBoundingClientRect().bottom;
+    const top = (el: Element) => el.getBoundingClientRect().top;
+    const probeField = probe.querySelector('.field')!;
+    const probeActions = probe.querySelector('.modal__actions')!;
+    const result = {
+      ...real,
+      probeTitleToField: top(probeField) - bottom(title),
+      probeFieldToActions: top(probeActions) - bottom(probeField),
+    };
+    probe.remove();
+    return result;
+  });
+  expect(gaps.titleToField).toBeCloseTo(gaps.probeTitleToField, 0);
+  expect(gaps.fieldToActions).toBeCloseTo(gaps.probeFieldToActions, 0);
+});
+
+test('Add Link with the caret placed and nothing selected inserts the address as a link, with no error', async ({
+  page,
+}) => {
+  await signInAs(page, 'caret-link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await appendTo(page, 'Changes to This Policy', ' ');
+  await page.waitForTimeout(300);
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(editorOf(page).getByRole('link', { name: 'https://example.com' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
+});
+
+test('Add Link before the editor has ever been clicked into still adds the address as a link, with no error', async ({
+  page,
+}) => {
+  await signInAs(page, 'unfocused-link-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await toolbarOf(page).getByRole('button', { name: 'Link' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add Link' });
+  const address = dialog.getByRole('textbox', { name: 'Address' });
+  await address.fill('example.com');
+  await address.blur();
+  await expect(address).toHaveValue('https://example.com');
+  await dialog.getByRole('button', { name: 'Add Link' }).click();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
+  await expect(editorOf(page).getByRole('link', { name: 'https://example.com' })).toHaveAttribute(
+    'href',
+    'https://example.com',
+  );
 });

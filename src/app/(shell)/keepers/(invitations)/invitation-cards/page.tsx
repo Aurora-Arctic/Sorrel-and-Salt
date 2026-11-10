@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageTitle } from '@/lib/page-metadata';
 import { cache } from 'react';
 import AdminCards from '../../../../../components/AdminCards';
 import { batchStatus } from '../../../../../components/AdminCards/batches';
@@ -13,9 +14,7 @@ import { cardBatchTotals, countCardBatches, listCardBatches } from '@/modules/id
 import { readListPlace } from '../../../curator/list-page';
 import type { CardsPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Invitation Cards',
-};
+export const metadata: Metadata = pageTitle('Invitation Cards');
 
 // Cached so a second render in the request reads once.
 const readBatches = cache(

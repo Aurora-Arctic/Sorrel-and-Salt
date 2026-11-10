@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
+import { PASSWORD, field, signInAs } from './session';
 import { withSql } from './stories/coven-ingredients';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
@@ -15,15 +15,10 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-const PASSWORD = 'lantern moss under the north window';
-
-const field = (page: Page, label: string) =>
-  page.getByRole('main').getByLabel(new RegExp(`^${label}`));
-
 async function signInByPassword(page: Page, email: string): Promise<void> {
   await page.goto('/sign-in?method=email');
-  await field(page, 'Email Address').fill(email);
-  await field(page, 'Password').fill(PASSWORD);
+  await field(page.getByRole('main'), 'Email Address').fill(email);
+  await field(page.getByRole('main'), 'Password').fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 }
 
