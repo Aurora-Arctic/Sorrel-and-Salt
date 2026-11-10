@@ -750,7 +750,7 @@ _Acceptance criteria:_
 
 **MB.295 — 1Password Saves the Login Under "Sorrelandsalt"** · 1.5h
 
-_Story:_ As a member, I want my password manager to save my login as "Sorrel & Salt", so that I can find it.
+_Story:_ As a member, I want my password manager to save my login under the site name, so that I can find it.
 
 Found on 2026-11-10 by the owner on production. When 1Password offers to save a login, it names the entry "Sorrelandsalt". The passkey site name (`rpName` in `src/lib/auth.ts`) is already "Sorrel & Salt", so the name most likely comes from the domain or the page metadata. Steps to reproduce:
 
@@ -759,11 +759,11 @@ Found on 2026-11-10 by the owner on production. When 1Password offers to save a 
 
 Actual: 1Password offers to save the entry as "Sorrelandsalt".
 
-Expected: it offers "Sorrel & Salt".
+Expected: it offers "Sorrel and Salt". 1Password names a saved login from the page title only when the name in it spells out the domain letters, so a title with "&" falls back to the capitalised domain; the application name and the web app manifest make no difference (the owner tested each on static pages).
 
 _Acceptance criteria:_
 
-- A regression test that fails before the fix: the sign-in page carries the metadata password managers read the site name from (the application name and the web app manifest name), set to "Sorrel & Salt"
+- A regression test that fails before the fix: the sign-in page title ends "Sorrel and Salt", and every page title writes the name that way, while share titles and page text keep "Sorrel & Salt"
 - The cause found is stated in the PR body
 
 **MB.296 — Emails Show the Wrong Fonts in Gmail** · 2h
