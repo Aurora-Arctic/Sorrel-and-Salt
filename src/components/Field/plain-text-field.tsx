@@ -1,6 +1,6 @@
 'use client';
 
-import { type ChangeEvent, type FocusEvent, type ReactElement, useId } from 'react';
+import { type ChangeEvent, type FocusEvent, type ReactElement, useId, useState } from 'react';
 import Spinner from '../Spinner';
 import { CharacterCount } from './character-count';
 import { fieldDescription } from './description';
@@ -45,15 +45,23 @@ export function PlainTextField({
   onChange,
   onBlur,
   error,
+  check,
 }: PlainTextFieldProps): ReactElement {
   const id = useId();
+  const [problem, setProblem] = useState<string>();
+  const [rechecking, setRechecking] = useState(false);
+  const recheck = (text: string) => {
+    const found = text === '' ? undefined : check?.(text);
+    setProblem(found);
+    return found;
+  };
   const countId = useId();
   const { aria, ...description } = fieldDescription({
     id,
     hint,
     note,
     describedBy: [describedBy, limit && countId].filter(Boolean).join(' ') || undefined,
-    error,
+    error: error ?? problem,
     invalid,
   });
   const blurFormatter = blurFormat({ format, multiline });
@@ -61,6 +69,7 @@ export function PlainTextField({
   const leave = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const formatted = blurFormatter?.(event.target.value) ?? event.target.value;
     if (formatted !== event.target.value) onChange(formatted);
+    if (recheck(formatted)) setRechecking(true);
     onBlur?.();
   };
   const control = {
@@ -85,6 +94,11 @@ export function PlainTextField({
     onFocus: masked.onFocus,
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       masked.mask(event);
+      // A caller's error counts as shown, as react-hook-form re-checks on change after a failed Save.
+      if (rechecking || error) {
+        setRechecking(true);
+        recheck(event.target.value);
+      }
       onChange(event.target.value);
     },
     onBlur: leave,

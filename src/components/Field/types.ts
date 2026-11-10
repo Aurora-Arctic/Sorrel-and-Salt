@@ -118,6 +118,11 @@ export interface PlainTextFieldProps extends TextControlProps {
   name?: string;
   /** The error text the caller's own check found, drawn and announced as TextField's is. */
   error?: string;
+  /**
+   * The value's format rule, run on the tidied value when the box is left and on each change once it has flagged;
+   * an empty value is left to the caller's Save check, and `error` wins over it.
+   */
+  check?: (value: string) => string | undefined;
   onBlur?: () => void;
 }
 

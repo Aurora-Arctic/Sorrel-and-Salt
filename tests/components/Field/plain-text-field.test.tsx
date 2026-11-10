@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PlainTextField } from '@/components/Field';
 import type { PlainTextFieldProps } from '@/components/Field/types';
 
@@ -77,5 +77,61 @@ describe('PlainTextField', () => {
   it('draws a textarea when multiline', () => {
     render(<Host multiline />);
     expect(box().tagName).toBe('TEXTAREA');
+  });
+  describe('check', () => {
+    const tooShort = (value: string) =>
+      value.length < 3 ? 'Enter at least three letters' : undefined;
+    const leave = () =>
+      act(async () => {
+        box().focus();
+        box().blur();
+      });
+    const errorText = () =>
+      (box().getAttribute('aria-describedby')?.split(' ') ?? [])
+        .map((id) => document.getElementById(id)?.textContent ?? '')
+        .join(' ');
+
+    it('stays quiet while the first value is typed, then flags a bad one when the box is left', async () => {
+      render(<Host check={tooShort} />);
+      await type('ab');
+      expect(box()).not.toBeInvalid();
+      await leave();
+      expect(box()).toBeInvalid();
+      expect(errorText()).toContain('Enter at least three letters');
+    });
+    it('re-checks as it is typed once it has flagged, and clears once the value passes', async () => {
+      render(<Host check={tooShort} />);
+      await type('ab');
+      await leave();
+      await type('abc');
+      expect(box()).not.toBeInvalid();
+      await type('a');
+      expect(box()).toBeInvalid();
+    });
+    it('checks the value as the format left it', async () => {
+      render(<Host check={tooShort} format={(text) => `${text}xx`} />);
+      await type('a');
+      await leave();
+      expect(box().value).toBe('axx');
+      expect(box()).not.toBeInvalid();
+    });
+    it('leaves an empty box quiet when it is left, so a required one is flagged only on Save', async () => {
+      const check = vi.fn(() => 'Enter something');
+      render(<Host check={check} />);
+      await leave();
+      expect(box()).not.toBeInvalid();
+      await type('ab');
+      await leave();
+      expect(box()).toBeInvalid();
+      await type('');
+      expect(box()).not.toBeInvalid();
+    });
+    it("shows the caller's error over its own", async () => {
+      render(<Host check={tooShort} error="That name is taken" />);
+      await type('ab');
+      await leave();
+      expect(errorText()).toContain('That name is taken');
+      expect(errorText()).not.toContain('Enter at least three letters');
+    });
   });
 });
