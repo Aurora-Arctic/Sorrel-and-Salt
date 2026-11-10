@@ -1,13 +1,6 @@
 import 'server-only';
-import {
-  findCategoryPage,
-  findGroupCount,
-  findGroupPage,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findCategoryPage, findGroupCount, findGroupPage } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -16,7 +9,7 @@ import { parseInput } from '../../../lib/validation';
 import { assertCurator } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryGroupInput } from '../validation/category-group';
-import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import { bySlug, createCurated, deleteGroup, updateGroup } from './curated-writes';
 import type { CategoryGroupRow, CuratedGroup } from '../types';
 
 /** The groups, and the categories filed under them, which a delete moves and a rename leaves alone: a category's slug is its own name alone. */
@@ -46,9 +39,7 @@ export function countCategoryGroups(start: Cursor | undefined): Promise<PageCoun
  * @throws {NotFound} no live group holds the slug.
  */
 export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGroupRow> {
-  const row = await findOneBySlug(categoryGroups, slug);
-  if (!row) throw new NotFound('No such group');
-  return row;
+  return bySlug(GROUPS, slug);
 }
 
 /**
@@ -61,14 +52,7 @@ export async function createCategoryGroup(
 ): Promise<CategoryGroupRow> {
   assertCurator(session);
   const fields = parseInput(CategoryGroupInput, input);
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(categoryGroups, { ...fields, slug });
-    return row;
-  }).catch((error: unknown) => refuseSlugCollision(GROUPS, error, slug));
-  expireCompendium();
-  return written;
+  return createCurated(session, GROUPS, fields, slugify(fields.name));
 }
 
 /**

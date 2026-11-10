@@ -18,19 +18,14 @@ export type { Claimant, DeitySuggestion, FormSuggestion, VocabularySuggestion };
 /** What a lookup asks of a named coven: only `ingredient: ['read']`, since the curated rows are global and every in-use value is one a reader could already list. */
 const READ = { ingredient: ['read'] } as const;
 
-async function suggest(
-  vocabulary: typeof celestialBodies | typeof zodiacSigns,
+/** Runs `find` over the coven readers `workspaceId` names (the compendium alone without one) with the query trimmed. */
+async function suggest<T>(
   session: Session,
   workspaceId: string | null | undefined,
   query: string,
-  page: PageRequest,
-): Promise<PageEntry<VocabularySuggestion>[]> {
-  return findVocabularySuggestions(
-    await readersOf(session, workspaceId, READ),
-    vocabulary,
-    query.trim(),
-    page,
-  );
+  find: (readers: Awaited<ReturnType<typeof readersOf>>, trimmed: string) => Promise<T>,
+): Promise<T> {
+  return find(await readersOf(session, workspaceId, READ), query.trim());
 }
 
 /**
@@ -48,7 +43,9 @@ export function suggestCelestialBodies(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
-  return suggest(celestialBodies, session, workspaceId, query, page);
+  return suggest(session, workspaceId, query, (readers, trimmed) =>
+    findVocabularySuggestions(readers, celestialBodies, trimmed, page),
+  );
 }
 
 /**
@@ -63,7 +60,9 @@ export function suggestZodiacSigns(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
-  return suggest(zodiacSigns, session, workspaceId, query, page);
+  return suggest(session, workspaceId, query, (readers, trimmed) =>
+    findVocabularySuggestions(readers, zodiacSigns, trimmed, page),
+  );
 }
 
 /**
@@ -76,17 +75,14 @@ export function suggestZodiacSigns(
  * @throws {Forbidden} a workspace is named and the caller may not read its
  * ingredients.
  */
-export async function suggestForms(
+export function suggestForms(
   session: Session,
   workspaceId: string | null | undefined,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<FormSuggestion>[]> {
-  return findVocabularySuggestions(
-    await readersOf(session, workspaceId, READ),
-    ingredientForms,
-    query.trim(),
-    page,
+  return suggest(session, workspaceId, query, (readers, trimmed) =>
+    findVocabularySuggestions(readers, ingredientForms, trimmed, page),
   );
 }
 
@@ -99,16 +95,13 @@ export async function suggestForms(
  * @throws {Forbidden} a workspace is named and the caller may not read its
  * ingredients.
  */
-export async function suggestDeities(
+export function suggestDeities(
   session: Session,
   workspaceId: string | null | undefined,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<DeitySuggestion>[]> {
-  return findVocabularySuggestions(
-    await readersOf(session, workspaceId, READ),
-    deities,
-    query.trim(),
-    page,
+  return suggest(session, workspaceId, query, (readers, trimmed) =>
+    findVocabularySuggestions(readers, deities, trimmed, page),
   );
 }
