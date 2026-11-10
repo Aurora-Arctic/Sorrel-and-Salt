@@ -158,7 +158,7 @@ Minted from the duplicated-code audit (M17.8) as one of its grouped clean-up tas
 _Acceptance criteria:_
 
 - A mixin or token replaces the wrapping flex row, hairline box and muted-stroke overrides (D-48, D-57, D-99), and one global `box-sizing` reset replaces the 68 declarations (D-98)
-- Dead CSS and the hard-coded values, restated paddings and nth-child rules are removed or use tokens (D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226), and `npm run lint:css` passes; a `$hairline-border` token replaces every hand-written `1px solid $hairline`, guarded by `tests/guards/hairline-border.test.ts` (D-221)
+- Dead CSS and the hard-coded values, restated paddings and nth-child rules are removed or use tokens (D-165, D-177, D-178, D-194, D-221, D-224, D-225, D-226), and `npm run lint:css` passes; a `$hairline-border` token replaces every hand-written `1px solid $hairline`, guarded by `tests/guards/border-tokens.test.ts` (D-221)
 - The production code named in D-129 with no production caller is removed together with its tests, and exports used by nothing outside their own file are un-exported or removed (D-145)
 - The knip config entries and the false positive are corrected (D-157, D-195)
 - `ignoreExportsUsedInFile` is off in the knip config (D-86), and each newly reported export is un-exported or listed with a reason, with the codegen consts, email functions and Pothos Refs handled per class
