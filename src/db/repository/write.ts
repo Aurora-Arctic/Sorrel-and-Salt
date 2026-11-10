@@ -22,11 +22,11 @@ import { userWrites } from './users';
 import { workingWrites } from './workings';
 import { workspaceMemberPauseWrites } from './workspace-member-pauses';
 import { workspaceSlugWrites } from './workspace-slugs';
-import { existsIn, selectFrom } from './select';
+import { existsIn, selectFrom, whenIds } from './select';
 import { runInWriteTransaction } from './unit-of-work';
 import { StaleWrite } from '@/lib/errors';
 import { newToken } from '../../lib/invitation-token';
-import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
+import { SYSTEM_SESSION } from '../../lib/system-actor';
 import type { Membership } from '@/modules/coven';
 import type {
   AuditWriter,
@@ -49,11 +49,11 @@ const contexts = new WeakMap<AuditWriter, WriterContext>();
 // `applyAudit` widens by exactly that table's audit columns; the cast is
 // confined here.
 function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
+  const stampInsert = (values: object) => applyAudit('insert', values, session) as never;
+  const stampUpdate = <T extends object>(values: T) => applyAudit('update', values, session);
+
   const insert = (table: PgTable, values: object) =>
-    tx
-      .insert(table)
-      .values(applyAudit('insert', values, session) as never)
-      .returning() as never;
+    tx.insert(table).values(stampInsert(values)).returning() as never;
 
   // Rule 4 on the write side: every update and soft delete skips a deleted
   // row, decided by the table's shape as a finder's filter is. The way back to
@@ -114,7 +114,16 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   // What a marked table's named writes are built from, in the repository file
   // beside its finders: spread in below, so a new marked table adds
   // its writes there rather than here.
-  const context: WriterContext = { tx, session, insert, update, softDelete, updateAtRevision };
+  const context: WriterContext = {
+    tx,
+    session,
+    stampInsert,
+    stampUpdate,
+    insert,
+    update,
+    softDelete,
+    updateAtRevision,
+  };
 
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
@@ -135,7 +144,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       updateAtRevision(table, inWorkspaceById(membership, table, id), expectedRevision, values),
     softDelete,
     softDeleteByIds: (table, ids) =>
-      ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),
+      whenIds(ids, () => softDelete(table, inArray(table.id, [...ids]))),
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
     softDeleteByIdInWorkspace: (membership, table, id) =>
@@ -314,7 +323,7 @@ export async function rotateInvitationToken(
   invitationId: string,
 ): Promise<{ token: string; invitation: InvitationRow } | null> {
   const token = newToken();
-  const [invitation] = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+  const [invitation] = await withAudit(SYSTEM_SESSION, (write) =>
     invitationTokenRotation(contexts.get(write)!)(invitationId, token),
   );
   return invitation ? { token, invitation } : null;

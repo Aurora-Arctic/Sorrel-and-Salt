@@ -6,7 +6,7 @@ import type { Membership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { findPageInTiers } from './finders';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsByKey, selectFrom, selectOne, whenIds } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { CupboardEntryRow, IngredientRow } from './types';
 
@@ -36,13 +36,14 @@ export function findCupboardEntriesOf(
   membership: Membership,
   ingredientIds: readonly string[],
 ): Promise<CupboardEntryRow[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    workspaceCompendiumEntries,
-    and(
-      inCupboard(membership),
-      notSoftDeleted(workspaceCompendiumEntries),
-      inArray(workspaceCompendiumEntries.ingredientId, [...ingredientIds]),
+  return whenIds(ingredientIds, () =>
+    selectFrom(
+      workspaceCompendiumEntries,
+      and(
+        inCupboard(membership),
+        notSoftDeleted(workspaceCompendiumEntries),
+        inArray(workspaceCompendiumEntries.ingredientId, [...ingredientIds]),
+      ),
     ),
   );
 }
@@ -82,9 +83,11 @@ export async function findCupboardEntryIncludingSoftDeleted(
 function inCupboard(membership: Membership): SQL | undefined {
   return and(
     scopedTo(membership, workspaceCompendiumEntries),
-    existsIn(
+    existsByKey(
       ingredients,
-      and(eq(ingredients.id, workspaceCompendiumEntries.ingredientId), inCompendium(ingredients)),
+      ingredients.id,
+      workspaceCompendiumEntries.ingredientId,
+      inCompendium(ingredients),
     ),
   );
 }
@@ -176,10 +179,12 @@ export async function countCovensUsing(_curator: Curator, ingredientId: string):
     and(
       notSoftDeleted(workspaceCompendiumEntries),
       eq(workspaceCompendiumEntries.ingredientId, ingredientId),
-      existsIn(workspaces, eq(workspaces.id, workspaceCompendiumEntries.workspaceId)),
-      existsIn(
+      existsByKey(workspaces, workspaces.id, workspaceCompendiumEntries.workspaceId),
+      existsByKey(
         ingredients,
-        and(eq(ingredients.id, workspaceCompendiumEntries.ingredientId), inCompendium(ingredients)),
+        ingredients.id,
+        workspaceCompendiumEntries.ingredientId,
+        inCompendium(ingredients),
       ),
     ),
     {

@@ -1,9 +1,9 @@
 import 'server-only';
 import {
+  findGroupCount,
+  findGroupPage,
   findIngredientFormValues,
   findOneBySlug,
-  findPage,
-  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
@@ -40,11 +40,11 @@ const GROUPS: CuratedGroup<typeof ingredientFormGroups> = {
 export function listIngredientFormGroups(
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormGroupRow>[]> {
-  return findPage(ingredientFormGroups, [ingredientFormGroups.name], page);
+  return findGroupPage(ingredientFormGroups, {}, page);
 }
 
 export function countIngredientFormGroups(start: Cursor | undefined): Promise<PageCount> {
-  return findPageCount(ingredientFormGroups, [ingredientFormGroups.name], start);
+  return findGroupCount(ingredientFormGroups, {}, start);
 }
 
 /**

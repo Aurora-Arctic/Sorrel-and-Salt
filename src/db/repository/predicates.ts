@@ -71,16 +71,21 @@ export function ownedByIngredient<TTable extends PgTable>(table: TTable): SQL | 
   return variantId ? isNull(variantId) : undefined;
 }
 
+// Reads `%`, `_` and `\` in a LIKE pattern literally.
+function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, '\\$&');
+}
+
 /**
  * `column` holds `query` anywhere, case-insensitively, its `%`, `_` and `\` read literally: how an admin list narrows by
  * a fragment. `ilike` rather than trigram, which scores part of a name or address poorly.
  */
 export function containsText(column: AnyPgColumn, query: string): SQL {
-  return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
+  return ilike(column, `%${escapeLike(query)}%`);
 }
 
 export function startsWithText(column: AnyPgColumn, prefix: string): SQL {
-  return ilike(sql`${column}::text`, `${prefix.replace(/[\\%_]/g, '\\$&')}%`);
+  return ilike(sql`${column}::text`, `${escapeLike(prefix)}%`);
 }
 
 /**

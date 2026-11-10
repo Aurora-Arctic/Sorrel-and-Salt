@@ -39,7 +39,7 @@ import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import type { Cursor, PageRequest } from '../../lib/types';
-import type { AuditSession, Generic } from '../types';
+import type { AuditFields, AuditSession, Generic, WithoutAuditFields } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 
@@ -223,6 +223,12 @@ export type WriterTransaction = PgTransaction<
 export interface WriterContext {
   tx: WriterTransaction;
   session: AuditSession;
+  /** `values` stamped as an insert by the session: for a statement `insert` cannot say (a batch, a conflict clause, no `returning`). */
+  stampInsert(values: object): never;
+  /** `values` stamped as an update by the session, for a hand-written `set` or `onConflictDoUpdate`. */
+  stampUpdate<T extends object>(
+    values: T,
+  ): WithoutAuditFields<T> & Pick<AuditFields, 'updatedAt' | 'updatedBy'>;
   insert(table: PgTable, values: object): Promise<never>;
   update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
   softDelete(table: PgTable, where: SQL | undefined): Promise<never>;

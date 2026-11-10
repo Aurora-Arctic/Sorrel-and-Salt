@@ -58,7 +58,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-44  | Four local `Failure`/`Refusal` interfaces for Better Auth results, one of which shadows the shared `Failure`                                                 | medium   | Components    |     29 |  4.75 | Moved to MC.5                                   |
 | D-45  | The mail-job family is five-times copied (start, message-for/send, step, workflow, report)                                                                   | medium   | Server        |     23 |     3 | Moved to MC.4                                   |
 | D-46  | GroupList and GroupedValueList (and AdminInvitations, AdminCards) rebuild one list family file for file                                                      | medium   | Components    |     20 |   6.5 | Moved to MC.5                                   |
-| D-47  | `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times                                                                     | medium   | Server        |     19 |   4.5 | Moved to MC.3                                   |
+| D-47  | `existsIn(parent, and(eq(parent.id, child.fk), predicate))` repeated about fifteen times                                                                     | medium   | Server        |     19 |   4.5 | Fixed                                           |
 | D-48  | Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times                                                                | medium   | Styles        |     19 |     2 | Moved to MC.9                                   |
 | D-49  | The lede text is written in both a page and its skeleton                                                                                                     | medium   | Pages and lib |     21 |     3 | Moved to MC.2                                   |
 | D-50  | `src/lib/utc.ts` repeats the `formatToParts` plus `part()` block four times, and one email does its own date formatting                                      | medium   | Pages and lib |     18 |  3.25 | Moved to MC.2                                   |
@@ -71,7 +71,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-57  | Hairline surface box repeated 12 times (exact triplicates)                                                                                                   | medium   | Styles        |     14 |   1.5 | Moved to MC.9                                   |
 | D-58  | Two pages read search params by hand instead of `single()` and `trimmed()`                                                                                   | medium   | Pages and lib |     13 |  1.25 | Moved to MC.2                                   |
 | D-59  | "named only in an allowed set of files" guards each rebuild the same scanner                                                                                 | medium   | Tests         |     13 |     2 | Moved to MC.1                                   |
-| D-60  | The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`                                                                          | medium   | Server        |     12 |   3.5 | Moved to MC.3                                   |
+| D-60  | The pause tables' repository files are near-copies, and re-implement `noEndOrAhead`                                                                          | medium   | Server        |     12 |   3.5 | Fixed                                           |
 | D-61  | A class-name joiner is hand-written in about nine components with four different idioms                                                                      | medium   | Components    |     12 |     4 | Moved to MC.7                                   |
 | D-62  | small e2e helpers copied across specs: `authorOf` x3, `openFilters`/`applyFilters` x2, `grimoireList` x2                                                     | medium   | Tests         |     11 |     2 | Moved to MC.1                                   |
 | D-63  | Trim, then empty to undefined or null, written inline in eight services                                                                                      | medium   | Server        |     11 |     2 | Moved to MC.4                                   |
@@ -86,7 +86,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-72  | A callback-ref merge written twice                                                                                                                           | medium   | Components    |      8 |     2 | Moved to MC.6                                   |
 | D-73  | Help article title row and page head repeated across four Help pages and their skeletons                                                                     | medium   | Components    |      8 |  2.75 | Moved to MC.8                                   |
 | D-74  | invitation-flow helpers duplicated between `workspace-invitation.spec.ts` and `stories/01-invitations.spec.ts`; Mailpit lookup duplicated again              | medium   | Tests         |      8 |   1.5 | Moved to MC.1                                   |
-| D-75  | About 59 hand-written empty-id early returns in the repository                                                                                               | medium   | Server        |      8 |     3 | Moved to MC.3                                   |
+| D-75  | About 59 hand-written empty-id early returns in the repository                                                                                               | medium   | Server        |      8 |     3 | Fixed                                           |
 | D-76  | The click-feedback action (guard, report, run, report failure) is written eight times                                                                        | medium   | Components    |      8 |     4 | Moved to MC.6                                   |
 | D-77  | "Unwrap a loader slot or throw" written three times                                                                                                          | medium   | Server        |      7 |     2 | Moved to MC.4                                   |
 | D-78  | Members page pages by hand and builds its cursor like the users page                                                                                         | medium   | Pages and lib |      7 |   2.5 | Moved to MC.2                                   |
@@ -102,7 +102,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-88  | Seven "lazy wrapper" components repeat `useLazyModule(x, true)` then `module ? <module.default {...props}/> : null`                                          | medium   | Components    |      6 |   1.5 | Moved to MC.6                                   |
 | D-89  | Quantity column declared five times without the shared constants' helper                                                                                     | medium   | Server        |      5 |   0.5 | Moved to MC.4                                   |
 | D-90  | Boolean ('1') search params copied six times                                                                                                                 | medium   | Components    |      5 |     2 | Moved to MC.2                                   |
-| D-91  | Invitation page and count twins repeat both scope and filter; `pendingInvitation` and `openInvitation` are near-twins                                        | medium   | Server        |      5 |     1 | Moved to MC.3                                   |
+| D-91  | Invitation page and count twins repeat both scope and filter; `pendingInvitation` and `openInvitation` are near-twins                                        | medium   | Server        |      5 |     1 | Fixed                                           |
 | D-92  | Curator group and value types and dialogs are near-copies                                                                                                    | medium   | Pages and lib |      5 |     4 | Moved to MC.2                                   |
 | D-93  | The formal-name label (`name (canonicalName)` and `name, canonicalName`) is formatted in five places                                                         | medium   | Components    |      5 |     2 | Moved to MC.8                                   |
 | D-94  | DateField and DateRangeField duplicate the popover shell, bounds and weekday-word helper                                                                     | medium   | Components    |      5 |     3 | Moved to MC.8                                   |
@@ -114,7 +114,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-100 | the three `lint-*-boundary` guards repeat the probe test and the exemption-directive scanner                                                                 | medium   | Tests         |      4 |   1.5 | Moved to MC.1                                   |
 | D-101 | the page-side GraphQL `fetch` is written four times; `graphqlFromPage` already exists                                                                        | medium   | Tests         |      4 |     1 | Moved to MC.1                                   |
 | D-102 | Coven "not a member" refusal and member-removal sequence repeated                                                                                            | medium   | Server        |      4 |   1.5 | Moved to MC.4                                   |
-| D-103 | "Card accepted by this user" written four ways, two as raw SQL                                                                                               | medium   | Server        |      4 |   1.5 | Moved to MC.3                                   |
+| D-103 | "Card accepted by this user" written four ways, two as raw SQL                                                                                               | medium   | Server        |      4 |   1.5 | Fixed                                           |
 | D-104 | Jar-row number conversion `quantityOnHand === null ? null : Number(quantityOnHand)` is repeated                                                              | medium   | Pages and lib |      4 |     1 | Moved to MC.2                                   |
 | D-105 | IngredientForm/duplicates `PlusChoice` re-implements AddIcon's button and glyph                                                                              | medium   | Components    |      4 |     2 | Moved to MC.8                                   |
 | D-106 | Single-name forms (NameForm, RenameWorkspaceForm) copy each other                                                                                            | medium   | Components    |      5 |  3.25 | Moved to MC.5                                   |
@@ -124,7 +124,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-110 | AboutPillars and AboutRoles are near-copies                                                                                                                  | medium   | Components    |      3 |     2 | Moved to MC.8                                   |
 | D-111 | Unit compatibility rule stated in three places                                                                                                               | medium   | Server        |      3 |   1.5 | Moved to MC.4                                   |
 | D-112 | Spell field list written five times                                                                                                                          | medium   | Server        |      3 |     2 | Moved to MC.4                                   |
-| D-113 | Public-reply test `eq(supportReplies.visibility, 'public')` written three times, each with a lint disable                                                    | medium   | Server        |      3 |   0.5 | Moved to MC.3                                   |
+| D-113 | Public-reply test `eq(supportReplies.visibility, 'public')` written three times, each with a lint disable                                                    | medium   | Server        |      3 |   0.5 | Fixed                                           |
 | D-114 | The keepers and curator area layouts are the same file                                                                                                       | medium   | Pages and lib |      3 |     2 | Moved to MC.2                                   |
 | D-115 | `readBatches` and `readArrivals` wrap `cache()` around an object argument, which React's cache never matches, and each has one caller                        | medium   | Pages and lib |      3 |     1 | Moved to MC.2                                   |
 | D-116 | Three cron route handlers are the same function                                                                                                              | medium   | Pages and lib |      3 |     1 | Moved to MC.2                                   |
@@ -146,8 +146,8 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-132 | Cleanup and retention page coordinators are near-copies                                                                                                      | medium   | Server        |      1 |     2 | Moved to MC.4                                   |
 | D-133 | Inline `new ValidationError([{ path, message }])` where `fieldRefusal(path, message)` exists                                                                 | medium   | Server        |      1 |   1.5 | Moved to MC.4                                   |
 | D-134 | Token hash written in four places                                                                                                                            | medium   | Server        |      1 |     1 | Moved to MC.4                                   |
-| D-135 | Vocabulary group list/count pairs drift between `findPage` and `findGroupPage`                                                                               | medium   | Server        |      1 |   2.5 | Moved to MC.3                                   |
-| D-136 | Page and count twin finders repeat their filter in every repository file                                                                                     | medium   | Server        |      1 |     4 | Moved to MC.3                                   |
+| D-135 | Vocabulary group list/count pairs drift between `findPage` and `findGroupPage`                                                                               | medium   | Server        |      1 |   2.5 | Fixed                                           |
+| D-136 | Page and count twin finders repeat their filter in every repository file                                                                                     | medium   | Server        |      1 |     4 | Fixed                                           |
 | D-137 | Support-request status marks written as seven separate `IconTip` plus button blocks                                                                          | medium   | Components    |      1 |   1.5 | Moved to MC.5                                   |
 | D-138 | AccountMenu trigger and panel each derive the same counts and labels                                                                                         | medium   | Components    |      1 |     1 | Moved to MC.8                                   |
 | D-139 | Combobox repeats option-row, group-heading and indicator markup                                                                                              | medium   | Components    |      1 |     4 | Moved to MC.8                                   |
@@ -167,10 +167,10 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-153 | Help module small repeats                                                                                                                                    | low      | Server        |      5 |     1 | Moved to MC.4                                   |
 | D-154 | "Until X" / "with no end date" wording built in five places                                                                                                  | low      | Components    |      5 |   1.5 | Moved to MC.5                                   |
 | D-155 | "Back to" link markup: `HelpBackLink` repeats `IngredientEntry/back-link.tsx`'s render and the skeleton rebuilds it                                          | low      | Components    |      5 |     1 | Moved to MC.8                                   |
-| D-156 | Stand-in user id list and direct `applyAudit(...) as never` inserts                                                                                          | low      | Server        |      4 |  2.75 | Moved to MC.3                                   |
+| D-156 | Stand-in user id list and direct `applyAudit(...) as never` inserts                                                                                          | low      | Server        |      4 |  2.75 | Fixed                                           |
 | D-157 | lock-probe.drizzle.config.ts is a false positive; fix the knip config                                                                                        | low      | Unused code   |      4 |  0.25 | Moved to MC.9                                   |
-| D-158 | Unique-index names and their race handling repeated as string literals                                                                                       | low      | Server        |      4 |     1 | Moved to MC.3                                   |
-| D-159 | User search: name-or-email test, and the three-way system-user exclusion                                                                                     | low      | Server        |      4 |   0.5 | Moved to MC.3                                   |
+| D-158 | Unique-index names and their race handling repeated as string literals                                                                                       | low      | Server        |      4 |     1 | Fixed                                           |
+| D-159 | User search: name-or-email test, and the three-way system-user exclusion                                                                                     | low      | Server        |      4 |   0.5 | Fixed                                           |
 | D-160 | Admin shared files live in `curator/` and the keepers area imports them across the sibling boundary                                                          | low      | Pages and lib |      4 |     2 | Moved to MC.2                                   |
 | D-161 | `TABLET_BAND` and its `useSyncExternalStore` subscription written in both PageNav and SectionNav                                                             | low      | Components    |      4 |     1 | Moved to MC.6                                   |
 | D-162 | "Deleted account" and "Signed-out sender" literals repeated across the support screens                                                                       | low      | Components    |      4 |   0.5 | Moved to MC.5                                   |
@@ -210,14 +210,14 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 | D-196 | Three identical notifier interfaces                                                                                                                          | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-197 | "a/an role" noun written three times                                                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-198 | Batch refusal try/catch around an assert, returning one error per id                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
-| D-199 | Constants: `SYSTEM`, day length, retention cutoff                                                                                                            | low      | Server        |      1 |     1 | Moved to MC.3                                   |
+| D-199 | Constants: `SYSTEM`, day length, retention cutoff                                                                                                            | low      | Server        |      1 |     1 | Fixed                                           |
 | D-200 | Confirm-email Forbidden and "no row" NotFound copies                                                                                                         | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-201 | Site-admin list services repeat assert, parse filter, page, count                                                                                            | low      | Server        |      1 |  0.25 | Moved to MC.4                                   |
 | D-202 | Working report mapping duplicated                                                                                                                            | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-203 | Compendium entry page assembled twice                                                                                                                        | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
 | D-204 | Vocabulary suggestion wrappers repeat the reader lookup                                                                                                      | low      | Server        |      1 |   0.5 | Moved to MC.4                                   |
-| D-205 | LIKE-escape inlined twice in predicates                                                                                                                      | low      | Server        |      1 |  0.25 | Moved to MC.3                                   |
-| D-206 | Help repository repeats its sort and filter clauses                                                                                                          | low      | Server        |      1 |     1 | Moved to MC.3                                   |
+| D-205 | LIKE-escape inlined twice in predicates                                                                                                                      | low      | Server        |      1 |  0.25 | Fixed                                           |
+| D-206 | Help repository repeats its sort and filter clauses                                                                                                          | low      | Server        |      1 |     1 | Fixed                                           |
 | D-207 | Tier-2 uncurated suggestion select repeated                                                                                                                  | low      | Server        |      1 |     1 | Moved to MC.4                                   |
 | D-208 | `requireAdminSession` and `requireCuratorSession` are the same function with a different assertion                                                           | low      | Pages and lib |      1 |   0.5 | Moved to MC.2                                   |
 | D-209 | `PublicLayout` writes `<main><PageColumn as="div">` once per branch                                                                                          | low      | Pages and lib |      1 |  0.25 | Moved to MC.2                                   |
@@ -943,7 +943,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/db/repository/grimoire*.test.ts`, `tests/db/repository/ingredients*.test.ts`, `tests/db/repository/ingredient-facets*.test.ts`.
 
 - **Estimate:** 2 hours
-- **Status:** Fixed. `categoryArms` and `pointsLive` in `src/db/repository/category-arms.ts` serve both filters, and the ingredient filter adds its extra live-pair term as an argument. The facet-count twins move to MC.3.
+- **Status:** Fixed. `categoryArms` and `pointsLive` in `src/db/repository/category-arms.ts` serve both filters, and the ingredient filter adds its extra live-pair term as an argument. `withoutChosenIfAny` and `categoryFacetJoins` in the same file serve both facet-count twins.
 
 ### D-28: Compendium `reviewOf` is written twice and the copies have drifted
 
@@ -1461,7 +1461,7 @@ Scope (owner, 2026-11-09): the branch for this audit fixes every finding judged 
 - **Tests covering the callers:** `tests/db/repository/{cupboard-entries,invitations,users,memberships}*.test.ts`.
 
 - **Estimate:** 4.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-48: Wrapping flex row (`display:flex; flex-wrap:wrap; align-items:center; gap`) repeated 25 times
 
@@ -1921,7 +1921,7 @@ The three reply forms have also drifted on rules the merged form must settle onc
 - **Tests covering the callers:** tests/modules/identity and tests/modules/coven pause tests, tests/db repository pause tests.
 
 - **Estimate:** 3.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-61: A class-name joiner is hand-written in about nine components with four different idioms
 
@@ -2268,7 +2268,7 @@ More copies: `src/app/(public)/help/page.tsx`, `search/page.tsx`, `[slug]/page.t
 - **Tests covering the callers:** `tests/db/` repository specs, loader specs.
 
 - **Estimate:** 3 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-76: The click-feedback action (guard, report, run, report failure) is written eight times
 
@@ -2635,7 +2635,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/db/repository/invitations*.test.ts`, `tests/modules/coven/**`.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-92: Curator group and value types and dialogs are near-copies
 
@@ -2840,7 +2840,7 @@ A fifth copy of the same markup: `Field/search-field.tsx` and `HelpSearchForm/in
 - **Tests covering the callers:** `tests/modules/coven/**` invitation-card tests, `tests/modules/support/**` sender-group tests, `tests/db/repository/invitations*.test.ts`.
 
 - **Estimate:** 1.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-104: Jar-row number conversion `quantityOnHand === null ? null : Number(quantityOnHand)` is repeated
 
@@ -3016,7 +3016,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/support/` reply tests; `tests/db/repository/support*.test.ts`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-114: The keepers and curator area layouts are the same file
 
@@ -3394,7 +3394,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** tests/modules/vocabulary list tests.
 
 - **Estimate:** 2.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed. The cached page and count reads in astrology.ts, categories.ts, deities.ts and ingredient-form-values.ts stay declared in each service, so each cache key sits beside the read it names.
 
 ### D-136: Page and count twin finders repeat their filter in every repository file
 
@@ -3408,7 +3408,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** the matching tests/db and tests/modules suites.
 
 - **Estimate:** 4 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-137: Support-request status marks written as seven separate `IconTip` plus button blocks
 
@@ -3881,7 +3881,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/db/repository/invitations*.test.ts`, `tests/modules/grimoire/**` working tests.
 
 - **Estimate:** 2.75 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-157: lock-probe.drizzle.config.ts is a false positive; fix the knip config
 
@@ -3910,7 +3910,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/modules/ingredients/` stock and ingredient-row race specs.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-159: User search: name-or-email test, and the three-way system-user exclusion
 
@@ -3925,7 +3925,7 @@ Hand-written submit, busy, failure then refresh blocks that D-106's hook would r
 - **Tests covering the callers:** `tests/db/repository/users*.test.ts`, `tests/modules/documents/**`.
 
 - **Estimate:** 0.5 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-160: Admin shared files live in `curator/` and the keepers area imports them across the sibling boundary
 
@@ -4536,7 +4536,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
   Estimate: 1 h
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-200: Confirm-email Forbidden and "no row" NotFound copies
 
@@ -4622,7 +4622,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/db repository predicates tests.
 
 - **Estimate:** 0.25 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-206: Help repository repeats its sort and filter clauses
 
@@ -4636,7 +4636,7 @@ src/components/IconTip/icons.tsx, five new icons (see D-222).
 - **Tests covering the callers:** tests/db help repository tests, tests/modules/help.
 
 - **Estimate:** 1 hours
-- **Status:** Not fixed: moved to MC.3.
+- **Status:** Fixed.
 
 ### D-207: Tier-2 uncurated suggestion select repeated
 

@@ -5,7 +5,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { Membership } from '@/modules/coven';
 import { inCompendium, inTiers, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, existsInIncludingSoftDeleted } from './select';
+import { existsByKey, existsInIncludingSoftDeleted } from './select';
 
 // The tier predicates built on a query, apart from `predicates.ts` and `select.ts` so no two files import
 // each other.
@@ -20,9 +20,12 @@ export function readableIngredientParent(
   childColumn: AnyPgColumn,
   where?: SQL,
 ): SQL {
-  return existsIn(
+  return existsByKey(
     ingredients,
-    and(eq(ingredients.id, childColumn), inTiers(memberships, ingredients), where),
+    ingredients.id,
+    childColumn,
+    inTiers(memberships, ingredients),
+    where,
   );
 }
 
@@ -46,12 +49,11 @@ export function inUseIngredientParent(
         and(notSoftDeleted(ingredients), inTiers(memberships, ingredients)),
         and(
           inCompendium(ingredients),
-          existsIn(
+          existsByKey(
             workspaceCompendiumEntries,
-            and(
-              eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
-              scopedTo(heldBy, workspaceCompendiumEntries),
-            ),
+            workspaceCompendiumEntries.ingredientId,
+            ingredients.id,
+            scopedTo(heldBy, workspaceCompendiumEntries),
           ),
         ),
       ),
@@ -70,11 +72,10 @@ export function inUseVariantParent(
   heldBy: Membership | undefined,
   where?: SQL,
 ): SQL {
-  return existsIn(
+  return existsByKey(
     ingredientVariants,
-    and(
-      eq(ingredientVariants.id, variantColumn),
-      inUseIngredientParent(memberships, ingredientVariants.ingredientId, heldBy, where),
-    ),
+    ingredientVariants.id,
+    variantColumn,
+    inUseIngredientParent(memberships, ingredientVariants.ingredientId, heldBy, where),
   );
 }
