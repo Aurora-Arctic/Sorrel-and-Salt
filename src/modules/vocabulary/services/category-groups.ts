@@ -1,9 +1,9 @@
 import 'server-only';
 import {
   findCategoryPage,
+  findGroupCount,
+  findGroupPage,
   findOneBySlug,
-  findPage,
-  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
@@ -35,11 +35,11 @@ const GROUPS: CuratedGroup<typeof categoryGroups> = {
 };
 
 export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
-  return findPage(categoryGroups, [categoryGroups.name], page);
+  return findGroupPage(categoryGroups, {}, page);
 }
 
 export function countCategoryGroups(start: Cursor | undefined): Promise<PageCount> {
-  return findPageCount(categoryGroups, [categoryGroups.name], start);
+  return findGroupCount(categoryGroups, {}, start);
 }
 
 /**

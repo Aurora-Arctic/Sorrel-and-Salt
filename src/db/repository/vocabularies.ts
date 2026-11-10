@@ -54,30 +54,22 @@ import type {
   VocabularySuggestion,
 } from './types';
 
+const FORM_ORDER = [ingredientForms.name];
+
 // Curated forms: live, with a live group. Public reference data, so no proof
 // (claude-docs/db/compendium-read.md, "Vocabulary finders").
 export function findIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredientForms.$inferSelect>[]> {
-  return findPage(
-    ingredientForms,
-    [ingredientForms.name],
-    page,
-    vocabularyArms(ingredientForms, filter),
-  );
+  return findPage(ingredientForms, FORM_ORDER, page, vocabularyArms(ingredientForms, filter));
 }
 
 export function findIngredientFormValueCount(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(
-    ingredientForms,
-    [ingredientForms.name],
-    start,
-    vocabularyArms(ingredientForms, filter),
-  );
+  return findPageCount(ingredientForms, FORM_ORDER, start, vocabularyArms(ingredientForms, filter));
 }
 
 export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
