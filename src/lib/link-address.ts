@@ -19,10 +19,10 @@ export const tidyLinkAddress: FieldFormat = (text) =>
 /** What is wrong with an address for a link, or undefined when the page will open it. */
 export function linkAddressProblem(address: string): string | undefined {
   if (address === '') return 'Enter a web address, like https://example.com';
+  if (/\s/.test(address)) return 'That address has a space in it';
   if (!isOpenableAddress(address)) {
     return 'Use a full web address starting https://, an email link starting mailto:, or a path on this site starting /';
   }
-  if (/\s/.test(address)) return 'That address has a space in it';
   if (address.toLowerCase().startsWith('https:')) {
     if (!URL.canParse(address) || !new URL(address).hostname.includes('.')) {
       return 'That is not a web address: check it for a full site name';

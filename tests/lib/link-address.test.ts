@@ -45,6 +45,10 @@ describe('linkAddressProblem', () => {
     (address) => expect(linkAddressProblem(address)).toEqual(expect.any(String)),
   );
 
+  it('says a space is the problem when the address has one, even without a scheme', () => {
+    expect(linkAddressProblem('exa mple.com')).toBe('That address has a space in it');
+  });
+
   it('allows exactly the schemes the renderer opens', () => {
     expect(LINK_SCHEMES).toEqual(['https', 'mailto']);
   });
