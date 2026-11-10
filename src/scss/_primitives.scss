@@ -2139,6 +2139,12 @@
     }
   }
 
+  // A card group with an error marks every card's border as an invalid input marks its own.
+  .radio-group--invalid .radio.radio--card {
+    border-color: $secondary;
+    box-shadow: inset 0 0 0 1px $secondary;
+  }
+
   // The native radio stays, visually hidden, so arrow keys and the label work (WCAG 1.4.1).
   .fieldset.radio-group--strip,
   .fieldset.radio-group--segmented {
