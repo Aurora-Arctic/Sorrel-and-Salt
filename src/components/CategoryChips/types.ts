@@ -16,3 +16,10 @@ export interface CategoryChipsProps {
   /** Words for a chip's tip, opened by hover, focus and tap; given, each chip is a button carrying its tip. */
   tipOf?: (category: CardCategory['category']) => string;
 }
+
+/** A category as the page read it, with the colours of its group. */
+export interface KnownCategory {
+  id: string;
+  name: string;
+  group: GroupColors;
+}

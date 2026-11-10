@@ -3,8 +3,8 @@ import { decodeCursor } from './cursor';
 
 // Next hands a repeated parameter over as a list, and a hand-edited cursor as whatever was typed.
 
-export function single(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
+export function single(value: string | readonly string[] | undefined): string | undefined {
+  return typeof value === 'string' || value === undefined ? value : value[0];
 }
 
 /** A cursor the codec reads, or none: a hand-edited address gets the first page, not an error. */
@@ -28,7 +28,7 @@ export function oneOf<T extends string>(
 }
 
 /** An empty list is no filter; one value given is a list of one. */
-export function list(value: string | string[] | undefined): string[] {
+export function list(value: string | readonly string[] | undefined): string[] {
   const values = value === undefined ? [] : Array.isArray(value) ? value : [value];
   return values.map((each) => each.trim()).filter((each) => each !== '');
 }
@@ -41,6 +41,6 @@ export function someOf<T extends string>(values: readonly T[], raw: readonly str
   });
 }
 
-export function trimmed(value: string | string[] | undefined): string {
+export function trimmed(value: string | readonly string[] | undefined): string {
   return single(value)?.trim() ?? '';
 }

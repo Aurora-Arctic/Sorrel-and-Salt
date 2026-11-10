@@ -10,13 +10,8 @@ import { readEntryStock, stockKey } from '../../../../entry-stock';
 import { getSession } from '../../../../../lib/request-session';
 import { single } from '../../../../../lib/search-params';
 import { covenRolesIfSignedIn, viewerIfSignedIn } from '../../../../../lib/viewer';
-import { rolePermits } from '@/modules/coven';
-import {
-  getCupboardEntry,
-  MAKE_IT_OURS_PERMISSION,
-  type HoldingCoven,
-  type IngredientRow,
-} from '@/modules/ingredients';
+import { covenAccessOf } from '@/lib/coven-access';
+import { getCupboardEntry, type HoldingCoven, type IngredientRow } from '@/modules/ingredients';
 
 // The cupboard choices for a signed-in person: each coven they may write in, whether it holds the
 // entry, and their role's permissions. Per viewer, so never in the cached read (rule 6). A
@@ -47,7 +42,7 @@ export async function publicCupboardOf(
   // batch, per viewer (rule 6).
   const stockers = writable.filter(({ id }) => {
     const role = roles?.get(id);
-    return held.has(id) && role !== undefined && rolePermits(role, { inventory: ['update'] });
+    return held.has(id) && role !== undefined && covenAccessOf(role).canUpdateStock;
   });
   const stock = await readEntryStock(
     stockers.map(({ id }) => ({ ingredientId: entry.id, workspaceId: id })),
@@ -55,16 +50,17 @@ export async function publicCupboardOf(
   const covens: CupboardPlace[] = writable.flatMap(({ id, slug, name }) => {
     const role = roles?.get(id);
     if (!role) return [];
+    const access = covenAccessOf(role);
     return [
       {
         workspaceId: id,
         covenSlug: slug,
         name,
         held: held.has(id),
-        canAdd: rolePermits(role, { ingredient: ['create'] }),
-        canAnnotate: rolePermits(role, { ingredient: ['update'] }),
-        canRemove: rolePermits(role, { ingredient: ['delete'] }),
-        canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
+        canAdd: access.canCreateIngredient,
+        canAnnotate: access.canUpdateIngredient,
+        canRemove: access.canDeleteIngredient,
+        canMakeOurs: access.canMakeOurs,
         annotateHref: `${own}?annotate=${encodeURIComponent(slug)}` as Route,
         stock: stock.get(stockKey(id, entry.id)),
       },

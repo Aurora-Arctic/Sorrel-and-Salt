@@ -1,13 +1,14 @@
+import { single } from '../../lib/search-params';
 import {
   choiceParam,
   defineSearchParams,
+  flagParam,
   listParam,
   searchParam,
   slugListParam,
   textListParam,
   textParam,
 } from '../../lib/search-param-table';
-import { single } from '../../lib/search-params';
 import {
   type CategoryMode,
   COMPENDIUM_SORTS,
@@ -34,29 +35,11 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // which the compendium read folds. Free text, not a fixed set: the form
   // vocabulary is only an autofill, so a form no one has curated is still valid.
   forms: textListParam('forms', 'forms'),
-  withoutReferences: searchParam({
-    name: 'withoutReferences',
-    variable: 'withoutReferences',
-    read: (raw) => single(raw) === '1',
-    write: (on: boolean) => (on ? '1' : undefined),
-    toVariable: (on) => on || undefined,
-  }),
+  withoutReferences: flagParam('withoutReferences'),
   // Only the hidden entries, `?hidden=1`; the admin list otherwise shows hidden and shown together.
   // The compendium read takes it as its `listing` and refuses it to anyone but a curator.
-  hidden: searchParam({
-    name: 'hidden',
-    variable: 'listing',
-    read: (raw) => single(raw) === '1',
-    write: (on: boolean) => (on ? '1' : undefined),
-    toVariable: (on) => (on ? ('hidden' as const) : undefined),
-  }),
-  withoutForms: searchParam({
-    name: 'withoutForms',
-    variable: 'withoutForms',
-    read: (raw) => single(raw) === '1',
-    write: (on: boolean) => (on ? '1' : undefined),
-    toVariable: (on) => on || undefined,
-  }),
+  hidden: flagParam('hidden', 'listing', (on) => (on ? ('hidden' as const) : undefined)),
+  withoutForms: flagParam('withoutForms'),
   elements: listParam('elements', INGREDIENT_ELEMENTS, 'elements'),
   categories: slugListParam('categories', 'categoryIds', 'categories'),
   // Written only for `any`, `?categoryMode=any`: all is the default, so it
@@ -99,11 +82,5 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // proves each id by membership, so a coven the viewer is not in filters nothing.
   covens: textListParam('covens', 'covenIds'),
   // Not In: entries none of the picked covens hold, or none of the viewer's covens if none picked.
-  covensNot: searchParam({
-    name: 'covensNot',
-    variable: 'covensNot',
-    read: (raw) => single(raw) === '1',
-    write: (on: boolean) => (on ? '1' : undefined),
-    toVariable: (on) => on || undefined,
-  }),
+  covensNot: flagParam('covensNot'),
 });

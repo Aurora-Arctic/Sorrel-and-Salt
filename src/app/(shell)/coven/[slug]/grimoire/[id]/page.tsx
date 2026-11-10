@@ -1,3 +1,4 @@
+import { single } from '@/lib/search-params';
 import { orNotFound } from '@/lib/or-not-found';
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
@@ -20,7 +21,7 @@ import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
 import { Forbidden } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
 import { viewerOf } from '@/lib/viewer';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import RecordWorkingButton from '@/components/RecordWorking';
 import { readSpell } from '@/modules/grimoire';
@@ -55,6 +56,7 @@ export async function generateMetadata({ params }: SpellRecipeParams): Promise<M
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
   const { slug, id } = await params;
   const { workspace, membership, session, spell } = await spellOf(slug, id);
+  const access = covenAccessOf(membership.role);
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const recipe = await readRecipeOf(session, spell, recipePath);
   const aside = await readRecipeAsideOf(
@@ -64,26 +66,27 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     recipe.categories,
     recipePath,
     // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for an observer.
-    rolePermits(membership.role, { inventory: ['update'] }),
+    access.canUpdateStock,
   );
   const workings = await readWorkingsOf(
     session,
     workspace.id,
     spell.id,
     recipe.steps,
-    rolePermits(membership.role, { working: ['delete'] }),
-    rolePermits(membership.role, { working: ['update'] }),
+    access.canDeleteWorking,
+    access.canUpdateWorking,
   );
   const ingredientSteps = workingStepsOf(
     recipe.views,
     recipePath,
     new Map(aside.doors.map(({ stepId, stock }) => [stepId, stock])),
   );
-  const canUpdate = rolePermits(membership.role, { spell: ['update'] });
-  const canDelete = rolePermits(membership.role, { spell: ['delete'] });
-  const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
-  const canRecord =
-    spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
+  const {
+    canUpdateSpell: canUpdate,
+    canDeleteSpell: canDelete,
+    canCreateSpell: canDuplicate,
+  } = access;
+  const canRecord = spell.status === 'complete' && access.canCreateWorking;
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const { viewer } = await viewerOf();
   const recordButton = (
@@ -100,7 +103,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const deletedHref = deletedHrefOf(listPath as Route, spell.title);
   const query = await searchParams;
   const edit = query.edit;
-  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const entryId = single(query.entry) || undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
   const wanted = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const saved =

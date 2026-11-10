@@ -1,3 +1,4 @@
+import { single } from '@/lib/search-params';
 import type { Metadata, Route } from 'next';
 import { pageTitle } from '@/lib/page-metadata';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
@@ -21,7 +22,7 @@ export const metadata: Metadata = pageTitle('Your Support Requests');
 export default async function SupportListPage({ searchParams }: SupportListPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
-  const requestParam = Array.isArray(params.request) ? params.request[0] : params.request;
+  const requestParam = single(params.request);
   const [page, opened, counts] = await Promise.all([
     readNumberedPage(
       { after, before },

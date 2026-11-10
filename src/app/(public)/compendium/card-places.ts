@@ -3,8 +3,7 @@ import type { Route } from 'next';
 import type { CompendiumCardPlace } from '../../../components/CompendiumCards/types';
 import type { StockData } from '../../../components/StockDialog/types';
 import { covenRolesIfSignedIn } from '../../../lib/viewer';
-import { rolePermits } from '@/modules/coven';
-import { MAKE_IT_OURS_PERMISSION } from '@/modules/ingredients';
+import { covenAccessOf } from '@/lib/coven-access';
 
 // What the cards' three dots and Quick Look offer a signed-in member: each coven they may write in and
 // their role's permissions there. Per viewer, so never in the cached reads (rule 6).
@@ -32,15 +31,16 @@ export async function readCardCovens(
   return writable.flatMap(({ id, slug, name }): CardCoven[] => {
     const role = roles?.get(id);
     if (!role) return [];
+    const access = covenAccessOf(role);
     return [
       {
         workspaceId: id,
         covenSlug: slug,
         name,
-        canAnnotate: rolePermits(role, { ingredient: ['update'] }),
-        canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
-        canRemove: rolePermits(role, { ingredient: ['delete'] }),
-        canStock: rolePermits(role, { inventory: ['update'] }),
+        canAnnotate: access.canUpdateIngredient,
+        canMakeOurs: access.canMakeOurs,
+        canRemove: access.canDeleteIngredient,
+        canStock: access.canUpdateStock,
       },
     ];
   });

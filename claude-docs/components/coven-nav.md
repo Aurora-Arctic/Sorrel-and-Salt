@@ -5,7 +5,7 @@
 ## Props
 
 - `slug`: the open coven's slug, from which every address is built.
-- `canReadMembers`: whether the viewer's role may read members (permission `member: read`); decides if Members is offered. Defaults to false. The layout computes it with `rolePermits(role, { member: ['read'] })` and passes a plain boolean, because the role statements (`access-control`) are server-only and this component's list also loads in the workshop, in the browser.
+- `canReadMembers`: whether the viewer's role may read members (permission `member: read`); decides if Members is offered. Defaults to false. The layout reads it from `covenAccessOf(role)` (`src/lib/coven-access.ts`, one flag per permission, each beside the statement its service asserts) and passes a plain boolean, because the role statements (`access-control`) are server-only and this component's list also loads in the workshop, in the browser.
 
 ## The sections
 

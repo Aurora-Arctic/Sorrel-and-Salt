@@ -14,7 +14,7 @@ import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { covenJarsOf, stockDialogOf } from '@/app/coven-stock';
 import { entryValues } from '@/app/entry-values';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
-import { rolePermits } from '@/modules/coven';
+import { covenAccessOf } from '@/lib/coven-access';
 import {
   applyCupboardEntry,
   compendiumMatchesOf,
@@ -25,7 +25,6 @@ import {
   isAnnotated,
   isRetired,
   lastEditsOf,
-  MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
 
@@ -110,7 +109,8 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
     ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
     : undefined;
 
-  const mayStock = rolePermits(role, { inventory: ['update'] });
+  const access = covenAccessOf(role);
+  const mayStock = access.canUpdateStock;
   const stockData =
     isOwn || held
       ? stockDialogOf(
@@ -122,9 +122,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
 
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
   const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
-  const canEdit = isOwn
-    ? rolePermits(role, { ingredient: ['update'] })
-    : inCompendium && viewer.canCurate;
+  const canEdit = isOwn ? access.canUpdateIngredient : inCompendium && viewer.canCurate;
   const opened =
     canEdit && 'edit' in (await searchParams)
       ? {
@@ -135,7 +133,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
         }
       : undefined;
 
-  const mayAnnotate = held && rolePermits(role, { ingredient: ['update'] });
+  const mayAnnotate = held && access.canUpdateIngredient;
   const annotating = mayAnnotate && 'annotate' in (await searchParams);
 
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
@@ -163,7 +161,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 coven: {
                   workspaceId: workspace.id,
                   ingredientsHref,
-                  mayPromote: rolePermits(role, { ingredient: ['update'] }),
+                  mayPromote: access.canUpdateIngredient,
                   stock,
                 },
               }
@@ -185,10 +183,10 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
             ? {
                 workspaceId: workspace.id,
                 covenSlug: workspace.slug,
-                canAdd: inCompendium && rolePermits(role, { ingredient: ['create'] }),
-                canAnnotate: rolePermits(role, { ingredient: ['update'] }),
-                canRemove: rolePermits(role, { ingredient: ['delete'] }),
-                canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
+                canAdd: inCompendium && access.canCreateIngredient,
+                canAnnotate: access.canUpdateIngredient,
+                canRemove: access.canDeleteIngredient,
+                canMakeOurs: access.canMakeOurs,
                 plus,
                 stock,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
